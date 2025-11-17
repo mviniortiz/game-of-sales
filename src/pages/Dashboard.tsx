@@ -2,8 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { StatCard } from "@/components/dashboard/StatCard";
+import { VendasPorProdutoChart } from "@/components/dashboard/VendasPorProdutoChart";
+import { VendasPorPlataformaChart } from "@/components/dashboard/VendasPorPlataformaChart";
 import { DollarSign, TrendingUp, ShoppingCart, Target } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -35,7 +37,6 @@ const Dashboard = () => {
       
       if (error) throw error;
       
-      // Agregar por produto
       const agregado = data.reduce((acc: any, venda) => {
         const produto = venda.produto_nome;
         if (!acc[produto]) {
@@ -63,7 +64,6 @@ const Dashboard = () => {
       
       if (error) throw error;
       
-      // Agregar por plataforma
       const agregado = data.reduce((acc: any, venda) => {
         const plat = venda.plataforma || "Não informado";
         if (!acc[plat]) {
@@ -153,147 +153,13 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="border-border/50">
-          <CardHeader>
-            <CardTitle>Produtos Mais Vendidos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {vendasPorProduto && vendasPorProduto.length > 0 ? (
-              <div className="space-y-4">
-                {vendasPorProduto.map((item: any, index: number) => {
-                  const maxTotal = vendasPorProduto[0]?.total || 1;
-                  const percentage = (item.total / maxTotal) * 100;
-                  return (
-                    <div key={index} className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="font-medium">{item.produto}</span>
-                        <span className="text-muted-foreground">
-                          {item.quantidade}x · R$ {Number(item.total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                        </span>
-                      </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-primary transition-all"
-                          style={{ width: `${percentage}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>Nenhuma venda registrada este mês</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/50">
-          <CardHeader>
-            <CardTitle>Vendas por Plataforma</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {vendasPorPlataforma && vendasPorPlataforma.length > 0 ? (
-              <div className="space-y-4">
-                {vendasPorPlataforma.map((item: any, index: number) => {
-                  const cores = {
-                    'Celetus': 'bg-[hsl(var(--primary))]',
-                    'Cakto': 'bg-blue-500',
-                    'Greenn': 'bg-green-500',
-                    'Pix/Boleto': 'bg-gray-400'
-                  };
-                  const cor = cores[item.plataforma as keyof typeof cores] || 'bg-primary';
-                  const totalGeral = vendasPorPlataforma.reduce((acc: number, p: any) => acc + p.total, 0);
-                  const percentage = totalGeral > 0 ? ((item.total / totalGeral) * 100).toFixed(1) : "0";
-                  
-                  return (
-                    <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-3 h-3 rounded-full ${cor}`} />
-                        <div>
-                          <p className="font-medium">{item.plataforma}</p>
-                          <p className="text-xs text-muted-foreground">{item.quantidade} vendas</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-primary">R$ {Number(item.total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
-                        <p className="text-xs text-muted-foreground">{percentage}%</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>Nenhuma venda registrada este mês</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="border-border/50">
-          <CardHeader>
-            <CardTitle>Suas Vendas Recentes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {vendas && vendas.length > 0 ? (
-              <div className="space-y-4">
-                {vendas.slice(0, 5).map((venda) => (
-                  <div key={venda.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-                    <div>
-                      <p className="font-medium">{venda.cliente_nome}</p>
-                      <p className="text-sm text-muted-foreground">{venda.produto_nome}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-primary">R$ {Number(venda.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
-                      <p className="text-xs text-muted-foreground">{new Date(venda.data_venda).toLocaleDateString("pt-BR")}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>Nenhuma venda registrada este mês</p>
-                <p className="text-sm mt-2">Comece registrando sua primeira venda!</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/50">
-          <CardHeader>
-            <CardTitle>Seu Progresso</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium">Nível: {profile?.nivel || "Bronze"}</span>
-                  <span className="text-sm text-muted-foreground">{profile?.pontos || 0} pontos</span>
-                </div>
-                <div className="h-3 bg-muted rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-primary to-accent transition-all"
-                    style={{ width: `${Math.min(((profile?.pontos || 0) % 2000) / 20, 100)}%` }}
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {2000 - ((profile?.pontos || 0) % 2000)} pontos para o próximo nível
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                <h4 className="font-medium">Conquistas Recentes</h4>
-                <div className="text-center py-6 text-muted-foreground">
-                  <p className="text-sm">Continue vendendo para desbloquear conquistas!</p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {vendasPorProduto && vendasPorProduto.length > 0 && (
+          <VendasPorProdutoChart data={vendasPorProduto} />
+        )}
+        
+        {vendasPorPlataforma && vendasPorPlataforma.length > 0 && (
+          <VendasPorPlataformaChart data={vendasPorPlataforma} />
+        )}
       </div>
     </div>
   );
