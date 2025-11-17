@@ -39,7 +39,7 @@ export function AppSidebar() {
         <div className="p-6 border-b border-border/50">
           {!collapsed && (
             <div className="flex items-center justify-center">
-              <img src={logo} alt="Rota de Negócios" className="w-24 h-24 object-contain" />
+              <img src={logo} alt="Rota de Negócios" className="w-40 h-40 object-contain" />
             </div>
           )}
           {collapsed && (
