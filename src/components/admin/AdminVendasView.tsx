@@ -162,7 +162,7 @@ export const AdminVendasView = ({ dateRange, selectedVendedor }: AdminVendasView
     <div className="space-y-6">
       {/* Cards de estatísticas gerais */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card className="border-border/50 bg-card/50">
+        <Card className="border-border/50 bg-card/50 animate-fade-in" style={{ animationDelay: "0ms" }}>
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="p-2 rounded-lg bg-blue-500/10">
@@ -176,7 +176,7 @@ export const AdminVendasView = ({ dateRange, selectedVendedor }: AdminVendasView
           </CardContent>
         </Card>
 
-        <Card className="border-border/50 bg-card/50">
+        <Card className="border-border/50 bg-card/50 animate-fade-in" style={{ animationDelay: "100ms" }}>
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="p-2 rounded-lg bg-green-500/10">
@@ -193,7 +193,7 @@ export const AdminVendasView = ({ dateRange, selectedVendedor }: AdminVendasView
           </CardContent>
         </Card>
 
-        <Card className="border-border/50 bg-card/50">
+        <Card className="border-border/50 bg-card/50 animate-fade-in" style={{ animationDelay: "200ms" }}>
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="p-2 rounded-lg bg-purple-500/10">
@@ -207,7 +207,7 @@ export const AdminVendasView = ({ dateRange, selectedVendedor }: AdminVendasView
           </CardContent>
         </Card>
 
-        <Card className="border-border/50 bg-card/50">
+        <Card className="border-border/50 bg-card/50 animate-fade-in" style={{ animationDelay: "300ms" }}>
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="p-2 rounded-lg bg-yellow-500/10">
@@ -226,7 +226,7 @@ export const AdminVendasView = ({ dateRange, selectedVendedor }: AdminVendasView
           </CardContent>
         </Card>
 
-        <Card className="border-border/50 bg-card/50 lg:col-span-2">
+        <Card className="border-border/50 bg-card/50 lg:col-span-2 animate-fade-in" style={{ animationDelay: "400ms" }}>
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="p-2 rounded-lg bg-pink-500/10">
