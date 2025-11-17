@@ -1,7 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, DollarSign, Users, Package } from "lucide-react";
+import { TrendingUp, DollarSign, Package } from "lucide-react";
+import { EvolucaoVendasChart } from "./charts/EvolucaoVendasChart";
+import { DistribuicaoProdutosChart } from "./charts/DistribuicaoProdutosChart";
+import { ComparativoVendedoresChart } from "./charts/ComparativoVendedoresChart";
 
 export const AdminRelatorios = () => {
   const { data: stats } = useQuery({
@@ -71,6 +74,109 @@ export const AdminRelatorios = () => {
     },
   });
 
+  // Dados para evolução temporal (últimos 6 meses)
+  const { data: evolucaoData } = useQuery({
+    queryKey: ["evolucao-vendas"],
+    queryFn: async () => {
+      const now = new Date();
+      const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 6, 1);
+
+      const { data: vendas, error } = await supabase
+        .from("vendas")
+        .select("data_venda, valor")
+        .gte("data_venda", sixMonthsAgo.toISOString())
+        .order("data_venda");
+
+      if (error) throw error;
+
+      // Agrupar por mês
+      const monthlyData = new Map<string, { vendas: number; faturamento: number }>();
+      
+      vendas?.forEach((venda) => {
+        const date = new Date(venda.data_venda);
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        const monthName = date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+        
+        const current = monthlyData.get(monthName) || { vendas: 0, faturamento: 0 };
+        current.vendas += 1;
+        current.faturamento += Number(venda.valor);
+        monthlyData.set(monthName, current);
+      });
+
+      return Array.from(monthlyData.entries()).map(([periodo, data]) => ({
+        periodo,
+        vendas: data.vendas,
+        faturamento: data.faturamento,
+      }));
+    },
+  });
+
+  // Dados para distribuição por produto
+  const { data: produtosData } = useQuery({
+    queryKey: ["distribuicao-produtos"],
+    queryFn: async () => {
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+      const { data: vendas, error } = await supabase
+        .from("vendas")
+        .select("produto_nome, valor")
+        .gte("data_venda", startOfMonth.toISOString());
+
+      if (error) throw error;
+
+      const produtosMap = new Map<string, { valor: number; vendas: number }>();
+      
+      vendas?.forEach((venda) => {
+        const current = produtosMap.get(venda.produto_nome) || { valor: 0, vendas: 0 };
+        current.valor += Number(venda.valor);
+        current.vendas += 1;
+        produtosMap.set(venda.produto_nome, current);
+      });
+
+      return Array.from(produtosMap.entries()).map(([nome, data]) => ({
+        nome,
+        valor: data.valor,
+        vendas: data.vendas,
+      }));
+    },
+  });
+
+  // Dados para comparativo de vendedores
+  const { data: vendedoresData } = useQuery({
+    queryKey: ["comparativo-vendedores"],
+    queryFn: async () => {
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+      const { data: vendas, error } = await supabase
+        .from("vendas")
+        .select("user_id, valor, profiles:user_id(nome)")
+        .gte("data_venda", startOfMonth.toISOString());
+
+      if (error) throw error;
+
+      const vendedoresMap = new Map<string, { vendas: number; faturamento: number }>();
+      
+      vendas?.forEach((venda) => {
+        const nome = venda.profiles?.nome || "Desconhecido";
+        const current = vendedoresMap.get(nome) || { vendas: 0, faturamento: 0 };
+        current.vendas += 1;
+        current.faturamento += Number(venda.valor);
+        vendedoresMap.set(nome, current);
+      });
+
+      return Array.from(vendedoresMap.entries())
+        .map(([nome, data]) => ({
+          nome: nome.length > 15 ? nome.substring(0, 15) + '...' : nome,
+          vendas: data.vendas,
+          faturamento: data.faturamento,
+        }))
+        .sort((a, b) => b.faturamento - a.faturamento)
+        .slice(0, 10); // Top 10 vendedores
+    },
+  });
+
   return (
     <div className="space-y-6">
       <h3 className="text-lg font-semibold">Relatórios Gerais</h3>
@@ -127,6 +233,24 @@ export const AdminRelatorios = () => {
         </Card>
       </div>
 
+      {/* Gráficos Interativos */}
+      <div className="space-y-6">
+        {evolucaoData && evolucaoData.length > 0 && (
+          <EvolucaoVendasChart data={evolucaoData} />
+        )}
+
+        <div className="grid gap-6 md:grid-cols-2">
+          {produtosData && produtosData.length > 0 && (
+            <DistribuicaoProdutosChart data={produtosData} />
+          )}
+
+          {vendedoresData && vendedoresData.length > 0 && (
+            <ComparativoVendedoresChart data={vendedoresData} />
+          )}
+        </div>
+      </div>
+
+      {/* Top Vendedores e Produtos */}
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
