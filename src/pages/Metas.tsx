@@ -1,26 +1,192 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { DefinirMetaForm } from "@/components/metas/DefinirMetaForm";
+import { MetaProgressCard } from "@/components/metas/MetaProgressCard";
+import { MetasRanking } from "@/components/metas/MetasRanking";
+import { MetaEvolutionChart } from "@/components/metas/MetaEvolutionChart";
 import { Target } from "lucide-react";
+import { startOfMonth, endOfMonth, format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 const Metas = () => {
+  const { user, isAdmin } = useAuth();
+  const mesAtual = format(new Date(), "MMMM 'de' yyyy", { locale: ptBR });
+
+  // Buscar progresso das metas
+  const { data: metasProgresso, isLoading: loadingProgresso } = useQuery({
+    queryKey: ["metas-progresso"],
+    queryFn: async () => {
+      const inicioMes = startOfMonth(new Date()).toISOString().split('T')[0];
+      const fimMes = endOfMonth(new Date()).toISOString().split('T')[0];
+
+      const { data: metas, error: metasError } = await supabase
+        .from("metas")
+        .select("*, profiles!inner(id, nome)")
+        .gte("mes_referencia", inicioMes)
+        .lte("mes_referencia", fimMes);
+
+      if (metasError) throw metasError;
+
+      const progressoPromises = metas.map(async (meta) => {
+        const { data: vendas } = await supabase
+          .from("vendas")
+          .select("valor")
+          .eq("user_id", meta.user_id)
+          .eq("status", "Aprovado")
+          .gte("data_venda", inicioMes)
+          .lte("data_venda", fimMes);
+
+        const valorRealizado = vendas?.reduce((sum, v) => sum + Number(v.valor), 0) || 0;
+        const valorMeta = Number(meta.valor_meta);
+        const percentual = (valorRealizado / valorMeta) * 100;
+        const faltaAtingir = Math.max(0, valorMeta - valorRealizado);
+        
+        const hoje = new Date();
+        const ultimoDiaMes = endOfMonth(hoje);
+        const diasRestantes = Math.ceil((ultimoDiaMes.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+        const mediaDiariaNecessaria = diasRestantes > 0 ? faltaAtingir / diasRestantes : 0;
+
+        return {
+          id: meta.user_id,
+          nome: meta.profiles.nome,
+          valorMeta,
+          valorRealizado,
+          percentual,
+          faltaAtingir,
+          diasRestantes,
+          mediaDiariaNecessaria,
+        };
+      });
+
+      const resultado = await Promise.all(progressoPromises);
+      
+      // Filtrar por usuário se não for admin
+      if (!isAdmin && user) {
+        return resultado.filter(m => m.id === user.id);
+      }
+      
+      return resultado;
+    },
+  });
+
+  // Buscar ranking
+  const { data: ranking } = useQuery({
+    queryKey: ["metas-ranking"],
+    queryFn: async () => {
+      if (!metasProgresso) return [];
+      
+      const rankingData = [...metasProgresso]
+        .sort((a, b) => b.percentual - a.percentual)
+        .map((meta, index) => ({
+          posicao: index + 1,
+          nome: meta.nome,
+          valorMeta: meta.valorMeta,
+          valorRealizado: meta.valorRealizado,
+          percentual: meta.percentual,
+        }));
+
+      return rankingData;
+    },
+    enabled: !!metasProgresso,
+  });
+
+  // Buscar evolução (apenas para o usuário logado ou todos se admin)
+  const { data: evolucao } = useQuery({
+    queryKey: ["meta-evolucao", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+
+      const inicioMes = startOfMonth(new Date());
+      const hoje = new Date();
+      const dias = [];
+
+      // Buscar meta do usuário
+      const { data: meta } = await supabase
+        .from("metas")
+        .select("valor_meta")
+        .eq("user_id", user.id)
+        .gte("mes_referencia", inicioMes.toISOString().split('T')[0])
+        .maybeSingle();
+
+      if (!meta) return [];
+
+      // Buscar vendas do mês
+      const { data: vendas } = await supabase
+        .from("vendas")
+        .select("data_venda, valor")
+        .eq("user_id", user.id)
+        .eq("status", "Aprovado")
+        .gte("data_venda", inicioMes.toISOString().split('T')[0])
+        .lte("data_venda", hoje.toISOString().split('T')[0])
+        .order("data_venda");
+
+      // Agrupar vendas por dia e calcular acumulado
+      const vendasPorDia: { [key: string]: number } = {};
+      vendas?.forEach(venda => {
+        const dia = new Date(venda.data_venda).getDate();
+        vendasPorDia[dia] = (vendasPorDia[dia] || 0) + Number(venda.valor);
+      });
+
+      let acumulado = 0;
+      for (let dia = 1; dia <= hoje.getDate(); dia++) {
+        acumulado += vendasPorDia[dia] || 0;
+        dias.push({
+          dia,
+          acumulado,
+          meta: Number(meta.valor_meta),
+        });
+      }
+
+      return dias;
+    },
+    enabled: !!user,
+  });
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Metas</h1>
-        <p className="text-muted-foreground">Acompanhe e gerencie suas metas mensais</p>
+      <div className="flex items-center gap-3">
+        <Target className="h-8 w-8 text-primary" />
+        <div>
+          <h1 className="text-3xl font-bold capitalize">🎯 Metas - {mesAtual}</h1>
+          <p className="text-muted-foreground">Acompanhe o progresso das metas mensais</p>
+        </div>
       </div>
 
-      <Card className="border-border/50">
-        <CardHeader>
-          <CardTitle>Minhas Metas</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-12 text-muted-foreground">
-            <Target className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Funcionalidade em desenvolvimento</p>
-            <p className="text-sm mt-2">Em breve você poderá acompanhar suas metas e progresso aqui</p>
+      {isAdmin && <DefinirMetaForm />}
+
+      {loadingProgresso ? (
+        <div className="text-center py-12 text-muted-foreground">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+          <p className="mt-4">Carregando metas...</p>
+        </div>
+      ) : (
+        <>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {metasProgresso?.map((meta) => (
+              <MetaProgressCard key={meta.id} {...meta} />
+            ))}
           </div>
-        </CardContent>
-      </Card>
+
+          {ranking && ranking.length > 0 && (
+            <MetasRanking ranking={ranking} />
+          )}
+
+          {evolucao && evolucao.length > 0 && (
+            <MetaEvolutionChart data={evolucao} />
+          )}
+
+          {(!metasProgresso || metasProgresso.length === 0) && (
+            <div className="text-center py-12 text-muted-foreground">
+              <Target className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>Nenhuma meta definida para este mês</p>
+              {isAdmin && (
+                <p className="text-sm mt-2">Use o formulário acima para definir metas</p>
+              )}
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 };
