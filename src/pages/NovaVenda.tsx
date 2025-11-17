@@ -15,8 +15,11 @@ import { z } from "zod";
 const vendaSchema = z.object({
   clienteNome: z.string().trim().min(1, "Nome do cliente é obrigatório").max(200, "Nome muito longo"),
   valor: z.number().positive("Valor deve ser positivo").max(999999999, "Valor muito alto"),
-  formaPagamento: z.enum(['dinheiro', 'cartao_credito', 'cartao_debito', 'pix', 'boleto'], {
+  formaPagamento: z.enum(['Cartão de Crédito', 'PIX', 'Recorrência'], {
     errorMap: () => ({ message: "Forma de pagamento inválida" })
+  }),
+  plataforma: z.enum(['Celetus', 'Cakto', 'Greenn', 'Pix/Boleto'], {
+    errorMap: () => ({ message: "Plataforma inválida" })
   }),
   observacoes: z.string().max(1000, "Observações muito longas").optional(),
   dataVenda: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida")
@@ -29,6 +32,7 @@ const NovaVenda = () => {
   const [produtoId, setProdutoId] = useState("");
   const [valor, setValor] = useState("");
   const [formaPagamento, setFormaPagamento] = useState("");
+  const [plataforma, setPlataforma] = useState("");
   const [observacoes, setObservacoes] = useState("");
   const [dataVenda, setDataVenda] = useState(new Date().toISOString().split("T")[0]);
 
@@ -65,6 +69,7 @@ const NovaVenda = () => {
       setProdutoId("");
       setValor("");
       setFormaPagamento("");
+      setPlataforma("");
       setObservacoes("");
       setDataVenda(new Date().toISOString().split("T")[0]);
     },
@@ -76,7 +81,7 @@ const NovaVenda = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!clienteNome || !produtoId || !valor || !formaPagamento) {
+    if (!clienteNome || !produtoId || !valor || !formaPagamento || !plataforma) {
       toast.error("Preencha todos os campos obrigatórios");
       return;
     }
@@ -86,6 +91,7 @@ const NovaVenda = () => {
       clienteNome,
       valor: parseFloat(valor),
       formaPagamento,
+      plataforma,
       observacoes,
       dataVenda
     });
@@ -109,6 +115,7 @@ const NovaVenda = () => {
       produto_nome: produto.nome,
       valor: validationResult.data.valor,
       forma_pagamento: validationResult.data.formaPagamento as any,
+      plataforma: validationResult.data.plataforma,
       data_venda: validationResult.data.dataVenda,
       observacoes: validationResult.data.observacoes || null,
     });
@@ -184,16 +191,30 @@ const NovaVenda = () => {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="plataforma">Plataforma</Label>
+              <Select value={plataforma} onValueChange={setPlataforma} required>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a plataforma" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Celetus">Celetus</SelectItem>
+                  <SelectItem value="Cakto">Cakto</SelectItem>
+                  <SelectItem value="Greenn">Greenn</SelectItem>
+                  <SelectItem value="Pix/Boleto">Pix/Boleto</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="pagamento">Forma de Pagamento</Label>
               <Select value={formaPagamento} onValueChange={setFormaPagamento} required>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione a forma de pagamento" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Pix">Pix</SelectItem>
                   <SelectItem value="Cartão de Crédito">Cartão de Crédito</SelectItem>
-                  <SelectItem value="Boleto">Boleto</SelectItem>
-                  <SelectItem value="Dinheiro">Dinheiro</SelectItem>
+                  <SelectItem value="PIX">PIX</SelectItem>
+                  <SelectItem value="Recorrência">Recorrência</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -202,7 +223,7 @@ const NovaVenda = () => {
               <Label htmlFor="observacoes">Observações (opcional)</Label>
               <Textarea
                 id="observacoes"
-                placeholder="Adicione informações adicionais sobre a venda"
+                placeholder="Adicione observações sobre esta venda (opcional)"
                 value={observacoes}
                 onChange={(e) => setObservacoes(e.target.value)}
                 rows={3}

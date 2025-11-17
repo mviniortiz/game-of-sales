@@ -23,6 +23,62 @@ const Dashboard = () => {
     enabled: !!user?.id,
   });
 
+  const { data: vendasPorProduto } = useQuery<Array<{ produto: string; quantidade: number; total: number }>>({
+    queryKey: ["vendas-por-produto", user?.id],
+    queryFn: async () => {
+      const startOfMonth = new Date(new Date().setDate(1)).toISOString().split("T")[0];
+      const { data, error } = await supabase
+        .from("vendas")
+        .select("produto_nome, valor")
+        .eq("user_id", user?.id)
+        .gte("data_venda", startOfMonth);
+      
+      if (error) throw error;
+      
+      // Agregar por produto
+      const agregado = data.reduce((acc: any, venda) => {
+        const produto = venda.produto_nome;
+        if (!acc[produto]) {
+          acc[produto] = { produto, quantidade: 0, total: 0 };
+        }
+        acc[produto].quantidade += 1;
+        acc[produto].total += Number(venda.valor);
+        return acc;
+      }, {});
+      
+      return Object.values(agregado).sort((a: any, b: any) => b.total - a.total).slice(0, 6) as Array<{ produto: string; quantidade: number; total: number }>;
+    },
+    enabled: !!user?.id,
+  });
+
+  const { data: vendasPorPlataforma } = useQuery<Array<{ plataforma: string; quantidade: number; total: number }>>({
+    queryKey: ["vendas-por-plataforma", user?.id],
+    queryFn: async () => {
+      const startOfMonth = new Date(new Date().setDate(1)).toISOString().split("T")[0];
+      const { data, error } = await supabase
+        .from("vendas")
+        .select("plataforma, valor")
+        .eq("user_id", user?.id)
+        .gte("data_venda", startOfMonth);
+      
+      if (error) throw error;
+      
+      // Agregar por plataforma
+      const agregado = data.reduce((acc: any, venda) => {
+        const plat = venda.plataforma || "Não informado";
+        if (!acc[plat]) {
+          acc[plat] = { plataforma: plat, quantidade: 0, total: 0 };
+        }
+        acc[plat].quantidade += 1;
+        acc[plat].total += Number(venda.valor);
+        return acc;
+      }, {});
+      
+      return Object.values(agregado).sort((a: any, b: any) => b.total - a.total) as Array<{ plataforma: string; quantidade: number; total: number }>;
+    },
+    enabled: !!user?.id,
+  });
+
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
     queryFn: async () => {
@@ -40,6 +96,12 @@ const Dashboard = () => {
 
   const totalVendas = vendas?.reduce((acc, v) => acc + Number(v.valor), 0) || 0;
   const ticketMedio = vendas?.length ? totalVendas / vendas.length : 0;
+  
+  const plataformaMaisUsada = vendasPorPlataforma?.[0];
+  const totalVendasMes = vendas?.length || 0;
+  const percentualPlataforma = plataformaMaisUsada && totalVendasMes > 0 
+    ? ((plataformaMaisUsada.quantidade / totalVendasMes) * 100).toFixed(1)
+    : "0";
 
   return (
     <div className="space-y-6">
@@ -70,11 +132,105 @@ const Dashboard = () => {
           trend="up"
           icon={ShoppingCart}
         />
-        <StatCard
-          title="Nível Atual"
-          value={profile?.nivel || "Bronze"}
-          icon={Target}
-        />
+        <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:border-primary/30 transition-all">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Target className="h-5 w-5 text-primary" />
+              </div>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">Plataforma Mais Usada</p>
+              <p className="text-2xl font-bold">{plataformaMaisUsada?.plataforma || "—"}</p>
+              {plataformaMaisUsada && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  {plataformaMaisUsada.quantidade} vendas ({percentualPlataforma}%)
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="border-border/50">
+          <CardHeader>
+            <CardTitle>Produtos Mais Vendidos</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {vendasPorProduto && vendasPorProduto.length > 0 ? (
+              <div className="space-y-4">
+                {vendasPorProduto.map((item: any, index: number) => {
+                  const maxTotal = vendasPorProduto[0]?.total || 1;
+                  const percentage = (item.total / maxTotal) * 100;
+                  return (
+                    <div key={index} className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-medium">{item.produto}</span>
+                        <span className="text-muted-foreground">
+                          {item.quantidade}x · R$ {Number(item.total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-primary transition-all"
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>Nenhuma venda registrada este mês</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/50">
+          <CardHeader>
+            <CardTitle>Vendas por Plataforma</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {vendasPorPlataforma && vendasPorPlataforma.length > 0 ? (
+              <div className="space-y-4">
+                {vendasPorPlataforma.map((item: any, index: number) => {
+                  const cores = {
+                    'Celetus': 'bg-[hsl(var(--primary))]',
+                    'Cakto': 'bg-blue-500',
+                    'Greenn': 'bg-green-500',
+                    'Pix/Boleto': 'bg-gray-400'
+                  };
+                  const cor = cores[item.plataforma as keyof typeof cores] || 'bg-primary';
+                  const totalGeral = vendasPorPlataforma.reduce((acc: number, p: any) => acc + p.total, 0);
+                  const percentage = totalGeral > 0 ? ((item.total / totalGeral) * 100).toFixed(1) : "0";
+                  
+                  return (
+                    <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-3 h-3 rounded-full ${cor}`} />
+                        <div>
+                          <p className="font-medium">{item.plataforma}</p>
+                          <p className="text-xs text-muted-foreground">{item.quantidade} vendas</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-primary">R$ {Number(item.total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                        <p className="text-xs text-muted-foreground">{percentage}%</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>Nenhuma venda registrada este mês</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
