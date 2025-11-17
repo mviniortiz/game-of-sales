@@ -57,8 +57,8 @@ export const VendasPorProdutoChart = ({ data }: VendasPorProdutoChartProps) => {
               }}
             />
             <Legend />
-            <Bar dataKey="quantidade" fill="hsl(var(--primary))" name="Quantidade" radius={[8, 8, 0, 0]} />
-            <Bar dataKey="total" fill="hsl(var(--accent))" name="Faturamento (R$)" radius={[8, 8, 0, 0]} />
+            <Bar dataKey="quantidade" fill="hsl(217, 91%, 60%)" name="Quantidade" radius={[8, 8, 0, 0]} />
+            <Bar dataKey="total" fill="hsl(142, 71%, 45%)" name="Faturamento (R$)" radius={[8, 8, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </CardContent>

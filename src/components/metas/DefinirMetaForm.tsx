@@ -106,8 +106,13 @@ export const DefinirMetaForm = () => {
                 type="month"
                 value={mesReferencia}
                 onChange={(e) => setMesReferencia(e.target.value)}
-                placeholder="2025-11"
+                placeholder="Selecione o mês"
+                className="bg-background"
+                lang="pt-BR"
               />
+              <p className="text-xs text-muted-foreground">
+                Exemplo: Novembro 2025
+              </p>
             </div>
 
             <div className="space-y-2">
