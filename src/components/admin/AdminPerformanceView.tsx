@@ -185,7 +185,7 @@ export const AdminPerformanceView = ({ dateRange, selectedVendedor }: AdminPerfo
             icon={Users}
           />
           <div
-            className={`absolute bottom-4 left-4 text-xs font-medium ${getStatusColor(
+            className={`absolute bottom-6 left-6 text-xs font-medium ${getStatusColor(
               metricas?.taxaComparecimento || 0,
               "comparecimento"
             )}`}
@@ -200,7 +200,7 @@ export const AdminPerformanceView = ({ dateRange, selectedVendedor }: AdminPerfo
             icon={TrendingUp}
           />
           <div
-            className={`absolute bottom-4 left-4 text-xs font-medium ${getStatusColor(
+            className={`absolute bottom-6 left-6 text-xs font-medium ${getStatusColor(
               metricas?.taxaConversao || 0,
               "conversao"
             )}`}
