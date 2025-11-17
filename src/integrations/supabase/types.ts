@@ -287,6 +287,7 @@ export type Database = {
           forma_pagamento: Database["public"]["Enums"]["payment_method"]
           id: string
           observacoes: string | null
+          plataforma: string | null
           produto_id: string | null
           produto_nome: string
           user_id: string
@@ -299,6 +300,7 @@ export type Database = {
           forma_pagamento: Database["public"]["Enums"]["payment_method"]
           id?: string
           observacoes?: string | null
+          plataforma?: string | null
           produto_id?: string | null
           produto_nome: string
           user_id: string
@@ -311,6 +313,7 @@ export type Database = {
           forma_pagamento?: Database["public"]["Enums"]["payment_method"]
           id?: string
           observacoes?: string | null
+          plataforma?: string | null
           produto_id?: string | null
           produto_nome?: string
           user_id?: string
@@ -363,7 +366,7 @@ export type Database = {
       app_role: "vendedor" | "admin"
       appointment_status: "agendado" | "realizado" | "cancelado"
       call_result: "venda" | "sem_interesse" | "reagendar"
-      payment_method: "Pix" | "Cartão de Crédito" | "Boleto" | "Dinheiro"
+      payment_method: "Cartão de Crédito" | "PIX" | "Recorrência"
       user_level: "Bronze" | "Prata" | "Ouro" | "Platina" | "Diamante"
     }
     CompositeTypes: {
@@ -495,7 +498,7 @@ export const Constants = {
       app_role: ["vendedor", "admin"],
       appointment_status: ["agendado", "realizado", "cancelado"],
       call_result: ["venda", "sem_interesse", "reagendar"],
-      payment_method: ["Pix", "Cartão de Crédito", "Boleto", "Dinheiro"],
+      payment_method: ["Cartão de Crédito", "PIX", "Recorrência"],
       user_level: ["Bronze", "Prata", "Ouro", "Platina", "Diamante"],
     },
   },
