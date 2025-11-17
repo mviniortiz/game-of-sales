@@ -224,17 +224,21 @@ const Calls = () => {
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
-          title="Agendamentos"
-          value={metricas?.agendamentos.toString() || "0"}
-          icon={Calendar}
-        />
-        <StatCard
-          title="Calls Realizadas"
-          value={metricas?.callsRealizadas.toString() || "0"}
-          icon={Phone}
-        />
-        <div className="relative">
+        <div className="animate-fade-in" style={{ animationDelay: "0ms" }}>
+          <StatCard
+            title="Agendamentos"
+            value={metricas?.agendamentos.toString() || "0"}
+            icon={Calendar}
+          />
+        </div>
+        <div className="animate-fade-in" style={{ animationDelay: "100ms" }}>
+          <StatCard
+            title="Calls Realizadas"
+            value={metricas?.callsRealizadas.toString() || "0"}
+            icon={Phone}
+          />
+        </div>
+        <div className="relative animate-fade-in" style={{ animationDelay: "200ms" }}>
           <StatCard
             title="Taxa de Comparecimento"
             value={`${metricas?.taxaComparecimento.toFixed(1) || "0.0"}%`}
@@ -249,7 +253,7 @@ const Calls = () => {
             {getStatusLabel(metricas?.taxaComparecimento || 0, "comparecimento")}
           </div>
         </div>
-        <div className="relative">
+        <div className="relative animate-fade-in" style={{ animationDelay: "300ms" }}>
           <StatCard
             title="Taxa de Conversão"
             value={`${metricas?.taxaConversao.toFixed(1) || "0.0"}%`}

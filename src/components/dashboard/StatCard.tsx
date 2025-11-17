@@ -12,7 +12,7 @@ interface StatCardProps {
 
 export const StatCard = ({ title, value, change, icon: Icon, trend }: StatCardProps) => {
   return (
-    <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:border-primary/30 transition-all">
+    <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:border-primary/30 transition-all hover-scale">
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="p-2 rounded-lg bg-primary/10">
