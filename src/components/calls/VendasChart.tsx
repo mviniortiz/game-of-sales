@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { TrendingUp } from "lucide-react";
 
 interface VendasChartProps {
   data: Array<{ data: string; vendas: number }>;
@@ -9,7 +10,10 @@ export const VendasChart = ({ data }: VendasChartProps) => {
   return (
     <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle>📈 Evolução de Vendas</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <TrendingUp className="h-5 w-5" />
+          Evolução de Vendas
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>

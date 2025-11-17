@@ -2,7 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, TrendingUp, Target, DollarSign, Award } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LineChart, Line } from "recharts";
+import { VendasChart } from "@/components/calls/VendasChart";
 
 interface AdminVendasViewProps {
   dateRange: { from?: Date; to?: Date };
@@ -150,6 +151,37 @@ export const AdminVendasView = ({ dateRange, selectedVendedor }: AdminVendasView
     },
   });
 
+  // Evolução de vendas ao longo do tempo
+  const { data: vendasChartData = [] } = useQuery({
+    queryKey: ["admin-vendas-evolucao", inicioMes, fimMes, selectedVendedor],
+    queryFn: async () => {
+      let query = supabase
+        .from("vendas")
+        .select("data_venda, valor")
+        .eq("status", "Aprovado")
+        .gte("data_venda", inicioMes)
+        .lte("data_venda", fimMes)
+        .order("data_venda", { ascending: true });
+
+      if (selectedVendedor !== "todos") {
+        query = query.eq("user_id", selectedVendedor);
+      }
+
+      const { data } = await query;
+
+      const vendasPorDia = data?.reduce((acc: any, venda) => {
+        const date = new Date(venda.data_venda).toLocaleDateString("pt-BR");
+        acc[date] = (acc[date] || 0) + 1;
+        return acc;
+      }, {});
+
+      return Object.entries(vendasPorDia || {}).map(([data, vendas]) => ({
+        data,
+        vendas: vendas as number,
+      }));
+    },
+  });
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
@@ -287,8 +319,12 @@ export const AdminVendasView = ({ dateRange, selectedVendedor }: AdminVendasView
           </CardContent>
         </Card>
 
-        {/* Progresso de Metas */}
-        <Card>
+        {/* Evolução de Vendas */}
+        <VendasChart data={vendasChartData} />
+      </div>
+
+      {/* Progresso de Metas */}
+      <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="h-5 w-5" />
@@ -332,7 +368,6 @@ export const AdminVendasView = ({ dateRange, selectedVendedor }: AdminVendasView
             </div>
           </CardContent>
         </Card>
-      </div>
     </div>
   );
 };

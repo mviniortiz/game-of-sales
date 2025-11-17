@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { User } from "lucide-react";
+import { User, CheckCircle2, TrendingUp, Target, AlertCircle } from "lucide-react";
 
 interface MetaProgressCardProps {
   nome: string;
@@ -36,11 +36,13 @@ export const MetaProgressCard = ({
   };
 
   const getStatusText = () => {
-    if (percentual >= 100) return "✅ Meta Atingida";
-    if (percentual >= 80) return "🟢 Quase Lá";
-    if (percentual >= 50) return "🟡 No Caminho";
-    return "🔴 Atenção";
+    if (percentual >= 100) return { text: "Meta Atingida", icon: CheckCircle2, color: "text-green-500" };
+    if (percentual >= 80) return { text: "Quase Lá", icon: TrendingUp, color: "text-blue-500" };
+    if (percentual >= 50) return { text: "No Caminho", icon: Target, color: "text-yellow-500" };
+    return { text: "Atenção", icon: AlertCircle, color: "text-red-500" };
   };
+
+  const status = getStatusText();
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -70,10 +72,11 @@ export const MetaProgressCard = ({
 
         <div className="space-y-2">
           <Progress value={Math.min(percentual, 100)} className="h-3" />
-          <div className="flex justify-between text-xs text-muted-foreground">
+          <div className="flex justify-between items-center text-xs text-muted-foreground">
             <span>{percentual.toFixed(1)}%</span>
-            <span className={getProgressColor().replace("bg-", "text-")}>
-              {getStatusText()}
+            <span className={`flex items-center gap-1 ${status.color}`}>
+              <status.icon className="h-3 w-3" />
+              {status.text}
             </span>
           </div>
         </div>

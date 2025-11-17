@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { CheckCircle2, AlertCircle, XCircle, BarChart3 } from "lucide-react";
 
 interface PerformanceData {
   vendedor: string;
@@ -19,18 +20,21 @@ export const PerformanceTable = ({ data }: PerformanceTableProps) => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "excelente":
-        return "🟢";
+        return <CheckCircle2 className="h-5 w-5 text-green-500" />;
       case "bom":
-        return "🟡";
+        return <AlertCircle className="h-5 w-5 text-yellow-500" />;
       default:
-        return "🔴";
+        return <XCircle className="h-5 w-5 text-red-500" />;
     }
   };
 
   return (
     <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle>📊 Performance por Vendedor</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <BarChart3 className="h-5 w-5" />
+          Performance por Vendedor
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
@@ -66,7 +70,7 @@ export const PerformanceTable = ({ data }: PerformanceTableProps) => {
                     <TableCell className="text-center font-bold">
                       {row.taxaConversao.toFixed(1)}%
                     </TableCell>
-                    <TableCell className="text-center text-2xl">
+                    <TableCell className="text-center">
                       {getStatusIcon(row.status)}
                     </TableCell>
                   </TableRow>

@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Phone } from "lucide-react";
+import { Phone, DollarSign, XCircle, CalendarClock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -199,20 +199,23 @@ export const CallForm = ({ onSuccess }: CallFormProps) => {
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="venda" id="venda" />
-                <Label htmlFor="venda" className="cursor-pointer">
-                  💰 Venda Fechada
+                <Label htmlFor="venda" className="cursor-pointer flex items-center gap-2">
+                  <DollarSign className="h-4 w-4 text-green-500" />
+                  Venda Fechada
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="sem_interesse" id="sem_interesse" />
-                <Label htmlFor="sem_interesse" className="cursor-pointer">
-                  ❌ Sem Interesse
+                <Label htmlFor="sem_interesse" className="cursor-pointer flex items-center gap-2">
+                  <XCircle className="h-4 w-4 text-red-500" />
+                  Sem Interesse
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="reagendar" id="reagendar" />
-                <Label htmlFor="reagendar" className="cursor-pointer">
-                  📅 Reagendar
+                <Label htmlFor="reagendar" className="cursor-pointer flex items-center gap-2">
+                  <CalendarClock className="h-4 w-4 text-blue-500" />
+                  Reagendar
                 </Label>
               </div>
             </RadioGroup>
