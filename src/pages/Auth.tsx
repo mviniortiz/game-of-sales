@@ -6,6 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Trophy, TrendingUp } from "lucide-react";
+import { z } from "zod";
+
+const authSchema = z.object({
+  email: z.string().email("Email inválido").max(255, "Email muito longo"),
+  password: z.string().min(8, "Senha deve ter no mínimo 8 caracteres").max(128, "Senha muito longa"),
+  nome: z.string().trim().min(1, "Nome é obrigatório").max(100, "Nome muito longo").optional()
+});
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -23,11 +30,24 @@ const Auth = () => {
       return;
     }
 
+    // Validate inputs
+    const validationResult = authSchema.safeParse({
+      email,
+      password,
+      nome: isLogin ? undefined : nome
+    });
+
+    if (!validationResult.success) {
+      const errors = validationResult.error.errors.map(e => e.message).join(", ");
+      toast.error(errors);
+      return;
+    }
+
     setLoading(true);
 
     try {
       if (isLogin) {
-        const { error } = await signIn(email, password);
+        const { error } = await signIn(validationResult.data.email, validationResult.data.password);
         if (error) {
           if (error.message.includes("Invalid login credentials")) {
             toast.error("Email ou senha inválidos");
@@ -38,7 +58,7 @@ const Auth = () => {
           toast.success("Login realizado com sucesso!");
         }
       } else {
-        const { error } = await signUp(email, password, nome);
+        const { error } = await signUp(validationResult.data.email, validationResult.data.password, validationResult.data.nome!);
         if (error) {
           if (error.message.includes("already registered")) {
             toast.error("Este email já está cadastrado");
