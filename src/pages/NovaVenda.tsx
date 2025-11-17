@@ -10,6 +10,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { PlusCircle } from "lucide-react";
+import { z } from "zod";
+
+const vendaSchema = z.object({
+  clienteNome: z.string().trim().min(1, "Nome do cliente é obrigatório").max(200, "Nome muito longo"),
+  valor: z.number().positive("Valor deve ser positivo").max(999999999, "Valor muito alto"),
+  formaPagamento: z.enum(['dinheiro', 'cartao_credito', 'cartao_debito', 'pix', 'boleto'], {
+    errorMap: () => ({ message: "Forma de pagamento inválida" })
+  }),
+  observacoes: z.string().max(1000, "Observações muito longas").optional(),
+  dataVenda: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida")
+});
 
 const NovaVenda = () => {
   const { user } = useAuth();
@@ -70,17 +81,36 @@ const NovaVenda = () => {
       return;
     }
 
+    // Validate inputs
+    const validationResult = vendaSchema.safeParse({
+      clienteNome,
+      valor: parseFloat(valor),
+      formaPagamento,
+      observacoes,
+      dataVenda
+    });
+
+    if (!validationResult.success) {
+      const errors = validationResult.error.errors.map(e => e.message).join(", ");
+      toast.error(errors);
+      return;
+    }
+
     const produto = produtos?.find(p => p.id === produtoId);
+    if (!produto) {
+      toast.error("Produto não encontrado");
+      return;
+    }
     
     createVenda.mutate({
       user_id: user?.id,
-      cliente_nome: clienteNome,
+      cliente_nome: validationResult.data.clienteNome,
       produto_id: produtoId,
-      produto_nome: produto?.nome,
-      valor: parseFloat(valor),
-      forma_pagamento: formaPagamento,
-      data_venda: dataVenda,
-      observacoes: observacoes || null,
+      produto_nome: produto.nome,
+      valor: validationResult.data.valor,
+      forma_pagamento: validationResult.data.formaPagamento as any,
+      data_venda: validationResult.data.dataVenda,
+      observacoes: validationResult.data.observacoes || null,
     });
   };
 
