@@ -22,9 +22,9 @@ export interface FilterValues {
 
 export const VendasFilters = ({ vendedores, produtos, onFilterChange }: VendasFiltersProps) => {
   const [filters, setFilters] = useState<FilterValues>({
-    vendedorId: "",
-    produtoId: "",
-    status: "",
+    vendedorId: "todos",
+    produtoId: "todos",
+    status: "todos",
     dataInicio: "",
     dataFim: "",
   });
@@ -37,9 +37,9 @@ export const VendasFilters = ({ vendedores, produtos, onFilterChange }: VendasFi
 
   const clearFilters = () => {
     const emptyFilters = {
-      vendedorId: "",
-      produtoId: "",
-      status: "",
+      vendedorId: "todos",
+      produtoId: "todos",
+      status: "todos",
       dataInicio: "",
       dataFim: "",
     };
@@ -47,7 +47,7 @@ export const VendasFilters = ({ vendedores, produtos, onFilterChange }: VendasFi
     onFilterChange(emptyFilters);
   };
 
-  const hasActiveFilters = Object.values(filters).some((value) => value !== "");
+  const hasActiveFilters = Object.values(filters).some((value) => value !== "" && value !== "todos");
 
   return (
     <Card>
@@ -63,7 +63,7 @@ export const VendasFilters = ({ vendedores, produtos, onFilterChange }: VendasFi
                 <SelectValue placeholder="Todos" />
               </SelectTrigger>
               <SelectContent className="bg-background z-50">
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="todos">Todos</SelectItem>
                 {vendedores?.map((vendedor) => (
                   <SelectItem key={vendedor.id} value={vendedor.id}>
                     {vendedor.nome}
@@ -83,7 +83,7 @@ export const VendasFilters = ({ vendedores, produtos, onFilterChange }: VendasFi
                 <SelectValue placeholder="Todos" />
               </SelectTrigger>
               <SelectContent className="bg-background z-50">
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="todos">Todos</SelectItem>
                 {produtos?.map((produto) => (
                   <SelectItem key={produto.id} value={produto.id}>
                     {produto.nome}
@@ -103,7 +103,7 @@ export const VendasFilters = ({ vendedores, produtos, onFilterChange }: VendasFi
                 <SelectValue placeholder="Todos" />
               </SelectTrigger>
               <SelectContent className="bg-background z-50">
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="todos">Todos</SelectItem>
                 <SelectItem value="Aprovado">Aprovado</SelectItem>
                 <SelectItem value="Pendente">Pendente</SelectItem>
                 <SelectItem value="Reembolsado">Reembolsado</SelectItem>
