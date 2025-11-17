@@ -1,6 +1,5 @@
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
-import { AppHeader } from "./AppHeader";
 import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 import { useOnboarding } from "@/hooks/useOnboarding";
 
@@ -12,7 +11,9 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
         <div className="flex-1 flex flex-col">
-          <AppHeader />
+          <header className="h-14 border-b border-border/50 flex items-center px-4">
+            <SidebarTrigger />
+          </header>
           <main className="flex-1 p-6 overflow-auto">
             {children}
           </main>

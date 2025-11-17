@@ -1,4 +1,4 @@
-import { Home, TrendingUp, Trophy, PlusCircle, Target, PhoneCall, Shield } from "lucide-react";
+import { Home, TrendingUp, Trophy, PlusCircle, Target, PhoneCall, Shield, LogOut, User } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,25 +13,41 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
+  SidebarFooter,
 } from "@/components/ui/sidebar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 
 const baseMenuItems = [
-  { title: "Dashboard", url: "/", icon: Home },
-  { title: "Performance de Calls", url: "/calls", icon: PhoneCall },
-  { title: "Ranking", url: "/ranking", icon: Trophy },
-  { title: "Registrar Venda", url: "/nova-venda", icon: PlusCircle },
-  { title: "Metas", url: "/metas", icon: Target },
+  { title: "Dashboard", url: "/", icon: Home, highlight: false },
+  { title: "Performance de Calls", url: "/calls", icon: PhoneCall, highlight: false },
+  { title: "Ranking", url: "/ranking", icon: Trophy, highlight: false },
+  { title: "Registrar Venda", url: "/nova-venda", icon: PlusCircle, highlight: true },
+  { title: "Metas", url: "/metas", icon: Target, highlight: false },
 ];
 
-const adminMenuItem = { title: "Administração", url: "/admin", icon: Shield };
+const adminMenuItem = { title: "Administração", url: "/admin", icon: Shield, highlight: false };
 
 export function AppSidebar() {
   const { state } = useSidebar();
-  const { isAdmin } = useAuth();
+  const { user, isAdmin, signOut } = useAuth();
   const location = useLocation();
   const collapsed = state === "collapsed";
 
   const menuItems = isAdmin ? [...baseMenuItems, adminMenuItem] : baseMenuItems;
+
+  const getInitials = (email: string) => {
+    return email.charAt(0).toUpperCase();
+  };
 
   return (
     <Sidebar className="border-r border-border/50">
@@ -57,11 +73,22 @@ export function AppSidebar() {
                     <NavLink
                       to={item.url}
                       end
-                      className="flex items-center gap-3 hover:bg-accent/50 transition-colors"
+                      className={`flex items-center gap-3 hover:bg-accent/50 transition-colors ${
+                        item.highlight ? "relative" : ""
+                      }`}
                       activeClassName="bg-primary/10 text-primary border-l-2 border-primary"
                     >
                       <item.icon className="h-5 w-5" />
-                      {!collapsed && <span>{item.title}</span>}
+                      {!collapsed && (
+                        <div className="flex items-center justify-between flex-1">
+                          <span>{item.title}</span>
+                          {item.highlight && (
+                            <Badge variant="default" className="ml-2 bg-primary">
+                              ⭐
+                            </Badge>
+                          )}
+                        </div>
+                      )}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -70,6 +97,77 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      <SidebarFooter className="border-t border-border/50 p-4">
+        {!collapsed ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="w-full justify-start gap-3 h-auto py-3">
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback className="bg-primary text-primary-foreground">
+                    {user?.email ? getInitials(user.email) : "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col items-start text-left flex-1">
+                  <span className="text-sm font-medium">{user?.email}</span>
+                  {isAdmin && (
+                    <Badge variant="secondary" className="text-xs mt-1">
+                      👑 Admin
+                    </Badge>
+                  )}
+                </div>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <User className="mr-2 h-4 w-4" />
+                Perfil
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={signOut} className="text-destructive">
+                <LogOut className="mr-2 h-4 w-4" />
+                Sair
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="mx-auto">
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback className="bg-primary text-primary-foreground">
+                    {user?.email ? getInitials(user.email) : "U"}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>
+                <div className="flex flex-col">
+                  <span>{user?.email}</span>
+                  {isAdmin && (
+                    <Badge variant="secondary" className="text-xs mt-1 w-fit">
+                      👑 Admin
+                    </Badge>
+                  )}
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <User className="mr-2 h-4 w-4" />
+                Perfil
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={signOut} className="text-destructive">
+                <LogOut className="mr-2 h-4 w-4" />
+                Sair
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </SidebarFooter>
     </Sidebar>
   );
 }
