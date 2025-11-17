@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { OnboardingButton } from "@/components/onboarding/OnboardingButton";
 
 export const AppHeader = () => {
   const { user, isAdmin, signOut } = useAuth();
@@ -30,6 +31,7 @@ export const AppHeader = () => {
       </div>
 
       <div className="flex items-center gap-4">
+        <OnboardingButton />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 rounded-full px-4 gap-2">
