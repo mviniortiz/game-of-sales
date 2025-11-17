@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { AdminDashboardOverview } from "@/components/dashboard/AdminDashboardOverview";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { VendasPorProdutoChart } from "@/components/dashboard/VendasPorProdutoChart";
 import { VendasPorPlataformaChart } from "@/components/dashboard/VendasPorPlataformaChart";
@@ -8,7 +9,12 @@ import { DollarSign, TrendingUp, ShoppingCart, Target } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
+
+  // Se for admin, mostrar dashboard administrativo
+  if (isAdmin) {
+    return <AdminDashboardOverview />;
+  }
 
   const { data: vendas } = useQuery({
     queryKey: ["vendas", user?.id],

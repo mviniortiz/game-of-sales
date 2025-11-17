@@ -7,12 +7,12 @@ interface VendasPorPlataformaChartProps {
 }
 
 const COLORS = [
-  "hsl(var(--primary))",
-  "hsl(var(--accent))",
-  "hsl(var(--secondary))",
-  "#10B981",
-  "#F59E0B",
-  "#EF4444",
+  "hsl(217, 91%, 60%)", // Azul vibrante
+  "hsl(142, 71%, 45%)", // Verde vibrante
+  "hsl(38, 92%, 50%)",  // Laranja vibrante
+  "hsl(280, 87%, 60%)", // Roxo vibrante
+  "hsl(0, 84%, 60%)",   // Vermelho vibrante
+  "hsl(187, 71%, 50%)", // Ciano vibrante
 ];
 
 export const VendasPorPlataformaChart = ({ data }: VendasPorPlataformaChartProps) => {
