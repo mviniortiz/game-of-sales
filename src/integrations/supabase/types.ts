@@ -198,7 +198,6 @@ export type Database = {
           nivel: Database["public"]["Enums"]["user_level"]
           nome: string
           pontos: number
-          role: Database["public"]["Enums"]["app_role"]
           updated_at: string
         }
         Insert: {
@@ -209,7 +208,6 @@ export type Database = {
           nivel?: Database["public"]["Enums"]["user_level"]
           nome: string
           pontos?: number
-          role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
         }
         Update: {
@@ -220,7 +218,6 @@ export type Database = {
           nivel?: Database["public"]["Enums"]["user_level"]
           nome?: string
           pontos?: number
-          role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
         }
         Relationships: []
