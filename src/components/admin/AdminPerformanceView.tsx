@@ -5,7 +5,6 @@ import { Calendar, Phone, TrendingUp, Users } from "lucide-react";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { CallsFunnel } from "@/components/calls/CallsFunnel";
 import { PerformanceTable } from "@/components/calls/PerformanceTable";
-import { VendasChart } from "@/components/calls/VendasChart";
 
 interface AdminPerformanceViewProps {
   dateRange: { from?: Date; to?: Date };
@@ -154,13 +153,13 @@ export const AdminPerformanceView = ({ dateRange, selectedVendedor }: AdminPerfo
 
   const getStatusLabel = (taxa: number, tipo: "comparecimento" | "conversao") => {
     if (tipo === "comparecimento") {
-      if (taxa >= 75) return "🟢 Excelente";
-      if (taxa >= 60) return "🟡 Bom";
-      return "🔴 Precisa Melhorar";
+      if (taxa >= 75) return "Excelente";
+      if (taxa >= 60) return "Bom";
+      return "Precisa Melhorar";
     } else {
-      if (taxa >= 20) return "🟢 Excelente";
-      if (taxa >= 15) return "🟡 Bom";
-      return "🔴 Precisa Melhorar";
+      if (taxa >= 20) return "Excelente";
+      if (taxa >= 15) return "Bom";
+      return "Precisa Melhorar";
     }
   };
 
@@ -223,7 +222,6 @@ export const AdminPerformanceView = ({ dateRange, selectedVendedor }: AdminPerfo
           taxaComparecimento={metricas?.taxaComparecimento || 0}
           taxaConversao={metricas?.taxaConversao || 0}
         />
-        <VendasChart data={vendasChartData} />
       </div>
 
       {/* Tabela de performance */}

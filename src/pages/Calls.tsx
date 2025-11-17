@@ -10,7 +10,6 @@ import { AgendamentoForm } from "@/components/calls/AgendamentoForm";
 import { CallForm } from "@/components/calls/CallForm";
 import { PerformanceTable } from "@/components/calls/PerformanceTable";
 import { ProximosAgendamentos } from "@/components/calls/ProximosAgendamentos";
-import { VendasChart } from "@/components/calls/VendasChart";
 
 const Calls = () => {
   const { user, isAdmin } = useAuth();
@@ -150,36 +149,6 @@ const Calls = () => {
     },
   });
 
-  const { data: vendasChartData = [] } = useQuery({
-    queryKey: ["vendas-chart", dateRange, selectedVendedor],
-    queryFn: async () => {
-      let query = supabase
-        .from("calls")
-        .select("data_call, resultado")
-        .eq("resultado", "venda")
-        .gte("data_call", dateRange.from?.toISOString().split("T")[0])
-        .lte("data_call", dateRange.to?.toISOString().split("T")[0]);
-
-      if (selectedVendedor !== "todos") {
-        query = query.eq("user_id", selectedVendedor);
-      }
-
-      const { data } = await query;
-
-      const vendasPorDia = data?.reduce((acc: any, call) => {
-        const date = new Date(call.data_call).toLocaleDateString("pt-BR");
-        acc[date] = (acc[date] || 0) + 1;
-        return acc;
-      }, {});
-
-      return Object.entries(vendasPorDia || {}).map(([data, vendas]) => ({
-        data,
-        vendas: vendas as number,
-      }));
-    },
-    enabled: !!user,
-  });
-
   const getStatusColor = (taxa: number, tipo: "comparecimento" | "conversao") => {
     if (tipo === "comparecimento") {
       if (taxa >= 75) return "text-green-500";
@@ -194,13 +163,13 @@ const Calls = () => {
 
   const getStatusLabel = (taxa: number, tipo: "comparecimento" | "conversao") => {
     if (tipo === "comparecimento") {
-      if (taxa >= 75) return "🟢 Excelente";
-      if (taxa >= 60) return "🟡 Bom";
-      return "🔴 Precisa Melhorar";
+      if (taxa >= 75) return "Excelente";
+      if (taxa >= 60) return "Bom";
+      return "Precisa Melhorar";
     } else {
-      if (taxa >= 20) return "🟢 Excelente";
-      if (taxa >= 15) return "🟡 Bom";
-      return "🔴 Precisa Melhorar";
+      if (taxa >= 20) return "Excelente";
+      if (taxa >= 15) return "Bom";
+      return "Precisa Melhorar";
     }
   };
 
@@ -270,7 +239,7 @@ const Calls = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6">
         <CallsFunnel
           agendamentos={metricas?.agendamentos || 0}
           callsRealizadas={metricas?.callsRealizadas || 0}
@@ -278,7 +247,6 @@ const Calls = () => {
           taxaComparecimento={metricas?.taxaComparecimento || 0}
           taxaConversao={metricas?.taxaConversao || 0}
         />
-        <VendasChart data={vendasChartData} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -4,7 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Filter, Users, CreditCard, Package, Target } from "lucide-react";
+import { CalendarIcon, Filter, Users, DollarSign, Target } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -171,9 +171,24 @@ export const CallsFilters = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="todos">Todos os resultados</SelectItem>
-                <SelectItem value="venda">💰 Venda Fechada</SelectItem>
-                <SelectItem value="sem_interesse">❌ Sem Interesse</SelectItem>
-                <SelectItem value="reagendar">📅 Reagendar</SelectItem>
+                <SelectItem value="venda">
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="h-4 w-4 text-green-500" />
+                    Venda Fechada
+                  </div>
+                </SelectItem>
+                <SelectItem value="sem_interesse">
+                  <div className="flex items-center gap-2">
+                    <Target className="h-4 w-4 text-red-500" />
+                    Sem Interesse
+                  </div>
+                </SelectItem>
+                <SelectItem value="reagendar">
+                  <div className="flex items-center gap-2">
+                    <CalendarIcon className="h-4 w-4 text-blue-500" />
+                    Reagendar
+                  </div>
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
