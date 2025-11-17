@@ -1,6 +1,7 @@
-import { Home, TrendingUp, Trophy, PlusCircle, Target, PhoneCall } from "lucide-react";
+import { Home, TrendingUp, Trophy, PlusCircle, Target, PhoneCall, Shield } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Sidebar,
   SidebarContent,
@@ -13,7 +14,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-const menuItems = [
+const baseMenuItems = [
   { title: "Dashboard", url: "/", icon: Home },
   { title: "Performance de Calls", url: "/calls", icon: PhoneCall },
   { title: "Ranking", url: "/ranking", icon: Trophy },
@@ -21,10 +22,15 @@ const menuItems = [
   { title: "Metas", url: "/metas", icon: Target },
 ];
 
+const adminMenuItem = { title: "Administração", url: "/admin", icon: Shield };
+
 export function AppSidebar() {
   const { state } = useSidebar();
+  const { isAdmin } = useAuth();
   const location = useLocation();
   const collapsed = state === "collapsed";
+
+  const menuItems = isAdmin ? [...baseMenuItems, adminMenuItem] : baseMenuItems;
 
   return (
     <Sidebar className="border-r border-border/50">

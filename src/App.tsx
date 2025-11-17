@@ -12,6 +12,7 @@ import Ranking from "./pages/Ranking";
 import NovaVenda from "./pages/NovaVenda";
 import Calls from "./pages/Calls";
 import Metas from "./pages/Metas";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -71,6 +72,16 @@ const App = () => (
                 <ProtectedRoute>
                   <AppLayout>
                     <Metas />
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <Admin />
                   </AppLayout>
                 </ProtectedRoute>
               }
