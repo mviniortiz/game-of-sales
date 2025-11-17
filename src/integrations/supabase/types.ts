@@ -261,6 +261,27 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       vendas: {
         Row: {
           cliente_nome: string
@@ -320,6 +341,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_public_profiles: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          created_at: string
+          id: string
+          nivel: Database["public"]["Enums"]["user_level"]
+          nome: string
+          pontos: number
+          updated_at: string
+        }[]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_admin: { Args: { user_id: string }; Returns: boolean }
     }
     Enums: {

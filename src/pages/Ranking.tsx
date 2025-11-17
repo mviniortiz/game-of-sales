@@ -9,8 +9,7 @@ const Ranking = () => {
     queryKey: ["rankings"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
+        .rpc("get_public_profiles")
         .order("pontos", { ascending: false })
         .limit(10);
       
@@ -63,7 +62,7 @@ const Ranking = () => {
                     </Badge>
                   </div>
                   <h3 className="text-xl font-bold">{vendedor.nome}</h3>
-                  <p className="text-muted-foreground">{vendedor.email}</p>
+                  <p className="text-sm text-muted-foreground">{vendedor.pontos.toLocaleString()} pontos</p>
                 </div>
                 <div className="text-right">
                   <p className="text-3xl font-bold text-primary">{vendedor.pontos}</p>
@@ -97,7 +96,7 @@ const Ranking = () => {
                         {vendedor.nivel}
                       </Badge>
                     </div>
-                    <p className="text-sm text-muted-foreground">{vendedor.email}</p>
+                    <p className="text-sm text-muted-foreground">{vendedor.pontos.toLocaleString()} pontos</p>
                   </div>
                 </div>
                 <div className="text-right">
