@@ -13,7 +13,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export const AppHeader = () => {
-  const { user, signOut } = useAuth();
+  const { user, isAdmin, signOut } = useAuth();
 
   const getUserInitials = () => {
     if (!user?.email) return "U";
@@ -32,12 +32,16 @@ export const AppHeader = () => {
       <div className="flex items-center gap-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+            <Button variant="ghost" className="relative h-10 rounded-full px-4 gap-2">
               <Avatar className="h-10 w-10 border-2 border-primary/20">
                 <AvatarFallback className="bg-primary/10 text-primary">
                   {getUserInitials()}
                 </AvatarFallback>
               </Avatar>
+              <span className="hidden md:inline-flex items-center gap-1">
+                {user?.email?.split("@")[0]}
+                {isAdmin && <span className="text-xs">👑 Admin</span>}
+              </span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56" align="end">

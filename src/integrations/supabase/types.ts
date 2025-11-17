@@ -169,7 +169,7 @@ export type Database = {
           descricao: string | null
           id: string
           nome: string
-          preco_base: number
+          preco_base: number | null
         }
         Insert: {
           ativo?: boolean
@@ -177,7 +177,7 @@ export type Database = {
           descricao?: string | null
           id?: string
           nome: string
-          preco_base: number
+          preco_base?: number | null
         }
         Update: {
           ativo?: boolean
@@ -185,7 +185,7 @@ export type Database = {
           descricao?: string | null
           id?: string
           nome?: string
-          preco_base?: number
+          preco_base?: number | null
         }
         Relationships: []
       }
@@ -290,6 +290,7 @@ export type Database = {
           plataforma: string | null
           produto_id: string | null
           produto_nome: string
+          status: Database["public"]["Enums"]["venda_status"] | null
           user_id: string
           valor: number
         }
@@ -303,6 +304,7 @@ export type Database = {
           plataforma?: string | null
           produto_id?: string | null
           produto_nome: string
+          status?: Database["public"]["Enums"]["venda_status"] | null
           user_id: string
           valor: number
         }
@@ -316,6 +318,7 @@ export type Database = {
           plataforma?: string | null
           produto_id?: string | null
           produto_nome?: string
+          status?: Database["public"]["Enums"]["venda_status"] | null
           user_id?: string
           valor?: number
         }
@@ -366,8 +369,15 @@ export type Database = {
       app_role: "vendedor" | "admin"
       appointment_status: "agendado" | "realizado" | "cancelado"
       call_result: "venda" | "sem_interesse" | "reagendar"
-      payment_method: "Cartão de Crédito" | "PIX" | "Recorrência"
+      payment_method:
+        | "Cartão de Crédito"
+        | "PIX"
+        | "Recorrência"
+        | "Boleto"
+        | "Parte PIX Parte Cartão"
+        | "Múltiplos Cartões"
       user_level: "Bronze" | "Prata" | "Ouro" | "Platina" | "Diamante"
+      venda_status: "Aprovado" | "Pendente" | "Reembolsado"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -498,8 +508,16 @@ export const Constants = {
       app_role: ["vendedor", "admin"],
       appointment_status: ["agendado", "realizado", "cancelado"],
       call_result: ["venda", "sem_interesse", "reagendar"],
-      payment_method: ["Cartão de Crédito", "PIX", "Recorrência"],
+      payment_method: [
+        "Cartão de Crédito",
+        "PIX",
+        "Recorrência",
+        "Boleto",
+        "Parte PIX Parte Cartão",
+        "Múltiplos Cartões",
+      ],
       user_level: ["Bronze", "Prata", "Ouro", "Platina", "Diamante"],
+      venda_status: ["Aprovado", "Pendente", "Reembolsado"],
     },
   },
 } as const
