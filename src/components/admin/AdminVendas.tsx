@@ -23,9 +23,9 @@ import { VendasFilters, FilterValues } from "./VendasFilters";
 export const AdminVendas = () => {
   const queryClient = useQueryClient();
   const [filters, setFilters] = useState<FilterValues>({
-    vendedorId: "",
-    produtoId: "",
-    status: "",
+    vendedorId: "todos",
+    produtoId: "todos",
+    status: "todos",
     dataInicio: "",
     dataFim: "",
   });
@@ -69,13 +69,13 @@ export const AdminVendas = () => {
         .order("data_venda", { ascending: false });
 
       // Aplicar filtros
-      if (filters.vendedorId) {
+      if (filters.vendedorId && filters.vendedorId !== "todos") {
         query = query.eq("user_id", filters.vendedorId);
       }
-      if (filters.produtoId) {
+      if (filters.produtoId && filters.produtoId !== "todos") {
         query = query.eq("produto_id", filters.produtoId);
       }
-      if (filters.status) {
+      if (filters.status && filters.status !== "todos") {
         query = query.eq("status", filters.status as any);
       }
       if (filters.dataInicio) {
