@@ -1,100 +1,293 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { Calendar, Phone, TrendingUp, Users } from "lucide-react";
+import { CallsFilters } from "@/components/calls/CallsFilters";
+import { CallsFunnel } from "@/components/calls/CallsFunnel";
+import { AgendamentoForm } from "@/components/calls/AgendamentoForm";
+import { CallForm } from "@/components/calls/CallForm";
+import { PerformanceTable } from "@/components/calls/PerformanceTable";
+import { ProximosAgendamentos } from "@/components/calls/ProximosAgendamentos";
+import { VendasChart } from "@/components/calls/VendasChart";
 
 const Calls = () => {
-  // Mock data - will be connected to real data later
-  const agendamentos = 245;
-  const callsRealizadas = 198;
-  const taxaComparecimento = (callsRealizadas / agendamentos * 100).toFixed(1);
-  const vendas = 45;
-  const taxaConversao = (vendas / callsRealizadas * 100).toFixed(1);
+  const { user, isAdmin } = useAuth();
+  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({
+    from: new Date(new Date().setDate(1)),
+    to: new Date(),
+  });
+  const [selectedVendedor, setSelectedVendedor] = useState("todos");
+  const [selectedResultado, setSelectedResultado] = useState("todos");
+
+  const { data: vendedores = [] } = useQuery({
+    queryKey: ["vendedores"],
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("id, nome");
+      return data || [];
+    },
+    enabled: isAdmin,
+  });
+
+  const { data: metricas, refetch: refetchMetricas } = useQuery({
+    queryKey: ["metricas-calls", dateRange, selectedVendedor],
+    queryFn: async () => {
+      let query = supabase
+        .from("agendamentos")
+        .select("id, data_agendamento, user_id")
+        .gte("data_agendamento", dateRange.from?.toISOString().split("T")[0])
+        .lte("data_agendamento", dateRange.to?.toISOString().split("T")[0]);
+
+      if (selectedVendedor !== "todos") {
+        query = query.eq("user_id", selectedVendedor);
+      }
+
+      const { data: agendamentosData } = await query;
+
+      let callsQuery = supabase
+        .from("calls")
+        .select("id, user_id, resultado")
+        .gte("data_call", dateRange.from?.toISOString().split("T")[0])
+        .lte("data_call", dateRange.to?.toISOString().split("T")[0]);
+
+      if (selectedVendedor !== "todos") {
+        callsQuery = callsQuery.eq("user_id", selectedVendedor);
+      }
+
+      if (selectedResultado !== "todos") {
+        callsQuery = callsQuery.eq("resultado", selectedResultado as any);
+      }
+
+      const { data: callsData } = await callsQuery;
+
+      const agendamentos = agendamentosData?.length || 0;
+      const callsRealizadas = callsData?.length || 0;
+      const vendas = callsData?.filter((c) => c.resultado === "venda").length || 0;
+      const taxaComparecimento = agendamentos > 0 ? (callsRealizadas / agendamentos) * 100 : 0;
+      const taxaConversao = callsRealizadas > 0 ? (vendas / callsRealizadas) * 100 : 0;
+
+      return {
+        agendamentos,
+        callsRealizadas,
+        vendas,
+        taxaComparecimento,
+        taxaConversao,
+      };
+    },
+    enabled: !!user,
+  });
+
+  const { data: performanceData = [] } = useQuery({
+    queryKey: ["performance-vendedores", dateRange],
+    queryFn: async () => {
+      const { data: profiles } = await supabase.from("profiles").select("id, nome");
+
+      if (!profiles) return [];
+
+      const results = await Promise.all(
+        profiles.map(async (profile) => {
+          const { data: agendamentos } = await supabase
+            .from("agendamentos")
+            .select("id")
+            .eq("user_id", profile.id)
+            .gte("data_agendamento", dateRange.from?.toISOString().split("T")[0])
+            .lte("data_agendamento", dateRange.to?.toISOString().split("T")[0]);
+
+          const { data: calls } = await supabase
+            .from("calls")
+            .select("id, resultado")
+            .eq("user_id", profile.id)
+            .gte("data_call", dateRange.from?.toISOString().split("T")[0])
+            .lte("data_call", dateRange.to?.toISOString().split("T")[0]);
+
+          const totalAgendamentos = agendamentos?.length || 0;
+          const totalCalls = calls?.length || 0;
+          const totalVendas = calls?.filter((c) => c.resultado === "venda").length || 0;
+          const taxaComparecimento = totalAgendamentos > 0 ? (totalCalls / totalAgendamentos) * 100 : 0;
+          const taxaConversao = totalCalls > 0 ? (totalVendas / totalCalls) * 100 : 0;
+
+          let status: "excelente" | "bom" | "precisa_melhorar" = "precisa_melhorar";
+          if (taxaConversao >= 20) status = "excelente";
+          else if (taxaConversao >= 15) status = "bom";
+
+          return {
+            vendedor: profile.nome,
+            agendamentos: totalAgendamentos,
+            calls: totalCalls,
+            taxaComparecimento,
+            vendas: totalVendas,
+            taxaConversao,
+            status,
+          };
+        })
+      );
+
+      return results.sort((a, b) => b.taxaConversao - a.taxaConversao);
+    },
+    enabled: isAdmin,
+  });
+
+  const { data: proximosAgendamentos = [] } = useQuery({
+    queryKey: ["proximos-agendamentos"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("agendamentos")
+        .select("id, cliente_nome, data_agendamento, user_id, profiles(nome)")
+        .eq("status", "agendado")
+        .gte("data_agendamento", new Date().toISOString())
+        .order("data_agendamento", { ascending: true })
+        .limit(10);
+
+      return (
+        data?.map((a: any) => ({
+          id: a.id,
+          cliente_nome: a.cliente_nome,
+          data_agendamento: a.data_agendamento,
+          vendedor: a.profiles?.nome || "Desconhecido",
+        })) || []
+      );
+    },
+  });
+
+  const { data: vendasChartData = [] } = useQuery({
+    queryKey: ["vendas-chart", dateRange, selectedVendedor],
+    queryFn: async () => {
+      let query = supabase
+        .from("calls")
+        .select("data_call, resultado")
+        .eq("resultado", "venda")
+        .gte("data_call", dateRange.from?.toISOString().split("T")[0])
+        .lte("data_call", dateRange.to?.toISOString().split("T")[0]);
+
+      if (selectedVendedor !== "todos") {
+        query = query.eq("user_id", selectedVendedor);
+      }
+
+      const { data } = await query;
+
+      const vendasPorDia = data?.reduce((acc: any, call) => {
+        const date = new Date(call.data_call).toLocaleDateString("pt-BR");
+        acc[date] = (acc[date] || 0) + 1;
+        return acc;
+      }, {});
+
+      return Object.entries(vendasPorDia || {}).map(([data, vendas]) => ({
+        data,
+        vendas: vendas as number,
+      }));
+    },
+    enabled: !!user,
+  });
+
+  const getStatusColor = (taxa: number, tipo: "comparecimento" | "conversao") => {
+    if (tipo === "comparecimento") {
+      if (taxa >= 75) return "text-green-500";
+      if (taxa >= 60) return "text-yellow-500";
+      return "text-red-500";
+    } else {
+      if (taxa >= 20) return "text-green-500";
+      if (taxa >= 15) return "text-yellow-500";
+      return "text-red-500";
+    }
+  };
+
+  const getStatusLabel = (taxa: number, tipo: "comparecimento" | "conversao") => {
+    if (tipo === "comparecimento") {
+      if (taxa >= 75) return "🟢 Excelente";
+      if (taxa >= 60) return "🟡 Bom";
+      return "🔴 Precisa Melhorar";
+    } else {
+      if (taxa >= 20) return "🟢 Excelente";
+      if (taxa >= 15) return "🟡 Bom";
+      return "🔴 Precisa Melhorar";
+    }
+  };
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold mb-2">Performance de Calls</h1>
-        <p className="text-muted-foreground">Acompanhe suas métricas de agendamentos e conversão</p>
+        <p className="text-muted-foreground">
+          Acompanhe suas métricas de agendamentos e conversão
+        </p>
       </div>
+
+      <CallsFilters
+        dateRange={dateRange}
+        setDateRange={setDateRange}
+        selectedVendedor={selectedVendedor}
+        setSelectedVendedor={setSelectedVendedor}
+        selectedResultado={selectedResultado}
+        setSelectedResultado={setSelectedResultado}
+        vendedores={vendedores}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Agendamentos"
-          value={agendamentos.toString()}
+          value={metricas?.agendamentos.toString() || "0"}
           icon={Calendar}
         />
         <StatCard
           title="Calls Realizadas"
-          value={callsRealizadas.toString()}
+          value={metricas?.callsRealizadas.toString() || "0"}
           icon={Phone}
         />
-        <StatCard
-          title="Taxa de Comparecimento"
-          value={`${taxaComparecimento}%`}
-          change={8.2}
-          trend="up"
-          icon={Users}
-        />
-        <StatCard
-          title="Taxa de Conversão"
-          value={`${taxaConversao}%`}
-          change={15.3}
-          trend="up"
-          icon={TrendingUp}
-        />
+        <div className="relative">
+          <StatCard
+            title="Taxa de Comparecimento"
+            value={`${metricas?.taxaComparecimento.toFixed(1) || "0.0"}%`}
+            icon={Users}
+          />
+          <div
+            className={`absolute bottom-4 left-4 text-xs font-medium ${getStatusColor(
+              metricas?.taxaComparecimento || 0,
+              "comparecimento"
+            )}`}
+          >
+            {getStatusLabel(metricas?.taxaComparecimento || 0, "comparecimento")}
+          </div>
+        </div>
+        <div className="relative">
+          <StatCard
+            title="Taxa de Conversão"
+            value={`${metricas?.taxaConversao.toFixed(1) || "0.0"}%`}
+            icon={TrendingUp}
+          />
+          <div
+            className={`absolute bottom-4 left-4 text-xs font-medium ${getStatusColor(
+              metricas?.taxaConversao || 0,
+              "conversao"
+            )}`}
+          >
+            {getStatusLabel(metricas?.taxaConversao || 0, "conversao")}
+          </div>
+        </div>
       </div>
 
-      <Card className="border-border/50">
-        <CardHeader>
-          <CardTitle>Funil de Conversão</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span>Agendamentos</span>
-                <span className="font-medium">{agendamentos}</span>
-              </div>
-              <div className="h-4 bg-muted rounded-full overflow-hidden">
-                <div className="h-full bg-blue-500" style={{ width: "100%" }} />
-              </div>
-            </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <CallsFunnel
+          agendamentos={metricas?.agendamentos || 0}
+          callsRealizadas={metricas?.callsRealizadas || 0}
+          vendas={metricas?.vendas || 0}
+          taxaComparecimento={metricas?.taxaComparecimento || 0}
+          taxaConversao={metricas?.taxaConversao || 0}
+        />
+        <VendasChart data={vendasChartData} />
+      </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span>Calls Realizadas</span>
-                <span className="font-medium">{callsRealizadas}</span>
-              </div>
-              <div className="h-4 bg-muted rounded-full overflow-hidden">
-                <div className="h-full bg-yellow-500" style={{ width: `${taxaComparecimento}%` }} />
-              </div>
-            </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <AgendamentoForm onSuccess={refetchMetricas} />
+        <CallForm onSuccess={refetchMetricas} />
+      </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span>Vendas Fechadas</span>
-                <span className="font-medium">{vendas}</span>
-              </div>
-              <div className="h-4 bg-muted rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-primary to-accent" style={{ width: `${taxaConversao}%` }} />
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {isAdmin && <PerformanceTable data={performanceData} />}
 
-      <Card className="border-border/50">
-        <CardHeader>
-          <CardTitle>Registro de Atividades</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-12 text-muted-foreground">
-            <Phone className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Funcionalidade em desenvolvimento</p>
-            <p className="text-sm mt-2">Em breve você poderá registrar agendamentos e calls diretamente aqui</p>
-          </div>
-        </CardContent>
-      </Card>
+      <ProximosAgendamentos
+        agendamentos={proximosAgendamentos}
+        onRegistrarClick={(id) => console.log("Registrar call:", id)}
+      />
     </div>
   );
 };
