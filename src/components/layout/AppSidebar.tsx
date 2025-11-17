@@ -45,8 +45,13 @@ export function AppSidebar() {
 
   const menuItems = isAdmin ? [...baseMenuItems, adminMenuItem] : baseMenuItems;
 
-  const getInitials = (email: string) => {
-    return email.charAt(0).toUpperCase();
+  const getInitials = (nome: string) => {
+    return nome
+      .split(" ")
+      .map(n => n.charAt(0))
+      .join("")
+      .substring(0, 2)
+      .toUpperCase();
   };
 
   return (
@@ -89,6 +94,13 @@ export function AppSidebar() {
                           )}
                         </div>
                       )}
+                      {collapsed && item.highlight && (
+                        <div className="absolute -top-1 -right-1">
+                          <Badge variant="default" className="h-4 w-4 p-0 flex items-center justify-center text-[10px]">
+                            ⭐
+                          </Badge>
+                        </div>
+                      )}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -103,13 +115,22 @@ export function AppSidebar() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="w-full justify-start gap-3 h-auto py-3">
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-primary text-primary-foreground">
-                    {user?.email ? getInitials(user.email) : "U"}
-                  </AvatarFallback>
-                </Avatar>
+                {user?.user_metadata?.avatar_url ? (
+                  <Avatar className="h-8 w-8">
+                    <img src={user.user_metadata.avatar_url} alt="Avatar" className="object-cover" />
+                    <AvatarFallback className="bg-primary text-primary-foreground">
+                      {user?.user_metadata?.nome ? getInitials(user.user_metadata.nome) : "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                ) : (
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="bg-primary text-primary-foreground">
+                      {user?.user_metadata?.nome ? getInitials(user.user_metadata.nome) : "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
                 <div className="flex flex-col items-start text-left flex-1">
-                  <span className="text-sm font-medium">{user?.email}</span>
+                  <span className="text-sm font-medium">{user?.user_metadata?.nome || "Usuário"}</span>
                   {isAdmin && (
                     <Badge variant="secondary" className="text-xs mt-1">
                       👑 Admin
@@ -136,17 +157,26 @@ export function AppSidebar() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="mx-auto">
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-primary text-primary-foreground">
-                    {user?.email ? getInitials(user.email) : "U"}
-                  </AvatarFallback>
-                </Avatar>
+                {user?.user_metadata?.avatar_url ? (
+                  <Avatar className="h-8 w-8">
+                    <img src={user.user_metadata.avatar_url} alt="Avatar" className="object-cover" />
+                    <AvatarFallback className="bg-primary text-primary-foreground">
+                      {user?.user_metadata?.nome ? getInitials(user.user_metadata.nome) : "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                ) : (
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="bg-primary text-primary-foreground">
+                      {user?.user_metadata?.nome ? getInitials(user.user_metadata.nome) : "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>
                 <div className="flex flex-col">
-                  <span>{user?.email}</span>
+                  <span>{user?.user_metadata?.nome || "Usuário"}</span>
                   {isAdmin && (
                     <Badge variant="secondary" className="text-xs mt-1 w-fit">
                       👑 Admin
