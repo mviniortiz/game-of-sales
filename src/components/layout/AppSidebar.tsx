@@ -2,6 +2,7 @@ import { Home, TrendingUp, Trophy, PlusCircle, Target, PhoneCall, Shield } from 
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import logo from "@/assets/logo.png";
 import {
   Sidebar,
   SidebarContent,
@@ -37,20 +38,16 @@ export function AppSidebar() {
       <SidebarContent>
         <div className="p-6 border-b border-border/50">
           {!collapsed && (
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-primary-foreground" />
-              </div>
+            <div className="flex items-center gap-3">
+              <img src={logo} alt="Rota de Negócios" className="w-12 h-12 object-contain" />
               <div>
-                <h1 className="font-bold text-lg">SalesForce</h1>
-                <p className="text-xs text-muted-foreground">Pro Edition</p>
+                <h1 className="font-bold text-lg">Rota de Negócios</h1>
+                <p className="text-xs text-muted-foreground">Sistema de Vendas</p>
               </div>
             </div>
           )}
           {collapsed && (
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center mx-auto">
-              <TrendingUp className="w-6 h-6 text-primary-foreground" />
-            </div>
+            <img src={logo} alt="Rota de Negócios" className="w-10 h-10 object-contain mx-auto" />
           )}
         </div>
 

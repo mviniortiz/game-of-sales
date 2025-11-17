@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Trophy, TrendingUp } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 import { z } from "zod";
+import logo from "@/assets/logo.png";
 
 const authSchema = z.object({
   email: z.string().email("Email inválido").max(255, "Email muito longo"),
@@ -80,11 +81,11 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-secondary p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
-            <Trophy className="w-8 h-8 text-primary" />
+          <div className="inline-flex items-center justify-center mb-4">
+            <img src={logo} alt="Rota de Negócios" className="w-24 h-24 object-contain" />
           </div>
           <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            SalesForce Pro
+            Rota de Negócios
           </h1>
           <p className="text-muted-foreground flex items-center justify-center gap-2">
             <TrendingUp className="w-4 h-4" />
