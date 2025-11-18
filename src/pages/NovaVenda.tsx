@@ -8,9 +8,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, CalendarIcon } from "lucide-react";
 import { z } from "zod";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 const vendaSchema = z.object({
   clienteNome: z.string().trim().min(1, "Nome do cliente é obrigatório").max(200, "Nome muito longo"),
@@ -39,7 +44,7 @@ const NovaVenda = () => {
   const [status, setStatus] = useState("Aprovado");
   const [vendedorId, setVendedorId] = useState("");
   const [observacoes, setObservacoes] = useState("");
-  const [dataVenda, setDataVenda] = useState(new Date().toISOString().split("T")[0]);
+  const [dataVenda, setDataVenda] = useState<Date>(new Date());
 
   const { data: produtos } = useQuery({
     queryKey: ["produtos"],
@@ -94,7 +99,7 @@ const NovaVenda = () => {
       setStatus("Aprovado");
       setVendedorId("");
       setObservacoes("");
-      setDataVenda(new Date().toISOString().split("T")[0]);
+      setDataVenda(new Date());
     },
     onError: (error: any) => {
       toast.error(`Erro ao registrar venda: ${error.message}`);
@@ -122,7 +127,7 @@ const NovaVenda = () => {
       plataforma,
       status,
       observacoes,
-      dataVenda
+      dataVenda: format(dataVenda, "yyyy-MM-dd")
     });
 
     if (!validationResult.success) {
@@ -169,13 +174,29 @@ const NovaVenda = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="data">Data da Venda</Label>
-              <Input
-                id="data"
-                type="date"
-                value={dataVenda}
-                onChange={(e) => setDataVenda(e.target.value)}
-                required
-              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !dataVenda && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dataVenda ? format(dataVenda, "PPP", { locale: ptBR }) : <span>Selecione a data</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={dataVenda}
+                    onSelect={(date) => date && setDataVenda(date)}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
 
             <div className="space-y-2">
