@@ -19,27 +19,36 @@ export type Database = {
           cliente_nome: string
           created_at: string
           data_agendamento: string
+          google_event_id: string | null
           id: string
+          last_synced_at: string | null
           observacoes: string | null
           status: Database["public"]["Enums"]["appointment_status"]
+          synced_with_google: boolean | null
           user_id: string
         }
         Insert: {
           cliente_nome: string
           created_at?: string
           data_agendamento: string
+          google_event_id?: string | null
           id?: string
+          last_synced_at?: string | null
           observacoes?: string | null
           status?: Database["public"]["Enums"]["appointment_status"]
+          synced_with_google?: boolean | null
           user_id: string
         }
         Update: {
           cliente_nome?: string
           created_at?: string
           data_agendamento?: string
+          google_event_id?: string | null
           id?: string
+          last_synced_at?: string | null
           observacoes?: string | null
           status?: Database["public"]["Enums"]["appointment_status"]
+          synced_with_google?: boolean | null
           user_id?: string
         }
         Relationships: [
@@ -194,6 +203,10 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           email: string
+          google_access_token: string | null
+          google_calendar_id: string | null
+          google_refresh_token: string | null
+          google_token_expires_at: string | null
           id: string
           nivel: Database["public"]["Enums"]["user_level"]
           nome: string
@@ -204,6 +217,10 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           email: string
+          google_access_token?: string | null
+          google_calendar_id?: string | null
+          google_refresh_token?: string | null
+          google_token_expires_at?: string | null
           id: string
           nivel?: Database["public"]["Enums"]["user_level"]
           nome: string
@@ -214,6 +231,10 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           email?: string
+          google_access_token?: string | null
+          google_calendar_id?: string | null
+          google_refresh_token?: string | null
+          google_token_expires_at?: string | null
           id?: string
           nivel?: Database["public"]["Enums"]["user_level"]
           nome?: string
@@ -221,6 +242,50 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      sync_logs: {
+        Row: {
+          action: string
+          error_message: string | null
+          google_event_id: string | null
+          id: string
+          resource_id: string | null
+          resource_type: string
+          success: boolean
+          synced_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          error_message?: string | null
+          google_event_id?: string | null
+          id?: string
+          resource_id?: string | null
+          resource_type: string
+          success: boolean
+          synced_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          error_message?: string | null
+          google_event_id?: string | null
+          id?: string
+          resource_id?: string | null
+          resource_type?: string
+          success?: boolean
+          synced_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sync_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_conquistas: {
         Row: {
@@ -364,6 +429,10 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { user_id: string }; Returns: boolean }
+      is_google_token_expired: {
+        Args: { check_user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "vendedor" | "admin"
