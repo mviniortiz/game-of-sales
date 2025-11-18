@@ -56,6 +56,13 @@ export type Database = {
             foreignKeyName: "agendamentos_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "contribuicao_vendedores"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "agendamentos_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -99,6 +106,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "agendamentos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calls_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "contribuicao_vendedores"
+            referencedColumns: ["user_id"]
           },
           {
             foreignKeyName: "calls_user_id_fkey"
@@ -166,10 +180,44 @@ export type Database = {
             foreignKeyName: "metas_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "contribuicao_vendedores"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "metas_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
+      }
+      metas_consolidadas: {
+        Row: {
+          created_at: string | null
+          descricao: string | null
+          id: string
+          mes_referencia: string
+          produto_alvo: string | null
+          valor_meta: number
+        }
+        Insert: {
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          mes_referencia: string
+          produto_alvo?: string | null
+          valor_meta: number
+        }
+        Update: {
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          mes_referencia?: string
+          produto_alvo?: string | null
+          valor_meta?: number
+        }
+        Relationships: []
       }
       produtos: {
         Row: {
@@ -282,6 +330,13 @@ export type Database = {
             foreignKeyName: "sync_logs_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "contribuicao_vendedores"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "sync_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -313,6 +368,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "conquistas"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_conquistas_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "contribuicao_vendedores"
+            referencedColumns: ["user_id"]
           },
           {
             foreignKeyName: "user_conquistas_user_id_fkey"
@@ -399,6 +461,13 @@ export type Database = {
             foreignKeyName: "vendas_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "contribuicao_vendedores"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "vendas_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -406,7 +475,21 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      contribuicao_vendedores: {
+        Row: {
+          avatar_url: string | null
+          contribuicao: number | null
+          mes_referencia: string | null
+          meta_total: number | null
+          nivel: Database["public"]["Enums"]["user_level"] | null
+          nome: string | null
+          percentual_contribuicao: number | null
+          pontos: number | null
+          posicao_ranking: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       get_public_profiles: {
