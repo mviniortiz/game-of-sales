@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useGoogleLogin } from "@react-oauth/google";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -29,35 +28,11 @@ export const GoogleCalendarConnect = () => {
     setLoading(false);
   };
 
-  const login = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      try {
-        const expiresAt = new Date(
-          Date.now() + tokenResponse.expires_in * 1000
-        );
-
-        await supabase
-          .from("profiles")
-          .update({
-            google_access_token: tokenResponse.access_token,
-            google_token_expires_at: expiresAt.toISOString(),
-          })
-          .eq("id", user!.id);
-
-        setIsConnected(true);
-        toast.success("Conectado ao Google Calendar!");
-
-        // Sincronizar eventos existentes
-        await syncAllEvents();
-      } catch (error) {
-        console.error("Error connecting to Google:", error);
-        toast.error("Erro ao conectar com Google Calendar");
-      }
-    },
-    scope:
-      "https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events",
-    flow: "implicit",
-  });
+  const handleConnect = () => {
+    toast.info(
+      "Para conectar ao Google Calendar, configure o OAuth no backend e implemente o fluxo de autenticação."
+    );
+  };
 
   const syncAllEvents = async () => {
     try {
@@ -122,7 +97,7 @@ export const GoogleCalendarConnect = () => {
                 </p>
               </div>
             </div>
-            <Button onClick={() => login()} variant="outline" size="sm">
+            <Button onClick={handleConnect} variant="outline" size="sm">
               Conectar
             </Button>
           </div>
