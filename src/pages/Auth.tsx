@@ -148,17 +148,28 @@ const Auth = () => {
               </Button>
             </form>
 
-            <div className="mt-4 text-center text-sm">
+            <div className="mt-4 text-center text-sm space-y-2">
               <button
                 type="button"
                 onClick={() => setIsLogin(!isLogin)}
-                className="text-primary hover:underline"
+                className="text-primary hover:underline block w-full"
                 disabled={loading}
               >
                 {isLogin
                   ? "Não tem uma conta? Cadastre-se"
                   : "Já tem uma conta? Faça login"}
               </button>
+              
+              {isLogin && (
+                <button
+                  type="button"
+                  onClick={() => window.location.href = "/recuperar-senha"}
+                  className="text-muted-foreground hover:text-primary transition-colors block w-full"
+                  disabled={loading}
+                >
+                  Esqueceu sua senha?
+                </button>
+              )}
             </div>
           </CardContent>
         </Card>
