@@ -1,4 +1,4 @@
-import { Home, TrendingUp, Trophy, PlusCircle, Target, PhoneCall, Shield, LogOut, User, Zap } from "lucide-react";
+import { Home, Trophy, PlusCircle, Target, PhoneCall, Shield, LogOut, User, Zap } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -33,7 +33,6 @@ const baseMenuItems = [
   { title: "Ranking", url: "/ranking", icon: Trophy, highlight: false },
   { title: "Registrar Venda", url: "/nova-venda", icon: PlusCircle, highlight: true },
   { title: "Metas", url: "/metas", icon: Target, highlight: false },
-  { title: "Metas Consolidadas", url: "/metas-consolidadas", icon: TrendingUp, highlight: false },
   { title: "Integrações", url: "/integracoes", icon: Zap, highlight: false },
 ];
 
