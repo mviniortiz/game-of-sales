@@ -48,10 +48,21 @@ export const DistribuicaoProdutosChart = ({ data }: DistribuicaoProdutosChartPro
             </Pie>
             <Tooltip
               contentStyle={{ 
-                backgroundColor: 'hsl(var(--background))',
+                backgroundColor: 'hsl(var(--popover))',
                 border: '1px solid hsl(var(--border))',
                 borderRadius: '8px',
-                color: 'hsl(var(--foreground))'
+                color: 'hsl(var(--popover-foreground))',
+                padding: '12px',
+                boxShadow: '0 4px 12px hsl(var(--border) / 0.3)'
+              }}
+              labelStyle={{
+                color: 'hsl(var(--popover-foreground))',
+                fontWeight: 600,
+                marginBottom: '4px'
+              }}
+              itemStyle={{
+                color: 'hsl(var(--popover-foreground))',
+                padding: '4px 0'
               }}
               formatter={(value: number, name: string, props: any) => {
                 if (name === 'valor') {

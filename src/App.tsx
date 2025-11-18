@@ -14,6 +14,7 @@ import Calls from "./pages/Calls";
 import Metas from "./pages/Metas";
 import MetasConsolidadas from "./pages/MetasConsolidadas";
 import Admin from "./pages/Admin";
+import Integracoes from "./pages/Integracoes";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -93,6 +94,16 @@ const App = () => (
                 <ProtectedRoute>
                   <AppLayout>
                     <Admin />
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/integracoes"
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <Integracoes />
                   </AppLayout>
                 </ProtectedRoute>
               }

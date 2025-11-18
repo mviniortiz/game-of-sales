@@ -6,76 +6,122 @@
 .rbc-header {
   color: hsl(var(--foreground));
   font-weight: 600;
-  padding: 12px;
-  border-bottom: 1px solid hsl(var(--border));
+  padding: 16px;
+  border-bottom: 2px solid hsl(var(--border));
+  background: hsl(var(--card) / 0.5);
+  backdrop-filter: blur(8px);
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
 }
 
 .rbc-today {
-  background-color: hsl(var(--accent) / 0.2);
+  background: linear-gradient(135deg, hsl(var(--primary) / 0.1), hsl(var(--accent) / 0.1));
 }
 
 .rbc-off-range-bg {
-  background: hsl(var(--muted) / 0.1);
+  background: hsl(var(--muted) / 0.05);
+}
+
+.rbc-date-cell {
+  padding: 8px;
+  font-weight: 500;
 }
 
 .rbc-event {
-  padding: 4px 8px;
+  padding: 6px 10px;
   font-size: 0.875rem;
-  border-radius: 4px;
+  border-radius: 6px;
+  border: none;
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.8));
+  box-shadow: 0 2px 8px hsl(var(--primary) / 0.3);
+  transition: all 0.2s ease;
 }
 
 .rbc-event:hover {
-  opacity: 0.8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px hsl(var(--primary) / 0.4);
+}
+
+.rbc-event.rbc-selected {
+  background: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--accent) / 0.8));
 }
 
 .rbc-toolbar {
-  margin-bottom: 16px;
+  margin-bottom: 24px;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 12px;
+  padding: 16px;
+  background: hsl(var(--card) / 0.5);
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+  border: 1px solid hsl(var(--border));
 }
 
 .rbc-toolbar button {
   color: hsl(var(--foreground));
   background: hsl(var(--background));
   border: 1px solid hsl(var(--border));
-  padding: 6px 12px;
-  border-radius: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
   font-size: 0.875rem;
-  transition: all 0.2s;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px hsl(var(--border) / 0.1);
 }
 
 .rbc-toolbar button:hover {
   background: hsl(var(--accent));
+  border-color: hsl(var(--accent));
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px hsl(var(--border) / 0.2);
 }
 
 .rbc-toolbar button.rbc-active {
   background: hsl(var(--primary));
   color: hsl(var(--primary-foreground));
   border-color: hsl(var(--primary));
+  box-shadow: 0 2px 8px hsl(var(--primary) / 0.3);
+}
+
+.rbc-toolbar-label {
+  font-weight: 600;
+  font-size: 1.125rem;
+  color: hsl(var(--foreground));
 }
 
 .rbc-month-view,
 .rbc-time-view,
 .rbc-agenda-view {
   border: 1px solid hsl(var(--border));
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
   background: hsl(var(--card));
+  box-shadow: 0 4px 12px hsl(var(--border) / 0.1);
 }
 
-.rbc-day-bg,
+.rbc-day-bg {
+  border-color: hsl(var(--border) / 0.5);
+  transition: background 0.2s ease;
+}
+
+.rbc-day-bg:hover {
+  background: hsl(var(--accent) / 0.05);
+}
+
 .rbc-month-row {
-  border-color: hsl(var(--border));
+  border-color: hsl(var(--border) / 0.5);
 }
 
 .rbc-time-slot {
-  border-color: hsl(var(--border));
+  border-color: hsl(var(--border) / 0.3);
   color: hsl(var(--muted-foreground));
 }
 
 .rbc-current-time-indicator {
   background-color: hsl(var(--primary));
+  height: 2px;
 }
 
 .rbc-agenda-table {
@@ -85,8 +131,22 @@
 .rbc-agenda-date-cell,
 .rbc-agenda-time-cell {
   color: hsl(var(--muted-foreground));
+  padding: 12px;
 }
 
 .rbc-agenda-event-cell {
   color: hsl(var(--foreground));
+  padding: 12px;
+}
+
+.rbc-show-more {
+  color: hsl(var(--primary));
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.rbc-show-more:hover {
+  background: hsl(var(--primary) / 0.1);
 }
