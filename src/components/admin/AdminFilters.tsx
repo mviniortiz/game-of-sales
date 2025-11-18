@@ -49,7 +49,7 @@ export const AdminFilters = ({
 
   return (
     <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-      <CardContent className="p-4">
+      <CardContent className="p-3">
         <div className="flex items-center gap-2 mb-4">
           <Filter className="h-5 w-5 text-primary" />
           <h3 className="text-lg font-semibold">Filtros Globais</h3>

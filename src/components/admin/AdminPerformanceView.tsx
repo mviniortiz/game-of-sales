@@ -5,6 +5,8 @@ import { Calendar, Phone, TrendingUp, Users } from "lucide-react";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { CallsFunnel } from "@/components/calls/CallsFunnel";
 import { PerformanceTable } from "@/components/calls/PerformanceTable";
+import { CalendarioAgendamentos } from "@/components/calendar/CalendarioAgendamentos";
+import { GoogleCalendarConnect } from "@/components/calendar/GoogleCalendarConnect";
 
 interface AdminPerformanceViewProps {
   dateRange: { from?: Date; to?: Date };
@@ -165,6 +167,8 @@ export const AdminPerformanceView = ({ dateRange, selectedVendedor }: AdminPerfo
 
   return (
     <div className="space-y-6">
+      {/* Google Calendar Connection */}
+      <GoogleCalendarConnect />
       {/* Cards de métricas */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="animate-fade-in" style={{ animationDelay: "0ms" }}>
@@ -223,6 +227,9 @@ export const AdminPerformanceView = ({ dateRange, selectedVendedor }: AdminPerfo
           taxaConversao={metricas?.taxaConversao || 0}
         />
       </div>
+
+      {/* Calendário */}
+      <CalendarioAgendamentos />
 
       {/* Tabela de performance */}
       <PerformanceTable data={performanceData} />
