@@ -20,17 +20,17 @@ export const StatCard = ({ title, value, change, icon: Icon, trend }: StatCardPr
           </div>
           {change !== undefined && (
             <div className={cn(
-              "flex items-center gap-1 text-sm font-medium",
+              "flex items-center gap-1.5 text-sm font-medium shrink-0",
               trend === "up" ? "text-success" : "text-destructive"
             )}>
               {trend === "up" ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
-              {Math.abs(change)}%
+              <span>{Math.abs(change)}%</span>
             </div>
           )}
         </div>
-        <div>
-          <p className="text-sm text-muted-foreground mb-1">{title}</p>
-          <p className="text-2xl font-bold">{value}</p>
+        <div className="space-y-1">
+          <p className="text-sm text-muted-foreground leading-tight">{title}</p>
+          <p className="text-2xl font-bold break-words">{value}</p>
         </div>
       </CardContent>
     </Card>
