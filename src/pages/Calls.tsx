@@ -149,29 +149,6 @@ const Calls = () => {
     },
   });
 
-  const getStatusColor = (taxa: number, tipo: "comparecimento" | "conversao") => {
-    if (tipo === "comparecimento") {
-      if (taxa >= 75) return "text-green-500";
-      if (taxa >= 60) return "text-yellow-500";
-      return "text-red-500";
-    } else {
-      if (taxa >= 20) return "text-green-500";
-      if (taxa >= 15) return "text-yellow-500";
-      return "text-red-500";
-    }
-  };
-
-  const getStatusLabel = (taxa: number, tipo: "comparecimento" | "conversao") => {
-    if (tipo === "comparecimento") {
-      if (taxa >= 75) return "Excelente";
-      if (taxa >= 60) return "Bom";
-      return "Precisa Melhorar";
-    } else {
-      if (taxa >= 20) return "Excelente";
-      if (taxa >= 15) return "Bom";
-      return "Precisa Melhorar";
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -207,35 +184,19 @@ const Calls = () => {
             icon={Phone}
           />
         </div>
-        <div className="relative animate-fade-in" style={{ animationDelay: "200ms" }}>
+        <div className="animate-fade-in" style={{ animationDelay: "200ms" }}>
           <StatCard
             title="Taxa de Comparecimento"
             value={`${metricas?.taxaComparecimento.toFixed(1) || "0.0"}%`}
             icon={Users}
           />
-          <div
-            className={`absolute bottom-6 left-6 text-xs font-medium ${getStatusColor(
-              metricas?.taxaComparecimento || 0,
-              "comparecimento"
-            )}`}
-          >
-            {getStatusLabel(metricas?.taxaComparecimento || 0, "comparecimento")}
-          </div>
         </div>
-        <div className="relative animate-fade-in" style={{ animationDelay: "300ms" }}>
+        <div className="animate-fade-in" style={{ animationDelay: "300ms" }}>
           <StatCard
             title="Taxa de Conversão"
             value={`${metricas?.taxaConversao.toFixed(1) || "0.0"}%`}
             icon={TrendingUp}
           />
-          <div
-            className={`absolute bottom-6 left-6 text-xs font-medium ${getStatusColor(
-              metricas?.taxaConversao || 0,
-              "conversao"
-            )}`}
-          >
-            {getStatusLabel(metricas?.taxaConversao || 0, "conversao")}
-          </div>
         </div>
       </div>
 
