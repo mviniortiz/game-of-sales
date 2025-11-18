@@ -1,5 +1,4 @@
 import { GoogleCalendarConnect } from "@/components/calendar/GoogleCalendarConnect";
-import { WhatsAppConnect } from "@/components/integrations/WhatsAppConnect";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Settings, Calendar as CalendarIcon } from "lucide-react";
 
@@ -36,14 +35,6 @@ const Integracoes = () => {
             Calendário
           </h2>
           <GoogleCalendarConnect />
-        </div>
-
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold flex items-center gap-2">
-            <Settings className="h-5 w-5" />
-            Comunicação
-          </h2>
-          <WhatsAppConnect />
         </div>
 
         <Card className="border-border/50 bg-card/50 backdrop-blur-sm border-dashed">
