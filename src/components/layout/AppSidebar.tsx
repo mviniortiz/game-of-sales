@@ -33,6 +33,7 @@ const baseMenuItems = [
   { title: "Ranking", url: "/ranking", icon: Trophy, highlight: false },
   { title: "Registrar Venda", url: "/nova-venda", icon: PlusCircle, highlight: true },
   { title: "Metas", url: "/metas", icon: Target, highlight: false },
+  { title: "Metas Consolidadas", url: "/metas-consolidadas", icon: TrendingUp, highlight: false },
 ];
 
 const adminMenuItem = { title: "Administração", url: "/admin", icon: Shield, highlight: false };
