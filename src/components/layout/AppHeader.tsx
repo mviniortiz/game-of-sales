@@ -1,7 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { LogOut, User } from "lucide-react";
+import { LogOut, User, Camera } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,11 +10,80 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { OnboardingButton } from "@/components/onboarding/OnboardingButton";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useState, useEffect, useRef } from "react";
 
 export const AppHeader = () => {
   const { user, isAdmin, signOut } = useAuth();
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (user?.id) {
+      loadAvatar();
+    }
+  }, [user?.id]);
+
+  const loadAvatar = async () => {
+    if (!user?.id) return;
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("avatar_url")
+      .eq("id", user.id)
+      .single();
+
+    if (profile?.avatar_url) {
+      setAvatarUrl(profile.avatar_url);
+    }
+  };
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      setUploading(true);
+
+      if (!event.target.files || event.target.files.length === 0) {
+        return;
+      }
+
+      const file = event.target.files[0];
+      const fileExt = file.name.split(".").pop();
+      const filePath = `${user?.id}-${Math.random()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(filePath);
+
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: publicUrl })
+        .eq("id", user?.id);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      setAvatarUrl(publicUrl);
+      toast.success("Foto de perfil atualizada com sucesso!");
+    } catch (error) {
+      console.error("Error uploading avatar:", error);
+      toast.error("Erro ao fazer upload da foto");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const getUserInitials = () => {
     if (!user?.email) return "U";
@@ -36,6 +105,7 @@ export const AppHeader = () => {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 rounded-full px-4 gap-2">
               <Avatar className="h-10 w-10 border-2 border-primary/20">
+                {avatarUrl && <AvatarImage src={avatarUrl} alt="Avatar" />}
                 <AvatarFallback className="bg-primary/10 text-primary">
                   {getUserInitials()}
                 </AvatarFallback>
@@ -60,6 +130,20 @@ export const AppHeader = () => {
               <User className="mr-2 h-4 w-4" />
               <span>Perfil</span>
             </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+            >
+              <Camera className="mr-2 h-4 w-4" />
+              <span>{uploading ? "Enviando..." : "Alterar Foto"}</span>
+            </DropdownMenuItem>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleAvatarUpload}
+              className="hidden"
+            />
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={signOut} className="text-destructive">
               <LogOut className="mr-2 h-4 w-4" />
