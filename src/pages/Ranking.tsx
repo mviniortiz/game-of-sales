@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MetaConsolidadaCard } from "@/components/metas/MetaConsolidadaCard";
 import { RankingPodium } from "@/components/metas/RankingPodium";
+import { RankingEvolutionChart } from "@/components/metas/RankingEvolutionChart";
 import { Badge } from "@/components/ui/badge";
 import { Target } from "lucide-react";
 
@@ -113,6 +114,8 @@ const Ranking = () => {
             />
 
             <RankingPodium vendedores={contribuicoes} />
+
+            <RankingEvolutionChart vendedores={contribuicoes} />
 
             {restanteVendedores.length > 0 && (
               <Card className="border-border/50">
