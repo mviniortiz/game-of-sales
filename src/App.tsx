@@ -15,6 +15,7 @@ import Metas from "./pages/Metas";
 import Admin from "./pages/Admin";
 import Integracoes from "./pages/Integracoes";
 import Calendario from "./pages/Calendario";
+import RecuperarSenha from "./pages/RecuperarSenha";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
@@ -28,9 +29,10 @@ const App = () => (
           <Toaster />
           <Sonner />
           <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route
-              path="/"
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/recuperar-senha" element={<RecuperarSenha />} />
+        <Route
+          path="/"
               element={
                 <ProtectedRoute>
                   <AppLayout>
