@@ -1,4 +1,4 @@
-import { Home, Trophy, PlusCircle, Target, PhoneCall, Shield, LogOut, User, Settings } from "lucide-react";
+import { Home, Trophy, PlusCircle, Target, PhoneCall, Shield, LogOut, User, Settings, Calendar } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,6 +30,7 @@ import { Badge } from "@/components/ui/badge";
 const baseMenuItems = [
   { title: "Dashboard", url: "/", icon: Home, highlight: false },
   { title: "Performance de Calls", url: "/calls", icon: PhoneCall, highlight: false },
+  { title: "Calendário", url: "/calendario", icon: Calendar, highlight: false },
   { title: "Ranking", url: "/ranking", icon: Trophy, highlight: false },
   { title: "Registrar Venda", url: "/nova-venda", icon: PlusCircle, highlight: true },
   { title: "Metas", url: "/metas", icon: Target, highlight: false },

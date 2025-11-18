@@ -14,6 +14,7 @@ import Calls from "./pages/Calls";
 import Metas from "./pages/Metas";
 import Admin from "./pages/Admin";
 import Integracoes from "./pages/Integracoes";
+import Calendario from "./pages/Calendario";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
@@ -95,6 +96,14 @@ const App = () => (
                   <AppLayout>
                     <Integracoes />
                   </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/calendario"
+              element={
+                <ProtectedRoute>
+                  <Calendario />
                 </ProtectedRoute>
               }
             />
