@@ -1,7 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { LogOut, User, Camera } from "lucide-react";
+import { LogOut, User, Camera, UserCog, Shield } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,9 +15,11 @@ import { OnboardingButton } from "@/components/onboarding/OnboardingButton";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 
 export const AppHeader = () => {
   const { user, isAdmin, signOut } = useAuth();
+  const navigate = useNavigate();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -123,12 +125,18 @@ export const AppHeader = () => {
                 <p className="text-xs leading-none text-muted-foreground">
                   {user?.email}
                 </p>
+                {isAdmin && (
+                  <div className="flex items-center gap-1 text-xs text-primary mt-1">
+                    <Shield className="h-3 w-3" />
+                    <span>Admin</span>
+                  </div>
+                )}
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <User className="mr-2 h-4 w-4" />
-              <span>Perfil</span>
+            <DropdownMenuItem onClick={() => navigate("/profile")}>
+              <UserCog className="mr-2 h-4 w-4" />
+              <span>Meu Perfil</span>
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => fileInputRef.current?.click()}
