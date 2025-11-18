@@ -1,22 +1,18 @@
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MetaConsolidadaCard } from "@/components/metas/MetaConsolidadaCard";
 import { RankingPodium } from "@/components/metas/RankingPodium";
-import { DefinirMetaConsolidadaForm } from "@/components/metas/DefinirMetaConsolidadaForm";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Target } from "lucide-react";
 
 const Ranking = () => {
   const { isAdmin } = useAuth();
-  const [refreshKey, setRefreshKey] = useState(0);
 
   // Buscar meta consolidada do mês atual
   const { data: metaAtual } = useQuery({
-    queryKey: ["meta-consolidada-atual", refreshKey],
+    queryKey: ["meta-consolidada-atual"],
     queryFn: async () => {
       const hoje = new Date();
       const mesReferencia = `${hoje.getFullYear()}-${String(
@@ -36,7 +32,7 @@ const Ranking = () => {
 
   // Buscar contribuições dos vendedores
   const { data: contribuicoes = [] } = useQuery({
-    queryKey: ["contribuicao-vendedores", refreshKey],
+    queryKey: ["contribuicao-vendedores"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("contribuicao_vendedores")
@@ -106,142 +102,73 @@ const Ranking = () => {
         </div>
       </div>
 
-      {isAdmin ? (
-        <Tabs defaultValue="ranking" className="w-full">
-          <TabsList>
-            <TabsTrigger value="ranking">Ranking</TabsTrigger>
-            <TabsTrigger value="definir">Definir Meta</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="ranking" className="space-y-6">
-            {metaAtual ? (
-              <>
-                <MetaConsolidadaCard
-                  metaTotal={Number(metaAtual.valor_meta)}
-                  valorAtingido={valorAtingido}
-                  diasRestantes={diasRestantes}
-                  descricao={metaAtual.descricao || undefined}
-                />
-
-                <RankingPodium vendedores={contribuicoes} />
-
-                {restanteVendedores.length > 0 && (
-                  <Card className="border-border/50">
-                    <CardHeader>
-                      <CardTitle>Classificação Geral</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        {restanteVendedores.map((vendedor, index) => (
-                          <div 
-                            key={vendedor.user_id}
-                            className="flex items-center justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
-                          >
-                            <div className="flex items-center gap-4">
-                              <span className="text-2xl font-bold text-muted-foreground w-8">
-                                #{index + 4}
-                              </span>
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <p className="font-medium">{vendedor.nome}</p>
-                                  <Badge className={`${getNivelColor(vendedor.nivel || 'Bronze')} text-white text-xs`}>
-                                    {vendedor.nivel || 'Bronze'}
-                                  </Badge>
-                                </div>
-                                <p className="text-sm text-muted-foreground">
-                                  R$ {Number(vendedor.contribuicao || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-xl font-bold text-primary">
-                                {Number(vendedor.percentual_contribuicao || 0).toFixed(1)}%
-                              </p>
-                              <p className="text-xs text-muted-foreground">da meta</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-              </>
-            ) : (
-              <div className="text-center py-12">
-                <Target className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <h2 className="text-2xl font-bold text-foreground mb-2">
-                  Nenhuma Meta Definida
-                </h2>
-                <p className="text-muted-foreground">
-                  Defina uma meta consolidada para começar a acompanhar o progresso da equipe.
-                </p>
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="definir" className="space-y-6">
-            <DefinirMetaConsolidadaForm
-              onSuccess={() => setRefreshKey((prev) => prev + 1)}
+      <div className="space-y-6">
+        {metaAtual ? (
+          <>
+            <MetaConsolidadaCard
+              metaTotal={Number(metaAtual.valor_meta)}
+              valorAtingido={valorAtingido}
+              diasRestantes={diasRestantes}
+              descricao={metaAtual.descricao || undefined}
             />
-          </TabsContent>
-        </Tabs>
-      ) : (
-        <div className="space-y-6">
-          {metaAtual && (
-            <>
-              <MetaConsolidadaCard
-                metaTotal={Number(metaAtual.valor_meta)}
-                valorAtingido={valorAtingido}
-                diasRestantes={diasRestantes}
-                descricao={metaAtual.descricao || undefined}
-              />
 
-              <RankingPodium vendedores={contribuicoes} />
+            <RankingPodium vendedores={contribuicoes} />
 
-              {restanteVendedores.length > 0 && (
-                <Card className="border-border/50">
-                  <CardHeader>
-                    <CardTitle>Classificação Geral</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {restanteVendedores.map((vendedor, index) => (
-                        <div 
-                          key={vendedor.user_id}
-                          className="flex items-center justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
-                        >
-                          <div className="flex items-center gap-4">
-                            <span className="text-2xl font-bold text-muted-foreground w-8">
-                              #{index + 4}
-                            </span>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <p className="font-medium">{vendedor.nome}</p>
-                                <Badge className={`${getNivelColor(vendedor.nivel || 'Bronze')} text-white text-xs`}>
-                                  {vendedor.nivel || 'Bronze'}
-                                </Badge>
-                              </div>
-                              <p className="text-sm text-muted-foreground">
-                                R$ {Number(vendedor.contribuicao || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                              </p>
+            {restanteVendedores.length > 0 && (
+              <Card className="border-border/50">
+                <CardHeader>
+                  <CardTitle>Classificação Geral</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {restanteVendedores.map((vendedor, index) => (
+                      <div 
+                        key={vendedor.user_id}
+                        className="flex items-center justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="flex items-center gap-4">
+                          <span className="text-2xl font-bold text-muted-foreground w-8">
+                            #{index + 4}
+                          </span>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium">{vendedor.nome}</p>
+                              <Badge className={`${getNivelColor(vendedor.nivel || 'Bronze')} text-white text-xs`}>
+                                {vendedor.nivel || 'Bronze'}
+                              </Badge>
                             </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-xl font-bold text-primary">
-                              {Number(vendedor.percentual_contribuicao || 0).toFixed(1)}%
+                            <p className="text-sm text-muted-foreground">
+                              R$ {Number(vendedor.contribuicao || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                             </p>
-                            <p className="text-xs text-muted-foreground">da meta</p>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </>
-          )}
-        </div>
-      )}
+                        <div className="text-right">
+                          <p className="text-xl font-bold text-primary">
+                            {Number(vendedor.percentual_contribuicao || 0).toFixed(1)}%
+                          </p>
+                          <p className="text-xs text-muted-foreground">da meta</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </>
+        ) : (
+          <div className="text-center py-12">
+            <Target className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-foreground mb-2">
+              Nenhuma Meta Definida
+            </h2>
+            <p className="text-muted-foreground">
+              {isAdmin 
+                ? "Defina uma meta consolidada na página de Metas para começar a acompanhar o progresso da equipe."
+                : "Aguarde o administrador definir a meta consolidada do mês."}
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
