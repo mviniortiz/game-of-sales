@@ -94,6 +94,46 @@ serve(async (req) => {
       success: true,
     });
 
+    // Registrar webhook para sincronização bidirecional
+    try {
+      const webhookUrl = `${FRONTEND_URL}/functions/v1/google-calendar-webhook`;
+      
+      const watchResponse = await fetch(
+        `https://www.googleapis.com/calendar/v3/calendars/primary/events/watch`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${tokens.access_token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: calendarData.id, // usar calendar ID como channel ID
+            type: "web_hook",
+            address: webhookUrl,
+            token: userId,
+          }),
+        }
+      );
+
+      if (watchResponse.ok) {
+        const watchData = await watchResponse.json();
+        console.log("[Google OAuth Callback] Webhook registered:", watchData);
+        
+        // Salvar informações do webhook
+        await supabase.from("sync_logs").insert({
+          user_id: userId,
+          action: "webhook_registered",
+          resource_type: "google_calendar",
+          success: true,
+        });
+      } else {
+        console.error("[Google OAuth Callback] Failed to register webhook:", await watchResponse.text());
+      }
+    } catch (webhookError) {
+      console.error("[Google OAuth Callback] Webhook registration error:", webhookError);
+      // Não falhar a conexão se o webhook falhar
+    }
+
     console.log("[Google OAuth Callback] Successfully connected user:", userId);
 
     // Redirecionar de volta para a página de integrações
