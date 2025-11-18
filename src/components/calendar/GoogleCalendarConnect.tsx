@@ -13,7 +13,28 @@ export const GoogleCalendarConnect = () => {
 
   useEffect(() => {
     checkConnection();
+    checkUrlParams();
   }, [user]);
+
+  const checkUrlParams = () => {
+    const params = new URLSearchParams(window.location.search);
+    const success = params.get("success");
+    const error = params.get("error");
+
+    if (success === "true") {
+      toast.success("Google Calendar conectado com sucesso!");
+      // Limpar parâmetros da URL
+      window.history.replaceState({}, "", window.location.pathname);
+      checkConnection();
+    } else if (error) {
+      const errorMessages: Record<string, string> = {
+        auth_failed: "Autorização cancelada",
+        connection_failed: "Erro ao conectar ao Google Calendar",
+      };
+      toast.error(errorMessages[error] || "Erro na conexão");
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  };
 
   const checkConnection = async () => {
     if (!user) return;
@@ -28,10 +49,24 @@ export const GoogleCalendarConnect = () => {
     setLoading(false);
   };
 
-  const handleConnect = () => {
-    toast.info(
-      "Para conectar ao Google Calendar, configure o OAuth no backend e implemente o fluxo de autenticação."
-    );
+  const handleConnect = async () => {
+    try {
+      setLoading(true);
+      
+      // Chamar edge function para obter URL de autorização
+      const response = await supabase.functions.invoke("google-oauth-init", {
+        body: { userId: user!.id },
+      });
+
+      if (response.error) throw response.error;
+
+      // Redirecionar para autorização do Google
+      window.location.href = response.data.authUrl;
+    } catch (error) {
+      console.error("Error initiating Google OAuth:", error);
+      toast.error("Erro ao iniciar conexão com Google Calendar");
+      setLoading(false);
+    }
   };
 
   const syncAllEvents = async () => {
