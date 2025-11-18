@@ -1,6 +1,7 @@
 import { GoogleCalendarConnect } from "@/components/calendar/GoogleCalendarConnect";
+import { WhatsAppConnect } from "@/components/integrations/WhatsAppConnect";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Settings, Zap } from "lucide-react";
+import { Settings, Calendar as CalendarIcon } from "lucide-react";
 
 const Integracoes = () => {
   return (
@@ -17,7 +18,7 @@ const Integracoes = () => {
           <CardHeader>
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-primary/10">
-                <Zap className="h-5 w-5 text-primary" />
+                <Settings className="h-5 w-5 text-primary" />
               </div>
               <div>
                 <CardTitle>Integrações Disponíveis</CardTitle>
@@ -31,17 +32,25 @@ const Integracoes = () => {
 
         <div className="space-y-4">
           <h2 className="text-xl font-semibold flex items-center gap-2">
-            <Settings className="h-5 w-5" />
+            <CalendarIcon className="h-5 w-5" />
             Calendário
           </h2>
           <GoogleCalendarConnect />
+        </div>
+
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            Comunicação
+          </h2>
+          <WhatsAppConnect />
         </div>
 
         <Card className="border-border/50 bg-card/50 backdrop-blur-sm border-dashed">
           <CardContent className="p-8 text-center">
             <div className="flex flex-col items-center gap-4">
               <div className="p-3 rounded-lg bg-muted/50">
-                <Zap className="h-8 w-8 text-muted-foreground" />
+                <Settings className="h-8 w-8 text-muted-foreground" />
               </div>
               <div>
                 <h3 className="font-semibold text-lg mb-2">Mais integrações em breve</h3>

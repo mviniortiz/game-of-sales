@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CalendarCheck, Calendar } from "lucide-react";
+import { CalendarDays, Check } from "lucide-react";
 
 export const GoogleCalendarConnect = () => {
   const { user } = useAuth();
@@ -87,7 +87,9 @@ export const GoogleCalendarConnect = () => {
         {!isConnected ? (
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <Calendar className="h-5 w-5 text-primary" />
+              <div className="p-2 rounded-lg bg-blue-500/10">
+                <CalendarDays className="h-5 w-5 text-blue-500" />
+              </div>
               <div>
                 <h3 className="font-semibold text-foreground">
                   Google Calendar
@@ -104,7 +106,9 @@ export const GoogleCalendarConnect = () => {
         ) : (
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <CalendarCheck className="h-5 w-5 text-green-500" />
+              <div className="p-2 rounded-lg bg-green-500/10">
+                <Check className="h-5 w-5 text-green-500" />
+              </div>
               <div>
                 <h3 className="font-semibold text-foreground flex items-center gap-2">
                   Conectado ao Google Calendar
