@@ -1,0 +1,92 @@
+.rbc-calendar {
+  font-family: inherit;
+  background: transparent;
+}
+
+.rbc-header {
+  color: hsl(var(--foreground));
+  font-weight: 600;
+  padding: 12px;
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.rbc-today {
+  background-color: hsl(var(--accent) / 0.2);
+}
+
+.rbc-off-range-bg {
+  background: hsl(var(--muted) / 0.1);
+}
+
+.rbc-event {
+  padding: 4px 8px;
+  font-size: 0.875rem;
+  border-radius: 4px;
+}
+
+.rbc-event:hover {
+  opacity: 0.8;
+}
+
+.rbc-toolbar {
+  margin-bottom: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.rbc-toolbar button {
+  color: hsl(var(--foreground));
+  background: hsl(var(--background));
+  border: 1px solid hsl(var(--border));
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.rbc-toolbar button:hover {
+  background: hsl(var(--accent));
+}
+
+.rbc-toolbar button.rbc-active {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-color: hsl(var(--primary));
+}
+
+.rbc-month-view,
+.rbc-time-view,
+.rbc-agenda-view {
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  overflow: hidden;
+  background: hsl(var(--card));
+}
+
+.rbc-day-bg,
+.rbc-month-row {
+  border-color: hsl(var(--border));
+}
+
+.rbc-time-slot {
+  border-color: hsl(var(--border));
+  color: hsl(var(--muted-foreground));
+}
+
+.rbc-current-time-indicator {
+  background-color: hsl(var(--primary));
+}
+
+.rbc-agenda-table {
+  border-color: hsl(var(--border));
+}
+
+.rbc-agenda-date-cell,
+.rbc-agenda-time-cell {
+  color: hsl(var(--muted-foreground));
+}
+
+.rbc-agenda-event-cell {
+  color: hsl(var(--foreground));
+}
