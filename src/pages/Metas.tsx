@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { DefinirMetaForm } from "@/components/metas/DefinirMetaForm";
 import { MetaProgressCard } from "@/components/metas/MetaProgressCard";
 import { MetasRanking } from "@/components/metas/MetasRanking";
 import { MetaEvolutionChart } from "@/components/metas/MetaEvolutionChart";
@@ -153,8 +152,6 @@ const Metas = () => {
         </div>
       </div>
 
-      {isAdmin && <DefinirMetaForm />}
-
       {loadingProgresso ? (
         <div className="text-center py-12 text-muted-foreground">
           <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
@@ -180,9 +177,6 @@ const Metas = () => {
             <div className="text-center py-12 text-muted-foreground">
               <Target className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>Nenhuma meta definida para este mês</p>
-              {isAdmin && (
-                <p className="text-sm mt-2">Use o formulário acima para definir metas</p>
-              )}
             </div>
           )}
         </>
