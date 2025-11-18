@@ -55,7 +55,7 @@ export const AdminFilters = ({
           <h3 className="text-lg font-semibold">Filtros Globais</h3>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           {/* Período Customizado */}
           <div className="space-y-2">
             <Label className="flex items-center gap-2">
