@@ -4,10 +4,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const GOOGLE_CLIENT_ID = Deno.env.get("GOOGLE_CLIENT_ID")!;
 const GOOGLE_CLIENT_SECRET = Deno.env.get("GOOGLE_CLIENT_SECRET")!;
-const FRONTEND_URL = Deno.env.get("VITE_SUPABASE_URL")?.replace(
-  /\/$/,
-  ""
-) || "http://localhost:8080";
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const FRONTEND_URL = Deno.env.get("VITE_SUPABASE_URL") || SUPABASE_URL;
 
 serve(async (req) => {
   try {
@@ -26,7 +24,7 @@ serve(async (req) => {
     }
 
     const userId = state;
-    const redirectUri = `${FRONTEND_URL}/functions/v1/google-oauth-callback`;
+    const redirectUri = `${SUPABASE_URL}/functions/v1/google-oauth-callback`;
 
     console.log("[Google OAuth Callback] Processing for user:", userId);
 
@@ -96,7 +94,7 @@ serve(async (req) => {
 
     // Registrar webhook para sincronização bidirecional
     try {
-      const webhookUrl = `${FRONTEND_URL}/functions/v1/google-calendar-webhook`;
+      const webhookUrl = `${SUPABASE_URL}/functions/v1/google-calendar-webhook`;
       
       const watchResponse = await fetch(
         `https://www.googleapis.com/calendar/v3/calendars/primary/events/watch`,
