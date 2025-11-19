@@ -1,10 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Phone, TrendingUp, Users } from "lucide-react";
+import { Calendar, Phone, TrendingUp, Users, Target, CheckCircle } from "lucide-react";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { CallsFunnel } from "@/components/calls/CallsFunnel";
 import { PerformanceTable } from "@/components/calls/PerformanceTable";
+import { CallsEvolutionChart } from "@/components/calls/CallsEvolutionChart";
+import { eachDayOfInterval } from "date-fns";
 
 interface AdminPerformanceViewProps {
   dateRange: { from?: Date; to?: Date };
@@ -109,33 +111,52 @@ export const AdminPerformanceView = ({ dateRange, selectedVendedor }: AdminPerfo
     },
   });
 
-  // Evolução de vendas
-  const { data: vendasChartData = [] } = useQuery({
-    queryKey: ["admin-vendas-chart", inicioMes, fimMes, selectedVendedor],
+  // Evolução diária de agendamentos e calls
+  const { data: evolutionChartData = [] } = useQuery({
+    queryKey: ["admin-evolution-chart", inicioMes, fimMes, selectedVendedor],
     queryFn: async () => {
-      let query = supabase
+      const start = dateRange.from || new Date();
+      const end = dateRange.to || new Date();
+      const days = eachDayOfInterval({ start, end });
+
+      let agendamentosQuery = supabase
+        .from("agendamentos")
+        .select("data_agendamento")
+        .gte("data_agendamento", inicioMes)
+        .lte("data_agendamento", fimMes);
+
+      if (selectedVendedor !== "todos") {
+        agendamentosQuery = agendamentosQuery.eq("user_id", selectedVendedor);
+      }
+
+      let callsQuery = supabase
         .from("calls")
-        .select("data_call, resultado")
-        .eq("resultado", "venda")
+        .select("data_call")
         .gte("data_call", inicioMes)
         .lte("data_call", fimMes);
 
       if (selectedVendedor !== "todos") {
-        query = query.eq("user_id", selectedVendedor);
+        callsQuery = callsQuery.eq("user_id", selectedVendedor);
       }
 
-      const { data } = await query;
+      const { data: agendamentosData } = await agendamentosQuery;
+      const { data: callsData } = await callsQuery;
 
-      const vendasPorDia = data?.reduce((acc: any, call) => {
-        const date = new Date(call.data_call).toLocaleDateString("pt-BR");
-        acc[date] = (acc[date] || 0) + 1;
-        return acc;
-      }, {});
+      return days.map((day) => {
+        const dateStr = day.toISOString().split('T')[0];
+        const agendamentos = agendamentosData?.filter((a) =>
+          a.data_agendamento.startsWith(dateStr)
+        ).length || 0;
+        const calls = callsData?.filter((c) =>
+          c.data_call.startsWith(dateStr)
+        ).length || 0;
 
-      return Object.entries(vendasPorDia || {}).map(([data, vendas]) => ({
-        data,
-        vendas: vendas as number,
-      }));
+        return {
+          data: day.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }),
+          agendamentos,
+          calls,
+        };
+      });
     },
   });
 
@@ -148,6 +169,7 @@ export const AdminPerformanceView = ({ dateRange, selectedVendedor }: AdminPerfo
             title="Agendamentos"
             value={metricas?.agendamentos.toString() || "0"}
             icon={Calendar}
+            iconClassName="bg-blue-500/10 text-blue-500"
           />
         </div>
         <div className="animate-fade-in" style={{ animationDelay: "100ms" }}>
@@ -155,25 +177,28 @@ export const AdminPerformanceView = ({ dateRange, selectedVendedor }: AdminPerfo
             title="Calls Realizadas"
             value={metricas?.callsRealizadas.toString() || "0"}
             icon={Phone}
+            iconClassName="bg-cyan-500/10 text-cyan-500"
           />
         </div>
         <div className="animate-fade-in" style={{ animationDelay: "200ms" }}>
           <StatCard
-            title="Taxa de Comparecimento"
-            value={`${metricas?.taxaComparecimento.toFixed(1) || "0.0"}%`}
-            icon={Users}
+            title="Vendas"
+            value={metricas?.vendas.toString() || "0"}
+            icon={Target}
+            iconClassName="bg-green-500/10 text-green-500"
           />
         </div>
         <div className="animate-fade-in" style={{ animationDelay: "300ms" }}>
           <StatCard
             title="Taxa de Conversão"
             value={`${metricas?.taxaConversao.toFixed(1) || "0.0"}%`}
-            icon={TrendingUp}
+            icon={CheckCircle}
+            iconClassName="bg-purple-500/10 text-purple-500"
           />
         </div>
       </div>
 
-      {/* Gráficos */}
+      {/* Gráficos lado a lado */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <CallsFunnel
           agendamentos={metricas?.agendamentos || 0}
@@ -182,6 +207,8 @@ export const AdminPerformanceView = ({ dateRange, selectedVendedor }: AdminPerfo
           taxaComparecimento={metricas?.taxaComparecimento || 0}
           taxaConversao={metricas?.taxaConversao || 0}
         />
+        
+        <CallsEvolutionChart data={evolutionChartData} />
       </div>
 
       {/* Tabela de performance */}

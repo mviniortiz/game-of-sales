@@ -273,6 +273,7 @@ const Calls = () => {
             title="Agendamentos"
             value={metricas?.agendamentos.toString() || "0"}
             icon={Calendar}
+            iconClassName="bg-blue-500/10 text-blue-500"
           />
         </div>
         <div className="animate-fade-in" style={{ animationDelay: "100ms" }}>
@@ -280,13 +281,15 @@ const Calls = () => {
             title="Calls Realizadas"
             value={metricas?.callsRealizadas.toString() || "0"}
             icon={Phone}
+            iconClassName="bg-cyan-500/10 text-cyan-500"
           />
         </div>
         <div className="animate-fade-in" style={{ animationDelay: "200ms" }}>
           <StatCard
-            title="Taxa de Comparecimento"
-            value={`${metricas?.taxaComparecimento.toFixed(1) || "0.0"}%`}
+            title="Vendas"
+            value={metricas?.vendas.toString() || "0"}
             icon={Target}
+            iconClassName="bg-green-500/10 text-green-500"
           />
         </div>
         <div className="animate-fade-in" style={{ animationDelay: "300ms" }}>
@@ -294,6 +297,7 @@ const Calls = () => {
             title="Taxa de Conversão"
             value={`${metricas?.taxaConversao.toFixed(1) || "0.0"}%`}
             icon={CheckCircle}
+            iconClassName="bg-purple-500/10 text-purple-500"
           />
         </div>
       </div>

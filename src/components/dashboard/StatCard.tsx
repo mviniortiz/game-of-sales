@@ -8,15 +8,16 @@ interface StatCardProps {
   change?: number;
   icon: LucideIcon;
   trend?: "up" | "down";
+  iconClassName?: string;
 }
 
-export const StatCard = ({ title, value, change, icon: Icon, trend }: StatCardProps) => {
+export const StatCard = ({ title, value, change, icon: Icon, trend, iconClassName }: StatCardProps) => {
   return (
     <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:border-primary/30 transition-all hover-scale">
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <div className="p-2 rounded-lg bg-primary/10">
-            <Icon className="h-5 w-5 text-primary" />
+          <div className={cn("p-2 rounded-lg", iconClassName || "bg-primary/10")}>
+            <Icon className={cn("h-5 w-5", iconClassName ? "" : "text-primary")} />
           </div>
           {change !== undefined && (
             <div className={cn(
