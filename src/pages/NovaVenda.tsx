@@ -235,111 +235,102 @@ const NovaVenda = () => {
                 {/* Coluna Esquerda - Dados do Cliente */}
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="cliente" className="text-sm font-semibold">
+                    <Label htmlFor="cliente" className="text-sm font-semibold flex items-center gap-2">
+                      <User className="h-4 w-4 text-muted-foreground" />
                       Nome do Cliente
                     </Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-20" />
-                      <Input
-                        id="cliente"
-                        type="text"
-                        placeholder="Ex: João Silva"
-                        value={clienteNome}
-                        onChange={(e) => setClienteNome(e.target.value)}
-                        className="pl-12 h-11"
-                        required
-                      />
-                    </div>
+                    <Input
+                      id="cliente"
+                      type="text"
+                      placeholder="Ex: João Silva"
+                      value={clienteNome}
+                      onChange={(e) => setClienteNome(e.target.value)}
+                      className="h-11"
+                      required
+                    />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="plataforma" className="text-sm font-semibold">
+                    <Label htmlFor="plataforma" className="text-sm font-semibold flex items-center gap-2">
+                      <Store className="h-4 w-4 text-muted-foreground" />
                       Plataforma
                     </Label>
-                    <div className="relative">
-                      <Store className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-20" />
-                      <Select value={plataforma} onValueChange={setPlataforma} required>
-                        <SelectTrigger className="pl-12 h-11 [&>span]:ml-0">
-                          <SelectValue placeholder="Selecione a plataforma" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Celetus">Celetus</SelectItem>
-                          <SelectItem value="Cakto">Cakto</SelectItem>
-                          <SelectItem value="Greenn">Greenn</SelectItem>
-                          <SelectItem value="Pix/Boleto">Pix/Boleto</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    <Select value={plataforma} onValueChange={setPlataforma} required>
+                      <SelectTrigger className="h-11">
+                        <SelectValue placeholder="Selecione a plataforma" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Celetus">Celetus</SelectItem>
+                        <SelectItem value="Cakto">Cakto</SelectItem>
+                        <SelectItem value="Greenn">Greenn</SelectItem>
+                        <SelectItem value="Pix/Boleto">Pix/Boleto</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="pagamento" className="text-sm font-semibold">
+                    <Label htmlFor="pagamento" className="text-sm font-semibold flex items-center gap-2">
+                      <CreditCard className="h-4 w-4 text-muted-foreground" />
                       Forma de Pagamento
                     </Label>
-                    <div className="relative">
-                      <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-20" />
-                      <Select value={formaPagamento} onValueChange={setFormaPagamento} required>
-                        <SelectTrigger className="pl-12 h-11 [&>span]:ml-0">
-                          <SelectValue placeholder="Selecione a forma de pagamento" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Cartão de Crédito">Cartão de Crédito</SelectItem>
-                          <SelectItem value="PIX">PIX</SelectItem>
-                          <SelectItem value="Recorrência">Recorrência</SelectItem>
-                          <SelectItem value="Boleto">Boleto</SelectItem>
-                          <SelectItem value="Parte PIX Parte Cartão">Parte PIX Parte Cartão</SelectItem>
-                          <SelectItem value="Múltiplos Cartões">Múltiplos Cartões</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    <Select value={formaPagamento} onValueChange={setFormaPagamento} required>
+                      <SelectTrigger className="h-11">
+                        <SelectValue placeholder="Selecione a forma de pagamento" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Cartão de Crédito">Cartão de Crédito</SelectItem>
+                        <SelectItem value="PIX">PIX</SelectItem>
+                        <SelectItem value="Recorrência">Recorrência</SelectItem>
+                        <SelectItem value="Boleto">Boleto</SelectItem>
+                        <SelectItem value="Parte PIX Parte Cartão">Parte PIX Parte Cartão</SelectItem>
+                        <SelectItem value="Múltiplos Cartões">Múltiplos Cartões</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
                 {/* Coluna Direita - Dados da Venda */}
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="produto" className="text-sm font-semibold">
+                    <Label htmlFor="produto" className="text-sm font-semibold flex items-center gap-2">
+                      <Package className="h-4 w-4 text-muted-foreground" />
                       Produto
                     </Label>
-                    <div className="relative">
-                      <Package className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-20" />
-                      <Select value={produtoId} onValueChange={setProdutoId} required>
-                        <SelectTrigger className="pl-12 h-11 [&>span]:ml-0">
-                          <SelectValue placeholder="Selecione um produto" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {produtos?.map((produto) => (
-                            <SelectItem key={produto.id} value={produto.id}>
-                              {produto.nome}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    <Select value={produtoId} onValueChange={setProdutoId} required>
+                      <SelectTrigger className="h-11">
+                        <SelectValue placeholder="Selecione um produto" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {produtos?.map((produto) => (
+                          <SelectItem key={produto.id} value={produto.id}>
+                            {produto.nome}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="valor" className="text-sm font-semibold">
+                    <Label htmlFor="valor" className="text-sm font-semibold flex items-center gap-2">
+                      <DollarSign className="h-4 w-4 text-muted-foreground" />
                       Valor da Venda
                     </Label>
-                    <div className="relative">
-                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-20" />
-                      <Input
-                        id="valor"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        placeholder="0.00"
-                        value={valor}
-                        onChange={(e) => setValor(e.target.value)}
-                        className="pl-12 h-11"
-                        required
-                      />
-                    </div>
+                    <Input
+                      id="valor"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0.00"
+                      value={valor}
+                      onChange={(e) => setValor(e.target.value)}
+                      className="h-11"
+                      required
+                    />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="data" className="text-sm font-semibold">
+                    <Label htmlFor="data" className="text-sm font-semibold flex items-center gap-2">
+                      <CalendarIcon className="h-4 w-4 text-muted-foreground" />
                       Data da Venda
                     </Label>
                     <Popover>
@@ -372,45 +363,41 @@ const NovaVenda = () => {
               {/* Segunda linha - Status */}
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="status" className="text-sm font-semibold">
+                  <Label htmlFor="status" className="text-sm font-semibold flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-muted-foreground" />
                     Status
                   </Label>
-                    <div className="relative">
-                      <CheckCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-20" />
-                      <Select value={status} onValueChange={setStatus} required>
-                        <SelectTrigger className="pl-12 h-11 [&>span]:ml-0">
-                          <SelectValue placeholder="Selecione o status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Aprovado">Aprovado</SelectItem>
-                          <SelectItem value="Pendente">Pendente</SelectItem>
-                          <SelectItem value="Reembolsado">Reembolsado</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                  <Select value={status} onValueChange={setStatus} required>
+                    <SelectTrigger className="h-11">
+                      <SelectValue placeholder="Selecione o status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Aprovado">Aprovado</SelectItem>
+                      <SelectItem value="Pendente">Pendente</SelectItem>
+                      <SelectItem value="Reembolsado">Reembolsado</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Campo Admin ao lado do Status */}
                 {isAdmin && (
                   <div className="space-y-2">
-                    <Label htmlFor="vendedor" className="text-sm font-semibold">
+                    <Label htmlFor="vendedor" className="text-sm font-semibold flex items-center gap-2">
+                      <User className="h-4 w-4 text-muted-foreground" />
                       Vendedor
                     </Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-20" />
-                      <Select value={vendedorId} onValueChange={setVendedorId} required>
-                        <SelectTrigger className="pl-12 h-11 [&>span]:ml-0">
-                          <SelectValue placeholder="Selecione o vendedor" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {vendedores?.map((vendedor) => (
-                            <SelectItem key={vendedor.id} value={vendedor.id}>
-                              {vendedor.nome} ({vendedor.email})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    <Select value={vendedorId} onValueChange={setVendedorId} required>
+                      <SelectTrigger className="h-11">
+                        <SelectValue placeholder="Selecione o vendedor" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {vendedores?.map((vendedor) => (
+                          <SelectItem key={vendedor.id} value={vendedor.id}>
+                            {vendedor.nome} ({vendedor.email})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 )}
               </div>
