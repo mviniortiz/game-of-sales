@@ -6,10 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { Loader2, Upload } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { AdminManagement } from "@/components/profile/AdminManagement";
+import { AvatarUpload } from "@/components/profile/AvatarUpload";
 
 export default function Profile() {
   const { user, isAdmin } = useAuth();
@@ -46,42 +46,42 @@ export default function Profile() {
     }
   };
 
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!user || !event.target.files || event.target.files.length === 0) return;
+  const handleAvatarUpload = async (file: File) => {
+    if (!user) return;
 
-    const file = event.target.files[0];
     const fileExt = file.name.split(".").pop();
     const filePath = `${user.id}/${Math.random()}.${fileExt}`;
 
     setUploading(true);
 
-    const { error: uploadError } = await supabase.storage
-      .from("avatars")
-      .upload(filePath, file);
+    try {
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, file);
 
-    if (uploadError) {
-      toast.error("Erro ao fazer upload da imagem");
+      if (uploadError) {
+        toast.error("Erro ao fazer upload da imagem");
+        return;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(filePath);
+
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: publicUrl })
+        .eq("id", user.id);
+
+      if (updateError) {
+        toast.error("Erro ao atualizar avatar");
+      } else {
+        setAvatarUrl(publicUrl);
+        toast.success("Avatar atualizado com sucesso!");
+      }
+    } finally {
       setUploading(false);
-      return;
     }
-
-    const { data: { publicUrl } } = supabase.storage
-      .from("avatars")
-      .getPublicUrl(filePath);
-
-    const { error: updateError } = await supabase
-      .from("profiles")
-      .update({ avatar_url: publicUrl })
-      .eq("id", user.id);
-
-    if (updateError) {
-      toast.error("Erro ao atualizar avatar");
-    } else {
-      setAvatarUrl(publicUrl);
-      toast.success("Avatar atualizado com sucesso!");
-    }
-
-    setUploading(false);
   };
 
   const handleUpdateProfile = async () => {
@@ -127,36 +127,12 @@ export default function Profile() {
               <CardDescription>Atualize suas informações de perfil</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center gap-6">
-                <Avatar className="h-24 w-24">
-                  <AvatarImage src={avatarUrl || ""} />
-                  <AvatarFallback>{getUserInitials()}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <Label htmlFor="avatar-upload" className="cursor-pointer">
-                    <Button variant="outline" disabled={uploading} asChild>
-                      <span>
-                        {uploading ? (
-                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        ) : (
-                          <Upload className="h-4 w-4 mr-2" />
-                        )}
-                        Alterar Foto
-                      </span>
-                    </Button>
-                  </Label>
-                  <Input
-                    id="avatar-upload"
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleAvatarUpload}
-                  />
-                  <p className="text-sm text-muted-foreground mt-2">
-                    JPG, PNG ou GIF. Máx 2MB.
-                  </p>
-                </div>
-              </div>
+              <AvatarUpload
+                currentAvatarUrl={avatarUrl}
+                userInitials={getUserInitials()}
+                onUpload={handleAvatarUpload}
+                uploading={uploading}
+              />
 
               <div className="space-y-2">
                 <Label htmlFor="nome">Nome</Label>
