@@ -319,17 +319,6 @@ export const AdminVendasView = ({
 
   return (
     <div className="space-y-8">
-      {/* Ranking de Metas */}
-      {(metaConsolidada || vendedoresMetas) && (
-        <MetasRankingCard
-          metaConsolidada={metaTotalConsolidada}
-          valorConsolidadoAtingido={valorConsolidadoAtingido}
-          percentualConsolidado={percentualConsolidado}
-          vendedores={vendedoresMetas || []}
-          statusFiltro={statusFiltro}
-          onStatusChange={setStatusFiltro}
-        />
-      )}
       {/* Cards de Métricas Principais - Destaque Visual */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Faturamento - Destaque Principal */}
@@ -559,6 +548,18 @@ export const AdminVendasView = ({
           </div>
         </CardContent>
       </Card>
+
+      {/* Ranking de Metas */}
+      {(metaConsolidada || vendedoresMetas) && (
+        <MetasRankingCard
+          metaConsolidada={metaTotalConsolidada}
+          valorConsolidadoAtingido={valorConsolidadoAtingido}
+          percentualConsolidado={percentualConsolidado}
+          vendedores={vendedoresMetas || []}
+          statusFiltro={statusFiltro}
+          onStatusChange={setStatusFiltro}
+        />
+      )}
     </div>
   );
 };
