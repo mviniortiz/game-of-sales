@@ -7,28 +7,28 @@ import { Calendar as CalendarIcon, CreditCard, Bell } from "lucide-react";
 const Integracoes = () => {
   const roadmapIntegrations = [
     {
-      name: "Hotmart",
-      description: "Sincronize vendas e comissões automaticamente",
-      icon: "💼",
-      color: "from-orange-500 to-red-500"
+      name: "Celetus",
+      description: "Importe vendas e transações automaticamente da Celetus",
+      icon: "💎",
+      color: "from-cyan-500 to-blue-500"
     },
     {
-      name: "Kiwify",
-      description: "Importe vendas e gerencie checkouts",
-      icon: "🥝",
+      name: "Cakto",
+      description: "Sincronize vendas e comissões em tempo real",
+      icon: "🎯",
+      color: "from-blue-500 to-indigo-500"
+    },
+    {
+      name: "Greenn",
+      description: "Conecte recorrências e assinaturas da Greenn",
+      icon: "🌱",
       color: "from-green-500 to-emerald-500"
     },
     {
-      name: "Eduzz",
-      description: "Conecte seus produtos digitais",
-      icon: "🚀",
-      color: "from-blue-500 to-cyan-500"
-    },
-    {
-      name: "Stripe",
-      description: "Processamento de pagamentos global",
+      name: "Pix/Boleto",
+      description: "Integração com gateways de pagamento direto",
       icon: "💳",
-      color: "from-purple-500 to-indigo-500"
+      color: "from-purple-500 to-pink-500"
     }
   ];
 
