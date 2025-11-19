@@ -88,7 +88,7 @@ const NovaVenda = () => {
 
   const createVenda = useMutation({
     mutationFn: async (vendaData: any) => {
-      const { data, error} = await supabase
+      const { data, error } = await supabase
         .from("vendas")
         .insert([vendaData])
         .select()
@@ -174,7 +174,7 @@ const NovaVenda = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="max-w-6xl mx-auto space-y-6">
         <div>
           <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-transparent">
             Registrar Nova Venda
@@ -182,296 +182,277 @@ const NovaVenda = () => {
           <p className="text-muted-foreground">Preencha os dados da venda para ganhar pontos e subir no ranking</p>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Card de Pontuação Prevista - Fixo no Desktop */}
-          <div className="lg:col-span-1 order-first lg:order-last">
-            <Card className="sticky top-6 border-2 border-amber-500/20 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
-                  <Trophy className="h-5 w-5" />
-                  Pontuação Prevista
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-center py-6 relative">
-                  {/* Glow effect atrás do troféu */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-32 h-32 bg-amber-400/20 rounded-full blur-3xl"></div>
+        <Card className="border-border/50">
+          {/* Header com Título e Card de Pontuação */}
+          <CardHeader className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 pb-6">
+            <CardTitle className="flex items-center gap-2">
+              <PlusCircle className="h-5 w-5" />
+              Informações da Venda
+            </CardTitle>
+            
+            {/* Card de Pontuação - Compacto */}
+            <div className="border-2 border-amber-500/20 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 rounded-lg p-4 shadow-md min-w-[280px]">
+              <div className="flex items-center gap-3">
+                {/* Troféu com Glow */}
+                <div className="relative flex-shrink-0">
+                  <div className="absolute inset-0 bg-amber-400/20 rounded-full blur-xl"></div>
+                  <Trophy className="relative h-12 w-12 text-amber-500 dark:text-amber-400" />
+                </div>
+                
+                {/* Pontuação */}
+                <div className="flex-1">
+                  <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
+                    Pontuação Prevista
                   </div>
-                  
-                  {/* Troféu grande */}
-                  <div className="relative mb-4">
-                    <Trophy className="h-16 w-16 mx-auto text-amber-500 dark:text-amber-400" />
-                  </div>
-                  
-                  <div className="text-6xl font-bold text-amber-600 dark:text-amber-400 mb-2 animate-pulse relative">
+                  <div className="text-3xl font-bold text-amber-600 dark:text-amber-400 animate-pulse">
                     +{pontosPrevistos}
                   </div>
-                  <div className="text-sm text-muted-foreground">pontos</div>
+                  <div className="text-xs text-muted-foreground">pontos</div>
+                </div>
+              </div>
+              
+              {pontosPrevistos > 0 ? (
+                <div className="mt-3 pt-3 border-t border-amber-200 dark:border-amber-800">
+                  <div className="flex items-center gap-2 text-xs">
+                    <TrendingUp className="h-3 w-3 text-green-600 flex-shrink-0" />
+                    <span className="text-muted-foreground">
+                      R$ {parseFloat(valor || "0").toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-3 text-xs text-center text-amber-700 dark:text-amber-400 font-medium">
+                  💰 Digite o valor para simular
+                </div>
+              )}
+            </div>
+          </CardHeader>
+
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Grid 2 Colunas - Desktop */}
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Coluna Esquerda - Dados do Cliente */}
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="cliente" className="text-sm font-semibold">
+                      Nome do Cliente
+                    </Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                      <Input
+                        id="cliente"
+                        type="text"
+                        placeholder="Ex: João Silva"
+                        value={clienteNome}
+                        onChange={(e) => setClienteNome(e.target.value)}
+                        className="pl-10 h-11"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="plataforma" className="text-sm font-semibold">
+                      Plataforma
+                    </Label>
+                    <div className="relative">
+                      <Store className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
+                      <Select value={plataforma} onValueChange={setPlataforma} required>
+                        <SelectTrigger className="pl-10 h-11">
+                          <SelectValue placeholder="Selecione a plataforma" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Celetus">Celetus</SelectItem>
+                          <SelectItem value="Cakto">Cakto</SelectItem>
+                          <SelectItem value="Greenn">Greenn</SelectItem>
+                          <SelectItem value="Pix/Boleto">Pix/Boleto</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="pagamento" className="text-sm font-semibold">
+                      Forma de Pagamento
+                    </Label>
+                    <div className="relative">
+                      <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
+                      <Select value={formaPagamento} onValueChange={setFormaPagamento} required>
+                        <SelectTrigger className="pl-10 h-11">
+                          <SelectValue placeholder="Selecione a forma de pagamento" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Cartão de Crédito">Cartão de Crédito</SelectItem>
+                          <SelectItem value="PIX">PIX</SelectItem>
+                          <SelectItem value="Recorrência">Recorrência</SelectItem>
+                          <SelectItem value="Boleto">Boleto</SelectItem>
+                          <SelectItem value="Parte PIX Parte Cartão">Parte PIX Parte Cartão</SelectItem>
+                          <SelectItem value="Múltiplos Cartões">Múltiplos Cartões</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                 </div>
 
-                {pontosPrevistos > 0 ? (
-                  <div className="space-y-2 pt-4 border-t border-amber-200 dark:border-amber-800">
-                    <div className="flex items-center gap-2 text-sm">
-                      <TrendingUp className="h-4 w-4 text-green-600" />
-                      <span className="text-muted-foreground">
-                        R$ {parseFloat(valor || "0").toFixed(2)} em vendas
-                      </span>
+                {/* Coluna Direita - Dados da Venda */}
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="produto" className="text-sm font-semibold">
+                      Produto
+                    </Label>
+                    <div className="relative">
+                      <Package className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
+                      <Select value={produtoId} onValueChange={setProdutoId} required>
+                        <SelectTrigger className="pl-10 h-11">
+                          <SelectValue placeholder="Selecione um produto" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {produtos?.map((produto) => (
+                            <SelectItem key={produto.id} value={produto.id}>
+                              {produto.nome}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      💡 Cada R$ 1,00 = 1 ponto
-                    </p>
                   </div>
-                ) : (
-                  <div className="text-center py-4 px-2 bg-amber-100/50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
-                    <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
-                      💰 Digite o valor da venda
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      para simular seus pontos!
-                    </p>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="valor" className="text-sm font-semibold">
+                      Valor da Venda
+                    </Label>
+                    <div className="relative">
+                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                      <Input
+                        id="valor"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="0.00"
+                        value={valor}
+                        onChange={(e) => setValor(e.target.value)}
+                        className="pl-10 h-11"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="data" className="text-sm font-semibold">
+                      Data da Venda
+                    </Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal h-11",
+                            !dataVenda && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {dataVenda ? format(dataVenda, "PPP", { locale: ptBR }) : <span>Selecione a data</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={dataVenda}
+                          onSelect={(date) => date && setDataVenda(date)}
+                          initialFocus
+                          className="pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+              </div>
+
+              {/* Segunda linha - Status */}
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="status" className="text-sm font-semibold">
+                    Status
+                  </Label>
+                  <div className="relative">
+                    <CheckCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
+                    <Select value={status} onValueChange={setStatus} required>
+                      <SelectTrigger className="pl-10 h-11">
+                        <SelectValue placeholder="Selecione o status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Aprovado">Aprovado</SelectItem>
+                        <SelectItem value="Pendente">Pendente</SelectItem>
+                        <SelectItem value="Reembolsado">Reembolsado</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Campo Admin ao lado do Status */}
+                {isAdmin && (
+                  <div className="space-y-2">
+                    <Label htmlFor="vendedor" className="text-sm font-semibold">
+                      Vendedor
+                    </Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
+                      <Select value={vendedorId} onValueChange={setVendedorId} required>
+                        <SelectTrigger className="pl-10 h-11">
+                          <SelectValue placeholder="Selecione o vendedor" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {vendedores?.map((vendedor) => (
+                            <SelectItem key={vendedor.id} value={vendedor.id}>
+                              {vendedor.nome} ({vendedor.email})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 )}
-              </CardContent>
-            </Card>
-          </div>
+              </div>
 
-          {/* Formulário - 2 Colunas */}
-          <div className="lg:col-span-2">
-            <Card className="border-border/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <PlusCircle className="h-5 w-5" />
-                  Informações da Venda
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  {/* Grid 2 Colunas - Desktop */}
-                  <div className="grid md:grid-cols-2 gap-6">
-                    {/* Coluna Esquerda - Dados do Cliente */}
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="cliente" className="text-sm font-semibold">
-                          Nome do Cliente
-                        </Label>
-                        <div className="relative">
-                          <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                          <Input
-                            id="cliente"
-                            type="text"
-                            placeholder="Ex: João Silva"
-                            value={clienteNome}
-                            onChange={(e) => setClienteNome(e.target.value)}
-                            className="pl-10 h-11"
-                            required
-                          />
-                        </div>
-                      </div>
+              {/* Observações - Full Width */}
+              <div className="space-y-2">
+                <Label htmlFor="observacoes" className="text-sm font-semibold">
+                  Observações (opcional)
+                </Label>
+                <Textarea
+                  id="observacoes"
+                  placeholder="Adicione observações sobre esta venda..."
+                  value={observacoes}
+                  onChange={(e) => setObservacoes(e.target.value)}
+                  rows={3}
+                  className="resize-none"
+                />
+              </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="plataforma" className="text-sm font-semibold">
-                          Plataforma
-                        </Label>
-                        <div className="relative">
-                          <Store className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
-                          <Select value={plataforma} onValueChange={setPlataforma} required>
-                            <SelectTrigger className="pl-10 h-11">
-                              <SelectValue placeholder="Selecione a plataforma" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Celetus">Celetus</SelectItem>
-                              <SelectItem value="Cakto">Cakto</SelectItem>
-                              <SelectItem value="Greenn">Greenn</SelectItem>
-                              <SelectItem value="Pix/Boleto">Pix/Boleto</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="pagamento" className="text-sm font-semibold">
-                          Forma de Pagamento
-                        </Label>
-                        <div className="relative">
-                          <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
-                          <Select value={formaPagamento} onValueChange={setFormaPagamento} required>
-                            <SelectTrigger className="pl-10 h-11">
-                              <SelectValue placeholder="Selecione a forma de pagamento" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Cartão de Crédito">Cartão de Crédito</SelectItem>
-                              <SelectItem value="PIX">PIX</SelectItem>
-                              <SelectItem value="Recorrência">Recorrência</SelectItem>
-                              <SelectItem value="Boleto">Boleto</SelectItem>
-                              <SelectItem value="Parte PIX Parte Cartão">Parte PIX Parte Cartão</SelectItem>
-                              <SelectItem value="Múltiplos Cartões">Múltiplos Cartões</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Coluna Direita - Dados da Venda */}
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="produto" className="text-sm font-semibold">
-                          Produto
-                        </Label>
-                        <div className="relative">
-                          <Package className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
-                          <Select value={produtoId} onValueChange={setProdutoId} required>
-                            <SelectTrigger className="pl-10 h-11">
-                              <SelectValue placeholder="Selecione um produto" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {produtos?.map((produto) => (
-                                <SelectItem key={produto.id} value={produto.id}>
-                                  {produto.nome}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="valor" className="text-sm font-semibold">
-                          Valor da Venda
-                        </Label>
-                        <div className="relative">
-                          <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                          <Input
-                            id="valor"
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            placeholder="0.00"
-                            value={valor}
-                            onChange={(e) => setValor(e.target.value)}
-                            className="pl-10 h-11"
-                            required
-                          />
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="data" className="text-sm font-semibold">
-                          Data da Venda
-                        </Label>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                "w-full justify-start text-left font-normal h-11",
-                                !dataVenda && "text-muted-foreground"
-                              )}
-                            >
-                              <CalendarIcon className="mr-2 h-4 w-4" />
-                              {dataVenda ? format(dataVenda, "PPP", { locale: ptBR }) : <span>Selecione a data</span>}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={dataVenda}
-                              onSelect={(date) => date && setDataVenda(date)}
-                              initialFocus
-                              className="pointer-events-auto"
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Segunda linha - Status */}
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="status" className="text-sm font-semibold">
-                        Status
-                      </Label>
-                      <div className="relative">
-                        <CheckCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
-                        <Select value={status} onValueChange={setStatus} required>
-                          <SelectTrigger className="pl-10 h-11">
-                            <SelectValue placeholder="Selecione o status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Aprovado">Aprovado</SelectItem>
-                            <SelectItem value="Pendente">Pendente</SelectItem>
-                            <SelectItem value="Reembolsado">Reembolsado</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    {/* Campo Admin ao lado do Status */}
-                    {isAdmin && (
-                      <div className="space-y-2">
-                        <Label htmlFor="vendedor" className="text-sm font-semibold">
-                          Vendedor
-                        </Label>
-                        <div className="relative">
-                          <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
-                          <Select value={vendedorId} onValueChange={setVendedorId} required>
-                            <SelectTrigger className="pl-10 h-11">
-                              <SelectValue placeholder="Selecione o vendedor" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {vendedores?.map((vendedor) => (
-                                <SelectItem key={vendedor.id} value={vendedor.id}>
-                                  {vendedor.nome} ({vendedor.email})
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Observações - Full Width */}
-                  <div className="space-y-2">
-                    <Label htmlFor="observacoes" className="text-sm font-semibold">
-                      Observações (opcional)
-                    </Label>
-                    <Textarea
-                      id="observacoes"
-                      placeholder="Adicione observações sobre esta venda..."
-                      value={observacoes}
-                      onChange={(e) => setObservacoes(e.target.value)}
-                      rows={3}
-                      className="resize-none"
-                    />
-                  </div>
-
-                  {/* Botão de Submit - Melhorado */}
-                  <Button
-                    type="submit"
-                    className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] active:scale-[0.98]"
-                    disabled={createVenda.isPending}
-                  >
-                    {createVenda.isPending ? (
-                      <>Registrando venda...</>
-                    ) : pontosPrevistos > 0 ? (
-                      <>
-                        <PlusCircle className="mr-2 h-5 w-5" />
-                        Registrar Venda (+{pontosPrevistos} Pontos)
-                      </>
-                    ) : (
-                      <>
-                        <PlusCircle className="mr-2 h-5 w-5" />
-                        Registrar Venda
-                      </>
-                    )}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+              {/* Botão de Submit - Melhorado */}
+              <Button
+                type="submit"
+                className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+                disabled={createVenda.isPending}
+              >
+                {createVenda.isPending ? (
+                  <>Registrando venda...</>
+                ) : pontosPrevistos > 0 ? (
+                  <>
+                    <PlusCircle className="mr-2 h-5 w-5" />
+                    Registrar Venda (+{pontosPrevistos} Pontos)
+                  </>
+                ) : (
+                  <>
+                    <PlusCircle className="mr-2 h-5 w-5" />
+                    Registrar Venda
+                  </>
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
