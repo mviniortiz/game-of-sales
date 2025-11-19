@@ -2,10 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const GOOGLE_CLIENT_ID = Deno.env.get("GOOGLE_CLIENT_ID")!;
-const FRONTEND_URL = Deno.env.get("VITE_SUPABASE_URL")?.replace(
-  /\/$/,
-  ""
-) || "http://localhost:8080";
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -26,7 +23,7 @@ serve(async (req) => {
     }
 
     // URL de callback para onde o Google vai redirecionar
-    const redirectUri = `${FRONTEND_URL}/functions/v1/google-oauth-callback`;
+    const redirectUri = `${SUPABASE_URL}/functions/v1/google-oauth-callback`;
 
     // Construir URL de autorização do Google
     const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
