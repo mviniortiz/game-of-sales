@@ -185,7 +185,7 @@ const NovaVenda = () => {
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Card de Pontuação Prevista - Fixo no Desktop */}
           <div className="lg:col-span-1 order-first lg:order-last">
-            <Card className="sticky top-6 border-2 border-amber-500/20 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20">
+            <Card className="sticky top-6 border-2 border-amber-500/20 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 shadow-lg">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
                   <Trophy className="h-5 w-5" />
@@ -193,14 +193,24 @@ const NovaVenda = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="text-center py-4">
-                  <div className="text-5xl font-bold text-amber-600 dark:text-amber-400 mb-2 animate-pulse">
+                <div className="text-center py-6 relative">
+                  {/* Glow effect atrás do troféu */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-32 h-32 bg-amber-400/20 rounded-full blur-3xl"></div>
+                  </div>
+                  
+                  {/* Troféu grande */}
+                  <div className="relative mb-4">
+                    <Trophy className="h-16 w-16 mx-auto text-amber-500 dark:text-amber-400" />
+                  </div>
+                  
+                  <div className="text-6xl font-bold text-amber-600 dark:text-amber-400 mb-2 animate-pulse relative">
                     +{pontosPrevistos}
                   </div>
                   <div className="text-sm text-muted-foreground">pontos</div>
                 </div>
 
-                {pontosPrevistos > 0 && (
+                {pontosPrevistos > 0 ? (
                   <div className="space-y-2 pt-4 border-t border-amber-200 dark:border-amber-800">
                     <div className="flex items-center gap-2 text-sm">
                       <TrendingUp className="h-4 w-4 text-green-600" />
@@ -212,12 +222,13 @@ const NovaVenda = () => {
                       💡 Cada R$ 1,00 = 1 ponto
                     </p>
                   </div>
-                )}
-
-                {pontosPrevistos === 0 && (
-                  <div className="text-center py-2">
-                    <p className="text-sm text-muted-foreground">
-                      Digite o valor da venda para ver os pontos 🎯
+                ) : (
+                  <div className="text-center py-4 px-2 bg-amber-100/50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                    <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+                      💰 Digite o valor da venda
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      para simular seus pontos!
                     </p>
                   </div>
                 )}
@@ -245,14 +256,14 @@ const NovaVenda = () => {
                           Nome do Cliente
                         </Label>
                         <div className="relative">
-                          <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                           <Input
                             id="cliente"
                             type="text"
                             placeholder="Ex: João Silva"
                             value={clienteNome}
                             onChange={(e) => setClienteNome(e.target.value)}
-                            className="pl-10"
+                            className="pl-10 h-11"
                             required
                           />
                         </div>
@@ -263,9 +274,9 @@ const NovaVenda = () => {
                           Plataforma
                         </Label>
                         <div className="relative">
-                          <Store className="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10" />
+                          <Store className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
                           <Select value={plataforma} onValueChange={setPlataforma} required>
-                            <SelectTrigger className="pl-10">
+                            <SelectTrigger className="pl-10 h-11">
                               <SelectValue placeholder="Selecione a plataforma" />
                             </SelectTrigger>
                             <SelectContent>
@@ -283,9 +294,9 @@ const NovaVenda = () => {
                           Forma de Pagamento
                         </Label>
                         <div className="relative">
-                          <CreditCard className="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10" />
+                          <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
                           <Select value={formaPagamento} onValueChange={setFormaPagamento} required>
-                            <SelectTrigger className="pl-10">
+                            <SelectTrigger className="pl-10 h-11">
                               <SelectValue placeholder="Selecione a forma de pagamento" />
                             </SelectTrigger>
                             <SelectContent>
@@ -308,9 +319,9 @@ const NovaVenda = () => {
                           Produto
                         </Label>
                         <div className="relative">
-                          <Package className="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10" />
+                          <Package className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
                           <Select value={produtoId} onValueChange={setProdutoId} required>
-                            <SelectTrigger className="pl-10">
+                            <SelectTrigger className="pl-10 h-11">
                               <SelectValue placeholder="Selecione um produto" />
                             </SelectTrigger>
                             <SelectContent>
@@ -329,7 +340,7 @@ const NovaVenda = () => {
                           Valor da Venda
                         </Label>
                         <div className="relative">
-                          <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                           <Input
                             id="valor"
                             type="number"
@@ -338,7 +349,7 @@ const NovaVenda = () => {
                             placeholder="0.00"
                             value={valor}
                             onChange={(e) => setValor(e.target.value)}
-                            className="pl-10"
+                            className="pl-10 h-11"
                             required
                           />
                         </div>
@@ -353,7 +364,7 @@ const NovaVenda = () => {
                             <Button
                               variant="outline"
                               className={cn(
-                                "w-full justify-start text-left font-normal",
+                                "w-full justify-start text-left font-normal h-11",
                                 !dataVenda && "text-muted-foreground"
                               )}
                             >
@@ -372,51 +383,54 @@ const NovaVenda = () => {
                           </PopoverContent>
                         </Popover>
                       </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="status" className="text-sm font-semibold">
-                          Status
-                        </Label>
-                        <div className="relative">
-                          <CheckCircle className="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10" />
-                          <Select value={status} onValueChange={setStatus} required>
-                            <SelectTrigger className="pl-10">
-                              <SelectValue placeholder="Selecione o status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Aprovado">Aprovado</SelectItem>
-                              <SelectItem value="Pendente">Pendente</SelectItem>
-                              <SelectItem value="Reembolsado">Reembolsado</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
                     </div>
                   </div>
 
-                  {/* Campo Admin - Full Width */}
-                  {isAdmin && (
+                  {/* Segunda linha - Status */}
+                  <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="vendedor" className="text-sm font-semibold">
-                        Vendedor
+                      <Label htmlFor="status" className="text-sm font-semibold">
+                        Status
                       </Label>
                       <div className="relative">
-                        <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10" />
-                        <Select value={vendedorId} onValueChange={setVendedorId} required>
-                          <SelectTrigger className="pl-10">
-                            <SelectValue placeholder="Selecione o vendedor" />
+                        <CheckCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
+                        <Select value={status} onValueChange={setStatus} required>
+                          <SelectTrigger className="pl-10 h-11">
+                            <SelectValue placeholder="Selecione o status" />
                           </SelectTrigger>
                           <SelectContent>
-                            {vendedores?.map((vendedor) => (
-                              <SelectItem key={vendedor.id} value={vendedor.id}>
-                                {vendedor.nome} ({vendedor.email})
-                              </SelectItem>
-                            ))}
+                            <SelectItem value="Aprovado">Aprovado</SelectItem>
+                            <SelectItem value="Pendente">Pendente</SelectItem>
+                            <SelectItem value="Reembolsado">Reembolsado</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                     </div>
-                  )}
+
+                    {/* Campo Admin ao lado do Status */}
+                    {isAdmin && (
+                      <div className="space-y-2">
+                        <Label htmlFor="vendedor" className="text-sm font-semibold">
+                          Vendedor
+                        </Label>
+                        <div className="relative">
+                          <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
+                          <Select value={vendedorId} onValueChange={setVendedorId} required>
+                            <SelectTrigger className="pl-10 h-11">
+                              <SelectValue placeholder="Selecione o vendedor" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {vendedores?.map((vendedor) => (
+                                <SelectItem key={vendedor.id} value={vendedor.id}>
+                                  {vendedor.nome} ({vendedor.email})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    )}
+                  </div>
 
                   {/* Observações - Full Width */}
                   <div className="space-y-2">
@@ -441,10 +455,15 @@ const NovaVenda = () => {
                   >
                     {createVenda.isPending ? (
                       <>Registrando venda...</>
+                    ) : pontosPrevistos > 0 ? (
+                      <>
+                        <PlusCircle className="mr-2 h-5 w-5" />
+                        Registrar Venda (+{pontosPrevistos} Pontos)
+                      </>
                     ) : (
                       <>
                         <PlusCircle className="mr-2 h-5 w-5" />
-                        Registrar Venda e Ganhar {pontosPrevistos} Pontos
+                        Registrar Venda
                       </>
                     )}
                   </Button>
