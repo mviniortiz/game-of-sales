@@ -4,12 +4,15 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CalendarDays, Check } from "lucide-react";
+import { CalendarDays, Check, Loader2 } from "lucide-react";
 
 export const GoogleCalendarConnect = () => {
   const { user } = useAuth();
   const [isConnected, setIsConnected] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [connecting, setConnecting] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [disconnecting, setDisconnecting] = useState(false);
 
   useEffect(() => {
     checkConnection();
@@ -51,7 +54,8 @@ export const GoogleCalendarConnect = () => {
 
   const handleConnect = async () => {
     try {
-      setLoading(true);
+      setConnecting(true);
+      toast.loading("Iniciando conexão com Google Calendar...", { id: "google-connect" });
       
       // Chamar edge function para obter URL de autorização
       const response = await supabase.functions.invoke("google-oauth-init", {
@@ -60,17 +64,22 @@ export const GoogleCalendarConnect = () => {
 
       if (response.error) throw response.error;
 
+      toast.loading("Redirecionando para autenticação do Google...", { id: "google-connect" });
+      
       // Redirecionar para autorização do Google
       window.location.href = response.data.authUrl;
     } catch (error) {
       console.error("Error initiating Google OAuth:", error);
-      toast.error("Erro ao iniciar conexão com Google Calendar");
-      setLoading(false);
+      toast.error("Erro ao iniciar conexão com Google Calendar", { id: "google-connect" });
+      setConnecting(false);
     }
   };
 
   const syncAllEvents = async () => {
     try {
+      setSyncing(true);
+      toast.loading("Sincronizando eventos do Google Calendar...", { id: "google-sync" });
+      
       const response = await supabase.functions.invoke(
         "google-calendar-sync",
         {
@@ -84,16 +93,22 @@ export const GoogleCalendarConnect = () => {
       if (response.error) throw response.error;
       
       toast.success(
-        `${response.data.synced} eventos sincronizados do Google Calendar!`
+        `${response.data.synced} eventos sincronizados do Google Calendar!`,
+        { id: "google-sync" }
       );
     } catch (error) {
       console.error("Error syncing events:", error);
-      toast.error("Erro ao sincronizar eventos");
+      toast.error("Erro ao sincronizar eventos", { id: "google-sync" });
+    } finally {
+      setSyncing(false);
     }
   };
 
   const handleDisconnect = async () => {
     try {
+      setDisconnecting(true);
+      toast.loading("Desconectando do Google Calendar...", { id: "google-disconnect" });
+      
       await supabase
         .from("profiles")
         .update({
@@ -105,15 +120,26 @@ export const GoogleCalendarConnect = () => {
         .eq("id", user!.id);
 
       setIsConnected(false);
-      toast.success("Desconectado do Google Calendar");
+      toast.success("Desconectado do Google Calendar", { id: "google-disconnect" });
     } catch (error) {
       console.error("Error disconnecting:", error);
-      toast.error("Erro ao desconectar");
+      toast.error("Erro ao desconectar", { id: "google-disconnect" });
+    } finally {
+      setDisconnecting(false);
     }
   };
 
   if (loading) {
-    return null;
+    return (
+      <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-center gap-2 py-2">
+            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">Verificando conexão...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
@@ -134,8 +160,21 @@ export const GoogleCalendarConnect = () => {
                 </p>
               </div>
             </div>
-            <Button onClick={handleConnect} variant="outline" size="sm">
-              Conectar
+            <Button
+              onClick={handleConnect}
+              variant="outline"
+              size="sm"
+              disabled={connecting}
+              className="flex items-center gap-2 whitespace-nowrap"
+            >
+              {connecting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Conectando...
+                </>
+              ) : (
+                "Conectar"
+              )}
             </Button>
           </div>
         ) : (
@@ -158,15 +197,33 @@ export const GoogleCalendarConnect = () => {
                 onClick={syncAllEvents}
                 variant="outline"
                 size="sm"
+                disabled={syncing || disconnecting}
+                className="flex items-center gap-2"
               >
-                Sincronizar
+                {syncing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Sincronizando...
+                  </>
+                ) : (
+                  "Sincronizar"
+                )}
               </Button>
               <Button
                 onClick={handleDisconnect}
                 variant="destructive"
                 size="sm"
+                disabled={syncing || disconnecting}
+                className="flex items-center gap-2"
               >
-                Desconectar
+                {disconnecting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Desconectando...
+                  </>
+                ) : (
+                  "Desconectar"
+                )}
               </Button>
             </div>
           </div>
