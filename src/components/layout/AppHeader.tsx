@@ -18,31 +18,10 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 export const AppHeader = () => {
-  const { user, isAdmin, signOut } = useAuth();
+  const { user, isAdmin, signOut, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (user?.id) {
-      loadAvatar();
-    }
-  }, [user?.id]);
-
-  const loadAvatar = async () => {
-    if (!user?.id) return;
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("avatar_url")
-      .eq("id", user.id)
-      .single();
-
-    if (profile?.avatar_url) {
-      setAvatarUrl(profile.avatar_url);
-    }
-  };
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
@@ -54,7 +33,7 @@ export const AppHeader = () => {
 
       const file = event.target.files[0];
       const fileExt = file.name.split(".").pop();
-      const filePath = `${user?.id}-${Math.random()}.${fileExt}`;
+      const filePath = `${user?.id}/${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from("avatars")
@@ -77,7 +56,7 @@ export const AppHeader = () => {
         throw updateError;
       }
 
-      setAvatarUrl(publicUrl);
+      await refreshProfile();
       toast.success("Foto de perfil atualizada com sucesso!");
     } catch (error) {
       console.error("Error uploading avatar:", error);
@@ -107,13 +86,13 @@ export const AppHeader = () => {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 rounded-full px-4 gap-2">
               <Avatar className="h-10 w-10 border-2 border-primary/20">
-                {avatarUrl && <AvatarImage src={avatarUrl} alt="Avatar" />}
+                {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt="Avatar" />}
                 <AvatarFallback className="bg-primary/10 text-primary">
                   {getUserInitials()}
                 </AvatarFallback>
               </Avatar>
               <span className="hidden md:inline-flex items-center gap-1">
-                {user?.email?.split("@")[0]}
+                {profile?.nome || user?.email?.split("@")[0]}
                 {isAdmin && <span className="text-xs">👑 Admin</span>}
               </span>
             </Button>
