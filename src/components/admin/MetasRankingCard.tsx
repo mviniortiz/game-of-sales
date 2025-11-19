@@ -57,16 +57,9 @@ export const MetasRankingCard = ({
         </Badge>
       );
     }
-    if (percentual >= 50) {
-      return (
-        <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 px-3 py-1">
-          🔵 Em andamento
-        </Badge>
-      );
-    }
     return (
-      <Badge className="bg-red-500/20 text-red-400 border-red-500/30 px-3 py-1">
-        🔴 Atrasada
+      <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 px-3 py-1">
+        🔵 Em andamento
       </Badge>
     );
   };
@@ -74,15 +67,13 @@ export const MetasRankingCard = ({
   const getProgressColor = (percentual: number) => {
     if (percentual >= 100) return "bg-gradient-to-r from-green-500 to-emerald-500";
     if (percentual >= 80) return "bg-gradient-to-r from-yellow-500 to-amber-500";
-    if (percentual >= 50) return "bg-gradient-to-r from-blue-500 to-cyan-500";
-    return "bg-gradient-to-r from-red-500 to-rose-500";
+    return "bg-gradient-to-r from-blue-500 to-cyan-500";
   };
 
   const filteredVendedores = vendedores.filter((v) => {
     if (statusFiltro === "todos") return true;
     if (statusFiltro === "atingida") return v.percentual >= 100;
-    if (statusFiltro === "em_andamento") return v.percentual >= 80 && v.percentual < 100;
-    if (statusFiltro === "nao_atingida") return v.percentual < 80;
+    if (statusFiltro === "em_andamento") return v.percentual < 100;
     return true;
   });
 
@@ -109,7 +100,6 @@ export const MetasRankingCard = ({
             <SelectItem value="todos">Todos</SelectItem>
             <SelectItem value="atingida">Atingida</SelectItem>
             <SelectItem value="em_andamento">Em andamento</SelectItem>
-            <SelectItem value="nao_atingida">Não atingida</SelectItem>
           </SelectContent>
         </Select>
       </div>
