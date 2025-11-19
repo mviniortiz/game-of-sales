@@ -14,12 +14,23 @@ export const AdminDashboardOverview = () => {
     to: endOfMonth(new Date()),
   });
   const [selectedVendedor, setSelectedVendedor] = useState("todos");
+  const [selectedFormaPagamento, setSelectedFormaPagamento] = useState("todas");
+  const [selectedProduto, setSelectedProduto] = useState("todos");
 
   // Buscar lista de vendedores
   const { data: vendedores = [] } = useQuery({
     queryKey: ["vendedores-list"],
     queryFn: async () => {
       const { data } = await supabase.from("profiles").select("id, nome");
+      return data || [];
+    },
+  });
+
+  // Buscar lista de produtos
+  const { data: produtos = [] } = useQuery({
+    queryKey: ["produtos-list"],
+    queryFn: async () => {
+      const { data } = await supabase.from("produtos").select("id, nome").eq("ativo", true);
       return data || [];
     },
   });
@@ -38,6 +49,11 @@ export const AdminDashboardOverview = () => {
         selectedVendedor={selectedVendedor}
         setSelectedVendedor={setSelectedVendedor}
         vendedores={vendedores}
+        selectedFormaPagamento={selectedFormaPagamento}
+        setSelectedFormaPagamento={setSelectedFormaPagamento}
+        selectedProduto={selectedProduto}
+        setSelectedProduto={setSelectedProduto}
+        produtos={produtos}
       />
 
       {/* Tabs para alternar entre Vendas e Performance */}
@@ -57,6 +73,8 @@ export const AdminDashboardOverview = () => {
           <AdminVendasView
             dateRange={dateRange}
             selectedVendedor={selectedVendedor}
+            selectedFormaPagamento={selectedFormaPagamento}
+            selectedProduto={selectedProduto}
           />
         </TabsContent>
 
