@@ -1,11 +1,8 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TrendingUp, Phone } from "lucide-react";
 import { AdminFilters } from "@/components/admin/AdminFilters";
 import { AdminVendasView } from "@/components/admin/AdminVendasView";
-import { AdminPerformanceView } from "@/components/admin/AdminPerformanceView";
 import { startOfMonth, endOfMonth } from "date-fns";
 
 export const AdminDashboardOverview = () => {
@@ -56,35 +53,13 @@ export const AdminDashboardOverview = () => {
         produtos={produtos}
       />
 
-      {/* Tabs para alternar entre Vendas e Performance */}
-      <Tabs defaultValue="vendas" className="w-full">
-        <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
-          <TabsTrigger value="vendas" className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4" />
-            Vendas
-          </TabsTrigger>
-          <TabsTrigger value="performance" className="flex items-center gap-2">
-            <Phone className="h-4 w-4" />
-            Performance de Calls
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="vendas" className="mt-6">
-          <AdminVendasView
-            dateRange={dateRange}
-            selectedVendedor={selectedVendedor}
-            selectedFormaPagamento={selectedFormaPagamento}
-            selectedProduto={selectedProduto}
-          />
-        </TabsContent>
-
-        <TabsContent value="performance" className="mt-6">
-          <AdminPerformanceView
-            dateRange={dateRange}
-            selectedVendedor={selectedVendedor}
-          />
-        </TabsContent>
-      </Tabs>
+      {/* Visualização de Vendas */}
+      <AdminVendasView
+        dateRange={dateRange}
+        selectedVendedor={selectedVendedor}
+        selectedFormaPagamento={selectedFormaPagamento}
+        selectedProduto={selectedProduto}
+      />
     </div>
   );
 };
