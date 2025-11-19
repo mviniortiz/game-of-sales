@@ -26,6 +26,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // Itens agrupados por categoria
 const visaoGeralItems = [
@@ -59,30 +65,47 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar className="border-r border-border/50">
-      <SidebarContent className="gap-0">
-        {/* Logo Section */}
-        <div className="p-6 border-b border-border/50">
-          {!collapsed && (
-            <div className="flex items-center justify-center">
-              <img src={logo} alt="Rota de Negócios" className="w-40 h-40 object-contain" />
-            </div>
-          )}
-          {collapsed && (
-            <img src={logo} alt="Rota de Negócios" className="w-12 h-12 object-contain mx-auto" />
-          )}
-        </div>
+    <TooltipProvider delayDuration={300}>
+      <Sidebar className="border-r border-border/50">
+        <SidebarContent className="gap-0">
+          {/* Logo Section */}
+          <div className="p-6 border-b border-border/50">
+            {!collapsed && (
+              <div className="flex items-center justify-center">
+                <img src={logo} alt="Rota de Negócios" className="w-40 h-40 object-contain" />
+              </div>
+            )}
+            {collapsed && (
+              <img src={logo} alt="Rota de Negócios" className="w-12 h-12 object-contain mx-auto" />
+            )}
+          </div>
 
-        {/* CTA Button - Registrar Venda */}
-        <div className="p-4">
-          <Button
-            onClick={() => navigate("/nova-venda")}
-            className="w-full bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-black font-semibold shadow-lg hover:shadow-xl transition-all h-12 gap-2"
-          >
-            <PlusCircle className="h-5 w-5" />
-            {!collapsed && <span>Registrar Venda</span>}
-          </Button>
-        </div>
+          {/* CTA Button - Registrar Venda */}
+          <div className="p-4">
+            {collapsed ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={() => navigate("/nova-venda")}
+                    className="w-full bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-black font-semibold shadow-lg hover:shadow-xl transition-all h-12 gap-2"
+                  >
+                    <PlusCircle className="h-5 w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="font-semibold">
+                  Registrar Venda
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              <Button
+                onClick={() => navigate("/nova-venda")}
+                className="w-full bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-black font-semibold shadow-lg hover:shadow-xl transition-all h-12 gap-2"
+              >
+                <PlusCircle className="h-5 w-5" />
+                <span>Registrar Venda</span>
+              </Button>
+            )}
+          </div>
 
         {/* Visão Geral Section */}
         <SidebarGroup className="py-2">
@@ -97,17 +120,37 @@ export function AppSidebar() {
                 const isActive = location.pathname === item.url;
                 return (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <NavLink
-                        to={item.url}
-                        end
-                        className="flex items-center gap-3 hover:bg-accent/50 transition-all group py-2.5"
-                        activeClassName="bg-accent/60 text-primary font-medium border-l-4 border-cyan-500"
-                      >
-                        <item.icon className={`h-5 w-5 transition-colors ${isActive ? 'text-cyan-500' : ''}`} />
-                        {!collapsed && <span className="flex-1">{item.title}</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
+                    {collapsed ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <SidebarMenuButton asChild>
+                            <NavLink
+                              to={item.url}
+                              end
+                              className="flex items-center gap-3 hover:bg-accent/50 transition-all group py-2.5"
+                              activeClassName="bg-accent/60 text-primary font-medium border-l-4 border-cyan-500"
+                            >
+                              <item.icon className={`h-5 w-5 transition-colors ${isActive ? 'text-cyan-500' : ''}`} />
+                            </NavLink>
+                          </SidebarMenuButton>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="font-medium">
+                          {item.title}
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <SidebarMenuButton asChild>
+                        <NavLink
+                          to={item.url}
+                          end
+                          className="flex items-center gap-3 hover:bg-accent/50 transition-all group py-2.5"
+                          activeClassName="bg-accent/60 text-primary font-medium border-l-4 border-cyan-500"
+                        >
+                          <item.icon className={`h-5 w-5 transition-colors ${isActive ? 'text-cyan-500' : ''}`} />
+                          <span className="flex-1">{item.title}</span>
+                        </NavLink>
+                      </SidebarMenuButton>
+                    )}
                   </SidebarMenuItem>
                 );
               })}
@@ -128,17 +171,37 @@ export function AppSidebar() {
                 const isActive = location.pathname === item.url;
                 return (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <NavLink
-                        to={item.url}
-                        end
-                        className="flex items-center gap-3 hover:bg-accent/50 transition-all group py-2.5"
-                        activeClassName="bg-accent/60 text-primary font-medium border-l-4 border-cyan-500"
-                      >
-                        <item.icon className={`h-5 w-5 transition-colors ${isActive ? 'text-cyan-500' : ''}`} />
-                        {!collapsed && <span className="flex-1">{item.title}</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
+                    {collapsed ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <SidebarMenuButton asChild>
+                            <NavLink
+                              to={item.url}
+                              end
+                              className="flex items-center gap-3 hover:bg-accent/50 transition-all group py-2.5"
+                              activeClassName="bg-accent/60 text-primary font-medium border-l-4 border-cyan-500"
+                            >
+                              <item.icon className={`h-5 w-5 transition-colors ${isActive ? 'text-cyan-500' : ''}`} />
+                            </NavLink>
+                          </SidebarMenuButton>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="font-medium">
+                          {item.title}
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <SidebarMenuButton asChild>
+                        <NavLink
+                          to={item.url}
+                          end
+                          className="flex items-center gap-3 hover:bg-accent/50 transition-all group py-2.5"
+                          activeClassName="bg-accent/60 text-primary font-medium border-l-4 border-cyan-500"
+                        >
+                          <item.icon className={`h-5 w-5 transition-colors ${isActive ? 'text-cyan-500' : ''}`} />
+                          <span className="flex-1">{item.title}</span>
+                        </NavLink>
+                      </SidebarMenuButton>
+                    )}
                   </SidebarMenuItem>
                 );
               })}
@@ -157,17 +220,37 @@ export function AppSidebar() {
             <SidebarGroupContent>
               <SidebarMenu className="gap-1">
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to={adminMenuItem.url}
-                      end
-                      className="flex items-center gap-3 hover:bg-accent/50 transition-all group py-2.5"
-                      activeClassName="bg-accent/60 text-primary font-medium border-l-4 border-cyan-500"
-                    >
-                      <adminMenuItem.icon className={`h-5 w-5 transition-colors ${location.pathname === adminMenuItem.url ? 'text-cyan-500' : ''}`} />
-                      {!collapsed && <span className="flex-1">{adminMenuItem.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
+                  {collapsed ? (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <SidebarMenuButton asChild>
+                          <NavLink
+                            to={adminMenuItem.url}
+                            end
+                            className="flex items-center gap-3 hover:bg-accent/50 transition-all group py-2.5"
+                            activeClassName="bg-accent/60 text-primary font-medium border-l-4 border-cyan-500"
+                          >
+                            <adminMenuItem.icon className={`h-5 w-5 transition-colors ${location.pathname === adminMenuItem.url ? 'text-cyan-500' : ''}`} />
+                          </NavLink>
+                        </SidebarMenuButton>
+                      </TooltipTrigger>
+                      <TooltipContent side="right" className="font-medium">
+                        {adminMenuItem.title}
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : (
+                    <SidebarMenuButton asChild>
+                      <NavLink
+                        to={adminMenuItem.url}
+                        end
+                        className="flex items-center gap-3 hover:bg-accent/50 transition-all group py-2.5"
+                        activeClassName="bg-accent/60 text-primary font-medium border-l-4 border-cyan-500"
+                      >
+                        <adminMenuItem.icon className={`h-5 w-5 transition-colors ${location.pathname === adminMenuItem.url ? 'text-cyan-500' : ''}`} />
+                        <span className="flex-1">{adminMenuItem.title}</span>
+                      </NavLink>
+                    </SidebarMenuButton>
+                  )}
                 </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
@@ -268,5 +351,6 @@ export function AppSidebar() {
         )}
       </SidebarFooter>
     </Sidebar>
+    </TooltipProvider>
   );
 }
