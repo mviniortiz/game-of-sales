@@ -20,9 +20,10 @@ interface WeekViewProps {
   date: Date;
   agendamentos: Agendamento[];
   onAgendamentoUpdate: (id: string, newDate: Date) => void;
+  onEventClick?: (agendamento: Agendamento) => void;
 }
 
-function SortableAgendamento({ agendamento }: { agendamento: Agendamento }) {
+function SortableAgendamento({ agendamento, onEventClick }: { agendamento: Agendamento; onEventClick?: (agendamento: Agendamento) => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: agendamento.id,
   });
@@ -47,9 +48,10 @@ function SortableAgendamento({ agendamento }: { agendamento: Agendamento }) {
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
       <Card
-        className={`p-3 mb-2 cursor-grab active:cursor-grabbing backdrop-blur-sm bg-card/60 hover:bg-card/80 hover:shadow-lg hover:scale-[1.02] transition-all ${getStatusColor(
+        className={`p-3 mb-2 cursor-pointer backdrop-blur-sm bg-card/60 hover:bg-card/80 hover:shadow-lg hover:scale-[1.02] transition-all ${getStatusColor(
           agendamento.status
         ).bg}`}
+        onClick={() => onEventClick?.(agendamento)}
       >
         <div className="flex items-start gap-2">
           <GripVertical className={`h-4 w-4 flex-shrink-0 mt-0.5 ${getStatusColor(agendamento.status).text}`} />
@@ -66,7 +68,7 @@ function SortableAgendamento({ agendamento }: { agendamento: Agendamento }) {
   );
 }
 
-export function WeekView({ date, agendamentos, onAgendamentoUpdate }: WeekViewProps) {
+export function WeekView({ date, agendamentos, onAgendamentoUpdate, onEventClick }: WeekViewProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const weekStart = startOfWeek(date, { locale: ptBR });
@@ -155,7 +157,7 @@ export function WeekView({ date, agendamentos, onAgendamentoUpdate }: WeekViewPr
 
                 <div>
                   {dayAgendamentos.map((agendamento) => (
-                    <SortableAgendamento key={agendamento.id} agendamento={agendamento} />
+                    <SortableAgendamento key={agendamento.id} agendamento={agendamento} onEventClick={onEventClick} />
                   ))}
                 </div>
               </div>
