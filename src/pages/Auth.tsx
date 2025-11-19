@@ -69,7 +69,7 @@ const Auth = () => {
         <div className="w-full max-w-md space-y-8">
           {/* Logo */}
           <div className="flex items-center animate-fade-in" style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>
-            <img src={logo} alt="Rota de Negócios" className="h-16 w-16 object-contain" />
+            <img src={logo} alt="Rota de Negócios" className="w-48 h-auto object-contain" />
           </div>
 
           {/* Header */}
