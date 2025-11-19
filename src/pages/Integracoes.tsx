@@ -2,32 +2,32 @@ import { GoogleCalendarConnect } from "@/components/calendar/GoogleCalendarConne
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar as CalendarIcon, CreditCard, Bell } from "lucide-react";
+import { Calendar as CalendarIcon, CreditCard, Bell, Zap, Target, Leaf, Banknote } from "lucide-react";
 
 const Integracoes = () => {
   const roadmapIntegrations = [
     {
       name: "Celetus",
       description: "Importe vendas e transações automaticamente da Celetus",
-      icon: "💎",
+      Icon: Zap,
       color: "from-cyan-500 to-blue-500"
     },
     {
       name: "Cakto",
       description: "Sincronize vendas e comissões em tempo real",
-      icon: "🎯",
+      Icon: Target,
       color: "from-blue-500 to-indigo-500"
     },
     {
       name: "Greenn",
       description: "Conecte recorrências e assinaturas da Greenn",
-      icon: "🌱",
+      Icon: Leaf,
       color: "from-green-500 to-emerald-500"
     },
     {
       name: "Pix/Boleto",
       description: "Integração com gateways de pagamento direto",
-      icon: "💳",
+      Icon: Banknote,
       color: "from-purple-500 to-pink-500"
     }
   ];
@@ -91,41 +91,44 @@ const Integracoes = () => {
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {roadmapIntegrations.map((integration) => (
-            <Card 
-              key={integration.name} 
-              className="relative border-border/30 bg-card/30 backdrop-blur-sm overflow-hidden group hover:border-border/50 transition-all duration-300 opacity-75 grayscale hover:grayscale-0 hover:opacity-100"
-            >
-              <Badge 
-                variant="secondary" 
-                className="absolute top-3 right-3 bg-yellow-500/20 text-yellow-600 border-yellow-500/30 text-xs"
+          {roadmapIntegrations.map((integration) => {
+            const IconComponent = integration.Icon;
+            return (
+              <Card 
+                key={integration.name} 
+                className="relative border-border/30 bg-card/30 backdrop-blur-sm overflow-hidden group hover:border-border/50 transition-all duration-300 opacity-75 grayscale hover:grayscale-0 hover:opacity-100"
               >
-                Em Breve
-              </Badge>
-              
-              <CardHeader className="pb-3">
-                <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${integration.color} flex items-center justify-center text-2xl mb-3 opacity-50 group-hover:opacity-100 transition-opacity`}>
-                  {integration.icon}
-                </div>
-                <CardTitle className="text-lg">{integration.name}</CardTitle>
-                <CardDescription className="text-sm line-clamp-2">
-                  {integration.description}
-                </CardDescription>
-              </CardHeader>
-              
-              <CardContent>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  disabled
-                  className="w-full gap-2"
+                <Badge 
+                  variant="secondary" 
+                  className="absolute top-3 right-3 bg-yellow-500/20 text-yellow-600 border-yellow-500/30 text-xs"
                 >
-                  <Bell className="h-3 w-3" />
-                  Avise-me
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+                  Em Breve
+                </Badge>
+                
+                <CardHeader className="pb-3">
+                  <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${integration.color} flex items-center justify-center mb-3 opacity-50 group-hover:opacity-100 transition-opacity`}>
+                    <IconComponent className="h-6 w-6 text-white" />
+                  </div>
+                  <CardTitle className="text-lg">{integration.name}</CardTitle>
+                  <CardDescription className="text-sm line-clamp-2">
+                    {integration.description}
+                  </CardDescription>
+                </CardHeader>
+                
+                <CardContent>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    disabled
+                    className="w-full gap-2"
+                  >
+                    <Bell className="h-3 w-3" />
+                    Avise-me
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
         {/* Call to Action */}
