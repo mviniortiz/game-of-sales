@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trophy, TrendingUp, Target } from "lucide-react";
+import { Trophy, TrendingUp, Target, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface VendedorMeta {
   nome: string;
@@ -34,23 +35,47 @@ export const MetasRankingCard = ({
     }).format(value);
   };
 
-  const getStatusColor = (percentual: number) => {
-    if (percentual >= 100) return "bg-green-500";
-    if (percentual >= 80) return "bg-yellow-500";
-    return "bg-red-500";
+  const getInitials = (name: string) => {
+    if (!name) return "?";
+    const names = name.trim().split(" ");
+    if (names.length === 1) return names[0].substring(0, 2).toUpperCase();
+    return (names[0][0] + names[names.length - 1][0]).toUpperCase();
   };
 
   const getStatusBadge = (percentual: number) => {
-    if (percentual >= 100) return <Badge className="bg-green-500">Atingida</Badge>;
-    if (percentual >= 80) return <Badge className="bg-yellow-500">Em andamento</Badge>;
-    return <Badge className="bg-red-500">Não atingida</Badge>;
+    if (percentual >= 100) {
+      return (
+        <Badge className="bg-green-500/20 text-green-400 border-green-500/30 px-3 py-1">
+          🟢 Atingida
+        </Badge>
+      );
+    }
+    if (percentual >= 80) {
+      return (
+        <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 px-3 py-1">
+          🟡 Quase lá
+        </Badge>
+      );
+    }
+    if (percentual >= 50) {
+      return (
+        <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 px-3 py-1">
+          🔵 Em andamento
+        </Badge>
+      );
+    }
+    return (
+      <Badge className="bg-red-500/20 text-red-400 border-red-500/30 px-3 py-1">
+        🔴 Atrasada
+      </Badge>
+    );
   };
 
-  const getMedalIcon = (posicao: number) => {
-    if (posicao === 1) return "🥇";
-    if (posicao === 2) return "🥈";
-    if (posicao === 3) return "🥉";
-    return null;
+  const getProgressColor = (percentual: number) => {
+    if (percentual >= 100) return "bg-gradient-to-r from-green-500 to-emerald-500";
+    if (percentual >= 80) return "bg-gradient-to-r from-yellow-500 to-amber-500";
+    if (percentual >= 50) return "bg-gradient-to-r from-blue-500 to-cyan-500";
+    return "bg-gradient-to-r from-red-500 to-rose-500";
   };
 
   const filteredVendedores = vendedores.filter((v) => {
@@ -61,197 +86,193 @@ export const MetasRankingCard = ({
     return true;
   });
 
-  const top3 = filteredVendedores.slice(0, 3);
-  const resto = filteredVendedores.slice(3);
-
   return (
-    <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
-      <CardHeader className="pb-4">
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/20">
-              <Target className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <CardTitle className="text-2xl">Metas de Vendas</CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                Acompanhamento mensal de metas
-              </p>
-            </div>
+    <div className="space-y-6">
+      {/* Cabeçalho com Filtro */}
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-primary/20">
+            <Target className="h-6 w-6 text-primary" />
           </div>
-          <Select value={statusFiltro} onValueChange={onStatusChange}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todos</SelectItem>
-              <SelectItem value="atingida">Atingida</SelectItem>
-              <SelectItem value="em_andamento">Em andamento</SelectItem>
-              <SelectItem value="nao_atingida">Não atingida</SelectItem>
-            </SelectContent>
-          </Select>
+          <div>
+            <h2 className="text-2xl font-bold">Metas de Vendas</h2>
+            <p className="text-sm text-muted-foreground">
+              Acompanhamento mensal de performance
+            </p>
+          </div>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Meta Consolidada */}
-        <div className="bg-card/50 border-2 border-primary/30 rounded-xl p-5 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-primary" />
-              <span className="text-lg font-semibold">Meta Consolidada</span>
+        <Select value={statusFiltro} onValueChange={onStatusChange}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos</SelectItem>
+            <SelectItem value="atingida">Atingida</SelectItem>
+            <SelectItem value="em_andamento">Em andamento</SelectItem>
+            <SelectItem value="nao_atingida">Não atingida</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Card Principal - Meta Consolidada */}
+      <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-background overflow-hidden relative">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32" />
+        <CardHeader className="pb-4 relative z-10">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-xl bg-primary/20 backdrop-blur-sm">
+                <Zap className="h-8 w-8 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-3xl font-bold">Black Friday 2025</CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Meta Consolidada da Equipe
+                </p>
+              </div>
             </div>
             <div className="text-right">
-              <span className="text-3xl font-bold text-primary">
+              <div className="text-5xl font-bold text-primary">
                 {percentualConsolidado.toFixed(1)}%
-              </span>
-              <p className="text-xs text-muted-foreground mt-1">Meta consolidada</p>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">do objetivo</p>
             </div>
           </div>
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>
-              Realizado: <span className="font-semibold text-foreground">{formatCurrency(valorConsolidadoAtingido)}</span>
-            </span>
-            <span>
-              Meta: <span className="font-semibold text-foreground">{formatCurrency(metaConsolidada)}</span>
-            </span>
+        </CardHeader>
+        <CardContent className="space-y-4 relative z-10">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Progresso</span>
+            <div className="flex gap-6">
+              <span className="font-semibold">
+                Realizado: <span className="text-primary">{formatCurrency(valorConsolidadoAtingido)}</span>
+              </span>
+              <span className="font-semibold">
+                Meta: <span className="text-foreground">{formatCurrency(metaConsolidada)}</span>
+              </span>
+            </div>
           </div>
-          <div className="h-4 bg-muted rounded-full overflow-hidden shadow-inner">
+          
+          {/* Barra de Progresso Principal - Grossa e Impactante */}
+          <div className="relative h-8 bg-muted/50 rounded-full overflow-hidden backdrop-blur-sm border border-border/50">
             <div
-              className={`h-full ${getStatusColor(percentualConsolidado)} transition-all duration-500 ease-out shadow-sm`}
+              className={`h-full ${getProgressColor(percentualConsolidado)} transition-all duration-1000 ease-out relative`}
               style={{ width: `${Math.min(percentualConsolidado, 100)}%` }}
-            />
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-xs font-bold text-foreground drop-shadow-lg">
+                {percentualConsolidado >= 10 && `${percentualConsolidado.toFixed(1)}%`}
+              </span>
+            </div>
           </div>
+
+          {getStatusBadge(percentualConsolidado)}
+        </CardContent>
+      </Card>
+
+      {/* Lista de Vendedores */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 mb-4">
+          <TrendingUp className="h-5 w-5 text-primary" />
+          <h3 className="text-lg font-semibold">Contribuição Individual</h3>
+          <span className="text-sm text-muted-foreground">
+            ({filteredVendedores.length} {filteredVendedores.length === 1 ? "vendedor" : "vendedores"})
+          </span>
         </div>
 
-        {/* Top 3 - Ranking com Medalhas */}
-        {top3.length > 0 && (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 mb-3">
-              <Trophy className="h-5 w-5 text-yellow-500" />
-              <h3 className="font-semibold text-lg">Top 3 Vendedores</h3>
-            </div>
-            {top3.map((vendedor, index) => {
+        {filteredVendedores.length === 0 ? (
+          <Card className="border-dashed">
+            <CardContent className="py-12 text-center">
+              <Target className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
+              <p className="text-muted-foreground">Nenhum vendedor encontrado</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Ajuste os filtros para ver os resultados
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-3">
+            {filteredVendedores.map((vendedor, index) => {
               const posicao = index + 1;
-              const medal = getMedalIcon(posicao);
               const percentualContribuicao = metaConsolidada > 0 
                 ? (vendedor.valorRealizado / metaConsolidada) * 100 
                 : 0;
 
               return (
-                <div
+                <Card
                   key={vendedor.nome}
-                  className={`p-5 rounded-xl border-2 bg-card/50 space-y-3 ${
-                    posicao === 1 ? "border-yellow-500/50 bg-yellow-500/5" :
-                    posicao === 2 ? "border-gray-400/50 bg-gray-400/5" :
-                    "border-orange-600/50 bg-orange-600/5"
-                  }`}
+                  className="border-border/50 bg-card/80 backdrop-blur-sm hover:bg-card/90 transition-all duration-200 hover:shadow-lg hover:border-primary/30"
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="text-3xl">{medal}</span>
-                      <div>
-                        <span className="text-lg font-semibold">{vendedor.nome}</span>
-                        <p className="text-xs text-muted-foreground">
-                          {formatCurrency(vendedor.valorRealizado)} de {formatCurrency(vendedor.valorMeta)}
-                        </p>
+                  <CardContent className="p-5">
+                    <div className="flex items-start gap-4">
+                      {/* Avatar e Posição */}
+                      <div className="relative flex-shrink-0">
+                        <Avatar className="h-14 w-14 border-2 border-primary/20">
+                          <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg">
+                            {getInitials(vendedor.nome)}
+                          </AvatarFallback>
+                        </Avatar>
+                        {posicao <= 3 && (
+                          <div className="absolute -top-1 -right-1 bg-background border-2 border-primary rounded-full w-6 h-6 flex items-center justify-center">
+                            <span className="text-xs font-bold">
+                              {posicao === 1 ? "🥇" : posicao === 2 ? "🥈" : "🥉"}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Informações e Progresso */}
+                      <div className="flex-1 min-w-0 space-y-3">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="font-bold text-lg truncate">{vendedor.nome}</h4>
+                              {posicao <= 3 && (
+                                <Trophy className="h-4 w-4 text-yellow-500 flex-shrink-0" />
+                              )}
+                            </div>
+                            <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
+                              <span>
+                                Contribuiu: <span className="font-semibold text-primary">{formatCurrency(vendedor.valorRealizado)}</span>
+                              </span>
+                              <span>•</span>
+                              <span>
+                                Meta: <span className="font-semibold text-foreground">{formatCurrency(vendedor.valorMeta)}</span>
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                            <span className="text-2xl font-bold text-primary">
+                              {vendedor.percentual.toFixed(1)}%
+                            </span>
+                            {getStatusBadge(vendedor.percentual)}
+                          </div>
+                        </div>
+
+                        {/* Barra de Progresso Individual */}
+                        <div className="space-y-1">
+                          <div className="relative h-3 bg-muted/50 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full ${getProgressColor(vendedor.percentual)} transition-all duration-700 ease-out`}
+                              style={{ width: `${Math.min(vendedor.percentual, 100)}%` }}
+                            />
+                          </div>
+                          <div className="flex justify-between text-xs text-muted-foreground">
+                            <span>Meta individual</span>
+                            <span>
+                              Contribuição geral: <span className="font-semibold text-primary">{percentualContribuicao.toFixed(1)}%</span>
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <span className="text-2xl font-bold text-primary">
-                        {vendedor.percentual.toFixed(1)}%
-                      </span>
-                      {getStatusBadge(vendedor.percentual)}
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>Progresso da meta</span>
-                      <span>{vendedor.percentual.toFixed(1)}%</span>
-                    </div>
-                    <div className="h-3 bg-muted rounded-full overflow-hidden">
-                      <div
-                        className={`h-full ${getStatusColor(vendedor.percentual)} transition-all duration-500`}
-                        style={{ width: `${Math.min(vendedor.percentual, 100)}%` }}
-                      />
-                    </div>
-                    <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                      <span>Contribuição para meta geral</span>
-                      <span className="font-semibold">{percentualContribuicao.toFixed(1)}%</span>
-                    </div>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               );
             })}
           </div>
         )}
-
-        {/* Demais Vendedores */}
-        {resto.length > 0 && (
-          <div className="space-y-3">
-            <h3 className="font-semibold text-lg flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-primary" />
-              Demais Vendedores
-            </h3>
-            {resto.map((vendedor, index) => {
-              const posicao = index + 4;
-              const percentualContribuicao = metaConsolidada > 0 
-                ? (vendedor.valorRealizado / metaConsolidada) * 100 
-                : 0;
-
-              return (
-                <div
-                  key={vendedor.nome}
-                  className="p-4 rounded-xl border bg-card/30 space-y-3"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="text-lg font-semibold text-muted-foreground">
-                        {posicao}º
-                      </span>
-                      <div>
-                        <span className="font-semibold">{vendedor.nome}</span>
-                        <p className="text-xs text-muted-foreground">
-                          {formatCurrency(vendedor.valorRealizado)} de {formatCurrency(vendedor.valorMeta)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-xl font-bold">
-                        {vendedor.percentual.toFixed(1)}%
-                      </span>
-                      {getStatusBadge(vendedor.percentual)}
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>Progresso</span>
-                      <span>{vendedor.percentual.toFixed(1)}%</span>
-                    </div>
-                    <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <div
-                        className={`h-full ${getStatusColor(vendedor.percentual)} transition-all duration-500`}
-                        style={{ width: `${Math.min(vendedor.percentual, 100)}%` }}
-                      />
-                    </div>
-                    <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                      <span>Contribuição geral</span>
-                      <span className="font-semibold">{percentualContribuicao.toFixed(1)}%</span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {filteredVendedores.length === 0 && (
-          <div className="text-center py-12 text-muted-foreground">
-            <Target className="h-12 w-12 mx-auto mb-4 opacity-30" />
-            <p className="text-lg font-medium">Nenhuma meta encontrada</p>
-            <p className="text-sm mt-2">Ajuste os filtros para ver os resultados</p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
