@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import logo from "@/assets/logo.png";
 import { Mail, Lock, ArrowRight } from "lucide-react";
-import { MouseEffect } from "@/components/auth/MouseEffect";
+import DataFlowBackground from "@/components/auth/DataFlowBackground";
 
 const authSchema = z.object({
   email: z.string().email("Email inválido").max(255, "Email muito longo"),
@@ -170,8 +170,8 @@ const Auth = () => {
 
       {/* Right Side - Visual */}
       <div className="hidden lg:block lg:w-1/2 relative overflow-hidden bg-slate-950">
-        {/* Dynamic Data Flow Background with Mouse Effect */}
-        <MouseEffect />
+        {/* Dynamic Data Flow Background */}
+        <DataFlowBackground />
         
         {/* Content */}
         <div className="relative h-full flex flex-col items-center justify-center p-12 text-white">
