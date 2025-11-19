@@ -35,26 +35,27 @@ function SortableAgendamento({ agendamento }: { agendamento: Agendamento }) {
 
   const getStatusColor = (status: string) => {
     const colors = {
-      agendado: "bg-blue-500",
-      confirmado: "bg-green-500",
-      cancelado: "bg-red-500",
-      concluido: "bg-gray-500",
+      agendado: { bg: "bg-blue-500/10 border-l-4 border-blue-500", text: "text-blue-400" },
+      confirmado: { bg: "bg-green-500/10 border-l-4 border-green-500", text: "text-green-400" },
+      cancelado: { bg: "bg-red-500/10 border-l-4 border-red-500", text: "text-red-400" },
+      concluido: { bg: "bg-gray-500/10 border-l-4 border-gray-500", text: "text-gray-400" },
+      realizado: { bg: "bg-green-500/10 border-l-4 border-green-500", text: "text-green-400" },
     };
-    return colors[status as keyof typeof colors] || "bg-primary";
+    return colors[status as keyof typeof colors] || { bg: "bg-primary/10 border-l-4 border-primary", text: "text-primary" };
   };
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
       <Card
-        className={`p-2 mb-2 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow ${getStatusColor(
+        className={`p-3 mb-2 cursor-grab active:cursor-grabbing backdrop-blur-sm bg-card/60 hover:bg-card/80 hover:shadow-lg hover:scale-[1.02] transition-all ${getStatusColor(
           agendamento.status
-        )} text-white`}
+        ).bg}`}
       >
         <div className="flex items-start gap-2">
-          <GripVertical className="h-4 w-4 flex-shrink-0 mt-0.5" />
+          <GripVertical className={`h-4 w-4 flex-shrink-0 mt-0.5 ${getStatusColor(agendamento.status).text}`} />
           <div className="flex-1 min-w-0">
-            <p className="font-medium text-sm truncate">{agendamento.cliente_nome}</p>
-            <div className="flex items-center gap-1 text-xs opacity-90">
+            <p className={`font-medium text-sm truncate ${getStatusColor(agendamento.status).text}`}>{agendamento.cliente_nome}</p>
+            <div className={`flex items-center gap-1 text-xs ${getStatusColor(agendamento.status).text}`}>
               <Clock className="h-3 w-3" />
               <span>{format(new Date(agendamento.data_agendamento), "HH:mm")}</span>
             </div>

@@ -104,22 +104,25 @@ export const CalendarioAgendamentos = () => {
 
   const eventStyleGetter = (event: CalendarEvent) => {
     const status = event.resource.status;
-    let backgroundColor = "hsl(var(--primary))";
+    
+    const statusColors = {
+      agendado: { border: "#3B82F6", bg: "rgba(59, 130, 246, 0.1)" },
+      realizado: { border: "#10B981", bg: "rgba(16, 185, 129, 0.1)" },
+      cancelado: { border: "#EF4444", bg: "rgba(239, 68, 68, 0.1)" },
+    };
 
-    if (status === "realizado") {
-      backgroundColor = "#10B981";
-    } else if (status === "cancelado") {
-      backgroundColor = "#EF4444";
-    }
+    const colors = statusColors[status as keyof typeof statusColors] || { border: "hsl(var(--primary))", bg: "hsl(var(--primary) / 0.1)" };
 
     return {
       style: {
-        backgroundColor,
-        borderRadius: "4px",
-        opacity: 0.9,
-        color: "white",
-        border: "0px",
-        display: "block",
+        backgroundColor: colors.bg,
+        borderLeft: `4px solid ${colors.border}`,
+        borderRadius: "8px",
+        color: "hsl(var(--foreground))",
+        border: "1px solid hsl(var(--border) / 0.2)",
+        backdropFilter: "blur(8px)",
+        padding: "8px 12px",
+        fontWeight: "500",
       },
     };
   };
