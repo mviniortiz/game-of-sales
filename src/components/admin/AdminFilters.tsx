@@ -49,16 +49,16 @@ export const AdminFilters = ({
 
   return (
     <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-      <CardContent className="p-3">
+      <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-4">
           <Filter className="h-5 w-5 text-primary" />
           <h3 className="text-lg font-semibold">Filtros Globais</h3>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Período Customizado */}
           <div className="space-y-2">
-            <Label className="flex items-center gap-2">
+            <Label className="flex items-center gap-2 text-sm">
               <CalendarIcon className="h-4 w-4 text-primary" />
               Período Customizado
             </Label>
@@ -66,8 +66,9 @@ export const AdminFilters = ({
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
+                  size="sm"
                   className={cn(
-                    "w-full justify-start text-left font-normal",
+                    "w-full justify-start text-left font-normal h-9",
                     !dateRange.from && "text-muted-foreground"
                   )}
                 >
@@ -75,8 +76,7 @@ export const AdminFilters = ({
                   {dateRange.from ? (
                     dateRange.to ? (
                       <>
-                        {format(dateRange.from, "dd/MM/yyyy")} -{" "}
-                        {format(dateRange.to, "dd/MM/yyyy")}
+                        {format(dateRange.from, "dd/MM/yy")} - {format(dateRange.to, "dd/MM/yy")}
                       </>
                     ) : (
                       format(dateRange.from, "dd/MM/yyyy")
@@ -86,7 +86,7 @@ export const AdminFilters = ({
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
+              <PopoverContent className="w-auto p-0 z-50 bg-popover" align="start">
                 <Calendar
                   mode="range"
                   selected={{ from: dateRange.from, to: dateRange.to }}
@@ -100,12 +100,13 @@ export const AdminFilters = ({
           </div>
 
           {/* Períodos Rápidos */}
-          <div className="space-y-2">
-            <Label>Períodos Rápidos</Label>
-            <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-2 md:col-span-2">
+            <Label className="text-sm">Períodos Rápidos</Label>
+            <div className="flex gap-2 flex-wrap">
               <Button
                 variant="outline"
                 size="sm"
+                className="h-9"
                 onClick={() => setQuickRange("hoje")}
               >
                 Hoje
@@ -113,6 +114,7 @@ export const AdminFilters = ({
               <Button
                 variant="outline"
                 size="sm"
+                className="h-9"
                 onClick={() => setQuickRange("semana")}
               >
                 Esta Semana
@@ -120,6 +122,7 @@ export const AdminFilters = ({
               <Button
                 variant="outline"
                 size="sm"
+                className="h-9"
                 onClick={() => setQuickRange("mes")}
               >
                 Este Mês
@@ -127,6 +130,7 @@ export const AdminFilters = ({
               <Button
                 variant="outline"
                 size="sm"
+                className="h-9"
                 onClick={() => setQuickRange("30dias")}
               >
                 Últimos 30 dias
@@ -135,16 +139,16 @@ export const AdminFilters = ({
           </div>
 
           {/* Vendedor */}
-          <div className="space-y-2 lg:col-span-2">
-            <Label className="flex items-center gap-2">
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2 text-sm">
               <Users className="h-4 w-4 text-primary" />
               Vendedor
             </Label>
             <Select value={selectedVendedor} onValueChange={setSelectedVendedor}>
-              <SelectTrigger>
-                <SelectValue placeholder="Todos os vendedores" />
+              <SelectTrigger className="w-full h-9">
+                <SelectValue placeholder="Selecione um vendedor" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-50 bg-popover">
                 <SelectItem value="todos">Todos os vendedores</SelectItem>
                 {vendedores.map((v) => (
                   <SelectItem key={v.id} value={v.id}>

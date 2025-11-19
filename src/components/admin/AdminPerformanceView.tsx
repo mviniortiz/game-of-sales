@@ -5,7 +5,6 @@ import { Calendar, Phone, TrendingUp, Users } from "lucide-react";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { CallsFunnel } from "@/components/calls/CallsFunnel";
 import { PerformanceTable } from "@/components/calls/PerformanceTable";
-import { CalendarioAgendamentos } from "@/components/calendar/CalendarioAgendamentos";
 
 interface AdminPerformanceViewProps {
   dateRange: { from?: Date; to?: Date };
@@ -184,9 +183,6 @@ export const AdminPerformanceView = ({ dateRange, selectedVendedor }: AdminPerfo
           taxaConversao={metricas?.taxaConversao || 0}
         />
       </div>
-
-      {/* Calendário */}
-      <CalendarioAgendamentos />
 
       {/* Tabela de performance */}
       <PerformanceTable data={performanceData} />
