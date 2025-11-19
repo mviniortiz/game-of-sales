@@ -6,6 +6,7 @@ import { Users, TrendingUp, Target, DollarSign, Award } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { VendasChart } from "@/components/calls/VendasChart";
 import { MetasRankingCard } from "@/components/admin/MetasRankingCard";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface AdminVendasViewProps {
   dateRange: { from?: Date; to?: Date };
@@ -317,6 +318,13 @@ export const AdminVendasView = ({
     }).format(value);
   };
 
+  const getInitials = (name: string) => {
+    if (!name) return "?";
+    const names = name.trim().split(" ");
+    if (names.length === 1) return names[0].substring(0, 2).toUpperCase();
+    return (names[0][0] + names[names.length - 1][0]).toUpperCase();
+  };
+
   return (
     <div className="space-y-8">
       {/* Cards de Métricas Principais - Destaque Visual */}
@@ -401,10 +409,19 @@ export const AdminVendasView = ({
               </div>
               <p className="text-sm font-medium text-muted-foreground">Top Vendedor</p>
             </div>
-            <p className="text-xl font-bold truncate">{topVendedores?.[0]?.nome || "—"}</p>
-            <p className="text-sm text-muted-foreground mt-2">
-              {topVendedores?.[0] ? formatCurrency(topVendedores[0].total) : "—"}
-            </p>
+            <div className="flex items-center gap-3 mt-4">
+              <Avatar className="h-12 w-12 border-2 border-pink-500/20">
+                <AvatarFallback className="bg-pink-500/10 text-pink-600 font-bold text-lg">
+                  {topVendedores?.[0]?.nome ? getInitials(topVendedores[0].nome) : "?"}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="text-xl font-bold truncate">{topVendedores?.[0]?.nome || "—"}</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {topVendedores?.[0] ? formatCurrency(topVendedores[0].total) : "—"}
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
