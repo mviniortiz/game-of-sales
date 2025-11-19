@@ -15,7 +15,7 @@ import {
   useSidebar,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -50,7 +50,7 @@ const adminMenuItem = { title: "Administração", url: "/admin", icon: Shield };
 
 export function AppSidebar() {
   const { state } = useSidebar();
-  const { user, isAdmin, signOut } = useAuth();
+  const { user, isAdmin, signOut, profile } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const collapsed = state === "collapsed";
@@ -267,22 +267,14 @@ export function AppSidebar() {
                 variant="ghost" 
                 className="w-full justify-start gap-3 h-auto py-3 hover:bg-accent/50 rounded-lg transition-all"
               >
-                {user?.user_metadata?.avatar_url ? (
-                  <Avatar className="h-10 w-10 ring-2 ring-cyan-500/20">
-                    <img src={user.user_metadata.avatar_url} alt="Avatar" className="object-cover" />
-                    <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-cyan-600 text-white">
-                      {user?.user_metadata?.nome ? getInitials(user.user_metadata.nome) : "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                ) : (
-                  <Avatar className="h-10 w-10 ring-2 ring-cyan-500/20">
-                    <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-cyan-600 text-white">
-                      {user?.user_metadata?.nome ? getInitials(user.user_metadata.nome) : "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                )}
+                <Avatar className="h-10 w-10 ring-2 ring-cyan-500/20">
+                  {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt="Avatar" />}
+                  <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-cyan-600 text-white">
+                    {profile?.nome ? getInitials(profile.nome) : "U"}
+                  </AvatarFallback>
+                </Avatar>
                 <div className="flex flex-col items-start text-left flex-1">
-                  <span className="text-sm font-semibold">{user?.user_metadata?.nome || "Usuário"}</span>
+                  <span className="text-sm font-semibold">{profile?.nome || "Usuário"}</span>
                   {isAdmin && (
                     <Badge variant="secondary" className="text-xs mt-1 bg-amber-500/10 text-amber-600 border-amber-500/20">
                       👑 Admin
@@ -309,26 +301,18 @@ export function AppSidebar() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="mx-auto hover:bg-accent/50">
-                {user?.user_metadata?.avatar_url ? (
-                  <Avatar className="h-10 w-10 ring-2 ring-cyan-500/20">
-                    <img src={user.user_metadata.avatar_url} alt="Avatar" className="object-cover" />
-                    <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-cyan-600 text-white">
-                      {user?.user_metadata?.nome ? getInitials(user.user_metadata.nome) : "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                ) : (
-                  <Avatar className="h-10 w-10 ring-2 ring-cyan-500/20">
-                    <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-cyan-600 text-white">
-                      {user?.user_metadata?.nome ? getInitials(user.user_metadata.nome) : "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                )}
+                <Avatar className="h-10 w-10 ring-2 ring-cyan-500/20">
+                  {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt="Avatar" />}
+                  <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-cyan-600 text-white">
+                    {profile?.nome ? getInitials(profile.nome) : "U"}
+                  </AvatarFallback>
+                </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>
                 <div className="flex flex-col">
-                  <span>{user?.user_metadata?.nome || "Usuário"}</span>
+                  <span>{profile?.nome || "Usuário"}</span>
                   {isAdmin && (
                     <Badge variant="secondary" className="text-xs mt-1 w-fit bg-amber-500/10 text-amber-600 border-amber-500/20">
                       👑 Admin

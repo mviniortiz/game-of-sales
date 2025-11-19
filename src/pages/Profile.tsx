@@ -12,7 +12,7 @@ import { AdminManagement } from "@/components/profile/AdminManagement";
 import { AvatarUpload } from "@/components/profile/AvatarUpload";
 
 export default function Profile() {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, refreshProfile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [nome, setNome] = useState("");
@@ -50,7 +50,7 @@ export default function Profile() {
     if (!user) return;
 
     const fileExt = file.name.split(".").pop();
-    const filePath = `${user.id}/${Math.random()}.${fileExt}`;
+    const filePath = `${user.id}/${Date.now()}.${fileExt}`;
 
     setUploading(true);
 
@@ -77,6 +77,7 @@ export default function Profile() {
         toast.error("Erro ao atualizar avatar");
       } else {
         setAvatarUrl(publicUrl);
+        await refreshProfile();
         toast.success("Avatar atualizado com sucesso!");
       }
     } finally {
@@ -97,6 +98,7 @@ export default function Profile() {
     if (error) {
       toast.error("Erro ao atualizar perfil");
     } else {
+      await refreshProfile();
       toast.success("Perfil atualizado com sucesso!");
     }
 

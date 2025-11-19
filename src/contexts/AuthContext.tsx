@@ -8,6 +8,11 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   isAdmin: boolean;
+  profile: {
+    nome: string;
+    avatar_url: string | null;
+  } | null;
+  refreshProfile: () => Promise<void>;
   signUp: (email: string, password: string, nome: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -20,7 +25,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [profile, setProfile] = useState<{ nome: string; avatar_url: string | null } | null>(null);
   const navigate = useNavigate();
+
+  const loadProfile = async (userId: string) => {
+    const { data } = await supabase
+      .from("profiles")
+      .select("nome, avatar_url")
+      .eq("id", userId)
+      .single();
+    
+    if (data) {
+      setProfile(data);
+    }
+  };
+
+  const refreshProfile = async () => {
+    if (user?.id) {
+      await loadProfile(user.id);
+    }
+  };
 
   useEffect(() => {
     const checkAdminRole = async (userId: string) => {
@@ -41,8 +65,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(session?.user ?? null);
         if (session?.user) {
           checkAdminRole(session.user.id);
+          loadProfile(session.user.id);
         } else {
           setIsAdmin(false);
+          setProfile(null);
         }
         setLoading(false);
       }
@@ -54,6 +80,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
         checkAdminRole(session.user.id);
+        loadProfile(session.user.id);
       }
       setLoading(false);
     });
@@ -101,7 +128,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, isAdmin, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, isAdmin, profile, refreshProfile, signUp, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );
