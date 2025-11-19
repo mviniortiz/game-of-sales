@@ -64,7 +64,7 @@ const Auth = () => {
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Login Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-background">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-background relative">
         <div className="w-full max-w-md space-y-8">
           {/* Logo */}
           <div className="flex items-center">
@@ -90,14 +90,14 @@ const Auth = () => {
                   Email
                 </Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none z-10" />
                   <Input
                     id="email"
                     type="email"
                     placeholder="seu@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 h-12 bg-background border-border/50 focus:border-primary"
+                    className="pl-10 h-12 bg-gray-900/50 border-gray-700 text-gray-200 placeholder:text-gray-500 focus:border-cyan-500 focus:ring-cyan-500/20"
                     required
                     autoComplete="email"
                   />
@@ -110,14 +110,14 @@ const Auth = () => {
                   Senha
                 </Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none z-10" />
                   <Input
                     id="password"
                     type="password"
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 h-12 bg-background border-border/50 focus:border-primary"
+                    className="pl-10 h-12 bg-gray-900/50 border-gray-700 text-gray-200 placeholder:text-gray-500 focus:border-cyan-500 focus:ring-cyan-500/20"
                     required
                     autoComplete="current-password"
                   />
@@ -156,13 +156,13 @@ const Auth = () => {
               )}
             </Button>
           </form>
+        </div>
 
-          {/* Footer Note */}
-          <div className="text-center">
-            <p className="text-xs text-muted-foreground">
-              Sistema de uso restrito. Acesso apenas para colaboradores autorizados.
-            </p>
-          </div>
+        {/* Footer Note - Fixed at Bottom */}
+        <div className="absolute bottom-8 left-0 right-0 text-center px-8">
+          <p className="text-xs text-gray-600">
+            Sistema de uso restrito. Acesso apenas para colaboradores autorizados.
+          </p>
         </div>
       </div>
 
