@@ -9,6 +9,7 @@ import { AdminVendedores } from "@/components/admin/AdminVendedores";
 import { AdminVendas } from "@/components/admin/AdminVendas";
 import { AdminRelatorios } from "@/components/admin/AdminRelatorios";
 import { AdminMetas } from "@/components/admin/AdminMetas";
+import { AdminManagement } from "@/components/profile/AdminManagement";
 
 const Admin = () => {
   const { isAdmin, loading } = useAuth();
@@ -52,11 +53,12 @@ const Admin = () => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="vendedores" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="vendedores">Vendedores</TabsTrigger>
               <TabsTrigger value="vendas">Vendas</TabsTrigger>
               <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
               <TabsTrigger value="metas">Metas</TabsTrigger>
+              <TabsTrigger value="usuarios">Usuários</TabsTrigger>
             </TabsList>
 
             <TabsContent value="vendedores" className="mt-6">
@@ -73,6 +75,10 @@ const Admin = () => {
 
             <TabsContent value="metas" className="mt-6">
               <AdminMetas />
+            </TabsContent>
+
+            <TabsContent value="usuarios" className="mt-6">
+              <AdminManagement />
             </TabsContent>
           </Tabs>
         </CardContent>
