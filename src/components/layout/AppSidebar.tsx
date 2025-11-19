@@ -1,6 +1,6 @@
 import { Home, Trophy, PlusCircle, Target, PhoneCall, Shield, LogOut, User, Settings, Calendar } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import logo from "@/assets/logo.png";
 import {
@@ -43,6 +43,7 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const { user, isAdmin, signOut } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const collapsed = state === "collapsed";
 
   const menuItems = isAdmin ? [...baseMenuItems, adminMenuItem] : baseMenuItems;
@@ -144,7 +145,7 @@ export function AppSidebar() {
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/profile")}>
                 <User className="mr-2 h-4 w-4" />
                 Perfil
               </DropdownMenuItem>
@@ -187,7 +188,7 @@ export function AppSidebar() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/profile")}>
                 <User className="mr-2 h-4 w-4" />
                 Perfil
               </DropdownMenuItem>
