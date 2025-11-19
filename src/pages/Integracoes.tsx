@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CreditCard, Bell } from "lucide-react";
+import { Link } from "react-router-dom";
 import googleCalendarLogo from "@/assets/integrations/google-calendar.png";
 import celetusLogo from "@/assets/integrations/celetus.png";
 import caktoLogo from "@/assets/integrations/cakto.png";
@@ -147,6 +148,16 @@ const Integracoes = () => {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Footer com links importantes */}
+      <div className="text-center text-sm text-muted-foreground pt-8 border-t">
+        <p>
+          Ao conectar integrações, você concorda com nossa{" "}
+          <Link to="/politica-privacidade" className="text-primary hover:underline">
+            Política de Privacidade
+          </Link>
+        </p>
       </div>
     </div>
   );
