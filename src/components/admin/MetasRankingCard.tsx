@@ -50,24 +50,16 @@ export const MetasRankingCard = ({
         </Badge>
       );
     }
-    if (percentual >= 80) {
-      return (
-        <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 px-3 py-1">
-          🟡 Quase lá
-        </Badge>
-      );
-    }
     return (
-      <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 px-3 py-1">
-        🔵 Em andamento
+      <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 px-3 py-1">
+        🟡 Em andamento
       </Badge>
     );
   };
 
   const getProgressColor = (percentual: number) => {
     if (percentual >= 100) return "bg-gradient-to-r from-green-500 to-emerald-500";
-    if (percentual >= 80) return "bg-gradient-to-r from-yellow-500 to-amber-500";
-    return "bg-gradient-to-r from-blue-500 to-cyan-500";
+    return "bg-gradient-to-r from-yellow-500 to-amber-500";
   };
 
   const filteredVendedores = vendedores.filter((v) => {
