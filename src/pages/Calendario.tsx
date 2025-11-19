@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Phone, Video } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek, addDays, subDays, addWeeks, subWeeks } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -14,6 +14,7 @@ import { AgendamentoForm } from "@/components/calls/AgendamentoForm";
 import { CalendarViewSelector } from "@/components/calendar/CalendarViewSelector";
 import { DayView } from "@/components/calendar/DayView";
 import { WeekView } from "@/components/calendar/WeekView";
+import { CalendarFilters } from "@/components/calendar/CalendarFilters";
 
 type ViewType = "day" | "week" | "month";
 
@@ -23,6 +24,7 @@ interface Agendamento {
   data_agendamento: string;
   observacoes: string;
   status: string;
+  user_id: string;
 }
 
 export default function Calendario() {
@@ -33,10 +35,12 @@ export default function Calendario() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [showNewAgendamento, setShowNewAgendamento] = useState(false);
   const [view, setView] = useState<ViewType>("month");
+  const [selectedVendedor, setSelectedVendedor] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState("all");
 
   useEffect(() => {
     loadAgendamentos();
-  }, [currentDate, user, view]);
+  }, [currentDate, user, view, selectedVendedor, selectedStatus]);
 
   const handleAgendamentoUpdate = async (id: string, newDate: Date) => {
     try {
@@ -134,13 +138,24 @@ export default function Calendario() {
       end = endOfMonth(currentDate);
     }
 
-    const { data, error } = await supabase
+    let query = supabase
       .from("agendamentos")
       .select("*")
-      .eq("user_id", user.id)
       .gte("data_agendamento", start.toISOString())
-      .lte("data_agendamento", end.toISOString())
-      .order("data_agendamento");
+      .lte("data_agendamento", end.toISOString());
+
+    // Apply filters
+    if (selectedVendedor !== "all") {
+      query = query.eq("user_id", selectedVendedor);
+    }
+
+    if (selectedStatus !== "all") {
+      query = query.eq("status", selectedStatus as "agendado" | "realizado" | "cancelado");
+    }
+
+    query = query.order("data_agendamento");
+
+    const { data, error } = await query;
 
     if (error) {
       toast.error("Erro ao carregar agendamentos");
@@ -197,6 +212,16 @@ export default function Calendario() {
           </div>
         </div>
 
+        {/* Filters */}
+        {view === "month" && (
+          <CalendarFilters
+            selectedVendedor={selectedVendedor}
+            selectedStatus={selectedStatus}
+            onVendedorChange={setSelectedVendedor}
+            onStatusChange={setSelectedStatus}
+          />
+        )}
+
         {/* Views */}
         {view === "day" && (
           <DayView
@@ -238,9 +263,9 @@ export default function Calendario() {
                   return (
                     <div
                       key={index}
-                      className={`min-h-[120px] border-b border-r p-2 transition-colors hover:bg-muted/50 ${
-                        !isCurrentMonth ? "bg-muted/20 text-muted-foreground" : ""
-                      } ${isToday ? "bg-primary/5" : ""}`}
+                      className={`group relative min-h-[120px] border-b border-r border-border/10 p-2 transition-all cursor-pointer ${
+                        !isCurrentMonth ? "bg-muted/5 text-muted-foreground" : ""
+                      } ${isToday ? "bg-primary/5 border-primary/20" : ""} hover:bg-accent/8`}
                       onClick={() => setSelectedDate(day)}
                     >
                       <div className="flex items-center justify-between mb-2">
@@ -255,28 +280,49 @@ export default function Calendario() {
                         </span>
                       </div>
 
-                      <div className="space-y-1">
-                        {dayAgendamentos.slice(0, 3).map((ag) => (
-                          <div
-                            key={ag.id}
-                            className={`text-xs p-1.5 rounded ${getEventColor(
-                              ag.status
-                            )} text-white truncate cursor-pointer hover:opacity-80`}
-                            title={`${ag.cliente_nome} - ${format(
-                              new Date(ag.data_agendamento),
-                              "HH:mm"
-                            )}`}
-                          >
-                            {format(new Date(ag.data_agendamento), "HH:mm")} -{" "}
-                            {ag.cliente_nome}
-                          </div>
-                        ))}
+                      <div className="space-y-1.5">
+                        {dayAgendamentos.slice(0, 3).map((ag) => {
+                          const statusColors = {
+                            agendado: { bg: "bg-blue-500/10", border: "border-blue-500", text: "text-blue-400" },
+                            realizado: { bg: "bg-green-500/10", border: "border-green-500", text: "text-green-400" },
+                            cancelado: { bg: "bg-red-500/10", border: "border-red-500", text: "text-red-400" },
+                            concluido: { bg: "bg-gray-500/10", border: "border-gray-500", text: "text-gray-400" },
+                          };
+                          
+                          const colors = statusColors[ag.status as keyof typeof statusColors] || statusColors.agendado;
+                          
+                          return (
+                            <div
+                              key={ag.id}
+                              className={`text-xs p-2 rounded-lg ${colors.bg} backdrop-blur-sm border-l-4 ${colors.border} ${colors.text} truncate cursor-pointer transition-all hover:scale-[1.02] hover:shadow-md`}
+                              title={`${ag.cliente_nome} - ${format(
+                                new Date(ag.data_agendamento),
+                                "HH:mm"
+                              )}`}
+                            >
+                              <div className="flex items-center gap-1.5">
+                                <Phone className="h-3 w-3" />
+                                <span className="font-medium">
+                                  {format(new Date(ag.data_agendamento), "HH:mm")}
+                                </span>
+                                <span className="truncate">{ag.cliente_nome}</span>
+                              </div>
+                            </div>
+                          );
+                        })}
                         {dayAgendamentos.length > 3 && (
-                          <div className="text-xs text-muted-foreground pl-1">
+                          <div className="text-xs text-muted-foreground pl-2 font-medium">
                             +{dayAgendamentos.length - 3} mais
                           </div>
                         )}
                       </div>
+                      
+                      {/* Plus icon on hover for empty days */}
+                      {dayAgendamentos.length === 0 && (
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                          <Plus className="h-8 w-8 text-muted-foreground/20" />
+                        </div>
+                      )}
                     </div>
                   );
                 })}

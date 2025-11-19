@@ -16,7 +16,8 @@
 }
 
 .rbc-today {
-  background: linear-gradient(135deg, hsl(var(--primary) / 0.1), hsl(var(--accent) / 0.1));
+  background: linear-gradient(135deg, hsl(var(--primary) / 0.08), hsl(var(--accent) / 0.08));
+  border: 1px solid hsl(var(--primary) / 0.2) !important;
 }
 
 .rbc-off-range-bg {
@@ -29,18 +30,22 @@
 }
 
 .rbc-event {
-  padding: 6px 10px;
-  font-size: 0.875rem;
-  border-radius: 6px;
-  border: none;
-  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.8));
-  box-shadow: 0 2px 8px hsl(var(--primary) / 0.3);
-  transition: all 0.2s ease;
+  padding: 8px 12px;
+  font-size: 0.8125rem;
+  border-radius: 8px;
+  border-left: 4px solid !important;
+  background: hsl(var(--card) / 0.6) !important;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 6px hsl(var(--primary) / 0.15);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 500;
 }
 
 .rbc-event:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px hsl(var(--primary) / 0.4);
+  transform: scale(1.02) translateY(-1px);
+  box-shadow: 0 4px 12px hsl(var(--primary) / 0.25);
+  background: hsl(var(--card) / 0.8) !important;
+  z-index: 10;
 }
 
 .rbc-event.rbc-selected {
@@ -102,16 +107,31 @@
 }
 
 .rbc-day-bg {
-  border-color: hsl(var(--border) / 0.5);
-  transition: background 0.2s ease;
+  border-color: hsl(var(--border) / 0.15);
+  transition: all 0.2s ease;
+  position: relative;
 }
 
 .rbc-day-bg:hover {
-  background: hsl(var(--accent) / 0.05);
+  background: hsl(var(--accent) / 0.08);
+  border-color: hsl(var(--border) / 0.3);
+}
+
+.rbc-day-bg:hover::after {
+  content: '+';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2rem;
+  color: hsl(var(--muted-foreground) / 0.3);
+  font-weight: 300;
+  pointer-events: none;
+  transition: all 0.2s ease;
 }
 
 .rbc-month-row {
-  border-color: hsl(var(--border) / 0.5);
+  border-color: hsl(var(--border) / 0.15);
 }
 
 .rbc-time-slot {

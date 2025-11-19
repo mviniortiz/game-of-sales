@@ -34,12 +34,13 @@ function SortableAgendamento({ agendamento }: { agendamento: Agendamento }) {
 
   const getStatusColor = (status: string) => {
     const colors = {
-      agendado: "bg-blue-500",
-      confirmado: "bg-green-500",
-      cancelado: "bg-red-500",
-      concluido: "bg-gray-500",
+      agendado: { bg: "bg-blue-500/10 border-l-4 border-blue-500", text: "text-blue-400" },
+      confirmado: { bg: "bg-green-500/10 border-l-4 border-green-500", text: "text-green-400" },
+      cancelado: { bg: "bg-red-500/10 border-l-4 border-red-500", text: "text-red-400" },
+      concluido: { bg: "bg-gray-500/10 border-l-4 border-gray-500", text: "text-gray-400" },
+      realizado: { bg: "bg-green-500/10 border-l-4 border-green-500", text: "text-green-400" },
     };
-    return colors[status as keyof typeof colors] || "bg-primary";
+    return colors[status as keyof typeof colors] || { bg: "bg-primary/10 border-l-4 border-primary", text: "text-primary" };
   };
 
   const getStatusLabel = (status: string) => {
@@ -54,24 +55,24 @@ function SortableAgendamento({ agendamento }: { agendamento: Agendamento }) {
 
   return (
     <div ref={setNodeRef} style={style} {...attributes}>
-      <Card className="p-4 hover:shadow-md transition-shadow cursor-move">
+      <Card className={`p-4 backdrop-blur-sm bg-card/60 hover:bg-card/80 hover:shadow-lg hover:scale-[1.01] transition-all cursor-move ${getStatusColor(agendamento.status).bg}`}>
         <div className="flex items-start gap-3">
           <div {...listeners} className="mt-1 cursor-grab active:cursor-grabbing">
             <GripVertical className="h-5 w-5 text-muted-foreground" />
           </div>
           <div className="flex-1 space-y-2">
             <div className="flex items-start justify-between">
-              <h3 className="font-semibold text-lg">{agendamento.cliente_nome}</h3>
-              <Badge variant="secondary" className={getStatusColor(agendamento.status)}>
+              <h3 className={`font-semibold text-lg ${getStatusColor(agendamento.status).text}`}>{agendamento.cliente_nome}</h3>
+              <Badge variant="secondary" className={getStatusColor(agendamento.status).text}>
                 {getStatusLabel(agendamento.status)}
               </Badge>
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className={`flex items-center gap-2 text-sm ${getStatusColor(agendamento.status).text}`}>
               <Clock className="h-4 w-4" />
               <span>{format(new Date(agendamento.data_agendamento), "HH:mm", { locale: ptBR })}</span>
             </div>
             {agendamento.observacoes && (
-              <p className="text-sm text-muted-foreground border-l-2 border-primary pl-3">
+              <p className={`text-sm border-l-2 pl-3 ${getStatusColor(agendamento.status).text}`}>
                 {agendamento.observacoes}
               </p>
             )}
