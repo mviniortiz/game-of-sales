@@ -125,18 +125,93 @@ export const AdminVendasView = ({
     },
   });
 
-  // Dados para ranking de metas (com dados fictícios para demonstração)
-  const metaConsolidadaFicticia = 500000;
-  const vendedoresMetas = [
-    { nome: "João Silva", valorMeta: 50000, valorRealizado: 48500, percentual: 97.0 },
-    { nome: "Maria Santos", valorMeta: 45000, valorRealizado: 47200, percentual: 104.9 },
-    { nome: "Pedro Costa", valorMeta: 40000, valorRealizado: 38100, percentual: 95.3 },
-    { nome: "Ana Lima", valorMeta: 35000, valorRealizado: 32800, percentual: 93.7 },
-    { nome: "Carlos Souza", valorMeta: 30000, valorRealizado: 25600, percentual: 85.3 },
-  ];
-  
-  const valorConsolidadoFicticio = vendedoresMetas.reduce((acc, v) => acc + v.valorRealizado, 0);
-  const percentualConsolidadoFicticio = (valorConsolidadoFicticio / metaConsolidadaFicticia) * 100;
+  // Buscar meta consolidada do mês
+  const { data: metaConsolidada } = useQuery({
+    queryKey: ["meta-consolidada", inicioMes],
+    queryFn: async () => {
+      const mesReferencia = `${new Date(inicioMes).getFullYear()}-${String(
+        new Date(inicioMes).getMonth() + 1
+      ).padStart(2, "0")}-01`;
+
+      const { data, error } = await supabase
+        .from("metas_consolidadas")
+        .select("*")
+        .eq("mes_referencia", mesReferencia)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Buscar metas individuais e calcular progresso
+  const { data: vendedoresMetas } = useQuery({
+    queryKey: ["vendedores-metas", inicioMes, fimMes, selectedVendedor, selectedFormaPagamento, selectedProduto],
+    queryFn: async () => {
+      const mesReferencia = `${new Date(inicioMes).getFullYear()}-${String(
+        new Date(inicioMes).getMonth() + 1
+      ).padStart(2, "0")}-01`;
+
+      let metasQuery = supabase
+        .from("metas")
+        .select(`
+          id,
+          user_id,
+          valor_meta,
+          profiles!inner(nome)
+        `)
+        .eq("mes_referencia", mesReferencia);
+
+      if (selectedVendedor !== "todos") {
+        metasQuery = metasQuery.eq("user_id", selectedVendedor);
+      }
+
+      const { data: metas } = await metasQuery;
+
+      if (!metas || metas.length === 0) return [];
+
+      const vendedoresData = await Promise.all(
+        metas.map(async (meta: any) => {
+          let vendasQuery = supabase
+            .from("vendas")
+            .select("valor")
+            .eq("user_id", meta.user_id)
+            .eq("status", "Aprovado")
+            .gte("data_venda", inicioMes)
+            .lte("data_venda", fimMes);
+
+          if (selectedFormaPagamento !== "todas") {
+            vendasQuery = vendasQuery.eq("forma_pagamento", selectedFormaPagamento as any);
+          }
+
+          if (selectedProduto !== "todos") {
+            vendasQuery = vendasQuery.eq("produto_id", selectedProduto as any);
+          }
+
+          const { data: vendas } = await vendasQuery;
+
+          const valorRealizado = vendas?.reduce((acc, v) => acc + Number(v.valor), 0) || 0;
+          const percentual = meta.valor_meta > 0 ? (valorRealizado / meta.valor_meta) * 100 : 0;
+
+          return {
+            nome: meta.profiles.nome,
+            valorMeta: Number(meta.valor_meta),
+            valorRealizado,
+            percentual,
+          };
+        })
+      );
+
+      // Ordenar por percentual decrescente
+      return vendedoresData.sort((a, b) => b.percentual - a.percentual);
+    },
+  });
+
+  const valorConsolidadoAtingido = vendedoresMetas?.reduce((acc, v) => acc + v.valorRealizado, 0) || 0;
+  const metaTotalConsolidada = Number(metaConsolidada?.valor_meta || 0);
+  const percentualConsolidado = metaTotalConsolidada > 0 
+    ? (valorConsolidadoAtingido / metaTotalConsolidada) * 100 
+    : 0;
 
   // Progresso de metas
   const { data: progressoMetas } = useQuery({
@@ -245,14 +320,16 @@ export const AdminVendasView = ({
   return (
     <div className="space-y-8">
       {/* Ranking de Metas */}
-      <MetasRankingCard
-        metaConsolidada={metaConsolidadaFicticia}
-        valorConsolidadoAtingido={valorConsolidadoFicticio}
-        percentualConsolidado={percentualConsolidadoFicticio}
-        vendedores={vendedoresMetas}
-        statusFiltro={statusFiltro}
-        onStatusChange={setStatusFiltro}
-      />
+      {(metaConsolidada || vendedoresMetas) && (
+        <MetasRankingCard
+          metaConsolidada={metaTotalConsolidada}
+          valorConsolidadoAtingido={valorConsolidadoAtingido}
+          percentualConsolidado={percentualConsolidado}
+          vendedores={vendedoresMetas || []}
+          statusFiltro={statusFiltro}
+          onStatusChange={setStatusFiltro}
+        />
+      )}
       {/* Cards de Métricas Principais - Destaque Visual */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Faturamento - Destaque Principal */}
