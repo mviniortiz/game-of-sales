@@ -27,17 +27,20 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 
-const baseMenuItems = [
-  { title: "Dashboard", url: "/", icon: Home, highlight: false },
-  { title: "Performance de Calls", url: "/calls", icon: PhoneCall, highlight: false },
-  { title: "Calendário", url: "/calendario", icon: Calendar, highlight: false },
-  { title: "Ranking", url: "/ranking", icon: Trophy, highlight: false },
-  { title: "Registrar Venda", url: "/nova-venda", icon: PlusCircle, highlight: true },
-  { title: "Metas", url: "/metas", icon: Target, highlight: false },
-  { title: "Integrações", url: "/integracoes", icon: Settings, highlight: false },
+// Itens agrupados por categoria
+const visaoGeralItems = [
+  { title: "Dashboard", url: "/", icon: Home },
+  { title: "Performance de Calls", url: "/calls", icon: PhoneCall },
+  { title: "Calendário", url: "/calendario", icon: Calendar },
 ];
 
-const adminMenuItem = { title: "Administração", url: "/admin", icon: Shield, highlight: false };
+const gestaoItems = [
+  { title: "Metas", url: "/metas", icon: Target },
+  { title: "Ranking", url: "/ranking", icon: Trophy },
+  { title: "Integrações", url: "/integracoes", icon: Settings },
+];
+
+const adminMenuItem = { title: "Administração", url: "/admin", icon: Shield };
 
 export function AppSidebar() {
   const { state } = useSidebar();
@@ -45,8 +48,6 @@ export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const collapsed = state === "collapsed";
-
-  const menuItems = isAdmin ? [...baseMenuItems, adminMenuItem] : baseMenuItems;
 
   const getInitials = (nome: string) => {
     return nome
@@ -59,7 +60,8 @@ export function AppSidebar() {
 
   return (
     <Sidebar className="border-r border-border/50">
-      <SidebarContent>
+      <SidebarContent className="gap-0">
+        {/* Logo Section */}
         <div className="p-6 border-b border-border/50">
           {!collapsed && (
             <div className="flex items-center justify-center">
@@ -71,71 +73,135 @@ export function AppSidebar() {
           )}
         </div>
 
-        <SidebarGroup>
-          <SidebarGroupLabel>Menu</SidebarGroupLabel>
+        {/* CTA Button - Registrar Venda */}
+        <div className="p-4">
+          <Button
+            onClick={() => navigate("/nova-venda")}
+            className="w-full bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-black font-semibold shadow-lg hover:shadow-xl transition-all h-12 gap-2"
+          >
+            <PlusCircle className="h-5 w-5" />
+            {!collapsed && <span>Registrar Venda</span>}
+          </Button>
+        </div>
+
+        {/* Visão Geral Section */}
+        <SidebarGroup className="py-2">
+          {!collapsed && (
+            <SidebarGroupLabel className="text-xs uppercase text-muted-foreground/60 font-semibold tracking-wider px-4">
+              Visão Geral
+            </SidebarGroupLabel>
+          )}
           <SidebarGroupContent>
-            <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to={item.url}
-                      end
-                      className={`flex items-center gap-3 hover:bg-accent/50 transition-colors ${
-                        item.highlight ? "relative" : ""
-                      }`}
-                      activeClassName="bg-primary/10 text-primary border-l-2 border-primary"
-                    >
-                      <item.icon className="h-5 w-5" />
-                      {!collapsed && (
-                        <div className="flex items-center justify-between flex-1">
-                          <span>{item.title}</span>
-                          {item.highlight && (
-                            <Badge variant="default" className="ml-2 bg-primary">
-                              ⭐
-                            </Badge>
-                          )}
-                        </div>
-                      )}
-                      {collapsed && item.highlight && (
-                        <div className="absolute -top-1 -right-1">
-                          <Badge variant="default" className="h-4 w-4 p-0 flex items-center justify-center text-[10px]">
-                            ⭐
-                          </Badge>
-                        </div>
-                      )}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+            <SidebarMenu className="gap-1">
+              {visaoGeralItems.map((item) => {
+                const isActive = location.pathname === item.url;
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <NavLink
+                        to={item.url}
+                        end
+                        className="flex items-center gap-3 hover:bg-accent/50 transition-all group py-2.5"
+                        activeClassName="bg-accent/60 text-primary font-medium border-l-4 border-cyan-500"
+                      >
+                        <item.icon className={`h-5 w-5 transition-colors ${isActive ? 'text-cyan-500' : ''}`} />
+                        {!collapsed && <span className="flex-1">{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Gestão Section */}
+        <SidebarGroup className="py-2">
+          {!collapsed && (
+            <SidebarGroupLabel className="text-xs uppercase text-muted-foreground/60 font-semibold tracking-wider px-4">
+              Gestão
+            </SidebarGroupLabel>
+          )}
+          <SidebarGroupContent>
+            <SidebarMenu className="gap-1">
+              {gestaoItems.map((item) => {
+                const isActive = location.pathname === item.url;
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <NavLink
+                        to={item.url}
+                        end
+                        className="flex items-center gap-3 hover:bg-accent/50 transition-all group py-2.5"
+                        activeClassName="bg-accent/60 text-primary font-medium border-l-4 border-cyan-500"
+                      >
+                        <item.icon className={`h-5 w-5 transition-colors ${isActive ? 'text-cyan-500' : ''}`} />
+                        {!collapsed && <span className="flex-1">{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Sistema Section - Admin Only */}
+        {isAdmin && (
+          <SidebarGroup className="py-2">
+            {!collapsed && (
+              <SidebarGroupLabel className="text-xs uppercase text-muted-foreground/60 font-semibold tracking-wider px-4">
+                Sistema
+              </SidebarGroupLabel>
+            )}
+            <SidebarGroupContent>
+              <SidebarMenu className="gap-1">
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to={adminMenuItem.url}
+                      end
+                      className="flex items-center gap-3 hover:bg-accent/50 transition-all group py-2.5"
+                      activeClassName="bg-accent/60 text-primary font-medium border-l-4 border-cyan-500"
+                    >
+                      <adminMenuItem.icon className={`h-5 w-5 transition-colors ${location.pathname === adminMenuItem.url ? 'text-cyan-500' : ''}`} />
+                      {!collapsed && <span className="flex-1">{adminMenuItem.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-border/50 p-4">
+      {/* User Profile Footer - Enhanced Card Design */}
+      <SidebarFooter className="border-t-2 border-border/50 p-4 mt-auto bg-muted/20">
         {!collapsed ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="w-full justify-start gap-3 h-auto py-3">
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start gap-3 h-auto py-3 hover:bg-accent/50 rounded-lg transition-all"
+              >
                 {user?.user_metadata?.avatar_url ? (
-                  <Avatar className="h-8 w-8">
+                  <Avatar className="h-10 w-10 ring-2 ring-cyan-500/20">
                     <img src={user.user_metadata.avatar_url} alt="Avatar" className="object-cover" />
-                    <AvatarFallback className="bg-primary text-primary-foreground">
+                    <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-cyan-600 text-white">
                       {user?.user_metadata?.nome ? getInitials(user.user_metadata.nome) : "U"}
                     </AvatarFallback>
                   </Avatar>
                 ) : (
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-primary text-primary-foreground">
+                  <Avatar className="h-10 w-10 ring-2 ring-cyan-500/20">
+                    <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-cyan-600 text-white">
                       {user?.user_metadata?.nome ? getInitials(user.user_metadata.nome) : "U"}
                     </AvatarFallback>
                   </Avatar>
                 )}
                 <div className="flex flex-col items-start text-left flex-1">
-                  <span className="text-sm font-medium">{user?.user_metadata?.nome || "Usuário"}</span>
+                  <span className="text-sm font-semibold">{user?.user_metadata?.nome || "Usuário"}</span>
                   {isAdmin && (
-                    <Badge variant="secondary" className="text-xs mt-1">
+                    <Badge variant="secondary" className="text-xs mt-1 bg-amber-500/10 text-amber-600 border-amber-500/20">
                       👑 Admin
                     </Badge>
                   )}
@@ -159,17 +225,17 @@ export function AppSidebar() {
         ) : (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="mx-auto">
+              <Button variant="ghost" size="icon" className="mx-auto hover:bg-accent/50">
                 {user?.user_metadata?.avatar_url ? (
-                  <Avatar className="h-8 w-8">
+                  <Avatar className="h-10 w-10 ring-2 ring-cyan-500/20">
                     <img src={user.user_metadata.avatar_url} alt="Avatar" className="object-cover" />
-                    <AvatarFallback className="bg-primary text-primary-foreground">
+                    <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-cyan-600 text-white">
                       {user?.user_metadata?.nome ? getInitials(user.user_metadata.nome) : "U"}
                     </AvatarFallback>
                   </Avatar>
                 ) : (
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-primary text-primary-foreground">
+                  <Avatar className="h-10 w-10 ring-2 ring-cyan-500/20">
+                    <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-cyan-600 text-white">
                       {user?.user_metadata?.nome ? getInitials(user.user_metadata.nome) : "U"}
                     </AvatarFallback>
                   </Avatar>
@@ -181,7 +247,7 @@ export function AppSidebar() {
                 <div className="flex flex-col">
                   <span>{user?.user_metadata?.nome || "Usuário"}</span>
                   {isAdmin && (
-                    <Badge variant="secondary" className="text-xs mt-1 w-fit">
+                    <Badge variant="secondary" className="text-xs mt-1 w-fit bg-amber-500/10 text-amber-600 border-amber-500/20">
                       👑 Admin
                     </Badge>
                   )}
