@@ -15,6 +15,7 @@ import { CalendarViewSelector } from "@/components/calendar/CalendarViewSelector
 import { DayView } from "@/components/calendar/DayView";
 import { WeekView } from "@/components/calendar/WeekView";
 import { CalendarFilters } from "@/components/calendar/CalendarFilters";
+import { AgendamentoDetailsModal } from "@/components/calendar/AgendamentoDetailsModal";
 
 type ViewType = "day" | "week" | "month";
 
@@ -37,6 +38,8 @@ export default function Calendario() {
   const [view, setView] = useState<ViewType>("month");
   const [selectedVendedor, setSelectedVendedor] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
+  const [selectedAgendamento, setSelectedAgendamento] = useState<Agendamento | null>(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
 
   useEffect(() => {
     loadAgendamentos();
@@ -105,6 +108,16 @@ export default function Calendario() {
     return agendamentos.filter((ag) =>
       isSameDay(new Date(ag.data_agendamento), day)
     );
+  };
+
+  const handleEventClick = (agendamento: Agendamento) => {
+    setSelectedAgendamento(agendamento);
+    setShowDetailsModal(true);
+  };
+
+  const handleCloseDetailsModal = () => {
+    setShowDetailsModal(false);
+    setSelectedAgendamento(null);
   };
 
   const getEventColor = (status: string) => {
@@ -228,6 +241,7 @@ export default function Calendario() {
             date={currentDate}
             agendamentos={agendamentos}
             onAgendamentoUpdate={handleAgendamentoUpdate}
+            onEventClick={handleEventClick}
           />
         )}
 
@@ -236,6 +250,7 @@ export default function Calendario() {
             date={currentDate}
             agendamentos={agendamentos}
             onAgendamentoUpdate={handleAgendamentoUpdate}
+            onEventClick={handleEventClick}
           />
         )}
 
@@ -295,6 +310,10 @@ export default function Calendario() {
                             <div
                               key={ag.id}
                               className={`text-xs p-2 rounded-lg ${colors.bg} backdrop-blur-sm border-l-4 ${colors.border} ${colors.text} truncate cursor-pointer transition-all hover:scale-[1.02] hover:shadow-md`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEventClick(ag);
+                              }}
                               title={`${ag.cliente_nome} - ${format(
                                 new Date(ag.data_agendamento),
                                 "HH:mm"
@@ -352,6 +371,14 @@ export default function Calendario() {
           </>
         )}
       </div>
+
+      {/* Details Modal */}
+      <AgendamentoDetailsModal
+        agendamento={selectedAgendamento}
+        open={showDetailsModal}
+        onClose={handleCloseDetailsModal}
+        onUpdate={loadAgendamentos}
+      />
     </AppLayout>
   );
 }

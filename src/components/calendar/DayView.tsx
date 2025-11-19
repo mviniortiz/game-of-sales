@@ -19,9 +19,10 @@ interface DayViewProps {
   date: Date;
   agendamentos: Agendamento[];
   onAgendamentoUpdate: (id: string, newDate: Date) => void;
+  onEventClick?: (agendamento: Agendamento) => void;
 }
 
-function SortableAgendamento({ agendamento }: { agendamento: Agendamento }) {
+function SortableAgendamento({ agendamento, onEventClick }: { agendamento: Agendamento; onEventClick?: (agendamento: Agendamento) => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: agendamento.id,
   });
@@ -55,9 +56,12 @@ function SortableAgendamento({ agendamento }: { agendamento: Agendamento }) {
 
   return (
     <div ref={setNodeRef} style={style} {...attributes}>
-      <Card className={`p-4 backdrop-blur-sm bg-card/60 hover:bg-card/80 hover:shadow-lg hover:scale-[1.01] transition-all cursor-move ${getStatusColor(agendamento.status).bg}`}>
+      <Card 
+        className={`p-4 backdrop-blur-sm bg-card/60 hover:bg-card/80 hover:shadow-lg hover:scale-[1.01] transition-all cursor-pointer ${getStatusColor(agendamento.status).bg}`}
+        onClick={() => onEventClick?.(agendamento)}
+      >
         <div className="flex items-start gap-3">
-          <div {...listeners} className="mt-1 cursor-grab active:cursor-grabbing">
+          <div {...listeners} className="mt-1 cursor-grab active:cursor-grabbing" onClick={(e) => e.stopPropagation()}>
             <GripVertical className="h-5 w-5 text-muted-foreground" />
           </div>
           <div className="flex-1 space-y-2">
@@ -83,7 +87,7 @@ function SortableAgendamento({ agendamento }: { agendamento: Agendamento }) {
   );
 }
 
-export function DayView({ date, agendamentos, onAgendamentoUpdate }: DayViewProps) {
+export function DayView({ date, agendamentos, onAgendamentoUpdate, onEventClick }: DayViewProps) {
   const sortedAgendamentos = [...agendamentos].sort(
     (a, b) => new Date(a.data_agendamento).getTime() - new Date(b.data_agendamento).getTime()
   );
@@ -126,7 +130,7 @@ export function DayView({ date, agendamentos, onAgendamentoUpdate }: DayViewProp
           <SortableContext items={sortedAgendamentos.map((ag) => ag.id)} strategy={verticalListSortingStrategy}>
             <div className="space-y-3">
               {sortedAgendamentos.map((agendamento) => (
-                <SortableAgendamento key={agendamento.id} agendamento={agendamento} />
+                <SortableAgendamento key={agendamento.id} agendamento={agendamento} onEventClick={onEventClick} />
               ))}
             </div>
           </SortableContext>
