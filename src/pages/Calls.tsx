@@ -3,13 +3,14 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { StatCard } from "@/components/dashboard/StatCard";
-import { Calendar, Phone, TrendingUp, Users } from "lucide-react";
+import { Calendar, Phone, TrendingUp, Target, CheckCircle } from "lucide-react";
 import { CallsFilters } from "@/components/calls/CallsFilters";
 import { CallsFunnel } from "@/components/calls/CallsFunnel";
 import { AgendamentoForm } from "@/components/calls/AgendamentoForm";
 import { CallForm } from "@/components/calls/CallForm";
 import { PerformanceTable } from "@/components/calls/PerformanceTable";
 import { ProximosAgendamentos } from "@/components/calls/ProximosAgendamentos";
+import { CallsEvolutionChart } from "@/components/calls/CallsEvolutionChart";
 
 const Calls = () => {
   const { user, isAdmin } = useAuth();
@@ -32,6 +33,19 @@ const Calls = () => {
   const { data: metricas, refetch: refetchMetricas } = useQuery({
     queryKey: ["metricas-calls", dateRange, selectedVendedor],
     queryFn: async () => {
+      // Mock data para visualização
+      const useMockData = true;
+      
+      if (useMockData) {
+        return {
+          agendamentos: 100,
+          callsRealizadas: 80,
+          vendas: 20,
+          taxaComparecimento: 80,
+          taxaConversao: 25,
+        };
+      }
+
       let query = supabase
         .from("agendamentos")
         .select("id, data_agendamento, user_id")
@@ -77,10 +91,94 @@ const Calls = () => {
     enabled: !!user,
   });
 
+  const { data: evolutionData = [] } = useQuery({
+    queryKey: ["calls-evolution", dateRange],
+    queryFn: async () => {
+      // Mock data para visualização (últimos 7 dias)
+      const mockData = [];
+      const hoje = new Date();
+      
+      for (let i = 6; i >= 0; i--) {
+        const data = new Date(hoje);
+        data.setDate(data.getDate() - i);
+        const dataFormatada = data.toLocaleDateString('pt-BR', { 
+          day: '2-digit', 
+          month: '2-digit' 
+        });
+        
+        // Dados com variação realista
+        const agendamentos = Math.floor(Math.random() * 8) + 10; // 10-18
+        const calls = Math.floor(agendamentos * (0.7 + Math.random() * 0.2)); // 70-90% dos agendamentos
+        
+        mockData.push({ 
+          data: dataFormatada, 
+          agendamentos, 
+          calls 
+        });
+      }
+      
+      return mockData;
+    },
+    enabled: !!user,
+  });
+
   const { data: performanceData = [] } = useQuery({
     queryKey: ["performance-vendedores", dateRange],
     queryFn: async () => {
-      const { data: profiles } = await supabase.from("profiles").select("id, nome");
+      // Mock data para visualização
+      const useMockData = true;
+      
+      if (useMockData) {
+        return [
+          {
+            vendedor: "João Silva",
+            agendamentos: 28,
+            calls: 24,
+            taxaComparecimento: 85.7,
+            vendas: 8,
+            taxaConversao: 33.3,
+            status: "excelente" as const,
+          },
+          {
+            vendedor: "Maria Santos",
+            agendamentos: 22,
+            calls: 19,
+            taxaComparecimento: 86.4,
+            vendas: 5,
+            taxaConversao: 26.3,
+            status: "bom" as const,
+          },
+          {
+            vendedor: "Pedro Costa",
+            agendamentos: 25,
+            calls: 20,
+            taxaComparecimento: 80.0,
+            vendas: 4,
+            taxaConversao: 20.0,
+            status: "bom" as const,
+          },
+          {
+            vendedor: "Ana Lima",
+            agendamentos: 15,
+            calls: 10,
+            taxaComparecimento: 66.7,
+            vendas: 2,
+            taxaConversao: 20.0,
+            status: "precisa_melhorar" as const,
+          },
+          {
+            vendedor: "Carlos Souza",
+            agendamentos: 10,
+            calls: 7,
+            taxaComparecimento: 70.0,
+            vendas: 1,
+            taxaConversao: 14.3,
+            status: "precisa_melhorar" as const,
+          },
+        ];
+      }
+
+      const { data: profiles } = await supabase.from("profiles").select("id, nome, avatar_url");
 
       if (!profiles) return [];
 
@@ -188,19 +286,19 @@ const Calls = () => {
           <StatCard
             title="Taxa de Comparecimento"
             value={`${metricas?.taxaComparecimento.toFixed(1) || "0.0"}%`}
-            icon={Users}
+            icon={Target}
           />
         </div>
         <div className="animate-fade-in" style={{ animationDelay: "300ms" }}>
           <StatCard
             title="Taxa de Conversão"
             value={`${metricas?.taxaConversao.toFixed(1) || "0.0"}%`}
-            icon={TrendingUp}
+            icon={CheckCircle}
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <CallsFunnel
           agendamentos={metricas?.agendamentos || 0}
           callsRealizadas={metricas?.callsRealizadas || 0}
@@ -208,6 +306,7 @@ const Calls = () => {
           taxaComparecimento={metricas?.taxaComparecimento || 0}
           taxaConversao={metricas?.taxaConversao || 0}
         />
+        <CallsEvolutionChart data={evolutionData} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
