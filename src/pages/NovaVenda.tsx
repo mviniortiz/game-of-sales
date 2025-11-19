@@ -239,14 +239,14 @@ const NovaVenda = () => {
                       Nome do Cliente
                     </Label>
                     <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
                       <Input
                         id="cliente"
                         type="text"
                         placeholder="Ex: João Silva"
                         value={clienteNome}
                         onChange={(e) => setClienteNome(e.target.value)}
-                        className="pl-10 h-11"
+                        className="pl-12 h-11"
                         required
                       />
                     </div>
@@ -259,7 +259,7 @@ const NovaVenda = () => {
                     <div className="relative">
                       <Store className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
                       <Select value={plataforma} onValueChange={setPlataforma} required>
-                        <SelectTrigger className="pl-10 h-11">
+                        <SelectTrigger className="pl-12 h-11">
                           <SelectValue placeholder="Selecione a plataforma" />
                         </SelectTrigger>
                         <SelectContent>
@@ -279,7 +279,7 @@ const NovaVenda = () => {
                     <div className="relative">
                       <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
                       <Select value={formaPagamento} onValueChange={setFormaPagamento} required>
-                        <SelectTrigger className="pl-10 h-11">
+                        <SelectTrigger className="pl-12 h-11">
                           <SelectValue placeholder="Selecione a forma de pagamento" />
                         </SelectTrigger>
                         <SelectContent>
@@ -304,7 +304,7 @@ const NovaVenda = () => {
                     <div className="relative">
                       <Package className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
                       <Select value={produtoId} onValueChange={setProdutoId} required>
-                        <SelectTrigger className="pl-10 h-11">
+                        <SelectTrigger className="pl-12 h-11">
                           <SelectValue placeholder="Selecione um produto" />
                         </SelectTrigger>
                         <SelectContent>
@@ -323,7 +323,7 @@ const NovaVenda = () => {
                       Valor da Venda
                     </Label>
                     <div className="relative">
-                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
                       <Input
                         id="valor"
                         type="number"
@@ -332,7 +332,7 @@ const NovaVenda = () => {
                         placeholder="0.00"
                         value={valor}
                         onChange={(e) => setValor(e.target.value)}
-                        className="pl-10 h-11"
+                        className="pl-12 h-11"
                         required
                       />
                     </div>
@@ -375,19 +375,19 @@ const NovaVenda = () => {
                   <Label htmlFor="status" className="text-sm font-semibold">
                     Status
                   </Label>
-                  <div className="relative">
-                    <CheckCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
-                    <Select value={status} onValueChange={setStatus} required>
-                      <SelectTrigger className="pl-10 h-11">
-                        <SelectValue placeholder="Selecione o status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Aprovado">Aprovado</SelectItem>
-                        <SelectItem value="Pendente">Pendente</SelectItem>
-                        <SelectItem value="Reembolsado">Reembolsado</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                    <div className="relative">
+                      <CheckCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
+                      <Select value={status} onValueChange={setStatus} required>
+                        <SelectTrigger className="pl-12 h-11">
+                          <SelectValue placeholder="Selecione o status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Aprovado">Aprovado</SelectItem>
+                          <SelectItem value="Pendente">Pendente</SelectItem>
+                          <SelectItem value="Reembolsado">Reembolsado</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                 </div>
 
                 {/* Campo Admin ao lado do Status */}
@@ -399,7 +399,7 @@ const NovaVenda = () => {
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
                       <Select value={vendedorId} onValueChange={setVendedorId} required>
-                        <SelectTrigger className="pl-10 h-11">
+                        <SelectTrigger className="pl-12 h-11">
                           <SelectValue placeholder="Selecione o vendedor" />
                         </SelectTrigger>
                         <SelectContent>
