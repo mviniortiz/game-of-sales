@@ -184,7 +184,7 @@ const NovaVenda = () => {
 
         <Card className="border-border/50">
           {/* Header com Título e Card de Pontuação */}
-          <CardHeader className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 pb-6">
+          <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6">
             <CardTitle className="flex items-center gap-2">
               <PlusCircle className="h-5 w-5" />
               Informações da Venda
@@ -239,7 +239,7 @@ const NovaVenda = () => {
                       Nome do Cliente
                     </Label>
                     <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-20" />
                       <Input
                         id="cliente"
                         type="text"
@@ -257,9 +257,9 @@ const NovaVenda = () => {
                       Plataforma
                     </Label>
                     <div className="relative">
-                      <Store className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
+                      <Store className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-20" />
                       <Select value={plataforma} onValueChange={setPlataforma} required>
-                        <SelectTrigger className="pl-12 h-11">
+                        <SelectTrigger className="pl-12 h-11 [&>span]:ml-0">
                           <SelectValue placeholder="Selecione a plataforma" />
                         </SelectTrigger>
                         <SelectContent>
@@ -277,9 +277,9 @@ const NovaVenda = () => {
                       Forma de Pagamento
                     </Label>
                     <div className="relative">
-                      <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
+                      <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-20" />
                       <Select value={formaPagamento} onValueChange={setFormaPagamento} required>
-                        <SelectTrigger className="pl-12 h-11">
+                        <SelectTrigger className="pl-12 h-11 [&>span]:ml-0">
                           <SelectValue placeholder="Selecione a forma de pagamento" />
                         </SelectTrigger>
                         <SelectContent>
@@ -302,9 +302,9 @@ const NovaVenda = () => {
                       Produto
                     </Label>
                     <div className="relative">
-                      <Package className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
+                      <Package className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-20" />
                       <Select value={produtoId} onValueChange={setProdutoId} required>
-                        <SelectTrigger className="pl-12 h-11">
+                        <SelectTrigger className="pl-12 h-11 [&>span]:ml-0">
                           <SelectValue placeholder="Selecione um produto" />
                         </SelectTrigger>
                         <SelectContent>
@@ -323,7 +323,7 @@ const NovaVenda = () => {
                       Valor da Venda
                     </Label>
                     <div className="relative">
-                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
+                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-20" />
                       <Input
                         id="valor"
                         type="number"
@@ -376,9 +376,9 @@ const NovaVenda = () => {
                     Status
                   </Label>
                     <div className="relative">
-                      <CheckCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
+                      <CheckCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-20" />
                       <Select value={status} onValueChange={setStatus} required>
-                        <SelectTrigger className="pl-12 h-11">
+                        <SelectTrigger className="pl-12 h-11 [&>span]:ml-0">
                           <SelectValue placeholder="Selecione o status" />
                         </SelectTrigger>
                         <SelectContent>
@@ -397,9 +397,9 @@ const NovaVenda = () => {
                       Vendedor
                     </Label>
                     <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-20" />
                       <Select value={vendedorId} onValueChange={setVendedorId} required>
-                        <SelectTrigger className="pl-12 h-11">
+                        <SelectTrigger className="pl-12 h-11 [&>span]:ml-0">
                           <SelectValue placeholder="Selecione o vendedor" />
                         </SelectTrigger>
                         <SelectContent>
