@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import logo from "@/assets/logo.png";
 import { Mail, Lock, ArrowRight } from "lucide-react";
+import DataFlowBackground from "@/components/auth/DataFlowBackground";
 
 const authSchema = z.object({
   email: z.string().email("Email inválido").max(255, "Email muito longo"),
@@ -167,12 +168,9 @@ const Auth = () => {
       </div>
 
       {/* Right Side - Visual */}
-      <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
-        {/* Gradient Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-purple-700 to-cyan-500 opacity-90" />
-        
-        {/* Overlay Pattern */}
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDE2YzAtMi4yMSAxLjc5LTQgNC00czQgMS43OSA0IDQtMS43OSA0LTQgNC00LTEuNzktNC00em0wIDI0YzAtMi4yMSAxLjc5LTQgNC00czQgMS43OSA0IDQtMS43OSA0LTQgNC00LTEuNzktNC00ek0xMiAxNmMwLTIuMjEgMS43OS00IDQtNHM0IDEuNzkgNCA0LTEuNzkgNC00IDQtNC0xLjc5LTQtNHptMCAyNGMwLTIuMjEgMS43OS00IDQtNHM0IDEuNzkgNCA0LTEuNzkgNC00IDQtNC0xLjc5LTQtNHoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-30" />
+      <div className="hidden lg:block lg:w-1/2 relative overflow-hidden bg-slate-950">
+        {/* Dynamic Data Flow Background */}
+        <DataFlowBackground />
         
         {/* Content */}
         <div className="relative h-full flex flex-col items-center justify-center p-12 text-white">
