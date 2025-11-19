@@ -7,6 +7,11 @@ interface VendasChartProps {
 }
 
 export const VendasChart = ({ data }: VendasChartProps) => {
+  // Calcular o valor máximo para adicionar padding
+  const maxValue = data.length > 0 ? Math.max(...data.map(d => d.vendas)) : 0;
+  const yAxisMax = Math.ceil(maxValue * 1.2); // 20% de padding no topo
+  const yAxisMin = 0;
+
   return (
     <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
       <CardHeader>
@@ -22,21 +27,24 @@ export const VendasChart = ({ data }: VendasChartProps) => {
         <ResponsiveContainer width="100%" height={350}>
           <LineChart 
             data={data}
-            margin={{ top: 20, right: 30, left: 10, bottom: 30 }}
+            margin={{ top: 40, right: 30, left: 20, bottom: 80 }}
           >
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
             <XAxis
               dataKey="data"
               stroke="hsl(var(--muted-foreground))"
-              fontSize={12}
+              fontSize={11}
               angle={-45}
               textAnchor="end"
               height={80}
-              interval="preserveStartEnd"
+              interval={data.length > 15 ? Math.floor(data.length / 10) : 0}
+              tick={{ dy: 10 }}
             />
             <YAxis 
               stroke="hsl(var(--muted-foreground))" 
               fontSize={12}
+              domain={[yAxisMin, yAxisMax]}
+              allowDecimals={false}
               label={{ 
                 value: 'Quantidade', 
                 angle: -90, 
