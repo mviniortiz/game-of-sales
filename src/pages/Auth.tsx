@@ -175,34 +175,13 @@ const Auth = () => {
         
         {/* Content */}
         <div className="relative h-full flex flex-col items-center justify-center p-12 text-white">
-          <div className="max-w-lg space-y-8 text-center">
-            <div className="space-y-4">
-              <div className="inline-block p-4 bg-white/10 backdrop-blur-sm rounded-2xl">
-                <img src={logo} alt="Rota de Negócios" className="h-24 w-24 object-contain" />
-              </div>
-              <h2 className="text-4xl font-bold">
-                Gestão Inteligente de Vendas
-              </h2>
-              <p className="text-lg text-white/80">
-                Controle completo das suas operações comerciais em uma única plataforma.
-              </p>
-            </div>
-            
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-6 pt-8">
-              <div className="space-y-1">
-                <div className="text-3xl font-bold">+50k</div>
-                <div className="text-sm text-white/70">Vendas Registradas</div>
-              </div>
-              <div className="space-y-1">
-                <div className="text-3xl font-bold">98%</div>
-                <div className="text-sm text-white/70">Satisfação</div>
-              </div>
-              <div className="space-y-1">
-                <div className="text-3xl font-bold">24/7</div>
-                <div className="text-sm text-white/70">Disponibilidade</div>
-              </div>
-            </div>
+          <div className="max-w-lg space-y-6 text-center">
+            <h2 className="text-4xl font-bold">
+              Gestão Inteligente de Vendas
+            </h2>
+            <p className="text-lg text-white/80">
+              Controle completo das suas operações comerciais em uma única plataforma.
+            </p>
           </div>
         </div>
       </div>
