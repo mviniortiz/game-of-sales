@@ -17,6 +17,7 @@ import Integracoes from "./pages/Integracoes";
 import Calendario from "./pages/Calendario";
 import RecuperarSenha from "./pages/RecuperarSenha";
 import Profile from "./pages/Profile";
+import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -117,6 +118,7 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route path="/politica-privacidade" element={<PoliticaPrivacidade />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </TooltipProvider>
