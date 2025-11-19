@@ -4,7 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Filter, Users } from "lucide-react";
+import { CalendarIcon, Filter, Users, CreditCard, Package } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,11 @@ interface AdminFiltersProps {
   selectedVendedor: string;
   setSelectedVendedor: (value: string) => void;
   vendedores: Array<{ id: string; nome: string }>;
+  selectedFormaPagamento?: string;
+  setSelectedFormaPagamento?: (value: string) => void;
+  selectedProduto?: string;
+  setSelectedProduto?: (value: string) => void;
+  produtos?: Array<{ id: string; nome: string }>;
 }
 
 export const AdminFilters = ({
@@ -23,7 +28,20 @@ export const AdminFilters = ({
   selectedVendedor,
   setSelectedVendedor,
   vendedores,
+  selectedFormaPagamento,
+  setSelectedFormaPagamento,
+  selectedProduto,
+  setSelectedProduto,
+  produtos = [],
 }: AdminFiltersProps) => {
+  const formasPagamento = [
+    "Cartão de Crédito",
+    "PIX",
+    "Recorrência",
+    "Boleto",
+    "Parte PIX Parte Cartão",
+    "Múltiplos Cartões",
+  ];
   const setQuickRange = (range: string) => {
     const today = new Date();
     const from = new Date();
@@ -55,9 +73,9 @@ export const AdminFilters = ({
           <h3 className="text-lg font-semibold">Filtros Globais</h3>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
           {/* Período Customizado */}
-          <div className="space-y-2">
+          <div className="space-y-2 lg:col-span-2">
             <Label className="flex items-center gap-2 text-sm">
               <CalendarIcon className="h-4 w-4 text-primary" />
               Período Customizado
@@ -100,7 +118,7 @@ export const AdminFilters = ({
           </div>
 
           {/* Períodos Rápidos */}
-          <div className="space-y-2 md:col-span-2">
+          <div className="space-y-2 lg:col-span-4">
             <Label className="text-sm">Períodos Rápidos</Label>
             <div className="flex gap-2 flex-wrap">
               <Button
@@ -158,6 +176,52 @@ export const AdminFilters = ({
               </SelectContent>
             </Select>
           </div>
+
+          {/* Forma de Pagamento */}
+          {setSelectedFormaPagamento && (
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2 text-sm">
+                <CreditCard className="h-4 w-4 text-primary" />
+                Forma de Pagamento
+              </Label>
+              <Select value={selectedFormaPagamento} onValueChange={setSelectedFormaPagamento}>
+                <SelectTrigger className="w-full h-9">
+                  <SelectValue placeholder="Todas" />
+                </SelectTrigger>
+                <SelectContent className="z-50 bg-popover">
+                  <SelectItem value="todas">Todas</SelectItem>
+                  {formasPagamento.map((forma) => (
+                    <SelectItem key={forma} value={forma}>
+                      {forma}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* Produto */}
+          {setSelectedProduto && (
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2 text-sm">
+                <Package className="h-4 w-4 text-primary" />
+                Produto
+              </Label>
+              <Select value={selectedProduto} onValueChange={setSelectedProduto}>
+                <SelectTrigger className="w-full h-9">
+                  <SelectValue placeholder="Todos" />
+                </SelectTrigger>
+                <SelectContent className="z-50 bg-popover">
+                  <SelectItem value="todos">Todos</SelectItem>
+                  {produtos.map((produto) => (
+                    <SelectItem key={produto.id} value={produto.id}>
+                      {produto.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

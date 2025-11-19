@@ -1,16 +1,26 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, TrendingUp, Target, DollarSign, Award } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { VendasChart } from "@/components/calls/VendasChart";
+import { MetasRankingCard } from "@/components/admin/MetasRankingCard";
 
 interface AdminVendasViewProps {
   dateRange: { from?: Date; to?: Date };
   selectedVendedor: string;
+  selectedFormaPagamento?: string;
+  selectedProduto?: string;
 }
 
-export const AdminVendasView = ({ dateRange, selectedVendedor }: AdminVendasViewProps) => {
+export const AdminVendasView = ({ 
+  dateRange, 
+  selectedVendedor,
+  selectedFormaPagamento = "todas",
+  selectedProduto = "todos"
+}: AdminVendasViewProps) => {
+  const [statusFiltro, setStatusFiltro] = useState("todos");
   const inicioMes = dateRange.from?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0];
   const fimMes = dateRange.to?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0];
 
@@ -26,12 +36,20 @@ export const AdminVendasView = ({ dateRange, selectedVendedor }: AdminVendasView
       // Vendas do período
       let vendasQuery = supabase
         .from("vendas")
-        .select("valor, status")
+        .select("valor, status, forma_pagamento, produto_id")
         .gte("data_venda", inicioMes)
         .lte("data_venda", fimMes);
 
       if (selectedVendedor !== "todos") {
         vendasQuery = vendasQuery.eq("user_id", selectedVendedor);
+      }
+
+      if (selectedFormaPagamento !== "todas") {
+        vendasQuery = vendasQuery.eq("forma_pagamento", selectedFormaPagamento as any);
+      }
+
+      if (selectedProduto !== "todos") {
+        vendasQuery = vendasQuery.eq("produto_id", selectedProduto as any);
       }
 
       const { data: vendas } = await vendasQuery;
@@ -107,9 +125,22 @@ export const AdminVendasView = ({ dateRange, selectedVendedor }: AdminVendasView
     },
   });
 
+  // Dados para ranking de metas (com dados fictícios para demonstração)
+  const metaConsolidadaFicticia = 500000;
+  const vendedoresMetas = [
+    { nome: "João Silva", valorMeta: 50000, valorRealizado: 48500, percentual: 97.0 },
+    { nome: "Maria Santos", valorMeta: 45000, valorRealizado: 47200, percentual: 104.9 },
+    { nome: "Pedro Costa", valorMeta: 40000, valorRealizado: 38100, percentual: 95.3 },
+    { nome: "Ana Lima", valorMeta: 35000, valorRealizado: 32800, percentual: 93.7 },
+    { nome: "Carlos Souza", valorMeta: 30000, valorRealizado: 25600, percentual: 85.3 },
+  ];
+  
+  const valorConsolidadoFicticio = vendedoresMetas.reduce((acc, v) => acc + v.valorRealizado, 0);
+  const percentualConsolidadoFicticio = (valorConsolidadoFicticio / metaConsolidadaFicticia) * 100;
+
   // Progresso de metas
   const { data: progressoMetas } = useQuery({
-    queryKey: ["admin-progresso-metas", inicioMes, fimMes, selectedVendedor],
+    queryKey: ["admin-progresso-metas", inicioMes, fimMes, selectedVendedor, selectedFormaPagamento, selectedProduto],
     queryFn: async () => {
       let metasQuery = supabase
         .from("metas")
@@ -133,13 +164,23 @@ export const AdminVendasView = ({ dateRange, selectedVendedor }: AdminVendasView
 
       const progressoData = await Promise.all(
         metas.map(async (meta: any) => {
-          const { data: vendas } = await supabase
+          let vendasMetaQuery = supabase
             .from("vendas")
             .select("valor")
             .eq("user_id", meta.user_id)
             .eq("status", "Aprovado")
             .gte("data_venda", inicioMes)
             .lte("data_venda", fimMes);
+
+          if (selectedFormaPagamento !== "todas") {
+            vendasMetaQuery = vendasMetaQuery.eq("forma_pagamento", selectedFormaPagamento as any);
+          }
+
+          if (selectedProduto !== "todos") {
+            vendasMetaQuery = vendasMetaQuery.eq("produto_id", selectedProduto as any);
+          }
+
+          const { data: vendas } = await vendasMetaQuery;
 
           const realizado = vendas?.reduce((acc, v) => acc + Number(v.valor), 0) || 0;
           const percentual = meta.valor_meta > 0 ? ((realizado / meta.valor_meta) * 100).toFixed(1) : "0.0";
@@ -203,6 +244,15 @@ export const AdminVendasView = ({ dateRange, selectedVendedor }: AdminVendasView
 
   return (
     <div className="space-y-8">
+      {/* Ranking de Metas */}
+      <MetasRankingCard
+        metaConsolidada={metaConsolidadaFicticia}
+        valorConsolidadoAtingido={valorConsolidadoFicticio}
+        percentualConsolidado={percentualConsolidadoFicticio}
+        vendedores={vendedoresMetas}
+        statusFiltro={statusFiltro}
+        onStatusChange={setStatusFiltro}
+      />
       {/* Cards de Métricas Principais - Destaque Visual */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Faturamento - Destaque Principal */}
