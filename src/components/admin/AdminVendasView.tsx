@@ -214,7 +214,7 @@ export const AdminVendasView = ({ dateRange, selectedVendedor }: AdminVendasView
               </div>
               <div className="text-right">
                 <p className="text-sm font-medium text-muted-foreground mb-2">Faturamento Total</p>
-                <p className="text-5xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                <p className="text-5xl font-bold text-green-600">
                   {formatCurrency(stats?.totalVendas || 0)}
                 </p>
                 <p className="text-sm text-muted-foreground mt-3">
@@ -234,7 +234,7 @@ export const AdminVendasView = ({ dateRange, selectedVendedor }: AdminVendasView
               </div>
               <div className="text-right">
                 <p className="text-sm font-medium text-muted-foreground mb-2">Ticket Médio</p>
-                <p className="text-5xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                <p className="text-5xl font-bold text-purple-600">
                   {formatCurrency(stats?.ticketMedio || 0)}
                 </p>
                 <p className="text-sm text-muted-foreground mt-3">
