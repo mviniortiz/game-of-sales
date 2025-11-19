@@ -50,6 +50,7 @@ const NovaVenda = () => {
   const [clienteNome, setClienteNome] = useState("");
   const [produtoId, setProdutoId] = useState("");
   const [valor, setValor] = useState("");
+  const [valorFormatado, setValorFormatado] = useState("");
   const [formaPagamento, setFormaPagamento] = useState("");
   const [plataforma, setPlataforma] = useState("");
   const [status, setStatus] = useState("Aprovado");
@@ -107,6 +108,7 @@ const NovaVenda = () => {
       setClienteNome("");
       setProdutoId("");
       setValor("");
+      setValorFormatado("");
       setFormaPagamento("");
       setPlataforma("");
       setStatus("Aprovado");
@@ -167,6 +169,32 @@ const NovaVenda = () => {
       data_venda: validationResult.data.dataVenda,
       observacoes: validationResult.data.observacoes || null,
     });
+  };
+
+  // Função para formatar valor como moeda
+  const formatarMoeda = (value: string) => {
+    // Remove tudo que não é número
+    const numero = value.replace(/\D/g, "");
+    
+    if (!numero) {
+      setValor("");
+      setValorFormatado("");
+      return;
+    }
+    
+    // Converte para número com centavos
+    const valorNumerico = parseFloat(numero) / 100;
+    setValor(valorNumerico.toString());
+    
+    // Formata como moeda brasileira
+    const valorFormatadoBR = valorNumerico.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    
+    setValorFormatado(valorFormatadoBR);
   };
 
   // Cálculo dinâmico de pontos
@@ -317,13 +345,12 @@ const NovaVenda = () => {
                     </Label>
                     <Input
                       id="valor"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      placeholder="0.00"
-                      value={valor}
-                      onChange={(e) => setValor(e.target.value)}
-                      className="h-11"
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="R$ 0,00"
+                      value={valorFormatado}
+                      onChange={(e) => formatarMoeda(e.target.value)}
+                      className="h-11 text-base font-medium"
                       required
                     />
                   </div>
