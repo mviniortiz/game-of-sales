@@ -68,12 +68,12 @@ const Auth = () => {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-background relative">
         <div className="w-full max-w-md space-y-8">
           {/* Logo */}
-          <div className="flex items-center">
+          <div className="flex items-center animate-fade-in" style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>
             <img src={logo} alt="Rota de Negócios" className="h-16 w-16 object-contain" />
           </div>
 
           {/* Header */}
-          <div className="space-y-2">
+          <div className="space-y-2 animate-fade-in" style={{ animationDelay: '0.2s', animationFillMode: 'both' }}>
             <h1 className="text-4xl font-bold text-foreground">
               Bem-vindo de volta
             </h1>
@@ -83,10 +83,10 @@ const Auth = () => {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6 animate-fade-in" style={{ animationDelay: '0.3s', animationFillMode: 'both' }}>
             <div className="space-y-4">
               {/* Email Input */}
-              <div className="space-y-2">
+              <div className="space-y-2 animate-fade-in" style={{ animationDelay: '0.4s', animationFillMode: 'both' }}>
                 <Label htmlFor="email" className="text-sm font-medium text-foreground">
                   Email
                 </Label>
@@ -106,7 +106,7 @@ const Auth = () => {
               </div>
 
               {/* Password Input */}
-              <div className="space-y-2">
+              <div className="space-y-2 animate-fade-in" style={{ animationDelay: '0.5s', animationFillMode: 'both' }}>
                 <Label htmlFor="password" className="text-sm font-medium text-foreground">
                   Senha
                 </Label>
@@ -127,7 +127,7 @@ const Auth = () => {
             </div>
 
             {/* Remember Me Checkbox */}
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 animate-fade-in" style={{ animationDelay: '0.6s', animationFillMode: 'both' }}>
               <Checkbox
                 id="remember"
                 checked={rememberMe}
@@ -145,7 +145,8 @@ const Auth = () => {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-12 text-base font-semibold bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-black shadow-lg hover:shadow-xl transition-all"
+              className="w-full h-12 text-base font-semibold bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-black shadow-lg hover:shadow-xl transition-all animate-fade-in"
+              style={{ animationDelay: '0.7s', animationFillMode: 'both' }}
             >
               {loading ? (
                 "Entrando..."
@@ -160,7 +161,7 @@ const Auth = () => {
         </div>
 
         {/* Footer Note - Fixed at Bottom */}
-        <div className="absolute bottom-8 left-0 right-0 text-center px-8">
+        <div className="absolute bottom-8 left-0 right-0 text-center px-8 animate-fade-in" style={{ animationDelay: '0.8s', animationFillMode: 'both' }}>
           <p className="text-xs text-gray-600">
             Sistema de uso restrito. Acesso apenas para colaboradores autorizados.
           </p>
