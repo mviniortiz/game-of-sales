@@ -444,6 +444,126 @@ const NovaVenda = () => {
                 />
               </div>
 
+              {/* Resumo da Venda */}
+              {(clienteNome || produtoId || valor || plataforma || formaPagamento) && (
+                <div className="mt-8 p-6 border-2 border-primary/20 rounded-lg bg-gradient-to-br from-primary/5 to-primary/10">
+                  <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-primary">
+                    <CheckCircle className="h-5 w-5" />
+                    Resumo da Venda
+                  </h3>
+                  
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {clienteNome && (
+                      <div className="flex items-start gap-3 p-3 bg-background/50 rounded-md border border-border/50">
+                        <User className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Cliente</p>
+                          <p className="font-medium text-sm truncate">{clienteNome}</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {produtoId && produtos && (
+                      <div className="flex items-start gap-3 p-3 bg-background/50 rounded-md border border-border/50">
+                        <Package className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Produto</p>
+                          <p className="font-medium text-sm truncate">
+                            {produtos.find(p => p.id === produtoId)?.nome}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {valor && (
+                      <div className="flex items-start gap-3 p-3 bg-background/50 rounded-md border border-border/50">
+                        <DollarSign className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Valor</p>
+                          <p className="font-bold text-base text-primary">{valorFormatado || "R$ 0,00"}</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {plataforma && (
+                      <div className="flex items-start gap-3 p-3 bg-background/50 rounded-md border border-border/50">
+                        <Store className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Plataforma</p>
+                          <p className="font-medium text-sm">{plataforma}</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {formaPagamento && (
+                      <div className="flex items-start gap-3 p-3 bg-background/50 rounded-md border border-border/50">
+                        <CreditCard className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Pagamento</p>
+                          <p className="font-medium text-sm">{formaPagamento}</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {status && (
+                      <div className="flex items-start gap-3 p-3 bg-background/50 rounded-md border border-border/50">
+                        <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Status</p>
+                          <p className="font-medium text-sm">{status}</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {dataVenda && (
+                      <div className="flex items-start gap-3 p-3 bg-background/50 rounded-md border border-border/50">
+                        <CalendarIcon className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Data</p>
+                          <p className="font-medium text-sm">{format(dataVenda, "PPP", { locale: ptBR })}</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {isAdmin && vendedorId && vendedores && (
+                      <div className="flex items-start gap-3 p-3 bg-background/50 rounded-md border border-border/50">
+                        <User className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Vendedor</p>
+                          <p className="font-medium text-sm truncate">
+                            {vendedores.find(v => v.id === vendedorId)?.nome}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {observacoes && (
+                    <div className="mt-4 p-3 bg-background/50 rounded-md border border-border/50">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Observações</p>
+                      <p className="text-sm text-foreground/80 whitespace-pre-wrap">{observacoes}</p>
+                    </div>
+                  )}
+                  
+                  {pontosPrevistos > 0 && (
+                    <div className="mt-4 p-4 bg-amber-500/10 border border-amber-500/20 rounded-md">
+                      <div className="flex items-center justify-center gap-2">
+                        <Trophy className="h-5 w-5 text-amber-500" />
+                        <span className="text-sm font-medium text-muted-foreground">
+                          Você ganhará
+                        </span>
+                        <span className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                          +{pontosPrevistos}
+                        </span>
+                        <span className="text-sm font-medium text-muted-foreground">
+                          pontos
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Botão de Submit - Melhorado */}
               <Button
                 type="submit"
