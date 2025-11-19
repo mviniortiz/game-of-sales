@@ -2,33 +2,31 @@ import { GoogleCalendarConnect } from "@/components/calendar/GoogleCalendarConne
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar as CalendarIcon, CreditCard, Bell, Zap, Target, Leaf, Banknote } from "lucide-react";
+import { CreditCard, Bell } from "lucide-react";
+import googleCalendarLogo from "@/assets/integrations/google-calendar.png";
+import celetusLogo from "@/assets/integrations/celetus.png";
+import caktoLogo from "@/assets/integrations/cakto.png";
+import greennLogo from "@/assets/integrations/greenn.png";
 
 const Integracoes = () => {
   const roadmapIntegrations = [
     {
       name: "Celetus",
       description: "Importe vendas e transações automaticamente da Celetus",
-      Icon: Zap,
+      logo: celetusLogo,
       color: "from-cyan-500 to-blue-500"
     },
     {
       name: "Cakto",
       description: "Sincronize vendas e comissões em tempo real",
-      Icon: Target,
+      logo: caktoLogo,
       color: "from-blue-500 to-indigo-500"
     },
     {
       name: "Greenn",
       description: "Conecte recorrências e assinaturas da Greenn",
-      Icon: Leaf,
+      logo: greennLogo,
       color: "from-green-500 to-emerald-500"
-    },
-    {
-      name: "Pix/Boleto",
-      description: "Integração com gateways de pagamento direto",
-      Icon: Banknote,
-      color: "from-purple-500 to-pink-500"
     }
   ];
 
@@ -57,8 +55,8 @@ const Integracoes = () => {
           <CardHeader className="relative">
             <div className="flex items-start justify-between">
               <div className="flex items-start gap-4">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-green-500/20 backdrop-blur-sm">
-                  <CalendarIcon className="h-8 w-8 text-blue-500" />
+                <div className="p-3 rounded-xl bg-white/90 backdrop-blur-sm shadow-sm">
+                  <img src={googleCalendarLogo} alt="Google Calendar" className="h-8 w-8" />
                 </div>
                 <div>
                   <CardTitle className="text-2xl mb-2 flex items-center gap-2">
@@ -90,45 +88,42 @@ const Integracoes = () => {
           Próximas integrações financeiras para automatizar completamente suas vendas
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {roadmapIntegrations.map((integration) => {
-            const IconComponent = integration.Icon;
-            return (
-              <Card 
-                key={integration.name} 
-                className="relative border-border/30 bg-card/30 backdrop-blur-sm overflow-hidden group hover:border-border/50 transition-all duration-300 opacity-75 grayscale hover:grayscale-0 hover:opacity-100"
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {roadmapIntegrations.map((integration) => (
+            <Card 
+              key={integration.name} 
+              className="relative border-border/30 bg-card/30 backdrop-blur-sm overflow-hidden group hover:border-border/50 transition-all duration-300 opacity-75 grayscale hover:grayscale-0 hover:opacity-100"
+            >
+              <Badge 
+                variant="secondary" 
+                className="absolute top-3 right-3 bg-yellow-500/20 text-yellow-600 border-yellow-500/30 text-xs"
               >
-                <Badge 
-                  variant="secondary" 
-                  className="absolute top-3 right-3 bg-yellow-500/20 text-yellow-600 border-yellow-500/30 text-xs"
+                Em Breve
+              </Badge>
+              
+              <CardHeader className="pb-3">
+                <div className="w-16 h-16 rounded-xl bg-white/90 flex items-center justify-center mb-3 shadow-sm opacity-50 group-hover:opacity-100 transition-opacity p-2">
+                  <img src={integration.logo} alt={integration.name} className="w-full h-full object-contain" />
+                </div>
+                <CardTitle className="text-lg">{integration.name}</CardTitle>
+                <CardDescription className="text-sm line-clamp-2">
+                  {integration.description}
+                </CardDescription>
+              </CardHeader>
+              
+              <CardContent>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  disabled
+                  className="w-full gap-2"
                 >
-                  Em Breve
-                </Badge>
-                
-                <CardHeader className="pb-3">
-                  <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${integration.color} flex items-center justify-center mb-3 opacity-50 group-hover:opacity-100 transition-opacity`}>
-                    <IconComponent className="h-6 w-6 text-white" />
-                  </div>
-                  <CardTitle className="text-lg">{integration.name}</CardTitle>
-                  <CardDescription className="text-sm line-clamp-2">
-                    {integration.description}
-                  </CardDescription>
-                </CardHeader>
-                
-                <CardContent>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    disabled
-                    className="w-full gap-2"
-                  >
-                    <Bell className="h-3 w-3" />
-                    Avise-me
-                  </Button>
-                </CardContent>
-              </Card>
-            );
-          })}
+                  <Bell className="h-3 w-3" />
+                  Avise-me
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
         {/* Call to Action */}
