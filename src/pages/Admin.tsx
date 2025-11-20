@@ -10,7 +10,6 @@ import { AdminVendas } from "@/components/admin/AdminVendas";
 import { AdminRelatorios } from "@/components/admin/AdminRelatorios";
 import { AdminMetas } from "@/components/admin/AdminMetas";
 import { AdminManagement } from "@/components/profile/AdminManagement";
-import { SkeletonCard, SkeletonTable } from "@/components/ui/skeleton-card";
 
 const Admin = () => {
   const { isAdmin, loading } = useAuth();
@@ -25,18 +24,10 @@ const Admin = () => {
 
   if (loading) {
     return (
-      <div className="space-y-6 animate-fade-in">
-        <div className="flex items-center gap-3">
-          <Shield className="h-8 w-8 text-primary" />
-          <div>
-            <h1 className="text-3xl font-bold">Administração</h1>
-            <p className="text-muted-foreground">Carregando painel administrativo...</p>
-          </div>
-        </div>
-        <SkeletonCard />
-        <div className="space-y-4">
-          <SkeletonTable rows={3} />
-          <SkeletonTable rows={5} />
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+          <p className="mt-4 text-muted-foreground">Carregando...</p>
         </div>
       </div>
     );
@@ -47,7 +38,7 @@ const Admin = () => {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6">
       <div className="flex items-center gap-3">
         <Shield className="h-8 w-8 text-primary" />
         <div>

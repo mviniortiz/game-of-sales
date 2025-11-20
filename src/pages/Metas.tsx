@@ -7,7 +7,6 @@ import { MetaEvolutionChart } from "@/components/metas/MetaEvolutionChart";
 import { Target } from "lucide-react";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { SkeletonCard, SkeletonChart, SkeletonTable } from "@/components/ui/skeleton-card";
 
 const Metas = () => {
   const { user, isAdmin } = useAuth();
@@ -144,7 +143,7 @@ const Metas = () => {
   });
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6">
       <div className="flex items-center gap-3">
         <Target className="h-8 w-8 text-primary" />
         <div>
@@ -154,14 +153,9 @@ const Metas = () => {
       </div>
 
       {loadingProgresso ? (
-        <div className="space-y-6">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
-          </div>
-          <SkeletonTable />
-          <SkeletonChart />
+        <div className="text-center py-12 text-muted-foreground">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+          <p className="mt-4">Carregando metas...</p>
         </div>
       ) : (
         <>

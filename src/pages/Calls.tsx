@@ -11,7 +11,6 @@ import { CallForm } from "@/components/calls/CallForm";
 import { PerformanceTable } from "@/components/calls/PerformanceTable";
 import { ProximosAgendamentos } from "@/components/calls/ProximosAgendamentos";
 import { CallsEvolutionChart } from "@/components/calls/CallsEvolutionChart";
-import { SkeletonStatCard, SkeletonChart, SkeletonTable } from "@/components/ui/skeleton-card";
 
 const Calls = () => {
   const { user, isAdmin } = useAuth();
@@ -31,7 +30,7 @@ const Calls = () => {
     enabled: isAdmin,
   });
 
-  const { data: metricas, refetch: refetchMetricas, isLoading: loadingMetricas } = useQuery({
+  const { data: metricas, refetch: refetchMetricas } = useQuery({
     queryKey: ["metricas-calls", dateRange, selectedVendedor],
     queryFn: async () => {
       // Mock data para visualização
@@ -92,7 +91,7 @@ const Calls = () => {
     enabled: !!user,
   });
 
-  const { data: evolutionData = [], isLoading: loadingEvolution } = useQuery({
+  const { data: evolutionData = [] } = useQuery({
     queryKey: ["calls-evolution", dateRange],
     queryFn: async () => {
       // Mock data para visualização (últimos 7 dias)
@@ -249,35 +248,8 @@ const Calls = () => {
   });
 
 
-  const isLoading = loadingMetricas || loadingEvolution;
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6 animate-fade-in">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Performance de Calls</h1>
-          <p className="text-muted-foreground">Carregando métricas...</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <SkeletonStatCard />
-          <SkeletonStatCard />
-          <SkeletonStatCard />
-          <SkeletonStatCard />
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <SkeletonChart />
-          <SkeletonChart />
-        </div>
-
-        {isAdmin && <SkeletonTable />}
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold mb-2">Performance de Calls</h1>
         <p className="text-muted-foreground">

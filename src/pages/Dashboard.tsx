@@ -7,7 +7,6 @@ import { VendasPorProdutoChart } from "@/components/dashboard/VendasPorProdutoCh
 import { VendasPorPlataformaChart } from "@/components/dashboard/VendasPorPlataformaChart";
 import { DollarSign, TrendingUp, ShoppingCart, Target } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { SkeletonStatCard, SkeletonChart } from "@/components/ui/skeleton-card";
 
 const Dashboard = () => {
   const { user, isAdmin } = useAuth();
@@ -17,7 +16,7 @@ const Dashboard = () => {
     return <AdminDashboardOverview />;
   }
 
-  const { data: vendas, isLoading: loadingVendas } = useQuery({
+  const { data: vendas } = useQuery({
     queryKey: ["vendas", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -32,7 +31,7 @@ const Dashboard = () => {
     enabled: !!user?.id,
   });
 
-  const { data: vendasPorProduto, isLoading: loadingProdutos } = useQuery<Array<{ produto: string; quantidade: number; total: number }>>({
+  const { data: vendasPorProduto } = useQuery<Array<{ produto: string; quantidade: number; total: number }>>({
     queryKey: ["vendas-por-produto", user?.id],
     queryFn: async () => {
       const startOfMonth = new Date(new Date().setDate(1)).toISOString().split("T")[0];
@@ -59,7 +58,7 @@ const Dashboard = () => {
     enabled: !!user?.id,
   });
 
-  const { data: vendasPorPlataforma, isLoading: loadingPlataformas } = useQuery<Array<{ plataforma: string; quantidade: number; total: number }>>({
+  const { data: vendasPorPlataforma } = useQuery<Array<{ plataforma: string; quantidade: number; total: number }>>({
     queryKey: ["vendas-por-plataforma", user?.id],
     queryFn: async () => {
       const startOfMonth = new Date(new Date().setDate(1)).toISOString().split("T")[0];
@@ -110,33 +109,8 @@ const Dashboard = () => {
     ? ((plataformaMaisUsada.quantidade / totalVendasMes) * 100).toFixed(1)
     : "0";
 
-  const isLoading = loadingVendas || loadingProdutos || loadingPlataformas;
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6 animate-fade-in">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
-          <p className="text-muted-foreground">Carregando seus dados...</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <SkeletonStatCard />
-          <SkeletonStatCard />
-          <SkeletonStatCard />
-          <SkeletonStatCard />
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <SkeletonChart />
-          <SkeletonChart />
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
         <p className="text-muted-foreground">Bem-vindo de volta, {profile?.nome || "Vendedor"}!</p>
