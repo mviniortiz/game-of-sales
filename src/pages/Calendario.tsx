@@ -16,6 +16,7 @@ import { DayView } from "@/components/calendar/DayView";
 import { WeekView } from "@/components/calendar/WeekView";
 import { CalendarFilters } from "@/components/calendar/CalendarFilters";
 import { AgendamentoDetailsModal } from "@/components/calendar/AgendamentoDetailsModal";
+import { SkeletonCard } from "@/components/ui/skeleton-card";
 
 type ViewType = "day" | "week" | "month";
 
@@ -182,7 +183,23 @@ export default function Calendario() {
 
   return (
     <AppLayout>
-      <div className="container py-6 space-y-6">
+      {loading ? (
+        <div className="container py-6 space-y-6 animate-fade-in">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <div className="h-8 w-64 bg-muted animate-pulse rounded" />
+              <div className="h-4 w-96 bg-muted animate-pulse rounded" />
+            </div>
+          </div>
+          <SkeletonCard />
+          <div className="grid grid-cols-7 gap-4">
+            {Array.from({ length: 35 }).map((_, i) => (
+              <div key={i} className="h-24 bg-muted animate-pulse rounded" />
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="container py-6 space-y-6 animate-fade-in">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
@@ -255,7 +272,7 @@ export default function Calendario() {
         )}
 
         {view === "month" && (
-          <>
+          <div>
             {/* Calendar Grid */}
             <Card className="overflow-hidden">
               <div className="grid grid-cols-7 bg-muted/50 border-b">
@@ -368,11 +385,11 @@ export default function Calendario() {
                 <span>Concluído</span>
               </div>
             </div>
-          </>
+          </div>
         )}
-      </div>
-
-      {/* Details Modal */}
+        </div>
+      )}
+      
       <AgendamentoDetailsModal
         agendamento={selectedAgendamento}
         open={showDetailsModal}
