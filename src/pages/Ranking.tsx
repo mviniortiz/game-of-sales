@@ -7,12 +7,13 @@ import { RankingPodium } from "@/components/metas/RankingPodium";
 import { RankingEvolutionChart } from "@/components/metas/RankingEvolutionChart";
 import { Badge } from "@/components/ui/badge";
 import { Target } from "lucide-react";
+import { SkeletonCard, SkeletonPodium, SkeletonChart, SkeletonTable } from "@/components/ui/skeleton-card";
 
 const Ranking = () => {
   const { isAdmin } = useAuth();
 
   // Buscar meta consolidada do mês atual
-  const { data: metaAtual } = useQuery({
+  const { data: metaAtual, isLoading: loadingMeta } = useQuery({
     queryKey: ["meta-consolidada-atual"],
     queryFn: async () => {
       const hoje = new Date();
@@ -32,7 +33,7 @@ const Ranking = () => {
   });
 
   // Buscar contribuições dos vendedores
-  const { data: contribuicoes = [] } = useQuery({
+  const { data: contribuicoes = [], isLoading: loadingContribuicoes } = useQuery({
     queryKey: ["contribuicao-vendedores"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -74,6 +75,32 @@ const Ranking = () => {
   // Vendedores a partir do 4º lugar
   const restanteVendedores = contribuicoes.slice(3);
 
+  const isLoading = loadingMeta || loadingContribuicoes;
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto p-6 space-y-6 animate-fade-in">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">
+              Ranking de Vendedores
+            </h1>
+            <p className="text-muted-foreground">
+              Carregando dados do ranking...
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <SkeletonCard />
+          <SkeletonPodium />
+          <SkeletonChart />
+          <SkeletonTable />
+        </div>
+      </div>
+    );
+  }
+
   if (!metaAtual && !isAdmin) {
     return (
       <div className="container mx-auto p-6">
@@ -91,7 +118,7 @@ const Ranking = () => {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-6 space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">
