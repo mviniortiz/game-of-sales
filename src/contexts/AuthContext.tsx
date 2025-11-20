@@ -29,14 +29,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
 
   const loadProfile = async (userId: string) => {
-    const { data } = await supabase
-      .from("profiles")
-      .select("nome, avatar_url")
-      .eq("id", userId)
-      .single();
-    
-    if (data) {
-      setProfile(data);
+    try {
+      const { data } = await supabase
+        .from("profiles")
+        .select("nome, avatar_url")
+        .eq("id", userId)
+        .single();
+      
+      if (data) {
+        setProfile(data);
+      }
+    } catch (error) {
+      console.error("Error loading profile:", error);
     }
   };
 
@@ -48,24 +52,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const checkAdminRole = async (userId: string) => {
-      const { data } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId)
-        .eq("role", "admin")
-        .maybeSingle();
-      
-      setIsAdmin(!!data);
+      try {
+        const { data } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", userId)
+          .eq("role", "admin")
+          .maybeSingle();
+        
+        setIsAdmin(!!data);
+      } catch (error) {
+        console.error("Error checking admin role:", error);
+        setIsAdmin(false);
+      }
     };
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          checkAdminRole(session.user.id);
-          loadProfile(session.user.id);
+          await Promise.all([
+            checkAdminRole(session.user.id),
+            loadProfile(session.user.id)
+          ]);
         } else {
           setIsAdmin(false);
           setProfile(null);
@@ -75,13 +86,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        checkAdminRole(session.user.id);
-        loadProfile(session.user.id);
+        await Promise.all([
+          checkAdminRole(session.user.id),
+          loadProfile(session.user.id)
+        ]);
       }
+      setLoading(false);
+    }).catch((error) => {
+      console.error("Error getting session:", error);
       setLoading(false);
     });
 
