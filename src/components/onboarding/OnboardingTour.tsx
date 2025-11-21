@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,53 +8,41 @@ import { X, ChevronRight, ChevronLeft } from "lucide-react";
 interface Step {
   title: string;
   description: string;
-  icon: string;
-  route?: string;
-  position: "center" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
+  target?: string; // data-tour attribute
+  position?: "top" | "bottom" | "left" | "right";
+  route?: string; // route to navigate to
 }
 
 const steps: Step[] = [
   {
-    title: "Bem-vindo à Rota de Negócios! 🎉",
-    description: "Vamos fazer um tour rápido pelas principais funcionalidades do sistema. Este tutorial levará apenas 2 minutos.",
-    icon: "👋",
-    position: "center"
+    title: "Bem-vindo ao Rota de Negócios! 🎉",
+    description: "Vamos configurar sua máquina de vendas. Este tour rápido vai te mostrar os recursos principais.",
   },
   {
-    title: "Dashboard - Seu Centro de Controle 📊",
-    description: "Aqui você acompanha suas métricas em tempo real: vendas do mês, pontos acumulados, nível atual e progresso para o próximo nível. É sua visão geral de desempenho!",
-    icon: "📊",
+    title: "Seus Números em Tempo Real 📊",
+    description: "Aqui você acompanha seu faturamento, ticket médio e total de transações. Seus KPIs sempre à vista!",
+    target: "dashboard-stats",
+    position: "bottom",
     route: "/",
-    position: "center"
   },
   {
-    title: "Registrar Nova Venda 💰",
-    description: "A forma mais rápida de adicionar suas vendas! Preencha os dados do cliente, produto, valor e forma de pagamento. Cada venda te dá pontos: R$ 1,00 = 1 ponto!",
-    icon: "💰",
-    route: "/nova-venda",
-    position: "center"
+    title: "Registre Suas Vendas 💰",
+    description: "A ação mais importante! Clique aqui para adicionar vendas e ganhar pontos. Cada R$ 1,00 = 1 ponto.",
+    target: "register-sale-btn",
+    position: "right",
+    route: "/",
   },
   {
-    title: "Ranking - Compete com a Equipe 🏆",
-    description: "Veja sua posição em relação aos outros vendedores. Quanto mais vendas, mais pontos, maior seu nível e melhor sua posição no ranking!",
-    icon: "🏆",
+    title: "Compete com o Time 🏆",
+    description: "Acompanhe sua posição no ranking. Quanto mais vendas, mais pontos, maior seu nível!",
+    target: "ranking-section",
+    position: "top",
     route: "/ranking",
-    position: "center"
   },
   {
-    title: "Metas - Acompanhe seu Progresso 🎯",
-    description: "Defina e acompanhe suas metas mensais. Veja seu progresso em tempo real e mantenha-se motivado para alcançar seus objetivos!",
-    icon: "🎯",
-    route: "/metas",
-    position: "center"
+    title: "Pronto para Decolar! 🚀",
+    description: "Você está preparado! Comece registrando sua primeira venda e suba de nível. Boa sorte!",
   },
-  {
-    title: "Pronto para Começar! 🚀",
-    description: "Agora você conhece o básico! Comece registrando sua primeira venda e suba de nível. Boa sorte e boas vendas!",
-    icon: "🚀",
-    route: "/nova-venda",
-    position: "center"
-  }
 ];
 
 interface OnboardingTourProps {
@@ -64,14 +52,82 @@ interface OnboardingTourProps {
 
 export const OnboardingTour = ({ onComplete, onSkip }: OnboardingTourProps) => {
   const [currentStep, setCurrentStep] = useState(0);
+  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
+  const [spotlightRect, setSpotlightRect] = useState<DOMRect | null>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
+  const step = steps[currentStep];
+  const progress = ((currentStep + 1) / steps.length) * 100;
+
   useEffect(() => {
-    const step = steps[currentStep];
-    if (step.route && currentStep > 0) {
+    // Navigate to the route if specified
+    if (step.route) {
       navigate(step.route);
     }
-  }, [currentStep, navigate]);
+  }, [currentStep, step.route, navigate]);
+
+  useEffect(() => {
+    if (step.target) {
+      // Wait a bit for navigation and render to complete
+      const timer = setTimeout(() => {
+        const element = document.querySelector(`[data-tour="${step.target}"]`);
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          setSpotlightRect(rect);
+          
+          // Calculate tooltip position based on preferred position
+          setTimeout(() => {
+            if (tooltipRef.current) {
+              const tooltipRect = tooltipRef.current.getBoundingClientRect();
+              let top = 0;
+              let left = 0;
+
+              switch (step.position) {
+                case "right":
+                  top = rect.top + rect.height / 2 - tooltipRect.height / 2;
+                  left = rect.right + 20;
+                  break;
+                case "left":
+                  top = rect.top + rect.height / 2 - tooltipRect.height / 2;
+                  left = rect.left - tooltipRect.width - 20;
+                  break;
+                case "top":
+                  top = rect.top - tooltipRect.height - 20;
+                  left = rect.left + rect.width / 2 - tooltipRect.width / 2;
+                  break;
+                case "bottom":
+                default:
+                  top = rect.bottom + 20;
+                  left = rect.left + rect.width / 2 - tooltipRect.width / 2;
+                  break;
+              }
+
+              // Ensure tooltip stays within viewport
+              const padding = 20;
+              if (left < padding) left = padding;
+              if (left + tooltipRect.width > window.innerWidth - padding) {
+                left = window.innerWidth - tooltipRect.width - padding;
+              }
+              if (top < padding) top = padding;
+              if (top + tooltipRect.height > window.innerHeight - padding) {
+                top = window.innerHeight - tooltipRect.height - padding;
+              }
+
+              setTooltipPosition({ top, left });
+            }
+          }, 0);
+
+          // Scroll element into view
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 300); // Wait for navigation
+
+      return () => clearTimeout(timer);
+    } else {
+      setSpotlightRect(null);
+    }
+  }, [currentStep, step]);
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
@@ -87,70 +143,97 @@ export const OnboardingTour = ({ onComplete, onSkip }: OnboardingTourProps) => {
     }
   };
 
-  const handleSkip = () => {
-    onSkip();
-  };
-
-  const progress = ((currentStep + 1) / steps.length) * 100;
-  const step = steps[currentStep];
-
-  const getPositionClasses = () => {
-    switch (step.position) {
-      case "top-left":
-        return "top-4 left-4";
-      case "top-right":
-        return "top-4 right-4";
-      case "bottom-left":
-        return "bottom-4 left-4";
-      case "bottom-right":
-        return "bottom-4 right-4";
-      default:
-        return "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2";
-    }
-  };
-
   return (
     <>
-      {/* Overlay */}
-      <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 animate-fade-in" />
+      {/* Dark Overlay with Spotlight */}
+      <div className="fixed inset-0 z-[9998] pointer-events-none">
+        <svg width="100%" height="100%" className="absolute inset-0">
+          <defs>
+            <mask id="spotlight-mask">
+              <rect x="0" y="0" width="100%" height="100%" fill="white" />
+              {spotlightRect && (
+                <rect
+                  x={spotlightRect.left - 8}
+                  y={spotlightRect.top - 8}
+                  width={spotlightRect.width + 16}
+                  height={spotlightRect.height + 16}
+                  rx="12"
+                  fill="black"
+                />
+              )}
+            </mask>
+          </defs>
+          <rect
+            x="0"
+            y="0"
+            width="100%"
+            height="100%"
+            fill="hsl(var(--background))"
+            fillOpacity="0.85"
+            mask="url(#spotlight-mask)"
+          />
+        </svg>
 
-      {/* Tour Card */}
-      <Card 
-        className={`fixed ${getPositionClasses()} w-full max-w-lg z-50 shadow-2xl border-2 border-primary/20 animate-scale-in`}
+        {/* Spotlight Border - Neon Cyan */}
+        {spotlightRect && (
+          <div
+            className="absolute border-2 border-cyan-500 rounded-xl shadow-[0_0_20px_rgba(6,182,212,0.5)] animate-pulse pointer-events-none transition-all duration-300"
+            style={{
+              top: spotlightRect.top - 8,
+              left: spotlightRect.left - 8,
+              width: spotlightRect.width + 16,
+              height: spotlightRect.height + 16,
+            }}
+          />
+        )}
+      </div>
+
+      {/* Tooltip Card */}
+      <Card
+        ref={tooltipRef}
+        className={`fixed z-[9999] w-full max-w-md shadow-2xl border-2 border-cyan-500/50 bg-card/95 backdrop-blur-sm animate-scale-in pointer-events-auto ${
+          !step.target ? "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" : ""
+        }`}
+        style={
+          step.target
+            ? {
+                top: `${tooltipPosition.top}px`,
+                left: `${tooltipPosition.left}px`,
+              }
+            : undefined
+        }
       >
-        <CardHeader className="relative">
+        <CardHeader className="relative pb-3">
           <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-4xl">{step.icon}</span>
-              <div>
-                <CardTitle className="text-xl">{step.title}</CardTitle>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Passo {currentStep + 1} de {steps.length}
-                </p>
-              </div>
+            <div>
+              <CardTitle className="text-xl mb-1">{step.title}</CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Passo {currentStep + 1} de {steps.length}
+              </p>
             </div>
             <Button
               variant="ghost"
               size="icon"
-              onClick={handleSkip}
-              className="h-8 w-8"
+              onClick={onSkip}
+              className="h-8 w-8 -mr-2 -mt-2"
             >
               <X className="h-4 w-4" />
             </Button>
           </div>
-          <Progress value={progress} className="mt-4 h-2" />
+          <Progress value={progress} className="mt-3 h-1.5 bg-muted" />
         </CardHeader>
 
-        <CardContent>
-          <p className="text-base leading-relaxed">{step.description}</p>
+        <CardContent className="py-3">
+          <p className="text-sm leading-relaxed text-foreground/90">{step.description}</p>
         </CardContent>
 
-        <CardFooter className="flex justify-between gap-2">
+        <CardFooter className="flex justify-between gap-2 pt-3">
           <Button
             variant="outline"
             onClick={handlePrevious}
             disabled={currentStep === 0}
             className="gap-2"
+            size="sm"
           >
             <ChevronLeft className="h-4 w-4" />
             Anterior
@@ -158,12 +241,12 @@ export const OnboardingTour = ({ onComplete, onSkip }: OnboardingTourProps) => {
 
           <div className="flex gap-2">
             {currentStep < steps.length - 1 && (
-              <Button variant="ghost" onClick={handleSkip}>
-                Pular Tutorial
+              <Button variant="ghost" onClick={onSkip} size="sm">
+                Pular
               </Button>
             )}
-            <Button onClick={handleNext} className="gap-2">
-              {currentStep === steps.length - 1 ? "Começar" : "Próximo"}
+            <Button onClick={handleNext} className="gap-2" size="sm">
+              {currentStep === steps.length - 1 ? "Começar! 🚀" : "Próximo"}
               {currentStep < steps.length - 1 && <ChevronRight className="h-4 w-4" />}
             </Button>
           </div>

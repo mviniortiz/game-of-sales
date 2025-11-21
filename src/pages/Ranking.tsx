@@ -113,7 +113,9 @@ const Ranking = () => {
               descricao={metaAtual.descricao || undefined}
             />
 
-            <RankingPodium vendedores={contribuicoes} />
+            <div data-tour="ranking-section">
+              <RankingPodium vendedores={contribuicoes} />
+            </div>
 
             <RankingEvolutionChart vendedores={contribuicoes} />
 
