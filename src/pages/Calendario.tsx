@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Plus, Phone, Video } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Phone, Video, RefreshCw } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek, addDays, subDays, addWeeks, subWeeks } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -40,10 +40,68 @@ export default function Calendario() {
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedAgendamento, setSelectedAgendamento] = useState<Agendamento | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [googleConnected, setGoogleConnected] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+
+  useEffect(() => {
+    checkGoogleConnection();
+  }, [user]);
 
   useEffect(() => {
     loadAgendamentos();
+    if (googleConnected) {
+      syncGoogleCalendar();
+    }
   }, [currentDate, user, view, selectedVendedor, selectedStatus]);
+
+  const checkGoogleConnection = async () => {
+    if (!user) return;
+
+    const { data } = await supabase
+      .from("profiles")
+      .select("google_access_token")
+      .eq("id", user.id)
+      .single();
+
+    setGoogleConnected(!!data?.google_access_token);
+  };
+
+  const syncGoogleCalendar = async () => {
+    if (!user || !googleConnected || syncing) return;
+
+    setSyncing(true);
+    try {
+      const response = await supabase.functions.invoke("google-calendar-sync", {
+        body: {
+          action: "sync_all",
+          userId: user.id,
+        },
+      });
+
+      if (response.error) {
+        console.error("Error syncing Google Calendar:", response.error);
+      }
+    } catch (error) {
+      console.error("Error syncing Google Calendar:", error);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const handleManualSync = async () => {
+    setSyncing(true);
+    toast.loading("Sincronizando com Google Calendar...", { id: "sync" });
+    
+    try {
+      await syncGoogleCalendar();
+      await loadAgendamentos();
+      toast.success("Eventos sincronizados!", { id: "sync" });
+    } catch (error) {
+      toast.error("Erro ao sincronizar", { id: "sync" });
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const handleAgendamentoUpdate = async (id: string, newDate: Date) => {
     try {
@@ -203,6 +261,18 @@ export default function Calendario() {
           <div className="flex items-center gap-3">
             <CalendarViewSelector view={view} onViewChange={setView} />
             
+            {googleConnected && (
+              <Button
+                onClick={handleManualSync}
+                disabled={syncing}
+                variant="outline"
+                size="icon"
+                title="Sincronizar com Google Calendar"
+              >
+                <RefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
+              </Button>
+            )}
+            
             <Dialog open={showNewAgendamento} onOpenChange={setShowNewAgendamento}>
               <DialogTrigger asChild>
                 <Button>
@@ -305,11 +375,12 @@ export default function Calendario() {
                           };
                           
                           const colors = statusColors[ag.status as keyof typeof statusColors] || statusColors.agendado;
+                          const isGoogleEvent = !!(ag as any).google_event_id;
                           
                           return (
                             <div
                               key={ag.id}
-                              className={`text-xs p-2 rounded-lg ${colors.bg} backdrop-blur-sm border-l-4 ${colors.border} ${colors.text} truncate cursor-pointer transition-all hover:scale-[1.02] hover:shadow-md`}
+                              className={`text-xs p-2 rounded-lg ${colors.bg} backdrop-blur-sm border-l-4 ${colors.border} ${colors.text} truncate cursor-pointer transition-all hover:scale-[1.02] hover:shadow-md relative`}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleEventClick(ag);
@@ -317,10 +388,19 @@ export default function Calendario() {
                               title={`${ag.cliente_nome} - ${format(
                                 new Date(ag.data_agendamento),
                                 "HH:mm"
-                              )}`}
+                              )}${isGoogleEvent ? " (Google Calendar)" : ""}`}
                             >
                               <div className="flex items-center gap-1.5">
-                                <Phone className="h-3 w-3" />
+                                {isGoogleEvent ? (
+                                  <svg className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M22.46 12c0-1.28-.11-2.53-.32-3.75H12v7.1h5.84c-.25 1.35-1.03 2.49-2.18 3.26v2.72h3.53c2.07-1.9 3.27-4.7 3.27-8.33z" fill="#4285F4"/>
+                                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.53-2.72c-.98.66-2.24 1.05-3.75 1.05-2.88 0-5.32-1.95-6.19-4.57H2.19v2.81C4.01 20.53 7.7 23 12 23z" fill="#34A853"/>
+                                    <path d="M5.81 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.09H2.19C1.46 8.55 1 10.22 1 12s.46 3.45 1.19 4.91l3.62-2.81z" fill="#FBBC05"/>
+                                    <path d="M12 5.38c1.62 0 3.08.56 4.23 1.64l3.17-3.17C17.45 2.09 14.97 1 12 1 7.7 1 4.01 3.47 2.19 7.09l3.62 2.81C6.68 7.33 9.12 5.38 12 5.38z" fill="#EA4335"/>
+                                  </svg>
+                                ) : (
+                                  <Phone className="h-3 w-3" />
+                                )}
                                 <span className="font-medium">
                                   {format(new Date(ag.data_agendamento), "HH:mm")}
                                 </span>

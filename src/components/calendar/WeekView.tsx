@@ -45,6 +45,8 @@ function SortableAgendamento({ agendamento, onEventClick }: { agendamento: Agend
     return colors[status as keyof typeof colors] || { bg: "bg-primary/10 border-l-4 border-primary", text: "text-primary" };
   };
 
+  const isGoogleEvent = !!(agendamento as any).google_event_id;
+
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
       <Card
@@ -56,7 +58,18 @@ function SortableAgendamento({ agendamento, onEventClick }: { agendamento: Agend
         <div className="flex items-start gap-2">
           <GripVertical className={`h-4 w-4 flex-shrink-0 mt-0.5 ${getStatusColor(agendamento.status).text}`} />
           <div className="flex-1 min-w-0">
-            <p className={`font-medium text-sm truncate ${getStatusColor(agendamento.status).text}`}>{agendamento.cliente_nome}</p>
+            <div className="flex items-center gap-1.5">
+              <p className={`font-medium text-sm truncate ${getStatusColor(agendamento.status).text}`}>{agendamento.cliente_nome}</p>
+              {isGoogleEvent && (
+                <svg className="h-3.5 w-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                  <title>Sincronizado com Google Calendar</title>
+                  <path d="M22.46 12c0-1.28-.11-2.53-.32-3.75H12v7.1h5.84c-.25 1.35-1.03 2.49-2.18 3.26v2.72h3.53c2.07-1.9 3.27-4.7 3.27-8.33z" fill="#4285F4"/>
+                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.53-2.72c-.98.66-2.24 1.05-3.75 1.05-2.88 0-5.32-1.95-6.19-4.57H2.19v2.81C4.01 20.53 7.7 23 12 23z" fill="#34A853"/>
+                  <path d="M5.81 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.09H2.19C1.46 8.55 1 10.22 1 12s.46 3.45 1.19 4.91l3.62-2.81z" fill="#FBBC05"/>
+                  <path d="M12 5.38c1.62 0 3.08.56 4.23 1.64l3.17-3.17C17.45 2.09 14.97 1 12 1 7.7 1 4.01 3.47 2.19 7.09l3.62 2.81C6.68 7.33 9.12 5.38 12 5.38z" fill="#EA4335"/>
+                </svg>
+              )}
+            </div>
             <div className={`flex items-center gap-1 text-xs ${getStatusColor(agendamento.status).text}`}>
               <Clock className="h-3 w-3" />
               <span>{format(new Date(agendamento.data_agendamento), "HH:mm")}</span>
