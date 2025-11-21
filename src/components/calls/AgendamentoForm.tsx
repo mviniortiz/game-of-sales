@@ -28,17 +28,67 @@ export const AgendamentoForm = ({ onSuccess }: AgendamentoFormProps) => {
 
     setLoading(true);
     try {
-      const { error } = await supabase.from("agendamentos").insert({
-        user_id: user.id,
-        cliente_nome: formData.cliente_nome,
-        data_agendamento: formData.data_agendamento,
-        observacoes: formData.observacoes || null,
-        status: "agendado",
-      });
+      // Criar agendamento local
+      const { data: newAgendamento, error } = await supabase
+        .from("agendamentos")
+        .insert({
+          user_id: user.id,
+          cliente_nome: formData.cliente_nome,
+          data_agendamento: formData.data_agendamento,
+          observacoes: formData.observacoes || null,
+          status: "agendado",
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
-      toast.success("Agendamento criado com sucesso!");
+      // Verificar se usuário tem Google Calendar conectado
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("google_access_token")
+        .eq("id", user.id)
+        .single();
+
+      // Se tiver Google Calendar, sincronizar automaticamente
+      if (profile?.google_access_token && newAgendamento) {
+        try {
+          const response = await supabase.functions.invoke("google-calendar-sync", {
+            body: {
+              action: "create_event",
+              userId: user.id,
+              agendamentoData: {
+                id: newAgendamento.id,
+                cliente_nome: newAgendamento.cliente_nome,
+                data_agendamento: newAgendamento.data_agendamento,
+                observacoes: newAgendamento.observacoes,
+              },
+            },
+          });
+
+          if (!response.error && response.data?.eventId) {
+            // Atualizar agendamento com google_event_id
+            await supabase
+              .from("agendamentos")
+              .update({
+                google_event_id: response.data.eventId,
+                synced_with_google: true,
+                last_synced_at: new Date().toISOString(),
+              })
+              .eq("id", newAgendamento.id);
+
+            toast.success("Agendamento criado e sincronizado com Google Calendar!");
+          } else {
+            toast.success("Agendamento criado!");
+          }
+        } catch (syncError) {
+          console.error("Erro ao sincronizar com Google:", syncError);
+          toast.success("Agendamento criado (sem sincronizar com Google)");
+        }
+      } else {
+        toast.success("Agendamento criado com sucesso!");
+      }
+
       setFormData({ cliente_nome: "", data_agendamento: "", observacoes: "" });
       onSuccess();
     } catch (error) {

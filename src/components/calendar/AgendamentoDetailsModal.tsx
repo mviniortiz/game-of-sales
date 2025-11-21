@@ -89,6 +89,28 @@ export const AgendamentoDetailsModal = ({
 
       if (error) throw error;
 
+      // Se tem google_event_id, sincronizar com Google Calendar
+      const googleEventId = (agendamento as any).google_event_id;
+      if (googleEventId) {
+        try {
+          await supabase.functions.invoke("google-calendar-sync", {
+            body: {
+              action: "update_event",
+              userId: agendamento.user_id,
+              agendamentoData: {
+                id: agendamento.id,
+                google_event_id: googleEventId,
+                cliente_nome: editedData.cliente_nome,
+                data_agendamento: dateTime.toISOString(),
+                observacoes: editedData.observacoes,
+              },
+            },
+          });
+        } catch (syncError) {
+          console.error("Erro ao sincronizar com Google:", syncError);
+        }
+      }
+
       toast.success("Agendamento atualizado com sucesso!");
       setIsEditing(false);
       onUpdate();
@@ -106,6 +128,24 @@ export const AgendamentoDetailsModal = ({
 
     setLoading(true);
     try {
+      // Se tem google_event_id, deletar do Google Calendar primeiro
+      const googleEventId = (agendamento as any).google_event_id;
+      if (googleEventId) {
+        try {
+          await supabase.functions.invoke("google-calendar-sync", {
+            body: {
+              action: "delete_event",
+              userId: agendamento.user_id,
+              agendamentoData: {
+                google_event_id: googleEventId,
+              },
+            },
+          });
+        } catch (syncError) {
+          console.error("Erro ao deletar do Google:", syncError);
+        }
+      }
+
       const { error } = await supabase
         .from("agendamentos")
         .delete()
