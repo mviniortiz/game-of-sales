@@ -81,7 +81,7 @@ export function AppSidebar() {
           </div>
 
           {/* CTA Button - Registrar Venda */}
-          <div className="p-4">
+          <div className="p-4" data-tour="register-sale-btn">
             {collapsed ? (
               <Tooltip>
                 <TooltipTrigger asChild>
