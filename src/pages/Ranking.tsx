@@ -6,13 +6,13 @@ import { MetaConsolidadaCard } from "@/components/metas/MetaConsolidadaCard";
 import { RankingPodium } from "@/components/metas/RankingPodium";
 import { RankingEvolutionChart } from "@/components/metas/RankingEvolutionChart";
 import { Badge } from "@/components/ui/badge";
-import { Target } from "lucide-react";
+import { Target, Loader2 } from "lucide-react";
 
 const Ranking = () => {
   const { isAdmin } = useAuth();
 
   // Buscar meta consolidada do mês atual
-  const { data: metaAtual } = useQuery({
+  const { data: metaAtual, isLoading: loadingMeta } = useQuery({
     queryKey: ["meta-consolidada-atual"],
     queryFn: async () => {
       const hoje = new Date();
@@ -29,10 +29,11 @@ const Ranking = () => {
       if (error) throw error;
       return data;
     },
+    staleTime: 30000, // Cache por 30 segundos
   });
 
   // Buscar contribuições dos vendedores
-  const { data: contribuicoes = [] } = useQuery({
+  const { data: contribuicoes = [], isLoading: loadingContribuicoes } = useQuery({
     queryKey: ["contribuicao-vendedores"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -43,7 +44,23 @@ const Ranking = () => {
       if (error) throw error;
       return data || [];
     },
+    staleTime: 30000, // Cache por 30 segundos
   });
+
+  const isLoading = loadingMeta || loadingContribuicoes;
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+            <p className="text-muted-foreground">Carregando ranking...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const valorAtingido = contribuicoes.reduce(
     (acc, v) => acc + Number(v.contribuicao),

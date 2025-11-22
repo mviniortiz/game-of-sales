@@ -7,15 +7,16 @@ export const useOnboarding = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Verificar se o usuário já completou o onboarding
+    // Verificar se o usuário já completou o onboarding - mais rápido
     const hasCompletedOnboarding = localStorage.getItem(ONBOARDING_KEY);
     
     if (!hasCompletedOnboarding) {
-      // Pequeno delay para garantir que a UI carregou
-      setTimeout(() => {
+      // Delay reduzido para melhor performance
+      const timer = setTimeout(() => {
         setShowOnboarding(true);
         setIsLoading(false);
-      }, 1000);
+      }, 300);
+      return () => clearTimeout(timer);
     } else {
       setIsLoading(false);
     }
