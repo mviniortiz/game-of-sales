@@ -4,7 +4,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CalendarDays, Check, Loader2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { CalendarDays, Check, Loader2, RefreshCw } from "lucide-react";
 
 export const GoogleCalendarConnect = () => {
   const { user } = useAuth();
@@ -186,9 +187,13 @@ export const GoogleCalendarConnect = () => {
               <div>
                 <h3 className="font-semibold text-foreground flex items-center gap-2">
                   Conectado ao Google Calendar
+                  <Badge variant="outline" className="text-xs bg-primary/10 border-primary/30 text-primary flex items-center gap-1">
+                    <RefreshCw className="h-3 w-3" />
+                    Auto-Sync 15min
+                  </Badge>
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Sincronização automática ativa
+                  Sincronização automática a cada 15 minutos
                 </p>
               </div>
             </div>
@@ -206,7 +211,7 @@ export const GoogleCalendarConnect = () => {
                     Sincronizando...
                   </>
                 ) : (
-                  "Sincronizar"
+                  "Sincronizar Agora"
                 )}
               </Button>
               <Button
