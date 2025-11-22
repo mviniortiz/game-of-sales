@@ -77,7 +77,7 @@ export const OnboardingTour = ({ onComplete, onSkip }: OnboardingTourProps) => {
           setSpotlightRect(rect);
           
           // Calculate tooltip position based on preferred position
-          setTimeout(() => {
+          const positionTimer = setTimeout(() => {
             if (tooltipRef.current) {
               const tooltipRect = tooltipRef.current.getBoundingClientRect();
               let top = 0;
@@ -116,12 +116,18 @@ export const OnboardingTour = ({ onComplete, onSkip }: OnboardingTourProps) => {
 
               setTooltipPosition({ top, left });
             }
-          }, 0);
+          }, 100);
 
           // Scroll element into view
           element.scrollIntoView({ behavior: "smooth", block: "center" });
+          
+          return () => clearTimeout(positionTimer);
+        } else {
+          console.warn(`[Tour] Element not found: ${step.target}`);
+          // Se o elemento não for encontrado, apenas centraliza o tooltip
+          setSpotlightRect(null);
         }
-      }, 300); // Wait for navigation
+      }, 500); // Increased delay to ensure page is fully loaded
 
       return () => clearTimeout(timer);
     } else {
