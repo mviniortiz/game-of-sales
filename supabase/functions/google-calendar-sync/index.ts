@@ -240,25 +240,43 @@ async function syncAllEvents(accessToken: string, userId: string, supabase: any)
   const data = await response.json();
   const events = data.items || [];
 
-  for (const event of events) {
-    const { data: existing } = await supabase
-      .from("agendamentos")
-      .select("id")
-      .eq("google_event_id", event.id)
-      .single();
-
-    if (!existing && event.summary) {
-      await supabase.from("agendamentos").insert({
-        user_id: userId,
-        cliente_nome: event.summary.replace("Call com ", ""),
-        data_agendamento: event.start.dateTime,
-        observacoes: event.description || "Sincronizado do Google Calendar",
-        google_event_id: event.id,
-        synced_with_google: true,
-        last_synced_at: new Date().toISOString(),
-      });
-    }
+  if (events.length === 0) {
+    return { synced: 0, inserted: 0 };
   }
 
-  return { synced: events.length };
+  // Buscar TODOS os eventos existentes de uma vez
+  const googleEventIds = events.map((e: any) => e.id).filter(Boolean);
+  const { data: existingEvents } = await supabase
+    .from("agendamentos")
+    .select("google_event_id")
+    .eq("user_id", userId)
+    .in("google_event_id", googleEventIds);
+
+  const existingIds = new Set(
+    existingEvents?.map((e: any) => e.google_event_id) || []
+  );
+
+  // Filtrar apenas eventos novos com summary válido
+  const newEvents = events
+    .filter((event: any) => 
+      event.summary && 
+      event.start?.dateTime && 
+      !existingIds.has(event.id)
+    )
+    .map((event: any) => ({
+      user_id: userId,
+      cliente_nome: event.summary.replace("Call com ", ""),
+      data_agendamento: event.start.dateTime,
+      observacoes: event.description || "Sincronizado do Google Calendar",
+      google_event_id: event.id,
+      synced_with_google: true,
+      last_synced_at: new Date().toISOString(),
+    }));
+
+  // Insert em batch (muito mais rápido)
+  if (newEvents.length > 0) {
+    await supabase.from("agendamentos").insert(newEvents);
+  }
+
+  return { synced: events.length, inserted: newEvents.length };
 }
