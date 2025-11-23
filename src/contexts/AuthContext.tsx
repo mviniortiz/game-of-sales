@@ -51,6 +51,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
+    let mounted = true;
+
     const checkAdminRole = async (userId: string) => {
       try {
         const { data } = await supabase
@@ -60,48 +62,69 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           .eq("role", "admin")
           .maybeSingle();
         
-        setIsAdmin(!!data);
+        if (mounted) {
+          setIsAdmin(!!data);
+        }
       } catch (error) {
         console.error("Error checking admin role:", error);
-        setIsAdmin(false);
+        if (mounted) {
+          setIsAdmin(false);
+        }
       }
     };
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
+        if (!mounted) return;
+        
         setSession(session);
         setUser(session?.user ?? null);
+        
+        // Defer async operations to prevent blocking
         if (session?.user) {
-          await Promise.all([
-            checkAdminRole(session.user.id),
-            loadProfile(session.user.id)
-          ]);
+          setTimeout(() => {
+            Promise.all([
+              checkAdminRole(session.user.id),
+              loadProfile(session.user.id)
+            ]).finally(() => {
+              if (mounted) setLoading(false);
+            });
+          }, 0);
         } else {
           setIsAdmin(false);
           setProfile(null);
+          setLoading(false);
         }
-        setLoading(false);
       }
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      
       setSession(session);
       setUser(session?.user ?? null);
+      
       if (session?.user) {
-        await Promise.all([
+        Promise.all([
           checkAdminRole(session.user.id),
           loadProfile(session.user.id)
-        ]);
+        ]).finally(() => {
+          if (mounted) setLoading(false);
+        });
+      } else {
+        setLoading(false);
       }
-      setLoading(false);
     }).catch((error) => {
       console.error("Error getting session:", error);
-      setLoading(false);
+      if (mounted) setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signUp = async (email: string, password: string, nome: string) => {

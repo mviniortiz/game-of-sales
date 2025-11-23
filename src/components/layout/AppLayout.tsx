@@ -1,11 +1,7 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
-import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
-import { useOnboarding } from "@/hooks/useOnboarding";
 
 export const AppLayout = ({ children }: { children: React.ReactNode }) => {
-  const { showOnboarding, completeOnboarding, skipOnboarding } = useOnboarding();
-
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
@@ -19,13 +15,6 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
           </main>
         </div>
       </div>
-
-      {showOnboarding && (
-        <OnboardingTour
-          onComplete={completeOnboarding}
-          onSkip={skipOnboarding}
-        />
-      )}
     </SidebarProvider>
   );
 };
