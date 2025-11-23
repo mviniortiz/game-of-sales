@@ -18,6 +18,8 @@ interface MetasRankingCardProps {
   vendedores: VendedorMeta[];
   statusFiltro: string;
   onStatusChange: (status: string) => void;
+  hasActiveFilters?: boolean;
+  filterDescription?: string;
 }
 
 export const MetasRankingCard = ({
@@ -27,6 +29,8 @@ export const MetasRankingCard = ({
   vendedores,
   statusFiltro,
   onStatusChange,
+  hasActiveFilters = false,
+  filterDescription = "",
 }: MetasRankingCardProps) => {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -78,17 +82,26 @@ export const MetasRankingCard = ({
             <Target className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold">Metas de Vendas</h2>
+            <div className="flex items-center gap-3">
+              <h2 className="text-2xl font-bold">Metas de Vendas</h2>
+              {hasActiveFilters && (
+                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
+                  Filtrado
+                </Badge>
+              )}
+            </div>
             <p className="text-sm text-muted-foreground">
-              Acompanhamento mensal de performance
+              {hasActiveFilters && filterDescription 
+                ? filterDescription
+                : "Acompanhamento mensal de performance"}
             </p>
           </div>
         </div>
         <Select value={statusFiltro} onValueChange={onStatusChange}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-[180px] bg-background">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-background border-border z-50">
             <SelectItem value="todos">Todos</SelectItem>
             <SelectItem value="atingida">Atingida</SelectItem>
             <SelectItem value="em_andamento">Em andamento</SelectItem>

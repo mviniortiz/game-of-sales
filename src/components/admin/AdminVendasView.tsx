@@ -13,13 +13,17 @@ interface AdminVendasViewProps {
   selectedVendedor: string;
   selectedFormaPagamento?: string;
   selectedProduto?: string;
+  vendedores?: Array<{ id: string; nome: string }>;
+  produtos?: Array<{ id: string; nome: string }>;
 }
 
 export const AdminVendasView = ({ 
   dateRange, 
   selectedVendedor,
   selectedFormaPagamento = "todas",
-  selectedProduto = "todos"
+  selectedProduto = "todos",
+  vendedores = [],
+  produtos = []
 }: AdminVendasViewProps) => {
   const [statusFiltro, setStatusFiltro] = useState("todos");
   const inicioMes = dateRange.from?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0];
@@ -532,22 +536,45 @@ export const AdminVendasView = ({
       </div>
 
       {/* Ranking de Metas */}
-      {(metaConsolidada || vendedoresMetas || true) && (
-        <MetasRankingCard
-          metaConsolidada={metaTotalConsolidada || 500000}
-          valorConsolidadoAtingido={valorConsolidadoAtingido || 218600}
-          percentualConsolidado={percentualConsolidado || 43.72}
-          vendedores={vendedoresMetas && vendedoresMetas.length > 0 ? vendedoresMetas : [
-            { nome: "João Silva", valorMeta: 50000, valorRealizado: 60000, percentual: 120 },
-            { nome: "Maria Santos", valorMeta: 50000, valorRealizado: 48000, percentual: 96 },
-            { nome: "Pedro Costa", valorMeta: 50000, valorRealizado: 35000, percentual: 70 },
-            { nome: "Ana Lima", valorMeta: 50000, valorRealizado: 42800, percentual: 85.6 },
-            { nome: "Carlos Souza", valorMeta: 50000, valorRealizado: 32800, percentual: 65.6 },
-          ]}
-          statusFiltro={statusFiltro}
-          onStatusChange={setStatusFiltro}
-        />
-      )}
+      {(metaConsolidada || vendedoresMetas || true) && (() => {
+        const hasActiveFilters = selectedVendedor !== "todos" || selectedFormaPagamento !== "todas" || selectedProduto !== "todos";
+        
+        const filterParts = [];
+        if (selectedVendedor !== "todos") {
+          const vendedorNome = vendedores?.find(v => v.id === selectedVendedor)?.nome;
+          if (vendedorNome) filterParts.push(`Vendedor: ${vendedorNome}`);
+        }
+        if (selectedFormaPagamento !== "todas") {
+          filterParts.push(`Forma: ${selectedFormaPagamento}`);
+        }
+        if (selectedProduto !== "todos") {
+          const produtoNome = produtos?.find(p => p.id === selectedProduto)?.nome;
+          if (produtoNome) filterParts.push(`Produto: ${produtoNome}`);
+        }
+        
+        const filterDescription = filterParts.length > 0 
+          ? `Filtros ativos: ${filterParts.join(" • ")}`
+          : "Acompanhamento mensal de performance";
+
+        return (
+          <MetasRankingCard
+            metaConsolidada={metaTotalConsolidada || 500000}
+            valorConsolidadoAtingido={valorConsolidadoAtingido || 218600}
+            percentualConsolidado={percentualConsolidado || 43.72}
+            vendedores={vendedoresMetas && vendedoresMetas.length > 0 ? vendedoresMetas : [
+              { nome: "João Silva", valorMeta: 50000, valorRealizado: 60000, percentual: 120 },
+              { nome: "Maria Santos", valorMeta: 50000, valorRealizado: 48000, percentual: 96 },
+              { nome: "Pedro Costa", valorMeta: 50000, valorRealizado: 35000, percentual: 70 },
+              { nome: "Ana Lima", valorMeta: 50000, valorRealizado: 42800, percentual: 85.6 },
+              { nome: "Carlos Souza", valorMeta: 50000, valorRealizado: 32800, percentual: 65.6 },
+            ]}
+            statusFiltro={statusFiltro}
+            onStatusChange={setStatusFiltro}
+            hasActiveFilters={hasActiveFilters}
+            filterDescription={filterDescription}
+          />
+        );
+      })()}
     </div>
   );
 };
