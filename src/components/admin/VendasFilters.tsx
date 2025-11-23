@@ -52,14 +52,14 @@ export const VendasFilters = ({ vendedores, produtos, onFilterChange }: VendasFi
   return (
     <Card>
       <CardContent className="pt-6">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           <div className="space-y-2">
             <Label>Vendedor</Label>
             <Select
               value={filters.vendedorId}
               onValueChange={(value) => handleFilterChange("vendedorId", value)}
             >
-              <SelectTrigger className="bg-background">
+              <SelectTrigger className="bg-background h-9">
                 <SelectValue placeholder="Todos" />
               </SelectTrigger>
               <SelectContent className="bg-background z-50">
@@ -79,7 +79,7 @@ export const VendasFilters = ({ vendedores, produtos, onFilterChange }: VendasFi
               value={filters.produtoId}
               onValueChange={(value) => handleFilterChange("produtoId", value)}
             >
-              <SelectTrigger className="bg-background">
+              <SelectTrigger className="bg-background h-9">
                 <SelectValue placeholder="Todos" />
               </SelectTrigger>
               <SelectContent className="bg-background z-50">
@@ -99,7 +99,7 @@ export const VendasFilters = ({ vendedores, produtos, onFilterChange }: VendasFi
               value={filters.status}
               onValueChange={(value) => handleFilterChange("status", value)}
             >
-              <SelectTrigger className="bg-background">
+              <SelectTrigger className="bg-background h-9">
                 <SelectValue placeholder="Todos" />
               </SelectTrigger>
               <SelectContent className="bg-background z-50">
@@ -117,7 +117,7 @@ export const VendasFilters = ({ vendedores, produtos, onFilterChange }: VendasFi
               type="date"
               value={filters.dataInicio}
               onChange={(e) => handleFilterChange("dataInicio", e.target.value)}
-              className="bg-background"
+              className="bg-background h-9"
             />
           </div>
 
@@ -127,7 +127,7 @@ export const VendasFilters = ({ vendedores, produtos, onFilterChange }: VendasFi
               type="date"
               value={filters.dataFim}
               onChange={(e) => handleFilterChange("dataFim", e.target.value)}
-              className="bg-background"
+              className="bg-background h-9"
             />
           </div>
         </div>
