@@ -59,6 +59,8 @@ export const AdminDashboardOverview = () => {
         selectedVendedor={selectedVendedor}
         selectedFormaPagamento={selectedFormaPagamento}
         selectedProduto={selectedProduto}
+        vendedores={vendedores}
+        produtos={produtos}
       />
     </div>
   );
