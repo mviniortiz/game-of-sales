@@ -45,8 +45,7 @@ export const AdminVendas = () => {
     vendedorId: "todos",
     produtoId: "todos",
     status: "todos",
-    dataInicio: "",
-    dataFim: "",
+    dateRange: {},
   });
 
   const { data: vendedores } = useQuery({
@@ -96,11 +95,13 @@ export const AdminVendas = () => {
       if (filters.status && filters.status !== "todos") {
         query = query.eq("status", filters.status as any);
       }
-      if (filters.dataInicio) {
-        query = query.gte("data_venda", filters.dataInicio);
+      if (filters.dateRange.from) {
+        const fromDate = filters.dateRange.from.toISOString().split('T')[0];
+        query = query.gte("data_venda", fromDate);
       }
-      if (filters.dataFim) {
-        query = query.lte("data_venda", filters.dataFim);
+      if (filters.dateRange.to) {
+        const toDate = filters.dateRange.to.toISOString().split('T')[0];
+        query = query.lte("data_venda", toDate);
       }
 
       const { data, error } = await query;
