@@ -90,7 +90,12 @@ export const AdminMetas = () => {
       if (error) throw error;
     },
     onSuccess: () => {
+      // Invalidar todas as queries relacionadas a metas
       queryClient.invalidateQueries({ queryKey: ["admin-metas"] });
+      queryClient.invalidateQueries({ queryKey: ["metas-progresso"] });
+      queryClient.invalidateQueries({ queryKey: ["metas-ranking"] });
+      queryClient.invalidateQueries({ queryKey: ["vendedores-metas"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-progresso-metas"] });
       toast.success("Meta individual definida com sucesso!");
       setUserId("");
       setMesReferencia("");
@@ -116,7 +121,12 @@ export const AdminMetas = () => {
       if (error) throw error;
     },
     onSuccess: () => {
+      // Invalidar todas as queries relacionadas a metas consolidadas
       queryClient.invalidateQueries({ queryKey: ["admin-metas-consolidadas"] });
+      queryClient.invalidateQueries({ queryKey: ["metas-progresso"] });
+      queryClient.invalidateQueries({ queryKey: ["metas-ranking"] });
+      queryClient.invalidateQueries({ queryKey: ["vendedores-metas"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-progresso-metas"] });
       toast.success("Meta consolidada definida com sucesso!");
       setMesReferenciaConsolidada("");
       setValorMetaConsolidada("");
@@ -138,7 +148,12 @@ export const AdminMetas = () => {
       if (error) throw error;
     },
     onSuccess: () => {
+      // Invalidar todas as queries relacionadas a metas
       queryClient.invalidateQueries({ queryKey: ["admin-metas"] });
+      queryClient.invalidateQueries({ queryKey: ["metas-progresso"] });
+      queryClient.invalidateQueries({ queryKey: ["metas-ranking"] });
+      queryClient.invalidateQueries({ queryKey: ["vendedores-metas"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-progresso-metas"] });
       toast.success("Meta removida com sucesso!");
     },
     onError: (error: any) => {
@@ -156,7 +171,12 @@ export const AdminMetas = () => {
       if (error) throw error;
     },
     onSuccess: () => {
+      // Invalidar todas as queries relacionadas a metas consolidadas
       queryClient.invalidateQueries({ queryKey: ["admin-metas-consolidadas"] });
+      queryClient.invalidateQueries({ queryKey: ["metas-progresso"] });
+      queryClient.invalidateQueries({ queryKey: ["metas-ranking"] });
+      queryClient.invalidateQueries({ queryKey: ["vendedores-metas"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-progresso-metas"] });
       toast.success("Meta consolidada removida com sucesso!");
     },
     onError: (error: any) => {
