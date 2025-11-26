@@ -273,35 +273,35 @@ const Metas = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Cabeçalho com Seletor */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-primary/20">
-            <Target className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold">Metas de Vendas</h1>
-            <p className="text-muted-foreground">Acompanhamento mensal de performance</p>
-          </div>
+    <div className="space-y-8">
+      {/* Seletor de Meta - Chips */}
+      {metasConsolidadas.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => setSelectedMetaId("all")}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              selectedMetaId === "all"
+                ? "bg-primary text-primary-foreground shadow-lg"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            }`}
+          >
+            Todas
+          </button>
+          {metasConsolidadas.map((meta) => (
+            <button
+              key={meta.id}
+              onClick={() => setSelectedMetaId(meta.id)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                selectedMetaId === meta.id
+                  ? "bg-primary text-primary-foreground shadow-lg"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
+            >
+              {meta.descricao || format(new Date(meta.mes_referencia), "MMM yyyy", { locale: ptBR })}
+            </button>
+          ))}
         </div>
-        
-        {metasConsolidadas.length > 0 && (
-          <Select value={selectedMetaId} onValueChange={setSelectedMetaId}>
-            <SelectTrigger className="w-[200px] bg-background">
-              <SelectValue placeholder="Selecione a meta" />
-            </SelectTrigger>
-            <SelectContent className="bg-background border-border z-50">
-              <SelectItem value="all">Todas</SelectItem>
-              {metasConsolidadas.map((meta) => (
-                <SelectItem key={meta.id} value={meta.id}>
-                  {meta.descricao || format(new Date(meta.mes_referencia), "MMMM 'de' yyyy", { locale: ptBR })}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-      </div>
+      )}
 
       {loadingProgresso ? (
         <div className="text-center py-12 text-muted-foreground">
@@ -310,145 +310,201 @@ const Metas = () => {
         </div>
       ) : (
         <>
-          {/* Card de Meta Consolidada */}
+          {/* Hero Compacto - Meta Consolidada */}
           {metaConsolidadaSelecionada && (
-            <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-background overflow-hidden relative">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32" />
-              <CardHeader className="pb-4 relative z-10">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 rounded-xl bg-primary/20 backdrop-blur-sm">
-                      <Zap className="h-8 w-8 text-primary" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-2xl sm:text-3xl font-bold">
-                        {metaConsolidadaSelecionada.descricao || "Meta Consolidada"}
-                      </CardTitle>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Meta Consolidada da Equipe
-                      </p>
-                    </div>
+            <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 via-background to-background p-6 sm:p-8">
+              <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -mr-48 -mt-48" />
+              
+              <div className="relative z-10 grid lg:grid-cols-[1fr,auto] gap-6 items-start">
+                {/* Lado Esquerdo - Título e Descrição */}
+                <div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <Zap className="h-6 w-6 text-primary" />
+                    <h1 className="text-3xl sm:text-4xl font-bold">
+                      {metaConsolidadaSelecionada.descricao || "Meta Consolidada"}
+                    </h1>
                   </div>
-                  <div className="text-right">
-                    <div className="text-4xl sm:text-5xl font-bold text-primary">
-                      {percentualConsolidado.toFixed(1)}%
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">do objetivo</p>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4 relative z-10">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-sm">
-                  <span className="text-muted-foreground">Progresso</span>
-                  <div className="flex flex-wrap gap-3 sm:gap-6">
-                    <span className="font-semibold text-sm sm:text-base">
-                      Realizado: <span className="text-primary">{formatCurrency(valorConsolidadoAtingido)}</span>
-                    </span>
-                    <span className="font-semibold text-sm sm:text-base">
-                      Meta: <span className="text-foreground">{formatCurrency(metaConsolidadaTotal)}</span>
-                    </span>
-                  </div>
-                </div>
-                
-                {/* Barra de Progresso Principal */}
-                <div className="relative h-8 bg-muted/50 rounded-full overflow-hidden backdrop-blur-sm border border-border/50">
-                  <div
-                    className={`h-full ${getProgressColor(percentualConsolidado)} transition-all duration-1000 ease-out relative`}
-                    style={{ width: `${Math.min(percentualConsolidado, 100)}%` }}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
-                  </div>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-xs font-bold text-foreground drop-shadow-lg">
-                      {percentualConsolidado >= 10 && `${percentualConsolidado.toFixed(1)}%`}
-                    </span>
-                  </div>
+                  <p className="text-muted-foreground text-sm sm:text-base">
+                    Meta Consolidada da Equipe • {format(new Date(metaConsolidadaSelecionada.mes_referencia), "MMMM 'de' yyyy", { locale: ptBR })}
+                  </p>
                 </div>
 
-                {getStatusBadge(percentualConsolidado)}
-              </CardContent>
-            </Card>
+                {/* Lado Direito - Card de Progresso */}
+                <Card className="lg:w-[360px] border-primary/30 bg-background/80 backdrop-blur-sm shadow-xl">
+                  <CardContent className="p-6 space-y-4">
+                    {/* Percentual Grande */}
+                    <div className="text-center">
+                      <div className="text-6xl font-bold text-primary mb-1">
+                        {percentualConsolidado.toFixed(1)}%
+                      </div>
+                      {getStatusBadge(percentualConsolidado)}
+                    </div>
+
+                    {/* Valores */}
+                    <div className="space-y-2 text-center">
+                      <div className="text-2xl font-bold">
+                        {formatCurrency(valorConsolidadoAtingido)}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        de {formatCurrency(metaConsolidadaTotal)}
+                      </div>
+                    </div>
+
+                    {/* Barra de Progresso Compacta */}
+                    <div className="space-y-2">
+                      <div className="relative h-6 bg-muted/50 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full ${getProgressColor(percentualConsolidado)} transition-all duration-1000 ease-out`}
+                          style={{ width: `${Math.min(percentualConsolidado, 100)}%` }}
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Mini KPI - O que falta */}
+                    <div className="pt-4 border-t border-border/50 text-center">
+                      <div className="text-xs text-muted-foreground mb-1">Faltam</div>
+                      <div className="text-xl font-bold text-foreground">
+                        {formatCurrency(Math.max(0, metaConsolidadaTotal - valorConsolidadoAtingido))}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {percentualConsolidado < 100 
+                          ? `Em andamento, ${(100 - percentualConsolidado).toFixed(1)}% restante`
+                          : "Meta atingida! 🎉"
+                        }
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           )}
 
-          {/* Lista de Contribuições Individuais */}
+          {/* Contribuição Individual */}
           {metaConsolidadaSelecionada && contribuicoes.length > 0 && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 mb-4">
-                <TrendingUp className="h-5 w-5 text-primary" />
-                <h3 className="text-lg font-semibold">Contribuição Individual</h3>
+            <div className="space-y-4">
+              {/* Cabeçalho da Seção */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <TrendingUp className="h-5 w-5 text-primary" />
+                  <h2 className="text-2xl font-bold">Contribuição Individual</h2>
+                </div>
                 <span className="text-sm text-muted-foreground">
-                  ({contribuicoes.length} {contribuicoes.length === 1 ? "vendedor" : "vendedores"})
+                  {contribuicoes.length} {contribuicoes.length === 1 ? "vendedor" : "vendedores"}
                 </span>
               </div>
 
-              <div className="grid gap-3">
+              {/* Grid de Cards Compactos */}
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                 {contribuicoes.map((vendedor, index) => {
                   const posicao = index + 1;
                   const percentualContribuicao = metaConsolidadaTotal > 0 
                     ? (vendedor.valorRealizado / metaConsolidadaTotal) * 100 
                     : 0;
 
+                  // Determinar cor da barra baseada em performance
+                  let barColor = "bg-gradient-to-r from-yellow-500 to-yellow-600"; // < 80%
+                  if (vendedor.percentual >= 100) {
+                    barColor = "bg-gradient-to-r from-green-500 to-emerald-600";
+                  } else if (vendedor.percentual >= 80) {
+                    barColor = "bg-gradient-to-r from-orange-500 to-orange-600";
+                  }
+
                   return (
                     <Card
                       key={vendedor.nome}
-                      className="border-border/50 bg-card/80 backdrop-blur-sm hover:bg-card/90 transition-all duration-200 hover:shadow-lg hover:border-primary/30"
+                      className={`border bg-card/50 backdrop-blur-sm transition-all duration-200 hover:shadow-lg hover:scale-[1.02] ${
+                        posicao === 1 
+                          ? "border-primary shadow-lg shadow-primary/20 ring-2 ring-primary/30" 
+                          : "border-border/50 hover:border-primary/30"
+                      }`}
                     >
-                      <CardContent className="p-4 sm:p-5">
-                        <div className="flex flex-col sm:flex-row items-start gap-4">
-                          {/* Avatar e Posição */}
+                      <CardContent className="p-4 space-y-3">
+                        {/* Linha 1: Avatar + Nome + Troféu/Posição */}
+                        <div className="flex items-center gap-3">
+                          {/* Posição Numérica */}
+                          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground">
+                            #{posicao}
+                          </div>
+
+                          {/* Avatar com Glow no Top 1 */}
                           <div className="relative flex-shrink-0">
-                            <Avatar className="h-12 w-12 sm:h-14 sm:w-14 border-2 border-primary/20">
-                              <AvatarFallback className="bg-primary/10 text-primary font-bold text-base sm:text-lg">
+                            <Avatar className={`h-10 w-10 border-2 ${
+                              posicao === 1 
+                                ? "border-primary shadow-lg shadow-primary/50" 
+                                : "border-primary/20"
+                            }`}>
+                              <AvatarFallback className={`font-bold text-sm ${
+                                posicao === 1 
+                                  ? "bg-primary text-primary-foreground" 
+                                  : "bg-primary/10 text-primary"
+                              }`}>
                                 {getInitials(vendedor.nome)}
                               </AvatarFallback>
                             </Avatar>
                             {posicao <= 3 && (
-                              <div className="absolute -top-1 -right-1 bg-background border-2 border-primary rounded-full w-6 h-6 flex items-center justify-center">
-                                <span className="text-xs font-bold">
-                                  {posicao === 1 ? "🥇" : posicao === 2 ? "🥈" : "🥉"}
-                                </span>
+                              <div className="absolute -top-1 -right-1 text-sm">
+                                {posicao === 1 ? "🥇" : posicao === 2 ? "🥈" : "🥉"}
                               </div>
                             )}
                           </div>
 
-                          {/* Informações e Progresso */}
-                          <div className="flex-1 min-w-0 space-y-3 w-full">
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                              <div className="min-w-0 flex-1">
-                                <h4 className="font-bold text-base sm:text-lg truncate">{vendedor.nome}</h4>
-                                <div className="flex flex-wrap gap-2 sm:gap-3 text-xs sm:text-sm text-muted-foreground mt-1">
-                                  <span>
-                                    Contribuiu: <span className="font-semibold text-primary">{formatCurrency(vendedor.valorRealizado)}</span>
-                                  </span>
-                                  <span className="hidden sm:inline">•</span>
-                                  <span>
-                                    Meta: <span className="font-semibold text-foreground">{formatCurrency(vendedor.valorMeta)}</span>
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                                <span className="text-xl sm:text-2xl font-bold text-primary">
-                                  {vendedor.percentual.toFixed(1)}%
-                                </span>
-                                {getStatusBadge(vendedor.percentual)}
-                              </div>
+                          {/* Nome + Troféu */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1">
+                              <h4 className="font-bold text-sm truncate">{vendedor.nome}</h4>
+                              {vendedor.percentual >= 100 && (
+                                <Target className="h-4 w-4 text-green-500 flex-shrink-0" />
+                              )}
                             </div>
+                          </div>
 
-                            {/* Barra de Progresso Individual */}
-                            <div className="space-y-1">
-                              <div className="relative h-3 bg-muted/50 rounded-full overflow-hidden">
-                                <div
-                                  className={`h-full ${getProgressColor(vendedor.percentual)} transition-all duration-700 ease-out`}
-                                  style={{ width: `${Math.min(vendedor.percentual, 100)}%` }}
-                                />
-                              </div>
-                              <div className="flex flex-col sm:flex-row justify-between gap-1 text-xs text-muted-foreground">
-                                <span>Meta individual</span>
-                                <span>
-                                  Contribuição geral: <span className="font-semibold text-primary">{percentualContribuicao.toFixed(1)}%</span>
-                                </span>
-                              </div>
+                          {/* Status Badge */}
+                          <div className="flex-shrink-0">
+                            {vendedor.percentual >= 100 ? (
+                              <Badge className="bg-green-500/20 text-green-400 border-green-500/30 px-2 py-0.5 text-[10px]">
+                                Atingida
+                              </Badge>
+                            ) : (
+                              <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 px-2 py-0.5 text-[10px]">
+                                Andamento
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Linha 2: Valores e Percentual */}
+                        <div className="flex items-end justify-between">
+                          <div className="space-y-0.5">
+                            <div className="text-xs text-muted-foreground">Realizado</div>
+                            <div className="font-bold text-base">{formatCurrency(vendedor.valorRealizado)}</div>
+                            <div className="text-[10px] text-muted-foreground">
+                              de {formatCurrency(vendedor.valorMeta)}
                             </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-3xl font-bold text-primary">
+                              {vendedor.percentual.toFixed(1)}%
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Barra de Progresso */}
+                        <div className="space-y-1.5">
+                          <div className="relative h-2.5 bg-muted/50 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full ${barColor} transition-all duration-700 ease-out`}
+                              style={{ width: `${Math.min(vendedor.percentual, 100)}%` }}
+                            >
+                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse" />
+                            </div>
+                          </div>
+                          <div className="flex justify-between text-[10px] text-muted-foreground/80">
+                            <span>Meta individual</span>
+                            <span className="font-semibold">
+                              {percentualContribuicao.toFixed(1)}% da geral
+                            </span>
                           </div>
                         </div>
                       </CardContent>
