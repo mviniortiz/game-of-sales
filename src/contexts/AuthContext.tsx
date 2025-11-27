@@ -8,12 +8,16 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   isAdmin: boolean;
+  isSuperAdmin: boolean;
+  companyId: string | null;
   profile: {
     nome: string;
     avatar_url: string | null;
+    is_super_admin: boolean;
+    company_id: string | null;
   } | null;
   refreshProfile: () => Promise<void>;
-  signUp: (email: string, password: string, nome: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, nome: string, companyId?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }
@@ -25,19 +29,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [profile, setProfile] = useState<{ nome: string; avatar_url: string | null } | null>(null);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [companyId, setCompanyId] = useState<string | null>(null);
+  const [profile, setProfile] = useState<{
+    nome: string;
+    avatar_url: string | null;
+    is_super_admin: boolean;
+    company_id: string | null;
+  } | null>(null);
   const navigate = useNavigate();
 
   const loadProfile = async (userId: string) => {
     try {
       const { data } = await supabase
         .from("profiles")
-        .select("nome, avatar_url")
+        .select("nome, avatar_url, is_super_admin, company_id")
         .eq("id", userId)
         .single();
       
       if (data) {
         setProfile(data);
+        setIsSuperAdmin(data.is_super_admin || false);
+        setCompanyId(data.company_id);
       }
     } catch (error) {
       console.error("Error loading profile:", error);
@@ -127,7 +140,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, []);
 
-  const signUp = async (email: string, password: string, nome: string) => {
+  const signUp = async (email: string, password: string, nome: string, companyId?: string) => {
     const redirectUrl = `${window.location.origin}/`;
     
     const { error } = await supabase.auth.signUp({
@@ -136,7 +149,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       options: {
         emailRedirectTo: redirectUrl,
         data: {
-          nome
+          nome,
+          company_id: companyId || '00000000-0000-0000-0000-000000000001'
         }
       }
     });
@@ -167,7 +181,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, isAdmin, profile, refreshProfile, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      session, 
+      loading, 
+      isAdmin, 
+      isSuperAdmin,
+      companyId,
+      profile, 
+      refreshProfile, 
+      signUp, 
+      signIn, 
+      signOut 
+    }}>
       {children}
     </AuthContext.Provider>
   );
