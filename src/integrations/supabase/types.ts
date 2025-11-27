@@ -17,6 +17,7 @@ export type Database = {
       agendamentos: {
         Row: {
           cliente_nome: string
+          company_id: string | null
           created_at: string
           data_agendamento: string
           google_event_id: string | null
@@ -29,6 +30,7 @@ export type Database = {
         }
         Insert: {
           cliente_nome: string
+          company_id?: string | null
           created_at?: string
           data_agendamento: string
           google_event_id?: string | null
@@ -41,6 +43,7 @@ export type Database = {
         }
         Update: {
           cliente_nome?: string
+          company_id?: string | null
           created_at?: string
           data_agendamento?: string
           google_event_id?: string | null
@@ -52,6 +55,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "agendamentos_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "agendamentos_user_id_fkey"
             columns: ["user_id"]
@@ -71,6 +81,10 @@ export type Database = {
       calls: {
         Row: {
           agendamento_id: string | null
+          attendance_status:
+            | Database["public"]["Enums"]["attendance_status"]
+            | null
+          company_id: string | null
           created_at: string
           data_call: string
           duracao_minutos: number | null
@@ -81,6 +95,10 @@ export type Database = {
         }
         Insert: {
           agendamento_id?: string | null
+          attendance_status?:
+            | Database["public"]["Enums"]["attendance_status"]
+            | null
+          company_id?: string | null
           created_at?: string
           data_call?: string
           duracao_minutos?: number | null
@@ -91,6 +109,10 @@ export type Database = {
         }
         Update: {
           agendamento_id?: string | null
+          attendance_status?:
+            | Database["public"]["Enums"]["attendance_status"]
+            | null
+          company_id?: string | null
           created_at?: string
           data_call?: string
           duracao_minutos?: number | null
@@ -108,6 +130,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "calls_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "calls_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -122,6 +151,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      companies: {
+        Row: {
+          created_at: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          plan: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          plan?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          plan?: string | null
+        }
+        Relationships: []
       }
       conquistas: {
         Row: {
@@ -153,8 +206,53 @@ export type Database = {
         }
         Relationships: []
       }
+      deals: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          id: string
+          loss_reason: string | null
+          name: string
+          owner_id: string
+          stage: Database["public"]["Enums"]["deal_stage"] | null
+          updated_at: string | null
+          value: number | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          id?: string
+          loss_reason?: string | null
+          name: string
+          owner_id: string
+          stage?: Database["public"]["Enums"]["deal_stage"] | null
+          updated_at?: string | null
+          value?: number | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          id?: string
+          loss_reason?: string | null
+          name?: string
+          owner_id?: string
+          stage?: Database["public"]["Enums"]["deal_stage"] | null
+          updated_at?: string | null
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deals_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       metas: {
         Row: {
+          company_id: string | null
           created_at: string
           id: string
           mes_referencia: string
@@ -162,6 +260,7 @@ export type Database = {
           valor_meta: number
         }
         Insert: {
+          company_id?: string | null
           created_at?: string
           id?: string
           mes_referencia: string
@@ -169,6 +268,7 @@ export type Database = {
           valor_meta: number
         }
         Update: {
+          company_id?: string | null
           created_at?: string
           id?: string
           mes_referencia?: string
@@ -176,6 +276,13 @@ export type Database = {
           valor_meta?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "metas_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "metas_user_id_fkey"
             columns: ["user_id"]
@@ -194,6 +301,7 @@ export type Database = {
       }
       metas_consolidadas: {
         Row: {
+          company_id: string | null
           created_at: string | null
           descricao: string | null
           id: string
@@ -202,6 +310,7 @@ export type Database = {
           valor_meta: number
         }
         Insert: {
+          company_id?: string | null
           created_at?: string | null
           descricao?: string | null
           id?: string
@@ -210,6 +319,7 @@ export type Database = {
           valor_meta: number
         }
         Update: {
+          company_id?: string | null
           created_at?: string | null
           descricao?: string | null
           id?: string
@@ -217,11 +327,20 @@ export type Database = {
           produto_alvo?: string | null
           valor_meta?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "metas_consolidadas_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       produtos: {
         Row: {
           ativo: boolean
+          company_id: string | null
           created_at: string
           descricao: string | null
           id: string
@@ -230,6 +349,7 @@ export type Database = {
         }
         Insert: {
           ativo?: boolean
+          company_id?: string | null
           created_at?: string
           descricao?: string | null
           id?: string
@@ -238,17 +358,27 @@ export type Database = {
         }
         Update: {
           ativo?: boolean
+          company_id?: string | null
           created_at?: string
           descricao?: string | null
           id?: string
           nome?: string
           preco_base?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "produtos_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
           avatar_url: string | null
+          company_id: string | null
           created_at: string
           email: string
           google_access_token: string | null
@@ -256,6 +386,7 @@ export type Database = {
           google_refresh_token: string | null
           google_token_expires_at: string | null
           id: string
+          is_super_admin: boolean | null
           nivel: Database["public"]["Enums"]["user_level"]
           nome: string
           pontos: number
@@ -263,6 +394,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          company_id?: string | null
           created_at?: string
           email: string
           google_access_token?: string | null
@@ -270,6 +402,7 @@ export type Database = {
           google_refresh_token?: string | null
           google_token_expires_at?: string | null
           id: string
+          is_super_admin?: boolean | null
           nivel?: Database["public"]["Enums"]["user_level"]
           nome: string
           pontos?: number
@@ -277,6 +410,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          company_id?: string | null
           created_at?: string
           email?: string
           google_access_token?: string | null
@@ -284,12 +418,21 @@ export type Database = {
           google_refresh_token?: string | null
           google_token_expires_at?: string | null
           id?: string
+          is_super_admin?: boolean | null
           nivel?: Database["public"]["Enums"]["user_level"]
           nome?: string
           pontos?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sync_logs: {
         Row: {
@@ -409,6 +552,7 @@ export type Database = {
       vendas: {
         Row: {
           cliente_nome: string
+          company_id: string | null
           created_at: string
           data_venda: string
           forma_pagamento: Database["public"]["Enums"]["payment_method"]
@@ -423,6 +567,7 @@ export type Database = {
         }
         Insert: {
           cliente_nome: string
+          company_id?: string | null
           created_at?: string
           data_venda?: string
           forma_pagamento: Database["public"]["Enums"]["payment_method"]
@@ -437,6 +582,7 @@ export type Database = {
         }
         Update: {
           cliente_nome?: string
+          company_id?: string | null
           created_at?: string
           data_venda?: string
           forma_pagamento?: Database["public"]["Enums"]["payment_method"]
@@ -450,6 +596,13 @@ export type Database = {
           valor?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "vendas_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "vendas_produto_id_fkey"
             columns: ["produto_id"]
@@ -478,6 +631,7 @@ export type Database = {
       contribuicao_vendedores: {
         Row: {
           avatar_url: string | null
+          company_id: string | null
           contribuicao: number | null
           mes_referencia: string | null
           meta_total: number | null
@@ -488,7 +642,15 @@ export type Database = {
           posicao_ranking: number | null
           user_id: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
@@ -520,7 +682,15 @@ export type Database = {
     Enums: {
       app_role: "vendedor" | "admin"
       appointment_status: "agendado" | "realizado" | "cancelado"
+      attendance_status: "pending" | "show" | "no_show"
       call_result: "venda" | "sem_interesse" | "reagendar"
+      deal_stage:
+        | "lead"
+        | "contacted"
+        | "qualified"
+        | "proposal"
+        | "won"
+        | "lost"
       payment_method:
         | "Cartão de Crédito"
         | "PIX"
@@ -659,7 +829,9 @@ export const Constants = {
     Enums: {
       app_role: ["vendedor", "admin"],
       appointment_status: ["agendado", "realizado", "cancelado"],
+      attendance_status: ["pending", "show", "no_show"],
       call_result: ["venda", "sem_interesse", "reagendar"],
+      deal_stage: ["lead", "contacted", "qualified", "proposal", "won", "lost"],
       payment_method: [
         "Cartão de Crédito",
         "PIX",
