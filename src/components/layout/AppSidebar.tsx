@@ -1,4 +1,4 @@
-import { Home, Trophy, PlusCircle, Target, PhoneCall, Shield, LogOut, User, Settings, Calendar } from "lucide-react";
+import { Home, Trophy, PlusCircle, Target, PhoneCall, Shield, LogOut, User, Settings, Calendar, Kanban } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -37,6 +37,7 @@ import {
 // Itens agrupados por categoria
 const visaoGeralItems = [
   { title: "Dashboard", url: "/", icon: Home },
+  { title: "CRM Pipeline", url: "/crm", icon: Kanban },
   { title: "Performance de Calls", url: "/calls", icon: PhoneCall },
   { title: "Calendário", url: "/calendario", icon: Calendar },
 ];

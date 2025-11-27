@@ -64,7 +64,7 @@ export const RankingPodium = ({ vendedores }: RankingPodiumProps) => {
                   R$ {segundo.contribuicao.toLocaleString("pt-BR")}
                 </div>
                 <div className="text-xs text-primary font-medium">
-                  {segundo.percentual_contribuicao}% da meta
+                  {segundo.percentual_contribuicao.toFixed(2)}% da meta
                 </div>
               </div>
 
@@ -130,7 +130,7 @@ export const RankingPodium = ({ vendedores }: RankingPodiumProps) => {
                 R$ {primeiro.contribuicao.toLocaleString("pt-BR")}
               </div>
               <div className="text-sm text-primary font-medium">
-                {primeiro.percentual_contribuicao}% da meta
+                {primeiro.percentual_contribuicao.toFixed(2)}% da meta
               </div>
             </div>
 
@@ -175,7 +175,7 @@ export const RankingPodium = ({ vendedores }: RankingPodiumProps) => {
                   R$ {terceiro.contribuicao.toLocaleString("pt-BR")}
                 </div>
                 <div className="text-xs text-primary font-medium">
-                  {terceiro.percentual_contribuicao}% da meta
+                  {terceiro.percentual_contribuicao.toFixed(2)}% da meta
                 </div>
               </div>
 
@@ -229,7 +229,7 @@ export const RankingPodium = ({ vendedores }: RankingPodiumProps) => {
                     <div className="text-sm text-muted-foreground">
                       R$ {vendedor.contribuicao.toLocaleString("pt-BR")} 
                       <span className="text-primary ml-2">
-                        ({vendedor.percentual_contribuicao}%)
+                        ({vendedor.percentual_contribuicao.toFixed(2)}%)
                       </span>
                     </div>
                   </div>

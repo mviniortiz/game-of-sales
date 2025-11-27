@@ -16,6 +16,8 @@ import Metas from "./pages/Metas";
 import Admin from "./pages/Admin";
 import Integracoes from "./pages/Integracoes";
 import Calendario from "./pages/Calendario";
+import CRM from "./pages/CRM";
+import DealDetails from "./pages/DealDetails";
 import RecuperarSenha from "./pages/RecuperarSenha";
 import Profile from "./pages/Profile";
 import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
@@ -109,6 +111,22 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Calendario />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/crm"
+              element={
+                <ProtectedRoute>
+                  <CRM />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/deals/:id"
+              element={
+                <ProtectedRoute>
+                  <DealDetails />
                 </ProtectedRoute>
               }
             />

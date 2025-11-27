@@ -2,30 +2,51 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { MetaProgressCard } from "@/components/metas/MetaProgressCard";
-import { MetasRanking } from "@/components/metas/MetasRanking";
-import { MetaEvolutionChart } from "@/components/metas/MetaEvolutionChart";
-import { Target, TrendingUp, Zap, RefreshCw } from "lucide-react";
+import { 
+  Target, 
+  TrendingUp, 
+  Zap, 
+  RefreshCw, 
+  Trophy,
+  Medal,
+  Crown,
+  Flame,
+  Users,
+  ChevronUp,
+  ChevronDown,
+  Minus,
+  PieChart
+} from "lucide-react";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 const Metas = () => {
   const { user, isAdmin } = useAuth();
   const queryClient = useQueryClient();
   const [selectedMetaId, setSelectedMetaId] = useState<string>("all");
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Refetch function for real-time updates
-  const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ["metas-consolidadas"] });
-    queryClient.invalidateQueries({ queryKey: ["metas-individuais"] });
-    queryClient.invalidateQueries({ queryKey: ["metas-progresso"] });
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await queryClient.invalidateQueries({ queryKey: ["metas-consolidadas"] });
+      await queryClient.invalidateQueries({ queryKey: ["metas-individuais-full"] });
+      await queryClient.invalidateQueries({ queryKey: ["vendas-mes-atual"] });
+      toast.success("Dados atualizados!");
+    } catch (error) {
+      toast.error("Erro ao atualizar dados");
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
-  // Buscar metas consolidadas - READ FROM DB (current_value)
+  // Buscar metas consolidadas
   const { data: metasConsolidadas = [], isLoading: loadingConsolidadas } = useQuery({
     queryKey: ["metas-consolidadas"],
     queryFn: async () => {
@@ -37,6 +58,7 @@ const Metas = () => {
       if (error) throw error;
       return data || [];
     },
+    refetchInterval: 10000, // Auto-refetch every 10 seconds
   });
 
   // Buscar a meta consolidada selecionada
@@ -44,9 +66,43 @@ const Metas = () => {
     ? metasConsolidadas[0] 
     : metasConsolidadas.find(m => m.id === selectedMetaId);
 
-  // Buscar metas individuais - READ FROM DB (current_value) - NO FRONTEND CALCULATION
-  const { data: metasIndividuais = [] } = useQuery({
-    queryKey: ["metas-individuais", metaConsolidadaSelecionada?.mes_referencia],
+  // Buscar vendas do mês atual para calcular valores reais
+  const { data: vendasMesAtual = [] } = useQuery({
+    queryKey: ["vendas-mes-atual", metaConsolidadaSelecionada?.mes_referencia],
+    queryFn: async () => {
+      if (!metaConsolidadaSelecionada) return [];
+
+      const mesRef = metaConsolidadaSelecionada.mes_referencia;
+      const [year, month] = mesRef.split('-');
+      const inicioMes = `${year}-${month}-01`;
+      
+      // Calcular fim do mês sem problemas de timezone
+      const yearNum = parseInt(year);
+      const monthNum = parseInt(month);
+      const ultimoDia = new Date(yearNum, monthNum, 0).getDate(); // Último dia do mês
+      const fimMes = `${year}-${month}-${String(ultimoDia).padStart(2, '0')}`;
+
+      console.log(`[Metas] Buscando vendas de ${inicioMes} até ${fimMes}`);
+
+      const { data, error } = await supabase
+        .from("vendas")
+        .select("user_id, valor, status, data_venda")
+        .eq("status", "Aprovado")
+        .gte("data_venda", inicioMes)
+        .lte("data_venda", fimMes);
+
+      if (error) throw error;
+      
+      console.log(`[Metas] Vendas encontradas:`, data);
+      return data || [];
+    },
+    enabled: !!metaConsolidadaSelecionada,
+    refetchInterval: 10000,
+  });
+
+  // Buscar metas individuais com cálculo real baseado em vendas
+  const { data: metasIndividuais = [], isLoading: loadingIndividuais } = useQuery({
+    queryKey: ["metas-individuais-full", metaConsolidadaSelecionada?.mes_referencia, vendasMesAtual],
     queryFn: async () => {
       if (!metaConsolidadaSelecionada) return [];
 
@@ -55,20 +111,31 @@ const Metas = () => {
       const inicioMes = `${year}-${month}-01`;
       const fimMes = endOfMonth(new Date(parseInt(year), parseInt(month) - 1)).toISOString().split('T')[0];
 
-      // Fetch metas with current_value directly from DB
-      const { data, error } = await supabase
+      // Fetch all metas for this month
+      const { data: metas, error: metasError } = await supabase
         .from("metas")
         .select("*, profiles!inner(id, nome, avatar_url)")
         .gte("mes_referencia", inicioMes)
         .lte("mes_referencia", fimMes);
 
-      if (error) throw error;
+      if (metasError) throw metasError;
 
-      // Map data - NO CALCULATION, just read current_value
-      return (data || []).map((meta: any) => {
+      // Calculate total vendas by user from the already fetched vendas
+      const vendasPorUsuario: { [key: string]: number } = {};
+      vendasMesAtual.forEach((venda: any) => {
+        vendasPorUsuario[venda.user_id] = (vendasPorUsuario[venda.user_id] || 0) + Number(venda.valor);
+      });
+
+      // Total de vendas do mês (para calcular contribuição)
+      const totalVendasMes = Object.values(vendasPorUsuario).reduce((a, b) => a + b, 0);
+
+      // Map data with real sales values
+      const resultado = (metas || []).map((meta: any) => {
         const valorMeta = Number(meta.valor_meta) || 0;
-        const valorRealizado = Number(meta.current_value) || 0; // READ FROM DB
+        const valorRealizado = vendasPorUsuario[meta.user_id] || 0;
         const percentual = valorMeta > 0 ? (valorRealizado / valorMeta) * 100 : 0;
+        const contribuicaoPercentual = totalVendasMes > 0 ? (valorRealizado / totalVendasMes) * 100 : 0;
+        const faltaAtingir = Math.max(0, valorMeta - valorRealizado);
 
         return {
           id: meta.id,
@@ -78,14 +145,19 @@ const Metas = () => {
           valorMeta,
           valorRealizado,
           percentual,
+          contribuicaoPercentual,
+          faltaAtingir,
+          status: percentual >= 100 ? 'atingida' : percentual >= 50 ? 'progresso' : 'inicio',
         };
       }).sort((a: any, b: any) => b.valorRealizado - a.valorRealizado);
+
+      return resultado;
     },
-    enabled: !!metaConsolidadaSelecionada,
+    enabled: !!metaConsolidadaSelecionada && vendasMesAtual.length >= 0,
   });
 
-  // Calculate consolidated values from DB current_value
-  const valorConsolidadoAtingido = Number(metaConsolidadaSelecionada?.current_value) || 0;
+  // Calculate consolidated values from actual sales
+  const valorConsolidadoAtingido = vendasMesAtual.reduce((acc: number, v: any) => acc + Number(v.valor), 0);
   const metaConsolidadaTotal = Number(metaConsolidadaSelecionada?.valor_meta) || 0;
   const percentualConsolidado = metaConsolidadaTotal > 0 
     ? (valorConsolidadoAtingido / metaConsolidadaTotal) * 100 
@@ -105,132 +177,21 @@ const Metas = () => {
 
   const diasRestantes = calcularDiasRestantes();
 
-  // Buscar progresso das metas individuais (para visão pessoal) - READ FROM DB
-  const { data: metasProgresso, isLoading: loadingProgresso } = useQuery({
-    queryKey: ["metas-progresso"],
-    queryFn: async () => {
-      const inicioMes = startOfMonth(new Date()).toISOString().split('T')[0];
-      const fimMes = endOfMonth(new Date()).toISOString().split('T')[0];
-
-      const { data: metas, error } = await supabase
-        .from("metas")
-        .select("*, profiles!inner(id, nome)")
-        .gte("mes_referencia", inicioMes)
-        .lte("mes_referencia", fimMes);
-
-      if (error) throw error;
-
-      // Map data - READ current_value FROM DB, NO FRONTEND CALCULATION
-      const resultado = (metas || []).map((meta: any) => {
-        const valorMeta = Number(meta.valor_meta) || 0;
-        const valorRealizado = Number(meta.current_value) || 0; // READ FROM DB
-        const percentual = valorMeta > 0 ? (valorRealizado / valorMeta) * 100 : 0;
-        const faltaAtingir = Math.max(0, valorMeta - valorRealizado);
-        
-        const hoje = new Date();
-        const ultimoDiaMes = endOfMonth(hoje);
-        const diasRestantes = Math.ceil((ultimoDiaMes.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
-        const mediaDiariaNecessaria = diasRestantes > 0 ? faltaAtingir / diasRestantes : 0;
-
-        return {
-          id: meta.user_id,
-          nome: meta.profiles.nome,
-          valorMeta,
-          valorRealizado,
-          percentual,
-          faltaAtingir,
-          diasRestantes,
-          mediaDiariaNecessaria,
-        };
-      });
-      
-      // Filtrar por usuário se não for admin
-      if (!isAdmin && user) {
-        return resultado.filter((m: any) => m.id === user.id);
-      }
-      
-      return resultado;
-    },
-  });
-
-  // Buscar ranking
-  const { data: ranking } = useQuery({
-    queryKey: ["metas-ranking"],
-    queryFn: async () => {
-      if (!metasProgresso) return [];
-      
-      const rankingData = [...metasProgresso]
-        .sort((a, b) => b.percentual - a.percentual)
-        .map((meta, index) => ({
-          posicao: index + 1,
-          nome: meta.nome,
-          valorMeta: meta.valorMeta,
-          valorRealizado: meta.valorRealizado,
-          percentual: meta.percentual,
-        }));
-
-      return rankingData;
-    },
-    enabled: !!metasProgresso,
-  });
-
-  // Buscar evolução (apenas para o usuário logado ou todos se admin)
-  const { data: evolucao } = useQuery({
-    queryKey: ["meta-evolucao", user?.id],
-    queryFn: async () => {
-      if (!user) return [];
-
-      const inicioMes = startOfMonth(new Date());
-      const hoje = new Date();
-      const dias = [];
-
-      // Buscar meta do usuário
-      const { data: meta } = await supabase
-        .from("metas")
-        .select("valor_meta")
-        .eq("user_id", user.id)
-        .gte("mes_referencia", inicioMes.toISOString().split('T')[0])
-        .maybeSingle();
-
-      if (!meta) return [];
-
-      // Buscar vendas do mês
-      const { data: vendas } = await supabase
-        .from("vendas")
-        .select("data_venda, valor")
-        .eq("user_id", user.id)
-        .eq("status", "Aprovado")
-        .gte("data_venda", inicioMes.toISOString().split('T')[0])
-        .lte("data_venda", hoje.toISOString().split('T')[0])
-        .order("data_venda");
-
-      // Agrupar vendas por dia e calcular acumulado
-      const vendasPorDia: { [key: string]: number } = {};
-      vendas?.forEach(venda => {
-        const dia = new Date(venda.data_venda).getDate();
-        vendasPorDia[dia] = (vendasPorDia[dia] || 0) + Number(venda.valor);
-      });
-
-      let acumulado = 0;
-      for (let dia = 1; dia <= hoje.getDate(); dia++) {
-        acumulado += vendasPorDia[dia] || 0;
-        dias.push({
-          dia,
-          acumulado,
-          meta: Number(meta.valor_meta),
-        });
-      }
-
-      return dias;
-    },
-    enabled: !!user,
-  });
-
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
       currency: "BRL",
     }).format(value);
+  };
+
+  const formatCurrencyCompact = (value: number) => {
+    if (value >= 1000000) {
+      return `R$ ${(value / 1000000).toFixed(2).replace('.', ',')} M`;
+    }
+    if (value >= 1000) {
+      return `R$ ${(value / 1000).toFixed(1).replace('.', ',')} k`;
+    }
+    return formatCurrency(value);
   };
 
   const getInitials = (name: string) => {
@@ -240,54 +201,89 @@ const Metas = () => {
     return (names[0][0] + names[names.length - 1][0]).toUpperCase();
   };
 
+  // Progress bar color logic based on percentage
+  const getProgressBarColor = (percentual: number) => {
+    if (percentual >= 100) {
+      return "bg-gradient-to-r from-emerald-500 to-emerald-400";
+    }
+    if (percentual >= 50) {
+      return "bg-gradient-to-r from-cyan-500 to-cyan-400";
+    }
+    return "bg-gradient-to-r from-indigo-500 to-indigo-400";
+  };
+
+  // Avatar ring color based on status
+  const getAvatarRingColor = (percentual: number) => {
+    if (percentual >= 100) return "ring-emerald-500 ring-2";
+    if (percentual >= 50) return "ring-cyan-500 ring-2";
+    return "ring-indigo-500/50 ring-2";
+  };
+
+  // Status badge based on percentage
   const getStatusBadge = (percentual: number) => {
     if (percentual >= 100) {
       return (
-        <Badge className="bg-green-500/20 text-green-400 border-green-500/30 px-3 py-1">
-          🟢 Meta atingida
+        <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 px-2 py-0.5 text-xs">
+          <Trophy className="h-3 w-3 mr-1" />
+          Meta Batida!
+        </Badge>
+      );
+    }
+    if (percentual >= 75) {
+      return (
+        <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/30 px-2 py-0.5 text-xs">
+          <Flame className="h-3 w-3 mr-1" />
+          Quase lá!
+        </Badge>
+      );
+    }
+    if (percentual >= 50) {
+      return (
+        <Badge className="bg-indigo-500/20 text-indigo-400 border-indigo-500/30 px-2 py-0.5 text-xs">
+          <TrendingUp className="h-3 w-3 mr-1" />
+          Em progresso
         </Badge>
       );
     }
     return (
-      <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 px-3 py-1">
-        🟡 Em andamento
+      <Badge className="bg-slate-500/20 text-slate-400 border-slate-500/30 px-2 py-0.5 text-xs">
+        <Target className="h-3 w-3 mr-1" />
+        Iniciando
       </Badge>
     );
   };
 
-  const getProgressColor = (percentual: number) => {
-    if (percentual >= 100) return "bg-gradient-to-r from-green-500 to-emerald-500";
-    return "bg-gradient-to-r from-yellow-500 to-amber-500";
-  };
+  const isLoading = loadingConsolidadas || loadingIndividuais;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-6 px-2 sm:px-1">
       {/* Header with Refresh Button */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold">Metas</h1>
-          <p className="text-muted-foreground">Acompanhe o progresso das metas da equipe</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-white">Metas</h1>
+          <p className="text-xs sm:text-sm text-slate-400">Acompanhe o progresso das metas da equipe</p>
         </div>
         <Button 
           variant="outline" 
           size="sm" 
           onClick={handleRefresh}
-          className="gap-2"
+          disabled={isRefreshing}
+          className="gap-2 border-white/10 bg-slate-900/50 hover:bg-slate-800 self-start sm:self-auto"
         >
-          <RefreshCw className="h-4 w-4" />
-          Atualizar
+          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          <span className="hidden sm:inline">Atualizar</span>
         </Button>
       </div>
 
-      {/* Seletor de Meta - Chips */}
+      {/* Seletor de Meta - Pills */}
       {metasConsolidadas.length > 0 && (
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap overflow-x-auto pb-2 -mx-2 px-2 sm:mx-0 sm:px-0 scrollbar-none">
           <button
             onClick={() => setSelectedMetaId("all")}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
               selectedMetaId === "all"
-                ? "bg-primary text-primary-foreground shadow-lg"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
+                ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/30"
+                : "bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white"
             }`}
           >
             Atual
@@ -296,258 +292,306 @@ const Metas = () => {
             <button
               key={meta.id}
               onClick={() => setSelectedMetaId(meta.id)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
                 selectedMetaId === meta.id
-                  ? "bg-primary text-primary-foreground shadow-lg"
-                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/30"
+                  : "bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white"
               }`}
             >
-              {meta.descricao || format(new Date(meta.mes_referencia), "MMM yyyy", { locale: ptBR })}
+              {meta.descricao || format(new Date(meta.mes_referencia + "T12:00:00"), "MMM yyyy", { locale: ptBR })}
             </button>
           ))}
         </div>
       )}
 
-      {loadingProgresso || loadingConsolidadas ? (
-        <div className="text-center py-12 text-muted-foreground">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+      {isLoading ? (
+        <div className="text-center py-12 text-slate-400">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-indigo-500 border-r-transparent"></div>
           <p className="mt-4">Carregando metas...</p>
+        </div>
+      ) : !metaConsolidadaSelecionada ? (
+        <div className="text-center py-12">
+          <Target className="h-16 w-16 mx-auto text-slate-600 mb-4" />
+          <h3 className="text-xl font-semibold text-white mb-2">Nenhuma Meta Consolidada</h3>
+          <p className="text-slate-400">Crie uma meta consolidada em Administração → Metas</p>
         </div>
       ) : (
         <>
-          {/* Hero Compacto - Meta Consolidada */}
-          {metaConsolidadaSelecionada && (
-            <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 via-background to-background p-6 sm:p-8">
-              <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -mr-48 -mt-48" />
-              
-              <div className="relative z-10 grid lg:grid-cols-[1fr,auto] gap-6 items-start">
-                {/* Lado Esquerdo - Título e Descrição */}
-                <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <Zap className="h-6 w-6 text-primary" />
-                    <h1 className="text-3xl sm:text-4xl font-bold">
-                      {metaConsolidadaSelecionada.descricao || "Meta Consolidada"}
-                    </h1>
+          {/* HERO BANNER - Meta Consolidada */}
+          <Card className="relative overflow-hidden border-white/5 bg-gradient-to-r from-indigo-900/50 via-slate-900/80 to-slate-900">
+            {/* Background glow effects */}
+            <div className="absolute top-0 left-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl -ml-48 -mt-48" />
+            <div className="absolute bottom-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl -mr-32 -mb-32" />
+            
+            <CardContent className="relative z-10 p-6 sm:p-8">
+              <div className="grid lg:grid-cols-2 gap-8 items-center">
+                {/* Left Side - Info */}
+                <div className="space-y-6">
+                  {/* Title */}
+                  <div>
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 rounded-lg bg-indigo-500/20">
+                        <Zap className="h-5 w-5 text-indigo-400" />
+                      </div>
+                      <span className="text-xs font-medium text-indigo-400 uppercase tracking-wider">
+                        Meta Consolidada
+                      </span>
+                    </div>
+                    <h2 className="text-2xl sm:text-3xl font-bold text-white">
+                      {metaConsolidadaSelecionada.descricao || "Meta da Equipe"}
+                    </h2>
+                    <p className="text-sm text-slate-400 mt-1">
+                      {format(new Date(metaConsolidadaSelecionada.mes_referencia + "T12:00:00"), "MMMM 'de' yyyy", { locale: ptBR })}
+                    </p>
                   </div>
-                  <p className="text-muted-foreground text-sm sm:text-base">
-                    Meta Consolidada da Equipe • {format(new Date(metaConsolidadaSelecionada.mes_referencia), "MMMM 'de' yyyy", { locale: ptBR })}
-                  </p>
-                  <p className="text-xs text-muted-foreground/60 mt-2">
-                    ⚡ Atualizado automaticamente via trigger do banco de dados
-                  </p>
+
+                  {/* Values - Realizado vs Meta */}
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Realizado</p>
+                      <p className="text-2xl sm:text-3xl font-bold text-white">
+                        {formatCurrencyCompact(valorConsolidadoAtingido)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Meta</p>
+                      <p className="text-2xl sm:text-3xl font-bold text-slate-400">
+                        {formatCurrencyCompact(metaConsolidadaTotal)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Progress Bar - Thick */}
+                  <div className="space-y-2">
+                    <div className="relative h-6 bg-slate-800 rounded-full overflow-hidden">
+                      <div
+                        className="absolute inset-y-0 left-0 bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-400 rounded-full transition-all duration-1000"
+                        style={{ width: `${Math.min(percentualConsolidado, 100)}%` }}
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
+                      </div>
+                      {/* Percentage inside bar */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-xs font-bold text-white drop-shadow-lg">
+                          {percentualConsolidado.toFixed(1)}% completo
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between text-xs text-slate-500">
+                      <span>0%</span>
+                      <span>Faltam {diasRestantes} dias</span>
+                      <span>100%</span>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Lado Direito - Card de Progresso */}
-                <Card className="lg:w-[360px] border-primary/30 bg-background/80 backdrop-blur-sm shadow-xl">
-                  <CardContent className="p-6 space-y-4">
-                    {/* Percentual Grande */}
-                    <div className="text-center">
-                      <div className="text-6xl font-bold text-primary mb-1">
-                        {percentualConsolidado.toFixed(1)}%
-                      </div>
-                      {getStatusBadge(percentualConsolidado)}
+                {/* Right Side - Big Percentage */}
+                <div className="text-center lg:text-right">
+                  <div className="inline-block">
+                    {/* Giant Percentage */}
+                    <div className="relative">
+                      <span className="text-7xl sm:text-8xl lg:text-9xl font-bold bg-gradient-to-r from-indigo-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent tabular-nums">
+                        {percentualConsolidado.toFixed(1)}
+                      </span>
+                      <span className="text-3xl sm:text-4xl font-bold text-slate-500">%</span>
                     </div>
-
-                    {/* Valores */}
-                    <div className="space-y-2 text-center">
-                      <div className="text-2xl font-bold">
-                        {formatCurrency(valorConsolidadoAtingido)}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        de {formatCurrency(metaConsolidadaTotal)}
-                      </div>
-                    </div>
-
-                    {/* Barra de Progresso Compacta */}
-                    <div className="space-y-2">
-                      <div className="relative h-6 bg-muted/50 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full ${getProgressColor(percentualConsolidado)} transition-all duration-1000 ease-out`}
-                          style={{ width: `${Math.min(percentualConsolidado, 100)}%` }}
-                        >
-                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
+                    
+                    {/* Status */}
+                    <div className="mt-4">
+                      {percentualConsolidado >= 100 ? (
+                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/20 border border-emerald-500/30">
+                          <Trophy className="h-5 w-5 text-emerald-400" />
+                          <span className="text-emerald-400 font-semibold">Meta Atingida!</span>
                         </div>
-                      </div>
+                      ) : (
+                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/20 border border-indigo-500/30">
+                          <Target className="h-5 w-5 text-indigo-400" />
+                          <span className="text-indigo-400 font-semibold">
+                            Faltam {formatCurrencyCompact(Math.max(0, metaConsolidadaTotal - valorConsolidadoAtingido))}
+                          </span>
+                        </div>
+                      )}
                     </div>
-
-                    {/* Mini KPI - O que falta */}
-                    <div className="pt-4 border-t border-border/50 text-center">
-                      <div className="text-xs text-muted-foreground mb-1">Faltam</div>
-                      <div className="text-xl font-bold text-foreground">
-                        {formatCurrency(Math.max(0, metaConsolidadaTotal - valorConsolidadoAtingido))}
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {percentualConsolidado < 100 
-                          ? `${diasRestantes} dias restantes`
-                          : "Meta atingida! 🎉"
-                        }
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               </div>
-            </div>
-          )}
+            </CardContent>
+          </Card>
 
           {/* Contribuição Individual */}
-          {metaConsolidadaSelecionada && metasIndividuais.length > 0 && (
-            <div className="space-y-4">
-              {/* Cabeçalho da Seção */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <TrendingUp className="h-5 w-5 text-primary" />
-                  <h2 className="text-2xl font-bold">Contribuição Individual</h2>
+          <div className="space-y-4">
+            {/* Section Header */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-indigo-500/10">
+                  <Users className="h-5 w-5 text-indigo-400" />
                 </div>
-                <span className="text-sm text-muted-foreground">
-                  {metasIndividuais.length} {metasIndividuais.length === 1 ? "vendedor" : "vendedores"}
-                </span>
+                <div>
+                  <h2 className="text-xl font-bold text-white">Contribuição Individual</h2>
+                  <p className="text-xs text-slate-500">
+                    {metasIndividuais.length} {metasIndividuais.length === 1 ? "vendedor" : "vendedores"} com meta definida
+                  </p>
+                </div>
               </div>
+            </div>
 
-              {/* Grid de Cards Compactos */}
-              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {metasIndividuais.length === 0 ? (
+              <Card className="border-white/5 bg-slate-900/50 p-8 text-center">
+                <Medal className="h-12 w-12 mx-auto text-slate-600 mb-4" />
+                <h3 className="text-lg font-semibold text-white mb-2">Nenhuma Meta Individual</h3>
+                <p className="text-slate-400 text-sm">
+                  Defina metas individuais para os vendedores em Administração → Metas
+                </p>
+              </Card>
+            ) : (
+              /* Grid of Seller Cards */
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {metasIndividuais.map((vendedor: any, index: number) => {
                   const posicao = index + 1;
-                  const percentualContribuicao = metaConsolidadaTotal > 0 
-                    ? (vendedor.valorRealizado / metaConsolidadaTotal) * 100 
-                    : 0;
-
-                  // Determinar cor da barra baseada em performance
-                  let barColor = "bg-gradient-to-r from-yellow-500 to-yellow-600"; // < 80%
-                  if (vendedor.percentual >= 100) {
-                    barColor = "bg-gradient-to-r from-green-500 to-emerald-600";
-                  } else if (vendedor.percentual >= 80) {
-                    barColor = "bg-gradient-to-r from-orange-500 to-orange-600";
-                  }
+                  const isWinner = vendedor.percentual >= 100;
+                  const isTop3 = posicao <= 3;
 
                   return (
                     <Card
                       key={vendedor.id}
-                      className={`border bg-card/50 backdrop-blur-sm transition-all duration-200 hover:shadow-lg hover:scale-[1.02] ${
-                        posicao === 1 
-                          ? "border-primary shadow-lg shadow-primary/20 ring-2 ring-primary/30" 
-                          : "border-border/50 hover:border-primary/30"
+                      className={`relative overflow-hidden border-white/5 bg-slate-900/50 backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] ${
+                        isWinner 
+                          ? "ring-2 ring-emerald-500/50 shadow-lg shadow-emerald-500/20" 
+                          : isTop3 
+                            ? "ring-1 ring-indigo-500/30" 
+                            : ""
                       }`}
                     >
-                      <CardContent className="p-4 space-y-3">
-                        {/* Linha 1: Avatar + Nome + Troféu/Posição */}
+                      {/* Winner glow effect */}
+                      {isWinner && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 via-transparent to-emerald-500/5" />
+                      )}
+
+                      <CardContent className="relative z-10 p-4 space-y-4">
+                        {/* Row 1: Avatar + Name + Percentage */}
                         <div className="flex items-center gap-3">
-                          {/* Posição Numérica */}
-                          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground">
-                            #{posicao}
+                          {/* Position Badge */}
+                          <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
+                            posicao === 1 
+                              ? "bg-amber-500/20 text-amber-400" 
+                              : posicao === 2 
+                                ? "bg-slate-400/20 text-slate-300" 
+                                : posicao === 3 
+                                  ? "bg-amber-700/20 text-amber-600" 
+                                  : "bg-slate-800 text-slate-500"
+                          }`}>
+                            {posicao <= 3 ? (
+                              posicao === 1 ? <Crown className="h-4 w-4" /> : `#${posicao}`
+                            ) : (
+                              `#${posicao}`
+                            )}
                           </div>
 
-                          {/* Avatar com Glow no Top 1 */}
+                          {/* Avatar with status ring */}
                           <div className="relative flex-shrink-0">
-                            <Avatar className={`h-10 w-10 border-2 ${
-                              posicao === 1 
-                                ? "border-primary shadow-lg shadow-primary/50" 
-                                : "border-primary/20"
-                            }`}>
-                              <AvatarFallback className={`font-bold text-sm ${
-                                posicao === 1 
-                                  ? "bg-primary text-primary-foreground" 
-                                  : "bg-primary/10 text-primary"
-                              }`}>
+                            <Avatar className={`h-10 w-10 ${getAvatarRingColor(vendedor.percentual)}`}>
+                              {vendedor.avatar_url && (
+                                <AvatarImage src={vendedor.avatar_url} alt={vendedor.nome} />
+                              )}
+                              <AvatarFallback className="bg-slate-800 text-white font-bold text-sm">
                                 {getInitials(vendedor.nome)}
                               </AvatarFallback>
                             </Avatar>
-                            {posicao <= 3 && (
-                              <div className="absolute -top-1 -right-1 text-sm">
-                                {posicao === 1 ? "🥇" : posicao === 2 ? "🥈" : "🥉"}
+                            {/* Winner trophy */}
+                            {isWinner && (
+                              <div className="absolute -top-1 -right-1 p-1 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50">
+                                <Trophy className="h-3 w-3 text-white" />
                               </div>
                             )}
                           </div>
 
-                          {/* Nome + Troféu */}
+                          {/* Name */}
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1">
-                              <h4 className="font-bold text-sm truncate">{vendedor.nome}</h4>
-                              {vendedor.percentual >= 100 && (
-                                <Target className="h-4 w-4 text-green-500 flex-shrink-0" />
-                              )}
-                            </div>
+                            <h4 className="font-semibold text-white truncate">{vendedor.nome}</h4>
+                            {getStatusBadge(vendedor.percentual)}
                           </div>
 
-                          {/* Status Badge */}
-                          <div className="flex-shrink-0">
-                            {vendedor.percentual >= 100 ? (
-                              <Badge className="bg-green-500/20 text-green-400 border-green-500/30 px-2 py-0.5 text-[10px]">
-                                Atingida
-                              </Badge>
-                            ) : (
-                              <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 px-2 py-0.5 text-[10px]">
-                                Andamento
-                              </Badge>
+                          {/* Percentage */}
+                          <div className="flex-shrink-0 text-right">
+                            <span className={`text-2xl font-bold tabular-nums ${
+                              isWinner 
+                                ? "text-emerald-400" 
+                                : vendedor.percentual >= 50 
+                                  ? "text-cyan-400" 
+                                  : "text-indigo-400"
+                            }`}>
+                              {vendedor.percentual.toFixed(0)}%
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Row 2: Progress Bar */}
+                        <div className="relative h-3 bg-slate-800 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full ${getProgressBarColor(vendedor.percentual)} rounded-full transition-all duration-700`}
+                            style={{ width: `${Math.min(vendedor.percentual, 100)}%` }}
+                          >
+                            {isWinner && (
+                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse" />
                             )}
                           </div>
                         </div>
 
-                        {/* Linha 2: Valores e Percentual */}
-                        <div className="flex items-end justify-between">
-                          <div className="space-y-0.5">
-                            <div className="text-xs text-muted-foreground">Realizado</div>
-                            <div className="font-bold text-base">{formatCurrency(vendedor.valorRealizado)}</div>
-                            <div className="text-[10px] text-muted-foreground">
-                              de {formatCurrency(vendedor.valorMeta)}
-                            </div>
+                        {/* Row 3: Values */}
+                        <div className="flex items-center justify-between text-sm">
+                          <div>
+                            <span className="text-slate-500">Realizado: </span>
+                            <span className="font-semibold text-white">
+                              {formatCurrency(vendedor.valorRealizado)}
+                            </span>
                           </div>
-                          <div className="text-right">
-                            <div className="text-3xl font-bold text-primary">
-                              {vendedor.percentual.toFixed(1)}%
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Barra de Progresso */}
-                        <div className="space-y-1.5">
-                          <div className="relative h-2.5 bg-muted/50 rounded-full overflow-hidden">
-                            <div
-                              className={`h-full ${barColor} transition-all duration-700 ease-out`}
-                              style={{ width: `${Math.min(vendedor.percentual, 100)}%` }}
-                            >
-                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse" />
-                            </div>
-                          </div>
-                          <div className="flex justify-between text-[10px] text-muted-foreground/80">
-                            <span>Meta individual</span>
-                            <span className="font-semibold">
-                              {percentualContribuicao.toFixed(1)}% da geral
+                          <div>
+                            <span className="text-slate-500">Meta: </span>
+                            <span className="font-medium text-slate-400">
+                              {formatCurrency(vendedor.valorMeta)}
                             </span>
                           </div>
                         </div>
+
+                        {/* Row 4: Contribution to Consolidated */}
+                        <div className="pt-3 border-t border-white/5">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <PieChart className="h-4 w-4 text-indigo-400" />
+                              <span className="text-xs text-slate-500">Contribuição para Meta Global</span>
+                            </div>
+                            <span className={`text-sm font-bold ${
+                              vendedor.contribuicaoPercentual >= 30 
+                                ? "text-emerald-400" 
+                                : vendedor.contribuicaoPercentual >= 15 
+                                  ? "text-cyan-400" 
+                                  : "text-indigo-400"
+                            }`}>
+                              {vendedor.contribuicaoPercentual.toFixed(1)}%
+                            </span>
+                          </div>
+                          {/* Mini contribution bar */}
+                          <div className="mt-2 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-gradient-to-r from-indigo-500 to-cyan-400 rounded-full"
+                              style={{ width: `${Math.min(vendedor.contribuicaoPercentual, 100)}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Row 5: What's missing */}
+                        {vendedor.faltaAtingir > 0 && (
+                          <div className="text-xs text-slate-500 text-center">
+                            Faltam <span className="text-white font-medium">{formatCurrency(vendedor.faltaAtingir)}</span> para bater a meta
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   );
                 })}
               </div>
-            </div>
-          )}
-
-          {/* Seção de Metas Individuais (visão antiga - mantida para compatibilidade) */}
-          {!metaConsolidadaSelecionada && (
-            <>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {metasProgresso?.map((meta) => (
-                  <MetaProgressCard key={meta.id} {...meta} />
-                ))}
-              </div>
-
-              {ranking && ranking.length > 0 && (
-                <MetasRanking ranking={ranking} />
-              )}
-
-              {evolucao && evolucao.length > 0 && (
-                <MetaEvolutionChart data={evolucao} />
-              )}
-
-              {(!metasProgresso || metasProgresso.length === 0) && (
-                <div className="text-center py-12 text-muted-foreground">
-                  <Target className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Nenhuma meta definida para este mês</p>
-                </div>
-              )}
-            </>
-          )}
+            )}
+          </div>
         </>
       )}
     </div>

@@ -100,17 +100,18 @@ export const AgendamentoForm = ({ onSuccess }: AgendamentoFormProps) => {
   };
 
   return (
-    <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Calendar className="h-5 w-5 text-primary" />
+    <Card className="border-white/5 bg-slate-900/50 backdrop-blur-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base font-semibold text-white flex items-center gap-2">
+          <Calendar className="h-4 w-4 text-blue-400" />
           Novo Agendamento
         </CardTitle>
+        <p className="text-xs text-slate-500">Agendar nova call com cliente</p>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-0">
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="cliente_nome">Nome do Cliente *</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="cliente_nome" className="text-xs text-slate-400">Nome do Cliente *</Label>
             <Input
               id="cliente_nome"
               required
@@ -119,11 +120,12 @@ export const AgendamentoForm = ({ onSuccess }: AgendamentoFormProps) => {
                 setFormData({ ...formData, cliente_nome: e.target.value })
               }
               placeholder="Nome completo"
+              className="h-10 bg-slate-800/50 border-white/10 text-white placeholder:text-slate-500 focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="data_agendamento">Data e Hora *</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="data_agendamento" className="text-xs text-slate-400">Data e Hora *</Label>
             <Input
               id="data_agendamento"
               type="datetime-local"
@@ -132,11 +134,12 @@ export const AgendamentoForm = ({ onSuccess }: AgendamentoFormProps) => {
               onChange={(e) =>
                 setFormData({ ...formData, data_agendamento: e.target.value })
               }
+              className="h-10 bg-slate-800/50 border-white/10 text-white focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="observacoes">Observações</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="observacoes" className="text-xs text-slate-400">Observações</Label>
             <Textarea
               id="observacoes"
               value={formData.observacoes}
@@ -144,11 +147,16 @@ export const AgendamentoForm = ({ onSuccess }: AgendamentoFormProps) => {
                 setFormData({ ...formData, observacoes: e.target.value })
               }
               placeholder="Informações adicionais..."
-              rows={3}
+              rows={2}
+              className="bg-slate-800/50 border-white/10 text-white placeholder:text-slate-500 resize-none focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
 
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button 
+            type="submit" 
+            className="w-full h-10 bg-primary hover:bg-primary/90 text-white font-medium" 
+            disabled={loading}
+          >
             {loading ? "Agendando..." : "Agendar Call"}
           </Button>
         </form>

@@ -19,15 +19,16 @@ serve(async (req) => {
   try {
     const { action, userId, agendamentoData } = await req.json();
 
+    console.log(`[Google Calendar Sync] Starting - Action: ${action}, User: ${userId}`);
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    console.log(`[Google Calendar Sync] Action: ${action}, User: ${userId}`);
-
     // Buscar tokens do usuário
-    const { data: user } = await supabase
+    console.log(`[Google Calendar Sync] Fetching user tokens...`);
+    const { data: user, error: userError } = await supabase
       .from("profiles")
       .select(
         "google_access_token, google_refresh_token, google_token_expires_at"
@@ -35,21 +36,50 @@ serve(async (req) => {
       .eq("id", userId)
       .single();
 
+    if (userError) {
+      console.error(`[Google Calendar Sync] Error fetching user:`, userError);
+      return new Response(JSON.stringify({ error: "Failed to fetch user data" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    console.log(`[Google Calendar Sync] User data found:`, {
+      hasAccessToken: !!user?.google_access_token,
+      hasRefreshToken: !!user?.google_refresh_token,
+      expiresAt: user?.google_token_expires_at
+    });
+
     if (!user?.google_access_token) {
-      return new Response("User not connected to Google", {
+      console.log(`[Google Calendar Sync] No access token found`);
+      return new Response(JSON.stringify({ error: "User not connected to Google" }), {
         status: 401,
-        headers: corsHeaders,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     // Verificar se token expirou e renovar se necessário
     let accessToken = user.google_access_token;
-    if (new Date(user.google_token_expires_at) < new Date()) {
-      accessToken = await refreshGoogleToken(
-        user.google_refresh_token,
-        userId,
-        supabase
-      );
+    const tokenExpired = user.google_token_expires_at && new Date(user.google_token_expires_at) < new Date();
+    
+    console.log(`[Google Calendar Sync] Token expired: ${tokenExpired}`);
+    
+    if (tokenExpired && user.google_refresh_token) {
+      console.log(`[Google Calendar Sync] Refreshing token...`);
+      try {
+        accessToken = await refreshGoogleToken(
+          user.google_refresh_token,
+          userId,
+          supabase
+        );
+        console.log(`[Google Calendar Sync] Token refreshed successfully`);
+      } catch (refreshError) {
+        console.error(`[Google Calendar Sync] Token refresh failed:`, refreshError);
+        return new Response(JSON.stringify({ error: "Failed to refresh token" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     // Executar ação
@@ -73,16 +103,6 @@ serve(async (req) => {
       default:
         throw new Error("Invalid action");
     }
-
-    // Log de sincronização
-    await supabase.from("sync_logs").insert({
-      user_id: userId,
-      action,
-      resource_type: "agendamento",
-      resource_id: agendamentoData?.id,
-      google_event_id: result && 'eventId' in result ? result.eventId : null,
-      success: true,
-    });
 
     console.log(`[Google Calendar Sync] Success:`, result);
 
@@ -260,23 +280,40 @@ async function syncAllEvents(accessToken: string, userId: string, supabase: any)
   const newEvents = events
     .filter((event: any) => 
       event.summary && 
-      event.start?.dateTime && 
+      (event.start?.dateTime || event.start?.date) && 
       !existingIds.has(event.id)
     )
     .map((event: any) => ({
       user_id: userId,
       cliente_nome: event.summary.replace("Call com ", ""),
-      data_agendamento: event.start.dateTime,
+      data_agendamento: event.start.dateTime || event.start.date + "T09:00:00",
       observacoes: event.description || "Sincronizado do Google Calendar",
       google_event_id: event.id,
       synced_with_google: true,
       last_synced_at: new Date().toISOString(),
+      status: "agendado", // Importante: definir status padrão
     }));
 
-  // Insert em batch (muito mais rápido)
+  // Insert em batch
+  console.log(`[Google Calendar Sync] Found ${events.length} events from Google`);
+  console.log(`[Google Calendar Sync] New events to insert: ${newEvents.length}`);
+  
   if (newEvents.length > 0) {
-    await supabase.from("agendamentos").insert(newEvents);
+    console.log(`[Google Calendar Sync] Sample event:`, JSON.stringify(newEvents[0]));
+    
+    const { data: insertedData, error: insertError } = await supabase
+      .from("agendamentos")
+      .insert(newEvents)
+      .select();
+    
+    if (insertError) {
+      console.error(`[Google Calendar Sync] Insert error:`, insertError);
+      throw new Error(`Failed to insert events: ${insertError.message}`);
+    }
+    
+    console.log(`[Google Calendar Sync] Successfully inserted ${insertedData?.length || 0} events`);
+    return { synced: events.length, inserted: insertedData?.length || 0 };
   }
 
-  return { synced: events.length, inserted: newEvents.length };
+  return { synced: events.length, inserted: 0 };
 }

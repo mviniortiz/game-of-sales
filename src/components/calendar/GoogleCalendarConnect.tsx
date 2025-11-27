@@ -81,6 +81,8 @@ export const GoogleCalendarConnect = () => {
       setSyncing(true);
       toast.loading("Sincronizando eventos do Google Calendar...", { id: "google-sync" });
       
+      console.log("[GoogleCalendarConnect] Starting sync for user:", user!.id);
+      
       const response = await supabase.functions.invoke(
         "google-calendar-sync",
         {
@@ -91,14 +93,19 @@ export const GoogleCalendarConnect = () => {
         }
       );
 
-      if (response.error) throw response.error;
+      console.log("[GoogleCalendarConnect] Response:", response);
+
+      if (response.error) {
+        console.error("[GoogleCalendarConnect] Error from function:", response.error);
+        throw response.error;
+      }
       
       toast.success(
-        `${response.data.synced} eventos sincronizados do Google Calendar!`,
+        `${response.data?.synced || 0} eventos sincronizados do Google Calendar!`,
         { id: "google-sync" }
       );
     } catch (error) {
-      console.error("Error syncing events:", error);
+      console.error("[GoogleCalendarConnect] Error syncing events:", error);
       toast.error("Erro ao sincronizar eventos", { id: "google-sync" });
     } finally {
       setSyncing(false);

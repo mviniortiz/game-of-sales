@@ -52,45 +52,44 @@ export const CallsFilters = ({
   };
 
   return (
-    <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-      <CardContent className="p-3">
+    <Card className="border-white/5 bg-slate-900/50 backdrop-blur-sm">
+      <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-4">
-          <Filter className="h-5 w-5 text-primary" />
-          <h3 className="text-lg font-semibold">Filtros Globais</h3>
+          <Filter className="h-4 w-4 text-indigo-400" />
+          <h3 className="text-sm font-semibold text-white">Filtros</h3>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Período Customizado */}
-          <div className="space-y-2">
-            <Label className="flex items-center gap-2">
-              <CalendarIcon className="h-4 w-4 text-primary" />
-              Período Customizado
+          <div className="space-y-1.5">
+            <Label className="text-xs text-slate-400 flex items-center gap-1.5">
+              <CalendarIcon className="h-3.5 w-3.5" />
+              Período
             </Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !dateRange.from && "text-muted-foreground"
+                    "w-full h-10 justify-start text-left font-normal bg-slate-800/50 border-white/10 text-white hover:bg-slate-800 hover:text-white",
+                    !dateRange.from && "text-slate-500"
                   )}
                 >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  <CalendarIcon className="mr-2 h-3.5 w-3.5 text-slate-400" />
                   {dateRange.from ? (
                     dateRange.to ? (
-                      <>
-                        {format(dateRange.from, "dd/MM/yyyy")} -{" "}
-                        {format(dateRange.to, "dd/MM/yyyy")}
-                      </>
+                      <span className="text-sm">
+                        {format(dateRange.from, "dd/MM")} - {format(dateRange.to, "dd/MM")}
+                      </span>
                     ) : (
-                      format(dateRange.from, "dd/MM/yyyy")
+                      <span className="text-sm">{format(dateRange.from, "dd/MM/yyyy")}</span>
                     )
                   ) : (
-                    <span>Selecione o período</span>
+                    <span className="text-sm">Selecione</span>
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
+              <PopoverContent className="w-auto p-0 bg-slate-900 border-white/10" align="start">
                 <Calendar
                   mode="range"
                   selected={{ from: dateRange.from, to: dateRange.to }}
@@ -104,13 +103,14 @@ export const CallsFilters = ({
           </div>
 
           {/* Períodos Rápidos */}
-          <div className="space-y-2">
-            <Label>Períodos Rápidos</Label>
-            <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-1.5">
+            <Label className="text-xs text-slate-400">Atalhos</Label>
+            <div className="grid grid-cols-2 gap-1.5">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setQuickRange("hoje")}
+                className="h-10 text-xs bg-slate-800/50 border-white/10 text-slate-300 hover:bg-slate-800 hover:text-white"
               >
                 Hoje
               </Button>
@@ -118,35 +118,38 @@ export const CallsFilters = ({
                 variant="outline"
                 size="sm"
                 onClick={() => setQuickRange("semana")}
+                className="h-10 text-xs bg-slate-800/50 border-white/10 text-slate-300 hover:bg-slate-800 hover:text-white"
               >
-                Esta Semana
+                Semana
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setQuickRange("mes")}
+                className="h-10 text-xs bg-slate-800/50 border-white/10 text-slate-300 hover:bg-slate-800 hover:text-white"
               >
-                Este Mês
+                Mês
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setQuickRange("30dias")}
+                className="h-10 text-xs bg-slate-800/50 border-white/10 text-slate-300 hover:bg-slate-800 hover:text-white"
               >
-                Últimos 30 dias
+                30 dias
               </Button>
             </div>
           </div>
 
           {/* Vendedor */}
-          <div className="space-y-2">
-            <Label className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-primary" />
+          <div className="space-y-1.5">
+            <Label className="text-xs text-slate-400 flex items-center gap-1.5">
+              <Users className="h-3.5 w-3.5" />
               Vendedor
             </Label>
             <Select value={selectedVendedor} onValueChange={setSelectedVendedor}>
-              <SelectTrigger>
-                <SelectValue placeholder="Todos os vendedores" />
+              <SelectTrigger className="h-10 bg-slate-800/50 border-white/10 text-white focus:ring-indigo-500">
+                <SelectValue placeholder="Todos" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="todos">Todos os vendedores</SelectItem>
@@ -160,32 +163,32 @@ export const CallsFilters = ({
           </div>
 
           {/* Resultado da Call */}
-          <div className="space-y-2">
-            <Label className="flex items-center gap-2">
-              <Target className="h-4 w-4 text-primary" />
+          <div className="space-y-1.5">
+            <Label className="text-xs text-slate-400 flex items-center gap-1.5">
+              <Target className="h-3.5 w-3.5" />
               Resultado
             </Label>
             <Select value={selectedResultado} onValueChange={setSelectedResultado}>
-              <SelectTrigger>
-                <SelectValue placeholder="Todos os resultados" />
+              <SelectTrigger className="h-10 bg-slate-800/50 border-white/10 text-white focus:ring-indigo-500">
+                <SelectValue placeholder="Todos" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="todos">Todos os resultados</SelectItem>
                 <SelectItem value="venda">
                   <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-green-500" />
+                    <DollarSign className="h-3.5 w-3.5 text-emerald-500" />
                     Venda Fechada
                   </div>
                 </SelectItem>
                 <SelectItem value="sem_interesse">
                   <div className="flex items-center gap-2">
-                    <Target className="h-4 w-4 text-red-500" />
+                    <Target className="h-3.5 w-3.5 text-red-500" />
                     Sem Interesse
                   </div>
                 </SelectItem>
                 <SelectItem value="reagendar">
                   <div className="flex items-center gap-2">
-                    <CalendarIcon className="h-4 w-4 text-blue-500" />
+                    <CalendarIcon className="h-3.5 w-3.5 text-blue-500" />
                     Reagendar
                   </div>
                 </SelectItem>

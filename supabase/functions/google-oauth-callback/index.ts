@@ -14,6 +14,10 @@ serve(async (req) => {
     const state = url.searchParams.get("state"); // userId
     const error = url.searchParams.get("error");
 
+    console.log("[Google OAuth Callback] Starting...");
+    console.log("[Google OAuth Callback] FRONTEND_URL:", FRONTEND_URL);
+    console.log("[Google OAuth Callback] SUPABASE_URL:", SUPABASE_URL);
+
     // Se usuário cancelou ou houve erro
     if (error || !code || !state) {
       console.error("[Google OAuth Callback] Error:", error || "Missing code/state");
@@ -27,8 +31,10 @@ serve(async (req) => {
     const redirectUri = `${SUPABASE_URL}/functions/v1/google-oauth-callback`;
 
     console.log("[Google OAuth Callback] Processing for user:", userId);
+    console.log("[Google OAuth Callback] Redirect URI:", redirectUri);
 
     // Trocar código por tokens
+    console.log("[Google OAuth Callback] Exchanging code for tokens...");
     const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -44,12 +50,17 @@ serve(async (req) => {
     if (!tokenResponse.ok) {
       const errorData = await tokenResponse.text();
       console.error("[Google OAuth Callback] Token exchange failed:", errorData);
-      throw new Error("Failed to exchange code for tokens");
+      return Response.redirect(
+        `${FRONTEND_URL}/integracoes?error=token_failed`,
+        302
+      );
     }
 
     const tokens = await tokenResponse.json();
+    console.log("[Google OAuth Callback] Tokens received successfully");
 
     // Obter informações do calendário principal
+    console.log("[Google OAuth Callback] Fetching calendar info...");
     const calendarResponse = await fetch(
       "https://www.googleapis.com/calendar/v3/calendars/primary",
       {
@@ -59,77 +70,40 @@ serve(async (req) => {
       }
     );
 
-    const calendarData = await calendarResponse.json();
+    let calendarId = "primary";
+    if (calendarResponse.ok) {
+      const calendarData = await calendarResponse.json();
+      calendarId = calendarData.id || "primary";
+      console.log("[Google OAuth Callback] Calendar ID:", calendarId);
+    } else {
+      console.log("[Google OAuth Callback] Could not fetch calendar, using 'primary'");
+    }
 
     // Salvar tokens no perfil do usuário
+    console.log("[Google OAuth Callback] Saving tokens to database...");
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const expiresAt = new Date(Date.now() + tokens.expires_in * 1000);
+    const expiresAt = new Date(Date.now() + (tokens.expires_in || 3600) * 1000);
 
     const { error: updateError } = await supabase
       .from("profiles")
       .update({
         google_access_token: tokens.access_token,
-        google_refresh_token: tokens.refresh_token,
+        google_refresh_token: tokens.refresh_token || null,
         google_token_expires_at: expiresAt.toISOString(),
-        google_calendar_id: calendarData.id,
+        google_calendar_id: calendarId,
       })
       .eq("id", userId);
 
     if (updateError) {
       console.error("[Google OAuth Callback] Database update failed:", updateError);
-      throw updateError;
-    }
-
-    // Log de sucesso
-    await supabase.from("sync_logs").insert({
-      user_id: userId,
-      action: "connect",
-      resource_type: "google_calendar",
-      success: true,
-    });
-
-    // Registrar webhook para sincronização bidirecional
-    try {
-      const webhookUrl = `${SUPABASE_URL}/functions/v1/google-calendar-webhook`;
-      
-      const watchResponse = await fetch(
-        `https://www.googleapis.com/calendar/v3/calendars/primary/events/watch`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${tokens.access_token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            id: calendarData.id, // usar calendar ID como channel ID
-            type: "web_hook",
-            address: webhookUrl,
-            token: userId,
-          }),
-        }
+      return Response.redirect(
+        `${FRONTEND_URL}/integracoes?error=db_failed`,
+        302
       );
-
-      if (watchResponse.ok) {
-        const watchData = await watchResponse.json();
-        console.log("[Google OAuth Callback] Webhook registered:", watchData);
-        
-        // Salvar informações do webhook
-        await supabase.from("sync_logs").insert({
-          user_id: userId,
-          action: "webhook_registered",
-          resource_type: "google_calendar",
-          success: true,
-        });
-      } else {
-        console.error("[Google OAuth Callback] Failed to register webhook:", await watchResponse.text());
-      }
-    } catch (webhookError) {
-      console.error("[Google OAuth Callback] Webhook registration error:", webhookError);
-      // Não falhar a conexão se o webhook falhar
     }
 
     console.log("[Google OAuth Callback] Successfully connected user:", userId);
@@ -140,7 +114,7 @@ serve(async (req) => {
       302
     );
   } catch (error) {
-    console.error("[Google OAuth Callback] Error:", error);
+    console.error("[Google OAuth Callback] Unexpected error:", error);
     return Response.redirect(
       `${FRONTEND_URL}/integracoes?error=connection_failed`,
       302

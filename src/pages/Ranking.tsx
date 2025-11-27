@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTenant } from "@/contexts/TenantContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MetaConsolidadaCard } from "@/components/metas/MetaConsolidadaCard";
 import { RankingPodium } from "@/components/metas/RankingPodium";
@@ -24,13 +25,26 @@ interface VendedorRanking {
 }
 
 const Ranking = () => {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isSuperAdmin, companyId } = useAuth();
+  const { activeCompanyId } = useTenant();
+  
+  // Determine which company to filter by for permissions
+  const effectiveCompanyId = isSuperAdmin ? activeCompanyId : companyId;
 
-  // Get current month boundaries
+  // Get current month boundaries - using local date to avoid timezone issues
   const hoje = new Date();
-  const inicioMes = startOfMonth(hoje).toISOString().split('T')[0];
-  const fimMes = endOfMonth(hoje).toISOString().split('T')[0];
-  const mesReferencia = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}-01`;
+  const ano = hoje.getFullYear();
+  const mes = hoje.getMonth(); // 0-indexed
+  
+  // Create dates in local timezone
+  const inicioMesDate = new Date(ano, mes, 1);
+  const fimMesDate = new Date(ano, mes + 1, 0); // Last day of current month
+  
+  const inicioMes = format(inicioMesDate, "yyyy-MM-dd");
+  const fimMes = format(fimMesDate, "yyyy-MM-dd");
+  const mesReferencia = format(inicioMesDate, "yyyy-MM-dd");
+  
+  console.log("[Ranking] Período:", { inicioMes, fimMes, mesReferencia });
 
   // Fetch meta consolidada (optional - won't block ranking)
   const { data: metaAtual, isLoading: loadingMeta, refetch: refetchMeta } = useQuery({
@@ -49,55 +63,106 @@ const Ranking = () => {
     refetchInterval: 5000, // Auto-refresh every 5 seconds
   });
 
-  // Fetch ALL sellers with their sales - INDEPENDENT of meta
+  // Fetch sellers with their sales - respecting permission hierarchy
+  // Super Admins: See all sellers (except other Super Admins)
+  // Admins: See only their company's sellers
+  // Sellers: See all visible sellers in their context
   const { data: vendedoresRanking = [], isLoading: loadingVendedores, refetch: refetchVendedores } = useQuery({
-    queryKey: ["vendedores-ranking", inicioMes, fimMes],
+    queryKey: ["vendedores-ranking", inicioMes, fimMes, effectiveCompanyId, isSuperAdmin],
     queryFn: async () => {
-      // 1. Fetch all profiles (sellers)
-      const { data: profiles, error: profilesError } = await supabase
+      console.log("[Ranking] Buscando dados...", { 
+        inicioMes, 
+        fimMes, 
+        effectiveCompanyId,
+        isSuperAdmin,
+        companyId,
+        activeCompanyId 
+      });
+      
+      // 1. Fetch profiles (sellers)
+      // For now, let's fetch ALL profiles to debug
+      let profilesQuery = supabase
         .from("profiles")
-        .select("id, nome, avatar_url, nivel");
+        .select("id, nome, avatar_url, nivel, is_super_admin, company_id");
 
-      if (profilesError) throw profilesError;
+      // Only exclude super admins if we're not debugging
+      // profilesQuery = profilesQuery.eq("is_super_admin", false);
+
+      // Apply company filter based on role
+      if (isSuperAdmin && activeCompanyId) {
+        profilesQuery = profilesQuery.eq("company_id", activeCompanyId);
+      } else if (!isSuperAdmin && companyId) {
+        profilesQuery = profilesQuery.eq("company_id", companyId);
+      }
+
+      const { data: profiles, error: profilesError } = await profilesQuery;
+
+      if (profilesError) {
+        console.error("[Ranking] Erro ao buscar profiles:", profilesError);
+        throw profilesError;
+      }
+      
+      console.log("[Ranking] Profiles encontrados:", profiles?.length, profiles);
+
+      // Get the user IDs from profiles to filter sales
+      const userIds = profiles?.map(p => p.id) || [];
+      
+      console.log("[Ranking] User IDs:", userIds);
+      
+      if (userIds.length === 0) {
+        console.log("[Ranking] Nenhum perfil encontrado - retornando vazio");
+        return [];
+      }
 
       // 2. Fetch all approved sales for this month
-      const { data: vendas, error: vendasError } = await supabase
+      // First, let's see ALL sales to debug
+      const { data: allVendas, error: allVendasError } = await supabase
         .from("vendas")
-        .select("user_id, valor")
-        .eq("status", "Aprovado")
+        .select("user_id, valor, status, data_venda")
         .gte("data_venda", inicioMes)
         .lte("data_venda", fimMes);
+      
+      console.log("[Ranking] TODAS as vendas do período:", allVendas?.length, allVendas);
 
-      if (vendasError) throw vendasError;
+      // Now filter by status and user IDs
+      const vendas = allVendas?.filter(v => 
+        v.status === "Aprovado" && userIds.includes(v.user_id)
+      ) || [];
+      
+      console.log("[Ranking] Vendas filtradas (Aprovado + userIds):", vendas?.length, vendas);
 
       // 3. Fetch individual goals for this month
       const { data: metas, error: metasError } = await supabase
         .from("metas")
-        .select("user_id, valor_meta, current_value")
-        .gte("mes_referencia", inicioMes)
-        .lte("mes_referencia", fimMes);
+        .select("user_id, valor_meta")
+        .eq("mes_referencia", mesReferencia)
+        .in("user_id", userIds);
 
-      if (metasError) throw metasError;
+      if (metasError) {
+        console.error("[Ranking] Erro ao buscar metas:", metasError);
+        throw metasError;
+      }
+      
+      console.log("[Ranking] Metas encontradas:", metas?.length);
 
       // 4. Aggregate sales by user
       const vendasPorUsuario: Record<string, number> = {};
       vendas?.forEach((venda) => {
         vendasPorUsuario[venda.user_id] = (vendasPorUsuario[venda.user_id] || 0) + Number(venda.valor);
       });
+      
+      console.log("[Ranking] Vendas por usuário:", vendasPorUsuario);
 
       // 5. Map goals by user
-      const metasPorUsuario: Record<string, { valor_meta: number; current_value: number }> = {};
-      metas?.forEach((meta) => {
-        metasPorUsuario[meta.user_id] = {
-          valor_meta: Number(meta.valor_meta) || 0,
-          current_value: Number(meta.current_value) || 0,
-        };
+      const metasPorUsuario: Record<string, number> = {};
+      metas?.forEach((meta: any) => {
+        metasPorUsuario[meta.user_id] = Number(meta.valor_meta) || 0;
       });
 
       // 6. Build ranking list
-      const ranking: VendedorRanking[] = (profiles || []).map((profile) => {
+      const ranking: VendedorRanking[] = (profiles || []).map((profile: any) => {
         const valorVendido = vendasPorUsuario[profile.id] || 0;
-        const metaIndividual = metasPorUsuario[profile.id]?.valor_meta;
+        const metaIndividual = metasPorUsuario[profile.id];
         const percentualMeta = metaIndividual && metaIndividual > 0 
           ? (valorVendido / metaIndividual) * 100 
           : undefined;
@@ -181,34 +246,37 @@ const Ranking = () => {
   // Rest of sellers
   const restanteVendedores = vendedoresRanking.slice(3);
 
-  // Convert to format expected by RankingPodium (if it exists)
-  const contribuicoesForPodium = vendedoresRanking.map((v) => ({
+  // Convert to format expected by RankingPodium
+  const contribuicoesForPodium = vendedoresRanking.map((v, index) => ({
     user_id: v.user_id,
     nome: v.nome,
-    avatar_url: v.avatar_url,
+    avatar_url: v.avatar_url || null,
     contribuicao: v.valor_vendido,
     percentual_contribuicao: metaAtual 
       ? (v.valor_vendido / Number(metaAtual.valor_meta)) * 100 
       : 0,
+    posicao_ranking: index + 1,
     nivel: v.nivel,
   }));
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-            <Trophy className="h-8 w-8 text-yellow-500" />
-            Ranking de Vendedores
+          <h1 className="text-xl sm:text-3xl font-bold text-foreground flex items-center gap-2 sm:gap-3">
+            <Trophy className="h-6 sm:h-8 w-6 sm:w-8 text-yellow-500" />
+            <span className="hidden sm:inline">Ranking de Vendedores</span>
+            <span className="sm:hidden">Ranking</span>
           </h1>
-          <p className="text-muted-foreground">
-            {format(hoje, "MMMM 'de' yyyy", { locale: ptBR })} • Atualização automática a cada 5s
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+            {format(hoje, "MMMM 'de' yyyy", { locale: ptBR })}
+            <span className="hidden sm:inline"> • Atualização automática a cada 5s</span>
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={handleRefresh} className="gap-2">
+        <Button variant="outline" size="sm" onClick={handleRefresh} className="gap-2 self-start sm:self-auto">
           <RefreshCw className="h-4 w-4" />
-          Atualizar
+          <span className="hidden sm:inline">Atualizar</span>
         </Button>
       </div>
 
@@ -260,8 +328,8 @@ const Ranking = () => {
                   Classificação Completa
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
+              <CardContent className="p-3 sm:p-6">
+                <div className="space-y-2 sm:space-y-3">
                   {vendedoresRanking.map((vendedor, index) => {
                     const posicao = index + 1;
                     const hasIndividualMeta = vendedor.meta_individual && vendedor.meta_individual > 0;
@@ -272,15 +340,15 @@ const Ranking = () => {
                     return (
                       <div 
                         key={vendedor.user_id}
-                        className={`flex items-center justify-between p-4 rounded-lg transition-all hover:scale-[1.01] ${
+                        className={`flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 rounded-lg transition-all hover:scale-[1.01] gap-3 ${
                           posicao <= 3 
                             ? "bg-gradient-to-r from-primary/10 to-transparent border border-primary/20" 
                             : "bg-muted/30 hover:bg-muted/50"
                         }`}
                       >
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3 sm:gap-4">
                           {/* Position */}
-                          <div className={`flex items-center justify-center w-10 h-10 rounded-full font-bold text-lg ${
+                          <div className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full font-bold text-sm sm:text-lg flex-shrink-0 ${
                             posicao === 1 ? "bg-yellow-500 text-yellow-900" :
                             posicao === 2 ? "bg-gray-300 text-gray-700" :
                             posicao === 3 ? "bg-amber-600 text-amber-100" :
@@ -294,48 +362,61 @@ const Ranking = () => {
                           </div>
 
                           {/* Avatar */}
-                          <Avatar className="h-12 w-12 border-2 border-primary/20">
+                          <Avatar className="h-10 w-10 sm:h-12 sm:w-12 border-2 border-primary/20 flex-shrink-0">
                             <AvatarImage src={vendedor.avatar_url} />
-                            <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                            <AvatarFallback className="bg-primary/10 text-primary font-bold text-sm">
                               {getInitials(vendedor.nome)}
                             </AvatarFallback>
                           </Avatar>
 
                           {/* Name and Level */}
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <p className="font-semibold text-foreground">{vendedor.nome}</p>
-                              <Badge className={`${getNivelColor(vendedor.nivel || 'Bronze')} text-white text-xs`}>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="font-semibold text-foreground text-sm sm:text-base truncate">{vendedor.nome}</p>
+                              <Badge className={`${getNivelColor(vendedor.nivel || 'Bronze')} text-white text-[10px] sm:text-xs`}>
                                 {vendedor.nivel || 'Bronze'}
                               </Badge>
                             </div>
                             
-                            {/* Progress Bar */}
-                            <div className="mt-2 flex items-center gap-2">
+                            {/* Progress Bar - Hidden on mobile, shown in separate row */}
+                            <div className="hidden sm:flex mt-2 items-center gap-2">
                               <Progress 
                                 value={progressValue} 
                                 className={`h-2 flex-1 ${!hasIndividualMeta ? 'opacity-50' : ''}`}
                               />
                               <span className="text-xs text-muted-foreground w-16 text-right">
                                 {hasIndividualMeta 
-                                  ? `${vendedor.percentual_meta?.toFixed(0)}% da meta`
+                                  ? `${vendedor.percentual_meta?.toFixed(0)}%`
                                   : "Sem meta"
                                 }
                               </span>
                             </div>
                           </div>
+
+                          {/* Value - Desktop */}
+                          <div className="hidden sm:block text-right flex-shrink-0">
+                            <p className="text-xl font-bold text-emerald-500">
+                              {formatCurrency(vendedor.valor_vendido)}
+                            </p>
+                            {hasIndividualMeta && (
+                              <p className="text-xs text-muted-foreground">
+                                Meta: {formatCurrency(vendedor.meta_individual!)}
+                              </p>
+                            )}
+                          </div>
                         </div>
 
-                        {/* Value */}
-                        <div className="text-right">
-                          <p className="text-xl font-bold text-emerald-500">
+                        {/* Mobile: Value and Progress */}
+                        <div className="sm:hidden flex items-center justify-between pl-11">
+                          <div className="flex-1 mr-3">
+                            <Progress 
+                              value={progressValue} 
+                              className={`h-1.5 ${!hasIndividualMeta ? 'opacity-50' : ''}`}
+                            />
+                          </div>
+                          <p className="text-base font-bold text-emerald-500 flex-shrink-0">
                             {formatCurrency(vendedor.valor_vendido)}
                           </p>
-                          {hasIndividualMeta && (
-                            <p className="text-xs text-muted-foreground">
-                              Meta: {formatCurrency(vendedor.meta_individual!)}
-                            </p>
-                          )}
                         </div>
                       </div>
                     );

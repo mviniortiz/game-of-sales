@@ -2,11 +2,36 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, TrendingUp, Target, DollarSign, Award } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { VendasChart } from "@/components/calls/VendasChart";
+import { 
+  Users, 
+  TrendingUp, 
+  Target, 
+  DollarSign, 
+  Award,
+  ArrowUpRight,
+  ArrowDownRight,
+  BarChart3,
+  UserCheck
+} from "lucide-react";
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+} from "recharts";
 import { MetasRankingCard } from "@/components/admin/MetasRankingCard";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { format, subDays } from "date-fns";
+import {
+  Tooltip as UITooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface AdminVendasViewProps {
   dateRange: { from?: Date; to?: Date };
@@ -16,6 +41,138 @@ interface AdminVendasViewProps {
   vendedores?: Array<{ id: string; nome: string }>;
   produtos?: Array<{ id: string; nome: string }>;
 }
+
+// Compact currency formatter
+const formatCurrencyCompact = (value: number) => {
+  if (value >= 1000000) {
+    return `R$ ${(value / 1000000).toFixed(2).replace('.', ',')} M`;
+  }
+  if (value >= 1000) {
+    return `R$ ${(value / 1000).toFixed(1).replace('.', ',')} k`;
+  }
+  return `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+};
+
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(value);
+};
+
+// Premium KPI Card Component - Linear/Stripe Style
+interface KPICardProps {
+  title: string;
+  value: string;
+  fullValue?: string;
+  subtitle?: string;
+  icon: React.ElementType;
+  trend?: number;
+  trendLabel?: string;
+  iconColor?: string;
+  iconBg?: string;
+  glowColor?: string;
+}
+
+const KPICard = ({ 
+  title, 
+  value, 
+  fullValue,
+  subtitle, 
+  icon: Icon, 
+  trend, 
+  trendLabel,
+  iconColor = "text-indigo-400",
+  iconBg = "bg-indigo-500/10",
+  glowColor = "shadow-indigo-500/20"
+}: KPICardProps) => {
+  const isPositive = trend && trend > 0;
+  const TrendIcon = isPositive ? ArrowUpRight : ArrowDownRight;
+  
+  const cardContent = (
+    <Card className={`
+      relative overflow-hidden
+      border border-white/[0.08] 
+      bg-gradient-to-br from-slate-900/80 via-slate-900/60 to-slate-800/40
+      backdrop-blur-xl
+      hover:border-white/[0.12] hover:shadow-xl hover:${glowColor}
+      transition-all duration-500 ease-out
+      group cursor-default
+    `}>
+      {/* Subtle gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
+      
+      {/* Animated glow on hover */}
+      <div className={`absolute -inset-1 ${iconBg} opacity-0 group-hover:opacity-20 blur-2xl transition-opacity duration-500`} />
+      
+      <CardContent className="relative p-5">
+        <div className="flex items-start justify-between gap-4">
+          {/* Left: Icon */}
+          <div className={`
+            relative p-3 rounded-2xl ${iconBg} 
+            group-hover:scale-105 group-hover:rotate-3
+            transition-all duration-300 ease-out
+          `}>
+            {/* Icon glow */}
+            <div className={`absolute inset-0 ${iconBg} rounded-2xl blur-xl opacity-60`} />
+            <Icon className={`h-6 w-6 ${iconColor} relative z-10`} />
+          </div>
+          
+          {/* Right: Content */}
+          <div className="flex-1 text-right">
+            <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-[0.1em] mb-2">
+              {title}
+            </p>
+            <p className="text-3xl font-bold text-white tabular-nums tracking-tight leading-none">
+              {value}
+            </p>
+            
+            {/* Trend or Subtitle */}
+            <div className="flex items-center justify-end gap-2 mt-2">
+              {trend !== undefined && (
+                <span className={`
+                  inline-flex items-center gap-0.5 
+                  px-2 py-0.5 rounded-full text-[11px] font-semibold
+                  ${isPositive 
+                    ? 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20' 
+                    : 'bg-rose-500/10 text-rose-400 ring-1 ring-rose-500/20'
+                  }
+                `}>
+                  <TrendIcon className="h-3 w-3" />
+                  {Math.abs(trend).toFixed(1)}%
+                </span>
+              )}
+              {(trendLabel || subtitle) && (
+                <span className="text-[11px] text-slate-500 font-medium">
+                  {trendLabel || subtitle}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  // Wrap with tooltip if fullValue is provided
+  if (fullValue) {
+    return (
+      <UITooltip>
+        <TooltipTrigger asChild>
+          {cardContent}
+        </TooltipTrigger>
+        <TooltipContent 
+          side="bottom" 
+          className="bg-slate-900/95 border-white/10 text-white font-mono"
+        >
+          {fullValue}
+        </TooltipContent>
+      </UITooltip>
+    );
+  }
+
+  return cardContent;
+};
 
 export const AdminVendasView = ({ 
   dateRange, 
@@ -31,10 +188,10 @@ export const AdminVendasView = ({
 
   // Estatísticas gerais
   const { data: stats } = useQuery({
-    queryKey: ["admin-stats-vendas", inicioMes, fimMes, selectedVendedor],
+    queryKey: ["admin-stats-vendas", inicioMes, fimMes, selectedVendedor, selectedFormaPagamento, selectedProduto],
     queryFn: async () => {
       // Total de vendedores
-      const { data: vendedores } = await supabase
+      const { data: vendedoresData } = await supabase
         .from("profiles")
         .select("id", { count: "exact" });
 
@@ -48,35 +205,51 @@ export const AdminVendasView = ({
       if (selectedVendedor !== "todos") {
         vendasQuery = vendasQuery.eq("user_id", selectedVendedor);
       }
-
       if (selectedFormaPagamento !== "todas") {
         vendasQuery = vendasQuery.eq("forma_pagamento", selectedFormaPagamento as any);
       }
-
       if (selectedProduto !== "todos") {
         vendasQuery = vendasQuery.eq("produto_id", selectedProduto as any);
       }
 
       const { data: vendas } = await vendasQuery;
 
-      // Metas do período
-      let metasQuery = supabase
-        .from("metas")
+      // Meta Consolidada do mês (usa a data do filtro para determinar o mês)
+      const dataFiltro = new Date(inicioMes + "T12:00:00");
+      const mesReferenciaConsolidada = `${dataFiltro.getFullYear()}-${String(
+        dataFiltro.getMonth() + 1
+      ).padStart(2, "0")}-01`;
+
+      const { data: metaConsolidadaData } = await supabase
+        .from("metas_consolidadas")
         .select("valor_meta")
-        .gte("mes_referencia", inicioMes)
-        .lte("mes_referencia", fimMes);
+        .eq("mes_referencia", mesReferenciaConsolidada)
+        .maybeSingle();
+
+      // Show Rate calculation
+      let callsQuery = supabase
+        .from("calls")
+        .select("id, attendance_status")
+        .gte("data_call", inicioMes)
+        .lte("data_call", fimMes);
 
       if (selectedVendedor !== "todos") {
-        metasQuery = metasQuery.eq("user_id", selectedVendedor);
+        callsQuery = callsQuery.eq("user_id", selectedVendedor);
       }
 
-      const { data: metas } = await metasQuery;
+      const { data: calls } = await callsQuery;
 
-      const totalVendedores = vendedores?.length || 0;
+      const totalCalls = calls?.length || 0;
+      const showCalls = calls?.filter((c: any) => c.attendance_status === 'show').length || 0;
+      const showRate = totalCalls > 0 ? (showCalls / totalCalls) * 100 : 0;
+
+      const totalVendedores = vendedoresData?.length || 0;
       const totalVendas = vendas?.filter(v => v.status === "Aprovado").reduce((acc, v) => acc + Number(v.valor), 0) || 0;
       const totalTransacoes = vendas?.filter(v => v.status === "Aprovado").length || 0;
-      const totalMetas = metas?.reduce((acc, m) => acc + Number(m.valor_meta), 0) || 0;
+      // Usa a meta consolidada real do banco
+      const totalMetas = metaConsolidadaData?.valor_meta || 0;
       const ticketMedio = totalTransacoes > 0 ? totalVendas / totalTransacoes : 0;
+      const metaProgress = totalMetas > 0 ? (totalVendas / totalMetas) * 100 : 0;
 
       return {
         totalVendedores,
@@ -84,6 +257,10 @@ export const AdminVendasView = ({
         totalTransacoes,
         totalMetas,
         ticketMedio,
+        metaProgress,
+        showRate,
+        showCalls,
+        totalCalls,
       };
     },
   });
@@ -92,7 +269,7 @@ export const AdminVendasView = ({
   const { data: topVendedores } = useQuery({
     queryKey: ["admin-top-vendedores", inicioMes, fimMes, selectedVendedor],
     queryFn: async () => {
-      let profilesQuery = supabase.from("profiles").select("id, nome");
+      let profilesQuery = supabase.from("profiles").select("id, nome, avatar_url");
 
       if (selectedVendedor !== "todos") {
         profilesQuery = profilesQuery.eq("id", selectedVendedor);
@@ -117,6 +294,7 @@ export const AdminVendasView = ({
 
           return {
             nome: profile.nome,
+            avatar_url: profile.avatar_url,
             total,
             quantidade,
           };
@@ -130,13 +308,58 @@ export const AdminVendasView = ({
     },
   });
 
-  // Buscar meta consolidada do mês
+  // Sales Evolution Chart Data
+  const { data: vendasEvolution } = useQuery({
+    queryKey: ["admin-vendas-evolution", inicioMes, fimMes, selectedVendedor],
+    queryFn: async () => {
+      let vendasQuery = supabase
+        .from("vendas")
+        .select("data_venda, valor")
+        .eq("status", "Aprovado")
+        .gte("data_venda", inicioMes)
+        .lte("data_venda", fimMes)
+        .order("data_venda", { ascending: true });
+
+      if (selectedVendedor !== "todos") {
+        vendasQuery = vendasQuery.eq("user_id", selectedVendedor);
+      }
+
+      const { data: vendas } = await vendasQuery;
+
+      // Group by date
+      const grouped = (vendas || []).reduce((acc: Record<string, number>, v) => {
+        const date = format(new Date(v.data_venda), "dd/MM");
+        acc[date] = (acc[date] || 0) + Number(v.valor);
+        return acc;
+      }, {});
+
+      // Fill in dates
+      const result = [];
+      const today = new Date();
+      for (let i = 14; i >= 0; i--) {
+        const date = subDays(today, i);
+        const dateKey = format(date, "dd/MM");
+        result.push({
+          date: dateKey,
+          valor: grouped[dateKey] || 0,
+        });
+      }
+      
+      return result;
+    },
+  });
+
+  // Meta consolidada - busca a meta do mês atual (baseado no filtro)
   const { data: metaConsolidada } = useQuery({
     queryKey: ["meta-consolidada", inicioMes],
     queryFn: async () => {
-      const mesReferencia = `${new Date(inicioMes).getFullYear()}-${String(
-        new Date(inicioMes).getMonth() + 1
+      // Usa a data do filtro para determinar o mês
+      const dataFiltro = new Date(inicioMes + "T12:00:00"); // Adiciona horário para evitar problemas de timezone
+      const mesReferencia = `${dataFiltro.getFullYear()}-${String(
+        dataFiltro.getMonth() + 1
       ).padStart(2, "0")}-01`;
+
+      console.log("[Dashboard] Buscando meta consolidada para:", mesReferencia);
 
       const { data, error } = await supabase
         .from("metas_consolidadas")
@@ -144,17 +367,20 @@ export const AdminVendasView = ({
         .eq("mes_referencia", mesReferencia)
         .maybeSingle();
 
+      console.log("[Dashboard] Meta consolidada encontrada:", data);
+
       if (error) throw error;
       return data;
     },
   });
 
-  // Buscar metas individuais e calcular progresso
+  // Vendedores metas
   const { data: vendedoresMetas } = useQuery({
     queryKey: ["vendedores-metas", inicioMes, fimMes, selectedVendedor, selectedFormaPagamento, selectedProduto],
     queryFn: async () => {
-      const mesReferencia = `${new Date(inicioMes).getFullYear()}-${String(
-        new Date(inicioMes).getMonth() + 1
+      const dataFiltro = new Date(inicioMes + "T12:00:00");
+      const mesReferencia = `${dataFiltro.getFullYear()}-${String(
+        dataFiltro.getMonth() + 1
       ).padStart(2, "0")}-01`;
 
       let metasQuery = supabase
@@ -163,7 +389,7 @@ export const AdminVendasView = ({
           id,
           user_id,
           valor_meta,
-          profiles!inner(nome)
+          profiles!inner(nome, avatar_url)
         `)
         .eq("mes_referencia", mesReferencia);
 
@@ -188,7 +414,6 @@ export const AdminVendasView = ({
           if (selectedFormaPagamento !== "todas") {
             vendasQuery = vendasQuery.eq("forma_pagamento", selectedFormaPagamento as any);
           }
-
           if (selectedProduto !== "todos") {
             vendasQuery = vendasQuery.eq("produto_id", selectedProduto as any);
           }
@@ -200,6 +425,7 @@ export const AdminVendasView = ({
 
           return {
             nome: meta.profiles.nome,
+            avatar_url: meta.profiles.avatar_url,
             valorMeta: Number(meta.valor_meta),
             valorRealizado,
             percentual,
@@ -207,7 +433,6 @@ export const AdminVendasView = ({
         })
       );
 
-      // Ordenar por percentual decrescente
       return vendedoresData.sort((a, b) => b.percentual - a.percentual);
     },
   });
@@ -218,138 +443,6 @@ export const AdminVendasView = ({
     ? (valorConsolidadoAtingido / metaTotalConsolidada) * 100 
     : 0;
 
-  // Progresso de metas
-  const { data: progressoMetas } = useQuery({
-    queryKey: ["admin-progresso-metas", inicioMes, fimMes, selectedVendedor, selectedFormaPagamento, selectedProduto],
-    queryFn: async () => {
-      let metasQuery = supabase
-        .from("metas")
-        .select(`
-          id,
-          user_id,
-          valor_meta,
-          mes_referencia,
-          profiles!inner(nome)
-        `)
-        .gte("mes_referencia", inicioMes)
-        .lte("mes_referencia", fimMes);
-
-      if (selectedVendedor !== "todos") {
-        metasQuery = metasQuery.eq("user_id", selectedVendedor);
-      }
-
-      const { data: metas } = await metasQuery;
-
-      if (!metas) return [];
-
-      const progressoData = await Promise.all(
-        metas.map(async (meta: any) => {
-          let vendasMetaQuery = supabase
-            .from("vendas")
-            .select("valor")
-            .eq("user_id", meta.user_id)
-            .eq("status", "Aprovado")
-            .gte("data_venda", inicioMes)
-            .lte("data_venda", fimMes);
-
-          if (selectedFormaPagamento !== "todas") {
-            vendasMetaQuery = vendasMetaQuery.eq("forma_pagamento", selectedFormaPagamento as any);
-          }
-
-          if (selectedProduto !== "todos") {
-            vendasMetaQuery = vendasMetaQuery.eq("produto_id", selectedProduto as any);
-          }
-
-          const { data: vendas } = await vendasMetaQuery;
-
-          const realizado = vendas?.reduce((acc, v) => acc + Number(v.valor), 0) || 0;
-          const percentual = meta.valor_meta > 0 ? ((realizado / meta.valor_meta) * 100).toFixed(1) : "0.0";
-
-          return {
-            nome: meta.profiles.nome,
-            meta: meta.valor_meta,
-            realizado,
-            percentual,
-          };
-        })
-      );
-
-      return progressoData;
-    },
-  });
-
-  // Dados para o gráfico de evolução de vendas
-  const { data: vendasChartData } = useQuery({
-    queryKey: ["admin-vendas-chart", inicioMes, fimMes, selectedVendedor],
-    queryFn: async () => {
-      let vendasQuery = supabase
-        .from("vendas")
-        .select("data_venda")
-        .eq("status", "Aprovado")
-        .gte("data_venda", inicioMes)
-        .lte("data_venda", fimMes)
-        .order("data_venda", { ascending: true });
-
-      if (selectedVendedor !== "todos") {
-        vendasQuery = vendasQuery.eq("user_id", selectedVendedor);
-      }
-
-      const { data: vendas } = await vendasQuery;
-
-      // Se não houver dados reais, retornar dados fictícios variados
-      if (!vendas || vendas.length === 0) {
-        const hoje = new Date();
-        const mockData = [];
-        for (let i = 14; i >= 0; i--) {
-          const data = new Date(hoje);
-          data.setDate(data.getDate() - i);
-          const dataFormatada = data.toLocaleDateString('pt-BR', { 
-            day: '2-digit', 
-            month: '2-digit' 
-          });
-          // Variação aleatória para tornar o gráfico interessante
-          const vendasDia = i % 3 === 0 ? Math.floor(Math.random() * 3) + 1 : 
-                           i % 2 === 0 ? Math.floor(Math.random() * 5) + 2 : 
-                           Math.floor(Math.random() * 2) + 1;
-          mockData.push({ data: dataFormatada, vendas: vendasDia });
-        }
-        return mockData;
-      }
-
-      // Agrupar vendas por data
-      const vendasPorData = vendas.reduce((acc: { [key: string]: number }, venda) => {
-        const data = new Date(venda.data_venda).toLocaleDateString('pt-BR', { 
-          day: '2-digit', 
-          month: '2-digit' 
-        });
-        acc[data] = (acc[data] || 0) + 1;
-        return acc;
-      }, {});
-
-      return Object.entries(vendasPorData).map(([data, vendas]) => ({
-        data,
-        vendas,
-      }));
-    },
-  });
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(value);
-  };
-
-  const formatCurrencyCompact = (value: number) => {
-    if (value >= 1000000) {
-      return `R$ ${(value / 1000000).toFixed(1)}M`;
-    }
-    if (value >= 1000) {
-      return `R$ ${(value / 1000).toFixed(0)}k`;
-    }
-    return `R$ ${value.toFixed(0)}`;
-  };
-
   const getInitials = (name: string) => {
     if (!name) return "?";
     const names = name.trim().split(" ");
@@ -358,184 +451,207 @@ export const AdminVendasView = ({
   };
 
   return (
-    <div className="space-y-8">
-      {/* Cards de Métricas Principais - Destaque Visual */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Faturamento - Destaque Principal */}
-        <Card className="border-border/50 bg-gradient-to-br from-green-500/10 to-emerald-500/5 animate-fade-in lg:col-span-2">
-          <CardContent className="p-8">
-            <div className="flex items-start justify-between mb-6">
-              <div className="p-3 rounded-xl bg-green-500/20">
-                <DollarSign className="h-8 w-8 text-green-600" />
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-medium text-muted-foreground mb-2">Faturamento Total</p>
-                <p className="text-5xl font-bold text-green-600">
-                  {formatCurrency(stats?.totalVendas || 0)}
-                </p>
-                <p className="text-sm text-muted-foreground mt-3">
-                  {stats?.totalTransacoes || 0} vendas realizadas
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Ticket Médio - Destaque Secundário */}
-        <Card className="border-border/50 bg-gradient-to-br from-purple-500/10 to-pink-500/5 animate-fade-in lg:col-span-2" style={{ animationDelay: "100ms" }}>
-          <CardContent className="p-8">
-            <div className="flex items-start justify-between mb-6">
-              <div className="p-3 rounded-xl bg-purple-500/20">
-                <TrendingUp className="h-8 w-8 text-purple-600" />
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-medium text-muted-foreground mb-2">Ticket Médio</p>
-                <p className="text-5xl font-bold text-purple-600">
-                  {formatCurrency(stats?.ticketMedio || 0)}
-                </p>
-                <p className="text-sm text-muted-foreground mt-3">
-                  por transação
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+    <div className="space-y-6">
+      {/* Row 1: KPI Cards - 4 columns */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        <KPICard
+          title="Faturamento Total"
+          value={formatCurrencyCompact(stats?.totalVendas || 0)}
+          fullValue={formatCurrency(stats?.totalVendas || 0)}
+          icon={DollarSign}
+          trend={18.4}
+          trendLabel="vs período anterior"
+          iconColor="text-emerald-400"
+          iconBg="bg-emerald-500/10"
+          glowColor="shadow-emerald-500/20"
+        />
+        <KPICard
+          title="Ticket Médio"
+          value={formatCurrencyCompact(stats?.ticketMedio || 0)}
+          fullValue={formatCurrency(stats?.ticketMedio || 0)}
+          icon={TrendingUp}
+          trend={5.2}
+          trendLabel="vs período anterior"
+          iconColor="text-indigo-400"
+          iconBg="bg-indigo-500/10"
+          glowColor="shadow-indigo-500/20"
+        />
+        <KPICard
+          title="Vendedores Ativos"
+          value={(stats?.totalVendedores || 0).toString()}
+          subtitle={`${stats?.totalTransacoes || 0} vendas no período`}
+          icon={Users}
+          iconColor="text-violet-400"
+          iconBg="bg-violet-500/10"
+          glowColor="shadow-violet-500/20"
+        />
+        <KPICard
+          title="Taxa de Show"
+          value={`${(stats?.showRate || 0).toFixed(0)}%`}
+          subtitle={`${stats?.showCalls || 0}/${stats?.totalCalls || 0} calls`}
+          icon={UserCheck}
+          trend={(stats?.showRate || 0) - 75}
+          trendLabel="vs média"
+          iconColor="text-amber-400"
+          iconBg="bg-amber-500/10"
+          glowColor="shadow-amber-500/20"
+        />
       </div>
 
-      {/* Cards Secundários */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border-border/50 bg-card/50 animate-fade-in" style={{ animationDelay: "200ms" }}>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4 mb-3">
-              <div className="p-2 rounded-lg bg-blue-500/10">
-                <Users className="h-5 w-5 text-blue-500" />
-              </div>
-              <p className="text-sm font-medium text-muted-foreground">Total de Vendedores</p>
-            </div>
-            <p className="text-3xl font-bold">{stats?.totalVendedores || 0}</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/50 bg-card/50 animate-fade-in" style={{ animationDelay: "250ms" }}>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4 mb-3">
-              <div className="p-2 rounded-lg bg-yellow-500/10">
-                <Target className="h-5 w-5 text-yellow-500" />
-              </div>
-              <p className="text-sm font-medium text-muted-foreground">Meta do Período</p>
-            </div>
-            <p className="text-3xl font-bold">{formatCurrency(stats?.totalMetas || 0)}</p>
-            <p className="text-sm text-muted-foreground mt-2">
-              {stats?.totalMetas && stats?.totalVendas 
-                ? `${((stats.totalVendas / stats.totalMetas) * 100).toFixed(1)}% alcançado`
-                : "—"}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/50 bg-card/50 animate-fade-in" style={{ animationDelay: "300ms" }}>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4 mb-3">
-              <div className="p-2 rounded-lg bg-pink-500/10">
-                <Award className="h-5 w-5 text-pink-500" />
-              </div>
-              <p className="text-sm font-medium text-muted-foreground">Top Vendedor</p>
-            </div>
-            <div className="flex items-center gap-3 mt-4">
-              <Avatar className="h-12 w-12 border-2 border-pink-500/20">
-                <AvatarFallback className="bg-pink-500/10 text-pink-600 font-bold text-lg">
-                  {topVendedores?.[0]?.nome ? getInitials(topVendedores[0].nome) : "?"}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <p className="text-xl font-bold truncate">{topVendedores?.[0]?.nome || "—"}</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {topVendedores?.[0] ? formatCurrency(topVendedores[0].total) : "—"}
-                </p>
+      {/* Row 2: Charts - 60/40 split */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        {/* Main Chart - Sales Evolution (60%) */}
+        <Card className="lg:col-span-3 relative overflow-hidden border border-white/[0.08] bg-gradient-to-br from-slate-900/80 via-slate-900/60 to-slate-800/40 backdrop-blur-xl">
+          {/* Subtle corner accent */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-3xl pointer-events-none" />
+          
+          <CardHeader className="pb-2 relative">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-sm font-semibold text-white flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-indigo-500/10">
+                    <TrendingUp className="h-4 w-4 text-indigo-400" />
+                  </div>
+                  Evolução de Vendas
+                </CardTitle>
+                <p className="text-[11px] text-slate-500 mt-1 ml-8">Últimos 15 dias • Faturamento diário</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Gráficos de Performance */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top Vendedores por Faturamento */}
-        <Card className="border-border/50 bg-card/50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Award className="h-5 w-5 text-primary" />
-              Top 5 Vendedores por Faturamento
-            </CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">
-              Ranking dos vendedores com melhor desempenho no período
-            </p>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={350}>
-              <BarChart 
-                data={topVendedores && topVendedores.length > 0 ? topVendedores : [
-                  { nome: "João Silva", total: 60000, quantidade: 12 },
-                  { nome: "Maria Santos", total: 48000, quantidade: 10 },
-                  { nome: "Pedro Costa", total: 35000, quantidade: 8 },
-                  { nome: "Ana Lima", total: 28000, quantidade: 6 },
-                  { nome: "Carlos Souza", total: 22000, quantidade: 5 },
-                ]}
-                margin={{ top: 20, right: 30, left: 60, bottom: 80 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+          <CardContent className="pt-0 relative">
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={vendasEvolution || []} margin={{ top: 20, right: 10, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorValorAdmin" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#6366F1" stopOpacity={0.5}/>
+                    <stop offset="50%" stopColor="#4F46E5" stopOpacity={0.2}/>
+                    <stop offset="100%" stopColor="#4F46E5" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
                 <XAxis 
-                  dataKey="nome" 
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                  angle={-45}
-                  textAnchor="end"
-                  height={100}
-                  interval={0}
+                  dataKey="date" 
+                  stroke="rgba(255,255,255,0.2)"
+                  fontSize={10}
+                  tickLine={false}
+                  axisLine={false}
+                  dy={10}
                 />
                 <YAxis 
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                  tickFormatter={formatCurrencyCompact}
-                  width={70}
-                  label={{ 
-                    value: 'Faturamento', 
-                    angle: -90, 
-                    position: 'insideLeft',
-                    style: { fill: 'hsl(var(--foreground))' }
-                  }}
+                  stroke="rgba(255,255,255,0.2)"
+                  fontSize={10}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(v) => formatCurrencyCompact(v)}
+                  width={55}
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "hsl(var(--popover))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+                    backgroundColor: "rgba(15, 23, 42, 0.98)",
+                    border: "1px solid rgba(99, 102, 241, 0.2)",
+                    borderRadius: "12px",
+                    boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+                    padding: "12px 16px"
                   }}
-                  formatter={(value: number, name: string) => {
-                    return [formatCurrency(value), name];
+                  labelStyle={{ color: "#94a3b8", fontSize: 11, marginBottom: 4 }}
+                  formatter={(value: number) => [
+                    <span className="text-white font-semibold">{formatCurrency(value)}</span>, 
+                    "Faturamento"
+                  ]}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="valor"
+                  stroke="#6366F1"
+                  strokeWidth={2.5}
+                  fill="url(#colorValorAdmin)"
+                  dot={false}
+                  activeDot={{ 
+                    r: 6, 
+                    fill: "#6366F1", 
+                    stroke: "#fff", 
+                    strokeWidth: 2,
+                    filter: "drop-shadow(0 0 8px rgba(99, 102, 241, 0.5))"
                   }}
                 />
-                <Legend 
-                  wrapperStyle={{ paddingTop: '20px' }}
-                  formatter={(value) => value}
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Secondary Chart - Top Sellers (40%) */}
+        <Card className="lg:col-span-2 relative overflow-hidden border border-white/[0.08] bg-gradient-to-br from-slate-900/80 via-slate-900/60 to-slate-800/40 backdrop-blur-xl">
+          {/* Subtle corner accent */}
+          <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 blur-3xl pointer-events-none" />
+          
+          <CardHeader className="pb-2 relative">
+            <CardTitle className="text-sm font-semibold text-white flex items-center gap-2">
+              <div className="p-1.5 rounded-lg bg-amber-500/10">
+                <Award className="h-4 w-4 text-amber-400" />
+              </div>
+              Top 5 Vendedores
+            </CardTitle>
+            <p className="text-[11px] text-slate-500 mt-1 ml-8">Por faturamento no período</p>
+          </CardHeader>
+          <CardContent className="pt-0 relative">
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart 
+                data={topVendedores || []} 
+                layout="vertical"
+                margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                barSize={24}
+              >
+                <defs>
+                  <linearGradient id="barGradientAdmin" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="#4F46E5" />
+                    <stop offset="100%" stopColor="#6366F1" />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" horizontal={false} />
+                <XAxis 
+                  type="number"
+                  stroke="rgba(255,255,255,0.2)"
+                  fontSize={10}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(v) => formatCurrencyCompact(v)}
+                />
+                <YAxis 
+                  type="category"
+                  dataKey="nome"
+                  stroke="rgba(255,255,255,0.2)"
+                  fontSize={10}
+                  tickLine={false}
+                  axisLine={false}
+                  width={90}
+                  tick={{ fill: 'rgba(255,255,255,0.6)' }}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "rgba(15, 23, 42, 0.98)",
+                    border: "1px solid rgba(99, 102, 241, 0.2)",
+                    borderRadius: "12px",
+                    boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+                    padding: "12px 16px"
+                  }}
+                  formatter={(value: number) => [
+                    <span className="text-emerald-400 font-semibold">{formatCurrency(value)}</span>, 
+                    "Faturamento"
+                  ]}
                 />
                 <Bar 
                   dataKey="total" 
-                  fill="hsl(var(--primary))" 
-                  name="Faturamento" 
-                  radius={[8, 8, 0, 0]}
+                  fill="url(#barGradientAdmin)"
+                  radius={[0, 6, 6, 0]}
                 />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
-
-        {/* Evolução de Vendas */}
-        <VendasChart data={vendasChartData || []} />
       </div>
 
-      {/* Ranking de Metas */}
+
+      {/* Row 4: Ranking de Metas */}
       {(metaConsolidada || vendedoresMetas || true) && (() => {
         const hasActiveFilters = selectedVendedor !== "todos" || selectedFormaPagamento !== "todas" || selectedProduto !== "todos";
         
@@ -556,18 +672,17 @@ export const AdminVendasView = ({
           ? `Filtros ativos: ${filterParts.join(" • ")}`
           : "Acompanhamento mensal de performance";
 
+        // Only render if there's real data
+        if (!vendedoresMetas || vendedoresMetas.length === 0) {
+          return null;
+        }
+
         return (
           <MetasRankingCard
-            metaConsolidada={metaTotalConsolidada || 500000}
-            valorConsolidadoAtingido={valorConsolidadoAtingido || 218600}
-            percentualConsolidado={percentualConsolidado || 43.72}
-            vendedores={vendedoresMetas && vendedoresMetas.length > 0 ? vendedoresMetas : [
-              { nome: "João Silva", valorMeta: 50000, valorRealizado: 60000, percentual: 120 },
-              { nome: "Maria Santos", valorMeta: 50000, valorRealizado: 48000, percentual: 96 },
-              { nome: "Pedro Costa", valorMeta: 50000, valorRealizado: 35000, percentual: 70 },
-              { nome: "Ana Lima", valorMeta: 50000, valorRealizado: 42800, percentual: 85.6 },
-              { nome: "Carlos Souza", valorMeta: 50000, valorRealizado: 32800, percentual: 65.6 },
-            ]}
+            metaConsolidada={metaTotalConsolidada}
+            valorConsolidadoAtingido={valorConsolidadoAtingido}
+            percentualConsolidado={percentualConsolidado}
+            vendedores={vendedoresMetas}
             statusFiltro={statusFiltro}
             onStatusChange={setStatusFiltro}
             hasActiveFilters={hasActiveFilters}

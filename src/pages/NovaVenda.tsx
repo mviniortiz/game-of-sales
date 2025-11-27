@@ -99,7 +99,20 @@ const NovaVenda = () => {
       return data;
     },
     onSuccess: () => {
+      // Invalidate all relevant queries to update dashboards
       queryClient.invalidateQueries({ queryKey: ["vendas"] });
+      queryClient.invalidateQueries({ queryKey: ["vendas-evolution"] });
+      queryClient.invalidateQueries({ queryKey: ["vendas-por-produto"] });
+      queryClient.invalidateQueries({ queryKey: ["vendas-por-plataforma"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-stats-vendas"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-top-vendedores"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-vendas-evolution"] });
+      queryClient.invalidateQueries({ queryKey: ["metas-consolidadas"] });
+      queryClient.invalidateQueries({ queryKey: ["metas-individuais"] });
+      queryClient.invalidateQueries({ queryKey: ["metas-progresso"] });
+      queryClient.invalidateQueries({ queryKey: ["vendedores-metas"] });
+      queryClient.invalidateQueries({ queryKey: ["seller-ranking"] });
+      
       toast.success("🎉 Venda registrada com sucesso!", {
         description: `Você ganhou ${Math.floor(parseFloat(valor) || 0)} pontos!`
       });

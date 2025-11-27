@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AdminFilters } from "@/components/admin/AdminFilters";
 import { AdminVendasView } from "@/components/admin/AdminVendasView";
 import { startOfMonth, endOfMonth } from "date-fns";
+import { useVisibleSellers } from "@/hooks/useVisibleSellers";
 
 export const AdminDashboardOverview = () => {
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({
@@ -14,14 +15,8 @@ export const AdminDashboardOverview = () => {
   const [selectedFormaPagamento, setSelectedFormaPagamento] = useState("todas");
   const [selectedProduto, setSelectedProduto] = useState("todos");
 
-  // Buscar lista de vendedores
-  const { data: vendedores = [] } = useQuery({
-    queryKey: ["vendedores-list"],
-    queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("id, nome");
-      return data || [];
-    },
-  });
+  // Buscar lista de vendedores (respeitando permissões - exclui Super Admins)
+  const { data: vendedores = [] } = useVisibleSellers({ includeAvatars: false });
 
   // Buscar lista de produtos
   const { data: produtos = [] } = useQuery({
