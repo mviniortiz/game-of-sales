@@ -15,7 +15,7 @@ const Integracoes = () => {
       name: "Celetus",
       description: "Importe vendas e transações automaticamente da Celetus",
       logo: celetusLogo,
-      color: "from-cyan-500 to-blue-500"
+      color: "from-indigo-500 to-indigo-600"
     },
     {
       name: "Cakto",

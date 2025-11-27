@@ -13,6 +13,7 @@ interface CalendarFiltersProps {
   selectedStatus: string;
   onVendedorChange: (value: string) => void;
   onStatusChange: (value: string) => void;
+  hideVendedorFilter?: boolean;
 }
 
 export const CalendarFilters = ({
@@ -20,12 +21,15 @@ export const CalendarFilters = ({
   selectedStatus,
   onVendedorChange,
   onStatusChange,
+  hideVendedorFilter = false,
 }: CalendarFiltersProps) => {
   const [vendedores, setVendedores] = useState<Profile[]>([]);
 
   useEffect(() => {
-    loadVendedores();
-  }, []);
+    if (!hideVendedorFilter) {
+      loadVendedores();
+    }
+  }, [hideVendedorFilter]);
 
   const loadVendedores = async () => {
     const { data, error } = await supabase
@@ -45,19 +49,21 @@ export const CalendarFilters = ({
         Filtros:
       </div>
       
-      <Select value={selectedVendedor} onValueChange={onVendedorChange}>
-        <SelectTrigger className="w-[200px] bg-background/50 border-border/50">
-          <SelectValue placeholder="Todos os vendedores" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Todos os vendedores</SelectItem>
-          {vendedores.map((v) => (
-            <SelectItem key={v.id} value={v.id}>
-              {v.nome}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      {!hideVendedorFilter && (
+        <Select value={selectedVendedor} onValueChange={onVendedorChange}>
+          <SelectTrigger className="w-[200px] bg-background/50 border-border/50">
+            <SelectValue placeholder="Todos os vendedores" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os vendedores</SelectItem>
+            {vendedores.map((v) => (
+              <SelectItem key={v.id} value={v.id}>
+                {v.nome}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
 
       <Select value={selectedStatus} onValueChange={onStatusChange}>
         <SelectTrigger className="w-[180px] bg-background/50 border-border/50">
@@ -65,8 +71,9 @@ export const CalendarFilters = ({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">Todos os status</SelectItem>
-          <SelectItem value="agendado">Agendado</SelectItem>
-          <SelectItem value="realizado">Realizado</SelectItem>
+          <SelectItem value="agendado">Pendente</SelectItem>
+          <SelectItem value="realizado">Compareceu</SelectItem>
+          <SelectItem value="nao_compareceu">Não Compareceu</SelectItem>
           <SelectItem value="cancelado">Cancelado</SelectItem>
         </SelectContent>
       </Select>

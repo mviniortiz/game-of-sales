@@ -49,7 +49,7 @@ export const CallsFunnel = ({
             </div>
             <div className="w-full flex justify-center">
               <div
-                className="h-14 bg-gradient-to-r from-cyan-500 to-cyan-400 flex items-center justify-center shadow-lg transition-all"
+                className="h-14 bg-gradient-to-r from-indigo-500 to-indigo-400 flex items-center justify-center shadow-lg transition-all"
                 style={{ 
                   width: `${Math.max(taxaComparecimento, 20)}%`,
                   clipPath: "polygon(5% 0, 95% 0, 90% 100%, 10% 100%)"

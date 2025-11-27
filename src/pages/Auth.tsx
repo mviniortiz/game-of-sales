@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { z } from "zod";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/logo.svg";
 import { Mail, Lock, ArrowRight } from "lucide-react";
 import DataFlowBackground from "@/components/auth/DataFlowBackground";
 
@@ -69,7 +69,7 @@ const Auth = () => {
         <div className="w-full max-w-md space-y-8">
           {/* Logo */}
           <div className="flex items-center animate-fade-in" style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>
-            <img src={logo} alt="Rota de Negócios" className="w-48 h-auto object-contain" />
+            <img src={logo} alt="VYZON" className="h-14 w-auto object-contain" />
           </div>
 
           {/* Header */}
@@ -98,7 +98,7 @@ const Auth = () => {
                     placeholder="seu@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 h-12 bg-gray-900/50 border-gray-700 text-gray-200 placeholder:text-gray-500 focus:border-cyan-500 focus:ring-cyan-500/20"
+                    className="pl-10 h-12 bg-gray-900/50 border-gray-700 text-gray-200 placeholder:text-gray-500 focus:border-indigo-500 focus:ring-indigo-500/20"
                     required
                     autoComplete="email"
                   />
@@ -118,7 +118,7 @@ const Auth = () => {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 h-12 bg-gray-900/50 border-gray-700 text-gray-200 placeholder:text-gray-500 focus:border-cyan-500 focus:ring-cyan-500/20"
+                    className="pl-10 h-12 bg-gray-900/50 border-gray-700 text-gray-200 placeholder:text-gray-500 focus:border-indigo-500 focus:ring-indigo-500/20"
                     required
                     autoComplete="current-password"
                   />
@@ -145,7 +145,7 @@ const Auth = () => {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-12 text-base font-semibold bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-black shadow-lg hover:shadow-xl transition-all animate-fade-in"
+              className="w-full h-12 text-base font-semibold bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all animate-fade-in"
               style={{ animationDelay: '0.7s', animationFillMode: 'both' }}
             >
               {loading ? (

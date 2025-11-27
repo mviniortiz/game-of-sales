@@ -177,7 +177,7 @@ export const AdminPerformanceView = ({ dateRange, selectedVendedor }: AdminPerfo
             title="Calls Realizadas"
             value={metricas?.callsRealizadas.toString() || "0"}
             icon={Phone}
-            iconClassName="bg-cyan-500/10 text-cyan-500"
+            iconClassName="bg-indigo-500/10 text-indigo-500"
           />
         </div>
         <div className="animate-fade-in" style={{ animationDelay: "200ms" }}>

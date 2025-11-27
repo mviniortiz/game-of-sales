@@ -1,4 +1,4 @@
-project_id = "yyvoaxezotwfrxmpklyd"
+project_id = "omsdkjzkphflpwnbaeye"
 
 [functions.google-calendar-sync]
 verify_jwt = false

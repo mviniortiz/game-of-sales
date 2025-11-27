@@ -4,8 +4,11 @@ import { Card } from "@/components/ui/card";
 import { DndContext, DragEndEvent, closestCenter } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Clock, GripVertical, MapPin } from "lucide-react";
+import { Clock, GripVertical, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+
+// Define attendance status type for type safety
+type AttendanceStatus = 'show' | 'no_show' | 'pending';
 
 interface Agendamento {
   id: string;
@@ -13,16 +16,44 @@ interface Agendamento {
   data_agendamento: string;
   observacoes: string;
   status: string;
+  google_event_id?: string;
+  attendance_status?: AttendanceStatus;
+  seller_name?: string;
 }
+
+// Helper function to map status to attendance status
+const mapStatusToAttendance = (status?: string): AttendanceStatus => {
+  if (!status) return 'pending';
+  
+  switch (status) {
+    case 'realizado':
+      return 'show';
+    case 'nao_compareceu':
+      return 'no_show';
+    case 'agendado':
+    case 'cancelado':
+    default:
+      return 'pending';
+  }
+};
 
 interface DayViewProps {
   date: Date;
   agendamentos: Agendamento[];
   onAgendamentoUpdate: (id: string, newDate: Date) => void;
   onEventClick?: (agendamento: Agendamento) => void;
+  showSellerName?: boolean;
 }
 
-function SortableAgendamento({ agendamento, onEventClick }: { agendamento: Agendamento; onEventClick?: (agendamento: Agendamento) => void }) {
+function SortableAgendamento({ 
+  agendamento, 
+  onEventClick,
+  showSellerName = false 
+}: { 
+  agendamento: Agendamento; 
+  onEventClick?: (agendamento: Agendamento) => void;
+  showSellerName?: boolean;
+}) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: agendamento.id,
   });
@@ -33,28 +64,33 @@ function SortableAgendamento({ agendamento, onEventClick }: { agendamento: Agend
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const getStatusColor = (status: string) => {
-    const colors = {
-      agendado: { bg: "bg-blue-500/10 border-l-4 border-blue-500", text: "text-blue-400" },
-      confirmado: { bg: "bg-green-500/10 border-l-4 border-green-500", text: "text-green-400" },
-      cancelado: { bg: "bg-red-500/10 border-l-4 border-red-500", text: "text-red-400" },
-      concluido: { bg: "bg-gray-500/10 border-l-4 border-gray-500", text: "text-gray-400" },
-      realizado: { bg: "bg-green-500/10 border-l-4 border-green-500", text: "text-green-400" },
+  const getStatusColor = (status?: string) => {
+    // Defensive: map status to attendance status with fallback
+    const attendanceStatus = mapStatusToAttendance(status);
+    
+    const colorMap: Record<AttendanceStatus, { bg: string; text: string }> = {
+      show: { bg: "bg-green-500/10 border-l-4 border-green-500", text: "text-green-400" },
+      no_show: { bg: "bg-red-500/10 border-l-4 border-red-500", text: "text-red-400" },
+      pending: { bg: "bg-gray-500/10 border-l-4 border-gray-500", text: "text-gray-400" },
     };
-    return colors[status as keyof typeof colors] || { bg: "bg-primary/10 border-l-4 border-primary", text: "text-primary" };
+    
+    return colorMap[attendanceStatus] || colorMap.pending;
   };
 
-  const getStatusLabel = (status: string) => {
-    const labels = {
-      agendado: "Agendado",
-      confirmado: "Confirmado",
-      cancelado: "Cancelado",
-      concluido: "Concluído",
+  const getStatusLabel = (status?: string) => {
+    // Defensive: map to attendance-based labels
+    const attendanceStatus = mapStatusToAttendance(status);
+    
+    const labels: Record<AttendanceStatus, string> = {
+      show: "Compareceu",
+      no_show: "Não Compareceu",
+      pending: "Pendente",
     };
-    return labels[status as keyof typeof labels] || status;
+    
+    return labels[attendanceStatus] || "Pendente";
   };
 
-  const isGoogleEvent = !!(agendamento as any).google_event_id;
+  const isGoogleEvent = !!agendamento.google_event_id;
 
   return (
     <div ref={setNodeRef} style={style} {...attributes}>
@@ -69,7 +105,12 @@ function SortableAgendamento({ agendamento, onEventClick }: { agendamento: Agend
           <div className="flex-1 space-y-2">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
-                <h3 className={`font-semibold text-lg ${getStatusColor(agendamento.status).text}`}>{agendamento.cliente_nome}</h3>
+                <h3 className={`font-semibold text-lg ${getStatusColor(agendamento.status).text}`}>
+                  {showSellerName && agendamento.seller_name && (
+                    <span className="text-indigo-400">[{agendamento.seller_name}] </span>
+                  )}
+                  {agendamento.cliente_nome}
+                </h3>
                 {isGoogleEvent && (
                   <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
                     <title>Sincronizado com Google Calendar</title>
@@ -84,9 +125,17 @@ function SortableAgendamento({ agendamento, onEventClick }: { agendamento: Agend
                 {getStatusLabel(agendamento.status)}
               </Badge>
             </div>
-            <div className={`flex items-center gap-2 text-sm ${getStatusColor(agendamento.status).text}`}>
-              <Clock className="h-4 w-4" />
-              <span>{format(new Date(agendamento.data_agendamento), "HH:mm", { locale: ptBR })}</span>
+            <div className="flex items-center gap-4">
+              <div className={`flex items-center gap-2 text-sm ${getStatusColor(agendamento.status).text}`}>
+                <Clock className="h-4 w-4" />
+                <span>{format(new Date(agendamento.data_agendamento), "HH:mm", { locale: ptBR })}</span>
+              </div>
+              {showSellerName && agendamento.seller_name && (
+                <div className="flex items-center gap-1 text-sm text-indigo-400">
+                  <User className="h-3 w-3" />
+                  <span>{agendamento.seller_name}</span>
+                </div>
+              )}
             </div>
             {agendamento.observacoes && (
               <p className={`text-sm border-l-2 pl-3 ${getStatusColor(agendamento.status).text}`}>
@@ -100,7 +149,7 @@ function SortableAgendamento({ agendamento, onEventClick }: { agendamento: Agend
   );
 }
 
-export function DayView({ date, agendamentos, onAgendamentoUpdate, onEventClick }: DayViewProps) {
+export function DayView({ date, agendamentos, onAgendamentoUpdate, onEventClick, showSellerName = false }: DayViewProps) {
   const sortedAgendamentos = [...agendamentos].sort(
     (a, b) => new Date(a.data_agendamento).getTime() - new Date(b.data_agendamento).getTime()
   );
@@ -143,7 +192,12 @@ export function DayView({ date, agendamentos, onAgendamentoUpdate, onEventClick 
           <SortableContext items={sortedAgendamentos.map((ag) => ag.id)} strategy={verticalListSortingStrategy}>
             <div className="space-y-3">
               {sortedAgendamentos.map((agendamento) => (
-                <SortableAgendamento key={agendamento.id} agendamento={agendamento} onEventClick={onEventClick} />
+                <SortableAgendamento 
+                  key={agendamento.id} 
+                  agendamento={agendamento} 
+                  onEventClick={onEventClick}
+                  showSellerName={showSellerName}
+                />
               ))}
             </div>
           </SortableContext>

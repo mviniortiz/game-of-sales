@@ -22,6 +22,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+// Define attendance status type for type safety
+type AttendanceStatus = 'show' | 'no_show' | 'pending';
+
 interface Agendamento {
   id: string;
   cliente_nome: string;
@@ -29,7 +32,25 @@ interface Agendamento {
   observacoes: string;
   status: string;
   user_id: string;
+  google_event_id?: string;
+  attendance_status?: AttendanceStatus;
 }
+
+// Helper function to map status to attendance status
+const mapStatusToAttendance = (status?: string): AttendanceStatus => {
+  if (!status) return 'pending';
+  
+  switch (status) {
+    case 'realizado':
+      return 'show';
+    case 'nao_compareceu':
+      return 'no_show';
+    case 'agendado':
+    case 'cancelado':
+    default:
+      return 'pending';
+  }
+};
 
 interface AgendamentoDetailsModalProps {
   agendamento: Agendamento | null;
@@ -90,7 +111,7 @@ export const AgendamentoDetailsModal = ({
       if (error) throw error;
 
       // Se tem google_event_id, sincronizar com Google Calendar
-      const googleEventId = (agendamento as any).google_event_id;
+      const googleEventId = agendamento.google_event_id;
       if (googleEventId) {
         try {
           await supabase.functions.invoke("google-calendar-sync", {
@@ -129,7 +150,7 @@ export const AgendamentoDetailsModal = ({
     setLoading(true);
     try {
       // Se tem google_event_id, deletar do Google Calendar primeiro
-      const googleEventId = (agendamento as any).google_event_id;
+      const googleEventId = agendamento.google_event_id;
       if (googleEventId) {
         try {
           await supabase.functions.invoke("google-calendar-sync", {
@@ -165,14 +186,17 @@ export const AgendamentoDetailsModal = ({
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    const variants = {
-      agendado: { color: "bg-blue-500/10 text-blue-400 border-blue-500/20", label: "Agendado" },
-      realizado: { color: "bg-green-500/10 text-green-400 border-green-500/20", label: "Realizado" },
-      cancelado: { color: "bg-red-500/10 text-red-400 border-red-500/20", label: "Cancelado" },
+  const getStatusBadge = (status?: string) => {
+    // Defensive: map to attendance-based colors and labels
+    const attendanceStatus = mapStatusToAttendance(status);
+    
+    const variants: Record<AttendanceStatus, { color: string; label: string }> = {
+      show: { color: "bg-green-500/10 text-green-400 border-green-500/20", label: "Compareceu" },
+      no_show: { color: "bg-red-500/10 text-red-400 border-red-500/20", label: "Não Compareceu" },
+      pending: { color: "bg-gray-500/10 text-gray-400 border-gray-500/20", label: "Pendente" },
     };
     
-    const variant = variants[status as keyof typeof variants] || variants.agendado;
+    const variant = variants[attendanceStatus] || variants.pending;
     
     return (
       <Badge className={`${variant.color} border`}>
@@ -284,8 +308,9 @@ export const AgendamentoDetailsModal = ({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="agendado">Agendado</SelectItem>
-                      <SelectItem value="realizado">Realizado</SelectItem>
+                      <SelectItem value="agendado">Pendente</SelectItem>
+                      <SelectItem value="realizado">Compareceu</SelectItem>
+                      <SelectItem value="nao_compareceu">Não Compareceu</SelectItem>
                       <SelectItem value="cancelado">Cancelado</SelectItem>
                     </SelectContent>
                   </Select>

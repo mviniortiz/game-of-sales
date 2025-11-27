@@ -1,26 +1,32 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { MetaProgressCard } from "@/components/metas/MetaProgressCard";
 import { MetasRanking } from "@/components/metas/MetasRanking";
 import { MetaEvolutionChart } from "@/components/metas/MetaEvolutionChart";
-import { Target, TrendingUp, Zap } from "lucide-react";
+import { Target, TrendingUp, Zap, RefreshCw } from "lucide-react";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 
 const Metas = () => {
   const { user, isAdmin } = useAuth();
-  const mesAtual = format(new Date(), "MMMM 'de' yyyy", { locale: ptBR });
+  const queryClient = useQueryClient();
   const [selectedMetaId, setSelectedMetaId] = useState<string>("all");
 
-  // Buscar metas consolidadas
-  const { data: metasConsolidadas = [] } = useQuery({
+  // Refetch function for real-time updates
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["metas-consolidadas"] });
+    queryClient.invalidateQueries({ queryKey: ["metas-individuais"] });
+    queryClient.invalidateQueries({ queryKey: ["metas-progresso"] });
+  };
+
+  // Buscar metas consolidadas - READ FROM DB (current_value)
+  const { data: metasConsolidadas = [], isLoading: loadingConsolidadas } = useQuery({
     queryKey: ["metas-consolidadas"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -38,9 +44,9 @@ const Metas = () => {
     ? metasConsolidadas[0] 
     : metasConsolidadas.find(m => m.id === selectedMetaId);
 
-  // Buscar contribuições dos vendedores para a meta selecionada
-  const { data: contribuicoes = [] } = useQuery({
-    queryKey: ["contribuicoes-vendedores", metaConsolidadaSelecionada?.mes_referencia],
+  // Buscar metas individuais - READ FROM DB (current_value) - NO FRONTEND CALCULATION
+  const { data: metasIndividuais = [] } = useQuery({
+    queryKey: ["metas-individuais", metaConsolidadaSelecionada?.mes_referencia],
     queryFn: async () => {
       if (!metaConsolidadaSelecionada) return [];
 
@@ -49,47 +55,38 @@ const Metas = () => {
       const inicioMes = `${year}-${month}-01`;
       const fimMes = endOfMonth(new Date(parseInt(year), parseInt(month) - 1)).toISOString().split('T')[0];
 
-      // Buscar todas as metas individuais do mês
-      const { data: metasIndividuais, error: metasError } = await supabase
+      // Fetch metas with current_value directly from DB
+      const { data, error } = await supabase
         .from("metas")
         .select("*, profiles!inner(id, nome, avatar_url)")
         .gte("mes_referencia", inicioMes)
         .lte("mes_referencia", fimMes);
 
-      if (metasError) throw metasError;
+      if (error) throw error;
 
-      // Para cada meta individual, calcular o realizado
-      const contribuicoesPromises = metasIndividuais.map(async (meta) => {
-        const { data: vendas } = await supabase
-          .from("vendas")
-          .select("valor")
-          .eq("user_id", meta.user_id)
-          .eq("status", "Aprovado")
-          .gte("data_venda", inicioMes)
-          .lte("data_venda", fimMes);
-
-        const valorRealizado = vendas?.reduce((sum, v) => sum + Number(v.valor), 0) || 0;
-        const valorMeta = Number(meta.valor_meta);
+      // Map data - NO CALCULATION, just read current_value
+      return (data || []).map((meta: any) => {
+        const valorMeta = Number(meta.valor_meta) || 0;
+        const valorRealizado = Number(meta.current_value) || 0; // READ FROM DB
         const percentual = valorMeta > 0 ? (valorRealizado / valorMeta) * 100 : 0;
 
         return {
+          id: meta.id,
+          user_id: meta.user_id,
           nome: meta.profiles.nome,
           avatar_url: meta.profiles.avatar_url,
           valorMeta,
           valorRealizado,
           percentual,
         };
-      });
-
-      const resultado = await Promise.all(contribuicoesPromises);
-      return resultado.sort((a, b) => b.valorRealizado - a.valorRealizado);
+      }).sort((a: any, b: any) => b.valorRealizado - a.valorRealizado);
     },
     enabled: !!metaConsolidadaSelecionada,
   });
 
-  // Calcular valores consolidados
-  const valorConsolidadoAtingido = contribuicoes.reduce((acc, v) => acc + v.valorRealizado, 0);
-  const metaConsolidadaTotal = metaConsolidadaSelecionada?.valor_meta || 0;
+  // Calculate consolidated values from DB current_value
+  const valorConsolidadoAtingido = Number(metaConsolidadaSelecionada?.current_value) || 0;
+  const metaConsolidadaTotal = Number(metaConsolidadaSelecionada?.valor_meta) || 0;
   const percentualConsolidado = metaConsolidadaTotal > 0 
     ? (valorConsolidadoAtingido / metaConsolidadaTotal) * 100 
     : 0;
@@ -108,33 +105,26 @@ const Metas = () => {
 
   const diasRestantes = calcularDiasRestantes();
 
-  // Buscar progresso das metas individuais (para visão pessoal)
+  // Buscar progresso das metas individuais (para visão pessoal) - READ FROM DB
   const { data: metasProgresso, isLoading: loadingProgresso } = useQuery({
     queryKey: ["metas-progresso"],
     queryFn: async () => {
       const inicioMes = startOfMonth(new Date()).toISOString().split('T')[0];
       const fimMes = endOfMonth(new Date()).toISOString().split('T')[0];
 
-      const { data: metas, error: metasError } = await supabase
+      const { data: metas, error } = await supabase
         .from("metas")
         .select("*, profiles!inner(id, nome)")
         .gte("mes_referencia", inicioMes)
         .lte("mes_referencia", fimMes);
 
-      if (metasError) throw metasError;
+      if (error) throw error;
 
-      const progressoPromises = metas.map(async (meta) => {
-        const { data: vendas } = await supabase
-          .from("vendas")
-          .select("valor")
-          .eq("user_id", meta.user_id)
-          .eq("status", "Aprovado")
-          .gte("data_venda", inicioMes)
-          .lte("data_venda", fimMes);
-
-        const valorRealizado = vendas?.reduce((sum, v) => sum + Number(v.valor), 0) || 0;
-        const valorMeta = Number(meta.valor_meta);
-        const percentual = (valorRealizado / valorMeta) * 100;
+      // Map data - READ current_value FROM DB, NO FRONTEND CALCULATION
+      const resultado = (metas || []).map((meta: any) => {
+        const valorMeta = Number(meta.valor_meta) || 0;
+        const valorRealizado = Number(meta.current_value) || 0; // READ FROM DB
+        const percentual = valorMeta > 0 ? (valorRealizado / valorMeta) * 100 : 0;
         const faltaAtingir = Math.max(0, valorMeta - valorRealizado);
         
         const hoje = new Date();
@@ -153,12 +143,10 @@ const Metas = () => {
           mediaDiariaNecessaria,
         };
       });
-
-      const resultado = await Promise.all(progressoPromises);
       
       // Filtrar por usuário se não for admin
       if (!isAdmin && user) {
-        return resultado.filter(m => m.id === user.id);
+        return resultado.filter((m: any) => m.id === user.id);
       }
       
       return resultado;
@@ -274,6 +262,23 @@ const Metas = () => {
 
   return (
     <div className="space-y-8">
+      {/* Header with Refresh Button */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Metas</h1>
+          <p className="text-muted-foreground">Acompanhe o progresso das metas da equipe</p>
+        </div>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleRefresh}
+          className="gap-2"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Atualizar
+        </Button>
+      </div>
+
       {/* Seletor de Meta - Chips */}
       {metasConsolidadas.length > 0 && (
         <div className="flex items-center gap-2 flex-wrap">
@@ -285,7 +290,7 @@ const Metas = () => {
                 : "bg-muted text-muted-foreground hover:bg-muted/80"
             }`}
           >
-            Todas
+            Atual
           </button>
           {metasConsolidadas.map((meta) => (
             <button
@@ -303,7 +308,7 @@ const Metas = () => {
         </div>
       )}
 
-      {loadingProgresso ? (
+      {loadingProgresso || loadingConsolidadas ? (
         <div className="text-center py-12 text-muted-foreground">
           <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
           <p className="mt-4">Carregando metas...</p>
@@ -326,6 +331,9 @@ const Metas = () => {
                   </div>
                   <p className="text-muted-foreground text-sm sm:text-base">
                     Meta Consolidada da Equipe • {format(new Date(metaConsolidadaSelecionada.mes_referencia), "MMMM 'de' yyyy", { locale: ptBR })}
+                  </p>
+                  <p className="text-xs text-muted-foreground/60 mt-2">
+                    ⚡ Atualizado automaticamente via trigger do banco de dados
                   </p>
                 </div>
 
@@ -370,7 +378,7 @@ const Metas = () => {
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">
                         {percentualConsolidado < 100 
-                          ? `Em andamento, ${(100 - percentualConsolidado).toFixed(1)}% restante`
+                          ? `${diasRestantes} dias restantes`
                           : "Meta atingida! 🎉"
                         }
                       </div>
@@ -382,7 +390,7 @@ const Metas = () => {
           )}
 
           {/* Contribuição Individual */}
-          {metaConsolidadaSelecionada && contribuicoes.length > 0 && (
+          {metaConsolidadaSelecionada && metasIndividuais.length > 0 && (
             <div className="space-y-4">
               {/* Cabeçalho da Seção */}
               <div className="flex items-center justify-between">
@@ -391,13 +399,13 @@ const Metas = () => {
                   <h2 className="text-2xl font-bold">Contribuição Individual</h2>
                 </div>
                 <span className="text-sm text-muted-foreground">
-                  {contribuicoes.length} {contribuicoes.length === 1 ? "vendedor" : "vendedores"}
+                  {metasIndividuais.length} {metasIndividuais.length === 1 ? "vendedor" : "vendedores"}
                 </span>
               </div>
 
               {/* Grid de Cards Compactos */}
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                {contribuicoes.map((vendedor, index) => {
+                {metasIndividuais.map((vendedor: any, index: number) => {
                   const posicao = index + 1;
                   const percentualContribuicao = metaConsolidadaTotal > 0 
                     ? (vendedor.valorRealizado / metaConsolidadaTotal) * 100 
@@ -413,7 +421,7 @@ const Metas = () => {
 
                   return (
                     <Card
-                      key={vendedor.nome}
+                      key={vendedor.id}
                       className={`border bg-card/50 backdrop-blur-sm transition-all duration-200 hover:shadow-lg hover:scale-[1.02] ${
                         posicao === 1 
                           ? "border-primary shadow-lg shadow-primary/20 ring-2 ring-primary/30" 

@@ -5,7 +5,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const GOOGLE_CLIENT_ID = Deno.env.get("GOOGLE_CLIENT_ID")!;
 const GOOGLE_CLIENT_SECRET = Deno.env.get("GOOGLE_CLIENT_SECRET")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const FRONTEND_URL = Deno.env.get("FRONTEND_URL") || "https://game-of-sales.lovable.app";
+const FRONTEND_URL = Deno.env.get("FRONTEND_URL") || "http://localhost:8080";
 
 serve(async (req) => {
   try {

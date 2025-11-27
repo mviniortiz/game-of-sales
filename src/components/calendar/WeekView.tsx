@@ -4,9 +4,12 @@ import { Card } from "@/components/ui/card";
 import { DndContext, DragEndEvent, closestCenter, DragOverlay } from "@dnd-kit/core";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Clock } from "lucide-react";
+import { GripVertical, Clock, User } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+
+// Define attendance status type for type safety
+type AttendanceStatus = 'show' | 'no_show' | 'pending';
 
 interface Agendamento {
   id: string;
@@ -14,16 +17,44 @@ interface Agendamento {
   data_agendamento: string;
   observacoes: string;
   status: string;
+  google_event_id?: string;
+  attendance_status?: AttendanceStatus;
+  seller_name?: string;
 }
+
+// Helper function to map status to attendance status
+const mapStatusToAttendance = (status?: string): AttendanceStatus => {
+  if (!status) return 'pending';
+  
+  switch (status) {
+    case 'realizado':
+      return 'show';
+    case 'nao_compareceu':
+      return 'no_show';
+    case 'agendado':
+    case 'cancelado':
+    default:
+      return 'pending';
+  }
+};
 
 interface WeekViewProps {
   date: Date;
   agendamentos: Agendamento[];
   onAgendamentoUpdate: (id: string, newDate: Date) => void;
   onEventClick?: (agendamento: Agendamento) => void;
+  showSellerName?: boolean;
 }
 
-function SortableAgendamento({ agendamento, onEventClick }: { agendamento: Agendamento; onEventClick?: (agendamento: Agendamento) => void }) {
+function SortableAgendamento({ 
+  agendamento, 
+  onEventClick,
+  showSellerName = false 
+}: { 
+  agendamento: Agendamento; 
+  onEventClick?: (agendamento: Agendamento) => void;
+  showSellerName?: boolean;
+}) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: agendamento.id,
   });
@@ -34,18 +65,28 @@ function SortableAgendamento({ agendamento, onEventClick }: { agendamento: Agend
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const getStatusColor = (status: string) => {
-    const colors = {
-      agendado: { bg: "bg-blue-500/10 border-l-4 border-blue-500", text: "text-blue-400" },
-      confirmado: { bg: "bg-green-500/10 border-l-4 border-green-500", text: "text-green-400" },
-      cancelado: { bg: "bg-red-500/10 border-l-4 border-red-500", text: "text-red-400" },
-      concluido: { bg: "bg-gray-500/10 border-l-4 border-gray-500", text: "text-gray-400" },
-      realizado: { bg: "bg-green-500/10 border-l-4 border-green-500", text: "text-green-400" },
+  const getStatusColor = (status?: string) => {
+    // Defensive: map status to attendance status with fallback
+    const attendanceStatus = mapStatusToAttendance(status);
+    
+    const colorMap: Record<AttendanceStatus, { bg: string; text: string }> = {
+      show: { bg: "bg-green-500/10 border-l-4 border-green-500", text: "text-green-400" },
+      no_show: { bg: "bg-red-500/10 border-l-4 border-red-500", text: "text-red-400" },
+      pending: { bg: "bg-gray-500/10 border-l-4 border-gray-500", text: "text-gray-400" },
     };
-    return colors[status as keyof typeof colors] || { bg: "bg-primary/10 border-l-4 border-primary", text: "text-primary" };
+    
+    return colorMap[attendanceStatus] || colorMap.pending;
   };
 
-  const isGoogleEvent = !!(agendamento as any).google_event_id;
+  const isGoogleEvent = !!agendamento.google_event_id;
+
+  // Get seller initials
+  const getSellerInitials = (name: string) => {
+    if (!name) return "?";
+    const parts = name.trim().split(" ");
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  };
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
@@ -58,8 +99,15 @@ function SortableAgendamento({ agendamento, onEventClick }: { agendamento: Agend
         <div className="flex items-start gap-2">
           <GripVertical className={`h-4 w-4 flex-shrink-0 mt-0.5 ${getStatusColor(agendamento.status).text}`} />
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5">
-              <p className={`font-medium text-sm truncate ${getStatusColor(agendamento.status).text}`}>{agendamento.cliente_nome}</p>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {showSellerName && agendamento.seller_name && (
+                <span className="px-1 py-0.5 rounded bg-indigo-500/20 text-indigo-300 text-[10px] font-semibold flex-shrink-0">
+                  {getSellerInitials(agendamento.seller_name)}
+                </span>
+              )}
+              <p className={`font-medium text-sm truncate ${getStatusColor(agendamento.status).text}`}>
+                {agendamento.cliente_nome}
+              </p>
               {isGoogleEvent && (
                 <svg className="h-3.5 w-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
                   <title>Sincronizado com Google Calendar</title>
@@ -81,7 +129,7 @@ function SortableAgendamento({ agendamento, onEventClick }: { agendamento: Agend
   );
 }
 
-export function WeekView({ date, agendamentos, onAgendamentoUpdate, onEventClick }: WeekViewProps) {
+export function WeekView({ date, agendamentos, onAgendamentoUpdate, onEventClick, showSellerName = false }: WeekViewProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const weekStart = startOfWeek(date, { locale: ptBR });
@@ -170,7 +218,12 @@ export function WeekView({ date, agendamentos, onAgendamentoUpdate, onEventClick
 
                 <div>
                   {dayAgendamentos.map((agendamento) => (
-                    <SortableAgendamento key={agendamento.id} agendamento={agendamento} onEventClick={onEventClick} />
+                    <SortableAgendamento 
+                      key={agendamento.id} 
+                      agendamento={agendamento} 
+                      onEventClick={onEventClick}
+                      showSellerName={showSellerName}
+                    />
                   ))}
                 </div>
               </div>

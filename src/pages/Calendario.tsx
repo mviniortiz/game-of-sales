@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTenant } from "@/contexts/TenantContext";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Plus, Phone, Video, RefreshCw } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Phone, RefreshCw, Users, Filter } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek, addDays, subDays, addWeeks, subWeeks } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -19,6 +22,9 @@ import { AgendamentoDetailsModal } from "@/components/calendar/AgendamentoDetail
 
 type ViewType = "day" | "week" | "month";
 
+// Define attendance status type for type safety
+type AttendanceStatus = 'show' | 'no_show' | 'pending';
+
 interface Agendamento {
   id: string;
   cliente_nome: string;
@@ -26,10 +32,43 @@ interface Agendamento {
   observacoes: string;
   status: string;
   user_id: string;
+  google_event_id?: string;
+  attendance_status?: AttendanceStatus;
+  seller_name?: string; // Added for team view
 }
 
+// Helper function to map status to attendance status
+const mapStatusToAttendance = (status?: string): AttendanceStatus => {
+  if (!status) return 'pending';
+  
+  switch (status) {
+    case 'realizado':
+      return 'show';
+    case 'nao_compareceu':
+      return 'no_show';
+    case 'agendado':
+    case 'cancelado':
+    default:
+      return 'pending';
+  }
+};
+
+// Helper function to get status colors with defensive fallback
+const getStatusColors = (status?: string) => {
+  const attendanceStatus = mapStatusToAttendance(status);
+  
+  const colorMap: Record<AttendanceStatus, { bg: string; border: string; text: string }> = {
+    show: { bg: "bg-green-500/10", border: "border-green-500", text: "text-green-400" },
+    no_show: { bg: "bg-red-500/10", border: "border-red-500", text: "text-red-400" },
+    pending: { bg: "bg-gray-500/10", border: "border-gray-500", text: "text-gray-400" },
+  };
+  
+  return colorMap[attendanceStatus] || colorMap.pending;
+};
+
 export default function Calendario() {
-  const { user } = useAuth();
+  const { user, isAdmin, isSuperAdmin } = useAuth();
+  const { activeCompanyId } = useTenant();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,6 +82,33 @@ export default function Calendario() {
   const [googleConnected, setGoogleConnected] = useState(false);
   const [syncing, setSyncing] = useState(false);
 
+  // Check if user can see team calendar (admin or super_admin)
+  const canSeeTeamCalendar = isAdmin || isSuperAdmin;
+  
+  // Check if we're showing team view (all sellers)
+  const showingTeam = canSeeTeamCalendar && selectedVendedor === "all";
+
+  // Fetch sellers for the filter dropdown
+  const { data: sellers = [] } = useQuery({
+    queryKey: ["sellers-list", activeCompanyId],
+    queryFn: async () => {
+      let query = supabase
+        .from("profiles")
+        .select("id, nome")
+        .order("nome");
+
+      // If there's an active company, filter by it
+      if (activeCompanyId) {
+        query = query.eq("company_id", activeCompanyId);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: canSeeTeamCalendar,
+  });
+
   useEffect(() => {
     checkGoogleConnection();
   }, [user]);
@@ -52,7 +118,7 @@ export default function Calendario() {
     if (googleConnected) {
       syncGoogleCalendar();
     }
-  }, [currentDate, user, view, selectedVendedor, selectedStatus]);
+  }, [currentDate, user, view, selectedVendedor, selectedStatus, activeCompanyId]);
 
   const checkGoogleConnection = async () => {
     if (!user) return;
@@ -178,16 +244,6 @@ export default function Calendario() {
     setSelectedAgendamento(null);
   };
 
-  const getEventColor = (status: string) => {
-    const colors = {
-      agendado: "bg-blue-500",
-      confirmado: "bg-green-500",
-      cancelado: "bg-red-500",
-      concluido: "bg-gray-500",
-    };
-    return colors[status as keyof typeof colors] || "bg-primary";
-  };
-
   const loadAgendamentos = async () => {
     if (!user) return;
 
@@ -209,17 +265,27 @@ export default function Calendario() {
       end = endOfMonth(currentDate);
     }
 
+    // Build query with seller name join
     let query = supabase
       .from("agendamentos")
-      .select("*")
+      .select("*, profiles!agendamentos_user_id_fkey(nome)")
       .gte("data_agendamento", start.toISOString())
       .lte("data_agendamento", end.toISOString());
 
-    // Apply filters
-    if (selectedVendedor !== "all") {
-      query = query.eq("user_id", selectedVendedor);
+    // Apply user filter based on permissions
+    if (canSeeTeamCalendar) {
+      // Admin/Super Admin: Can see all or filter by specific seller
+      if (selectedVendedor !== "all") {
+        query = query.eq("user_id", selectedVendedor);
+      }
+      // If "all" is selected and there's an active company, we could filter by company
+      // but for now we show all accessible appointments
+    } else {
+      // Regular seller: Can only see their own appointments
+      query = query.eq("user_id", user.id);
     }
 
+    // Apply status filter
     if (selectedStatus !== "all") {
       query = query.eq("status", selectedStatus as "agendado" | "realizado" | "cancelado");
     }
@@ -232,10 +298,23 @@ export default function Calendario() {
       toast.error("Erro ao carregar agendamentos");
       console.error(error);
     } else {
-      setAgendamentos(data || []);
+      // Map data to include seller_name
+      const mappedData = (data || []).map((ag: any) => ({
+        ...ag,
+        seller_name: ag.profiles?.nome || "Desconhecido",
+      }));
+      setAgendamentos(mappedData);
     }
 
     setLoading(false);
+  };
+
+  // Get seller initials for compact display
+  const getSellerInitials = (name: string) => {
+    if (!name) return "?";
+    const parts = name.trim().split(" ");
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   };
 
   return (
@@ -295,13 +374,49 @@ export default function Calendario() {
           </div>
         </div>
 
-        {/* Filters */}
+        {/* Team Filter - Only for Admins */}
+        {canSeeTeamCalendar && (
+          <Card className="p-4 bg-amber-500/5 border-amber-500/20">
+            <div className="flex items-center gap-4 flex-wrap">
+              <div className="flex items-center gap-2 text-amber-400">
+                <Users className="h-5 w-5" />
+                <span className="font-semibold">Filtrar Agenda</span>
+              </div>
+              <Select value={selectedVendedor} onValueChange={setSelectedVendedor}>
+                <SelectTrigger className="w-[200px] bg-background border-amber-500/30">
+                  <SelectValue placeholder="Selecionar vendedor..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      Todos os Vendedores
+                    </div>
+                  </SelectItem>
+                  {sellers.map((seller: any) => (
+                    <SelectItem key={seller.id} value={seller.id}>
+                      {seller.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedVendedor === "all" && (
+                <Badge variant="secondary" className="bg-amber-500/20 text-amber-400 border-amber-500/30">
+                  Visualizando agenda de toda a equipe
+                </Badge>
+              )}
+            </div>
+          </Card>
+        )}
+
+        {/* Status Filters */}
         {view === "month" && (
           <CalendarFilters
             selectedVendedor={selectedVendedor}
             selectedStatus={selectedStatus}
-            onVendedorChange={setSelectedVendedor}
+            onVendedorChange={canSeeTeamCalendar ? setSelectedVendedor : () => {}}
             onStatusChange={setSelectedStatus}
+            hideVendedorFilter={!canSeeTeamCalendar}
           />
         )}
 
@@ -312,6 +427,7 @@ export default function Calendario() {
             agendamentos={agendamentos}
             onAgendamentoUpdate={handleAgendamentoUpdate}
             onEventClick={handleEventClick}
+            showSellerName={canSeeTeamCalendar && selectedVendedor === "all"}
           />
         )}
 
@@ -321,6 +437,7 @@ export default function Calendario() {
             agendamentos={agendamentos}
             onAgendamentoUpdate={handleAgendamentoUpdate}
             onEventClick={handleEventClick}
+            showSellerName={canSeeTeamCalendar && selectedVendedor === "all"}
           />
         )}
 
@@ -367,15 +484,8 @@ export default function Calendario() {
 
                       <div className="space-y-1.5">
                         {dayAgendamentos.slice(0, 3).map((ag) => {
-                          const statusColors = {
-                            agendado: { bg: "bg-blue-500/10", border: "border-blue-500", text: "text-blue-400" },
-                            realizado: { bg: "bg-green-500/10", border: "border-green-500", text: "text-green-400" },
-                            cancelado: { bg: "bg-red-500/10", border: "border-red-500", text: "text-red-400" },
-                            concluido: { bg: "bg-gray-500/10", border: "border-gray-500", text: "text-gray-400" },
-                          };
-                          
-                          const colors = statusColors[ag.status as keyof typeof statusColors] || statusColors.agendado;
-                          const isGoogleEvent = !!(ag as any).google_event_id;
+                          const colors = getStatusColors(ag.status);
+                          const isGoogleEvent = !!ag.google_event_id;
                           
                           return (
                             <div
@@ -385,25 +495,31 @@ export default function Calendario() {
                                 e.stopPropagation();
                                 handleEventClick(ag);
                               }}
-                              title={`${ag.cliente_nome} - ${format(
+                              title={`${showingTeam ? `[${ag.seller_name}] ` : ""}${ag.cliente_nome} - ${format(
                                 new Date(ag.data_agendamento),
                                 "HH:mm"
                               )}${isGoogleEvent ? " (Google Calendar)" : ""}`}
                             >
                               <div className="flex items-center gap-1.5">
                                 {isGoogleEvent ? (
-                                  <svg className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor">
+                                  <svg className="h-3 w-3 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
                                     <path d="M22.46 12c0-1.28-.11-2.53-.32-3.75H12v7.1h5.84c-.25 1.35-1.03 2.49-2.18 3.26v2.72h3.53c2.07-1.9 3.27-4.7 3.27-8.33z" fill="#4285F4"/>
                                     <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.53-2.72c-.98.66-2.24 1.05-3.75 1.05-2.88 0-5.32-1.95-6.19-4.57H2.19v2.81C4.01 20.53 7.7 23 12 23z" fill="#34A853"/>
                                     <path d="M5.81 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.09H2.19C1.46 8.55 1 10.22 1 12s.46 3.45 1.19 4.91l3.62-2.81z" fill="#FBBC05"/>
                                     <path d="M12 5.38c1.62 0 3.08.56 4.23 1.64l3.17-3.17C17.45 2.09 14.97 1 12 1 7.7 1 4.01 3.47 2.19 7.09l3.62 2.81C6.68 7.33 9.12 5.38 12 5.38z" fill="#EA4335"/>
                                   </svg>
                                 ) : (
-                                  <Phone className="h-3 w-3" />
+                                  <Phone className="h-3 w-3 flex-shrink-0" />
                                 )}
                                 <span className="font-medium">
                                   {format(new Date(ag.data_agendamento), "HH:mm")}
                                 </span>
+                                {/* Show seller name when viewing team */}
+                                {showingTeam && (
+                                  <span className="px-1 py-0.5 rounded bg-indigo-500/20 text-indigo-300 text-[10px] font-semibold flex-shrink-0">
+                                    {getSellerInitials(ag.seller_name || "")}
+                                  </span>
+                                )}
                                 <span className="truncate">{ag.cliente_nome}</span>
                               </div>
                             </div>
@@ -429,24 +545,31 @@ export default function Calendario() {
             </Card>
 
             {/* Legend */}
-            <div className="flex items-center gap-4 text-sm">
+            <div className="flex items-center gap-4 text-sm flex-wrap">
               <span className="text-muted-foreground">Status:</span>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded bg-blue-500" />
-                <span>Agendado</span>
+                <div className="w-3 h-3 rounded bg-gray-500" />
+                <span>Pendente</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded bg-green-500" />
-                <span>Confirmado</span>
+                <span>Compareceu</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded bg-red-500" />
-                <span>Cancelado</span>
+                <span>Não Compareceu</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded bg-gray-500" />
-                <span>Concluído</span>
-              </div>
+              {showingTeam && (
+                <>
+                  <span className="text-muted-foreground ml-4">|</span>
+                  <div className="flex items-center gap-2">
+                    <span className="px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 text-[10px] font-semibold">
+                      AB
+                    </span>
+                    <span>= Iniciais do Vendedor</span>
+                  </div>
+                </>
+              )}
             </div>
           </>
         )}

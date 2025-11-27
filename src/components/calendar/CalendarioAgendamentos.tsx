@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, RefreshCw, Plus } from "lucide-react";
+import { Calendar, RefreshCw } from "lucide-react";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "./calendar-styles.css";
 
@@ -23,12 +23,25 @@ const localizer = dateFnsLocalizer({
   locales,
 });
 
+// Define attendance status type for type safety
+type AttendanceStatus = 'show' | 'no_show' | 'pending';
+
 interface CalendarEvent {
   id: string;
   title: string;
   start: Date;
   end: Date;
-  resource: any;
+  resource: {
+    id: string;
+    cliente_nome: string;
+    data_agendamento: string;
+    status?: string;
+    attendance_status?: AttendanceStatus;
+    observacoes?: string;
+    user_id?: string;
+    google_event_id?: string;
+    profiles?: { nome: string };
+  };
 }
 
 export const CalendarioAgendamentos = () => {
@@ -49,7 +62,13 @@ export const CalendarioAgendamentos = () => {
       const { data, error } = await supabase
         .from("agendamentos")
         .select(`
-          *,
+          id,
+          cliente_nome,
+          data_agendamento,
+          status,
+          observacoes,
+          user_id,
+          google_event_id,
           profiles!inner(nome)
         `)
         .order("data_agendamento", { ascending: true });
@@ -58,12 +77,16 @@ export const CalendarioAgendamentos = () => {
 
       const calendarEvents: CalendarEvent[] = (data || []).map((ag) => ({
         id: ag.id,
-        title: `${ag.cliente_nome} - ${ag.profiles.nome}`,
+        title: `${ag.cliente_nome} - ${ag.profiles?.nome || 'Vendedor'}`,
         start: new Date(ag.data_agendamento),
         end: new Date(
           new Date(ag.data_agendamento).getTime() + 60 * 60 * 1000
         ),
-        resource: ag,
+        resource: {
+          ...ag,
+          // Map status to attendance_status for color coding
+          attendance_status: mapStatusToAttendance(ag.status),
+        },
       }));
 
       setEvents(calendarEvents);
@@ -72,6 +95,22 @@ export const CalendarioAgendamentos = () => {
       toast.error("Erro ao buscar agendamentos");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Helper function to map status to attendance status
+  const mapStatusToAttendance = (status?: string): AttendanceStatus => {
+    if (!status) return 'pending';
+    
+    switch (status) {
+      case 'realizado':
+        return 'show';
+      case 'nao_compareceu':
+        return 'no_show';
+      case 'agendado':
+      case 'cancelado':
+      default:
+        return 'pending';
     }
   };
 
@@ -103,15 +142,22 @@ export const CalendarioAgendamentos = () => {
   };
 
   const eventStyleGetter = (event: CalendarEvent) => {
-    const status = event.resource.status;
+    // Defensive: safely access attendance_status with fallback to 'pending'
+    const attendanceStatus = event.resource?.attendance_status || 'pending';
+    const status = event.resource?.status;
     
-    const statusColors = {
-      agendado: { border: "#3B82F6", bg: "rgba(59, 130, 246, 0.1)" },
-      realizado: { border: "#10B981", bg: "rgba(16, 185, 129, 0.1)" },
-      cancelado: { border: "#EF4444", bg: "rgba(239, 68, 68, 0.1)" },
+    // Color coding based on attendance status:
+    // - show (realizado): Green - Client attended
+    // - no_show (nao_compareceu): Red - Client didn't show up
+    // - pending (agendado/future): Gray - Waiting/Scheduled
+    const attendanceColors: Record<AttendanceStatus, { border: string; bg: string }> = {
+      show: { border: "#10B981", bg: "rgba(16, 185, 129, 0.15)" },        // Green for show
+      no_show: { border: "#EF4444", bg: "rgba(239, 68, 68, 0.15)" },      // Red for no_show
+      pending: { border: "#6B7280", bg: "rgba(107, 114, 128, 0.15)" },    // Gray for pending
     };
 
-    const colors = statusColors[status as keyof typeof statusColors] || { border: "hsl(var(--primary))", bg: "hsl(var(--primary) / 0.1)" };
+    // Get colors based on attendance status, default to pending (gray)
+    const colors = attendanceColors[attendanceStatus] || attendanceColors.pending;
 
     return {
       style: {

@@ -72,7 +72,7 @@ export const AdminVendedores = () => {
       case "Ouro":
         return "bg-yellow-600/50 text-yellow-200 border-yellow-700";
       case "Platina":
-        return "bg-cyan-500/50 text-cyan-200 border-cyan-600";
+        return "bg-indigo-500/50 text-indigo-200 border-indigo-600";
       case "Diamante":
         return "bg-blue-500/50 text-blue-200 border-blue-600";
       default:
@@ -100,7 +100,7 @@ export const AdminVendedores = () => {
               className="pl-10 bg-background border-border"
             />
           </div>
-          <Button className="bg-cyan-500 hover:bg-cyan-600 text-black font-bold">
+          <Button className="bg-indigo-500 hover:bg-indigo-600 text-white font-bold">
             <Plus className="h-4 w-4 mr-2" />
             Adicionar Vendedor
           </Button>

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- VYZON Favicon - Geometric V Icon -->
+  
+  <!-- Left arm - teal/mint -->
+  <polygon points="8,6 24,6 36,58 20,58" fill="#4ECCA3"/>
+  
+  <!-- Right arm - teal -->  
+  <polygon points="40,6 56,6 36,58 20,58" fill="#36B5A0"/>
+  
+  <!-- Dark blue overlay in center -->
+  <polygon points="20,22 44,22 32,48" fill="#2B4C7E" opacity="0.8"/>
+  
+  <!-- Top highlight layers -->
+  <polygon points="8,6 24,6 20,22" fill="#3DD9A0"/>
+  <polygon points="40,6 56,6 44,22" fill="#2B9E8C"/>
+</svg>

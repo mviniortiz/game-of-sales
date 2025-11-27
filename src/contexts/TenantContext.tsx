@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface Company {
   id: string;
@@ -15,16 +16,19 @@ interface TenantContextType {
   switchCompany: (companyId: string) => void;
   isSuperAdmin: boolean;
   loading: boolean;
+  refreshKey: number; // Used to trigger refetch in components
 }
 
 const TenantContext = createContext<TenantContextType | undefined>(undefined);
 
 export const TenantProvider = ({ children }: { children: ReactNode }) => {
   const { user, profile } = useAuth();
+  const queryClient = useQueryClient();
   const [activeCompanyId, setActiveCompanyId] = useState<string | null>(null);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     if (!user) {
@@ -78,11 +82,15 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
     loadTenantData();
   }, [user]);
 
-  const switchCompany = (companyId: string) => {
+  const switchCompany = useCallback((companyId: string) => {
     setActiveCompanyId(companyId);
     // Store in localStorage for persistence
     localStorage.setItem('activeCompanyId', companyId);
-  };
+    // Increment refresh key to trigger data refetch
+    setRefreshKey(prev => prev + 1);
+    // Invalidate all queries to refetch with new company context
+    queryClient.invalidateQueries();
+  }, [queryClient]);
 
   return (
     <TenantContext.Provider
@@ -92,6 +100,7 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
         switchCompany,
         isSuperAdmin,
         loading,
+        refreshKey,
       }}
     >
       {children}

@@ -15,7 +15,7 @@ interface Step {
 
 const steps: Step[] = [
   {
-    title: "Bem-vindo ao Rota de Negócios! 🎉",
+    title: "Bem-vindo ao VYZON! 🎉",
     description: "Vamos configurar sua máquina de vendas. Este tour rápido vai te mostrar os recursos principais.",
   },
   {
@@ -183,7 +183,7 @@ export const OnboardingTour = ({ onComplete, onSkip }: OnboardingTourProps) => {
         {/* Spotlight Border - Neon Cyan */}
         {spotlightRect && (
           <div
-            className="absolute border-2 border-cyan-500 rounded-xl shadow-[0_0_20px_rgba(6,182,212,0.5)] animate-pulse pointer-events-none transition-all duration-300"
+            className="absolute border-2 border-indigo-500 rounded-xl shadow-[0_0_20px_rgba(6,182,212,0.5)] animate-pulse pointer-events-none transition-all duration-300"
             style={{
               top: spotlightRect.top - 8,
               left: spotlightRect.left - 8,
@@ -197,7 +197,7 @@ export const OnboardingTour = ({ onComplete, onSkip }: OnboardingTourProps) => {
       {/* Tooltip Card */}
       <Card
         ref={tooltipRef}
-        className={`fixed z-[9999] w-full max-w-md shadow-2xl border-2 border-cyan-500/50 bg-card/95 backdrop-blur-sm animate-scale-in pointer-events-auto ${
+        className={`fixed z-[9999] w-full max-w-md shadow-2xl border-2 border-indigo-500/50 bg-card/95 backdrop-blur-sm animate-scale-in pointer-events-auto ${
           !step.target ? "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" : ""
         }`}
         style={

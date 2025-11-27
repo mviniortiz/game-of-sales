@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 60" fill="none">
+  <!-- VYZON Logo - Geometric V with VYZON text -->
+  
+  <!-- Geometric V Shape - matches the brand -->
+  <g transform="translate(0, 0)">
+    <!-- Left arm - teal/mint gradient -->
+    <polygon points="5,5 25,5 40,55 20,55" fill="#4ECCA3"/>
+    
+    <!-- Right arm - teal -->  
+    <polygon points="35,5 55,5 40,55 20,55" fill="#36B5A0"/>
+    
+    <!-- Dark blue overlay in center -->
+    <polygon points="20,20 40,20 30,42" fill="#2B4C7E" opacity="0.8"/>
+    
+    <!-- Additional depth layer -->
+    <polygon points="5,5 25,5 20,20" fill="#3DD9A0"/>
+    <polygon points="35,5 55,5 40,20" fill="#2B9E8C"/>
+  </g>
+  
+  <!-- VYZON Text -->
+  <text x="75" y="42" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="36" font-weight="600" fill="white" letter-spacing="3">
+    VYZON
+  </text>
+</svg>
