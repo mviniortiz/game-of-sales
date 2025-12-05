@@ -309,14 +309,7 @@ export function AppSidebar() {
                 Perfil
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => {
-                  signOut().finally(() => {
-                    window.location.href = "/auth";
-                  });
-                }}
-                className="text-destructive"
-              >
+              <DropdownMenuItem onClick={signOut} className="text-destructive">
                 <LogOut className="mr-2 h-4 w-4" />
                 Sair
               </DropdownMenuItem>

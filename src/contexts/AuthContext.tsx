@@ -63,6 +63,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const clearAuthState = () => {
+    setUser(null);
+    setSession(null);
+    setProfile(null);
+    setIsAdmin(false);
+    setIsSuperAdmin(false);
+    setCompanyId(null);
+    localStorage.removeItem("activeCompanyId");
+  };
+
   useEffect(() => {
     let mounted = true;
 
@@ -90,7 +100,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (!mounted) return;
-        
+
+        if (event === "TOKEN_REFRESH_FAILED") {
+          console.warn("Token refresh failed; clearing session");
+          clearAuthState();
+          navigate("/auth");
+          setLoading(false);
+          return;
+        }
+
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -105,8 +123,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             });
           }, 0);
         } else {
-          setIsAdmin(false);
-          setProfile(null);
+          clearAuthState();
           setLoading(false);
         }
       }
@@ -176,8 +193,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    navigate("/auth");
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error("Error during signOut:", error);
+    } finally {
+      clearAuthState();
+      navigate("/auth");
+    }
   };
 
   return (

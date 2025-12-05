@@ -12,7 +12,6 @@ import { AdminMetas } from "@/components/admin/AdminMetas";
 import { AdminManagement } from "@/components/profile/AdminManagement";
 import { AdminCompanies } from "@/components/admin/AdminCompanies";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
 
 const Admin = () => {
   const { isAdmin, loading } = useAuth();
