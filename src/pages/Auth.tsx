@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { z } from "zod";
 import logo from "@/assets/logo.svg";
+import logoLight from "@/assets/logo 1 - white.svg";
 import { Mail, Lock, ArrowRight } from "lucide-react";
 import DataFlowBackground from "@/components/auth/DataFlowBackground";
 
@@ -20,7 +21,16 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isDark, setIsDark] = useState(() => typeof document !== "undefined" && document.documentElement.classList.contains("dark"));
   const { signIn } = useAuth();
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains("dark"));
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,7 +79,7 @@ const Auth = () => {
         <div className="w-full max-w-md space-y-8">
           {/* Logo */}
           <div className="flex items-center animate-fade-in" style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>
-            <img src={logo} alt="VYZON" className="h-14 w-auto object-contain" />
+            <img src={isDark ? logo : logoLight} alt="VYZON" className="h-14 w-auto object-contain" />
           </div>
 
           {/* Header */}
@@ -98,7 +108,7 @@ const Auth = () => {
                     placeholder="seu@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 h-12 bg-gray-900/50 border-gray-700 text-gray-200 placeholder:text-gray-500 focus:border-indigo-500 focus:ring-indigo-500/20"
+                    className="pl-10 h-12 bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-indigo-500 focus:ring-indigo-500/20"
                     required
                     autoComplete="email"
                   />
@@ -118,7 +128,7 @@ const Auth = () => {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 h-12 bg-gray-900/50 border-gray-700 text-gray-200 placeholder:text-gray-500 focus:border-indigo-500 focus:ring-indigo-500/20"
+                    className="pl-10 h-12 bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-indigo-500 focus:ring-indigo-500/20"
                     required
                     autoComplete="current-password"
                   />
@@ -177,10 +187,10 @@ const Auth = () => {
         <div className="relative h-full flex flex-col items-center justify-center p-12 text-white">
           <div className="max-w-lg space-y-6 text-center">
             <h2 className="text-4xl font-bold">
-              Gestão Inteligente de Vendas
+              Inteligência de Vendas em Tempo Real
             </h2>
             <p className="text-lg text-white/80">
-              Controle completo das suas operações comerciais em uma única plataforma.
+              Metas, pipeline, calls e receita em um único painel — com alertas, filtros multiempresa e automações para acelerar decisões.
             </p>
           </div>
         </div>

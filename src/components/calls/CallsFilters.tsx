@@ -4,8 +4,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Filter, Users, DollarSign, Target } from "lucide-react";
-import { format } from "date-fns";
+import { CalendarIcon, Filter, Users, DollarSign, Target, X } from "lucide-react";
+import { format, isSameDay, differenceInCalendarDays, startOfMonth, startOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
@@ -51,19 +51,163 @@ export const CallsFilters = ({
     }
   };
 
+  const formatRangeLabel = () => {
+    if (!dateRange.from) return null;
+    if (dateRange.from && dateRange.to) {
+      return `${format(dateRange.from, "dd/MM/yy")} - ${format(dateRange.to, "dd/MM/yy")}`;
+    }
+    return format(dateRange.from, "dd/MM/yy");
+  };
+
+  const activeFilters = [
+    dateRange.from
+      ? { key: "dateRange", label: "Período", value: formatRangeLabel() || "" }
+      : null,
+    selectedVendedor !== "todos"
+      ? {
+          key: "vendedor",
+          label: "Vendedor",
+          value: vendedores.find((v) => v.id === selectedVendedor)?.nome || "Selecionado",
+        }
+      : null,
+    selectedResultado !== "todos"
+      ? { key: "resultado", label: "Resultado", value: mapResultadoLabel(selectedResultado) }
+      : null,
+  ].filter(Boolean) as Array<{ key: string; label: string; value: string }>;
+
+  const activeCount = activeFilters.length;
+
+  const handleClearAll = () => {
+    setDateRange({});
+    setSelectedVendedor("todos");
+    setSelectedResultado("todos");
+  };
+
+  const handleRemoveFilter = (key: string) => {
+    switch (key) {
+      case "dateRange":
+        setDateRange({});
+        break;
+      case "vendedor":
+        setSelectedVendedor("todos");
+        break;
+      case "resultado":
+        setSelectedResultado("todos");
+        break;
+    }
+  };
+
+  const isQuickRangeActive = (range: string) => {
+    if (!dateRange.from || !dateRange.to) return false;
+    const today = new Date();
+    switch (range) {
+      case "hoje":
+        return isSameDay(dateRange.from, today) && isSameDay(dateRange.to, today);
+      case "semana":
+        return (
+          isSameDay(dateRange.to, today) &&
+          isSameDay(dateRange.from, startOfWeek(today))
+        );
+      case "mes":
+        return (
+          isSameDay(dateRange.to, today) &&
+          isSameDay(dateRange.from, startOfMonth(today))
+        );
+      case "30dias":
+        return (
+          isSameDay(dateRange.to, today) &&
+          differenceInCalendarDays(today, dateRange.from) === 30
+        );
+      default:
+        return false;
+    }
+  };
+
+  function mapResultadoLabel(value: string) {
+    switch (value) {
+      case "venda":
+        return "Venda Fechada";
+      case "sem_interesse":
+        return "Sem Interesse";
+      case "reagendar":
+        return "Reagendar";
+      default:
+        return value;
+    }
+  }
+
   return (
-    <Card className="border-white/5 bg-slate-900/50 backdrop-blur-sm">
-      <CardContent className="p-4">
-        <div className="flex items-center gap-2 mb-4">
-          <Filter className="h-4 w-4 text-indigo-400" />
-          <h3 className="text-sm font-semibold text-white">Filtros</h3>
+    <Card className="border border-border bg-card shadow-sm">
+      <CardContent className="p-4 space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <div className="h-9 w-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+              <Filter className="h-4 w-4 text-primary" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                Filtros (Calls)
+                <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">
+                  {activeCount} ativo{activeCount === 1 ? "" : "s"}
+                </span>
+              </h3>
+              <p className="text-xs text-muted-foreground">Aplique rápido por período, vendedor e resultado.</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 border-border bg-muted text-foreground hover:bg-muted/80"
+              onClick={() => setDateRange({ from: new Date(), to: new Date() })}
+            >
+              Hoje
+            </Button>
+            {activeCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 text-rose-600 dark:text-rose-200 hover:bg-rose-50 dark:hover:bg-rose-500/10"
+                onClick={handleClearAll}
+              >
+                Limpar tudo
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2 min-h-[38px] border border-border rounded-xl bg-muted/60 dark:bg-secondary px-3 py-2">
+          {activeFilters.length === 0 ? (
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              Nenhum filtro ativo
+            </span>
+          ) : (
+            activeFilters.map((f) => (
+              <Button
+                key={f.key}
+                variant="secondary"
+                size="sm"
+                className="h-8 rounded-full px-3 text-xs bg-muted text-foreground border-border hover:bg-muted/80 dark:bg-white/10 dark:text-white"
+              >
+                <span className="font-semibold text-primary">{f.label}:</span>
+                <span className="ml-1">{f.value}</span>
+                <X
+                  className="ml-2 h-3.5 w-3.5 text-muted-foreground hover:text-foreground"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemoveFilter(f.key);
+                  }}
+                />
+              </Button>
+            ))
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Período Customizado */}
-          <div className="space-y-1.5">
-            <Label className="text-xs text-slate-400 flex items-center gap-1.5">
-              <CalendarIcon className="h-3.5 w-3.5" />
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+              <CalendarIcon className="h-3.5 w-3.5 text-primary" />
               Período
             </Label>
             <Popover>
@@ -71,25 +215,15 @@ export const CallsFilters = ({
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-full h-10 justify-start text-left font-normal bg-slate-800/50 border-white/10 text-white hover:bg-slate-800 hover:text-white",
-                    !dateRange.from && "text-slate-500"
+                    "w-full h-10 justify-start text-left font-normal bg-background border-border text-foreground hover:bg-muted",
+                    !dateRange.from && "text-muted-foreground"
                   )}
                 >
-                  <CalendarIcon className="mr-2 h-3.5 w-3.5 text-slate-400" />
-                  {dateRange.from ? (
-                    dateRange.to ? (
-                      <span className="text-sm">
-                        {format(dateRange.from, "dd/MM")} - {format(dateRange.to, "dd/MM")}
-                      </span>
-                    ) : (
-                      <span className="text-sm">{format(dateRange.from, "dd/MM/yyyy")}</span>
-                    )
-                  ) : (
-                    <span className="text-sm">Selecione</span>
-                  )}
+                  <CalendarIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
+                  {formatRangeLabel() || <span className="text-sm text-muted-foreground">Selecione</span>}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 bg-slate-900 border-white/10" align="start">
+              <PopoverContent className="w-auto p-0 bg-card border-border shadow-md" align="start">
                 <Calendar
                   mode="range"
                   selected={{ from: dateRange.from, to: dateRange.to }}
@@ -103,55 +237,44 @@ export const CallsFilters = ({
           </div>
 
           {/* Períodos Rápidos */}
-          <div className="space-y-1.5">
-            <Label className="text-xs text-slate-400">Atalhos</Label>
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">Atalhos</Label>
             <div className="grid grid-cols-2 gap-1.5">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setQuickRange("hoje")}
-                className="h-10 text-xs bg-slate-800/50 border-white/10 text-slate-300 hover:bg-slate-800 hover:text-white"
-              >
-                Hoje
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setQuickRange("semana")}
-                className="h-10 text-xs bg-slate-800/50 border-white/10 text-slate-300 hover:bg-slate-800 hover:text-white"
-              >
-                Semana
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setQuickRange("mes")}
-                className="h-10 text-xs bg-slate-800/50 border-white/10 text-slate-300 hover:bg-slate-800 hover:text-white"
-              >
-                Mês
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setQuickRange("30dias")}
-                className="h-10 text-xs bg-slate-800/50 border-white/10 text-slate-300 hover:bg-slate-800 hover:text-white"
-              >
-                30 dias
-              </Button>
+              {[
+                { id: "hoje", label: "Hoje" },
+                { id: "semana", label: "Semana" },
+                { id: "mes", label: "Mês" },
+                { id: "30dias", label: "30 dias" },
+              ].map((range) => (
+                <Button
+                  key={range.id}
+                  variant={isQuickRangeActive(range.id) ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setQuickRange(range.id)}
+                  className={cn(
+                    "h-9 text-xs",
+                    isQuickRangeActive(range.id)
+                      ? "bg-primary text-primary-foreground border-primary/70"
+                      : "bg-background border-border text-foreground hover:bg-muted"
+                  )}
+                >
+                  {range.label}
+                </Button>
+              ))}
             </div>
           </div>
 
           {/* Vendedor */}
-          <div className="space-y-1.5">
-            <Label className="text-xs text-slate-400 flex items-center gap-1.5">
-              <Users className="h-3.5 w-3.5" />
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+              <Users className="h-3.5 w-3.5 text-primary" />
               Vendedor
             </Label>
             <Select value={selectedVendedor} onValueChange={setSelectedVendedor}>
-              <SelectTrigger className="h-10 bg-slate-800/50 border-white/10 text-white focus:ring-indigo-500">
+              <SelectTrigger className="h-10 bg-background border-border text-foreground focus:ring-indigo-500">
                 <SelectValue placeholder="Todos" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-card border-border">
                 <SelectItem value="todos">Todos os vendedores</SelectItem>
                 {vendedores.map((v) => (
                   <SelectItem key={v.id} value={v.id}>
@@ -163,16 +286,16 @@ export const CallsFilters = ({
           </div>
 
           {/* Resultado da Call */}
-          <div className="space-y-1.5">
-            <Label className="text-xs text-slate-400 flex items-center gap-1.5">
-              <Target className="h-3.5 w-3.5" />
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+              <Target className="h-3.5 w-3.5 text-primary" />
               Resultado
             </Label>
             <Select value={selectedResultado} onValueChange={setSelectedResultado}>
-              <SelectTrigger className="h-10 bg-slate-800/50 border-white/10 text-white focus:ring-indigo-500">
+              <SelectTrigger className="h-10 bg-background border-border text-foreground focus:ring-indigo-500">
                 <SelectValue placeholder="Todos" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-card border-border">
                 <SelectItem value="todos">Todos os resultados</SelectItem>
                 <SelectItem value="venda">
                   <div className="flex items-center gap-2">

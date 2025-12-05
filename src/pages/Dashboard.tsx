@@ -73,48 +73,31 @@ const KPICard = ({
   icon: Icon, 
   trend, 
   trendLabel,
-  iconColor = "text-indigo-400",
-  iconBg = "bg-indigo-500/10",
-  glowColor = "shadow-indigo-500/20"
+  iconColor = "text-indigo-600 dark:text-indigo-200",
+  iconBg = "bg-indigo-50 dark:bg-indigo-500/10",
 }: KPICardProps) => {
   const isPositive = trend && trend > 0;
   const TrendIcon = isPositive ? ArrowUpRight : ArrowDownRight;
   
   const cardContent = (
-    <Card className={`
-      relative overflow-hidden
-      border border-white/[0.08] 
-      bg-gradient-to-br from-slate-900/80 via-slate-900/60 to-slate-800/40
-      backdrop-blur-xl
-      hover:border-white/[0.12] hover:shadow-xl hover:${glowColor}
-      transition-all duration-500 ease-out
-      group cursor-default
-    `}>
-      {/* Subtle gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
-      
-      {/* Animated glow on hover */}
-      <div className={`absolute -inset-1 ${iconBg} opacity-0 group-hover:opacity-20 blur-2xl transition-opacity duration-500`} />
-      
+    <Card className="relative overflow-hidden bg-card border-border shadow-sm hover:shadow-md transition-all duration-300 group cursor-default">
       <CardContent className="relative p-5">
         <div className="flex items-start justify-between gap-4">
           {/* Left: Icon */}
           <div className={`
-            relative p-3 rounded-2xl ${iconBg} 
-            group-hover:scale-105 group-hover:rotate-3
-            transition-all duration-300 ease-out
+            relative p-3 rounded-2xl ${iconBg}
+            group-hover:scale-105
+            transition-all duration-200 ease-out
           `}>
-            {/* Icon glow */}
-            <div className={`absolute inset-0 ${iconBg} rounded-2xl blur-xl opacity-60`} />
             <Icon className={`h-6 w-6 ${iconColor} relative z-10`} />
           </div>
           
           {/* Right: Content */}
           <div className="flex-1 text-right">
-            <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-[0.1em] mb-2">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.1em] mb-2">
               {title}
             </p>
-            <p className="text-3xl font-bold text-white tabular-nums tracking-tight leading-none">
+            <p className="text-3xl font-bold text-foreground tabular-nums tracking-tight leading-none">
               {value}
             </p>
             
@@ -125,8 +108,8 @@ const KPICard = ({
                   inline-flex items-center gap-0.5 
                   px-2 py-0.5 rounded-full text-[11px] font-semibold
                   ${isPositive 
-                    ? 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20' 
-                    : 'bg-rose-500/10 text-rose-400 ring-1 ring-rose-500/20'
+                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 ring-1 ring-emerald-200/80 dark:ring-emerald-500/20' 
+                    : 'bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300 ring-1 ring-rose-200/80 dark:ring-rose-500/20'
                   }
                 `}>
                   <TrendIcon className="h-3 w-3" />
@@ -134,7 +117,7 @@ const KPICard = ({
                 </span>
               )}
               {(trendLabel || subtitle) && (
-                <span className="text-[11px] text-slate-500 font-medium">
+                <span className="text-[11px] text-muted-foreground font-medium">
                   {trendLabel || subtitle}
                 </span>
               )}
@@ -321,14 +304,14 @@ const Dashboard = () => {
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <h1 className="text-2xl font-bold text-white tracking-tight">Dashboard</h1>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 text-[10px] font-semibold uppercase tracking-wider ring-1 ring-indigo-500/20">
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">Dashboard</h1>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-200 text-[10px] font-semibold uppercase tracking-wider ring-1 ring-indigo-200/70 dark:ring-indigo-500/20">
               <Sparkles className="h-3 w-3" />
               Live
             </span>
           </div>
-          <p className="text-sm text-slate-500 font-medium">
-            Bem-vindo, <span className="text-slate-300">{profile?.nome || "Vendedor"}</span> • {format(new Date(), "MMMM 'de' yyyy", { locale: ptBR })}
+          <p className="text-sm text-muted-foreground font-medium">
+            Bem-vindo, <span className="text-foreground">{profile?.nome || "Vendedor"}</span> • {format(new Date(), "MMMM 'de' yyyy", { locale: ptBR })}
           </p>
         </div>
       </div>
@@ -384,20 +367,17 @@ const Dashboard = () => {
       {/* Row 2: Charts - 60/40 split */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Main Chart - Sales Evolution (60%) */}
-        <Card className="lg:col-span-3 relative overflow-hidden border border-white/[0.08] bg-gradient-to-br from-slate-900/80 via-slate-900/60 to-slate-800/40 backdrop-blur-xl">
-          {/* Subtle corner accent */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-3xl pointer-events-none" />
-          
+        <Card className="lg:col-span-3 relative overflow-hidden bg-card border-border shadow-sm">
           <CardHeader className="pb-2 relative">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-sm font-semibold text-white flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-indigo-500/10">
-                    <TrendingUp className="h-4 w-4 text-indigo-400" />
+                <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-500/10">
+                    <TrendingUp className="h-4 w-4 text-indigo-600 dark:text-indigo-300" />
                   </div>
                   Evolução de Vendas
                 </CardTitle>
-                <p className="text-[11px] text-slate-500 mt-1 ml-8">Últimos 15 dias • Faturamento diário</p>
+                <p className="text-[11px] text-muted-foreground mt-1 ml-8">Últimos 15 dias • Faturamento diário</p>
               </div>
             </div>
           </CardHeader>
@@ -411,17 +391,17 @@ const Dashboard = () => {
                     <stop offset="100%" stopColor="#4F46E5" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.25)" vertical={false} />
                 <XAxis 
                   dataKey="date" 
-                  stroke="rgba(255,255,255,0.2)"
+                  stroke="rgba(100,116,139,0.6)"
                   fontSize={10}
                   tickLine={false}
                   axisLine={false}
                   dy={10}
                 />
                 <YAxis 
-                  stroke="rgba(255,255,255,0.2)"
+                  stroke="rgba(100,116,139,0.6)"
                   fontSize={10}
                   tickLine={false}
                   axisLine={false}
@@ -430,15 +410,15 @@ const Dashboard = () => {
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "rgba(15, 23, 42, 0.98)",
-                    border: "1px solid rgba(99, 102, 241, 0.2)",
+                    backgroundColor: "var(--card)",
+                    border: "1px solid var(--border)",
                     borderRadius: "12px",
-                    boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
-                    padding: "12px 16px"
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+                    padding: "12px 16px",
                   }}
-                  labelStyle={{ color: "#94a3b8", fontSize: 11, marginBottom: 4 }}
+                  labelStyle={{ color: "var(--muted-foreground)", fontSize: 11, marginBottom: 4 }}
                   formatter={(value: number) => [
-                    <span className="text-white font-semibold">{formatCurrency(value)}</span>, 
+                    <span className="text-foreground font-semibold">{formatCurrency(value)}</span>, 
                     "Faturamento"
                   ]}
                 />
@@ -463,18 +443,15 @@ const Dashboard = () => {
         </Card>
 
         {/* Secondary Chart - Top Products (40%) */}
-        <Card className="lg:col-span-2 relative overflow-hidden border border-white/[0.08] bg-gradient-to-br from-slate-900/80 via-slate-900/60 to-slate-800/40 backdrop-blur-xl">
-          {/* Subtle corner accent */}
-          <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 blur-3xl pointer-events-none" />
-          
+        <Card className="lg:col-span-2 relative overflow-hidden bg-card border-border shadow-sm">
           <CardHeader className="pb-2 relative">
-            <CardTitle className="text-sm font-semibold text-white flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-emerald-500/10">
-                <BarChart3 className="h-4 w-4 text-emerald-400" />
+            <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/10">
+                <BarChart3 className="h-4 w-4 text-emerald-600 dark:text-emerald-300" />
               </div>
               Top Produtos
             </CardTitle>
-            <p className="text-[11px] text-slate-500 mt-1 ml-8">Por faturamento no período</p>
+            <p className="text-[11px] text-muted-foreground mt-1 ml-8">Por faturamento no período</p>
           </CardHeader>
           <CardContent className="pt-0 relative">
             <ResponsiveContainer width="100%" height={280}>
@@ -490,10 +467,10 @@ const Dashboard = () => {
                     <stop offset="100%" stopColor="#6366F1" />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" horizontal={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.25)" horizontal={false} />
                 <XAxis 
                   type="number"
-                  stroke="rgba(255,255,255,0.2)"
+                  stroke="rgba(100,116,139,0.6)"
                   fontSize={10}
                   tickLine={false}
                   axisLine={false}
@@ -502,23 +479,23 @@ const Dashboard = () => {
                 <YAxis 
                   type="category"
                   dataKey="produto"
-                  stroke="rgba(255,255,255,0.2)"
+                  stroke="rgba(100,116,139,0.6)"
                   fontSize={10}
                   tickLine={false}
                   axisLine={false}
                   width={80}
-                  tick={{ fill: 'rgba(255,255,255,0.6)' }}
+                  tick={{ fill: 'rgba(100,116,139,0.9)' }}
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "rgba(15, 23, 42, 0.98)",
-                    border: "1px solid rgba(99, 102, 241, 0.2)",
+                    backgroundColor: "var(--card)",
+                    border: "1px solid var(--border)",
                     borderRadius: "12px",
-                    boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
-                    padding: "12px 16px"
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+                    padding: "12px 16px",
                   }}
                   formatter={(value: number) => [
-                    <span className="text-emerald-400 font-semibold">{formatCurrency(value)}</span>, 
+                    <span className="text-emerald-600 dark:text-emerald-300 font-semibold">{formatCurrency(value)}</span>, 
                     "Total"
                   ]}
                 />
@@ -535,46 +512,41 @@ const Dashboard = () => {
 
       {/* Row 3: Meta Progress - Premium Card */}
       {metaValor > 0 && (
-        <Card className="relative overflow-hidden border border-white/[0.08] bg-gradient-to-r from-indigo-950/40 via-slate-900/60 to-slate-900/40 backdrop-blur-xl">
-          {/* Animated gradient background */}
-          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 via-transparent to-violet-500/5 animate-pulse pointer-events-none" />
-          <div className="absolute top-0 left-0 w-40 h-40 bg-indigo-500/10 blur-3xl pointer-events-none" />
-          
+        <Card className="relative overflow-hidden bg-card border-border shadow-sm">
           <CardContent className="relative p-5">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-4">
-                <div className="relative p-3 rounded-2xl bg-indigo-500/10 group-hover:scale-105 transition-transform">
-                  <div className="absolute inset-0 bg-indigo-500/20 rounded-2xl blur-xl" />
-                  <Target className="h-6 w-6 text-indigo-400 relative z-10" />
+                <div className="relative p-3 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 group-hover:scale-105 transition-transform">
+                  <Target className="h-6 w-6 text-indigo-600 dark:text-indigo-200 relative z-10" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-white">Meta do Mês</p>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    <span className="text-emerald-400 font-medium">{formatCurrency(totalVendas)}</span>
-                    <span className="mx-1.5 text-slate-600">/</span>
+                  <p className="text-sm font-semibold text-foreground">Meta do Mês</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    <span className="text-emerald-600 dark:text-emerald-300 font-medium">{formatCurrency(totalVendas)}</span>
+                    <span className="mx-1.5 text-muted-foreground">/</span>
                     <span>{formatCurrency(metaValor)}</span>
                   </p>
                 </div>
               </div>
               <div className="text-right">
                 <p className={`text-3xl font-bold tabular-nums ${
-                  metaProgress >= 100 ? 'text-emerald-400' : 
-                  metaProgress >= 70 ? 'text-indigo-400' : 
-                  'text-amber-400'
+                  metaProgress >= 100 ? 'text-emerald-600 dark:text-emerald-300' : 
+                  metaProgress >= 70 ? 'text-indigo-600 dark:text-indigo-200' : 
+                  'text-amber-500 dark:text-amber-300'
                 }`}>
                   {metaProgress.toFixed(1)}%
                 </p>
-                <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">alcançado</p>
+                <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">alcançado</p>
               </div>
             </div>
             
             {/* Premium Progress Bar */}
-            <div className="relative h-3 bg-slate-800/80 rounded-full overflow-hidden ring-1 ring-white/5">
+            <div className="relative h-3 bg-muted rounded-full overflow-hidden ring-1 ring-border/60">
               <div 
                 className={`absolute inset-y-0 left-0 rounded-full transition-all duration-1000 ease-out ${
                   metaProgress >= 100 
-                    ? 'bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-400' 
-                    : 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-500'
+                    ? 'bg-gradient-to-r from-emerald-500 via-emerald-400 to-emerald-300' 
+                    : 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-400'
                 }`}
                 style={{ width: `${Math.min(metaProgress, 100)}%` }}
               >
@@ -587,7 +559,7 @@ const Dashboard = () => {
                 {[25, 50, 75].map((milestone) => (
                   <div 
                     key={milestone}
-                    className="w-px h-full bg-white/10"
+                    className="w-px h-full bg-border"
                     style={{ marginLeft: `${milestone}%` }}
                   />
                 ))}
@@ -596,9 +568,9 @@ const Dashboard = () => {
             
             {/* Milestone labels */}
             <div className="flex justify-between mt-2 px-1">
-              <span className="text-[10px] text-slate-600">0%</span>
-              <span className="text-[10px] text-slate-600">50%</span>
-              <span className="text-[10px] text-slate-600">100%</span>
+              <span className="text-[10px] text-muted-foreground">0%</span>
+              <span className="text-[10px] text-muted-foreground">50%</span>
+              <span className="text-[10px] text-muted-foreground">100%</span>
             </div>
           </CardContent>
         </Card>

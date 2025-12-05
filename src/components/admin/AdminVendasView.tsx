@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { 
   Users, 
   TrendingUp, 
@@ -32,6 +33,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useTenant } from "@/contexts/TenantContext";
 
 interface AdminVendasViewProps {
   dateRange: { from?: Date; to?: Date };
@@ -92,38 +94,30 @@ const KPICard = ({
   const cardContent = (
     <Card className={`
       relative overflow-hidden
-      border border-white/[0.08] 
-      bg-gradient-to-br from-slate-900/80 via-slate-900/60 to-slate-800/40
-      backdrop-blur-xl
-      hover:border-white/[0.12] hover:shadow-xl hover:${glowColor}
-      transition-all duration-500 ease-out
+      border border-border 
+      bg-card
+      shadow-sm
+      hover:shadow-md hover:${glowColor}
+      transition-all duration-300 ease-out
       group cursor-default
     `}>
-      {/* Subtle gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
-      
-      {/* Animated glow on hover */}
-      <div className={`absolute -inset-1 ${iconBg} opacity-0 group-hover:opacity-20 blur-2xl transition-opacity duration-500`} />
-      
       <CardContent className="relative p-5">
         <div className="flex items-start justify-between gap-4">
           {/* Left: Icon */}
           <div className={`
             relative p-3 rounded-2xl ${iconBg} 
-            group-hover:scale-105 group-hover:rotate-3
-            transition-all duration-300 ease-out
+            group-hover:scale-105
+            transition-all duration-200 ease-out
           `}>
-            {/* Icon glow */}
-            <div className={`absolute inset-0 ${iconBg} rounded-2xl blur-xl opacity-60`} />
-            <Icon className={`h-6 w-6 ${iconColor} relative z-10`} />
+            <Icon className={`h-6 w-6 ${iconColor}`} />
           </div>
           
           {/* Right: Content */}
           <div className="flex-1 text-right">
-            <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-[0.1em] mb-2">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.1em] mb-2">
               {title}
             </p>
-            <p className="text-3xl font-bold text-white tabular-nums tracking-tight leading-none">
+            <p className="text-3xl font-bold text-foreground tabular-nums tracking-tight leading-none">
               {value}
             </p>
             
@@ -134,8 +128,8 @@ const KPICard = ({
                   inline-flex items-center gap-0.5 
                   px-2 py-0.5 rounded-full text-[11px] font-semibold
                   ${isPositive 
-                    ? 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20' 
-                    : 'bg-rose-500/10 text-rose-400 ring-1 ring-rose-500/20'
+                    ? 'bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-200 dark:ring-emerald-500/20' 
+                    : 'bg-rose-50 text-rose-600 ring-1 ring-rose-100 dark:bg-rose-500/10 dark:text-rose-200 dark:ring-rose-500/20'
                   }
                 `}>
                   <TrendIcon className="h-3 w-3" />
@@ -143,7 +137,7 @@ const KPICard = ({
                 </span>
               )}
               {(trendLabel || subtitle) && (
-                <span className="text-[11px] text-slate-500 font-medium">
+                <span className="text-[11px] text-muted-foreground font-medium">
                   {trendLabel || subtitle}
                 </span>
               )}
@@ -163,7 +157,7 @@ const KPICard = ({
         </TooltipTrigger>
         <TooltipContent 
           side="bottom" 
-          className="bg-slate-900/95 border-white/10 text-white font-mono"
+          className="bg-card border border-border text-foreground font-mono shadow-md"
         >
           {fullValue}
         </TooltipContent>
@@ -183,24 +177,32 @@ export const AdminVendasView = ({
   produtos = []
 }: AdminVendasViewProps) => {
   const [statusFiltro, setStatusFiltro] = useState("todos");
+  const [topView, setTopView] = useState<"vendedores" | "produtos">("vendedores");
   const inicioMes = dateRange.from?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0];
   const fimMes = dateRange.to?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0];
+  const { activeCompanyId } = useTenant();
+
+  const applyCompanyFilter = <T,>(query: any) => {
+    return activeCompanyId ? query.eq("company_id", activeCompanyId) : query;
+  };
 
   // Estatísticas gerais
   const { data: stats } = useQuery({
-    queryKey: ["admin-stats-vendas", inicioMes, fimMes, selectedVendedor, selectedFormaPagamento, selectedProduto],
+    queryKey: ["admin-stats-vendas", inicioMes, fimMes, selectedVendedor, selectedFormaPagamento, selectedProduto, activeCompanyId],
     queryFn: async () => {
       // Total de vendedores
-      const { data: vendedoresData } = await supabase
-        .from("profiles")
-        .select("id", { count: "exact" });
+      const { data: vendedoresData } = await applyCompanyFilter(
+        supabase.from("profiles").select("id", { count: "exact" })
+      );
 
       // Vendas do período
-      let vendasQuery = supabase
-        .from("vendas")
-        .select("valor, status, forma_pagamento, produto_id")
-        .gte("data_venda", inicioMes)
-        .lte("data_venda", fimMes);
+      let vendasQuery = applyCompanyFilter(
+        supabase
+          .from("vendas")
+          .select("valor, status, forma_pagamento, produto_id")
+          .gte("data_venda", inicioMes)
+          .lte("data_venda", fimMes)
+      );
 
       if (selectedVendedor !== "todos") {
         vendasQuery = vendasQuery.eq("user_id", selectedVendedor);
@@ -220,18 +222,23 @@ export const AdminVendasView = ({
         dataFiltro.getMonth() + 1
       ).padStart(2, "0")}-01`;
 
-      const { data: metaConsolidadaData } = await supabase
-        .from("metas_consolidadas")
-        .select("valor_meta")
-        .eq("mes_referencia", mesReferenciaConsolidada)
-        .maybeSingle();
+      const { data: metaConsolidadaData } = await applyCompanyFilter(
+        supabase
+          .from("metas_consolidadas")
+          .select("valor_meta")
+          .eq("mes_referencia", mesReferenciaConsolidada)
+          .maybeSingle()
+      );
 
-      // Show Rate calculation
-      let callsQuery = supabase
-        .from("calls")
-        .select("id, attendance_status")
-        .gte("data_call", inicioMes)
-        .lte("data_call", fimMes);
+      // Show Rate calculation (exclui super-admins)
+      let callsQuery = applyCompanyFilter(
+        supabase
+          .from("calls")
+          .select("id, attendance_status, profiles!inner(is_super_admin)")
+          .gte("data_call", inicioMes)
+          .lte("data_call", fimMes)
+          .eq("profiles.is_super_admin", false)
+      );
 
       if (selectedVendedor !== "todos") {
         callsQuery = callsQuery.eq("user_id", selectedVendedor);
@@ -267,9 +274,9 @@ export const AdminVendasView = ({
 
   // Top vendedores
   const { data: topVendedores } = useQuery({
-    queryKey: ["admin-top-vendedores", inicioMes, fimMes, selectedVendedor],
+    queryKey: ["admin-top-vendedores", inicioMes, fimMes, selectedVendedor, activeCompanyId],
     queryFn: async () => {
-      let profilesQuery = supabase.from("profiles").select("id, nome, avatar_url");
+      let profilesQuery = applyCompanyFilter(supabase.from("profiles").select("id, nome, avatar_url"));
 
       if (selectedVendedor !== "todos") {
         profilesQuery = profilesQuery.eq("id", selectedVendedor);
@@ -281,13 +288,15 @@ export const AdminVendasView = ({
 
       const vendedoresData = await Promise.all(
         profiles.map(async (profile) => {
-          const { data: vendas } = await supabase
-            .from("vendas")
-            .select("valor")
-            .eq("user_id", profile.id)
-            .eq("status", "Aprovado")
-            .gte("data_venda", inicioMes)
-            .lte("data_venda", fimMes);
+          const { data: vendas } = await applyCompanyFilter(
+            supabase
+              .from("vendas")
+              .select("valor")
+              .eq("user_id", profile.id)
+              .eq("status", "Aprovado")
+              .gte("data_venda", inicioMes)
+              .lte("data_venda", fimMes)
+          );
 
           const total = vendas?.reduce((acc, v) => acc + Number(v.valor), 0) || 0;
           const quantidade = vendas?.length || 0;
@@ -308,17 +317,55 @@ export const AdminVendasView = ({
     },
   });
 
+  // Top produtos
+  const { data: topProdutos } = useQuery({
+    queryKey: ["admin-top-produtos", inicioMes, fimMes, selectedVendedor, activeCompanyId],
+    queryFn: async () => {
+      let vendasQuery = applyCompanyFilter(
+        supabase
+          .from("vendas")
+          .select("valor, produto_nome, user_id")
+          .eq("status", "Aprovado")
+          .gte("data_venda", inicioMes)
+          .lte("data_venda", fimMes)
+      );
+
+      if (selectedVendedor !== "todos") {
+        vendasQuery = vendasQuery.eq("user_id", selectedVendedor);
+      }
+
+      const { data: vendas } = await vendasQuery;
+      if (!vendas) return [];
+
+      const map = new Map<string, { nome: string; total: number; quantidade: number }>();
+      vendas.forEach((v: any) => {
+        const nome = v.produto_nome || "Produto";
+        const current = map.get(nome) || { nome, total: 0, quantidade: 0 };
+        current.total += Number(v.valor) || 0;
+        current.quantidade += 1;
+        map.set(nome, current);
+      });
+
+      return Array.from(map.values())
+        .filter(p => p.total > 0)
+        .sort((a, b) => b.total - a.total)
+        .slice(0, 5);
+    },
+  });
+
   // Sales Evolution Chart Data
   const { data: vendasEvolution } = useQuery({
-    queryKey: ["admin-vendas-evolution", inicioMes, fimMes, selectedVendedor],
+    queryKey: ["admin-vendas-evolution", inicioMes, fimMes, selectedVendedor, activeCompanyId],
     queryFn: async () => {
-      let vendasQuery = supabase
-        .from("vendas")
-        .select("data_venda, valor")
-        .eq("status", "Aprovado")
-        .gte("data_venda", inicioMes)
-        .lte("data_venda", fimMes)
-        .order("data_venda", { ascending: true });
+      let vendasQuery = applyCompanyFilter(
+        supabase
+          .from("vendas")
+          .select("data_venda, valor")
+          .eq("status", "Aprovado")
+          .gte("data_venda", inicioMes)
+          .lte("data_venda", fimMes)
+          .order("data_venda", { ascending: true })
+      );
 
       if (selectedVendedor !== "todos") {
         vendasQuery = vendasQuery.eq("user_id", selectedVendedor);
@@ -351,7 +398,7 @@ export const AdminVendasView = ({
 
   // Meta consolidada - busca a meta do mês atual (baseado no filtro)
   const { data: metaConsolidada } = useQuery({
-    queryKey: ["meta-consolidada", inicioMes],
+    queryKey: ["meta-consolidada", inicioMes, activeCompanyId],
     queryFn: async () => {
       // Usa a data do filtro para determinar o mês
       const dataFiltro = new Date(inicioMes + "T12:00:00"); // Adiciona horário para evitar problemas de timezone
@@ -361,11 +408,13 @@ export const AdminVendasView = ({
 
       console.log("[Dashboard] Buscando meta consolidada para:", mesReferencia);
 
-      const { data, error } = await supabase
-        .from("metas_consolidadas")
-        .select("*")
-        .eq("mes_referencia", mesReferencia)
-        .maybeSingle();
+      const { data, error } = await applyCompanyFilter(
+        supabase
+          .from("metas_consolidadas")
+          .select("*")
+          .eq("mes_referencia", mesReferencia)
+          .maybeSingle()
+      );
 
       console.log("[Dashboard] Meta consolidada encontrada:", data);
 
@@ -376,22 +425,24 @@ export const AdminVendasView = ({
 
   // Vendedores metas
   const { data: vendedoresMetas } = useQuery({
-    queryKey: ["vendedores-metas", inicioMes, fimMes, selectedVendedor, selectedFormaPagamento, selectedProduto],
+    queryKey: ["vendedores-metas", inicioMes, fimMes, selectedVendedor, selectedFormaPagamento, selectedProduto, activeCompanyId],
     queryFn: async () => {
       const dataFiltro = new Date(inicioMes + "T12:00:00");
       const mesReferencia = `${dataFiltro.getFullYear()}-${String(
         dataFiltro.getMonth() + 1
       ).padStart(2, "0")}-01`;
 
-      let metasQuery = supabase
-        .from("metas")
-        .select(`
-          id,
-          user_id,
-          valor_meta,
-          profiles!inner(nome, avatar_url)
-        `)
-        .eq("mes_referencia", mesReferencia);
+      let metasQuery = applyCompanyFilter(
+        supabase
+          .from("metas")
+          .select(`
+            id,
+            user_id,
+            valor_meta,
+            profiles!inner(nome, avatar_url)
+          `)
+          .eq("mes_referencia", mesReferencia)
+      );
 
       if (selectedVendedor !== "todos") {
         metasQuery = metasQuery.eq("user_id", selectedVendedor);
@@ -403,13 +454,15 @@ export const AdminVendasView = ({
 
       const vendedoresData = await Promise.all(
         metas.map(async (meta: any) => {
-          let vendasQuery = supabase
-            .from("vendas")
-            .select("valor")
-            .eq("user_id", meta.user_id)
-            .eq("status", "Aprovado")
-            .gte("data_venda", inicioMes)
-            .lte("data_venda", fimMes);
+          let vendasQuery = applyCompanyFilter(
+            supabase
+              .from("vendas")
+              .select("valor")
+              .eq("user_id", meta.user_id)
+              .eq("status", "Aprovado")
+              .gte("data_venda", inicioMes)
+              .lte("data_venda", fimMes)
+          );
 
           if (selectedFormaPagamento !== "todas") {
             vendasQuery = vendasQuery.eq("forma_pagamento", selectedFormaPagamento as any);
@@ -501,20 +554,20 @@ export const AdminVendasView = ({
       {/* Row 2: Charts - 60/40 split */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Main Chart - Sales Evolution (60%) */}
-        <Card className="lg:col-span-3 relative overflow-hidden border border-white/[0.08] bg-gradient-to-br from-slate-900/80 via-slate-900/60 to-slate-800/40 backdrop-blur-xl">
+        <Card className="lg:col-span-3 relative overflow-hidden border border-border bg-card shadow-sm">
           {/* Subtle corner accent */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-3xl pointer-events-none" />
           
           <CardHeader className="pb-2 relative">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-sm font-semibold text-white flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-indigo-500/10">
-                    <TrendingUp className="h-4 w-4 text-indigo-400" />
+          <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <div className="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-500/10">
+              <TrendingUp className="h-4 w-4 text-indigo-600 dark:text-indigo-200" />
                   </div>
                   Evolução de Vendas
                 </CardTitle>
-                <p className="text-[11px] text-slate-500 mt-1 ml-8">Últimos 15 dias • Faturamento diário</p>
+          <p className="text-[11px] text-muted-foreground mt-1 ml-8">Últimos 15 dias • Faturamento diário</p>
               </div>
             </div>
           </CardHeader>
@@ -528,17 +581,17 @@ export const AdminVendasView = ({
                     <stop offset="100%" stopColor="#4F46E5" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.25)" vertical={false} />
                 <XAxis 
                   dataKey="date" 
-                  stroke="rgba(255,255,255,0.2)"
+                  stroke="rgba(100,116,139,0.6)"
                   fontSize={10}
                   tickLine={false}
                   axisLine={false}
                   dy={10}
                 />
                 <YAxis 
-                  stroke="rgba(255,255,255,0.2)"
+                  stroke="rgba(100,116,139,0.6)"
                   fontSize={10}
                   tickLine={false}
                   axisLine={false}
@@ -547,15 +600,15 @@ export const AdminVendasView = ({
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "rgba(15, 23, 42, 0.98)",
-                    border: "1px solid rgba(99, 102, 241, 0.2)",
+                    backgroundColor: "rgba(255,255,255,0.96)",
+                    border: "1px solid rgba(148,163,184,0.3)",
                     borderRadius: "12px",
-                    boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+                    boxShadow: "0 8px 32px rgba(15,23,42,0.15)",
                     padding: "12px 16px"
                   }}
-                  labelStyle={{ color: "#94a3b8", fontSize: 11, marginBottom: 4 }}
+                  labelStyle={{ color: "#475569", fontSize: 11, marginBottom: 4 }}
                   formatter={(value: number) => [
-                    <span className="text-white font-semibold">{formatCurrency(value)}</span>, 
+                    <span className="text-indigo-600 font-semibold">{formatCurrency(value)}</span>, 
                     "Faturamento"
                   ]}
                 />
@@ -579,24 +632,46 @@ export const AdminVendasView = ({
           </CardContent>
         </Card>
 
-        {/* Secondary Chart - Top Sellers (40%) */}
-        <Card className="lg:col-span-2 relative overflow-hidden border border-white/[0.08] bg-gradient-to-br from-slate-900/80 via-slate-900/60 to-slate-800/40 backdrop-blur-xl">
+        {/* Secondary Chart - Top Sellers / Products (40%) */}
+        <Card className="lg:col-span-2 relative overflow-hidden border border-border bg-card shadow-sm">
           {/* Subtle corner accent */}
           <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 blur-3xl pointer-events-none" />
           
           <CardHeader className="pb-2 relative">
-            <CardTitle className="text-sm font-semibold text-white flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-amber-500/10">
-                <Award className="h-4 w-4 text-amber-400" />
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-500/10">
+                  <Award className="h-4 w-4 text-amber-500 dark:text-amber-200" />
+                </div>
+                {topView === "vendedores" ? "Top 5 Vendedores" : "Top 5 Produtos"}
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant={topView === "vendedores" ? "default" : "ghost"}
+                  size="sm"
+                  className="h-8 px-2.5 text-xs"
+                  onClick={() => setTopView("vendedores")}
+                >
+                  Vendedores
+                </Button>
+                <Button
+                  variant={topView === "produtos" ? "default" : "ghost"}
+                  size="sm"
+                  className="h-8 px-2.5 text-xs"
+                  onClick={() => setTopView("produtos")}
+                >
+                  Produtos
+                </Button>
               </div>
-              Top 5 Vendedores
-            </CardTitle>
-            <p className="text-[11px] text-slate-500 mt-1 ml-8">Por faturamento no período</p>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-1 ml-8">
+              {topView === "vendedores" ? "Por faturamento no período" : "Top produtos por faturamento"}
+            </p>
           </CardHeader>
           <CardContent className="pt-0 relative">
             <ResponsiveContainer width="100%" height={300}>
               <BarChart 
-                data={topVendedores || []} 
+                data={(topView === "vendedores" ? topVendedores : topProdutos) || []} 
                 layout="vertical"
                 margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
                 barSize={24}
@@ -607,10 +682,10 @@ export const AdminVendasView = ({
                     <stop offset="100%" stopColor="#6366F1" />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" horizontal={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.25)" horizontal={false} />
                 <XAxis 
                   type="number"
-                  stroke="rgba(255,255,255,0.2)"
+                  stroke="rgba(100,116,139,0.6)"
                   fontSize={10}
                   tickLine={false}
                   axisLine={false}
@@ -619,23 +694,23 @@ export const AdminVendasView = ({
                 <YAxis 
                   type="category"
                   dataKey="nome"
-                  stroke="rgba(255,255,255,0.2)"
+                  stroke="rgba(100,116,139,0.6)"
                   fontSize={10}
                   tickLine={false}
                   axisLine={false}
                   width={90}
-                  tick={{ fill: 'rgba(255,255,255,0.6)' }}
+                  tick={{ fill: 'rgba(71,85,105,0.9)' }}
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "rgba(15, 23, 42, 0.98)",
-                    border: "1px solid rgba(99, 102, 241, 0.2)",
+                    backgroundColor: "rgba(255,255,255,0.96)",
+                    border: "1px solid rgba(148,163,184,0.3)",
                     borderRadius: "12px",
-                    boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+                    boxShadow: "0 8px 32px rgba(15,23,42,0.15)",
                     padding: "12px 16px"
                   }}
                   formatter={(value: number) => [
-                    <span className="text-emerald-400 font-semibold">{formatCurrency(value)}</span>, 
+                    <span className="text-emerald-600 font-semibold">{formatCurrency(value)}</span>, 
                     "Faturamento"
                   ]}
                 />

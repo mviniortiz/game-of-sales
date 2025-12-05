@@ -30,23 +30,31 @@ const DataFlowBackground = () => {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    // Branding colors: Cyan/Teal and Deep Blue
+    // Branding colors: Indigo/Cyan/Violet
     const colors = [
-      'rgba(6, 182, 212, 0.8)',    // Cyan
-      'rgba(8, 145, 178, 0.7)',    // Teal
-      'rgba(30, 58, 138, 0.6)',    // Deep Blue
-      'rgba(15, 23, 42, 0.5)',     // Very Dark Blue
+      'rgba(99, 102, 241, 0.85)',   // Indigo
+      'rgba(34, 211, 238, 0.85)',   // Cyan
+      'rgba(59, 130, 246, 0.75)',   // Blue
+      'rgba(168, 85, 247, 0.7)',    // Violet
+    ];
+    const connectionColors = [
+      'rgba(99, 102, 241, VAR)',
+      'rgba(34, 211, 238, VAR)',
+      'rgba(59, 130, 246, VAR)',
     ];
 
-    // Initialize particles
-    const particleCount = 80;
+    // Initialize particles (density adapts to canvas area)
+    const baseCount = 60;
+    const densityFactor = Math.min(1.2, Math.max(0.7, (canvas.width * canvas.height) / (1400 * 800)));
+    const particleCount = Math.floor(baseCount * densityFactor);
+
     particlesRef.current = Array.from({ length: particleCount }, () => ({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
-      vx: (Math.random() - 0.5) * 0.3,
-      vy: (Math.random() - 0.5) * 0.3,
-      size: Math.random() * 2 + 1,
-      opacity: Math.random() * 0.5 + 0.3,
+      vx: (Math.random() - 0.5) * 0.25,
+      vy: (Math.random() - 0.5) * 0.25,
+      size: Math.random() * 1.6 + 0.9,
+      opacity: Math.random() * 0.4 + 0.25,
       color: colors[Math.floor(Math.random() * colors.length)],
     }));
 
@@ -55,7 +63,7 @@ const DataFlowBackground = () => {
       if (!ctx || !canvas) return;
 
       // Create mesh gradient background
-      ctx.fillStyle = '#0f172a'; // Dark base
+      ctx.fillStyle = '#0b1021'; // Deeper base
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Add multiple radial gradients for mesh effect
@@ -70,8 +78,8 @@ const DataFlowBackground = () => {
         canvas.height * 0.4,
         canvas.width * 0.6
       );
-      gradient1.addColorStop(0, 'rgba(6, 182, 212, 0.15)');
-      gradient1.addColorStop(1, 'rgba(6, 182, 212, 0)');
+      gradient1.addColorStop(0, 'rgba(99, 102, 241, 0.18)');
+      gradient1.addColorStop(1, 'rgba(99, 102, 241, 0)');
       ctx.fillStyle = gradient1;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -84,8 +92,8 @@ const DataFlowBackground = () => {
         canvas.height * 0.6,
         canvas.width * 0.5
       );
-      gradient2.addColorStop(0, 'rgba(30, 58, 138, 0.2)');
-      gradient2.addColorStop(1, 'rgba(30, 58, 138, 0)');
+      gradient2.addColorStop(0, 'rgba(59, 130, 246, 0.16)');
+      gradient2.addColorStop(1, 'rgba(59, 130, 246, 0)');
       ctx.fillStyle = gradient2;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -98,16 +106,18 @@ const DataFlowBackground = () => {
         canvas.height * 0.3,
         canvas.width * 0.4
       );
-      gradient3.addColorStop(0, 'rgba(8, 145, 178, 0.12)');
-      gradient3.addColorStop(1, 'rgba(8, 145, 178, 0)');
+      gradient3.addColorStop(0, 'rgba(34, 211, 238, 0.12)');
+      gradient3.addColorStop(1, 'rgba(34, 211, 238, 0)');
       ctx.fillStyle = gradient3;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Draw and update particles
       particlesRef.current.forEach((particle, index) => {
-        // Update position
-        particle.x += particle.vx;
-        particle.y += particle.vy;
+        // Update position with slight jitter for organic motion
+        const jitterX = (Math.random() - 0.5) * 0.05;
+        const jitterY = (Math.random() - 0.5) * 0.05;
+        particle.x += particle.vx + jitterX;
+        particle.y += particle.vy + jitterY;
 
         // Wrap around edges
         if (particle.x < 0) particle.x = canvas.width;
@@ -115,15 +125,16 @@ const DataFlowBackground = () => {
         if (particle.y < 0) particle.y = canvas.height;
         if (particle.y > canvas.height) particle.y = 0;
 
-        // Pulse opacity
-        particle.opacity = 0.3 + Math.sin(time + index * 0.1) * 0.3;
+        // Pulse size/opacity subtly
+        const pulse = 0.6 + Math.sin(time * 3 + index * 0.7) * 0.2;
+        const finalOpacity = Math.min(0.85, particle.opacity * pulse + 0.15);
 
         // Draw particle with glow
-        ctx.shadowBlur = 15;
+        ctx.shadowBlur = 8;
         ctx.shadowColor = particle.color;
-        ctx.fillStyle = particle.color.replace(/[\d.]+\)$/, `${particle.opacity})`);
+        ctx.fillStyle = particle.color.replace(/[\d.]+\)$/, `${finalOpacity})`);
         ctx.beginPath();
-        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+        ctx.arc(particle.x, particle.y, particle.size * pulse, 0, Math.PI * 2);
         ctx.fill();
 
         // Draw connections to nearby particles
@@ -134,9 +145,11 @@ const DataFlowBackground = () => {
           const dy = particle.y - otherParticle.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
 
-          if (distance < 150) {
-            ctx.strokeStyle = `rgba(6, 182, 212, ${0.15 * (1 - distance / 150)})`;
-            ctx.lineWidth = 0.5;
+          if (distance < 140) {
+            const alpha = 0.18 * (1 - distance / 140);
+            const colorTemplate = connectionColors[(index + otherIndex) % connectionColors.length];
+            ctx.strokeStyle = colorTemplate.replace('VAR', alpha.toFixed(3));
+            ctx.lineWidth = 0.45;
             ctx.shadowBlur = 0;
             ctx.beginPath();
             ctx.moveTo(particle.x, particle.y);

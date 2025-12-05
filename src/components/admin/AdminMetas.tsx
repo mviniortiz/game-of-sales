@@ -20,6 +20,8 @@ import {
   Trophy
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -35,9 +37,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { format, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useTenant } from "@/contexts/TenantContext";
 
 export const AdminMetas = () => {
   const queryClient = useQueryClient();
+  const { activeCompanyId, isSuperAdmin } = useTenant();
   
   // Mês atual formatado para input type="month" (YYYY-MM)
   const mesAtual = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
@@ -81,60 +85,73 @@ export const AdminMetas = () => {
     setFormatado(valorFormatadoBR);
   };
 
+  const applyCompanyFilter = (query: any) => {
+    return activeCompanyId ? query.eq("company_id", activeCompanyId) : query;
+  };
+
   // Fetch vendedores with avatar
   const { data: vendedores } = useQuery({
-    queryKey: ["vendedores"],
+    queryKey: ["vendedores", activeCompanyId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, nome, email, avatar_url")
-        .order("nome");
+      const { data, error } = await applyCompanyFilter(
+        supabase.from("profiles").select("id, nome, email, avatar_url, is_super_admin").order("nome")
+      );
       
       if (error) throw error;
       return data;
     },
+    enabled: !!activeCompanyId || isSuperAdmin, // allow super-admin to see even if null
   });
 
   // Fetch metas individuais
   const { data: metas } = useQuery({
-    queryKey: ["admin-metas"],
+    queryKey: ["admin-metas", activeCompanyId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("metas")
-        .select("*, profiles:user_id(nome, avatar_url)")
-        .order("mes_referencia", { ascending: false });
-      
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  // Fetch ALL vendas to calculate real progress
-  const { data: todasVendas = [] } = useQuery({
-    queryKey: ["admin-todas-vendas"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("vendas")
-        .select("user_id, valor, data_venda, status")
-        .eq("status", "Aprovado");
+      const { data, error } = await applyCompanyFilter(
+        supabase
+          .from("metas")
+          .select("*, profiles:user_id(nome, avatar_url, is_super_admin)")
+          .order("mes_referencia", { ascending: false })
+      );
       
       if (error) throw error;
       return data || [];
     },
+    enabled: !!activeCompanyId || isSuperAdmin,
+  });
+
+  // Fetch ALL vendas to calculate real progress
+  const { data: todasVendas = [] } = useQuery({
+    queryKey: ["admin-todas-vendas", activeCompanyId],
+    queryFn: async () => {
+      const { data, error } = await applyCompanyFilter(
+        supabase
+          .from("vendas")
+          .select("user_id, valor, data_venda, status, company_id")
+          .eq("status", "Aprovado")
+      );
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!activeCompanyId || isSuperAdmin,
   });
 
   // Fetch metas consolidadas
   const { data: metasConsolidadas } = useQuery({
-    queryKey: ["admin-metas-consolidadas"],
+    queryKey: ["admin-metas-consolidadas", activeCompanyId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("metas_consolidadas")
-        .select("*")
-        .order("mes_referencia", { ascending: false });
+      const { data, error } = await applyCompanyFilter(
+        supabase
+          .from("metas_consolidadas")
+          .select("*")
+          .order("mes_referencia", { ascending: false })
+      );
       
       if (error) throw error;
       return data;
     },
+    enabled: !!activeCompanyId || isSuperAdmin,
   });
 
   // Calculate real values for each meta based on actual sales
@@ -185,17 +202,21 @@ export const AdminMetas = () => {
 
   // Performance Insight - Fetch 3-month average for selected seller
   const { data: performanceInsight } = useQuery({
-    queryKey: ["seller-performance", userId],
+    queryKey: ["seller-performance", userId, activeCompanyId],
     queryFn: async () => {
       if (!userId) return null;
 
       const threeMonthsAgo = subMonths(new Date(), 3);
-      const { data, error } = await supabase
-        .from("vendas")
-        .select("valor")
-        .eq("user_id", userId)
-        .eq("status", "Aprovado")
-        .gte("data_venda", threeMonthsAgo.toISOString().split("T")[0]);
+      const { data, error } = await applyCompanyFilter(
+        applyCompanyFilter(
+          supabase
+            .from("vendas")
+            .select("valor")
+            .eq("user_id", userId)
+            .eq("status", "Aprovado")
+            .gte("data_venda", threeMonthsAgo.toISOString().split("T")[0])
+        )
+      );
 
       if (error) throw error;
 
@@ -208,7 +229,7 @@ export const AdminMetas = () => {
         count: data?.length || 0,
       };
     },
-    enabled: !!userId,
+    enabled: !!userId && (!!activeCompanyId || isSuperAdmin),
   });
 
   // Check if meta already exists for user/month
@@ -221,6 +242,7 @@ export const AdminMetas = () => {
       .select("id")
       .eq("user_id", userId)
       .eq("mes_referencia", dataReferencia)
+      .eq("company_id", activeCompanyId)
       .maybeSingle();
 
     return data;
@@ -249,6 +271,7 @@ export const AdminMetas = () => {
           user_id: userId,
           mes_referencia: dataReferencia,
           valor_meta: parseFloat(valorMeta),
+          company_id: activeCompanyId,
         });
         
         if (error) throw error;
@@ -256,7 +279,7 @@ export const AdminMetas = () => {
       }
     },
     onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: ["admin-metas"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-metas", activeCompanyId] });
       queryClient.invalidateQueries({ queryKey: ["metas-progresso"] });
       queryClient.invalidateQueries({ queryKey: ["metas-ranking"] });
       queryClient.invalidateQueries({ queryKey: ["vendedores-metas"] });
@@ -289,6 +312,7 @@ export const AdminMetas = () => {
         .from("metas_consolidadas")
         .select("id")
         .eq("mes_referencia", dataReferencia)
+        .eq("company_id", activeCompanyId)
         .maybeSingle();
 
       if (existingMeta) {
@@ -311,6 +335,7 @@ export const AdminMetas = () => {
           valor_meta: parseFloat(valorMetaConsolidada),
           descricao: descricaoConsolidada || null,
           produto_alvo: produtoAlvo || null,
+          company_id: activeCompanyId,
         });
         
         if (error) throw error;
@@ -351,7 +376,7 @@ export const AdminMetas = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-metas"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-metas", activeCompanyId] });
       queryClient.invalidateQueries({ queryKey: ["metas-progresso"] });
       queryClient.invalidateQueries({ queryKey: ["metas-ranking"] });
       queryClient.invalidateQueries({ queryKey: ["vendedores-metas"] });
@@ -449,17 +474,17 @@ export const AdminMetas = () => {
 
   return (
     <Tabs defaultValue="individual" className="w-full">
-      <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 bg-slate-900/50 border border-white/10">
+      <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 bg-card border border-border shadow-sm">
         <TabsTrigger 
           value="individual" 
-          className="flex items-center gap-2 data-[state=active]:bg-indigo-500 data-[state=active]:text-white"
+          className="flex items-center gap-2 data-[state=active]:bg-indigo-600 data-[state=active]:text-white"
         >
           <Target className="h-4 w-4" />
           Metas Individuais
         </TabsTrigger>
         <TabsTrigger 
           value="consolidada" 
-          className="flex items-center gap-2 data-[state=active]:bg-indigo-500 data-[state=active]:text-white"
+          className="flex items-center gap-2 data-[state=active]:bg-indigo-600 data-[state=active]:text-white"
         >
           <TrendingUp className="h-4 w-4" />
           Meta Consolidada
@@ -472,38 +497,42 @@ export const AdminMetas = () => {
           {/* LEFT COLUMN - The Controller (Sticky) */}
           <div className="col-span-12 lg:col-span-4">
             <div className="lg:sticky lg:top-4 space-y-4">
-              <Card className="border-indigo-500/30 bg-slate-900 shadow-xl shadow-indigo-500/5">
-                <CardContent className="p-6">
+              <Card className="border border-border bg-card shadow-sm">
+                <CardContent className="p-6 space-y-5">
                   {/* Header */}
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 rounded-lg bg-indigo-500/20">
-                      <Target className="h-5 w-5 text-indigo-400" />
+                    <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-200">
+                      <Target className="h-5 w-5" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-white">Definir Meta Individual</h3>
-                      <p className="text-xs text-slate-500">Configure metas por vendedor</p>
+                      <h3 className="font-semibold text-foreground">Definir Meta Individual</h3>
+                      <p className="text-xs text-muted-foreground">Configure metas por vendedor</p>
                     </div>
                   </div>
 
                   <form onSubmit={handleSubmitMetaIndividual} className="space-y-5">
                     {/* Vendedor Select */}
                     <div className="space-y-2">
-                      <Label className="text-slate-300 text-sm">Vendedor</Label>
+                      <Label className="text-muted-foreground text-sm">Vendedor</Label>
                       <Select value={userId} onValueChange={setUserId}>
-                        <SelectTrigger className="bg-slate-800 border-white/10 text-white focus:ring-indigo-500">
+                        <SelectTrigger className="bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-indigo-500">
                           <SelectValue placeholder="Selecione um vendedor" />
                         </SelectTrigger>
-                        <SelectContent className="bg-slate-900 border-white/10">
+                        <SelectContent className="bg-card border-border">
                           {vendedores?.map((vendedor) => (
-                            <SelectItem key={vendedor.id} value={vendedor.id} className="text-white">
+                            <SelectItem
+                              key={vendedor.id}
+                              value={vendedor.id}
+                              className="data-[state=checked]:bg-indigo-100 data-[state=checked]:text-indigo-700 dark:data-[state=checked]:bg-indigo-500/20 dark:data-[state=checked]:text-white"
+                            >
                               <div className="flex items-center gap-2">
-                                <Avatar className="h-5 w-5">
+                                <Avatar className="h-5 w-5 ring-2 ring-indigo-100 dark:ring-indigo-500/30">
                                   {vendedor.avatar_url && <AvatarImage src={vendedor.avatar_url} />}
-                                  <AvatarFallback className="text-[10px] bg-indigo-500/20 text-indigo-400">
+                                  <AvatarFallback className="text-[10px] bg-muted text-foreground">
                                     {getInitials(vendedor.nome)}
                                   </AvatarFallback>
                                 </Avatar>
-                                <span>{vendedor.nome}</span>
+                                <span className="text-foreground">{vendedor.nome}</span>
                               </div>
                             </SelectItem>
                           ))}
@@ -513,24 +542,24 @@ export const AdminMetas = () => {
 
                     {/* Performance Insight Box */}
                     {userId && (
-                      <div className="p-4 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
+                      <div className="p-4 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-700 dark:bg-indigo-500/10 dark:border-indigo-500/20 dark:text-indigo-100">
                         <div className="flex items-center gap-2 mb-2">
-                          <Sparkles className="h-4 w-4 text-indigo-400" />
-                          <span className="text-xs font-medium text-indigo-400 uppercase tracking-wider">
+                          <Sparkles className="h-4 w-4" />
+                          <span className="text-xs font-medium uppercase tracking-wider">
                             Performance Insight
                           </span>
                         </div>
                         <div className="space-y-1">
-                          <p className="text-sm text-slate-300">
+                          <p className="text-sm text-foreground">
                             Média de Vendas (3 meses):{" "}
-                            <span className="font-bold text-white">
+                            <span className="font-bold">
                               {performanceInsight 
                                 ? formatCurrencyCompact(performanceInsight.average)
                                 : "—"
                               }
                             </span>
                           </p>
-                          <p className="text-xs text-slate-500">
+                          <p className="text-xs text-muted-foreground">
                             {performanceInsight?.count || 0} vendas no período
                           </p>
                         </div>
@@ -539,31 +568,53 @@ export const AdminMetas = () => {
 
                     {/* Month Input */}
                     <div className="space-y-2">
-                      <Label className="text-slate-300 text-sm">Mês/Ano</Label>
-                      <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                        <Input
-                          type="month"
-                          value={mesReferencia}
-                          onChange={(e) => setMesReferencia(e.target.value)}
-                          className="pl-10 bg-slate-800 border-white/10 text-white focus:ring-indigo-500"
-                          required
-                        />
-                      </div>
+                      <Label className="text-muted-foreground text-sm">Mês/Ano</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="w-full justify-between bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Calendar className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-sm">
+                                {mesReferencia
+                                  ? format(new Date(`${mesReferencia}-01T12:00:00`), "MMMM yyyy", { locale: ptBR })
+                                  : "Selecione o mês"}
+                              </span>
+                            </div>
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="p-0 bg-card border-border shadow-lg" align="start">
+                          <CalendarPicker
+                            mode="single"
+                            selected={mesReferencia ? new Date(`${mesReferencia}-01T12:00:00`) : undefined}
+                            onSelect={(date) => {
+                              if (!date) return;
+                              const y = date.getFullYear();
+                              const m = String(date.getMonth() + 1).padStart(2, "0");
+                              setMesReferencia(`${y}-${m}`);
+                            }}
+                            locale={ptBR}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
                     </div>
 
                     {/* Value Input - Formatado como moeda */}
                     <div className="space-y-2">
-                      <Label className="text-slate-300 text-sm">Valor da Meta</Label>
+                      <Label className="text-muted-foreground text-sm">Valor da Meta</Label>
                       <div className="relative">
-                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
                           type="text"
                           inputMode="numeric"
                           value={valorMetaFormatado}
                           onChange={(e) => formatarMoeda(e.target.value, setValorMeta, setValorMetaFormatado)}
                           placeholder="R$ 0,00"
-                          className="pl-10 bg-slate-800 border-white/10 text-white focus:ring-indigo-500"
+                          className="pl-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-indigo-500"
                           required
                         />
                       </div>
@@ -572,7 +623,7 @@ export const AdminMetas = () => {
                     <Button 
                       type="submit" 
                       disabled={createMeta.isPending}
-                      className="w-full bg-indigo-500 hover:bg-indigo-600 text-white"
+                      className="w-full bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-500/20 hover:scale-[1.01] transition-transform"
                     >
                       {createMeta.isPending ? "Definindo..." : "Definir Meta"}
                     </Button>
@@ -581,14 +632,14 @@ export const AdminMetas = () => {
               </Card>
 
               {/* Quick Stats */}
-              <Card className="border-white/5 bg-slate-900/50">
+              <Card className="border border-border bg-card shadow-sm">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-slate-500" />
-                      <span className="text-sm text-slate-400">Metas Ativas</span>
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">Metas Ativas</span>
                     </div>
-                    <span className="text-lg font-bold text-white">{metas?.length || 0}</span>
+                    <span className="text-lg font-bold text-foreground">{metas?.length || 0}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -598,21 +649,21 @@ export const AdminMetas = () => {
           {/* RIGHT COLUMN - The Context */}
           <div className="col-span-12 lg:col-span-8">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-slate-800">
-                <Trophy className="h-4 w-4 text-amber-400" />
+              <div className="p-2 rounded-lg bg-amber-50 text-amber-700 dark:bg-slate-800 dark:text-amber-200">
+                <Trophy className="h-4 w-4" />
               </div>
-              <h3 className="font-semibold text-white">Metas Ativas</h3>
-              <Badge variant="outline" className="bg-slate-800 border-white/10 text-slate-400">
+              <h3 className="font-semibold text-foreground">Metas Ativas</h3>
+              <Badge variant="outline" className="bg-muted border-border text-muted-foreground">
                 {metas?.length || 0} metas
               </Badge>
             </div>
 
             {metas?.length === 0 ? (
-              <Card className="border-dashed border-white/10 bg-slate-900/30">
-                <CardContent className="py-12 text-center">
-                  <Target className="h-12 w-12 mx-auto mb-4 text-slate-600" />
-                  <p className="text-slate-400">Nenhuma meta individual definida</p>
-                  <p className="text-sm text-slate-500 mt-1">
+              <Card className="border-dashed border-border bg-card">
+                <CardContent className="py-12 text-center space-y-1">
+                  <Target className="h-12 w-12 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-muted-foreground">Nenhuma meta individual definida</p>
+                  <p className="text-sm text-muted-foreground">
                     Use o formulário ao lado para criar uma nova meta
                   </p>
                 </CardContent>
@@ -628,7 +679,7 @@ export const AdminMetas = () => {
                   return (
                     <Card 
                       key={meta.id} 
-                      className="relative overflow-hidden border-white/5 bg-slate-900/50 backdrop-blur-sm hover:bg-slate-900/70 transition-all group"
+                    className="relative overflow-hidden border border-border bg-card shadow-sm hover:shadow-md transition-all group"
                     >
                       {/* Delete Button */}
                       <AlertDialog>
@@ -636,20 +687,20 @@ export const AdminMetas = () => {
                           <Button 
                             variant="ghost" 
                             size="icon"
-                            className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-slate-500 hover:text-red-400 hover:bg-red-500/10"
+                            className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </AlertDialogTrigger>
-                        <AlertDialogContent className="bg-slate-900 border-white/10">
+                        <AlertDialogContent className="bg-card border-border shadow-lg">
                           <AlertDialogHeader>
-                            <AlertDialogTitle className="text-white">Confirmar exclusão</AlertDialogTitle>
-                            <AlertDialogDescription className="text-slate-400">
+                            <AlertDialogTitle className="text-foreground">Confirmar exclusão</AlertDialogTitle>
+                            <AlertDialogDescription className="text-muted-foreground">
                               Tem certeza que deseja remover a meta de {meta.profiles?.nome}? Esta ação não pode ser desfeita.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel className="bg-slate-800 border-white/10 text-white hover:bg-slate-700">
+                            <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted/80">
                               Cancelar
                             </AlertDialogCancel>
                             <AlertDialogAction
@@ -665,19 +716,19 @@ export const AdminMetas = () => {
                       <CardContent className="p-4 space-y-4">
                         {/* Header: Avatar + Name + Month */}
                         <div className="flex items-center gap-3">
-                          <Avatar className="h-10 w-10 ring-2 ring-indigo-500/30">
+                          <Avatar className="h-10 w-10 ring-2 ring-indigo-100 dark:ring-indigo-500/30">
                             {meta.profiles?.avatar_url && (
                               <AvatarImage src={meta.profiles.avatar_url} />
                             )}
-                            <AvatarFallback className="bg-indigo-500/20 text-indigo-400 font-bold">
+                            <AvatarFallback className="bg-muted text-foreground font-bold">
                               {getInitials(meta.profiles?.nome || "")}
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-white truncate">
+                            <h4 className="font-semibold text-foreground truncate">
                               {meta.profiles?.nome}
                             </h4>
-                            <Badge variant="outline" className="bg-slate-800/50 border-white/10 text-slate-400 text-xs">
+                            <Badge variant="outline" className="bg-muted border-border text-muted-foreground text-xs">
                               <Calendar className="h-3 w-3 mr-1" />
                               {format(new Date(meta.mes_referencia + "T12:00:00"), "MMM yyyy", { locale: ptBR })}
                             </Badge>
@@ -686,25 +737,25 @@ export const AdminMetas = () => {
 
                         {/* Body: Huge Value */}
                         <div className="py-2">
-                          <p className="text-3xl font-bold text-white tabular-nums">
+                          <p className="text-3xl font-bold text-foreground tabular-nums">
                             {formatCurrencyCompact(valorMeta)}
                           </p>
-                          <p className="text-xs text-slate-500 mt-1">
-                            Realizado: <span className="text-emerald-400 font-medium">{formatCurrency(realizado)}</span>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Realizado: <span className="text-emerald-600 dark:text-emerald-300 font-medium">{formatCurrency(realizado)}</span>
                           </p>
                         </div>
 
                         {/* Footer: Progress Bar */}
                         <div className="space-y-2">
                           <div className="flex justify-between text-xs">
-                            <span className="text-slate-500">Progresso</span>
+                            <span className="text-muted-foreground">Progresso</span>
                             <span className={`font-medium ${
-                              progress >= 100 ? "text-emerald-400" : "text-indigo-400"
+                              progress >= 100 ? "text-emerald-600 dark:text-emerald-300" : "text-indigo-600 dark:text-indigo-300"
                             }`}>
                               {progress.toFixed(0)}%
                             </span>
                           </div>
-                          <div className="relative h-2 bg-slate-800 rounded-full overflow-hidden">
+                          <div className="relative h-2 bg-muted rounded-full overflow-hidden">
                             <div
                               className={`h-full ${getProgressColor(progress)} rounded-full transition-all duration-500`}
                               style={{ width: `${progress}%` }}
@@ -727,47 +778,69 @@ export const AdminMetas = () => {
           {/* LEFT COLUMN - The Controller (Sticky) */}
           <div className="col-span-12 lg:col-span-4">
             <div className="lg:sticky lg:top-4 space-y-4">
-              <Card className="border-indigo-500/30 bg-slate-900 shadow-xl shadow-indigo-500/5">
-                <CardContent className="p-6">
+              <Card className="border border-border bg-card shadow-sm">
+                <CardContent className="p-6 space-y-5">
                   {/* Header */}
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 rounded-lg bg-indigo-500/20">
-                      <Zap className="h-5 w-5 text-indigo-400" />
+                    <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-200">
+                      <Zap className="h-5 w-5" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-white">Definir Meta Consolidada</h3>
-                      <p className="text-xs text-slate-500">Meta global da equipe</p>
+                      <h3 className="font-semibold text-foreground">Definir Meta Consolidada</h3>
+                      <p className="text-xs text-muted-foreground">Meta global da equipe</p>
                     </div>
                   </div>
 
                   <form onSubmit={handleSubmitMetaConsolidada} className="space-y-5">
                     {/* Month Input */}
                     <div className="space-y-2">
-                      <Label className="text-slate-300 text-sm">Mês/Ano *</Label>
-                      <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                        <Input
-                          type="month"
-                          value={mesReferenciaConsolidada}
-                          onChange={(e) => setMesReferenciaConsolidada(e.target.value)}
-                          className="pl-10 bg-slate-800 border-white/10 text-white focus:ring-indigo-500"
-                          required
-                        />
-                      </div>
+                      <Label className="text-muted-foreground text-sm">Mês/Ano *</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="w-full justify-between bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Calendar className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-sm">
+                                {mesReferenciaConsolidada
+                                  ? format(new Date(`${mesReferenciaConsolidada}-01T12:00:00`), "MMMM yyyy", { locale: ptBR })
+                                  : "Selecione o mês"}
+                              </span>
+                            </div>
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="p-0 bg-card border-border shadow-lg" align="start">
+                          <CalendarPicker
+                            mode="single"
+                            selected={mesReferenciaConsolidada ? new Date(`${mesReferenciaConsolidada}-01T12:00:00`) : undefined}
+                            onSelect={(date) => {
+                              if (!date) return;
+                              const y = date.getFullYear();
+                              const m = String(date.getMonth() + 1).padStart(2, "0");
+                              setMesReferenciaConsolidada(`${y}-${m}`);
+                            }}
+                            locale={ptBR}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
                     </div>
 
                     {/* Value Input - Formatado como moeda */}
                     <div className="space-y-2">
-                      <Label className="text-slate-300 text-sm">Valor da Meta *</Label>
+                      <Label className="text-muted-foreground text-sm">Valor da Meta *</Label>
                       <div className="relative">
-                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
                           type="text"
                           inputMode="numeric"
                           value={valorMetaConsolidadaFormatado}
                           onChange={(e) => formatarMoeda(e.target.value, setValorMetaConsolidada, setValorMetaConsolidadaFormatado)}
                           placeholder="R$ 0,00"
-                          className="pl-10 bg-slate-800 border-white/10 text-white focus:ring-indigo-500"
+                          className="pl-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-indigo-500"
                           required
                         />
                       </div>
@@ -775,30 +848,30 @@ export const AdminMetas = () => {
 
                     {/* Description */}
                     <div className="space-y-2">
-                      <Label className="text-slate-300 text-sm">Descrição (Opcional)</Label>
+                      <Label className="text-muted-foreground text-sm">Descrição (Opcional)</Label>
                       <Textarea
                         value={descricaoConsolidada}
                         onChange={(e) => setDescricaoConsolidada(e.target.value)}
                         placeholder="Ex: Meta Black Friday..."
-                        className="bg-slate-800 border-white/10 text-white focus:ring-indigo-500 min-h-[80px]"
+                        className="bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-indigo-500 min-h-[80px]"
                       />
                     </div>
 
                     {/* Product Target */}
                     <div className="space-y-2">
-                      <Label className="text-slate-300 text-sm">Produto Alvo (Opcional)</Label>
+                      <Label className="text-muted-foreground text-sm">Produto Alvo (Opcional)</Label>
                       <Input
                         value={produtoAlvo}
                         onChange={(e) => setProdutoAlvo(e.target.value)}
                         placeholder="Ex: Plano Premium..."
-                        className="bg-slate-800 border-white/10 text-white focus:ring-indigo-500"
+                        className="bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-indigo-500"
                       />
                     </div>
 
                     <Button 
                       type="submit" 
                       disabled={createMetaConsolidada.isPending}
-                      className="w-full bg-indigo-500 hover:bg-indigo-600 text-white"
+                      className="w-full bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-500/20 hover:scale-[1.01] transition-transform"
                     >
                       {createMetaConsolidada.isPending ? "Definindo..." : "Definir Meta Consolidada"}
                     </Button>
@@ -807,14 +880,14 @@ export const AdminMetas = () => {
               </Card>
 
               {/* Quick Stats */}
-              <Card className="border-white/5 bg-slate-900/50">
+              <Card className="border border-border bg-card shadow-sm">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Zap className="h-4 w-4 text-slate-500" />
-                      <span className="text-sm text-slate-400">Campanhas Ativas</span>
+                      <Zap className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">Campanhas Ativas</span>
                     </div>
-                    <span className="text-lg font-bold text-white">{metasConsolidadas?.length || 0}</span>
+                    <span className="text-lg font-bold text-foreground">{metasConsolidadas?.length || 0}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -824,21 +897,21 @@ export const AdminMetas = () => {
           {/* RIGHT COLUMN - The Context */}
           <div className="col-span-12 lg:col-span-8">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-slate-800">
-                <TrendingUp className="h-4 w-4 text-cyan-400" />
+              <div className="p-2 rounded-lg bg-cyan-50 text-cyan-700 dark:bg-slate-800 dark:text-cyan-200">
+                <TrendingUp className="h-4 w-4" />
               </div>
-              <h3 className="font-semibold text-white">Campanhas Ativas</h3>
-              <Badge variant="outline" className="bg-slate-800 border-white/10 text-slate-400">
+              <h3 className="font-semibold text-foreground">Campanhas Ativas</h3>
+              <Badge variant="outline" className="bg-muted border-border text-muted-foreground">
                 {metasConsolidadas?.length || 0} campanhas
               </Badge>
             </div>
 
             {metasConsolidadas?.length === 0 ? (
-              <Card className="border-dashed border-white/10 bg-slate-900/30">
-                <CardContent className="py-12 text-center">
-                  <Zap className="h-12 w-12 mx-auto mb-4 text-slate-600" />
-                  <p className="text-slate-400">Nenhuma meta consolidada definida</p>
-                  <p className="text-sm text-slate-500 mt-1">
+              <Card className="border-dashed border-border bg-card">
+                <CardContent className="py-12 text-center space-y-1">
+                  <Zap className="h-12 w-12 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-muted-foreground">Nenhuma meta consolidada definida</p>
+                  <p className="text-sm text-muted-foreground">
                     Use o formulário ao lado para criar uma nova campanha
                   </p>
                 </CardContent>
@@ -854,10 +927,8 @@ export const AdminMetas = () => {
                   return (
                     <Card 
                       key={meta.id} 
-                      className="relative overflow-hidden border-white/5 bg-gradient-to-br from-indigo-900/30 via-slate-900/50 to-slate-900/50 backdrop-blur-sm hover:from-indigo-900/40 transition-all group"
+                      className="relative overflow-hidden border border-border bg-card shadow-sm hover:shadow-md transition-all group"
                     >
-                      {/* Glow effect */}
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl -mr-16 -mt-16" />
 
                       {/* Delete Button - Always visible */}
                       <AlertDialog>
@@ -865,20 +936,20 @@ export const AdminMetas = () => {
                           <Button 
                             variant="ghost" 
                             size="icon"
-                            className="absolute top-2 right-2 h-8 w-8 text-slate-400 hover:text-red-400 hover:bg-red-500/10 z-20"
+                            className="absolute top-2 right-2 h-8 w-8 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 z-20"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </AlertDialogTrigger>
-                        <AlertDialogContent className="bg-slate-900 border-white/10">
+                        <AlertDialogContent className="bg-card border-border shadow-lg">
                           <AlertDialogHeader>
-                            <AlertDialogTitle className="text-white">Confirmar exclusão</AlertDialogTitle>
-                            <AlertDialogDescription className="text-slate-400">
+                            <AlertDialogTitle className="text-foreground">Confirmar exclusão</AlertDialogTitle>
+                            <AlertDialogDescription className="text-muted-foreground">
                               Tem certeza que deseja remover esta meta consolidada? Esta ação não pode ser desfeita.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel className="bg-slate-800 border-white/10 text-white hover:bg-slate-700">
+                            <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted/80">
                               Cancelar
                             </AlertDialogCancel>
                             <AlertDialogAction
@@ -895,12 +966,12 @@ export const AdminMetas = () => {
                         {/* Header: Title + Month */}
                         <div>
                           <div className="flex items-center gap-2 mb-1">
-                            <Zap className="h-4 w-4 text-indigo-400" />
-                            <h4 className="font-semibold text-white">
+                            <Zap className="h-4 w-4 text-indigo-600 dark:text-indigo-300" />
+                            <h4 className="font-semibold text-foreground">
                               {meta.descricao || "Meta Consolidada"}
                             </h4>
                           </div>
-                          <Badge variant="outline" className="bg-slate-800/50 border-white/10 text-slate-400 text-xs">
+                          <Badge variant="outline" className="bg-muted border-border text-muted-foreground text-xs">
                             <Calendar className="h-3 w-3 mr-1" />
                             {format(new Date(meta.mes_referencia + "T12:00:00"), "MMMM yyyy", { locale: ptBR })}
                           </Badge>
@@ -908,18 +979,18 @@ export const AdminMetas = () => {
 
                         {/* Body: Huge Value */}
                         <div className="py-2">
-                          <p className="text-4xl font-bold text-white tabular-nums">
+                          <p className="text-4xl font-bold text-foreground tabular-nums">
                             {formatCurrencyCompact(valorMeta)}
                           </p>
-                          <div className="flex items-center gap-3 mt-2 text-sm">
-                            <span className="text-slate-500">
-                              Realizado: <span className="text-emerald-400 font-medium">{formatCurrency(realizado)}</span>
+                          <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground">
+                            <span>
+                              Realizado: <span className="text-emerald-600 dark:text-emerald-300 font-medium">{formatCurrency(realizado)}</span>
                             </span>
                             {meta.produto_alvo && (
                               <>
-                                <span className="text-slate-600">•</span>
-                                <span className="text-slate-500">
-                                  Produto: <span className="text-indigo-400">{meta.produto_alvo}</span>
+                                <span className="text-muted-foreground">•</span>
+                                <span>
+                                  Produto: <span className="text-indigo-600 dark:text-indigo-300">{meta.produto_alvo}</span>
                                 </span>
                               </>
                             )}
@@ -929,14 +1000,14 @@ export const AdminMetas = () => {
                         {/* Footer: Progress Bar */}
                         <div className="space-y-2">
                           <div className="flex justify-between text-xs">
-                            <span className="text-slate-500">Progresso da Equipe</span>
+                            <span className="text-muted-foreground">Progresso da Equipe</span>
                             <span className={`font-medium ${
-                              progress >= 100 ? "text-emerald-400" : "text-cyan-400"
+                              progress >= 100 ? "text-emerald-600 dark:text-emerald-300" : "text-cyan-600 dark:text-cyan-300"
                             }`}>
                               {progress.toFixed(1)}%
                             </span>
                           </div>
-                          <div className="relative h-3 bg-slate-800 rounded-full overflow-hidden">
+                          <div className="relative h-3 bg-muted rounded-full overflow-hidden">
                             <div
                               className={`h-full ${getProgressColor(progress)} rounded-full transition-all duration-500`}
                               style={{ width: `${progress}%` }}

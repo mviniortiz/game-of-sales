@@ -15,6 +15,7 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,6 +37,7 @@ import {
   XCircle,
   LucideIcon
 } from "lucide-react";
+import { syncWonDealToSale } from "@/utils/salesSync";
 import { KanbanColumn } from "@/components/crm/KanbanColumn";
 import { DealCard } from "@/components/crm/DealCard";
 import { NewDealModal } from "@/components/crm/NewDealModal";
@@ -69,9 +71,9 @@ const COLOR_MAP: Record<string, { color: string; bgColor: string; borderColor: s
   cyan: { color: "text-cyan-400", bgColor: "bg-cyan-500/10", borderColor: "border-cyan-500/30" },
 };
 
-// Valid database stage IDs - these MUST match the deal_stage enum in Supabase
-export const VALID_DB_STAGES = ["lead", "qualification", "proposal", "negotiation", "closed_won", "closed_lost"] as const;
-export type ValidDbStage = typeof VALID_DB_STAGES[number];
+// Valid database stage IDs - must match deal_stage enum in Supabase
+const VALID_DB_STAGES = ["lead", "qualification", "proposal", "negotiation", "closed_won", "closed_lost"] as const;
+type ValidDbStage = typeof VALID_DB_STAGES[number];
 
 // Default stages configuration - IDs must match database enum
 const DEFAULT_STAGES: StageConfig[] = [
@@ -155,12 +157,15 @@ export default function CRM() {
   const { user, isSuperAdmin, companyId } = useAuth();
   const { activeCompanyId } = useTenant();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   
+  const [localDeals, setLocalDeals] = useState<Deal[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [showNewDeal, setShowNewDeal] = useState(false);
   const [showConfig, setShowConfig] = useState(false);
   const [showLostModal, setShowLostModal] = useState(false);
   const [dealToLose, setDealToLose] = useState<Deal | null>(null);
+  const [viewMode, setViewMode] = useState<"kanban" | "list">("kanban");
   
   // Load stages from localStorage or use defaults
   const [stageConfigs, setStageConfigs] = useState<StageConfig[]>(() => {
@@ -248,24 +253,101 @@ export default function CRM() {
         profiles: profilesMap.get(d.user_id) || null,
       })) as Deal[];
     },
-    refetchInterval: 30000,
+    refetchInterval: 15000,
+    staleTime: 0,
   });
+
+  useEffect(() => {
+    setLocalDeals(deals);
+    queryClient.setQueryData(["deals", effectiveCompanyId], deals);
+  }, [deals, queryClient, effectiveCompanyId]);
+
+  const reorderDealsOptimistic = (
+    currentDeals: Deal[],
+    draggedId: string,
+    targetStage: StageId,
+    targetPosition: number
+  ): Deal[] => {
+    if (!currentDeals.length) return currentDeals;
+
+    const working = currentDeals.map((d) => ({ ...d }));
+    const draggedIndex = working.findIndex((d) => d.id === draggedId);
+    if (draggedIndex === -1) return currentDeals;
+
+    const dragged = { ...working[draggedIndex], stage: targetStage };
+    working.splice(draggedIndex, 1);
+
+    const grouped: Record<string, Deal[]> = {};
+    working.forEach((d) => {
+      if (!grouped[d.stage]) grouped[d.stage] = [];
+      grouped[d.stage].push(d);
+    });
+
+    const stageList = grouped[targetStage] || [];
+    const insertPos = Math.max(0, Math.min(targetPosition, stageList.length));
+    stageList.splice(insertPos, 0, dragged);
+    grouped[targetStage] = stageList;
+
+    const ordered: Deal[] = [];
+    STAGES.forEach((s) => {
+      const list = grouped[s.id] || [];
+      list.forEach((d, idx) => {
+        ordered.push({ ...d, position: idx });
+      });
+    });
+
+    Object.keys(grouped).forEach((sid) => {
+      if (!STAGES.find((s) => s.id === sid)) {
+        grouped[sid].forEach((d, idx) => ordered.push({ ...d, position: idx }));
+      }
+    });
+
+    return ordered;
+  };
+
+  const applyOptimisticMove = (
+    draggedId: string,
+    targetStage: StageId,
+    targetPosition: number
+  ) => {
+    const previousDeals = localDeals;
+    const reordered = reorderDealsOptimistic(previousDeals, draggedId, targetStage, targetPosition);
+    setLocalDeals(reordered);
+    queryClient.setQueryData(["deals", effectiveCompanyId], reordered);
+    return previousDeals;
+  };
 
   // Update deal mutation
   const updateDealMutation = useMutation({
-    mutationFn: async ({ id, stage, position }: { id: string; stage: string; position: number }) => {
+    mutationFn: async ({ id, stage, position, deal }: { id: string; stage: string; position: number; deal?: Deal; previousDeals?: Deal[] }) => {
       const { error } = await supabase
         .from("deals")
         .update({ stage: stage as any, position })
         .eq("id", id);
       
       if (error) throw error;
+
+      if (stage === "closed_won" && deal) {
+        try {
+          await syncWonDealToSale(deal, queryClient);
+        } catch (syncError) {
+          console.error("Erro ao sincronizar venda do deal:", syncError);
+          toast.error("Deal ganho, mas a venda não foi sincronizada.");
+        }
+      }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["deals"] });
+    onMutate: async ({ previousDeals }) => {
+      return { previousDeals };
     },
-    onError: () => {
+    onError: (_err, _vars, context) => {
+      if (context?.previousDeals) {
+        setLocalDeals(context.previousDeals);
+        queryClient.setQueryData(["deals", effectiveCompanyId], context.previousDeals);
+      }
       toast.error("Erro ao mover deal");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["deals", effectiveCompanyId] });
     },
   });
 
@@ -279,7 +361,7 @@ export default function CRM() {
     });
 
     // Group deals
-    deals.forEach((deal) => {
+    localDeals.forEach((deal) => {
       if (grouped[deal.stage]) {
         grouped[deal.stage].push(deal);
       } else {
@@ -306,7 +388,7 @@ export default function CRM() {
       totals[stage.id] = { count: 0, value: 0 };
     });
 
-    deals.forEach((deal) => {
+    localDeals.forEach((deal) => {
       if (totals[deal.stage]) {
         totals[deal.stage].count++;
         totals[deal.stage].value += Number(deal.value) || 0;
@@ -314,10 +396,10 @@ export default function CRM() {
     });
 
     return totals;
-  }, [deals, STAGES]);
+  }, [localDeals, STAGES]);
 
   // Get the active deal for drag overlay
-  const activeDeal = activeId ? deals.find((d) => d.id === activeId) : null;
+  const activeDeal = activeId ? localDeals.find((d) => d.id === activeId) : null;
 
   // DnD handlers - optimized for speed
   const handleDragStart = (event: DragStartEvent) => {
@@ -341,34 +423,39 @@ export default function CRM() {
     const overId = over.id as string;
 
     // Find the deal being dragged
-    const draggedDeal = deals.find((d) => d.id === draggedId);
+    const draggedDeal = localDeals.find((d) => d.id === draggedId);
     if (!draggedDeal) return;
 
     // Determine target stage
     let targetStage: StageId;
-    let targetPosition: number;
+    let targetIndex: number;
 
     // Check if dropped on a column
     const isColumn = STAGES.some((s) => s.id === overId);
     
     if (isColumn) {
       targetStage = overId;
-      targetPosition = dealsByStage[targetStage]?.length || 0;
+      targetIndex = dealsByStage[targetStage]?.length || 0;
     } else {
       // Dropped on another deal
-      const overDeal = deals.find((d) => d.id === overId);
+      const overDeal = localDeals.find((d) => d.id === overId);
       if (!overDeal) return;
       
       targetStage = overDeal.stage;
-      targetPosition = overDeal.position;
+      const targetList = dealsByStage[targetStage] || [];
+      const idx = targetList.findIndex(d => d.id === overId);
+      targetIndex = idx >= 0 ? idx : targetList.length;
     }
 
     // Only update if stage changed (optimistic update)
     if (draggedDeal.stage !== targetStage) {
+      const previousDeals = applyOptimisticMove(draggedId, targetStage, targetIndex);
       updateDealMutation.mutate({
         id: draggedId,
         stage: targetStage,
-        position: targetPosition,
+        position: targetIndex,
+        deal: draggedDeal,
+        previousDeals,
       });
     }
   };
@@ -394,41 +481,79 @@ export default function CRM() {
   };
 
   // Calculate pipeline total
-  const pipelineTotal = deals.reduce((acc, deal) => acc + (Number(deal.value) || 0), 0);
+  const pipelineTotal = localDeals.reduce((acc, deal) => acc + (Number(deal.value) || 0), 0);
+
+  const sortedDealsForList = useMemo(() => {
+    return [...localDeals].sort((a, b) => {
+      const aDate = new Date(a.updated_at || a.created_at || 0).getTime();
+      const bDate = new Date(b.updated_at || b.created_at || 0).getTime();
+      return bDate - aDate;
+    });
+  }, [localDeals]);
+
+  const renderStageBadge = (stageId: string) => {
+    const stage = STAGES.find((s) => s.id === stageId);
+    if (!stage) return null;
+    return (
+      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${stage.bgColor} ${stage.borderColor} ${stage.color.replace("text-", "ring-")} ring-1`}>
+        <stage.icon className="h-3 w-3" />
+        {stage.title}
+      </span>
+    );
+  };
 
   return (
     <AppLayout>
-      <div className="h-[calc(100vh-64px)] flex flex-col bg-slate-950">
+      <div className="h-[calc(100vh-64px)] flex flex-col bg-background text-foreground">
         {/* Header - Premium Style */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-6 py-4 sm:py-5 border-b border-slate-800/80 bg-slate-900/50 backdrop-blur-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-6 py-4 sm:py-5 border-b border-border bg-card backdrop-blur-sm shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="p-2 sm:p-2.5 rounded-xl bg-indigo-500/10 ring-1 ring-indigo-500/20">
-              <Target className="h-4 sm:h-5 w-4 sm:w-5 text-indigo-400" />
+            <div className="p-2 sm:p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 ring-1 ring-indigo-100 dark:ring-indigo-500/20">
+              <Target className="h-4 sm:h-5 w-4 sm:w-5 text-indigo-600 dark:text-indigo-200" />
             </div>
             <div>
-              <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight flex items-center gap-2">
+              <h1 className="text-lg sm:text-xl font-bold text-foreground tracking-tight flex items-center gap-2">
                 <span className="hidden sm:inline">Pipeline de Vendas</span>
                 <span className="sm:hidden">Pipeline</span>
-                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 text-[10px] font-semibold uppercase tracking-wider ring-1 ring-indigo-500/20">
+                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-semibold uppercase tracking-wider ring-1 ring-indigo-100 dark:bg-indigo-500/10 dark:text-indigo-200 dark:ring-indigo-500/20">
                   <Sparkles className="h-3 w-3" />
                   Live
                 </span>
               </h1>
-              <p className="text-xs sm:text-[13px] text-slate-500 font-medium mt-0.5">
+              <p className="text-xs sm:text-[13px] text-muted-foreground font-medium mt-0.5">
                 {isLoading ? "Carregando..." : (
-                  <>{deals.length} deals • <span className="text-emerald-400">{formatCurrency(pipelineTotal)}</span></>
+                  <>{deals.length} deals • <span className="text-emerald-600 dark:text-emerald-300">{formatCurrency(pipelineTotal)}</span></>
                 )}
               </p>
             </div>
           </div>
           
           <div className="flex items-center gap-2 sm:gap-3">
+            <div className="hidden sm:flex items-center gap-1 bg-muted px-1 py-1 rounded-lg border border-border">
+              <Button
+                variant={viewMode === "kanban" ? "default" : "ghost"}
+                size="sm"
+                className="h-8"
+                onClick={() => setViewMode("kanban")}
+              >
+                Kanban
+              </Button>
+              <Button
+                variant={viewMode === "list" ? "default" : "ghost"}
+                size="sm"
+                className="h-8"
+                onClick={() => setViewMode("list")}
+              >
+                Lista
+              </Button>
+            </div>
+
             {/* Config Button */}
             <Button 
               variant="outline"
               size="sm"
               onClick={() => setShowConfig(true)}
-              className="border-slate-700 hover:bg-slate-800 text-slate-300 h-9"
+              className="border-border hover:bg-muted text-foreground h-9"
             >
               <Settings2 className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Configurar</span>
@@ -446,11 +571,11 @@ export default function CRM() {
           </div>
         </div>
 
-        {/* Kanban Board - Full Height with Custom Scrollbar */}
-        <div className="flex-1 overflow-x-auto overflow-y-auto sm:overflow-y-hidden scrollbar-thin scrollbar-track-slate-900 scrollbar-thumb-slate-700 hover:scrollbar-thumb-slate-600">
+        {/* Content Area */}
+        <div className="flex-1 overflow-x-auto overflow-y-auto sm:overflow-y-hidden scrollbar-thin">
           {isLoading ? (
             <KanbanSkeleton />
-          ) : (
+          ) : viewMode === "kanban" ? (
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
@@ -478,7 +603,7 @@ export default function CRM() {
               {/* Drag Overlay - Fast animation */}
               <DragOverlay 
                 dropAnimation={{
-                  duration: 150,
+                  duration: 70,
                   easing: 'ease-out',
                 }}
                 modifiers={[]}
@@ -492,6 +617,50 @@ export default function CRM() {
                 ) : null}
               </DragOverlay>
             </DndContext>
+          ) : (
+            <div className="p-4 sm:p-6 space-y-3 sm:space-y-4 max-w-6xl">
+              {sortedDealsForList.length === 0 && (
+                <div className="text-muted-foreground text-sm">Nenhum deal cadastrado.</div>
+              )}
+              {sortedDealsForList.map((deal) => (
+                <div
+                  key={deal.id}
+                  className="bg-card border border-border rounded-xl p-4 sm:p-5 shadow-sm hover:border-indigo-500/30 hover:shadow-md transition-all"
+                >
+                  <div className="flex flex-col gap-3 sm:gap-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                      <div className="text-base sm:text-lg font-semibold text-foreground">
+                        {deal.title || "Sem título"}
+                      </div>
+                      {renderStageBadge(deal.stage)}
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-sm text-foreground">
+                      <div className="flex flex-col">
+                        <span className="text-xs text-muted-foreground">Cliente</span>
+                        <span>{deal.customer_name || "Cliente"}</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-xs text-muted-foreground">Valor</span>
+                        <span className="text-emerald-600 dark:text-emerald-300 font-semibold">{formatCurrency(Number(deal.value) || 0)}</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-xs text-muted-foreground">Probabilidade</span>
+                        <span>{deal.probability || 0}%</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-xs text-muted-foreground">Atualizado</span>
+                        <span>{deal.updated_at ? new Date(deal.updated_at).toLocaleString("pt-BR") : "-"}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 justify-end">
+                      <Button variant="ghost" size="sm" onClick={() => navigate(`/deals/${deal.id}`)}>
+                        Ver detalhes
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </div>

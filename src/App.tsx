@@ -14,6 +14,8 @@ import NovaVenda from "./pages/NovaVenda";
 import Calls from "./pages/Calls";
 import Metas from "./pages/Metas";
 import Admin from "./pages/Admin";
+import AdminCompaniesPage from "./pages/AdminCompaniesPage";
+import AdminCompanyDetail from "./pages/AdminCompanyDetail";
 import Integracoes from "./pages/Integracoes";
 import Calendario from "./pages/Calendario";
 import CRM from "./pages/CRM";
@@ -92,6 +94,26 @@ const App = () => (
                 <ProtectedRoute>
                   <AppLayout>
                     <Admin />
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/companies"
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <AdminCompaniesPage />
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/companies/:companyId"
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <AdminCompanyDetail />
                   </AppLayout>
                 </ProtectedRoute>
               }

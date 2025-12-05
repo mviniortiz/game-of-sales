@@ -10,6 +10,9 @@ import { AdminVendas } from "@/components/admin/AdminVendas";
 import { AdminRelatorios } from "@/components/admin/AdminRelatorios";
 import { AdminMetas } from "@/components/admin/AdminMetas";
 import { AdminManagement } from "@/components/profile/AdminManagement";
+import { AdminCompanies } from "@/components/admin/AdminCompanies";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const Admin = () => {
   const { isAdmin, loading } = useAuth();
@@ -53,11 +56,12 @@ const Admin = () => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="vendedores" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="vendedores">Vendedores</TabsTrigger>
               <TabsTrigger value="vendas">Vendas</TabsTrigger>
               <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
               <TabsTrigger value="metas">Metas</TabsTrigger>
+              <TabsTrigger value="empresas">Empresas</TabsTrigger>
               <TabsTrigger value="usuarios">Usuários</TabsTrigger>
             </TabsList>
 
@@ -75,6 +79,18 @@ const Admin = () => {
 
             <TabsContent value="metas" className="mt-6">
               <AdminMetas />
+            </TabsContent>
+
+            <TabsContent value="empresas" className="mt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-semibold text-foreground">Empresas</h3>
+                  <p className="text-sm text-muted-foreground">Use o gerenciador dedicado para listar e editar empresas.</p>
+                </div>
+                <Button onClick={() => navigate("/admin/companies")} className="bg-indigo-600 hover:bg-indigo-500 text-white">
+                  Abrir Gerenciador de Empresas
+                </Button>
+              </div>
             </TabsContent>
 
             <TabsContent value="usuarios" className="mt-6">

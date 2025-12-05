@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTenant } from "@/contexts/TenantContext";
 import { 
   Calendar, 
   Phone, 
@@ -68,21 +69,21 @@ const KPICard = ({
   const TrendIcon = isPositive ? ArrowUpRight : ArrowDownRight;
   
   return (
-    <Card className="border-white/5 bg-slate-900/50 backdrop-blur-sm hover:bg-slate-900/70 transition-all duration-300 group">
+    <Card className="border border-border bg-card shadow-sm hover:shadow-md transition-all duration-300 group">
       <CardContent className="p-4">
         <div className="flex items-center gap-4">
-          {/* Icon with glow */}
-          <div className={`relative p-3 rounded-xl ${iconBg} group-hover:scale-110 transition-transform`}>
-            <div className={`absolute inset-0 ${iconBg} rounded-xl blur-lg opacity-50`} />
+          {/* Icon with soft accent */}
+          <div className={`relative p-3 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-200 ring-1 ring-indigo-100 dark:ring-indigo-500/20 group-hover:scale-110 transition-transform`}>
+            <div className="absolute inset-0 bg-indigo-100 dark:bg-indigo-500/20 rounded-xl blur-lg opacity-40" />
             <Icon className={`h-6 w-6 ${iconColor} relative z-10`} />
           </div>
           
           {/* Content */}
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
               {title}
             </p>
-            <p className="text-2xl font-bold text-white tabular-nums tracking-tight">
+            <p className="text-2xl font-bold text-foreground tabular-nums tracking-tight">
               {value}
             </p>
             
@@ -90,14 +91,14 @@ const KPICard = ({
             <div className="flex items-center gap-2 mt-1">
               {trend !== undefined && (
                 <span className={`flex items-center text-xs font-medium ${
-                  isPositive ? 'text-emerald-400' : 'text-red-400'
+                  isPositive ? 'text-emerald-600 dark:text-emerald-300' : 'text-rose-600 dark:text-rose-300'
                 }`}>
                   <TrendIcon className="h-3 w-3 mr-0.5" />
                   {Math.abs(trend).toFixed(1)}%
                 </span>
               )}
               {(trendLabel || subtitle) && (
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-muted-foreground">
                   {trendLabel || subtitle}
                 </span>
               )}
@@ -145,13 +146,13 @@ const ConversionFunnel = ({ agendamentos, compareceram, vendas }: FunnelProps) =
   ];
 
   return (
-    <Card className="border-white/5 bg-slate-900/50 backdrop-blur-sm">
+    <Card className="border border-border bg-card shadow-sm">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold text-white flex items-center gap-2">
-          <TrendingUp className="h-4 w-4 text-indigo-400" />
+        <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+          <TrendingUp className="h-4 w-4 text-indigo-600 dark:text-indigo-300" />
           Funil de Conversão
         </CardTitle>
-        <p className="text-xs text-slate-500">Fluxo de vendas do período</p>
+        <p className="text-xs text-muted-foreground">Fluxo de vendas do período</p>
       </CardHeader>
       <CardContent className="pt-4">
         <div className="flex items-center justify-between gap-2">
@@ -160,12 +161,12 @@ const ConversionFunnel = ({ agendamentos, compareceram, vendas }: FunnelProps) =
               {/* Step */}
               <div className="flex-1">
                 <div className="text-center mb-3">
-                  <p className="text-2xl font-bold text-white tabular-nums">{step.value}</p>
-                  <p className="text-xs text-slate-400 mt-1">{step.label}</p>
+                  <p className="text-2xl font-bold text-foreground tabular-nums">{step.value}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{step.label}</p>
                 </div>
                 
                 {/* Progress Bar */}
-                <div className="h-3 bg-slate-800 rounded-full overflow-hidden">
+                <div className="h-3 bg-muted rounded-full overflow-hidden">
                   <div 
                     className={`h-full bg-gradient-to-r ${step.color} rounded-full transition-all duration-1000 ease-out`}
                     style={{ width: `${Math.max(step.percentage, 5)}%` }}
@@ -182,7 +183,7 @@ const ConversionFunnel = ({ agendamentos, compareceram, vendas }: FunnelProps) =
               {/* Arrow Connector */}
               {index < steps.length - 1 && (
                 <div className="px-2 flex-shrink-0">
-                  <ArrowRight className="h-4 w-4 text-slate-600" />
+                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
                 </div>
               )}
             </div>
@@ -190,14 +191,14 @@ const ConversionFunnel = ({ agendamentos, compareceram, vendas }: FunnelProps) =
         </div>
         
         {/* Summary Stats */}
-        <div className="mt-6 pt-4 border-t border-white/5 grid grid-cols-2 gap-3">
-          <div className="text-center p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
-            <p className="text-xl font-bold text-cyan-400 tabular-nums">{showRate.toFixed(1)}%</p>
-            <p className="text-[10px] text-slate-400 mt-0.5">Taxa de Comparecimento</p>
+        <div className="mt-6 pt-4 border-t border-border grid grid-cols-2 gap-3">
+          <div className="text-center p-3 rounded-lg bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100 dark:bg-cyan-500/10 dark:text-cyan-200 dark:ring-cyan-500/20">
+            <p className="text-xl font-bold tabular-nums">{showRate.toFixed(1)}%</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Taxa de Comparecimento</p>
           </div>
-          <div className="text-center p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-            <p className="text-xl font-bold text-emerald-400 tabular-nums">{conversionRate.toFixed(1)}%</p>
-            <p className="text-[10px] text-slate-400 mt-0.5">Taxa de Conversão</p>
+          <div className="text-center p-3 rounded-lg bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-200 dark:ring-emerald-500/20">
+            <p className="text-xl font-bold tabular-nums">{conversionRate.toFixed(1)}%</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Taxa de Conversão</p>
           </div>
         </div>
       </CardContent>
@@ -221,9 +222,9 @@ const SellersLeagueTable = ({ data, maxCalls }: { data: SellerData[], maxCalls: 
   };
 
   const getEfficiencyColor = (rate: number) => {
-    if (rate >= 80) return "text-emerald-400";
-    if (rate >= 60) return "text-amber-400";
-    return "text-red-400";
+    if (rate >= 80) return "text-emerald-600 dark:text-emerald-300";
+    if (rate >= 60) return "text-amber-600 dark:text-amber-300";
+    return "text-rose-600 dark:text-rose-300";
   };
 
   const formatCurrency = (value: number) => {
@@ -236,53 +237,53 @@ const SellersLeagueTable = ({ data, maxCalls }: { data: SellerData[], maxCalls: 
   const sortedData = [...data].sort((a, b) => b.totalVendido - a.totalVendido);
 
   return (
-    <Card className="border-white/5 bg-slate-900/50 backdrop-blur-sm">
+    <Card className="border border-border bg-card shadow-sm">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold text-white flex items-center gap-2">
-          <Trophy className="h-4 w-4 text-amber-400" />
+        <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+          <Trophy className="h-4 w-4 text-amber-500 dark:text-amber-300" />
           League Table - Vendedores
         </CardTitle>
-        <p className="text-xs text-slate-500">Ranking por receita no período</p>
+        <p className="text-xs text-muted-foreground">Ranking por receita no período</p>
       </CardHeader>
       <CardContent className="p-0">
         <Table>
           <TableHeader>
-            <TableRow className="border-white/5 hover:bg-transparent">
-              <TableHead className="text-slate-500 font-medium text-xs w-10">#</TableHead>
-              <TableHead className="text-slate-500 font-medium text-xs">Vendedor</TableHead>
-              <TableHead className="text-slate-500 font-medium text-xs">Volume</TableHead>
-              <TableHead className="text-slate-500 font-medium text-xs text-center">Show</TableHead>
-              <TableHead className="text-slate-500 font-medium text-xs text-center">Conv.</TableHead>
-              <TableHead className="text-slate-500 font-medium text-xs text-right">Receita</TableHead>
+            <TableRow className="border-border hover:bg-transparent">
+              <TableHead className="text-muted-foreground font-medium text-xs w-10">#</TableHead>
+              <TableHead className="text-muted-foreground font-medium text-xs">Vendedor</TableHead>
+              <TableHead className="text-muted-foreground font-medium text-xs">Volume</TableHead>
+              <TableHead className="text-muted-foreground font-medium text-xs text-center">Show</TableHead>
+              <TableHead className="text-muted-foreground font-medium text-xs text-center">Conv.</TableHead>
+              <TableHead className="text-muted-foreground font-medium text-xs text-right">Receita</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {sortedData.map((seller, index) => (
               <TableRow 
                 key={seller.vendedor} 
-                className="border-white/5 hover:bg-white/5 transition-colors"
+                className="border-border hover:bg-muted/40 dark:hover:bg-white/5 transition-colors"
               >
-                <TableCell className="font-medium text-slate-500 text-sm py-3">
-                  {index === 0 && <span className="text-amber-400">🥇</span>}
-                  {index === 1 && <span className="text-slate-300">🥈</span>}
-                  {index === 2 && <span className="text-amber-600">🥉</span>}
-                  {index > 2 && <span>{index + 1}</span>}
+                <TableCell className="font-medium text-muted-foreground text-sm py-3">
+                  {index === 0 && <span className="text-amber-600 dark:text-amber-300">🥇</span>}
+                  {index === 1 && <span className="text-slate-500 dark:text-slate-300">🥈</span>}
+                  {index === 2 && <span className="text-amber-700 dark:text-amber-400">🥉</span>}
+                  {index > 2 && <span className="text-foreground">{index + 1}</span>}
                 </TableCell>
                 <TableCell className="py-3">
                   <div className="flex items-center gap-2">
-                    <Avatar className="h-8 w-8 ring-2 ring-indigo-500/30">
+                    <Avatar className="h-8 w-8 ring-2 ring-indigo-100 dark:ring-indigo-500/30">
                       <AvatarImage src={seller.avatarUrl} />
-                      <AvatarFallback className="bg-indigo-500/20 text-indigo-300 font-semibold text-xs">
+                      <AvatarFallback className="bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-200 font-semibold text-xs">
                         {getInitials(seller.vendedor)}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="font-medium text-white text-sm">{seller.vendedor}</span>
+                    <span className="font-medium text-foreground text-sm">{seller.vendedor}</span>
                   </div>
                 </TableCell>
                 <TableCell className="py-3">
                   <div className="space-y-1">
-                    <span className="text-xs text-slate-400">{seller.calls} calls</span>
-                    <div className="h-1.5 w-16 bg-slate-800 rounded-full overflow-hidden">
+                    <span className="text-xs text-muted-foreground">{seller.calls} calls</span>
+                    <div className="h-1.5 w-16 bg-muted rounded-full overflow-hidden">
                       <div 
                         className="h-full bg-gradient-to-r from-indigo-600 to-indigo-400 rounded-full"
                         style={{ width: `${maxCalls > 0 ? (seller.calls / maxCalls) * 100 : 0}%` }}
@@ -296,12 +297,12 @@ const SellersLeagueTable = ({ data, maxCalls }: { data: SellerData[], maxCalls: 
                   </span>
                 </TableCell>
                 <TableCell className="text-center py-3">
-                  <span className="font-bold text-white text-sm">
+                  <span className="font-bold text-foreground text-sm">
                     {seller.taxaConversao.toFixed(0)}%
                   </span>
                 </TableCell>
                 <TableCell className="text-right py-3">
-                  <span className="font-bold text-emerald-400 text-sm">
+                  <span className="font-semibold text-emerald-700 dark:text-emerald-200 text-sm">
                     {formatCurrency(seller.totalVendido)}
                   </span>
                 </TableCell>
@@ -323,33 +324,33 @@ interface ChartData {
 
 const AnalyticsChart = ({ data }: { data: ChartData[] }) => {
   return (
-    <Card className="border-white/5 bg-slate-900/50 backdrop-blur-sm">
+    <Card className="border border-border bg-card shadow-sm">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold text-white flex items-center gap-2">
-          <BarChart3 className="h-4 w-4 text-emerald-400" />
+        <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+          <BarChart3 className="h-4 w-4 text-emerald-600 dark:text-emerald-300" />
           Volume de Calls
         </CardTitle>
-        <p className="text-xs text-slate-500">Últimos 7 dias</p>
+        <p className="text-xs text-muted-foreground">Últimos 7 dias</p>
       </CardHeader>
       <CardContent className="pt-0">
         <ResponsiveContainer width="100%" height={220}>
           <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="colorCallsArea" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.4}/>
+                <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.35}/>
                 <stop offset="95%" stopColor="#4F46E5" stopOpacity={0}/>
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.25)" vertical={false} />
             <XAxis 
               dataKey="data" 
-              stroke="rgba(255,255,255,0.3)"
+              stroke="rgba(100,116,139,0.6)"
               fontSize={11}
               tickLine={false}
               axisLine={false}
             />
             <YAxis 
-              stroke="rgba(255,255,255,0.3)"
+              stroke="rgba(100,116,139,0.6)"
               fontSize={11}
               tickLine={false}
               axisLine={false}
@@ -357,12 +358,12 @@ const AnalyticsChart = ({ data }: { data: ChartData[] }) => {
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: "rgba(15, 23, 42, 0.95)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: "8px",
-                boxShadow: "0 4px 20px rgba(0,0,0,0.3)"
+                backgroundColor: "rgba(255,255,255,0.96)",
+                border: "1px solid rgba(226,232,240,0.8)",
+                borderRadius: "10px",
+                boxShadow: "0 12px 30px rgba(15,23,42,0.16)"
               }}
-              labelStyle={{ color: "#94a3b8" }}
+              labelStyle={{ color: "#475569" }}
               formatter={(value: number, name: string) => {
                 if (name === 'calls') return [value, 'Calls'];
                 return [`${value.toFixed(1)}%`, 'Conversão'];
@@ -394,6 +395,7 @@ const Calls = () => {
   });
   const [selectedVendedor, setSelectedVendedor] = useState("todos");
   const [selectedResultado, setSelectedResultado] = useState("todos");
+  const { activeCompanyId } = useTenant();
 
   // Comprehensive refetch function for when a call/sale is registered
   const handleCallSuccess = () => {
@@ -412,37 +414,48 @@ const Calls = () => {
   };
 
   const { data: vendedores = [] } = useQuery({
-    queryKey: ["vendedores"],
+    queryKey: ["vendedores", activeCompanyId],
     queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("id, nome");
+      let query = supabase.from("profiles").select("id, nome").eq("is_super_admin", false);
+      if (activeCompanyId) query = query.eq("company_id", activeCompanyId);
+      const { data } = await query;
       return data || [];
     },
     enabled: isAdmin,
   });
 
   const { data: metricas } = useQuery({
-    queryKey: ["metricas-calls", dateRange, selectedVendedor],
+    queryKey: ["metricas-calls", dateRange, selectedVendedor, activeCompanyId],
     queryFn: async () => {
       let agendamentosQuery = supabase
         .from("agendamentos")
-        .select("id")
+        .select("id, profiles!inner(company_id, is_super_admin)")
         .gte("data_agendamento", dateRange.from?.toISOString().split("T")[0] || '')
-        .lte("data_agendamento", dateRange.to?.toISOString().split("T")[0] || '');
+        .lte("data_agendamento", dateRange.to?.toISOString().split("T")[0] || '')
+        .eq("profiles.is_super_admin", false);
 
       if (selectedVendedor !== "todos") {
         agendamentosQuery = agendamentosQuery.eq("user_id", selectedVendedor);
+      }
+      if (activeCompanyId) {
+        agendamentosQuery = agendamentosQuery.eq("profiles.company_id", activeCompanyId);
       }
 
       const { data: agendamentosData } = await agendamentosQuery;
 
       let callsQuery = supabase
         .from("calls")
-        .select("id, resultado, attendance_status")
+        .select("id, resultado, attendance_status, profiles!inner(is_super_admin)")
         .gte("data_call", dateRange.from?.toISOString().split("T")[0] || '')
         .lte("data_call", dateRange.to?.toISOString().split("T")[0] || '');
 
       if (selectedVendedor !== "todos") {
         callsQuery = callsQuery.eq("user_id", selectedVendedor);
+      }
+      // Excluir calls de super-admins (calendário admin não conta)
+      callsQuery = callsQuery.eq("profiles.is_super_admin", false);
+      if (activeCompanyId) {
+        callsQuery = callsQuery.eq("company_id", activeCompanyId);
       }
 
       const { data: callsData } = await callsQuery;
@@ -477,7 +490,7 @@ const Calls = () => {
   });
 
   const { data: chartData = [] } = useQuery({
-    queryKey: ["calls-chart-data", dateRange],
+    queryKey: ["calls-chart-data", dateRange, activeCompanyId],
     queryFn: async () => {
       const data: ChartData[] = [];
       const hoje = new Date();
@@ -488,10 +501,17 @@ const Calls = () => {
         const dateStr = date.toISOString().split("T")[0];
         const dataFormatada = format(date, "dd/MM");
 
-        const { data: callsData } = await supabase
+        let callsQuery = supabase
           .from("calls")
-          .select("id, resultado")
-          .eq("data_call", dateStr);
+          .select("id, resultado, profiles!inner(is_super_admin)")
+          .eq("data_call", dateStr)
+          .eq("profiles.is_super_admin", false);
+
+        if (activeCompanyId) {
+          callsQuery = callsQuery.eq("company_id", activeCompanyId);
+        }
+
+        const { data: callsData } = await callsQuery;
 
         const calls = callsData?.length || 0;
         const vendas = callsData?.filter((c: any) => c.resultado === "venda").length || 0;
@@ -506,19 +526,27 @@ const Calls = () => {
   });
 
   const { data: sellersData = [] } = useQuery({
-    queryKey: ["sellers-league", dateRange],
+    queryKey: ["sellers-league", dateRange, activeCompanyId],
     queryFn: async () => {
-      const { data: profiles } = await supabase.from("profiles").select("id, nome, avatar_url");
+      let profilesQuery = supabase
+        .from("profiles")
+        .select("id, nome, avatar_url, is_super_admin")
+        .eq("is_super_admin", false);
+      if (activeCompanyId) {
+        profilesQuery = profilesQuery.eq("company_id", activeCompanyId);
+      }
+      const { data: profiles } = await profilesQuery;
       if (!profiles) return [];
 
       const results = await Promise.all(
         profiles.map(async (profile: any) => {
           const { data: callsData } = await supabase
             .from("calls")
-            .select("id, resultado, attendance_status")
+            .select("id, resultado, attendance_status, profiles!inner(is_super_admin)")
             .eq("user_id", profile.id)
             .gte("data_call", dateRange.from?.toISOString().split("T")[0] || '')
-            .lte("data_call", dateRange.to?.toISOString().split("T")[0] || '');
+            .lte("data_call", dateRange.to?.toISOString().split("T")[0] || '')
+            .eq("profiles.is_super_admin", false);
 
           const { data: agendamentosData } = await supabase
             .from("agendamentos")
@@ -560,15 +588,28 @@ const Calls = () => {
   });
 
   const { data: proximosAgendamentos = [] } = useQuery({
-    queryKey: ["proximos-agendamentos"],
+    queryKey: ["proximos-agendamentos", selectedVendedor, user?.id, isAdmin],
     queryFn: async () => {
-      const { data } = await supabase
+      let query = supabase
         .from("agendamentos")
-        .select("id, cliente_nome, data_agendamento, user_id, profiles(nome)")
+        .select("id, cliente_nome, data_agendamento, user_id, profiles!inner(nome, is_super_admin, company_id)")
         .eq("status", "agendado")
         .gte("data_agendamento", new Date().toISOString())
+        .eq("profiles.is_super_admin", false)
         .order("data_agendamento", { ascending: true })
         .limit(10);
+
+      // Respeita filtro escolhido; não exibe de outros por padrão
+      if (selectedVendedor && selectedVendedor !== "todos") {
+        query = query.eq("user_id", selectedVendedor);
+      } else if (!isAdmin && user?.id) {
+        query = query.eq("user_id", user.id);
+      }
+      if (activeCompanyId) {
+        query = query.eq("profiles.company_id", activeCompanyId);
+      }
+
+      const { data } = await query;
 
       return (
         data?.map((a: any) => ({
@@ -579,6 +620,7 @@ const Calls = () => {
         })) || []
       );
     },
+    enabled: !!user,
   });
 
   const maxCalls = Math.max(...sellersData.map(s => s.calls), 1);
@@ -588,8 +630,8 @@ const Calls = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-white">Performance de Calls</h1>
-          <p className="text-xs sm:text-sm text-slate-400">
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Performance de Calls</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground">
             Métricas e conversão • {format(new Date(), "MMMM 'de' yyyy", { locale: ptBR })}
           </p>
         </div>

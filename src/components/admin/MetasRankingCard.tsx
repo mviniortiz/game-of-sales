@@ -109,19 +109,19 @@ export const MetasRankingCard = ({
       {/* Header with Filter */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-indigo-500/10">
-            <Medal className="h-5 w-5 text-indigo-400" />
+          <div className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-500/10">
+            <Medal className="h-5 w-5 text-indigo-600 dark:text-indigo-200" />
           </div>
           <div>
             <div className="flex items-center gap-3">
-              <h2 className="text-xl font-bold text-white">Metas de Vendas</h2>
+              <h2 className="text-xl font-bold text-foreground">Metas de Vendas</h2>
               {hasActiveFilters && (
-                <Badge variant="outline" className="bg-indigo-500/10 text-indigo-400 border-indigo-500/30 text-xs">
+                <Badge variant="outline" className="bg-indigo-50 text-indigo-600 border-indigo-100 text-xs dark:bg-indigo-500/10 dark:text-indigo-200 dark:border-indigo-500/30">
                   Filtrado
                 </Badge>
               )}
             </div>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted-foreground">
               {hasActiveFilters && filterDescription 
                 ? filterDescription
                 : "Acompanhamento mensal de performance"}
@@ -129,10 +129,10 @@ export const MetasRankingCard = ({
           </div>
         </div>
         <Select value={statusFiltro} onValueChange={onStatusChange}>
-          <SelectTrigger className="w-[160px] bg-slate-900/50 border-white/10 text-white">
+          <SelectTrigger className="w-[160px] bg-card border-border text-foreground">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
-          <SelectContent className="bg-slate-900 border-white/10">
+          <SelectContent className="bg-card border border-border shadow-sm">
             <SelectItem value="todos">Todos</SelectItem>
             <SelectItem value="atingida">Atingida</SelectItem>
             <SelectItem value="em_andamento">Em andamento</SelectItem>
@@ -141,45 +141,44 @@ export const MetasRankingCard = ({
       </div>
 
       {/* Hero Card - Meta Consolidada */}
-      <Card className="relative overflow-hidden border-white/5 bg-gradient-to-r from-indigo-900/50 via-slate-900/80 to-slate-900">
-        {/* Background effects */}
-        <div className="absolute top-0 left-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -ml-32 -mt-32" />
-        <div className="absolute bottom-0 right-0 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl -mr-24 -mb-24" />
+      <Card className="relative overflow-hidden border border-border bg-card shadow-sm">
+        <div className="absolute top-0 left-0 w-64 h-64 bg-indigo-500/5 dark:bg-indigo-500/10 rounded-full blur-3xl -ml-32 -mt-32 pointer-events-none" />
+        <div className="absolute bottom-0 right-0 w-48 h-48 bg-cyan-500/5 dark:bg-cyan-500/10 rounded-full blur-3xl -mr-24 -mb-24 pointer-events-none" />
         
         <CardContent className="relative z-10 p-6">
           <div className="grid md:grid-cols-2 gap-6 items-center">
             {/* Left - Info */}
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-indigo-500/20">
-                  <Zap className="h-5 w-5 text-indigo-400" />
+                <div className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-500/10">
+                  <Zap className="h-5 w-5 text-indigo-600 dark:text-indigo-200" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">Meta Consolidada</h3>
-                  <p className="text-xs text-slate-500">Objetivo da equipe</p>
+                  <h3 className="text-lg font-bold text-foreground">Meta Consolidada</h3>
+                  <p className="text-xs text-muted-foreground">Objetivo da equipe</p>
                 </div>
               </div>
 
               {/* Values */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs text-slate-500 uppercase tracking-wider">Realizado</p>
-                  <p className="text-xl font-bold text-white">{formatCurrencyCompact(valorConsolidadoAtingido)}</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider">Realizado</p>
+                  <p className="text-xl font-bold text-foreground">{formatCurrencyCompact(valorConsolidadoAtingido)}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500 uppercase tracking-wider">Meta</p>
-                  <p className="text-xl font-bold text-slate-400">{formatCurrencyCompact(metaConsolidada)}</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider">Meta</p>
+                  <p className="text-xl font-bold text-muted-foreground">{formatCurrencyCompact(metaConsolidada)}</p>
                 </div>
               </div>
 
               {/* Progress Bar */}
               <div className="space-y-2">
-                <div className="relative h-5 bg-slate-800 rounded-full overflow-hidden">
+                <div className="relative h-3.5 bg-muted rounded-full overflow-hidden border border-border">
                   <div
-                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-400 rounded-full transition-all duration-1000"
+                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-indigo-600 via-indigo-500 to-emerald-400 rounded-full transition-all duration-700"
                     style={{ width: `${Math.min(percentualConsolidado, 100)}%` }}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-60" />
                   </div>
                 </div>
               </div>
@@ -188,10 +187,10 @@ export const MetasRankingCard = ({
             {/* Right - Big Percentage */}
             <div className="text-center md:text-right">
               <div className="inline-block">
-                <span className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-indigo-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent tabular-nums">
+                <span className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-indigo-600 via-cyan-500 to-emerald-500 bg-clip-text text-transparent tabular-nums">
                   {percentualConsolidado.toFixed(1)}
                 </span>
-                <span className="text-2xl font-bold text-slate-500">%</span>
+                <span className="text-2xl font-bold text-muted-foreground">%</span>
               </div>
               <div className="mt-2">
                 {getStatusBadge(percentualConsolidado)}
@@ -204,18 +203,18 @@ export const MetasRankingCard = ({
       {/* Individual Contributions */}
       <div className="space-y-3">
         <div className="flex items-center gap-2">
-          <TrendingUp className="h-4 w-4 text-indigo-400" />
-          <h3 className="text-sm font-semibold text-white">Contribuição Individual</h3>
-          <span className="text-xs text-slate-500">
+          <TrendingUp className="h-4 w-4 text-indigo-600 dark:text-indigo-200" />
+          <h3 className="text-sm font-semibold text-foreground">Contribuição Individual</h3>
+          <span className="text-xs text-muted-foreground">
             ({filteredVendedores.length} {filteredVendedores.length === 1 ? "vendedor" : "vendedores"})
           </span>
         </div>
 
         {filteredVendedores.length === 0 ? (
-          <Card className="border-dashed border-white/10 bg-slate-900/30">
+          <Card className="border-dashed border-border bg-card">
             <CardContent className="py-8 text-center">
-              <Target className="h-10 w-10 mx-auto mb-3 text-slate-600" />
-              <p className="text-slate-400 text-sm">Nenhum vendedor encontrado</p>
+              <Target className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
+              <p className="text-muted-foreground text-sm">Nenhum vendedor encontrado</p>
             </CardContent>
           </Card>
         ) : (
@@ -230,7 +229,7 @@ export const MetasRankingCard = ({
               return (
                 <Card
                   key={vendedor.nome}
-                  className={`relative overflow-hidden border-white/5 bg-slate-900/50 backdrop-blur-sm transition-all duration-300 hover:scale-[1.01] ${
+                  className={`relative overflow-hidden border border-border bg-card shadow-sm transition-all duration-300 hover:scale-[1.01] ${
                     isWinner 
                       ? "ring-1 ring-emerald-500/50 shadow-lg shadow-emerald-500/10" 
                       : ""
@@ -246,12 +245,12 @@ export const MetasRankingCard = ({
                       {/* Position */}
                       <div className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
                         posicao === 1 
-                          ? "bg-amber-500/20 text-amber-400" 
+                            ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-200" 
                           : posicao === 2 
-                            ? "bg-slate-400/20 text-slate-300" 
+                              ? "bg-slate-200 text-slate-700 dark:bg-slate-400/20 dark:text-slate-200" 
                             : posicao === 3 
-                              ? "bg-amber-700/20 text-amber-600" 
-                              : "bg-slate-800 text-slate-500"
+                                ? "bg-amber-200 text-amber-800 dark:bg-amber-700/20 dark:text-amber-200" 
+                                : "bg-muted text-muted-foreground"
                       }`}>
                         {posicao <= 3 ? (
                           posicao === 1 ? <Crown className="h-3 w-3" /> : `#${posicao}`
@@ -266,7 +265,7 @@ export const MetasRankingCard = ({
                           {vendedor.avatar_url && (
                             <AvatarImage src={vendedor.avatar_url} alt={vendedor.nome} />
                           )}
-                          <AvatarFallback className="bg-slate-800 text-white font-bold text-xs">
+                          <AvatarFallback className="bg-muted text-foreground font-bold text-xs">
                             {getInitials(vendedor.nome)}
                           </AvatarFallback>
                         </Avatar>
@@ -279,23 +278,23 @@ export const MetasRankingCard = ({
 
                       {/* Name */}
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-white text-sm truncate">{vendedor.nome}</h4>
+                        <h4 className="font-semibold text-foreground text-sm truncate">{vendedor.nome}</h4>
                       </div>
 
                       {/* Percentage */}
                       <span className={`text-xl font-bold tabular-nums ${
                         isWinner 
-                          ? "text-emerald-400" 
+                          ? "text-emerald-600 dark:text-emerald-300" 
                           : vendedor.percentual >= 50 
-                            ? "text-cyan-400" 
-                            : "text-indigo-400"
+                            ? "text-cyan-600 dark:text-cyan-300" 
+                            : "text-indigo-600 dark:text-indigo-300"
                       }`}>
                         {vendedor.percentual.toFixed(0)}%
                       </span>
                     </div>
 
                     {/* Row 2: Progress Bar */}
-                    <div className="relative h-2 bg-slate-800 rounded-full overflow-hidden">
+                    <div className="relative h-2 bg-muted rounded-full overflow-hidden border border-border">
                       <div
                         className={`h-full ${getProgressBarColor(vendedor.percentual)} rounded-full transition-all duration-700`}
                         style={{ width: `${Math.min(vendedor.percentual, 100)}%` }}
@@ -304,10 +303,10 @@ export const MetasRankingCard = ({
 
                     {/* Row 3: Values */}
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400">
+                      <span className="text-muted-foreground">
                         {formatCurrencyCompact(vendedor.valorRealizado)} / {formatCurrencyCompact(vendedor.valorMeta)}
                       </span>
-                      <span className="text-slate-500">
+                      <span className="text-muted-foreground">
                         {percentualContribuicao.toFixed(1)}% do total
                       </span>
                     </div>

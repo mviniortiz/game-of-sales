@@ -228,9 +228,10 @@ export default function Calendario() {
     // Build query with seller name join and super_admin flag
     let query = supabase
       .from("agendamentos")
-      .select("*, profiles!agendamentos_user_id_fkey(nome, is_super_admin)")
+      .select("*, profiles!agendamentos_user_id_fkey(nome, is_super_admin, company_id)")
       .gte("data_agendamento", start.toISOString())
-      .lte("data_agendamento", end.toISOString());
+      .lte("data_agendamento", end.toISOString())
+      .eq("profiles.is_super_admin", false);
 
     // ==========================================
     // PERMISSION-BASED FILTERING:
@@ -242,15 +243,9 @@ export default function Calendario() {
       // - Can filter by company if one is selected
       
       if (selectedVendedor !== "all") {
-        // Viewing specific seller
         query = query.eq("user_id", selectedVendedor);
-      } else {
-        // Viewing all - but exclude other Super Admins
-        // This is done in post-processing since we need the profile join
-        if (activeCompanyId) {
-          // Filter by selected company
-          query = query.eq("profiles.company_id", activeCompanyId);
-        }
+      } else if (activeCompanyId) {
+        query = query.eq("profiles.company_id", activeCompanyId);
       }
     } else if (isAdmin) {
       // Company Admin:
@@ -260,7 +255,9 @@ export default function Calendario() {
       if (selectedVendedor !== "all") {
         query = query.eq("user_id", selectedVendedor);
       }
-      // Company filter will be applied in post-processing
+      if (companyId) {
+        query = query.eq("profiles.company_id", companyId);
+      }
     } else {
       // Regular Seller:
       // - Can ONLY see their own appointments
@@ -282,17 +279,9 @@ export default function Calendario() {
     } else {
       // Map data and apply permission filters
       let filteredData = (data || []).filter((ag: any) => {
-        // CRITICAL: Never show Super Admins' appointments to anyone except themselves
-        if (ag.profiles?.is_super_admin && ag.user_id !== user.id) {
-          return false;
-        }
-        
-        // For Company Admins: Only show appointments from their company
-        if (isAdmin && !isSuperAdmin && companyId) {
-          // This would require company_id on agendamentos or checking via profile
-          // For now, we trust the sellers list is already filtered by company
-        }
-        
+        if (ag.profiles?.is_super_admin && ag.user_id !== user.id) return false;
+        if (activeCompanyId && ag.profiles?.company_id !== activeCompanyId) return false;
+        if (isAdmin && !isSuperAdmin && companyId && ag.profiles?.company_id !== companyId) return false;
         return true;
       });
 

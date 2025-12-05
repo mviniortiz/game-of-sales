@@ -35,9 +35,10 @@ export const AdminPerformanceView = ({ dateRange, selectedVendedor }: AdminPerfo
 
       let callsQuery = supabase
         .from("calls")
-        .select("id, user_id, resultado")
+        .select("id, user_id, resultado, profiles!inner(is_super_admin)")
         .gte("data_call", inicioMes)
-        .lte("data_call", fimMes);
+        .lte("data_call", fimMes)
+        .eq("profiles.is_super_admin", false);
 
       if (selectedVendedor !== "todos") {
         callsQuery = callsQuery.eq("user_id", selectedVendedor);
@@ -65,7 +66,10 @@ export const AdminPerformanceView = ({ dateRange, selectedVendedor }: AdminPerfo
   const { data: performanceData = [] } = useQuery({
     queryKey: ["admin-performance-vendedores", inicioMes, fimMes],
     queryFn: async () => {
-      const { data: profiles } = await supabase.from("profiles").select("id, nome");
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, nome, is_super_admin")
+        .eq("is_super_admin", false);
 
       if (!profiles) return [];
 
@@ -80,10 +84,11 @@ export const AdminPerformanceView = ({ dateRange, selectedVendedor }: AdminPerfo
 
           const { data: calls } = await supabase
             .from("calls")
-            .select("id, resultado")
+            .select("id, resultado, profiles!inner(is_super_admin)")
             .eq("user_id", profile.id)
             .gte("data_call", inicioMes)
-            .lte("data_call", fimMes);
+            .lte("data_call", fimMes)
+            .eq("profiles.is_super_admin", false);
 
           const totalAgendamentos = agendamentos?.length || 0;
           const totalCalls = calls?.length || 0;
@@ -131,9 +136,10 @@ export const AdminPerformanceView = ({ dateRange, selectedVendedor }: AdminPerfo
 
       let callsQuery = supabase
         .from("calls")
-        .select("data_call")
+        .select("data_call, profiles!inner(is_super_admin)")
         .gte("data_call", inicioMes)
-        .lte("data_call", fimMes);
+        .lte("data_call", fimMes)
+        .eq("profiles.is_super_admin", false);
 
       if (selectedVendedor !== "todos") {
         callsQuery = callsQuery.eq("user_id", selectedVendedor);

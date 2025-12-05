@@ -1,9 +1,11 @@
+import { useEffect, useState } from "react";
 import { Home, Trophy, PlusCircle, Target, PhoneCall, Shield, LogOut, User, Settings, Calendar, Kanban } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { CompanySwitcher } from "./CompanySwitcher";
 import logo from "@/assets/logo.svg";
+import logoLight from "@/assets/logo 1 - white.svg";
 import {
   Sidebar,
   SidebarContent,
@@ -56,6 +58,15 @@ export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const collapsed = state === "collapsed";
+  const [isDark, setIsDark] = useState(() => typeof document !== "undefined" && document.documentElement.classList.contains("dark"));
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains("dark"));
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
 
   const getInitials = (nome: string) => {
     return nome
@@ -68,13 +79,13 @@ export function AppSidebar() {
 
   return (
     <TooltipProvider delayDuration={300}>
-      <Sidebar className="border-r border-border/50">
+      <Sidebar className="border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
         <SidebarContent className="gap-0">
           {/* Logo Section */}
-          <div className="p-4 border-b border-border/50">
+          <div className="p-4 border-b border-sidebar-border">
             {!collapsed && (
               <div className="flex items-center justify-center">
-                <img src={logo} alt="VYZON" className="h-12 w-auto object-contain" />
+                <img src={isDark ? logo : logoLight} alt="VYZON" className="h-12 w-auto object-contain" />
               </div>
             )}
             {collapsed && (
@@ -94,7 +105,7 @@ export function AppSidebar() {
                 <TooltipTrigger asChild>
                   <Button
                     onClick={() => navigate("/nova-venda")}
-                    className="w-full bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all h-12 gap-2"
+                    className="w-full bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-semibold shadow-md hover:shadow-lg transition-all h-12 gap-2"
                   >
                     <PlusCircle className="h-5 w-5" />
                   </Button>
@@ -106,7 +117,7 @@ export function AppSidebar() {
             ) : (
               <Button
                 onClick={() => navigate("/nova-venda")}
-                className="w-full bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all h-12 gap-2"
+                className="w-full bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-semibold shadow-md hover:shadow-lg transition-all h-12 gap-2"
               >
                 <PlusCircle className="h-5 w-5" />
                 <span>Registrar Venda</span>
@@ -117,7 +128,7 @@ export function AppSidebar() {
         {/* Visão Geral Section */}
         <SidebarGroup className="py-2">
           {!collapsed && (
-            <SidebarGroupLabel className="text-xs uppercase text-muted-foreground/60 font-semibold tracking-wider px-4">
+            <SidebarGroupLabel className="text-xs uppercase text-muted-foreground/70 font-semibold tracking-wider px-4">
               Visão Geral
             </SidebarGroupLabel>
           )}
@@ -134,10 +145,10 @@ export function AppSidebar() {
                             <NavLink
                               to={item.url}
                               end
-                              className="flex items-center gap-3 hover:bg-accent/50 transition-all group py-2.5"
-                              activeClassName="bg-accent/60 text-primary font-medium border-l-4 border-indigo-500"
+                              className="flex items-center gap-3 hover:bg-sidebar-accent transition-all group py-2.5"
+                              activeClassName="bg-indigo-50 text-indigo-600 font-medium border-l-4 border-indigo-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
                             >
-                              <item.icon className={`h-5 w-5 transition-colors ${isActive ? 'text-indigo-500' : ''}`} />
+                              <item.icon className={`h-5 w-5 transition-colors ${isActive ? 'text-indigo-500' : 'text-muted-foreground'}`} />
                             </NavLink>
                           </SidebarMenuButton>
                         </TooltipTrigger>
@@ -150,10 +161,10 @@ export function AppSidebar() {
                         <NavLink
                           to={item.url}
                           end
-                          className="flex items-center gap-3 hover:bg-accent/50 transition-all group py-2.5"
-                          activeClassName="bg-accent/60 text-primary font-medium border-l-4 border-indigo-500"
+                          className="flex items-center gap-3 hover:bg-sidebar-accent transition-all group py-2.5"
+                          activeClassName="bg-indigo-50 text-indigo-600 font-medium border-l-4 border-indigo-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
                         >
-                          <item.icon className={`h-5 w-5 transition-colors ${isActive ? 'text-indigo-500' : ''}`} />
+                          <item.icon className={`h-5 w-5 transition-colors ${isActive ? 'text-indigo-500' : 'text-muted-foreground'}`} />
                           <span className="flex-1">{item.title}</span>
                         </NavLink>
                       </SidebarMenuButton>
@@ -168,7 +179,7 @@ export function AppSidebar() {
         {/* Gestão Section */}
         <SidebarGroup className="py-2">
           {!collapsed && (
-            <SidebarGroupLabel className="text-xs uppercase text-muted-foreground/60 font-semibold tracking-wider px-4">
+            <SidebarGroupLabel className="text-xs uppercase text-muted-foreground/70 font-semibold tracking-wider px-4">
               Gestão
             </SidebarGroupLabel>
           )}
@@ -185,10 +196,10 @@ export function AppSidebar() {
                             <NavLink
                               to={item.url}
                               end
-                              className="flex items-center gap-3 hover:bg-accent/50 transition-all group py-2.5"
-                              activeClassName="bg-accent/60 text-primary font-medium border-l-4 border-indigo-500"
+                              className="flex items-center gap-3 hover:bg-sidebar-accent transition-all group py-2.5"
+                              activeClassName="bg-indigo-50 text-indigo-600 font-medium border-l-4 border-indigo-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
                             >
-                              <item.icon className={`h-5 w-5 transition-colors ${isActive ? 'text-indigo-500' : ''}`} />
+                              <item.icon className={`h-5 w-5 transition-colors ${isActive ? 'text-indigo-500' : 'text-muted-foreground'}`} />
                             </NavLink>
                           </SidebarMenuButton>
                         </TooltipTrigger>
@@ -201,10 +212,10 @@ export function AppSidebar() {
                         <NavLink
                           to={item.url}
                           end
-                          className="flex items-center gap-3 hover:bg-accent/50 transition-all group py-2.5"
-                          activeClassName="bg-accent/60 text-primary font-medium border-l-4 border-indigo-500"
+                          className="flex items-center gap-3 hover:bg-sidebar-accent transition-all group py-2.5"
+                          activeClassName="bg-indigo-50 text-indigo-600 font-medium border-l-4 border-indigo-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
                         >
-                          <item.icon className={`h-5 w-5 transition-colors ${isActive ? 'text-indigo-500' : ''}`} />
+                          <item.icon className={`h-5 w-5 transition-colors ${isActive ? 'text-indigo-500' : 'text-muted-foreground'}`} />
                           <span className="flex-1">{item.title}</span>
                         </NavLink>
                       </SidebarMenuButton>
@@ -220,7 +231,7 @@ export function AppSidebar() {
         {isAdmin && (
           <SidebarGroup className="py-2">
             {!collapsed && (
-              <SidebarGroupLabel className="text-xs uppercase text-muted-foreground/60 font-semibold tracking-wider px-4">
+              <SidebarGroupLabel className="text-xs uppercase text-muted-foreground/70 font-semibold tracking-wider px-4">
                 Sistema
               </SidebarGroupLabel>
             )}
@@ -234,10 +245,10 @@ export function AppSidebar() {
                           <NavLink
                             to={adminMenuItem.url}
                             end
-                            className="flex items-center gap-3 hover:bg-accent/50 transition-all group py-2.5"
-                            activeClassName="bg-accent/60 text-primary font-medium border-l-4 border-indigo-500"
+                            className="flex items-center gap-3 hover:bg-sidebar-accent transition-all group py-2.5"
+                            activeClassName="bg-indigo-50 text-indigo-600 font-medium border-l-4 border-indigo-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
                           >
-                            <adminMenuItem.icon className={`h-5 w-5 transition-colors ${location.pathname === adminMenuItem.url ? 'text-indigo-500' : ''}`} />
+                            <adminMenuItem.icon className={`h-5 w-5 transition-colors ${location.pathname === adminMenuItem.url ? 'text-indigo-500' : 'text-muted-foreground'}`} />
                           </NavLink>
                         </SidebarMenuButton>
                       </TooltipTrigger>
@@ -250,10 +261,10 @@ export function AppSidebar() {
                       <NavLink
                         to={adminMenuItem.url}
                         end
-                        className="flex items-center gap-3 hover:bg-accent/50 transition-all group py-2.5"
-                        activeClassName="bg-accent/60 text-primary font-medium border-l-4 border-indigo-500"
+                          className="flex items-center gap-3 hover:bg-sidebar-accent transition-all group py-2.5"
+                          activeClassName="bg-indigo-50 text-indigo-600 font-medium border-l-4 border-indigo-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
                       >
-                        <adminMenuItem.icon className={`h-5 w-5 transition-colors ${location.pathname === adminMenuItem.url ? 'text-indigo-500' : ''}`} />
+                          <adminMenuItem.icon className={`h-5 w-5 transition-colors ${location.pathname === adminMenuItem.url ? 'text-indigo-500' : 'text-muted-foreground'}`} />
                         <span className="flex-1">{adminMenuItem.title}</span>
                       </NavLink>
                     </SidebarMenuButton>
@@ -266,13 +277,13 @@ export function AppSidebar() {
       </SidebarContent>
 
       {/* User Profile Footer - Enhanced Card Design */}
-      <SidebarFooter className="border-t-2 border-border/50 p-4 mt-auto bg-muted/20">
+      <SidebarFooter className="border-t border-sidebar-border p-4 mt-auto bg-secondary">
         {!collapsed ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="ghost" 
-                className="w-full justify-start gap-3 h-auto py-3 hover:bg-accent/50 rounded-lg transition-all"
+                className="w-full justify-start gap-3 h-auto py-3 hover:bg-sidebar-accent rounded-lg transition-all"
               >
                 <Avatar className="h-10 w-10 ring-2 ring-indigo-500/20">
                   {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt="Avatar" />}
@@ -298,7 +309,14 @@ export function AppSidebar() {
                 Perfil
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={signOut} className="text-destructive">
+              <DropdownMenuItem
+                onClick={() => {
+                  signOut().finally(() => {
+                    window.location.href = "/auth";
+                  });
+                }}
+                className="text-destructive"
+              >
                 <LogOut className="mr-2 h-4 w-4" />
                 Sair
               </DropdownMenuItem>
@@ -307,7 +325,7 @@ export function AppSidebar() {
         ) : (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="mx-auto hover:bg-accent/50">
+              <Button variant="ghost" size="icon" className="mx-auto hover:bg-gray-100">
                 <Avatar className="h-10 w-10 ring-2 ring-indigo-500/20">
                   {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt="Avatar" />}
                   <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white">

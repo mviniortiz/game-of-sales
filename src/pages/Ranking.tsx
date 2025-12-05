@@ -83,10 +83,8 @@ const Ranking = () => {
       // For now, let's fetch ALL profiles to debug
       let profilesQuery = supabase
         .from("profiles")
-        .select("id, nome, avatar_url, nivel, is_super_admin, company_id");
-
-      // Only exclude super admins if we're not debugging
-      // profilesQuery = profilesQuery.eq("is_super_admin", false);
+        .select("id, nome, avatar_url, nivel, is_super_admin, company_id")
+        .eq("is_super_admin", false);
 
       // Apply company filter based on role
       if (isSuperAdmin && activeCompanyId) {
@@ -118,7 +116,7 @@ const Ranking = () => {
       // First, let's see ALL sales to debug
       const { data: allVendas, error: allVendasError } = await supabase
         .from("vendas")
-        .select("user_id, valor, status, data_venda")
+        .select("user_id, valor, status, data_venda, company_id")
         .gte("data_venda", inicioMes)
         .lte("data_venda", fimMes);
       

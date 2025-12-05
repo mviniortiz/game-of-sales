@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTenant } from "@/contexts/TenantContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ import { z } from "zod";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { playSaleChime } from "@/utils/sounds";
 
 const vendaSchema = z.object({
   clienteNome: z.string().trim().min(1, "Nome do cliente é obrigatório").max(200, "Nome muito longo"),
@@ -46,6 +48,7 @@ const vendaSchema = z.object({
 
 const NovaVenda = () => {
   const { user, isAdmin } = useAuth();
+  const { activeCompanyId } = useTenant();
   const queryClient = useQueryClient();
   const [clienteNome, setClienteNome] = useState("");
   const [produtoId, setProdutoId] = useState("");
@@ -59,32 +62,35 @@ const NovaVenda = () => {
   const [dataVenda, setDataVenda] = useState<Date>(new Date());
 
   const { data: produtos } = useQuery({
-    queryKey: ["produtos"],
+    queryKey: ["produtos", activeCompanyId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("produtos")
         .select("*")
-        .eq("ativo", true);
+        .eq("ativo", true)
+        .eq("company_id", activeCompanyId);
       
       if (error) throw error;
       return data;
     },
+    enabled: !!activeCompanyId,
   });
 
   const { data: vendedores } = useQuery({
-    queryKey: ["vendedores"],
+    queryKey: ["vendedores", activeCompanyId],
     queryFn: async () => {
       if (!isAdmin) return [];
       
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, nome, email")
+        .select("id, nome, email, company_id")
+        .eq("company_id", activeCompanyId)
         .order("nome");
       
       if (error) throw error;
       return data;
     },
-    enabled: isAdmin,
+    enabled: isAdmin && !!activeCompanyId,
   });
 
   const createVenda = useMutation({
@@ -113,6 +119,7 @@ const NovaVenda = () => {
       queryClient.invalidateQueries({ queryKey: ["vendedores-metas"] });
       queryClient.invalidateQueries({ queryKey: ["seller-ranking"] });
       
+      playSaleChime();
       toast.success("🎉 Venda registrada com sucesso!", {
         description: `Você ganhou ${Math.floor(parseFloat(valor) || 0)} pontos!`
       });
@@ -181,6 +188,7 @@ const NovaVenda = () => {
       status: validationResult.data.status as any,
       data_venda: validationResult.data.dataVenda,
       observacoes: validationResult.data.observacoes || null,
+      company_id: activeCompanyId,
     });
   };
 
@@ -223,46 +231,46 @@ const NovaVenda = () => {
           <p className="text-muted-foreground">Preencha os dados da venda para ganhar pontos e subir no ranking</p>
         </div>
 
-        <Card className="border-border/50">
+        <Card className="border border-border bg-card shadow-sm">
           {/* Header com Título e Card de Pontuação */}
           <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6">
-            <CardTitle className="flex items-center gap-2">
-              <PlusCircle className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+              <PlusCircle className="h-5 w-5 text-muted-foreground" />
               Informações da Venda
             </CardTitle>
             
             {/* Card de Pontuação - Compacto */}
-            <div className="border-2 border-amber-500/20 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 rounded-lg p-4 shadow-md min-w-[280px]">
+            <div className="rounded-lg p-4 min-w-[280px] border border-yellow-500/20 bg-yellow-500/10 backdrop-blur-md shadow-lg shadow-yellow-500/10">
               <div className="flex items-center gap-3">
                 {/* Troféu com Glow */}
                 <div className="relative flex-shrink-0">
-                  <div className="absolute inset-0 bg-amber-400/20 rounded-full blur-xl"></div>
-                  <Trophy className="relative h-12 w-12 text-amber-500 dark:text-amber-400" />
+                  <div className="absolute inset-0 bg-yellow-400/25 rounded-full blur-xl"></div>
+                  <Trophy className="relative h-12 w-12 text-yellow-400 drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]" />
                 </div>
                 
                 {/* Pontuação */}
                 <div className="flex-1">
-                  <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
+                  <div className="text-xs text-gray-300 uppercase tracking-wide mb-1">
                     Pontuação Prevista
                   </div>
-                  <div className="text-3xl font-bold text-amber-600 dark:text-amber-400 animate-pulse">
+                  <div className="text-3xl font-bold text-yellow-400 animate-pulse">
                     +{pontosPrevistos}
                   </div>
-                  <div className="text-xs text-muted-foreground">pontos</div>
+                  <div className="text-xs text-gray-400">pontos</div>
                 </div>
               </div>
               
               {pontosPrevistos > 0 ? (
-                <div className="mt-3 pt-3 border-t border-amber-200 dark:border-amber-800">
-                  <div className="flex items-center gap-2 text-xs">
-                    <TrendingUp className="h-3 w-3 text-green-600 flex-shrink-0" />
-                    <span className="text-muted-foreground">
+                <div className="mt-3 pt-3 border-t border-yellow-500/20">
+                  <div className="flex items-center gap-2 text-xs text-gray-300">
+                    <TrendingUp className="h-3 w-3 text-green-400 flex-shrink-0" />
+                    <span className="text-gray-300">
                       R$ {parseFloat(valor || "0").toFixed(2)}
                     </span>
                   </div>
                 </div>
               ) : (
-                <div className="mt-3 text-xs text-center text-amber-700 dark:text-amber-400 font-medium">
+                <div className="mt-3 text-xs text-center text-yellow-300 font-medium">
                   💰 Digite o valor para simular
                 </div>
               )}
@@ -286,7 +294,7 @@ const NovaVenda = () => {
                       placeholder="Ex: João Silva"
                       value={clienteNome}
                       onChange={(e) => setClienteNome(e.target.value)}
-                      className="h-11"
+                      className="h-11 bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:border-indigo-500"
                       required
                     />
                   </div>
@@ -297,7 +305,7 @@ const NovaVenda = () => {
                       Plataforma
                     </Label>
                     <Select value={plataforma} onValueChange={setPlataforma} required>
-                      <SelectTrigger className="h-11">
+                      <SelectTrigger className="h-11 bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:border-indigo-500">
                         <SelectValue placeholder="Selecione a plataforma" />
                       </SelectTrigger>
                       <SelectContent>
@@ -315,7 +323,7 @@ const NovaVenda = () => {
                       Forma de Pagamento
                     </Label>
                     <Select value={formaPagamento} onValueChange={setFormaPagamento} required>
-                      <SelectTrigger className="h-11">
+                      <SelectTrigger className="h-11 bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:border-indigo-500">
                         <SelectValue placeholder="Selecione a forma de pagamento" />
                       </SelectTrigger>
                       <SelectContent>
@@ -338,7 +346,7 @@ const NovaVenda = () => {
                       Produto
                     </Label>
                     <Select value={produtoId} onValueChange={setProdutoId} required>
-                      <SelectTrigger className="h-11">
+                      <SelectTrigger className="h-11 bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:border-indigo-500">
                         <SelectValue placeholder="Selecione um produto" />
                       </SelectTrigger>
                       <SelectContent>
@@ -363,7 +371,7 @@ const NovaVenda = () => {
                       placeholder="R$ 0,00"
                       value={valorFormatado}
                       onChange={(e) => formatarMoeda(e.target.value)}
-                      className="h-11 text-base font-medium"
+                      className="h-11 text-base font-medium bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:border-indigo-500"
                       required
                     />
                   </div>
@@ -378,7 +386,7 @@ const NovaVenda = () => {
                         <Button
                           variant="outline"
                           className={cn(
-                            "w-full justify-start text-left font-normal h-11",
+                            "w-full justify-start text-left font-normal h-11 bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white hover:bg-muted dark:hover:bg-slate-800 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:border-indigo-500",
                             !dataVenda && "text-muted-foreground"
                           )}
                         >
@@ -408,7 +416,7 @@ const NovaVenda = () => {
                     Status
                   </Label>
                   <Select value={status} onValueChange={setStatus} required>
-                    <SelectTrigger className="h-11">
+                    <SelectTrigger className="h-11 bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:border-indigo-500">
                       <SelectValue placeholder="Selecione o status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -422,12 +430,12 @@ const NovaVenda = () => {
                 {/* Campo Admin ao lado do Status */}
                 {isAdmin && (
                   <div className="space-y-2">
-                    <Label htmlFor="vendedor" className="text-sm font-semibold flex items-center gap-2">
-                      <User className="h-4 w-4 text-muted-foreground" />
+                  <Label htmlFor="vendedor" className="text-sm font-semibold flex items-center gap-2">
+                    <User className="h-4 w-4 text-muted-foreground" />
                       Vendedor
                     </Label>
                     <Select value={vendedorId} onValueChange={setVendedorId} required>
-                      <SelectTrigger className="h-11">
+                    <SelectTrigger className="h-11 bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:border-indigo-500">
                         <SelectValue placeholder="Selecione o vendedor" />
                       </SelectTrigger>
                       <SelectContent>
@@ -453,35 +461,35 @@ const NovaVenda = () => {
                   value={observacoes}
                   onChange={(e) => setObservacoes(e.target.value)}
                   rows={3}
-                  className="resize-none"
+                  className="resize-none bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:border-indigo-500"
                 />
               </div>
 
               {/* Resumo da Venda */}
               {(clienteNome || produtoId || valor || plataforma || formaPagamento) && (
-                <div className="mt-8 p-6 border-2 border-primary/20 rounded-lg bg-gradient-to-br from-primary/5 to-primary/10">
-                  <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-primary">
+                <div className="mt-8 p-6 border border-border rounded-lg bg-card shadow-sm">
+                  <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-foreground">
                     <CheckCircle className="h-5 w-5" />
                     Resumo da Venda
                   </h3>
                   
                   <div className="grid md:grid-cols-2 gap-4">
                     {clienteNome && (
-                      <div className="flex items-start gap-3 p-3 bg-background/50 rounded-md border border-border/50">
+                      <div className="flex items-start gap-3 p-3 bg-muted/60 dark:bg-slate-900/40 rounded-md border border-border">
                         <User className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Cliente</p>
-                          <p className="font-medium text-sm truncate">{clienteNome}</p>
+                          <p className="font-medium text-sm truncate text-foreground">{clienteNome}</p>
                         </div>
                       </div>
                     )}
                     
                     {produtoId && produtos && (
-                      <div className="flex items-start gap-3 p-3 bg-background/50 rounded-md border border-border/50">
+                      <div className="flex items-start gap-3 p-3 bg-muted/60 dark:bg-slate-900/40 rounded-md border border-border">
                         <Package className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Produto</p>
-                          <p className="font-medium text-sm truncate">
+                          <p className="font-medium text-sm truncate text-foreground">
                             {produtos.find(p => p.id === produtoId)?.nome}
                           </p>
                         </div>
@@ -489,7 +497,7 @@ const NovaVenda = () => {
                     )}
                     
                     {valor && (
-                      <div className="flex items-start gap-3 p-3 bg-background/50 rounded-md border border-border/50">
+                      <div className="flex items-start gap-3 p-3 bg-muted/60 dark:bg-slate-900/40 rounded-md border border-border">
                         <DollarSign className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Valor</p>
@@ -499,51 +507,51 @@ const NovaVenda = () => {
                     )}
                     
                     {plataforma && (
-                      <div className="flex items-start gap-3 p-3 bg-background/50 rounded-md border border-border/50">
+                      <div className="flex items-start gap-3 p-3 bg-muted/60 dark:bg-slate-900/40 rounded-md border border-border">
                         <Store className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Plataforma</p>
-                          <p className="font-medium text-sm">{plataforma}</p>
+                          <p className="font-medium text-sm text-foreground">{plataforma}</p>
                         </div>
                       </div>
                     )}
                     
                     {formaPagamento && (
-                      <div className="flex items-start gap-3 p-3 bg-background/50 rounded-md border border-border/50">
+                      <div className="flex items-start gap-3 p-3 bg-muted/60 dark:bg-slate-900/40 rounded-md border border-border">
                         <CreditCard className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Pagamento</p>
-                          <p className="font-medium text-sm">{formaPagamento}</p>
+                          <p className="font-medium text-sm text-foreground">{formaPagamento}</p>
                         </div>
                       </div>
                     )}
                     
                     {status && (
-                      <div className="flex items-start gap-3 p-3 bg-background/50 rounded-md border border-border/50">
+                      <div className="flex items-start gap-3 p-3 bg-muted/60 dark:bg-slate-900/40 rounded-md border border-border">
                         <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Status</p>
-                          <p className="font-medium text-sm">{status}</p>
+                          <p className="font-medium text-sm text-foreground">{status}</p>
                         </div>
                       </div>
                     )}
                     
                     {dataVenda && (
-                      <div className="flex items-start gap-3 p-3 bg-background/50 rounded-md border border-border/50">
+                      <div className="flex items-start gap-3 p-3 bg-muted/60 dark:bg-slate-900/40 rounded-md border border-border">
                         <CalendarIcon className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Data</p>
-                          <p className="font-medium text-sm">{format(dataVenda, "PPP", { locale: ptBR })}</p>
+                          <p className="font-medium text-sm text-foreground">{format(dataVenda, "PPP", { locale: ptBR })}</p>
                         </div>
                       </div>
                     )}
                     
                     {isAdmin && vendedorId && vendedores && (
-                      <div className="flex items-start gap-3 p-3 bg-background/50 rounded-md border border-border/50">
+                      <div className="flex items-start gap-3 p-3 bg-muted/60 dark:bg-slate-900/40 rounded-md border border-border">
                         <User className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Vendedor</p>
-                          <p className="font-medium text-sm truncate">
+                          <p className="font-medium text-sm truncate text-foreground">
                             {vendedores.find(v => v.id === vendedorId)?.nome}
                           </p>
                         </div>
@@ -552,7 +560,7 @@ const NovaVenda = () => {
                   </div>
                   
                   {observacoes && (
-                    <div className="mt-4 p-3 bg-background/50 rounded-md border border-border/50">
+                    <div className="mt-4 p-3 bg-muted/60 dark:bg-slate-900/40 rounded-md border border-border">
                       <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Observações</p>
                       <p className="text-sm text-foreground/80 whitespace-pre-wrap">{observacoes}</p>
                     </div>
@@ -580,7 +588,7 @@ const NovaVenda = () => {
               {/* Botão de Submit - Melhorado */}
               <Button
                 type="submit"
-                className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+                className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 shadow-lg shadow-indigo-500/25 transition-all transform hover:scale-[1.01] active:scale-[0.98]"
                 disabled={createVenda.isPending}
               >
                 {createVenda.isPending ? (

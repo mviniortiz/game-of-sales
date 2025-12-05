@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -12,11 +12,27 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Search, Plus, MoreHorizontal, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const AdminVendedores = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [showAdd, setShowAdd] = useState(false);
+  const [nome, setNome] = useState("");
+  const [email, setEmail] = useState("");
+  const [sendPassword, setSendPassword] = useState(true);
+  const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: vendedores, isLoading } = useQuery({
     queryKey: ["admin-vendedores"],
@@ -80,6 +96,39 @@ export const AdminVendedores = () => {
     }
   };
 
+  const handleCreateSeller = async () => {
+    if (!nome.trim() || !email.trim()) {
+      toast.error("Preencha nome e e-mail");
+      return;
+    }
+
+    setSubmitting(true);
+    setGeneratedPassword(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-create-seller", {
+        body: { nome, email, sendPassword },
+      });
+
+      if (error) throw error;
+
+      if (data?.password && sendPassword) {
+        setGeneratedPassword(data.password);
+      }
+
+      toast.success("Vendedor criado com sucesso!");
+      setShowAdd(false);
+      setNome("");
+      setEmail("");
+      setSendPassword(true);
+      queryClient.invalidateQueries({ queryKey: ["admin-vendedores"] });
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err?.message || "Não foi possível criar o vendedor");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   if (isLoading) {
     return <div className="text-muted-foreground">Carregando vendedores...</div>;
   }
@@ -100,7 +149,7 @@ export const AdminVendedores = () => {
               className="pl-10 bg-background border-border"
             />
           </div>
-          <Button className="bg-indigo-500 hover:bg-indigo-600 text-white font-bold">
+          <Button className="bg-indigo-500 hover:bg-indigo-600 text-white font-bold" onClick={() => setShowAdd(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Adicionar Vendedor
           </Button>
@@ -179,6 +228,61 @@ export const AdminVendedores = () => {
           </TableBody>
         </Table>
       </div>
+
+      <Dialog open={showAdd} onOpenChange={setShowAdd}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Adicionar Vendedor</DialogTitle>
+            <DialogDescription>Crie um acesso para um novo vendedor.</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Nome</Label>
+              <Input
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                placeholder="Nome completo"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>E-mail</Label>
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="email@empresa.com"
+              />
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="send-password"
+                checked={sendPassword}
+                onCheckedChange={(v) => setSendPassword(Boolean(v))}
+              />
+              <Label htmlFor="send-password">Enviar senha aleatória por e-mail</Label>
+            </div>
+
+            {generatedPassword && (
+              <div className="bg-muted/40 border border-border rounded-md p-3 text-sm">
+                <p className="text-muted-foreground mb-1">Senha gerada:</p>
+                <p className="font-mono text-base">{generatedPassword}</p>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowAdd(false)} disabled={submitting}>
+                Cancelar
+              </Button>
+              <Button onClick={handleCreateSeller} disabled={submitting}>
+                {submitting ? "Criando..." : "Criar"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

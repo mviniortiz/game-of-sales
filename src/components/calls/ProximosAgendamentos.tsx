@@ -21,18 +21,18 @@ export const ProximosAgendamentos = ({
   onRegistrarClick,
 }: ProximosAgendamentosProps) => {
   return (
-    <Card className="border-white/5 bg-slate-900/50 backdrop-blur-sm">
+    <Card className="border border-border bg-card shadow-sm">
       <CardHeader className="pb-3">
-        <CardTitle className="text-base font-semibold text-white flex items-center gap-2">
-          <CalendarDays className="h-4 w-4 text-blue-400" />
+        <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+          <CalendarDays className="h-4 w-4 text-blue-600 dark:text-blue-300" />
           Próximos Agendamentos
         </CardTitle>
-        <p className="text-xs text-slate-500">Calls agendadas para os próximos dias</p>
+        <p className="text-xs text-muted-foreground">Calls agendadas para os próximos dias</p>
       </CardHeader>
       <CardContent className="pt-0">
         <div className="space-y-2">
           {agendamentos.length === 0 ? (
-            <div className="text-center py-6 text-slate-500 text-sm">
+            <div className="text-center py-6 text-muted-foreground text-sm">
               Nenhum agendamento pendente
             </div>
           ) : (
@@ -46,34 +46,34 @@ export const ProximosAgendamentos = ({
               return (
                 <div
                   key={agendamento.id}
-                  className="p-3 border border-white/5 rounded-lg hover:border-indigo-500/30 bg-slate-800/30 transition-all group"
+                  className="p-3 border border-border rounded-lg hover:border-indigo-500/30 bg-muted/60 dark:bg-slate-800/30 transition-all group"
                 >
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <div className="p-2 rounded-lg bg-indigo-500/10 group-hover:bg-indigo-500/20 transition-colors">
-                        <Clock className="h-4 w-4 text-indigo-400" />
+                      <div className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-500/20 transition-colors">
+                        <Clock className="h-4 w-4 text-indigo-600 dark:text-indigo-300" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">
-                          <span className="text-sm font-medium text-white">
+                          <span className="text-sm font-medium text-foreground">
                             {isToday && (
-                              <span className="text-emerald-400">Hoje, </span>
+                              <span className="text-emerald-600 dark:text-emerald-300">Hoje, </span>
                             )}
                             {isTomorrow && (
-                              <span className="text-blue-400">Amanhã, </span>
+                              <span className="text-blue-600 dark:text-blue-300">Amanhã, </span>
                             )}
                             {!isToday && !isTomorrow && (
-                              <span className="text-slate-400">
+                              <span className="text-muted-foreground">
                                 {format(data, "dd/MM", { locale: ptBR })},{" "}
                               </span>
                             )}
                             {format(data, "HH:mm", { locale: ptBR })}
                           </span>
                         </div>
-                        <p className="font-semibold text-white truncate">
+                        <p className="font-semibold text-foreground truncate">
                           {agendamento.cliente_nome}
                         </p>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-muted-foreground">
                           {agendamento.vendedor}
                         </p>
                       </div>
@@ -81,7 +81,7 @@ export const ProximosAgendamentos = ({
                     <Button
                       size="sm"
                       onClick={() => onRegistrarClick(agendamento.id)}
-                      className="h-8 px-3 bg-primary hover:bg-primary/90 text-white text-xs font-medium shrink-0"
+                      className="h-8 px-3 bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-medium shrink-0 shadow-md shadow-primary/20"
                     >
                       <Phone className="h-3 w-3 mr-1.5" />
                       Registrar

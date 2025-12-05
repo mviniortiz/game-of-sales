@@ -29,22 +29,22 @@ export const KanbanColumn = memo(({ stage, deals, total, formatCurrency }: Kanba
         flex flex-col w-[300px] flex-shrink-0 h-full
         rounded-xl overflow-hidden
         transition-shadow duration-150
-        ${isOver ? "ring-2 ring-indigo-500/50 ring-offset-1 ring-offset-slate-950" : ""}
+        ${isOver ? "ring-2 ring-indigo-500/50 ring-offset-1 ring-offset-background" : ""}
       `}
     >
       {/* Column Header - Premium Style */}
-      <div className="bg-slate-900 border-b border-indigo-500/20 p-4">
+      <div className="bg-card border-b border-border p-4 shadow-sm">
         {/* Title Row */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2.5">
-            <div className={`p-2 rounded-xl ${stage.bgColor} ring-1 ring-white/5`}>
-              <Icon className={`h-4 w-4 ${stage.color}`} />
+            <div className={`p-2 rounded-xl ${stage.bgColor} ring-1 ring-border`}>
+              <Icon className={`h-4 w-4 ${stage.color.replace("text-", "text-")}`} />
             </div>
             <div>
-              <h3 className="font-semibold text-white text-sm tracking-tight">
+              <h3 className="font-semibold text-foreground text-sm tracking-tight">
                 {stage.title}
               </h3>
-              <p className="text-[11px] text-slate-500 font-medium">
+              <p className="text-[11px] text-muted-foreground font-medium">
                 {total.count} {total.count === 1 ? 'deal' : 'deals'}
               </p>
             </div>
@@ -53,9 +53,9 @@ export const KanbanColumn = memo(({ stage, deals, total, formatCurrency }: Kanba
 
         {/* Value Badge */}
         <div className="flex items-center justify-between">
-          <span className="text-[11px] text-slate-500 uppercase tracking-wider font-medium">Pipeline</span>
-          <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-emerald-500/10 ring-1 ring-emerald-500/20">
-            <span className="text-sm font-bold text-emerald-400 tabular-nums">
+          <span className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">Pipeline</span>
+          <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-emerald-50 ring-1 ring-emerald-100 dark:bg-emerald-500/10 dark:ring-emerald-500/20">
+            <span className="text-sm font-bold text-emerald-600 dark:text-emerald-200 tabular-nums">
               {formatCurrency(total.value)}
             </span>
           </span>
@@ -67,10 +67,10 @@ export const KanbanColumn = memo(({ stage, deals, total, formatCurrency }: Kanba
         ref={setNodeRef}
         className={`
           flex-1 
-          bg-slate-900/30
+          bg-muted/60
           p-3
           transition-colors duration-100
-          ${isOver ? "bg-indigo-500/5" : ""}
+          ${isOver ? "bg-indigo-50 dark:bg-indigo-500/10" : ""}
         `}
       >
         <ScrollArea className="h-full pr-1">

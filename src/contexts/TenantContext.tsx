@@ -38,6 +38,8 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
 
     const loadTenantData = async () => {
       try {
+        const storedCompanyId = localStorage.getItem('activeCompanyId');
+
         // Check if user is super admin
         const { data: profileData } = await supabase
           .from('profiles')
@@ -47,7 +49,6 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
 
         if (profileData) {
           setIsSuperAdmin(profileData.is_super_admin || false);
-          setActiveCompanyId(profileData.company_id);
 
           // If super admin, load all companies
           if (profileData.is_super_admin) {
@@ -58,6 +59,12 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
             
             if (companiesData) {
               setCompanies(companiesData);
+              // Prefer stored selection if valid; otherwise fallback to first
+              const validStored = companiesData.find(c => c.id === storedCompanyId)?.id;
+              setActiveCompanyId(validStored || profileData.company_id || companiesData[0]?.id || null);
+              if (validStored) {
+                localStorage.setItem('activeCompanyId', validStored);
+              }
             }
           } else {
             // Regular user, load only their company
@@ -69,6 +76,7 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
             
             if (companyData) {
               setCompanies([companyData]);
+              setActiveCompanyId(profileData.company_id);
             }
           }
         }

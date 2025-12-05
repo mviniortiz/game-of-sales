@@ -39,6 +39,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { LostDealModal } from "@/components/crm/LostDealModal";
+import { syncWonDealToSale } from "@/utils/salesSync";
 
 // Pipeline stages configuration
 const PIPELINE_STAGES = [
@@ -180,12 +181,22 @@ export default function DealDetails() {
   // Update deal mutation
   const updateDealMutation = useMutation({
     mutationFn: async (updates: any) => {
+      const { syncDeal, ...payload } = updates || {};
       const { error } = await supabase
         .from("deals")
-        .update(updates)
+        .update(payload)
         .eq("id", id);
 
       if (error) throw error;
+
+      if (payload.stage === "closed_won" && syncDeal) {
+        try {
+          await syncWonDealToSale(syncDeal, queryClient);
+        } catch (syncError) {
+          console.error("Erro ao sincronizar venda do deal:", syncError);
+          toast.error("Deal ganho, mas a venda não foi sincronizada.");
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["deal", id] });
@@ -225,7 +236,8 @@ export default function DealDetails() {
     if (newStage === "closed_lost") {
       setShowLostModal(true);
     } else {
-      updateDealMutation.mutate({ stage: newStage });
+      if (!deal) return;
+      updateDealMutation.mutate({ stage: newStage, syncDeal: deal });
     }
   };
 
@@ -240,7 +252,8 @@ export default function DealDetails() {
 
   // Handle won deal
   const handleWonDeal = () => {
-    updateDealMutation.mutate({ stage: "closed_won" });
+    if (!deal) return;
+    updateDealMutation.mutate({ stage: "closed_won", syncDeal: deal });
   };
 
   // Handle save
@@ -323,9 +336,9 @@ export default function DealDetails() {
 
   return (
     <AppLayout>
-      <div className="min-h-screen bg-slate-950">
+      <div className="min-h-screen bg-background text-foreground">
         {/* Header */}
-        <div className="border-b border-slate-800/80 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-10">
+        <div className="border-b border-border bg-card backdrop-blur-sm sticky top-0 z-10 shadow-sm">
           <div className="px-4 sm:px-6 py-3 sm:py-4">
             {/* Back button and title */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3 sm:mb-4">
@@ -334,14 +347,14 @@ export default function DealDetails() {
                   variant="ghost"
                   size="sm"
                   onClick={() => navigate("/crm")}
-                  className="text-slate-400 hover:text-white hover:bg-slate-800 transition-all group h-8 px-2 sm:px-3"
+                  className="text-muted-foreground hover:text-foreground hover:bg-muted transition-all group h-8 px-2 sm:px-3"
                 >
                   <ArrowLeft className="h-4 w-4 sm:mr-2 group-hover:-translate-x-1 transition-transform" />
                   <span className="hidden sm:inline">Voltar</span>
                 </Button>
                 <div className="min-w-0 flex-1">
-                  <h1 className="text-base sm:text-xl font-bold text-white truncate">{deal.title}</h1>
-                  <p className="text-xs sm:text-sm text-slate-400 truncate">
+                  <h1 className="text-base sm:text-xl font-bold text-foreground truncate">{deal.title}</h1>
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate">
                     {deal.customer_name} • {formatCurrency(deal.value)}
                   </p>
                 </div>
@@ -355,7 +368,7 @@ export default function DealDetails() {
                       variant="outline"
                       size="sm"
                       onClick={() => setShowLostModal(true)}
-                      className="border-rose-500/50 text-rose-400 hover:bg-rose-500/10 h-8 px-2 sm:px-4"
+                      className="border-rose-200 text-rose-600 hover:bg-rose-50 h-8 px-2 sm:px-4"
                     >
                       <XCircle className="h-4 w-4 sm:mr-2" />
                       <span className="hidden sm:inline">Perdido</span>
@@ -363,7 +376,7 @@ export default function DealDetails() {
                     <Button
                       size="sm"
                       onClick={handleWonDeal}
-                      className="bg-emerald-600 hover:bg-emerald-500 text-white h-8 px-2 sm:px-4"
+                      className="bg-emerald-600 hover:bg-emerald-500 text-white h-8 px-2 sm:px-4 shadow-sm"
                     >
                       <Trophy className="h-4 w-4 sm:mr-2" />
                       <span className="hidden sm:inline">Ganho</span>
@@ -393,26 +406,26 @@ export default function DealDetails() {
                         ${isLast ? "rounded-r-lg" : ""}
                         ${isActive
                           ? stage.id === "closed_won"
-                            ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30"
+                            ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/25"
                             : stage.id === "closed_lost"
-                              ? "bg-rose-500 text-white shadow-lg shadow-rose-500/30"
-                              : "bg-indigo-500 text-white shadow-lg shadow-indigo-500/30"
+                              ? "bg-rose-600 text-white shadow-md shadow-rose-500/25"
+                              : "bg-indigo-600 text-white shadow-md shadow-indigo-500/25"
                           : isPast
-                            ? "bg-indigo-900/60 text-indigo-300"
-                            : "bg-slate-800/80 text-slate-500 hover:bg-slate-700/80 hover:text-slate-300"
+                            ? "bg-indigo-50 text-indigo-700 border border-indigo-100"
+                            : "bg-muted text-muted-foreground hover:bg-muted/70"
                         }
                         ${isClosed && !isActive ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}
                       `}
                     >
                       <span className="flex items-center justify-center gap-1">
-                        {isPast && !isActive && <Check className="h-3 w-3 text-indigo-400 hidden sm:block" />}
+                        {isPast && !isActive && <Check className="h-3 w-3 text-indigo-500 hidden sm:block" />}
                         <span className="sm:hidden">{stage.shortTitle}</span>
                         <span className="hidden sm:inline">{stage.title}</span>
                       </span>
                     </button>
                     {!isLast && (
                       <ChevronRight className={`h-4 sm:h-5 w-4 sm:w-5 -mx-0.5 sm:-mx-1 z-10 flex-shrink-0 ${
-                        isPast || isActive ? "text-indigo-400" : "text-slate-700"
+                        isPast || isActive ? "text-indigo-500" : "text-muted-foreground/60"
                       }`} />
                     )}
                   </div>
@@ -428,15 +441,15 @@ export default function DealDetails() {
             {/* Left Column - Deal Data */}
             <div className="lg:col-span-4 space-y-4">
               {/* Deal Info Card */}
-              <div className="bg-slate-900/60 backdrop-blur-sm border border-slate-800/60 rounded-xl p-4">
+              <div className="bg-card border border-border rounded-xl p-4 shadow-sm">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">Informações</h3>
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Informações</h3>
                   {!isEditing ? (
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setIsEditing(true)}
-                      className="text-indigo-400 hover:text-indigo-300 h-7 px-2 text-xs"
+                      className="text-indigo-600 hover:text-indigo-700 h-7 px-2 text-xs"
                     >
                       Editar
                     </Button>
@@ -449,7 +462,7 @@ export default function DealDetails() {
                           setIsEditing(false);
                           setEditedDeal(deal);
                         }}
-                        className="text-slate-400 h-7 px-2 text-xs"
+                        className="text-muted-foreground h-7 px-2 text-xs"
                       >
                         Cancelar
                       </Button>
@@ -457,7 +470,7 @@ export default function DealDetails() {
                         size="sm"
                         onClick={handleSave}
                         disabled={updateDealMutation.isPending}
-                        className="bg-indigo-600 hover:bg-indigo-500 h-7 px-2"
+                        className="bg-indigo-600 hover:bg-indigo-500 h-7 px-2 text-white shadow-sm"
                       >
                         {updateDealMutation.isPending ? (
                           <Loader2 className="h-3 w-3 animate-spin" />
@@ -471,28 +484,28 @@ export default function DealDetails() {
 
                 <div className="space-y-3">
                   {/* Value Hero - Most Important */}
-                  <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/30">
+                  <div className="bg-muted rounded-lg p-3 border border-border">
                     {isEditing ? (
                       <div>
-                        <Label className="text-[10px] text-slate-500 uppercase tracking-wider">Valor</Label>
+                        <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Valor</Label>
                         <Input
                           type="number"
                           value={editedDeal?.value || 0}
                           onChange={(e) =>
                             setEditedDeal({ ...editedDeal, value: parseFloat(e.target.value) })
                           }
-                          className="mt-1 bg-slate-950 border-slate-700 text-emerald-400 text-xl font-bold"
+                          className="mt-1 bg-white dark:bg-secondary border-gray-300 dark:border-border text-emerald-600 dark:text-emerald-200 text-xl font-bold"
                         />
                       </div>
                     ) : (
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                            <DollarSign className="h-5 w-5 text-emerald-400" />
+                          <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+                            <DollarSign className="h-5 w-5 text-emerald-600" />
                           </div>
-                          <span className="text-xs text-slate-500 uppercase">Valor do Deal</span>
+                          <span className="text-xs text-muted-foreground uppercase">Valor do Deal</span>
                         </div>
-                        <p className="text-3xl font-bold text-emerald-400">
+                        <p className="text-3xl font-bold text-emerald-600 dark:text-emerald-300">
                           {formatCurrency(deal.value)}
                         </p>
                       </div>
@@ -501,23 +514,23 @@ export default function DealDetails() {
 
                   {/* Title */}
                   <div>
-                    <Label className="text-[10px] text-slate-500 uppercase tracking-wider">Título</Label>
+                    <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Título</Label>
                     {isEditing ? (
                       <Input
                         value={editedDeal?.title || ""}
                         onChange={(e) =>
                           setEditedDeal({ ...editedDeal, title: e.target.value })
                         }
-                        className="mt-1 h-9 bg-slate-950 border-slate-700 text-sm"
+                        className="mt-1 h-9 bg-white dark:bg-secondary border-gray-300 dark:border-border text-sm"
                       />
                     ) : (
-                      <p className="text-white font-medium text-sm mt-0.5">{deal.title}</p>
+                      <p className="text-foreground font-medium text-sm mt-0.5">{deal.title}</p>
                     )}
                   </div>
 
                   {/* Customer Name */}
                   <div>
-                    <Label className="text-[10px] text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                    <Label className="text-[10px] text-muted-foreground uppercase tracking-wider flex items-center gap-1">
                       <User className="h-3 w-3" />
                       Cliente
                     </Label>
@@ -527,17 +540,17 @@ export default function DealDetails() {
                         onChange={(e) =>
                           setEditedDeal({ ...editedDeal, customer_name: e.target.value })
                         }
-                        className="mt-1 h-9 bg-slate-950 border-slate-700 text-sm"
+                        className="mt-1 h-9 bg-white dark:bg-secondary border-gray-300 dark:border-border text-sm"
                       />
                     ) : (
-                      <p className="text-white text-sm mt-0.5">{deal.customer_name}</p>
+                      <p className="text-foreground text-sm mt-0.5">{deal.customer_name}</p>
                     )}
                   </div>
 
                   {/* Email & Phone - Compact Row */}
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="flex items-center gap-2 bg-slate-800/30 rounded-lg px-3 py-2">
-                      <Mail className="h-4 w-4 text-slate-500 flex-shrink-0" />
+                    <div className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2 border border-border">
+                      <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                       {isEditing ? (
                         <Input
                           type="email"
@@ -546,16 +559,16 @@ export default function DealDetails() {
                             setEditedDeal({ ...editedDeal, customer_email: e.target.value })
                           }
                           placeholder="Email"
-                          className="h-7 bg-slate-950 border-slate-700 text-xs"
+                          className="h-7 bg-white dark:bg-secondary border-gray-300 dark:border-border text-xs"
                         />
                       ) : (
-                        <span className="text-slate-300 text-xs truncate">
+                        <span className="text-muted-foreground text-xs truncate">
                           {deal.customer_email || "Não informado"}
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 bg-slate-800/30 rounded-lg px-3 py-2">
-                      <Phone className="h-4 w-4 text-slate-500 flex-shrink-0" />
+                    <div className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2 border border-border">
+                      <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                       {isEditing ? (
                         <Input
                           value={editedDeal?.customer_phone || ""}
@@ -563,10 +576,10 @@ export default function DealDetails() {
                             setEditedDeal({ ...editedDeal, customer_phone: e.target.value })
                           }
                           placeholder="Telefone"
-                          className="h-7 bg-slate-950 border-slate-700 text-xs"
+                          className="h-7 bg-white dark:bg-secondary border-gray-300 dark:border-border text-xs"
                         />
                       ) : (
-                        <span className="text-slate-300 text-xs truncate">
+                        <span className="text-muted-foreground text-xs truncate">
                           {deal.customer_phone || "Não informado"}
                         </span>
                       )}
@@ -574,9 +587,9 @@ export default function DealDetails() {
                   </div>
 
                   {/* Expected Close Date */}
-                  <div className="flex items-center gap-2 bg-slate-800/30 rounded-lg px-3 py-2">
-                    <Calendar className="h-4 w-4 text-slate-500 flex-shrink-0" />
-                    <span className="text-[10px] text-slate-500 uppercase">Previsão:</span>
+                  <div className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2 border border-border">
+                    <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <span className="text-[10px] text-muted-foreground uppercase">Previsão:</span>
                     {isEditing ? (
                       <Input
                         type="date"
@@ -584,10 +597,10 @@ export default function DealDetails() {
                         onChange={(e) =>
                           setEditedDeal({ ...editedDeal, expected_close_date: e.target.value })
                         }
-                        className="h-7 bg-slate-950 border-slate-700 text-xs flex-1"
+                        className="h-7 bg-white dark:bg-secondary border-gray-300 dark:border-border text-xs flex-1"
                       />
                     ) : (
-                      <span className="text-slate-300 text-xs">
+                      <span className="text-muted-foreground text-xs">
                         {deal.expected_close_date
                           ? format(new Date(deal.expected_close_date), "dd/MM/yyyy", {
                               locale: ptBR,
