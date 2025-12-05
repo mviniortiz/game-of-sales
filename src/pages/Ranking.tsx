@@ -48,17 +48,20 @@ const Ranking = () => {
 
   // Fetch meta consolidada (optional - won't block ranking)
   const { data: metaAtual, isLoading: loadingMeta, refetch: refetchMeta } = useQuery({
-    queryKey: ["meta-consolidada-atual", mesReferencia],
+    queryKey: ["meta-consolidada-atual", mesReferencia, effectiveCompanyId],
     queryFn: async () => {
+      if (!effectiveCompanyId) return null;
       const { data, error } = await supabase
         .from("metas_consolidadas")
         .select("*")
         .eq("mes_referencia", mesReferencia)
+        .eq("company_id", effectiveCompanyId)
         .maybeSingle();
 
       if (error) throw error;
       return data;
     },
+    enabled: !!effectiveCompanyId,
     staleTime: 5000,
     refetchInterval: 5000, // Auto-refresh every 5 seconds
   });
@@ -79,19 +82,14 @@ const Ranking = () => {
         activeCompanyId 
       });
       
-      // 1. Fetch profiles (sellers)
-      // For now, let's fetch ALL profiles to debug
+      // 1. Fetch profiles (sellers) scoped by company
+      if (!effectiveCompanyId) return [];
+
       let profilesQuery = supabase
         .from("profiles")
         .select("id, nome, avatar_url, nivel, is_super_admin, company_id")
-        .eq("is_super_admin", false);
-
-      // Apply company filter based on role
-      if (isSuperAdmin && activeCompanyId) {
-        profilesQuery = profilesQuery.eq("company_id", activeCompanyId);
-      } else if (!isSuperAdmin && companyId) {
-        profilesQuery = profilesQuery.eq("company_id", companyId);
-      }
+        .eq("is_super_admin", false)
+        .eq("company_id", effectiveCompanyId);
 
       const { data: profiles, error: profilesError } = await profilesQuery;
 
@@ -112,28 +110,24 @@ const Ranking = () => {
         return [];
       }
 
-      // 2. Fetch all approved sales for this month
-      // First, let's see ALL sales to debug
-      const { data: allVendas, error: allVendasError } = await supabase
+      // 2. Fetch approved sales for this month scoped by company + users
+      const { data: vendas, error: vendasError } = await supabase
         .from("vendas")
         .select("user_id, valor, status, data_venda, company_id")
+        .eq("company_id", effectiveCompanyId)
+        .eq("status", "Aprovado")
         .gte("data_venda", inicioMes)
-        .lte("data_venda", fimMes);
+        .lte("data_venda", fimMes)
+        .in("user_id", userIds);
       
-      console.log("[Ranking] TODAS as vendas do período:", allVendas?.length, allVendas);
-
-      // Now filter by status and user IDs
-      const vendas = allVendas?.filter(v => 
-        v.status === "Aprovado" && userIds.includes(v.user_id)
-      ) || [];
-      
-      console.log("[Ranking] Vendas filtradas (Aprovado + userIds):", vendas?.length, vendas);
+      if (vendasError) throw vendasError;
 
       // 3. Fetch individual goals for this month
       const { data: metas, error: metasError } = await supabase
         .from("metas")
         .select("user_id, valor_meta")
         .eq("mes_referencia", mesReferencia)
+        .eq("company_id", effectiveCompanyId)
         .in("user_id", userIds);
 
       if (metasError) {

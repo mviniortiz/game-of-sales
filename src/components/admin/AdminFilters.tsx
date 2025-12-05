@@ -19,7 +19,8 @@ interface AdminFiltersProps {
   setSelectedFormaPagamento?: (value: string) => void;
   selectedProduto?: string;
   setSelectedProduto?: (value: string) => void;
-  produtos?: Array<{ id: string; nome: string }>;
+  produtos?: Array<{ id: string; nome: string; company_id?: string }>;
+  activeCompanyId?: string | null;
 }
 
 export const AdminFilters = ({
@@ -33,6 +34,7 @@ export const AdminFilters = ({
   selectedProduto,
   setSelectedProduto,
   produtos = [],
+  activeCompanyId,
 }: AdminFiltersProps) => {
   const formasPagamento = [
     "Cartão de Crédito",
@@ -336,11 +338,13 @@ export const AdminFilters = ({
                 </SelectTrigger>
                 <SelectContent className="z-50 bg-white dark:bg-card border border-gray-200 dark:border-border shadow-sm">
                   <SelectItem value="todos">Todos</SelectItem>
-                  {produtos.map((produto) => (
-                    <SelectItem key={produto.id} value={produto.id}>
-                      {produto.nome}
-                    </SelectItem>
-                  ))}
+                  {produtos
+                    .filter((produto) => !activeCompanyId || produto.company_id === activeCompanyId)
+                    .map((produto) => (
+                      <SelectItem key={produto.id} value={produto.id}>
+                        {produto.nome}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>

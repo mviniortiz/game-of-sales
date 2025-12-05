@@ -5,6 +5,7 @@ import { AdminFilters } from "@/components/admin/AdminFilters";
 import { AdminVendasView } from "@/components/admin/AdminVendasView";
 import { startOfMonth, endOfMonth } from "date-fns";
 import { useVisibleSellers } from "@/hooks/useVisibleSellers";
+import { useTenant } from "@/contexts/TenantContext";
 
 export const AdminDashboardOverview = () => {
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({
@@ -14,17 +15,25 @@ export const AdminDashboardOverview = () => {
   const [selectedVendedor, setSelectedVendedor] = useState("todos");
   const [selectedFormaPagamento, setSelectedFormaPagamento] = useState("todas");
   const [selectedProduto, setSelectedProduto] = useState("todos");
+  const { activeCompanyId } = useTenant();
 
   // Buscar lista de vendedores (respeitando permissões - exclui Super Admins)
   const { data: vendedores = [] } = useVisibleSellers({ includeAvatars: false });
 
-  // Buscar lista de produtos
+  // Buscar lista de produtos filtrados pela empresa ativa
   const { data: produtos = [] } = useQuery({
-    queryKey: ["produtos-list"],
+    queryKey: ["produtos-list", activeCompanyId],
     queryFn: async () => {
-      const { data } = await supabase.from("produtos").select("id, nome").eq("ativo", true);
+      if (!activeCompanyId) return [];
+      const { data, error } = await supabase
+        .from("produtos")
+        .select("id, nome, company_id")
+        .eq("ativo", true)
+        .eq("company_id", activeCompanyId);
+      if (error) throw error;
       return data || [];
     },
+    enabled: !!activeCompanyId,
   });
 
   return (
@@ -46,6 +55,7 @@ export const AdminDashboardOverview = () => {
         selectedProduto={selectedProduto}
         setSelectedProduto={setSelectedProduto}
         produtos={produtos}
+        activeCompanyId={activeCompanyId}
       />
 
       {/* Visualização de Vendas */}

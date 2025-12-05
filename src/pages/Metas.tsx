@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -37,7 +37,8 @@ const Metas = () => {
     return activeCompanyId ? query.eq("company_id", activeCompanyId) : query;
   };
 
-  const applyNonSuperAdmin = (query: any) => query.eq("is_super_admin", false);
+  // Filter profiles join, not metas columns
+  const applyNonSuperAdmin = (query: any) => query.eq("profiles.is_super_admin", false);
 
   // Refetch function for real-time updates
   const handleRefresh = async () => {
@@ -58,6 +59,7 @@ const Metas = () => {
   const { data: metasConsolidadas = [], isLoading: loadingConsolidadas } = useQuery({
     queryKey: ["metas-consolidadas", activeCompanyId],
     queryFn: async () => {
+      if (!activeCompanyId) return [];
       const { data, error } = await applyCompanyFilter(
         supabase
           .from("metas_consolidadas")
@@ -68,8 +70,14 @@ const Metas = () => {
       if (error) throw error;
       return data || [];
     },
+    enabled: !!activeCompanyId,
     refetchInterval: 10000, // Auto-refetch every 10 seconds
   });
+
+  useEffect(() => {
+    // When company changes, reset selected meta to default (all)
+    setSelectedMetaId("all");
+  }, [activeCompanyId]);
 
   // Buscar a meta consolidada selecionada
   const metaConsolidadaSelecionada = selectedMetaId === "all" 
