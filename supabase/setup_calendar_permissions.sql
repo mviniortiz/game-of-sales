@@ -1,5 +1,5 @@
 -- =====================================================
--- VYZON Calendar Permissions Setup
+-- Game Sales Calendar Permissions Setup
 -- =====================================================
 -- This script sets up the permission hierarchy for calendars:
 -- 1. Super Admin (God Mode): Sees all, but NOT other Super Admins

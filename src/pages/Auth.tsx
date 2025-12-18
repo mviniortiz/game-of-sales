@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,8 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { z } from "zod";
-import logo from "@/assets/logo.svg";
-import logoLight from "@/assets/logo 1 - white.svg";
+import brandLogo from "@/assets/logo-full.png";
 import { Mail, Lock, ArrowRight } from "lucide-react";
 import DataFlowBackground from "@/components/auth/DataFlowBackground";
 
@@ -21,20 +20,11 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [isDark, setIsDark] = useState(() => typeof document !== "undefined" && document.documentElement.classList.contains("dark"));
   const { signIn } = useAuth();
-
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setIsDark(document.documentElement.classList.contains("dark"));
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-    return () => observer.disconnect();
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email || !password) {
       toast.error("Preencha todos os campos");
       return;
@@ -79,7 +69,7 @@ const Auth = () => {
         <div className="w-full max-w-md space-y-8">
           {/* Logo */}
           <div className="flex items-center animate-fade-in" style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>
-            <img src={isDark ? logo : logoLight} alt="VYZON" className="h-14 w-auto object-contain" />
+            <img src={brandLogo} alt="Game Sales" className="h-28 w-auto object-contain" />
           </div>
 
           {/* Header */}
@@ -182,7 +172,7 @@ const Auth = () => {
       <div className="hidden lg:block lg:w-1/2 relative overflow-hidden bg-slate-950">
         {/* Dynamic Data Flow Background */}
         <DataFlowBackground />
-        
+
         {/* Content */}
         <div className="relative h-full flex flex-col items-center justify-center p-12 text-white">
           <div className="max-w-lg space-y-6 text-center">

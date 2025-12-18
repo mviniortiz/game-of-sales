@@ -357,7 +357,7 @@ CREATE TRIGGER on_auth_user_created
 
 -- Ensure default company exists
 INSERT INTO public.companies (id, name, plan)
-VALUES ('00000000-0000-0000-0000-000000000001', 'VYZON Default', 'pro')
+VALUES ('00000000-0000-0000-0000-000000000001', 'Game Sales Default', 'pro')
 ON CONFLICT (id) DO NOTHING;
 
 -- Assign any orphan profiles to default company

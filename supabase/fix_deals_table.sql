@@ -1,5 +1,5 @@
 -- =====================================================
--- VYZON CRM - Fix Deals Table Schema
+-- Game Sales CRM - Fix Deals Table Schema
 -- =====================================================
 -- This script updates the deals table to match the new CRM requirements
 

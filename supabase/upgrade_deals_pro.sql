@@ -1,5 +1,5 @@
 -- =====================================================
--- VYZON CRM Pro - Upgrade Deals Table
+-- Game Sales CRM Pro - Upgrade Deals Table
 -- =====================================================
 -- This script adds professional CRM features to the deals table
 

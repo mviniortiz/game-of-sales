@@ -20,10 +20,12 @@ import Integracoes from "./pages/Integracoes";
 import Calendario from "./pages/Calendario";
 import CRM from "./pages/CRM";
 import DealDetails from "./pages/DealDetails";
+import DealCommandCenter from "./pages/DealCommandCenter";
 import RecuperarSenha from "./pages/RecuperarSenha";
 import Profile from "./pages/Profile";
 import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
 import NotFound from "./pages/NotFound";
+import LandingPage from "./pages/LandingPage";
 
 const queryClient = new QueryClient();
 
@@ -33,136 +35,137 @@ const App = () => (
       <AuthProvider>
         <TenantProvider>
           <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <Routes>
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/recuperar-senha" element={<RecuperarSenha />} />
-        <Route
-          path="/"
-              element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <Dashboard />
-                  </AppLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/ranking"
-              element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <Ranking />
-                  </AppLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/nova-venda"
-              element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <NovaVenda />
-                  </AppLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/calls"
-              element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <Calls />
-                  </AppLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/metas"
-              element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <Metas />
-                  </AppLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <Admin />
-                  </AppLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/companies"
-              element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <AdminCompaniesPage />
-                  </AppLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/companies/:companyId"
-              element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <AdminCompanyDetail />
-                  </AppLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/integracoes"
-              element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <Integracoes />
-                  </AppLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/calendario"
-              element={
-                <ProtectedRoute>
-                  <Calendario />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/crm"
-              element={
-                <ProtectedRoute>
-                  <CRM />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/deals/:id"
-              element={
-                <ProtectedRoute>
-                  <DealDetails />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/politica-privacidade" element={<PoliticaPrivacidade />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+            <Toaster />
+            <Sonner />
+            <Routes>
+              <Route path="/landing" element={<LandingPage />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/recuperar-senha" element={<RecuperarSenha />} />
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <Dashboard />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/ranking"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <Ranking />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/nova-venda"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <NovaVenda />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/calls"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <Calls />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/metas"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <Metas />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <Admin />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/companies"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <AdminCompaniesPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/companies/:companyId"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <AdminCompanyDetail />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/integracoes"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <Integracoes />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/calendario"
+                element={
+                  <ProtectedRoute>
+                    <Calendario />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/crm"
+                element={
+                  <ProtectedRoute>
+                    <CRM />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/deals/:id"
+                element={
+                  <ProtectedRoute>
+                    <DealCommandCenter />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/politica-privacidade" element={<PoliticaPrivacidade />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
           </TooltipProvider>
         </TenantProvider>
       </AuthProvider>

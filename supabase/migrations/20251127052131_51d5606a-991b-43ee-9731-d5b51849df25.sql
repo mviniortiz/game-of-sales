@@ -1,5 +1,5 @@
 -- ============================================================================
--- VYZON MULTI-TENANT ARCHITECTURE MIGRATION
+-- Game Sales MULTI-TENANT ARCHITECTURE MIGRATION
 -- ============================================================================
 
 -- 1. CREATE COMPANIES TABLE (Multi-Tenancy Foundation)
@@ -73,7 +73,7 @@ ALTER TABLE public.produtos
 -- 5. CREATE DEFAULT COMPANY AND MIGRATE EXISTING DATA
 -- ============================================================================
 INSERT INTO public.companies (id, name, plan)
-VALUES ('00000000-0000-0000-0000-000000000001', 'VYZON Default', 'pro')
+VALUES ('00000000-0000-0000-0000-000000000001', 'Game Sales Default', 'pro')
 ON CONFLICT (id) DO NOTHING;
 
 -- Assign existing users to default company

@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 
 type Theme = "light" | "dark";
 
-const storageKey = "vyzon-theme";
+const storageKey = "gamesales-theme";
+const legacyStorageKeys = ["vyzon-theme"];
 
 const getStoredTheme = (): Theme => {
-  const stored = localStorage.getItem(storageKey);
+  const stored = localStorage.getItem(storageKey) ?? legacyStorageKeys.map(key => localStorage.getItem(key)).find(Boolean);
   return stored === "dark" ? "dark" : "light";
 };
 
@@ -22,6 +23,7 @@ export const ThemeToggle = () => {
       html.classList.remove("dark");
     }
     localStorage.setItem(storageKey, theme);
+    legacyStorageKeys.forEach(key => localStorage.removeItem(key));
   }, [theme]);
 
   const toggle = () => setTheme((prev) => (prev === "light" ? "dark" : "light"));

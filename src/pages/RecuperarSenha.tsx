@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
 import { z } from "zod";
-import logo from "@/assets/logo.svg";
+import brandLogo from "@/assets/logo-full.png";
 import { MouseEffect } from "@/components/auth/MouseEffect";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -23,7 +23,7 @@ const RecuperarSenha = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email) {
       toast.error("Preencha o campo de email");
       return;
@@ -41,7 +41,7 @@ const RecuperarSenha = () => {
 
     try {
       const redirectUrl = `${window.location.origin}/auth`;
-      
+
       const { error } = await supabase.auth.resetPasswordForEmail(
         validationResult.data.email,
         {
@@ -68,7 +68,7 @@ const RecuperarSenha = () => {
       <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center mb-8 animate-fade-in">
-            <img src={logo} alt="VYZON" className="h-16 w-auto object-contain hover-scale" />
+            <img src={brandLogo} alt="Game Sales" className="h-28 w-auto object-contain hover-scale" />
           </div>
         </div>
 

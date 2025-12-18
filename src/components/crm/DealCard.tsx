@@ -1,12 +1,13 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, Clock, AlertTriangle } from "lucide-react";
+import { User, Clock, AlertTriangle, Phone, Calendar, CheckCircle2 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import type { Deal } from "@/pages/CRM";
-import { memo, useCallback, useRef } from "react";
+import { memo, useCallback, useRef, useState } from "react";
 
 interface DealCardProps {
   deal: Deal;
@@ -15,10 +16,34 @@ interface DealCardProps {
   onClick?: () => void;
 }
 
+// Get rotting status color for left border
+const getRottingColor = (days: number): { border: string; glow: string } => {
+  if (days > 7) return {
+    border: "border-l-rose-500 dark:border-l-rose-400",
+    glow: "shadow-rose-500/20 dark:shadow-rose-400/20"
+  };
+  if (days > 3) return {
+    border: "border-l-amber-500 dark:border-l-amber-400",
+    glow: "shadow-amber-500/20 dark:shadow-amber-400/20"
+  };
+  return {
+    border: "border-l-emerald-500 dark:border-l-emerald-400",
+    glow: "shadow-emerald-500/20 dark:shadow-emerald-400/20"
+  };
+};
+
+// Get XP bar color based on probability
+const getXPBarColor = (probability: number): string => {
+  if (probability >= 70) return "from-emerald-500 to-emerald-400";
+  if (probability >= 40) return "from-amber-500 to-amber-400";
+  return "from-slate-500 to-slate-400";
+};
+
 export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onClick }: DealCardProps) => {
   const navigate = useNavigate();
   const clickStartTime = useRef<number>(0);
-  
+  const [isHovered, setIsHovered] = useState(false);
+
   const {
     attributes,
     listeners,
@@ -26,7 +51,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onClic
     transform,
     transition,
     isDragging: isSortableDragging,
-  } = useSortable({ 
+  } = useSortable({
     id: deal.id,
     transition: {
       duration: 150,
@@ -50,12 +75,12 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onClic
   const isBeingDragged = isDragging || isSortableDragging;
 
   // Calculate days since last update (Deal Rotting)
-  const daysSinceUpdate = deal.updated_at 
+  const daysSinceUpdate = deal.updated_at
     ? differenceInDays(new Date(), new Date(deal.updated_at))
     : 0;
-  
-  const isRotting = daysSinceUpdate > 7;
-  const isWarning = daysSinceUpdate > 3 && daysSinceUpdate <= 7;
+
+  const rottingColors = getRottingColor(daysSinceUpdate);
+  const xpBarColor = getXPBarColor(deal.probability);
 
   // Track mouse down time to distinguish click from drag
   const handleMouseDown = useCallback(() => {
@@ -66,8 +91,8 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onClic
   const handleClick = useCallback((e: React.MouseEvent) => {
     // Don't navigate if we're dragging
     if (isBeingDragged) return;
-    
-    // Only navigate if it was a quick click (< 200ms)
+
+    // Only navigate if it was a quick click (<200ms)
     const clickDuration = Date.now() - clickStartTime.current;
     if (clickDuration < 200) {
       e.stopPropagation();
@@ -75,101 +100,172 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onClic
     }
   }, [isBeingDragged, deal.id, navigate]);
 
+  // Quick action handlers
+  const handleQuickAction = useCallback((e: React.MouseEvent, action: string) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    switch (action) {
+      case 'phone':
+        if (deal.customer_phone) {
+          window.open(`tel:${deal.customer_phone}`, '_self');
+        }
+        break;
+      case 'calendar':
+        navigate(`/calendario?deal=${deal.id}`);
+        break;
+      case 'check':
+        // Could trigger a quick win modal
+        navigate(`/deals/${deal.id}?action=win`);
+        break;
+    }
+  }, [deal, navigate]);
+
   return (
     <div
       ref={setNodeRef}
       style={style}
       className={`
         group relative
-        bg-card border border-border shadow-sm
+        bg-white dark:bg-slate-800 
+        border border-slate-200 dark:border-slate-700
+        border-l-4 ${rottingColors.border}
+        shadow-sm dark:shadow-none
         rounded-xl p-4
         cursor-grab active:cursor-grabbing
-        transition-colors duration-100
-        ${isBeingDragged 
-          ? "scale-105 rotate-1 shadow-2xl shadow-indigo-500/30 border-indigo-500 z-50 !opacity-100" 
-          : "hover:border-indigo-500/40 hover:bg-muted"
+        transition-all duration-150
+        ${isBeingDragged
+          ? `scale-105 rotate-1 shadow-2xl ${rottingColors.glow} border-indigo-500 dark:border-indigo-400 z-50 !opacity-100`
+          : "hover:border-indigo-400/50 dark:hover:border-indigo-500/50 hover:shadow-md dark:hover:shadow-indigo-500/5"
         }
-        ${isSortableDragging ? "opacity-70" : "opacity-100"}
+        ${isSortableDragging ? "opacity-50" : "opacity-100"}
       `}
       onMouseDown={handleMouseDown}
       onClick={handleClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       {...attributes}
       {...listeners}
     >
-      {/* Rotting indicator */}
-      {isRotting && (
-        <div className="absolute -top-2 -right-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-500/20 ring-1 ring-rose-500/40">
-          <AlertTriangle className="h-3 w-3 text-rose-400" />
-          <span className="text-[10px] font-bold text-rose-400">{daysSinceUpdate}d</span>
-        </div>
-      )}
-
-      {/* Warning indicator */}
-      {isWarning && !isRotting && (
-        <div className="absolute -top-2 -right-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/20 ring-1 ring-amber-500/40">
-          <Clock className="h-3 w-3 text-amber-400" />
-          <span className="text-[10px] font-bold text-amber-400">{daysSinceUpdate}d</span>
-        </div>
-      )}
+      {/* Hover Action Bar */}
+      <AnimatePresence>
+        {isHovered && !isBeingDragged && (
+          <motion.div
+            initial={{ opacity: 0, y: 8, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            className="absolute -top-3 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-1.5 rounded-lg bg-white dark:bg-slate-700 shadow-lg dark:shadow-black/30 ring-1 ring-slate-200 dark:ring-slate-600 z-50"
+          >
+            <button
+              onClick={(e) => handleQuickAction(e, 'phone')}
+              className="p-1.5 rounded-md hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors group/btn"
+              title="Ligar"
+            >
+              <Phone className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400 group-hover/btn:text-emerald-600 dark:group-hover/btn:text-emerald-400" />
+            </button>
+            <button
+              onClick={(e) => handleQuickAction(e, 'calendar')}
+              className="p-1.5 rounded-md hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors group/btn"
+              title="Agendar"
+            >
+              <Calendar className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400 group-hover/btn:text-indigo-600 dark:group-hover/btn:text-indigo-400" />
+            </button>
+            <button
+              onClick={(e) => handleQuickAction(e, 'check')}
+              className="p-1.5 rounded-md hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors group/btn"
+              title="Marcar como Ganho"
+            >
+              <CheckCircle2 className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400 group-hover/btn:text-emerald-600 dark:group-hover/btn:text-emerald-400" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Subtle gradient overlay on hover */}
-      <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-indigo-500/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-      
+      <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-indigo-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+
       {/* Content */}
       <div className="relative">
-        {/* Title */}
-        <h4 className="font-semibold text-foreground text-[13px] leading-snug mb-1 line-clamp-2 pr-6">
-          {deal.title}
-        </h4>
-
-        {/* Customer Name */}
-        <p className="text-[12px] text-muted-foreground mb-3 flex items-center gap-1.5">
-          <User className="h-3 w-3 text-muted-foreground/80" />
-          <span className="truncate">{deal.customer_name}</span>
-        </p>
-
-        {/* Footer: Value + Avatar */}
-        <div className="flex items-center justify-between">
-          {/* Value - Always Emerald for money */}
-          <span className="text-base font-bold text-emerald-600 dark:text-emerald-300 tabular-nums">
-            {formatCurrency(deal.value)}
-          </span>
-
-          {/* Right side: Probability + Avatar */}
-          <div className="flex items-center gap-2">
-            {/* Probability indicator */}
-            {deal.probability > 0 && (
-              <div className={`
-                flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold
-                ${deal.probability >= 70 
-                  ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-200" 
-                  : deal.probability >= 40 
-                    ? "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-200"
-                    : "bg-muted text-muted-foreground"
-                }
-              `}>
-                {deal.probability}%
+        {/* Header: Title + Avatar + Rotting Indicator */}
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <h4 className="font-semibold text-slate-900 dark:text-white text-[13px] leading-snug line-clamp-2 flex-1">
+            {deal.title}
+          </h4>
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            {/* Rotting/Warning Badge - Inline */}
+            {daysSinceUpdate > 7 && (
+              <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-rose-100 dark:bg-rose-500/20">
+                <AlertTriangle className="h-3 w-3 text-rose-600 dark:text-rose-400" />
+                <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400">{daysSinceUpdate}d</span>
               </div>
             )}
-
-            {/* Owner Avatar */}
-            <Avatar className="h-6 w-6 ring-2 ring-indigo-500/20">
+            {daysSinceUpdate > 3 && daysSinceUpdate <= 7 && (
+              <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-500/20">
+                <Clock className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+                <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400">{daysSinceUpdate}d</span>
+              </div>
+            )}
+            {/* Avatar */}
+            <Avatar className="h-7 w-7 ring-2 ring-indigo-100 dark:ring-indigo-500/30">
               <AvatarImage src={deal.profiles?.avatar_url || undefined} />
-              <AvatarFallback className="bg-muted text-foreground text-[10px] font-bold">
+              <AvatarFallback className="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-bold">
                 {getInitials(deal.profiles?.nome || "")}
               </AvatarFallback>
             </Avatar>
           </div>
         </div>
 
-        {/* Date - subtle bottom */}
-        <div className="mt-3 pt-2 border-t border-border flex items-center justify-between">
-          <p className="text-[10px] text-muted-foreground font-medium">
-            Criado em {format(new Date(deal.created_at), "dd MMM", { locale: ptBR })}
+        {/* Customer Name */}
+        <p className="text-[12px] text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-1.5">
+          <User className="h-3 w-3 text-slate-400 dark:text-slate-500" />
+          <span className="truncate">{deal.customer_name}</span>
+        </p>
+
+        {/* Value + Badges Row */}
+        <div className="flex items-center justify-between mb-3">
+          {/* Value - Always Emerald for money */}
+          <span className="text-base font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
+            {formatCurrency(deal.value)}
+          </span>
+
+          {/* Probability Badge */}
+          {deal.probability > 0 && (
+            <div className={`
+              flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold
+              ${deal.probability >= 70
+                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300"
+                : deal.probability >= 40
+                  ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300"
+                  : "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400"
+              }
+            `}>
+              {deal.probability}%
+            </div>
+          )}
+        </div>
+
+        {/* XP Bar (Probability Visualization) */}
+        <div className="relative h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mb-3">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${deal.probability}%` }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className={`absolute inset-y-0 left-0 bg-gradient-to-r ${xpBarColor} rounded-full`}
+          />
+          {/* Shimmer effect */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+        </div>
+
+        {/* Footer: Date info */}
+        <div className="pt-2 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
+          <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+            {format(new Date(deal.created_at), "dd MMM", { locale: ptBR })}
           </p>
           {deal.expected_close_date && (
-            <p className="text-[10px] text-muted-foreground font-medium">
-              Prev: {format(new Date(deal.expected_close_date), "dd/MM", { locale: ptBR })}
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              {format(new Date(deal.expected_close_date), "dd/MM", { locale: ptBR })}
             </p>
           )}
         </div>

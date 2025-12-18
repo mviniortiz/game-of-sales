@@ -1,11 +1,10 @@
-import { useEffect, useState } from "react";
 import { Home, Trophy, PlusCircle, Target, PhoneCall, Shield, LogOut, User, Settings, Calendar, Kanban } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { CompanySwitcher } from "./CompanySwitcher";
-import logo from "@/assets/logo.svg";
-import logoLight from "@/assets/logo 1 - white.svg";
+import brandLogo from "@/assets/logo-full.png";
+import brandLogoIcon from "@/assets/logo-icon.png";
 import {
   Sidebar,
   SidebarContent,
@@ -58,15 +57,6 @@ export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const collapsed = state === "collapsed";
-  const [isDark, setIsDark] = useState(() => typeof document !== "undefined" && document.documentElement.classList.contains("dark"));
-
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setIsDark(document.documentElement.classList.contains("dark"));
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-    return () => observer.disconnect();
-  }, []);
 
   const getInitials = (nome: string) => {
     return nome
@@ -85,11 +75,11 @@ export function AppSidebar() {
           <div className="p-4 border-b border-sidebar-border">
             {!collapsed && (
               <div className="flex items-center justify-center">
-                <img src={isDark ? logo : logoLight} alt="VYZON" className="h-12 w-auto object-contain" />
+                <img src={brandLogo} alt="Game Sales" className="h-20 w-auto object-contain" />
               </div>
             )}
             {collapsed && (
-              <img src="/favicon.svg" alt="VYZON" className="w-10 h-10 object-contain mx-auto" />
+              <img src={brandLogoIcon} alt="Game Sales" className="w-12 h-12 object-contain mx-auto" />
             )}
           </div>
 
@@ -125,234 +115,234 @@ export function AppSidebar() {
             )}
           </div>
 
-        {/* Visão Geral Section */}
-        <SidebarGroup className="py-2">
-          {!collapsed && (
-            <SidebarGroupLabel className="text-xs uppercase text-muted-foreground/70 font-semibold tracking-wider px-4">
-              Visão Geral
-            </SidebarGroupLabel>
-          )}
-          <SidebarGroupContent>
-            <SidebarMenu className="gap-1">
-              {visaoGeralItems.map((item) => {
-                const isActive = location.pathname === item.url;
-                return (
-                  <SidebarMenuItem key={item.title}>
-                    {collapsed ? (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <SidebarMenuButton asChild>
-                            <NavLink
-                              to={item.url}
-                              end
-                              className="flex items-center gap-3 hover:bg-sidebar-accent transition-all group py-2.5"
-                              activeClassName="bg-indigo-50 text-indigo-600 font-medium border-l-4 border-indigo-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
-                            >
-                              <item.icon className={`h-5 w-5 transition-colors ${isActive ? 'text-indigo-500' : 'text-muted-foreground'}`} />
-                            </NavLink>
-                          </SidebarMenuButton>
-                        </TooltipTrigger>
-                        <TooltipContent side="right" className="font-medium">
-                          {item.title}
-                        </TooltipContent>
-                      </Tooltip>
-                    ) : (
-                      <SidebarMenuButton asChild>
-                        <NavLink
-                          to={item.url}
-                          end
-                          className="flex items-center gap-3 hover:bg-sidebar-accent transition-all group py-2.5"
-                          activeClassName="bg-indigo-50 text-indigo-600 font-medium border-l-4 border-indigo-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
-                        >
-                          <item.icon className={`h-5 w-5 transition-colors ${isActive ? 'text-indigo-500' : 'text-muted-foreground'}`} />
-                          <span className="flex-1">{item.title}</span>
-                        </NavLink>
-                      </SidebarMenuButton>
-                    )}
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* Gestão Section */}
-        <SidebarGroup className="py-2">
-          {!collapsed && (
-            <SidebarGroupLabel className="text-xs uppercase text-muted-foreground/70 font-semibold tracking-wider px-4">
-              Gestão
-            </SidebarGroupLabel>
-          )}
-          <SidebarGroupContent>
-            <SidebarMenu className="gap-1">
-              {gestaoItems.map((item) => {
-                const isActive = location.pathname === item.url;
-                return (
-                  <SidebarMenuItem key={item.title}>
-                    {collapsed ? (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <SidebarMenuButton asChild>
-                            <NavLink
-                              to={item.url}
-                              end
-                              className="flex items-center gap-3 hover:bg-sidebar-accent transition-all group py-2.5"
-                              activeClassName="bg-indigo-50 text-indigo-600 font-medium border-l-4 border-indigo-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
-                            >
-                              <item.icon className={`h-5 w-5 transition-colors ${isActive ? 'text-indigo-500' : 'text-muted-foreground'}`} />
-                            </NavLink>
-                          </SidebarMenuButton>
-                        </TooltipTrigger>
-                        <TooltipContent side="right" className="font-medium">
-                          {item.title}
-                        </TooltipContent>
-                      </Tooltip>
-                    ) : (
-                      <SidebarMenuButton asChild>
-                        <NavLink
-                          to={item.url}
-                          end
-                          className="flex items-center gap-3 hover:bg-sidebar-accent transition-all group py-2.5"
-                          activeClassName="bg-indigo-50 text-indigo-600 font-medium border-l-4 border-indigo-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
-                        >
-                          <item.icon className={`h-5 w-5 transition-colors ${isActive ? 'text-indigo-500' : 'text-muted-foreground'}`} />
-                          <span className="flex-1">{item.title}</span>
-                        </NavLink>
-                      </SidebarMenuButton>
-                    )}
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* Sistema Section - Admin Only */}
-        {isAdmin && (
+          {/* Visão Geral Section */}
           <SidebarGroup className="py-2">
             {!collapsed && (
               <SidebarGroupLabel className="text-xs uppercase text-muted-foreground/70 font-semibold tracking-wider px-4">
-                Sistema
+                Visão Geral
               </SidebarGroupLabel>
             )}
             <SidebarGroupContent>
               <SidebarMenu className="gap-1">
-                <SidebarMenuItem>
-                  {collapsed ? (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
+                {visaoGeralItems.map((item) => {
+                  const isActive = location.pathname === item.url;
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      {collapsed ? (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <SidebarMenuButton asChild>
+                              <NavLink
+                                to={item.url}
+                                end
+                                className="flex items-center gap-3 hover:bg-sidebar-accent transition-all group py-2.5"
+                                activeClassName="bg-indigo-50 text-indigo-600 font-medium border-l-4 border-indigo-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
+                              >
+                                <item.icon className={`h-5 w-5 transition-colors ${isActive ? 'text-indigo-500' : 'text-muted-foreground'}`} />
+                              </NavLink>
+                            </SidebarMenuButton>
+                          </TooltipTrigger>
+                          <TooltipContent side="right" className="font-medium">
+                            {item.title}
+                          </TooltipContent>
+                        </Tooltip>
+                      ) : (
                         <SidebarMenuButton asChild>
                           <NavLink
-                            to={adminMenuItem.url}
+                            to={item.url}
                             end
                             className="flex items-center gap-3 hover:bg-sidebar-accent transition-all group py-2.5"
                             activeClassName="bg-indigo-50 text-indigo-600 font-medium border-l-4 border-indigo-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
                           >
-                            <adminMenuItem.icon className={`h-5 w-5 transition-colors ${location.pathname === adminMenuItem.url ? 'text-indigo-500' : 'text-muted-foreground'}`} />
+                            <item.icon className={`h-5 w-5 transition-colors ${isActive ? 'text-indigo-500' : 'text-muted-foreground'}`} />
+                            <span className="flex-1">{item.title}</span>
                           </NavLink>
                         </SidebarMenuButton>
-                      </TooltipTrigger>
-                      <TooltipContent side="right" className="font-medium">
-                        {adminMenuItem.title}
-                      </TooltipContent>
-                    </Tooltip>
-                  ) : (
-                    <SidebarMenuButton asChild>
-                      <NavLink
-                        to={adminMenuItem.url}
-                        end
-                          className="flex items-center gap-3 hover:bg-sidebar-accent transition-all group py-2.5"
-                          activeClassName="bg-indigo-50 text-indigo-600 font-medium border-l-4 border-indigo-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
-                      >
-                          <adminMenuItem.icon className={`h-5 w-5 transition-colors ${location.pathname === adminMenuItem.url ? 'text-indigo-500' : 'text-muted-foreground'}`} />
-                        <span className="flex-1">{adminMenuItem.title}</span>
-                      </NavLink>
-                    </SidebarMenuButton>
-                  )}
-                </SidebarMenuItem>
+                      )}
+                    </SidebarMenuItem>
+                  );
+                })}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
-        )}
-      </SidebarContent>
 
-      {/* User Profile Footer - Enhanced Card Design */}
-      <SidebarFooter className="border-t border-sidebar-border p-4 mt-auto bg-secondary">
-        {!collapsed ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start gap-3 h-auto py-3 hover:bg-sidebar-accent rounded-lg transition-all"
-              >
-                <Avatar className="h-10 w-10 ring-2 ring-indigo-500/20">
-                  {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt="Avatar" />}
-                  <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white">
-                    {profile?.nome ? getInitials(profile.nome) : "U"}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col items-start text-left flex-1">
-                  <span className="text-sm font-semibold">{profile?.nome || "Usuário"}</span>
-                  {isAdmin && (
-                    <Badge variant="secondary" className="text-xs mt-1 bg-amber-500/10 text-amber-600 border-amber-500/20">
-                      👑 Admin
-                    </Badge>
-                  )}
-                </div>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate("/profile")}>
-                <User className="mr-2 h-4 w-4" />
-                Perfil
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={signOut} className="text-destructive">
-                <LogOut className="mr-2 h-4 w-4" />
-                Sair
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="mx-auto hover:bg-gray-100">
-                <Avatar className="h-10 w-10 ring-2 ring-indigo-500/20">
-                  {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt="Avatar" />}
-                  <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white">
-                    {profile?.nome ? getInitials(profile.nome) : "U"}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>
-                <div className="flex flex-col">
-                  <span>{profile?.nome || "Usuário"}</span>
-                  {isAdmin && (
-                    <Badge variant="secondary" className="text-xs mt-1 w-fit bg-amber-500/10 text-amber-600 border-amber-500/20">
-                      👑 Admin
-                    </Badge>
-                  )}
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate("/profile")}>
-                <User className="mr-2 h-4 w-4" />
-                Perfil
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={signOut} className="text-destructive">
-                <LogOut className="mr-2 h-4 w-4" />
-                Sair
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
-      </SidebarFooter>
-    </Sidebar>
+          {/* Gestão Section */}
+          <SidebarGroup className="py-2">
+            {!collapsed && (
+              <SidebarGroupLabel className="text-xs uppercase text-muted-foreground/70 font-semibold tracking-wider px-4">
+                Gestão
+              </SidebarGroupLabel>
+            )}
+            <SidebarGroupContent>
+              <SidebarMenu className="gap-1">
+                {gestaoItems.map((item) => {
+                  const isActive = location.pathname === item.url;
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      {collapsed ? (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <SidebarMenuButton asChild>
+                              <NavLink
+                                to={item.url}
+                                end
+                                className="flex items-center gap-3 hover:bg-sidebar-accent transition-all group py-2.5"
+                                activeClassName="bg-indigo-50 text-indigo-600 font-medium border-l-4 border-indigo-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
+                              >
+                                <item.icon className={`h-5 w-5 transition-colors ${isActive ? 'text-indigo-500' : 'text-muted-foreground'}`} />
+                              </NavLink>
+                            </SidebarMenuButton>
+                          </TooltipTrigger>
+                          <TooltipContent side="right" className="font-medium">
+                            {item.title}
+                          </TooltipContent>
+                        </Tooltip>
+                      ) : (
+                        <SidebarMenuButton asChild>
+                          <NavLink
+                            to={item.url}
+                            end
+                            className="flex items-center gap-3 hover:bg-sidebar-accent transition-all group py-2.5"
+                            activeClassName="bg-indigo-50 text-indigo-600 font-medium border-l-4 border-indigo-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
+                          >
+                            <item.icon className={`h-5 w-5 transition-colors ${isActive ? 'text-indigo-500' : 'text-muted-foreground'}`} />
+                            <span className="flex-1">{item.title}</span>
+                          </NavLink>
+                        </SidebarMenuButton>
+                      )}
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+
+          {/* Sistema Section - Admin Only */}
+          {isAdmin && (
+            <SidebarGroup className="py-2">
+              {!collapsed && (
+                <SidebarGroupLabel className="text-xs uppercase text-muted-foreground/70 font-semibold tracking-wider px-4">
+                  Sistema
+                </SidebarGroupLabel>
+              )}
+              <SidebarGroupContent>
+                <SidebarMenu className="gap-1">
+                  <SidebarMenuItem>
+                    {collapsed ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <SidebarMenuButton asChild>
+                            <NavLink
+                              to={adminMenuItem.url}
+                              end
+                              className="flex items-center gap-3 hover:bg-sidebar-accent transition-all group py-2.5"
+                              activeClassName="bg-indigo-50 text-indigo-600 font-medium border-l-4 border-indigo-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
+                            >
+                              <adminMenuItem.icon className={`h-5 w-5 transition-colors ${location.pathname === adminMenuItem.url ? 'text-indigo-500' : 'text-muted-foreground'}`} />
+                            </NavLink>
+                          </SidebarMenuButton>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="font-medium">
+                          {adminMenuItem.title}
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <SidebarMenuButton asChild>
+                        <NavLink
+                          to={adminMenuItem.url}
+                          end
+                          className="flex items-center gap-3 hover:bg-sidebar-accent transition-all group py-2.5"
+                          activeClassName="bg-indigo-50 text-indigo-600 font-medium border-l-4 border-indigo-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
+                        >
+                          <adminMenuItem.icon className={`h-5 w-5 transition-colors ${location.pathname === adminMenuItem.url ? 'text-indigo-500' : 'text-muted-foreground'}`} />
+                          <span className="flex-1">{adminMenuItem.title}</span>
+                        </NavLink>
+                      </SidebarMenuButton>
+                    )}
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          )}
+        </SidebarContent>
+
+        {/* User Profile Footer - Enhanced Card Design */}
+        <SidebarFooter className="border-t border-sidebar-border p-4 mt-auto bg-secondary">
+          {!collapsed ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start gap-3 h-auto py-3 hover:bg-sidebar-accent rounded-lg transition-all"
+                >
+                  <Avatar className="h-10 w-10 ring-2 ring-indigo-500/20">
+                    {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt="Avatar" />}
+                    <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white">
+                      {profile?.nome ? getInitials(profile.nome) : "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col items-start text-left flex-1">
+                    <span className="text-sm font-semibold">{profile?.nome || "Usuário"}</span>
+                    {isAdmin && (
+                      <Badge variant="secondary" className="text-xs mt-1 bg-amber-500/10 text-amber-600 border-amber-500/20">
+                        👑 Admin
+                      </Badge>
+                    )}
+                  </div>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate("/profile")}>
+                  <User className="mr-2 h-4 w-4" />
+                  Perfil
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={signOut} className="text-destructive">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sair
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="mx-auto hover:bg-gray-100">
+                  <Avatar className="h-10 w-10 ring-2 ring-indigo-500/20">
+                    {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt="Avatar" />}
+                    <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white">
+                      {profile?.nome ? getInitials(profile.nome) : "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>
+                  <div className="flex flex-col">
+                    <span>{profile?.nome || "Usuário"}</span>
+                    {isAdmin && (
+                      <Badge variant="secondary" className="text-xs mt-1 w-fit bg-amber-500/10 text-amber-600 border-amber-500/20">
+                        👑 Admin
+                      </Badge>
+                    )}
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate("/profile")}>
+                  <User className="mr-2 h-4 w-4" />
+                  Perfil
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={signOut} className="text-destructive">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sair
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </SidebarFooter>
+      </Sidebar>
     </TooltipProvider>
   );
 }

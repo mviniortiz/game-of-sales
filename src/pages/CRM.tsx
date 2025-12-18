@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   DndContext,
@@ -18,23 +18,28 @@ import {
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
 import { toast } from "sonner";
-import { 
-  Plus, 
-  Target, 
-  TrendingUp, 
-  DollarSign, 
-  Users, 
-  CheckCircle, 
+import {
+  Plus,
+  Target,
+  TrendingUp,
+  DollarSign,
+  Users,
+  CheckCircle,
   Sparkles,
   Settings2,
   AlertCircle,
   Zap,
   Star,
   XCircle,
+  Search,
+  Trash2,
+  User,
   LucideIcon
 } from "lucide-react";
 import { syncWonDealToSale } from "@/utils/salesSync";
@@ -44,6 +49,7 @@ import { NewDealModal } from "@/components/crm/NewDealModal";
 import { KanbanSkeleton } from "@/components/crm/KanbanSkeleton";
 import { PipelineConfigModal, StageConfig } from "@/components/crm/PipelineConfigModal";
 import { LostDealModal } from "@/components/crm/LostDealModal";
+import { Confetti, CelebrationOverlay } from "@/components/crm/Confetti";
 
 // Icon mapping
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -130,26 +136,19 @@ export interface Deal {
 }
 
 // LocalStorage key for pipeline config
-const PIPELINE_CONFIG_KEY = "vyzon_pipeline_config_v2";
+const PIPELINE_CONFIG_KEY = "gamesales_pipeline_config_v2";
+const LEGACY_PIPELINE_KEYS = ["vyzon_pipeline_config_v2"];
 
-// Validate that loaded stages have valid IDs
+// Validate that loaded stages have valid structure (no longer filtering by enum)
 const validateStages = (stages: StageConfig[]): StageConfig[] => {
-  const validIds = new Set(VALID_DB_STAGES);
-  const validStages = stages.filter(s => validIds.has(s.id as ValidDbStage));
-  
+  // Filter stages that have valid structure (id, title, iconId, colorId)
+  const validStages = stages.filter(s => s.id && s.title && s.iconId && s.colorId);
+
   // If no valid stages, return defaults
   if (validStages.length === 0) {
     return DEFAULT_STAGES;
   }
-  
-  // Ensure all default stages exist (in case some are missing)
-  const existingIds = new Set(validStages.map(s => s.id));
-  DEFAULT_STAGES.forEach(defaultStage => {
-    if (!existingIds.has(defaultStage.id)) {
-      validStages.push(defaultStage);
-    }
-  });
-  
+
   return validStages;
 };
 
@@ -158,7 +157,7 @@ export default function CRM() {
   const { activeCompanyId } = useTenant();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  
+
   const [localDeals, setLocalDeals] = useState<Deal[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [showNewDeal, setShowNewDeal] = useState(false);
@@ -166,26 +165,38 @@ export default function CRM() {
   const [showLostModal, setShowLostModal] = useState(false);
   const [dealToLose, setDealToLose] = useState<Deal | null>(null);
   const [viewMode, setViewMode] = useState<"kanban" | "list">("kanban");
-  
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [celebrationMessage, setCelebrationMessage] = useState("");
+  const [selectedSeller, setSelectedSeller] = useState<string>("all");
+  const [dealToDelete, setDealToDelete] = useState<Deal | null>(null);
+
   // Load stages from localStorage or use defaults
   const [stageConfigs, setStageConfigs] = useState<StageConfig[]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem(PIPELINE_CONFIG_KEY);
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          return validateStages(parsed);
-        } catch {
-          return DEFAULT_STAGES;
-        }
+    if (typeof window === "undefined") return DEFAULT_STAGES;
+
+    const saved =
+      localStorage.getItem(PIPELINE_CONFIG_KEY) ??
+      LEGACY_PIPELINE_KEYS.map((key) => localStorage.getItem(key)).find(Boolean);
+
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        const validated = validateStages(parsed);
+        localStorage.setItem(PIPELINE_CONFIG_KEY, JSON.stringify(validated));
+        LEGACY_PIPELINE_KEYS.forEach((key) => localStorage.removeItem(key));
+        return validated;
+      } catch {
+        return DEFAULT_STAGES;
       }
     }
+
     return DEFAULT_STAGES;
   });
 
   // Convert configs to full stage objects
   const STAGES = useMemo(() => stageConfigs.map(configToStage), [stageConfigs]);
-  
+
   const effectiveCompanyId = isSuperAdmin ? activeCompanyId : companyId;
 
   // Optimized sensors for fast, responsive drag
@@ -202,6 +213,7 @@ export default function CRM() {
   const handleSaveStages = (newConfigs: StageConfig[]) => {
     setStageConfigs(newConfigs);
     localStorage.setItem(PIPELINE_CONFIG_KEY, JSON.stringify(newConfigs));
+    LEGACY_PIPELINE_KEYS.forEach((key) => localStorage.removeItem(key));
   };
 
   // Fetch deals
@@ -222,7 +234,7 @@ export default function CRM() {
         console.error("Error fetching deals:", error);
         throw error;
       }
-      
+
       // Fetch profiles separately for each unique user_id
       const userIds = [...new Set((data || []).map(d => d.user_id))];
       const { data: profiles } = await supabase
@@ -231,7 +243,7 @@ export default function CRM() {
         .in("id", userIds);
 
       const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
-      
+
       // Map to our Deal interface
       return (data || []).map((d: any) => ({
         id: d.id,
@@ -261,6 +273,46 @@ export default function CRM() {
     setLocalDeals(deals);
     queryClient.setQueryData(["deals", effectiveCompanyId], deals);
   }, [deals, queryClient, effectiveCompanyId]);
+
+  // Fetch vendors for filter
+  const { data: vendors = [] } = useQuery({
+    queryKey: ["crm-vendors", effectiveCompanyId],
+    queryFn: async () => {
+      let query = supabase
+        .from("profiles")
+        .select("id, nome, avatar_url")
+        .order("nome");
+
+      if (effectiveCompanyId) {
+        query = query.eq("company_id", effectiveCompanyId);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!effectiveCompanyId || isSuperAdmin,
+  });
+
+  // Delete deal mutation
+  const deleteDealMutation = useMutation({
+    mutationFn: async (dealId: string) => {
+      const { error } = await supabase
+        .from("deals")
+        .delete()
+        .eq("id", dealId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["deals", effectiveCompanyId] });
+      toast.success("Negociação excluída com sucesso!");
+      setDealToDelete(null);
+    },
+    onError: (error: any) => {
+      console.error("Error deleting deal:", error);
+      toast.error("Erro ao excluir negociação");
+    },
+  });
 
   const reorderDealsOptimistic = (
     currentDeals: Deal[],
@@ -324,12 +376,17 @@ export default function CRM() {
         .from("deals")
         .update({ stage: stage as any, position })
         .eq("id", id);
-      
+
       if (error) throw error;
 
       if (stage === "closed_won" && deal) {
+        // Trigger celebration
+        setCelebrationMessage(`🎉 ${deal.title} Ganho!`);
+        setShowConfetti(true);
+
         try {
           await syncWonDealToSale(deal, queryClient);
+          toast.success("Deal ganho e venda sincronizada!");
         } catch (syncError) {
           console.error("Erro ao sincronizar venda do deal:", syncError);
           toast.error("Deal ganho, mas a venda não foi sincronizada.");
@@ -354,14 +411,27 @@ export default function CRM() {
   // Group deals by stage
   const dealsByStage = useMemo(() => {
     const grouped: Record<string, Deal[]> = {};
-    
+
     // Initialize all stages
     STAGES.forEach(stage => {
       grouped[stage.id] = [];
     });
 
+    // First filter by seller
+    let dealsToFilter = selectedSeller === "all"
+      ? localDeals
+      : localDeals.filter(deal => deal.user_id === selectedSeller);
+
+    // Then filter by search query
+    if (searchQuery.trim()) {
+      dealsToFilter = dealsToFilter.filter(deal =>
+        deal.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        deal.customer_name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
     // Group deals
-    localDeals.forEach((deal) => {
+    dealsToFilter.forEach((deal) => {
       if (grouped[deal.stage]) {
         grouped[deal.stage].push(deal);
       } else {
@@ -378,17 +448,29 @@ export default function CRM() {
     });
 
     return grouped;
-  }, [deals, STAGES]);
+  }, [localDeals, STAGES, searchQuery, selectedSeller]);
 
-  // Calculate totals per stage
+  // Calculate totals per stage (from filtered deals)
   const stageTotals = useMemo(() => {
     const totals: Record<string, { count: number; value: number }> = {};
-    
+
     STAGES.forEach(stage => {
       totals[stage.id] = { count: 0, value: 0 };
     });
 
-    localDeals.forEach((deal) => {
+    // Use the same filtering as dealsByStage
+    let dealsToCount = selectedSeller === "all"
+      ? localDeals
+      : localDeals.filter(deal => deal.user_id === selectedSeller);
+
+    if (searchQuery.trim()) {
+      dealsToCount = dealsToCount.filter(deal =>
+        deal.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        deal.customer_name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    dealsToCount.forEach((deal) => {
       if (totals[deal.stage]) {
         totals[deal.stage].count++;
         totals[deal.stage].value += Number(deal.value) || 0;
@@ -396,7 +478,7 @@ export default function CRM() {
     });
 
     return totals;
-  }, [localDeals, STAGES]);
+  }, [localDeals, STAGES, selectedSeller, searchQuery]);
 
   // Get the active deal for drag overlay
   const activeDeal = activeId ? localDeals.find((d) => d.id === activeId) : null;
@@ -405,14 +487,14 @@ export default function CRM() {
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
     setActiveId(active.id as string);
-    
+
     // Add grabbing cursor to body during drag
     document.body.style.cursor = 'grabbing';
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    
+
     // Reset cursor
     document.body.style.cursor = '';
     setActiveId(null);
@@ -432,7 +514,7 @@ export default function CRM() {
 
     // Check if dropped on a column
     const isColumn = STAGES.some((s) => s.id === overId);
-    
+
     if (isColumn) {
       targetStage = overId;
       targetIndex = dealsByStage[targetStage]?.length || 0;
@@ -440,7 +522,7 @@ export default function CRM() {
       // Dropped on another deal
       const overDeal = localDeals.find((d) => d.id === overId);
       if (!overDeal) return;
-      
+
       targetStage = overDeal.stage;
       const targetList = dealsByStage[targetStage] || [];
       const idx = targetList.findIndex(d => d.id === overId);
@@ -480,16 +562,22 @@ export default function CRM() {
     }).format(value);
   };
 
-  // Calculate pipeline total
-  const pipelineTotal = localDeals.reduce((acc, deal) => acc + (Number(deal.value) || 0), 0);
+  // Filter deals by selected seller
+  const filteredDeals = useMemo(() => {
+    if (selectedSeller === "all") return localDeals;
+    return localDeals.filter(deal => deal.user_id === selectedSeller);
+  }, [localDeals, selectedSeller]);
+
+  // Calculate pipeline total (from filtered deals)
+  const pipelineTotal = filteredDeals.reduce((acc, deal) => acc + (Number(deal.value) || 0), 0);
 
   const sortedDealsForList = useMemo(() => {
-    return [...localDeals].sort((a, b) => {
+    return [...filteredDeals].sort((a, b) => {
       const aDate = new Date(a.updated_at || a.created_at || 0).getTime();
       const bDate = new Date(b.updated_at || b.created_at || 0).getTime();
       return bDate - aDate;
     });
-  }, [localDeals]);
+  }, [filteredDeals]);
 
   const renderStageBadge = (stageId: string) => {
     const stage = STAGES.find((s) => s.id === stageId);
@@ -527,7 +615,7 @@ export default function CRM() {
               </p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="hidden sm:flex items-center gap-1 bg-muted px-1 py-1 rounded-lg border border-border">
               <Button
@@ -548,8 +636,36 @@ export default function CRM() {
               </Button>
             </div>
 
+            {/* Seller Filter */}
+            <Select value={selectedSeller} onValueChange={setSelectedSeller}>
+              <SelectTrigger className="w-40 h-9 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white">
+                <User className="h-4 w-4 mr-2 text-slate-400" />
+                <SelectValue placeholder="Vendedor" />
+              </SelectTrigger>
+              <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                <SelectItem value="all">Todos</SelectItem>
+                {vendors.map((vendor: any) => (
+                  <SelectItem key={vendor.id} value={vendor.id}>
+                    {vendor.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Search Input */}
+            <div className="relative hidden sm:block">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500" />
+              <Input
+                type="text"
+                placeholder="Buscar deals..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-48 pl-9 h-9 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-indigo-500"
+              />
+            </div>
+
             {/* Config Button */}
-            <Button 
+            <Button
               variant="outline"
               size="sm"
               onClick={() => setShowConfig(true)}
@@ -560,7 +676,7 @@ export default function CRM() {
             </Button>
 
             {/* New Deal Button */}
-            <Button 
+            <Button
               size="sm"
               onClick={() => setShowNewDeal(true)}
               className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all duration-200 h-9"
@@ -601,7 +717,7 @@ export default function CRM() {
               </div>
 
               {/* Drag Overlay - Fast animation */}
-              <DragOverlay 
+              <DragOverlay
                 dropAnimation={{
                   duration: 70,
                   easing: 'ease-out',
@@ -609,9 +725,9 @@ export default function CRM() {
                 modifiers={[]}
               >
                 {activeDeal ? (
-                  <DealCard 
-                    deal={activeDeal} 
-                    isDragging 
+                  <DealCard
+                    deal={activeDeal}
+                    isDragging
                     formatCurrency={formatCurrency}
                   />
                 ) : null}
@@ -653,6 +769,18 @@ export default function CRM() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2 justify-end">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10"
+                        onClick={() => {
+                          if (confirm(`Tem certeza que deseja excluir a negociação "${deal.title}"?`)) {
+                            deleteDealMutation.mutate(deal.id);
+                          }
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                       <Button variant="ghost" size="sm" onClick={() => navigate(`/deals/${deal.id}`)}>
                         Ver detalhes
                       </Button>
@@ -695,9 +823,9 @@ export default function CRM() {
           if (!dealToLose) return;
           await supabase
             .from("deals")
-            .update({ 
-              stage: "closed_lost" as any, 
-              loss_reason: reason 
+            .update({
+              stage: "closed_lost" as any,
+              loss_reason: reason
             })
             .eq("id", dealToLose.id);
           queryClient.invalidateQueries({ queryKey: ["deals"] });
@@ -706,6 +834,16 @@ export default function CRM() {
           toast.success("Deal marcado como perdido");
         }}
         dealTitle={dealToLose?.title || ""}
+      />
+
+      {/* Confetti Celebration */}
+      <Confetti
+        show={showConfetti}
+        onComplete={() => setShowConfetti(false)}
+      />
+      <CelebrationOverlay
+        show={showConfetti}
+        message={celebrationMessage}
       />
     </AppLayout>
   );

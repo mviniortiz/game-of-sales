@@ -58,25 +58,33 @@ export function AdminCompanies() {
       if (companiesError) throw companiesError;
 
       const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-      const vyzon = companiesData?.find((c) => normalize(c.name).includes("vyzon"));
+      const gameSales = companiesData?.find((c) => {
+        const normalized = normalize(c.name);
+        return (
+          normalized.includes("game sales") ||
+          normalized.includes("gamesales") ||
+          normalized.includes("game-sales") ||
+          normalized.includes("vyzon")
+        );
+      });
       const rota = companiesData?.find((c) => normalize(c.name).includes("rota de negocios"));
 
-      if (!vyzon) throw new Error("Empresa Vyzon não encontrada");
+      if (!gameSales) throw new Error("Empresa Game Sales não encontrada");
       if (!rota) throw new Error("Empresa Rota de Negócios não encontrada");
 
       // Remove produto fora de escopo
       const { error: deleteError } = await supabase
         .from("produtos")
         .delete()
-        .eq("company_id", vyzon.id)
+        .eq("company_id", gameSales.id)
         .ilike("nome", "%renovação rota anual%");
       if (deleteError) throw deleteError;
 
-      // Migrar demais produtos Vyzon -> Rota de Negócios
+      // Migrar demais produtos Game Sales -> Rota de Negócios
       const { error: moveError } = await supabase
         .from("produtos")
         .update({ company_id: rota.id })
-        .eq("company_id", vyzon.id);
+        .eq("company_id", gameSales.id);
       if (moveError) throw moveError;
     },
     onSuccess: () => {

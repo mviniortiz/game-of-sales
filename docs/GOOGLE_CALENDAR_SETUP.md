@@ -1,10 +1,10 @@
-# Configuração do Google Calendar - VYZON
+# Configuração do Google Calendar - Game Sales
 
 ## Passo 1: Criar Projeto no Google Cloud Console
 
 1. Acesse [Google Cloud Console](https://console.cloud.google.com/)
 2. Clique em **"Select a project"** → **"New Project"**
-3. Nome: `VYZON Sales` (ou qualquer nome)
+3. Nome: `Game Sales` (ou qualquer nome)
 4. Clique em **Create**
 
 ## Passo 2: Habilitar a API do Google Calendar
@@ -18,7 +18,7 @@
 1. Vá em **APIs & Services** → **OAuth consent screen**
 2. Selecione **External** (para permitir qualquer conta Google)
 3. Preencha:
-   - **App name**: `VYZON`
+   - **App name**: `Game Sales`
    - **User support email**: Seu email
    - **Developer contact email**: Seu email
 4. Clique em **Save and Continue**
@@ -33,7 +33,7 @@
 1. Vá em **APIs & Services** → **Credentials**
 2. Clique em **+ CREATE CREDENTIALS** → **OAuth client ID**
 3. Application type: **Web application**
-4. Name: `VYZON Web Client`
+4. Name: `Game Sales Web Client`
 5. **Authorized redirect URIs** - Adicione:
    ```
    https://SEU_PROJECT_ID.supabase.co/functions/v1/google-oauth-callback
@@ -54,7 +54,7 @@
 |------|-------|
 | `GOOGLE_CLIENT_ID` | Seu Client ID do Google |
 | `GOOGLE_CLIENT_SECRET` | Seu Client Secret do Google |
-| `FRONTEND_URL` | URL do seu frontend (ex: `https://vyzon.vercel.app`) |
+| `FRONTEND_URL` | URL do seu frontend (ex: `https://gamesales.vercel.app`) |
 
 ## Passo 6: Garantir Colunas no Banco de Dados
 
@@ -107,7 +107,7 @@ npx supabase functions deploy google-calendar-auto-sync
 
 ## Passo 8: Testar a Integração
 
-1. Acesse seu app VYZON
+1. Acesse seu app Game Sales
 2. Vá em **Integrações**
 3. Clique em **Conectar** no Google Calendar
 4. Autorize o acesso

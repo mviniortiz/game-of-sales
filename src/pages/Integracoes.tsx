@@ -1,165 +1,403 @@
-import { GoogleCalendarConnect } from "@/components/calendar/GoogleCalendarConnect";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { CreditCard, Bell } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Search,
+  ThumbsUp,
+  Settings,
+  Check,
+  ExternalLink,
+  Puzzle,
+} from "lucide-react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { HotmartConfigModal } from "@/components/integrations/HotmartConfigModal";
+
+// Import logo images
 import googleCalendarLogo from "@/assets/integrations/google-calendar.png";
 import celetusLogo from "@/assets/integrations/celetus.png";
 import caktoLogo from "@/assets/integrations/cakto.png";
 import greennLogo from "@/assets/integrations/greenn.png";
+import hotmartLogo from "@/assets/integrations/hotmart-logo-png_seeklogo-485917.png";
+import kiwifyLogo from "@/assets/integrations/kiwify-logo-png_seeklogo-537186.png";
 
-const Integracoes = () => {
-  const roadmapIntegrations = [
-    {
-      name: "Celetus",
-      description: "Importe vendas e transações automaticamente da Celetus",
-      logo: celetusLogo,
-      color: "from-indigo-500 to-indigo-600"
-    },
-    {
-      name: "Cakto",
-      description: "Sincronize vendas e comissões em tempo real",
-      logo: caktoLogo,
-      color: "from-blue-500 to-indigo-500"
-    },
-    {
-      name: "Greenn",
-      description: "Conecte recorrências e assinaturas da Greenn",
-      logo: greennLogo,
-      color: "from-green-500 to-emerald-500"
+// Integration status types
+type IntegrationStatus = "active" | "available" | "roadmap";
+type IntegrationCategory = "all" | "sales" | "productivity";
+
+interface Integration {
+  id: string;
+  name: string;
+  description: string;
+  logo?: string;
+  logoText?: string;
+  logoBg: string;
+  logoColor?: string;
+  status: IntegrationStatus;
+  category: IntegrationCategory;
+  votes?: number;
+}
+
+// Integration data - Using actual logo images where available
+const INTEGRATIONS: Integration[] = [
+  {
+    id: "google-calendar",
+    name: "Google Calendar",
+    description: "Sincronize agendamentos e calls de vendas automaticamente",
+    logo: googleCalendarLogo,
+    logoBg: "bg-white",
+    status: "active",
+    category: "productivity",
+  },
+  {
+    id: "hotmart",
+    name: "Hotmart",
+    description: "Importe vendas e comissões automaticamente via webhook",
+    logo: hotmartLogo,
+    logoBg: "bg-white",
+    status: "available",
+    category: "sales",
+  },
+  {
+    id: "kiwify",
+    name: "Kiwify",
+    description: "Webhooks em tempo real para vendas e reembolsos",
+    logo: kiwifyLogo,
+    logoBg: "bg-white",
+    status: "available",
+    category: "sales",
+  },
+  {
+    id: "celetus",
+    name: "Celetus",
+    description: "Sincronize transações e leads da plataforma Celetus",
+    logo: celetusLogo,
+    logoBg: "bg-white",
+    status: "roadmap",
+    category: "sales",
+    votes: 23,
+  },
+  {
+    id: "cakto",
+    name: "Cakto",
+    description: "Conecte vendas e relatórios financeiros",
+    logo: caktoLogo,
+    logoBg: "bg-white",
+    status: "roadmap",
+    category: "sales",
+    votes: 18,
+  },
+  {
+    id: "greenn",
+    name: "Greenn",
+    description: "Importe recorrências e assinaturas automaticamente",
+    logo: greennLogo,
+    logoBg: "bg-white",
+    status: "roadmap",
+    category: "sales",
+    votes: 12,
+  },
+];
+
+// Filter tabs
+const FILTER_TABS: { id: IntegrationCategory; label: string }[] = [
+  { id: "all", label: "Todas" },
+  { id: "sales", label: "Vendas" },
+  { id: "productivity", label: "Produtividade" },
+];
+
+// Integration Card Component
+const IntegrationCard = ({ integration, onConnect }: { integration: Integration; onConnect?: () => void }) => {
+  const [votes, setVotes] = useState(integration.votes || 0);
+  const [hasVoted, setHasVoted] = useState(false);
+
+  const handleVote = () => {
+    if (!hasVoted) {
+      setVotes(v => v + 1);
+      setHasVoted(true);
     }
-  ];
+  };
 
   return (
-    <div className="space-y-8 pb-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Hub de Integrações</h1>
-        <p className="text-muted-foreground">
-          Conecte suas ferramentas favoritas e automatize seu fluxo de trabalho de vendas
-        </p>
-      </div>
-
-      {/* Seção 1: Disponível Agora */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <div className="h-1 w-1 rounded-full bg-green-500 animate-pulse" />
-          <h2 className="text-2xl font-semibold">Disponível Agora</h2>
-          <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      whileHover={{ y: -4, transition: { duration: 0.2 } }}
+      className={`
+        relative flex flex-col h-full p-5 rounded-2xl border
+        bg-white dark:bg-slate-800
+        border-slate-200 dark:border-slate-700
+        hover:border-indigo-300 dark:hover:border-indigo-500/50
+        hover:shadow-lg hover:shadow-indigo-500/5 dark:hover:shadow-indigo-500/10
+        transition-all duration-200
+        ${integration.status === "roadmap" ? "opacity-80" : ""}
+      `}
+    >
+      {/* Status Badge */}
+      <div className="absolute top-4 right-4">
+        {integration.status === "active" && (
+          <Badge className="bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30 gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             Ativo
           </Badge>
-        </div>
-        
-        <Card className="border-border/50 bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm relative overflow-hidden group hover:shadow-lg transition-all duration-300">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-green-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-          <CardHeader className="relative">
-            <div className="flex items-start justify-between">
-              <div className="flex items-start gap-4">
-                <div className="p-3 rounded-xl bg-white/90 backdrop-blur-sm shadow-sm">
-                  <img src={googleCalendarLogo} alt="Google Calendar" className="h-8 w-8" />
-                </div>
-                <div>
-                  <CardTitle className="text-2xl mb-2 flex items-center gap-2">
-                    Google Calendar
-                  </CardTitle>
-                  <CardDescription className="text-base">
-                    Sincronize seus agendamentos e não perca nenhuma call de venda.
-                    Mantenha sua agenda sempre atualizada em tempo real.
-                  </CardDescription>
-                </div>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="relative">
-            <GoogleCalendarConnect />
-          </CardContent>
-        </Card>
+        )}
+        {integration.status === "roadmap" && (
+          <Badge variant="secondary" className="bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/30">
+            Em Breve
+          </Badge>
+        )}
       </div>
 
-      {/* Seção 2: Roadmap de Integrações */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <h2 className="text-2xl font-semibold">Roadmap de Integrações</h2>
-          <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
-            Em Desenvolvimento
-          </Badge>
-        </div>
-        <p className="text-muted-foreground">
-          Próximas integrações financeiras para automatizar completamente suas vendas
-        </p>
+      {/* Logo */}
+      <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${integration.logoBg} mb-4 p-2 shadow-sm ring-1 ring-slate-200 dark:ring-slate-700 overflow-hidden`}>
+        {integration.logo ? (
+          <img
+            src={integration.logo}
+            alt={integration.name}
+            className="w-full h-full object-contain"
+          />
+        ) : (
+          <span className={`text-2xl font-bold ${integration.logoColor || "text-slate-900"}`}>
+            {integration.logoText}
+          </span>
+        )}
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {roadmapIntegrations.map((integration) => (
-            <Card 
-              key={integration.name} 
-              className="relative border-border/30 bg-card/30 backdrop-blur-sm overflow-hidden group hover:border-border/50 transition-all duration-300 opacity-75 grayscale hover:grayscale-0 hover:opacity-100"
+      {/* Content */}
+      <h3 className="text-base font-semibold text-slate-900 dark:text-white mb-1">
+        {integration.name}
+      </h3>
+      <p className="text-sm text-slate-500 dark:text-slate-400 flex-1 mb-4 line-clamp-2">
+        {integration.description}
+      </p>
+
+      {/* Footer Actions */}
+      <div className="mt-auto pt-3 border-t border-slate-100 dark:border-slate-700">
+        {integration.status === "active" && (
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+              <Check className="w-3.5 h-3.5" />
+              Conectado
+            </span>
+            <Button variant="ghost" size="sm" className="h-7 text-xs gap-1">
+              <Settings className="w-3 h-3" />
+              Gerenciar
+            </Button>
+          </div>
+        )}
+
+        {integration.status === "available" && (
+          <Button
+            className="w-full gap-2 bg-indigo-600 hover:bg-indigo-500 text-white h-8 text-sm"
+            size="sm"
+            onClick={onConnect}
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            Conectar
+          </Button>
+        )}
+
+        {integration.status === "roadmap" && (
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-slate-500 dark:text-slate-400">
+              {votes} votos
+            </span>
+            <Button
+              variant={hasVoted ? "secondary" : "outline"}
+              size="sm"
+              onClick={handleVote}
+              disabled={hasVoted}
+              className={`gap-1 h-7 text-xs ${hasVoted ? "bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400" : ""}`}
             >
-              <Badge 
-                variant="secondary" 
-                className="absolute top-3 right-3 bg-yellow-500/20 text-yellow-600 border-yellow-500/30 text-xs"
-              >
-                Em Breve
-              </Badge>
-              
-              <CardHeader className="pb-3">
-                <div className="w-16 h-16 rounded-xl bg-white/90 flex items-center justify-center mb-3 shadow-sm opacity-50 group-hover:opacity-100 transition-opacity p-2">
-                  <img src={integration.logo} alt={integration.name} className="w-full h-full object-contain" />
-                </div>
-                <CardTitle className="text-lg">{integration.name}</CardTitle>
-                <CardDescription className="text-sm line-clamp-2">
-                  {integration.description}
-                </CardDescription>
-              </CardHeader>
-              
-              <CardContent>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  disabled
-                  className="w-full gap-2"
-                >
-                  <Bell className="h-3 w-3" />
-                  Avise-me
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+              <ThumbsUp className={`w-3 h-3 ${hasVoted ? "fill-current" : ""}`} />
+              {hasVoted ? "Votado" : "Votar"}
+            </Button>
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+};
+
+// Main Component - Full Width Layout
+const Integracoes = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeFilter, setActiveFilter] = useState<IntegrationCategory>("all");
+  const [hotmartModalOpen, setHotmartModalOpen] = useState(false);
+
+  // Filter integrations
+  const filteredIntegrations = INTEGRATIONS.filter(integration => {
+    const matchesSearch = integration.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      integration.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesFilter = activeFilter === "all" || integration.category === activeFilter;
+    return matchesSearch && matchesFilter;
+  });
+
+  // Group by status
+  const activeIntegrations = filteredIntegrations.filter(i => i.status === "active");
+  const availableIntegrations = filteredIntegrations.filter(i => i.status === "available");
+  const roadmapIntegrations = filteredIntegrations.filter(i => i.status === "roadmap");
+
+  return (
+    <>
+      <div className="w-full h-full min-h-screen bg-slate-50 dark:bg-slate-900">
+        {/* Header - Full Width, Left Aligned */}
+        <div className="w-full bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+          <div className="w-full px-6 py-5">
+            {/* Title Row - Left Aligned */}
+            <div className="flex items-start gap-3 mb-1">
+              <div className="p-2.5 rounded-xl bg-indigo-100 dark:bg-indigo-500/20">
+                <Puzzle className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-slate-900 dark:text-white">
+                  Hub de Integrações
+                </h1>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Conecte suas plataformas de vendas e automatize seu CRM
+                </p>
+              </div>
+            </div>
+
+            {/* Actions Row - Filters Left, Search Right */}
+            <div className="flex items-center justify-between mt-5">
+              {/* Filter Tabs - Left */}
+              <div className="flex gap-1">
+                {FILTER_TABS.map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveFilter(tab.id)}
+                    className={`
+                      px-3 py-1.5 rounded-lg text-sm font-medium transition-colors
+                      ${activeFilter === tab.id
+                        ? "bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400"
+                        : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700"
+                      }
+                    `}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Search - Right */}
+              <div className="relative w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Input
+                  type="text"
+                  placeholder="Buscar integrações..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 h-9 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-sm"
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Call to Action */}
-        <Card className="border-border/50 bg-gradient-to-br from-primary/5 to-primary/10 backdrop-blur-sm border-dashed">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-lg bg-primary/10">
-                  <CreditCard className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg mb-1">Precisa de uma integração específica?</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Entre em contato e conte-nos qual plataforma você gostaria de conectar
-                  </p>
-                </div>
+        {/* Content - Full Width, Left Aligned */}
+        <div className="w-full p-6 space-y-8">
+
+          {/* Connected Integrations */}
+          {activeIntegrations.length > 0 && (
+            <section>
+              <div className="flex items-center gap-2 mb-4">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <h2 className="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wide">
+                  Conectadas
+                </h2>
+                <Badge variant="secondary" className="text-xs">
+                  {activeIntegrations.length}
+                </Badge>
               </div>
-              <Button variant="outline" className="gap-2">
-                Solicitar Integração
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {activeIntegrations.map(integration => (
+                  <IntegrationCard key={integration.id} integration={integration} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Available Integrations */}
+          {availableIntegrations.length > 0 && (
+            <section>
+              <div className="flex items-center gap-2 mb-4">
+                <h2 className="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wide">
+                  Plataformas de Vendas
+                </h2>
+                <Badge className="bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border-0 text-xs">
+                  Novo
+                </Badge>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {availableIntegrations.map(integration => (
+                  <IntegrationCard
+                    key={integration.id}
+                    integration={integration}
+                    onConnect={integration.id === "hotmart" ? () => setHotmartModalOpen(true) : undefined}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Roadmap - More Compact */}
+          {roadmapIntegrations.length > 0 && (
+            <section>
+              <div className="flex items-center gap-2 mb-4">
+                <h2 className="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wide">
+                  Roadmap
+                </h2>
+                <Badge variant="secondary" className="bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border-0 text-xs">
+                  Vote nas próximas
+                </Badge>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {roadmapIntegrations.map(integration => (
+                  <IntegrationCard key={integration.id} integration={integration} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Request Integration CTA */}
+          <div className="p-5 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-100/50 dark:bg-slate-800/30">
+            <div className="flex items-center gap-4">
+              <div className="p-2.5 rounded-xl bg-indigo-100 dark:bg-indigo-500/20 shrink-0">
+                <Puzzle className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-slate-900 dark:text-white text-sm">
+                  Precisa de outra integração?
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Conte-nos qual plataforma você usa
+                </p>
+              </div>
+              <Button variant="outline" size="sm" className="shrink-0">
+                Solicitar
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+
+          {/* Footer */}
+          <div className="text-xs text-slate-500 dark:text-slate-400 pt-6 border-t border-slate-200 dark:border-slate-800">
+            Ao conectar integrações, você concorda com nossa{" "}
+            <Link to="/politica-privacidade" className="text-indigo-600 dark:text-indigo-400 hover:underline">
+              Política de Privacidade
+            </Link>
+          </div>
+        </div>
       </div>
 
-      {/* Footer com links importantes */}
-      <div className="text-center text-sm text-muted-foreground pt-8 border-t">
-        <p>
-          Ao conectar integrações, você concorda com nossa{" "}
-          <Link to="/politica-privacidade" className="text-primary hover:underline">
-            Política de Privacidade
-          </Link>
-        </p>
-      </div>
-    </div>
+      {/* Hotmart Config Modal */}
+      <HotmartConfigModal
+        open={hotmartModalOpen}
+        onClose={() => setHotmartModalOpen(false)}
+      />
+    </>
   );
 };
 

@@ -1,5 +1,5 @@
 -- =====================================================
--- VYZON CRM - Deals Table (Safe Migration)
+-- Game Sales CRM - Deals Table (Safe Migration)
 -- =====================================================
 
 -- Drop existing table if it exists (for clean migration)

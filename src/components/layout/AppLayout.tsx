@@ -16,7 +16,7 @@ const getPageTitle = (pathname: string) => {
   if (pathname.startsWith("/deal")) return "Detalhes do Deal";
   if (pathname.startsWith("/admin")) return "Administração";
   if (pathname.startsWith("/profile")) return "Perfil";
-  return "VYZON";
+  return "Game Sales";
 };
 
 export const AppLayout = ({ children }: { children: React.ReactNode }) => {
@@ -24,7 +24,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const title = getPageTitle(location.pathname);
-    document.title = `VYZON | ${title}`;
+    document.title = `Game Sales | ${title}`;
   }, [location.pathname]);
 
   return (
