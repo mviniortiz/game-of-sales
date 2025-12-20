@@ -121,11 +121,13 @@ export const KanbanColumn = memo(({
             flex-1 
             bg-slate-100 dark:bg-slate-800/50
             p-3
+            overflow-hidden
+            max-h-[calc(100vh-280px)]
             transition-colors duration-100
             ${isOver ? "bg-indigo-50 dark:bg-indigo-500/10" : ""}
           `}
         >
-          <ScrollArea className="h-full pr-1">
+          <ScrollArea className="h-full max-h-[calc(100vh-300px)] pr-1">
             <SortableContext
               items={dealIds}
               strategy={verticalListSortingStrategy}

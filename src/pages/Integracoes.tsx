@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { usePlan } from "@/hooks/usePlan";
+import { UpgradePrompt } from "@/components/shared/UpgradePrompt";
 import {
   Search,
   ThumbsUp,
@@ -223,9 +225,15 @@ const IntegrationCard = ({ integration, onConnect }: { integration: Integration;
 
 // Main Component - Full Width Layout
 const Integracoes = () => {
+  const { needsUpgrade } = usePlan();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<IntegrationCategory>("all");
   const [hotmartModalOpen, setHotmartModalOpen] = useState(false);
+
+  // Feature gate check
+  if (needsUpgrade('integrations')) {
+    return <UpgradePrompt feature="integrations" />;
+  }
 
   // Filter integrations
   const filteredIntegrations = INTEGRATIONS.filter(integration => {

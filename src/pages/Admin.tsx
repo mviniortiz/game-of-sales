@@ -81,15 +81,7 @@ const Admin = () => {
             </TabsContent>
 
             <TabsContent value="empresas" className="mt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-semibold text-foreground">Empresas</h3>
-                  <p className="text-sm text-muted-foreground">Use o gerenciador dedicado para listar e editar empresas.</p>
-                </div>
-                <Button onClick={() => navigate("/admin/companies")} className="bg-indigo-600 hover:bg-indigo-500 text-white">
-                  Abrir Gerenciador de Empresas
-                </Button>
-              </div>
+              <AdminCompanies />
             </TabsContent>
 
             <TabsContent value="usuarios" className="mt-6">

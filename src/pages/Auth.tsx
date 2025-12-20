@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { z } from "zod";
 import brandLogo from "@/assets/logo-full.png";
-import { Mail, Lock, ArrowRight } from "lucide-react";
+import { Mail, Lock, ArrowRight, ArrowLeft } from "lucide-react";
 import DataFlowBackground from "@/components/auth/DataFlowBackground";
 
 const authSchema = z.object({
@@ -16,6 +17,7 @@ const authSchema = z.object({
 });
 
 const Auth = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -67,6 +69,16 @@ const Auth = () => {
       {/* Left Side - Login Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-background relative">
         <div className="w-full max-w-md space-y-8">
+          {/* Back Button */}
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/landing")}
+            className="text-muted-foreground hover:text-foreground -ml-2"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar para o site
+          </Button>
+
           {/* Logo */}
           <div className="flex items-center animate-fade-in" style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>
             <img src={brandLogo} alt="Game Sales" className="h-28 w-auto object-contain" />
@@ -157,6 +169,14 @@ const Auth = () => {
                 </span>
               )}
             </Button>
+
+            {/* Register Link */}
+            <p className="text-center text-sm text-muted-foreground animate-fade-in" style={{ animationDelay: '0.8s', animationFillMode: 'both' }}>
+              Não tem uma conta?{" "}
+              <a href="/register" className="text-indigo-600 hover:text-indigo-500 font-medium">
+                Criar conta
+              </a>
+            </p>
           </form>
         </div>
 

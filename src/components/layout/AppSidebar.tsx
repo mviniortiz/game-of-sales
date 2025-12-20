@@ -1,7 +1,8 @@
-import { Home, Trophy, PlusCircle, Target, PhoneCall, Shield, LogOut, User, Settings, Calendar, Kanban } from "lucide-react";
+import { Home, Trophy, PlusCircle, Target, PhoneCall, Shield, LogOut, User, Settings, Calendar, Kanban, Lock } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePlan } from "@/hooks/usePlan";
 import { CompanySwitcher } from "./CompanySwitcher";
 import brandLogo from "@/assets/logo-full.png";
 import brandLogoIcon from "@/assets/logo-icon.png";
@@ -54,9 +55,23 @@ const adminMenuItem = { title: "Administração", url: "/admin", icon: Shield };
 export function AppSidebar() {
   const { state } = useSidebar();
   const { user, isAdmin, signOut, profile } = useAuth();
+  const { hasFeature } = usePlan();
   const location = useLocation();
   const navigate = useNavigate();
   const collapsed = state === "collapsed";
+
+  // Filter menu items based on plan features
+  const filteredVisaoGeralItems = visaoGeralItems.filter(item => {
+    if (item.url === '/calls') return hasFeature('calls');
+    return true;
+  });
+
+  const filteredGestaoItems = gestaoItems.filter(item => {
+    if (item.url === '/metas') return hasFeature('metas');
+    if (item.url === '/integracoes') return hasFeature('integrations');
+    if (item.url === '/ranking') return hasFeature('gamification');
+    return true;
+  });
 
   const getInitials = (nome: string) => {
     return nome
@@ -124,7 +139,7 @@ export function AppSidebar() {
             )}
             <SidebarGroupContent>
               <SidebarMenu className="gap-1">
-                {visaoGeralItems.map((item) => {
+                {filteredVisaoGeralItems.map((item) => {
                   const isActive = location.pathname === item.url;
                   return (
                     <SidebarMenuItem key={item.title}>
@@ -175,7 +190,7 @@ export function AppSidebar() {
             )}
             <SidebarGroupContent>
               <SidebarMenu className="gap-1">
-                {gestaoItems.map((item) => {
+                {filteredGestaoItems.map((item) => {
                   const isActive = location.pathname === item.url;
                   return (
                     <SidebarMenuItem key={item.title}>

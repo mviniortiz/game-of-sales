@@ -17,6 +17,7 @@ interface CallsFiltersProps {
   selectedResultado: string;
   setSelectedResultado: (value: string) => void;
   vendedores: Array<{ id: string; nome: string }>;
+  isAdmin?: boolean; // Only show vendedor filter for admins
 }
 
 export const CallsFilters = ({
@@ -27,11 +28,12 @@ export const CallsFilters = ({
   selectedResultado,
   setSelectedResultado,
   vendedores,
+  isAdmin = false,
 }: CallsFiltersProps) => {
   const setQuickRange = (range: string) => {
     const today = new Date();
     const from = new Date();
-    
+
     switch (range) {
       case "hoje":
         setDateRange({ from: today, to: today });
@@ -63,12 +65,12 @@ export const CallsFilters = ({
     dateRange.from
       ? { key: "dateRange", label: "Período", value: formatRangeLabel() || "" }
       : null,
-    selectedVendedor !== "todos"
+    isAdmin && selectedVendedor !== "todos"
       ? {
-          key: "vendedor",
-          label: "Vendedor",
-          value: vendedores.find((v) => v.id === selectedVendedor)?.nome || "Selecionado",
-        }
+        key: "vendedor",
+        label: "Vendedor",
+        value: vendedores.find((v) => v.id === selectedVendedor)?.nome || "Selecionado",
+      }
       : null,
     selectedResultado !== "todos"
       ? { key: "resultado", label: "Resultado", value: mapResultadoLabel(selectedResultado) }
@@ -203,7 +205,7 @@ export const CallsFilters = ({
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className={`grid grid-cols-1 md:grid-cols-2 ${isAdmin ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-4`}>
           {/* Período Customizado */}
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
@@ -264,26 +266,28 @@ export const CallsFilters = ({
             </div>
           </div>
 
-          {/* Vendedor */}
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
-              <Users className="h-3.5 w-3.5 text-primary" />
-              Vendedor
-            </Label>
-            <Select value={selectedVendedor} onValueChange={setSelectedVendedor}>
-              <SelectTrigger className="h-10 bg-background border-border text-foreground focus:ring-indigo-500">
-                <SelectValue placeholder="Todos" />
-              </SelectTrigger>
-              <SelectContent className="bg-card border-border">
-                <SelectItem value="todos">Todos os vendedores</SelectItem>
-                {vendedores.map((v) => (
-                  <SelectItem key={v.id} value={v.id}>
-                    {v.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Vendedor - Only for Admin */}
+          {isAdmin && (
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <Users className="h-3.5 w-3.5 text-primary" />
+                Vendedor
+              </Label>
+              <Select value={selectedVendedor} onValueChange={setSelectedVendedor}>
+                <SelectTrigger className="h-10 bg-background border-border text-foreground focus:ring-indigo-500">
+                  <SelectValue placeholder="Todos" />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border">
+                  <SelectItem value="todos">Todos os vendedores</SelectItem>
+                  {vendedores.map((v) => (
+                    <SelectItem key={v.id} value={v.id}>
+                      {v.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {/* Resultado da Call */}
           <div className="space-y-2">

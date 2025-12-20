@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,12 +27,22 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Loader2, Target, User, DollarSign, Phone, Mail, Calendar, Percent } from "lucide-react";
+import { Loader2, Target, User, DollarSign, Phone, Mail, Calendar, Flame } from "lucide-react";
 import type { Stage } from "@/pages/CRM";
+
+// Stage to probability mapping
+const STAGE_PROBABILITY: Record<string, number> = {
+  lead: 10,
+  qualificacao: 30,
+  proposta: 60,
+  negociacao: 80,
+  fechado: 100,
+};
 
 const dealSchema = z.object({
   title: z.string().min(1, "Título é obrigatório"),
@@ -44,7 +54,7 @@ const dealSchema = z.object({
   product_id: z.string().optional(),
   notes: z.string().optional(),
   expected_close_date: z.string().optional(),
-  probability: z.number().min(0).max(100),
+  is_hot: z.boolean().default(false),
 });
 
 type DealFormData = z.infer<typeof dealSchema>;
@@ -72,9 +82,12 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
       product_id: "",
       notes: "",
       expected_close_date: "",
-      probability: 50,
+      is_hot: false,
     },
   });
+
+  const selectedStage = form.watch("stage");
+  const probability = STAGE_PROBABILITY[selectedStage] || 10;
 
   // Fetch products
   const { data: produtos = [] } = useQuery({
@@ -107,11 +120,11 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
         .order("position", { ascending: false })
         .limit(1);
 
-      const nextPosition = existingDeals?.[0]?.position 
-        ? existingDeals[0].position + 1 
+      const nextPosition = existingDeals?.[0]?.position
+        ? existingDeals[0].position + 1
         : 0;
 
-      // Insert new deal
+      // Insert new deal with auto-calculated probability
       const { error } = await supabase.from("deals").insert({
         title: data.title,
         value: numericValue,
@@ -122,7 +135,8 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
         product_id: data.product_id || null,
         notes: data.notes || null,
         expected_close_date: data.expected_close_date || null,
-        probability: data.probability,
+        probability: STAGE_PROBABILITY[data.stage] || 10,
+        is_hot: data.is_hot,
         position: nextPosition,
         user_id: user.id,
       });
@@ -161,9 +175,18 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
     createDealMutation.mutate(data);
   };
 
+  // Get probability color
+  const getProbabilityColor = (prob: number) => {
+    if (prob >= 70) return { bar: "bg-emerald-500", text: "text-emerald-600 dark:text-emerald-400" };
+    if (prob >= 30) return { bar: "bg-amber-500", text: "text-amber-600 dark:text-amber-400" };
+    return { bar: "bg-rose-500", text: "text-rose-600 dark:text-rose-400" };
+  };
+
+  const probColors = getProbabilityColor(probability);
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[520px] bg-card border border-border shadow-lg">
+      <DialogContent className="sm:max-w-[540px] bg-card border border-border shadow-lg">
         <DialogHeader className="pb-4 border-b border-border">
           <DialogTitle className="flex items-center gap-3 text-foreground">
             <div className="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 ring-1 ring-indigo-100 dark:ring-indigo-500/20">
@@ -177,45 +200,22 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Title */}
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-foreground text-[13px] font-medium">Título do Deal</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      placeholder="Ex: Implementação CRM"
-                      className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 placeholder:text-muted-foreground"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
 
-            {/* Value + Stage Row */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* Group 1: Title + Value + Stage */}
+            <div className="space-y-4">
+              {/* Title */}
               <FormField
                 control={form.control}
-                name="value"
+                name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-foreground text-[13px] font-medium flex items-center gap-1.5">
-                      <DollarSign className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-300" />
-                      Valor
-                    </FormLabel>
+                    <FormLabel className="text-foreground text-[13px] font-medium">Título do Deal</FormLabel>
                     <FormControl>
                       <Input
-                        type="text"
-                        inputMode="numeric"
-                        value={valorFormatado}
-                        onChange={handleValorChange}
-                        placeholder="R$ 0,00"
-                        className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 text-emerald-600 dark:text-emerald-300 font-bold placeholder:text-muted-foreground"
+                        {...field}
+                        placeholder="Ex: Implementação CRM"
+                        className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 placeholder:text-muted-foreground"
                       />
                     </FormControl>
                     <FormMessage />
@@ -223,107 +223,154 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="stage"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-foreground text-[13px] font-medium">Estágio</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value || stages[0]?.id}>
+              {/* Value + Stage Row */}
+              <div className="grid grid-cols-2 gap-4">
+                {/* VALUE - Emphasized */}
+                <FormField
+                  control={form.control}
+                  name="value"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-foreground text-[13px] font-medium flex items-center gap-1.5">
+                        <DollarSign className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                        Valor
+                      </FormLabel>
                       <FormControl>
-                        <SelectTrigger className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border">
-                          <SelectValue placeholder="Selecione..." />
-                        </SelectTrigger>
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          value={valorFormatado}
+                          onChange={handleValorChange}
+                          placeholder="R$ 0,00"
+                          className="h-12 text-lg font-semibold bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 text-emerald-700 dark:text-emerald-300 placeholder:text-emerald-400/60"
+                        />
                       </FormControl>
-                      <SelectContent className="bg-card border border-border shadow-sm">
-                        {stages.map((stage) => {
-                          const Icon = stage.icon;
-                          return (
-                            <SelectItem key={stage.id} value={stage.id}>
-                              <div className="flex items-center gap-2">
-                                <Icon className={`h-4 w-4 ${stage.color}`} />
-                                {stage.title}
-                              </div>
-                            </SelectItem>
-                          );
-                        })}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            {/* Customer Name */}
-            <FormField
-              control={form.control}
-              name="customer_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-foreground text-[13px] font-medium flex items-center gap-1.5">
-                    <User className="h-3.5 w-3.5 text-muted-foreground" />
-                    Nome do Cliente
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      placeholder="Nome completo"
-                      className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 placeholder:text-muted-foreground"
+                {/* Stage */}
+                <FormField
+                  control={form.control}
+                  name="stage"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-foreground text-[13px] font-medium">Estágio</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value || stages[0]?.id}>
+                        <FormControl>
+                          <SelectTrigger className="h-12 bg-white dark:bg-secondary border-gray-300 dark:border-border">
+                            <SelectValue placeholder="Selecione..." />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="bg-card border border-border shadow-sm">
+                          {stages.map((stage) => {
+                            const Icon = stage.icon;
+                            return (
+                              <SelectItem key={stage.id} value={stage.id}>
+                                <div className="flex items-center gap-2">
+                                  <Icon className={`h-4 w-4 ${stage.color}`} />
+                                  {stage.title}
+                                </div>
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Auto Probability Bar */}
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border border-border">
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs text-muted-foreground">Probabilidade (auto)</span>
+                    <span className={`text-sm font-bold ${probColors.text}`}>{probability}%</span>
+                  </div>
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className={`h-full ${probColors.bar} transition-all duration-300`}
+                      style={{ width: `${probability}%` }}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Email + Phone Row */}
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="customer_email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-foreground text-[13px] font-medium flex items-center gap-1.5">
-                      <Mail className="h-3.5 w-3.5 text-muted-foreground" />
-                      Email
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="email"
-                        placeholder="email@exemplo.com"
-                        className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 placeholder:text-muted-foreground"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="customer_phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-foreground text-[13px] font-medium flex items-center gap-1.5">
-                      <Phone className="h-3.5 w-3.5 text-muted-foreground" />
-                      Telefone
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="(00) 00000-0000"
-                        className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 placeholder:text-muted-foreground"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Product + Expected Close Date Row */}
+            {/* Group 2: Contact Info */}
+            <div className="space-y-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <User className="h-3 w-3" />
+                Contato
+              </p>
+
+              {/* Customer Name */}
+              <FormField
+                control={form.control}
+                name="customer_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="Nome do cliente"
+                        className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 placeholder:text-muted-foreground"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Email + Phone Row */}
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="customer_email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            {...field}
+                            type="email"
+                            placeholder="Email"
+                            className="h-10 pl-9 bg-white dark:bg-secondary border-gray-300 dark:border-border focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 placeholder:text-muted-foreground"
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="customer_phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <div className="relative">
+                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            {...field}
+                            placeholder="Telefone"
+                            className="h-10 pl-9 bg-white dark:bg-secondary border-gray-300 dark:border-border focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 placeholder:text-muted-foreground"
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* Group 3: Product + Forecast + Hot Deal */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -372,42 +419,37 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
               />
             </div>
 
-            {/* Probability Slider */}
+            {/* Hot Deal Toggle */}
             <FormField
               control={form.control}
-              name="probability"
+              name="is_hot"
               render={({ field }) => (
-                <FormItem className="bg-muted rounded-xl p-4 border border-border">
-                  <FormLabel className="text-foreground text-[13px] font-medium flex items-center justify-between">
-                    <span className="flex items-center gap-1.5">
-                      <Percent className="h-3.5 w-3.5 text-muted-foreground" />
-                      Probabilidade de Fechamento
-                    </span>
-                    <span className={`text-lg font-bold tabular-nums ${
-                      field.value >= 70 
-                        ? "text-emerald-600 dark:text-emerald-300" 
-                        : field.value >= 40 
-                          ? "text-amber-600 dark:text-amber-300" 
-                          : "text-muted-foreground"
+                <FormItem>
+                  <div className={`flex items-center justify-between p-3 rounded-lg border transition-all ${field.value
+                      ? 'bg-orange-50 dark:bg-orange-500/10 border-orange-200 dark:border-orange-500/30'
+                      : 'bg-muted/30 border-border'
                     }`}>
-                      {field.value}%
-                    </span>
-                  </FormLabel>
-                  <FormControl>
-                    <Slider
-                      value={[field.value]}
-                      onValueChange={(values) => field.onChange(values[0])}
-                      max={100}
-                      step={5}
-                      className="py-4 [&_[role=slider]]:h-4 [&_[role=slider]]:w-4 [&_[role=slider]]:bg-indigo-500 [&_[role=slider]]:border-0 [&_[role=slider]]:shadow-lg [&_[role=slider]]:shadow-indigo-500/30"
-                    />
-                  </FormControl>
-                  <FormMessage />
+                    <Label htmlFor="hot-deal" className="flex items-center gap-2 cursor-pointer">
+                      <Flame className={`h-4 w-4 ${field.value ? 'text-orange-500' : 'text-muted-foreground'}`} />
+                      <span className={`text-sm font-medium ${field.value ? 'text-orange-700 dark:text-orange-400' : 'text-foreground'}`}>
+                        🔥 Hot Deal
+                      </span>
+                      <span className="text-xs text-muted-foreground">(Prioridade Alta)</span>
+                    </Label>
+                    <FormControl>
+                      <Switch
+                        id="hot-deal"
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        className="data-[state=checked]:bg-orange-500"
+                      />
+                    </FormControl>
+                  </div>
                 </FormItem>
               )}
             />
 
-            {/* Notes */}
+            {/* Notes - Collapsed by default visual */}
             <FormField
               control={form.control}
               name="notes"
@@ -418,7 +460,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
                     <Textarea
                       {...field}
                       placeholder="Informações adicionais sobre o deal..."
-                      className="min-h-[80px] bg-white dark:bg-secondary border-gray-300 dark:border-border focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 resize-none placeholder:text-muted-foreground"
+                      className="min-h-[60px] bg-white dark:bg-secondary border-gray-300 dark:border-border focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 resize-none placeholder:text-muted-foreground text-sm"
                     />
                   </FormControl>
                   <FormMessage />
@@ -457,4 +499,3 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
     </Dialog>
   );
 };
-

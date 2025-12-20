@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { 
-  Target, 
-  TrendingUp, 
-  Zap, 
-  RefreshCw, 
+import { usePlan } from "@/hooks/usePlan";
+import { UpgradePrompt } from "@/components/shared/UpgradePrompt";
+import {
+  Target,
+  TrendingUp,
+  Zap,
+  RefreshCw,
   Trophy,
   Medal,
   Crown,
@@ -28,10 +30,17 @@ import { useTenant } from "@/contexts/TenantContext";
 
 const Metas = () => {
   const { user, isAdmin } = useAuth();
+  const { needsUpgrade } = usePlan();
   const queryClient = useQueryClient();
   const { activeCompanyId } = useTenant();
   const [selectedMetaId, setSelectedMetaId] = useState<string>("all");
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Feature gate check
+  if (needsUpgrade('metas')) {
+    return <UpgradePrompt feature="metas" />;
+  }
+
 
   const applyCompanyFilter = (query: any) => {
     return activeCompanyId ? query.eq("company_id", activeCompanyId) : query;
@@ -80,8 +89,8 @@ const Metas = () => {
   }, [activeCompanyId]);
 
   // Buscar a meta consolidada selecionada
-  const metaConsolidadaSelecionada = selectedMetaId === "all" 
-    ? metasConsolidadas[0] 
+  const metaConsolidadaSelecionada = selectedMetaId === "all"
+    ? metasConsolidadas[0]
     : metasConsolidadas.find(m => m.id === selectedMetaId);
 
   // Buscar vendas do mês atual para calcular valores reais
@@ -93,7 +102,7 @@ const Metas = () => {
       const mesRef = metaConsolidadaSelecionada.mes_referencia;
       const [year, month] = mesRef.split('-');
       const inicioMes = `${year}-${month}-01`;
-      
+
       // Calcular fim do mês sem problemas de timezone
       const yearNum = parseInt(year);
       const monthNum = parseInt(month);
@@ -112,7 +121,7 @@ const Metas = () => {
       );
 
       if (error) throw error;
-      
+
       console.log(`[Metas] Vendas encontradas:`, data);
       return data || [];
     },
@@ -127,22 +136,29 @@ const Metas = () => {
       if (!metaConsolidadaSelecionada) return [];
 
       const mesRef = metaConsolidadaSelecionada.mes_referencia;
-      const [year, month] = mesRef.split('-');
-      const inicioMes = `${year}-${month}-01`;
-      const fimMes = endOfMonth(new Date(parseInt(year), parseInt(month) - 1)).toISOString().split('T')[0];
 
-      // Fetch all metas for this month
-      const { data: metas, error: metasError } = await applyNonSuperAdmin(
-        applyCompanyFilter(
-          supabase
-            .from("metas")
-            .select("*, profiles!inner(id, nome, avatar_url, is_super_admin)")
-            .gte("mes_referencia", inicioMes)
-            .lte("mes_referencia", fimMes)
-        )
-      );
+      // Use exact match on mes_referencia (format: "YYYY-MM-01")
+      console.log(`[Metas] Buscando metas individuais para mes_referencia: ${mesRef}, company: ${activeCompanyId}`);
 
-      if (metasError) throw metasError;
+      // First, fetch metas for this month and company (using same join syntax as AdminMetas)
+      let metasQuery = supabase
+        .from("metas")
+        .select("*, profiles:user_id(id, nome, avatar_url, is_super_admin)")
+        .eq("mes_referencia", mesRef);
+
+      // Filter by metas.company_id directly
+      if (activeCompanyId) {
+        metasQuery = metasQuery.eq("company_id", activeCompanyId);
+      }
+
+      const { data: metas, error: metasError } = await metasQuery;
+
+      if (metasError) {
+        console.error("[Metas] Erro ao buscar metas individuais:", metasError);
+        throw metasError;
+      }
+
+      console.log(`[Metas] Metas individuais encontradas (raw):`, metas);
 
       // Calculate total vendas by user from the already fetched vendas
       const vendasPorUsuario: { [key: string]: number } = {};
@@ -157,36 +173,36 @@ const Metas = () => {
       const resultado = (metas || [])
         .filter((meta: any) => !meta.profiles?.is_super_admin)
         .map((meta: any) => {
-        const valorMeta = Number(meta.valor_meta) || 0;
-        const valorRealizado = vendasPorUsuario[meta.user_id] || 0;
-        const percentual = valorMeta > 0 ? (valorRealizado / valorMeta) * 100 : 0;
-        const contribuicaoPercentual = totalVendasMes > 0 ? (valorRealizado / totalVendasMes) * 100 : 0;
-        const faltaAtingir = Math.max(0, valorMeta - valorRealizado);
+          const valorMeta = Number(meta.valor_meta) || 0;
+          const valorRealizado = vendasPorUsuario[meta.user_id] || 0;
+          const percentual = valorMeta > 0 ? (valorRealizado / valorMeta) * 100 : 0;
+          const contribuicaoPercentual = totalVendasMes > 0 ? (valorRealizado / totalVendasMes) * 100 : 0;
+          const faltaAtingir = Math.max(0, valorMeta - valorRealizado);
 
-        return {
-          id: meta.id,
-          user_id: meta.user_id,
-          nome: meta.profiles.nome,
-          avatar_url: meta.profiles.avatar_url,
-          valorMeta,
-          valorRealizado,
-          percentual,
-          contribuicaoPercentual,
-          faltaAtingir,
-          status: percentual >= 100 ? 'atingida' : percentual >= 50 ? 'progresso' : 'inicio',
-        };
-      }).sort((a: any, b: any) => b.valorRealizado - a.valorRealizado);
+          return {
+            id: meta.id,
+            user_id: meta.user_id,
+            nome: meta.profiles.nome,
+            avatar_url: meta.profiles.avatar_url,
+            valorMeta,
+            valorRealizado,
+            percentual,
+            contribuicaoPercentual,
+            faltaAtingir,
+            status: percentual >= 100 ? 'atingida' : percentual >= 50 ? 'progresso' : 'inicio',
+          };
+        }).sort((a: any, b: any) => b.valorRealizado - a.valorRealizado);
 
       return resultado;
     },
-    enabled: !!metaConsolidadaSelecionada && vendasMesAtual.length >= 0,
+    enabled: !!metaConsolidadaSelecionada,
   });
 
   // Calculate consolidated values from actual sales
   const valorConsolidadoAtingido = vendasMesAtual.reduce((acc: number, v: any) => acc + Number(v.valor), 0);
   const metaConsolidadaTotal = Number(metaConsolidadaSelecionada?.valor_meta) || 0;
-  const percentualConsolidado = metaConsolidadaTotal > 0 
-    ? (valorConsolidadoAtingido / metaConsolidadaTotal) * 100 
+  const percentualConsolidado = metaConsolidadaTotal > 0
+    ? (valorConsolidadoAtingido / metaConsolidadaTotal) * 100
     : 0;
 
   // Calcular dias restantes
@@ -289,9 +305,9 @@ const Metas = () => {
           <h1 className="text-xl sm:text-2xl font-bold text-foreground">Metas</h1>
           <p className="text-xs sm:text-sm text-muted-foreground">Acompanhe o progresso das metas da equipe</p>
         </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
+        <Button
+          variant="outline"
+          size="sm"
           onClick={handleRefresh}
           disabled={isRefreshing}
           className="gap-2 border-border bg-muted text-foreground hover:bg-muted/80 self-start sm:self-auto"
@@ -306,11 +322,10 @@ const Metas = () => {
         <div className="flex items-center gap-2 flex-wrap overflow-x-auto pb-2 -mx-2 px-2 sm:mx-0 sm:px-0 scrollbar-none">
           <button
             onClick={() => setSelectedMetaId("all")}
-            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
-              selectedMetaId === "all"
-                ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
-            }`}
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${selectedMetaId === "all"
+              ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30"
+              : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
           >
             Atual
           </button>
@@ -318,11 +333,10 @@ const Metas = () => {
             <button
               key={meta.id}
               onClick={() => setSelectedMetaId(meta.id)}
-              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
-                selectedMetaId === meta.id
-                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30"
-                  : "bg-muted text-muted-foreground hover:bg-muted/80"
-              }`}
+              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${selectedMetaId === meta.id
+                ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+                }`}
             >
               {meta.descricao || format(new Date(meta.mes_referencia + "T12:00:00"), "MMM yyyy", { locale: ptBR })}
             </button>
@@ -417,7 +431,7 @@ const Metas = () => {
                       </span>
                       <span className="text-3xl sm:text-4xl font-bold text-muted-foreground">%</span>
                     </div>
-                    
+
                     {/* Status */}
                     <div className="mt-4">
                       {percentualConsolidado >= 100 ? (
@@ -476,13 +490,12 @@ const Metas = () => {
                   return (
                     <Card
                       key={vendedor.id}
-                      className={`relative overflow-hidden border border-border bg-card shadow-sm transition-all duration-300 hover:shadow-md ${
-                        isWinner 
-                          ? "ring-2 ring-emerald-200 dark:ring-emerald-500/50 shadow-lg shadow-emerald-500/20" 
-                          : isTop3 
-                            ? "ring-1 ring-indigo-200 dark:ring-indigo-500/30" 
-                            : ""
-                      }`}
+                      className={`relative overflow-hidden border border-border bg-card shadow-sm transition-all duration-300 hover:shadow-md ${isWinner
+                        ? "ring-2 ring-emerald-200 dark:ring-emerald-500/50 shadow-lg shadow-emerald-500/20"
+                        : isTop3
+                          ? "ring-1 ring-indigo-200 dark:ring-indigo-500/30"
+                          : ""
+                        }`}
                     >
                       {/* Winner glow effect */}
                       {isWinner && (
@@ -493,15 +506,14 @@ const Metas = () => {
                         {/* Row 1: Avatar + Name + Percentage */}
                         <div className="flex items-center gap-3">
                           {/* Position Badge */}
-                          <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
-                            posicao === 1 
-                              ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300" 
-                              : posicao === 2 
-                                ? "bg-slate-200 text-slate-600 dark:bg-slate-400/20 dark:text-slate-300" 
-                                : posicao === 3 
-                                  ? "bg-amber-200 text-amber-700 dark:bg-amber-700/20 dark:text-amber-400" 
-                                  : "bg-muted text-muted-foreground"
-                          }`}>
+                          <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${posicao === 1
+                            ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300"
+                            : posicao === 2
+                              ? "bg-slate-200 text-slate-600 dark:bg-slate-400/20 dark:text-slate-300"
+                              : posicao === 3
+                                ? "bg-amber-200 text-amber-700 dark:bg-amber-700/20 dark:text-amber-400"
+                                : "bg-muted text-muted-foreground"
+                            }`}>
                             {posicao <= 3 ? (
                               posicao === 1 ? <Crown className="h-4 w-4" /> : `#${posicao}`
                             ) : (
@@ -535,13 +547,12 @@ const Metas = () => {
 
                           {/* Percentage */}
                           <div className="flex-shrink-0 text-right">
-                            <span className={`text-2xl font-bold tabular-nums ${
-                              isWinner 
-                                ? "text-emerald-600 dark:text-emerald-300" 
-                                : vendedor.percentual >= 50 
-                                  ? "text-cyan-600 dark:text-cyan-300" 
-                                  : "text-indigo-600 dark:text-indigo-300"
-                            }`}>
+                            <span className={`text-2xl font-bold tabular-nums ${isWinner
+                              ? "text-emerald-600 dark:text-emerald-300"
+                              : vendedor.percentual >= 50
+                                ? "text-cyan-600 dark:text-cyan-300"
+                                : "text-indigo-600 dark:text-indigo-300"
+                              }`}>
                               {vendedor.percentual.toFixed(0)}%
                             </span>
                           </div>
@@ -582,13 +593,12 @@ const Metas = () => {
                               <PieChart className="h-4 w-4 text-indigo-600 dark:text-indigo-300" />
                               <span className="text-xs text-muted-foreground">Contribuição para Meta Global</span>
                             </div>
-                            <span className={`text-sm font-bold ${
-                              vendedor.contribuicaoPercentual >= 30 
-                                ? "text-emerald-600 dark:text-emerald-300" 
-                                : vendedor.contribuicaoPercentual >= 15 
-                                  ? "text-cyan-600 dark:text-cyan-300" 
-                                  : "text-indigo-600 dark:text-indigo-300"
-                            }`}>
+                            <span className={`text-sm font-bold ${vendedor.contribuicaoPercentual >= 30
+                              ? "text-emerald-600 dark:text-emerald-300"
+                              : vendedor.contribuicaoPercentual >= 15
+                                ? "text-cyan-600 dark:text-cyan-300"
+                                : "text-indigo-600 dark:text-indigo-300"
+                              }`}>
                               {vendedor.contribuicaoPercentual.toFixed(1)}%
                             </span>
                           </div>

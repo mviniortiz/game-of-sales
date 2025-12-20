@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
+import { PLAN_FEATURES, PlanType, PlanFeatures, PLANS_INFO } from '@/config/planConfig';
 
 interface Company {
   id: string;
@@ -16,7 +17,14 @@ interface TenantContextType {
   switchCompany: (companyId: string) => void;
   isSuperAdmin: boolean;
   loading: boolean;
-  refreshKey: number; // Used to trigger refetch in components
+  refreshKey: number;
+  // Plan-related fields
+  currentPlan: PlanType;
+  planFeatures: PlanFeatures;
+  planInfo: { label: string; color: string };
+  hasFeature: (feature: keyof Omit<PlanFeatures, 'maxUsers' | 'maxProducts'>) => boolean;
+  getUserLimit: () => number;
+  getProductLimit: () => number;
 }
 
 const TenantContext = createContext<TenantContextType | undefined>(undefined);
@@ -56,7 +64,7 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
               .from('companies')
               .select('*')
               .order('name');
-            
+
             if (companiesData) {
               setCompanies(companiesData);
               // Prefer stored selection if valid; otherwise fallback to first
@@ -73,7 +81,7 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
               .select('*')
               .eq('id', profileData.company_id)
               .single();
-            
+
             if (companyData) {
               setCompanies([companyData]);
               setActiveCompanyId(profileData.company_id);
@@ -100,6 +108,29 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
     queryClient.invalidateQueries();
   }, [queryClient]);
 
+  // Compute plan-related values
+  const activeCompany = useMemo(() =>
+    companies.find(c => c.id === activeCompanyId),
+    [companies, activeCompanyId]
+  );
+
+  const currentPlan: PlanType = useMemo(() => {
+    const plan = activeCompany?.plan?.toLowerCase() as PlanType;
+    return plan && PLAN_FEATURES[plan] ? plan : 'starter';
+  }, [activeCompany]);
+
+  const planFeatures = useMemo(() => PLAN_FEATURES[currentPlan], [currentPlan]);
+  const planInfo = useMemo(() => PLANS_INFO[currentPlan], [currentPlan]);
+
+  const hasFeature = useCallback((feature: keyof Omit<PlanFeatures, 'maxUsers' | 'maxProducts'>) => {
+    // Super admins bypass all restrictions
+    if (isSuperAdmin) return true;
+    return planFeatures[feature] ?? false;
+  }, [planFeatures, isSuperAdmin]);
+
+  const getUserLimit = useCallback(() => planFeatures.maxUsers, [planFeatures]);
+  const getProductLimit = useCallback(() => planFeatures.maxProducts, [planFeatures]);
+
   return (
     <TenantContext.Provider
       value={{
@@ -109,6 +140,12 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
         isSuperAdmin,
         loading,
         refreshKey,
+        currentPlan,
+        planFeatures,
+        planInfo,
+        hasFeature,
+        getUserLimit,
+        getProductLimit,
       }}
     >
       {children}

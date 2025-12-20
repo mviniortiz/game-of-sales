@@ -67,18 +67,18 @@ const PIPELINE_STAGES = [
 
 // Timeline event types with icons
 const EVENT_ICONS: Record<string, { icon: typeof StickyNote; color: string; bg: string }> = {
-    note: { icon: StickyNote, color: "text-blue-400", bg: "bg-blue-500/20" },
-    call: { icon: PhoneCall, color: "text-emerald-400", bg: "bg-emerald-500/20" },
-    stage_change: { icon: Rocket, color: "text-purple-400", bg: "bg-purple-500/20" },
-    email: { icon: Mail, color: "text-amber-400", bg: "bg-amber-500/20" },
-    task_completed: { icon: CheckCircle2, color: "text-emerald-400", bg: "bg-emerald-500/20" },
+    note: { icon: StickyNote, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-100 dark:bg-blue-500/20" },
+    call: { icon: PhoneCall, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-100 dark:bg-emerald-500/20" },
+    stage_change: { icon: Rocket, color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-100 dark:bg-purple-500/20" },
+    email: { icon: Mail, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-100 dark:bg-amber-500/20" },
+    task_completed: { icon: CheckCircle2, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-100 dark:bg-emerald-500/20" },
 };
 
 // Health status based on days since last update
 const getHealthStatus = (days: number) => {
-    if (days > 7) return { icon: ShieldOff, color: "text-rose-400", bg: "bg-rose-500/20", label: "Crítico", subtitle: `${days} dias sem contato` };
-    if (days > 3) return { icon: ShieldAlert, color: "text-amber-400", bg: "bg-amber-500/20", label: "Atenção", subtitle: `${days} dias sem contato` };
-    return { icon: Shield, color: "text-emerald-400", bg: "bg-emerald-500/20", label: "Saudável", subtitle: "Engajamento ativo" };
+    if (days > 7) return { icon: ShieldOff, color: "text-rose-600 dark:text-rose-400", bg: "bg-rose-100 dark:bg-rose-500/20", label: "Crítico", subtitle: `${days} dias sem contato` };
+    if (days > 3) return { icon: ShieldAlert, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-100 dark:bg-amber-500/20", label: "Atenção", subtitle: `${days} dias sem contato` };
+    return { icon: Shield, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-100 dark:bg-emerald-500/20", label: "Saudável", subtitle: "Engajamento ativo" };
 };
 
 // Format currency
@@ -110,8 +110,8 @@ const PipelineProgressBar = ({ currentStage }: { currentStage: string }) => {
                 relative flex items-center justify-center w-8 h-8 rounded-lg text-xs font-bold
                 transition-all duration-300
                 ${isCompleted ? `${stage.color} text-white` : ""}
-                ${isCurrent ? `${stage.color} text-white ring-2 ring-offset-2 ring-offset-slate-900 ring-white/50` : ""}
-                ${isPending ? "bg-slate-700 text-slate-500" : ""}
+                ${isCurrent ? `${stage.color} text-white ring-2 ring-offset-2 ring-offset-white dark:ring-offset-slate-900 ring-indigo-500/50` : ""}
+                ${isPending ? "bg-gray-200 text-gray-600 dark:bg-slate-700 dark:text-slate-500" : ""}
               `}
                             animate={isCurrent ? { scale: [1, 1.05, 1] } : {}}
                             transition={isCurrent ? { repeat: Infinity, duration: 2 } : {}}
@@ -126,7 +126,7 @@ const PipelineProgressBar = ({ currentStage }: { currentStage: string }) => {
                             )}
                         </motion.div>
                         {index < PIPELINE_STAGES.length - 1 && (
-                            <div className={`w-4 h-0.5 mx-0.5 ${index < currentIndex ? "bg-emerald-500" : "bg-slate-700"}`} />
+                            <div className={`w-4 h-0.5 mx-0.5 ${index < currentIndex ? "bg-emerald-500" : "bg-gray-200 dark:bg-slate-700"}`} />
                         )}
                     </div>
                 );
@@ -152,7 +152,7 @@ const CircularProgress = ({ value, size = 48 }: { value: number; size?: number }
                     cy={size / 2}
                     r={radius}
                     strokeWidth={strokeWidth}
-                    className="stroke-slate-700 fill-none"
+                    className="stroke-gray-200 dark:stroke-slate-700 fill-none"
                 />
                 <motion.circle
                     cx={size / 2}
@@ -168,7 +168,7 @@ const CircularProgress = ({ value, size = 48 }: { value: number; size?: number }
                 />
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-xs font-bold text-white tabular-nums">{value}%</span>
+                <span className="text-xs font-bold text-gray-900 dark:text-white tabular-nums">{value}%</span>
             </div>
         </div>
     );
@@ -182,12 +182,12 @@ const QuickActionButton = ({ icon: Icon, label, onClick, color }: { icon: typeof
         onClick={onClick}
         className={`
       p-3 rounded-full transition-all duration-200
-      bg-slate-800 hover:${color} ring-1 ring-slate-700 hover:ring-transparent
+      bg-gray-100 dark:bg-slate-800 hover:${color} ring-1 ring-gray-200 dark:ring-slate-700 hover:ring-transparent
       group
     `}
         title={label}
     >
-        <Icon className="h-4 w-4 text-slate-400 group-hover:text-white transition-colors" />
+        <Icon className="h-4 w-4 text-gray-500 dark:text-slate-400 group-hover:text-white transition-colors" />
     </motion.button>
 );
 
@@ -207,19 +207,19 @@ const TimelineEvent = ({ event, isLast }: { event: any; isLast: boolean }) => {
                 <div className={`p-2 rounded-lg ${config.bg}`}>
                     <Icon className={`h-4 w-4 ${config.color}`} />
                 </div>
-                {!isLast && <div className="w-0.5 flex-1 bg-slate-700 mt-2" />}
+                {!isLast && <div className="w-0.5 flex-1 bg-gray-200 dark:bg-slate-700 mt-2" />}
             </div>
 
             {/* Content */}
             <div className="flex-1 pb-6">
                 <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-medium text-white">{event.title}</span>
-                    <span className="text-xs text-slate-500">
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">{event.title}</span>
+                    <span className="text-xs text-gray-500 dark:text-slate-500">
                         {formatDistanceToNow(new Date(event.created_at), { addSuffix: true, locale: ptBR })}
                     </span>
                 </div>
                 {event.content && (
-                    <p className="text-sm text-slate-400 bg-slate-800/50 rounded-lg p-3 border border-slate-700/50">
+                    <p className="text-sm text-gray-600 dark:text-slate-400 bg-gray-50 dark:bg-slate-800/50 rounded-lg p-3 border border-gray-200 dark:border-slate-700/50">
                         {event.content}
                     </p>
                 )}
@@ -244,8 +244,8 @@ const ActiveQuestCard = ({ task, onComplete }: { task: any; onComplete: () => vo
             className={`
         relative p-4 rounded-xl border-2 transition-all duration-300
         ${isCompleted
-                    ? "bg-emerald-500/10 border-emerald-500/50"
-                    : "bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-amber-500/30"
+                    ? "bg-emerald-50 dark:bg-emerald-500/10 border-emerald-300 dark:border-emerald-500/50"
+                    : "bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-500/10 dark:to-orange-500/10 border-amber-300 dark:border-amber-500/30"
                 }
       `}
             animate={isCompleted ? {} : { borderColor: ["rgba(245, 158, 11, 0.3)", "rgba(245, 158, 11, 0.5)", "rgba(245, 158, 11, 0.3)"] }}
@@ -259,7 +259,7 @@ const ActiveQuestCard = ({ task, onComplete }: { task: any; onComplete: () => vo
             mt-0.5 p-1 rounded-lg transition-all
             ${isCompleted
                             ? "bg-emerald-500 text-white"
-                            : "bg-slate-700 text-slate-400 hover:bg-amber-500 hover:text-white"
+                            : "bg-gray-200 dark:bg-slate-700 text-gray-500 dark:text-slate-400 hover:bg-amber-500 hover:text-white"
                         }
           `}
                 >
@@ -272,14 +272,14 @@ const ActiveQuestCard = ({ task, onComplete }: { task: any; onComplete: () => vo
 
                 <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                        <Zap className="h-4 w-4 text-amber-400" />
-                        <span className="text-xs font-medium text-amber-400 uppercase tracking-wider">Próxima Missão</span>
+                        <Zap className="h-4 w-4 text-amber-500" />
+                        <span className="text-xs font-medium text-amber-600 dark:text-amber-400 uppercase tracking-wider">Próxima Missão</span>
                     </div>
-                    <p className={`text-lg font-semibold transition-all ${isCompleted ? "text-emerald-400 line-through" : "text-white"}`}>
+                    <p className={`text-lg font-semibold transition-all ${isCompleted ? "text-emerald-600 dark:text-emerald-400 line-through" : "text-gray-900 dark:text-white"}`}>
                         {task.title}
                     </p>
                     {task.due_date && (
-                        <div className="flex items-center gap-1.5 mt-2 text-slate-400">
+                        <div className="flex items-center gap-1.5 mt-2 text-gray-500 dark:text-slate-400">
                             <Clock className="h-3.5 w-3.5" />
                             <span className="text-xs">
                                 {format(new Date(task.due_date), "dd MMM, HH:mm", { locale: ptBR })}
@@ -295,7 +295,7 @@ const ActiveQuestCard = ({ task, onComplete }: { task: any; onComplete: () => vo
                     animate={{ scale: 1, opacity: 1 }}
                     className="absolute top-2 right-2"
                 >
-                    <Sparkles className="h-6 w-6 text-emerald-400" />
+                    <Sparkles className="h-6 w-6 text-emerald-500" />
                 </motion.div>
             )}
         </motion.div>
@@ -432,7 +432,7 @@ export default function DealCommandCenter() {
     if (isLoading) {
         return (
             <AppLayout>
-                <div className="flex items-center justify-center h-[calc(100vh-64px)] bg-slate-900">
+                <div className="flex items-center justify-center h-[calc(100vh-64px)] bg-gray-50 dark:bg-slate-900">
                     <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}>
                         <Target className="h-8 w-8 text-indigo-500" />
                     </motion.div>
@@ -444,9 +444,9 @@ export default function DealCommandCenter() {
     if (!deal) {
         return (
             <AppLayout>
-                <div className="flex flex-col items-center justify-center h-[calc(100vh-64px)] gap-4 bg-slate-900">
+                <div className="flex flex-col items-center justify-center h-[calc(100vh-64px)] gap-4 bg-gray-50 dark:bg-slate-900">
                     <AlertTriangle className="h-12 w-12 text-amber-500" />
-                    <p className="text-slate-400">Deal não encontrado</p>
+                    <p className="text-gray-500 dark:text-slate-400">Deal não encontrado</p>
                     <Button onClick={() => navigate("/crm")} variant="outline">Voltar ao Pipeline</Button>
                 </div>
             </AppLayout>
@@ -455,12 +455,12 @@ export default function DealCommandCenter() {
 
     return (
         <AppLayout>
-            <div className="min-h-[calc(100vh-64px)] bg-slate-900 text-white">
+            <div className="min-h-[calc(100vh-64px)] bg-gray-50 dark:bg-slate-950">
                 {/* Confetti Effect */}
                 {showConfetti && <Confetti show={showConfetti} />}
 
                 {/* HUD Header - Sticky */}
-                <div className="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-lg border-b border-slate-800">
+                <div className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-b border-gray-200 dark:border-slate-800">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
                         <div className="flex items-center justify-between gap-6">
                             {/* Left: Back + Title */}
@@ -469,20 +469,20 @@ export default function DealCommandCenter() {
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => navigate("/crm")}
-                                    className="text-slate-400 hover:text-white hover:bg-slate-800"
+                                    className="text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-800"
                                 >
                                     <ArrowLeft className="h-4 w-4" />
                                 </Button>
 
                                 <div className="flex items-center gap-3">
-                                    <div className="p-2.5 rounded-xl bg-indigo-500/20 ring-1 ring-indigo-500/30">
-                                        <Building2 className="h-5 w-5 text-indigo-400" />
+                                    <div className="p-2.5 rounded-xl bg-indigo-100 dark:bg-indigo-500/20 ring-1 ring-indigo-200 dark:ring-indigo-500/30">
+                                        <Building2 className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
                                     </div>
                                     <div>
-                                        <h1 className="text-lg font-bold text-white truncate max-w-[200px] sm:max-w-none">
+                                        <h1 className="text-lg font-bold text-gray-900 dark:text-white truncate max-w-[200px] sm:max-w-none">
                                             {deal.title}
                                         </h1>
-                                        <p className="text-xs text-slate-500">{deal.customer_name}</p>
+                                        <p className="text-xs text-gray-500 dark:text-slate-500">{deal.customer_name}</p>
                                     </div>
                                 </div>
                             </div>
@@ -496,8 +496,8 @@ export default function DealCommandCenter() {
                             <div className="flex items-center gap-4 sm:gap-6">
                                 {/* Value */}
                                 <div className="text-right">
-                                    <p className="text-xs text-slate-500 uppercase tracking-wider">Valor</p>
-                                    <p className="text-xl font-bold text-emerald-400 tabular-nums">
+                                    <p className="text-xs text-gray-500 dark:text-slate-500 uppercase tracking-wider">Valor</p>
+                                    <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
                                         {formatCurrency(deal.value || 0)}
                                     </p>
                                 </div>
@@ -542,8 +542,8 @@ export default function DealCommandCenter() {
                         <div className="col-span-12 lg:col-span-3 space-y-5">
 
                             {/* Quick Actions */}
-                            <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
-                                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-3">Ações Rápidas</p>
+                            <div className="bg-white dark:bg-slate-900 rounded-xl p-4 border border-gray-200 dark:border-slate-800 shadow-sm">
+                                <p className="text-xs font-medium text-gray-500 dark:text-slate-500 uppercase tracking-wider mb-3">Ações Rápidas</p>
                                 <div className="flex items-center justify-around">
                                     <QuickActionButton icon={Phone} label="Ligar" color="bg-emerald-500" onClick={() => {
                                         if (deal.customer_phone) window.open(`tel:${deal.customer_phone}`, "_self");
@@ -559,34 +559,34 @@ export default function DealCommandCenter() {
                             </div>
 
                             {/* Deal Health */}
-                            <div className={`rounded-xl p-4 border ${healthStatus.bg} border-slate-700/50`}>
+                            <div className={`rounded-xl p-4 border ${healthStatus.bg} border-gray-200 dark:border-slate-800`}>
                                 <div className="flex items-center gap-3">
                                     <div className={`p-2 rounded-lg ${healthStatus.bg}`}>
                                         <HealthIcon className={`h-5 w-5 ${healthStatus.color}`} />
                                     </div>
                                     <div>
                                         <p className={`text-sm font-semibold ${healthStatus.color}`}>{healthStatus.label}</p>
-                                        <p className="text-xs text-slate-500">{healthStatus.subtitle}</p>
+                                        <p className="text-xs text-gray-500 dark:text-slate-500">{healthStatus.subtitle}</p>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Contact Card */}
-                            <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
-                                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-3">Contato</p>
+                            <div className="bg-white dark:bg-slate-900 rounded-xl p-4 border border-gray-200 dark:border-slate-800 shadow-sm">
+                                <p className="text-xs font-medium text-gray-500 dark:text-slate-500 uppercase tracking-wider mb-3">Contato</p>
                                 <div className="flex items-center gap-3">
-                                    <Avatar className="h-12 w-12 ring-2 ring-slate-700">
+                                    <Avatar className="h-12 w-12 ring-2 ring-gray-200 dark:ring-slate-700">
                                         <AvatarFallback className="bg-indigo-500 text-white font-bold">
                                             {deal.customer_name?.substring(0, 2).toUpperCase() || "?"}
                                         </AvatarFallback>
                                     </Avatar>
                                     <div>
-                                        <p className="font-semibold text-white">{deal.customer_name}</p>
-                                        <p className="text-xs text-slate-400">{deal.customer_email || "Sem email"}</p>
+                                        <p className="font-semibold text-gray-900 dark:text-white">{deal.customer_name}</p>
+                                        <p className="text-xs text-gray-500 dark:text-slate-400">{deal.customer_email || "Sem email"}</p>
                                     </div>
                                 </div>
                                 {deal.customer_phone && (
-                                    <div className="mt-3 flex items-center gap-2 text-slate-400">
+                                    <div className="mt-3 flex items-center gap-2 text-gray-500 dark:text-slate-400">
                                         <Phone className="h-3.5 w-3.5" />
                                         <span className="text-sm">{deal.customer_phone}</span>
                                     </div>
@@ -594,31 +594,31 @@ export default function DealCommandCenter() {
                             </div>
 
                             {/* Details Widget */}
-                            <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
-                                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-3">Detalhes</p>
+                            <div className="bg-white dark:bg-slate-900 rounded-xl p-4 border border-gray-200 dark:border-slate-800 shadow-sm">
+                                <p className="text-xs font-medium text-gray-500 dark:text-slate-500 uppercase tracking-wider mb-3">Detalhes</p>
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-xs text-slate-500 flex items-center gap-1.5">
+                                        <span className="text-xs text-gray-500 dark:text-slate-500 flex items-center gap-1.5">
                                             <Target className="h-3.5 w-3.5" />
                                             Fonte
                                         </span>
-                                        <span className="text-sm text-white">{(deal as any).source || "Manual"}</span>
+                                        <span className="text-sm text-gray-900 dark:text-white">{(deal as any).source || "Manual"}</span>
                                     </div>
                                     <div className="flex items-center justify-between">
-                                        <span className="text-xs text-slate-500 flex items-center gap-1.5">
+                                        <span className="text-xs text-gray-500 dark:text-slate-500 flex items-center gap-1.5">
                                             <Calendar className="h-3.5 w-3.5" />
                                             Criado
                                         </span>
-                                        <span className="text-sm text-white">
+                                        <span className="text-sm text-gray-900 dark:text-white">
                                             {format(new Date(deal.created_at), "dd MMM yyyy", { locale: ptBR })}
                                         </span>
                                     </div>
                                     <div className="flex items-center justify-between">
-                                        <span className="text-xs text-slate-500 flex items-center gap-1.5">
+                                        <span className="text-xs text-gray-500 dark:text-slate-500 flex items-center gap-1.5">
                                             <TrendingUp className="h-3.5 w-3.5" />
                                             Probabilidade
                                         </span>
-                                        <span className="text-sm text-white">{deal.probability}%</span>
+                                        <span className="text-sm text-gray-900 dark:text-white">{deal.probability}%</span>
                                     </div>
                                 </div>
                             </div>
@@ -638,10 +638,10 @@ export default function DealCommandCenter() {
                             />
 
                             {/* Timeline */}
-                            <div className="bg-slate-800/50 rounded-xl border border-slate-700/50">
-                                <div className="p-4 border-b border-slate-700/50">
-                                    <p className="text-sm font-semibold text-white flex items-center gap-2">
-                                        <Clock className="h-4 w-4 text-indigo-400" />
+                            <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm">
+                                <div className="p-4 border-b border-gray-200 dark:border-slate-800">
+                                    <p className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                                        <Clock className="h-4 w-4 text-indigo-500" />
                                         Linha do Tempo
                                     </p>
                                 </div>
@@ -649,7 +649,7 @@ export default function DealCommandCenter() {
                                 <ScrollArea className="h-[400px]">
                                     <div className="p-4">
                                         {timeline.length === 0 ? (
-                                            <div className="flex flex-col items-center justify-center py-12 text-slate-500">
+                                            <div className="flex flex-col items-center justify-center py-12 text-gray-400 dark:text-slate-500 bg-gray-50 dark:bg-slate-800/30 rounded-lg">
                                                 <StickyNote className="h-8 w-8 mb-2 opacity-50" />
                                                 <p className="text-sm">Nenhuma atividade registrada</p>
                                                 <p className="text-xs">Adicione a primeira nota abaixo</p>
@@ -667,23 +667,23 @@ export default function DealCommandCenter() {
                                 </ScrollArea>
 
                                 {/* Chat Input - Fixed Toolbar Style */}
-                                <div className="p-4 border-t border-slate-600 bg-slate-800 shadow-[0_-4px_16px_rgba(0,0,0,0.3)]">
+                                <div className="p-4 border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 shadow-[0_-4px_16px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_16px_rgba(0,0,0,0.3)]">
                                     <div className="flex items-center gap-2">
-                                        <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white">
+                                        <Button variant="ghost" size="sm" className="text-gray-400 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white">
                                             <Paperclip className="h-4 w-4" />
                                         </Button>
                                         <Input
                                             value={newNote}
                                             onChange={(e) => setNewNote(e.target.value)}
                                             placeholder="Digite uma nota ou comando..."
-                                            className="flex-1 bg-slate-900 border-slate-700 text-white placeholder:text-slate-500 focus:ring-indigo-500"
+                                            className="flex-1 bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:ring-indigo-500"
                                             onKeyPress={(e) => {
                                                 if (e.key === "Enter" && newNote.trim()) {
                                                     addNoteMutation.mutate(newNote.trim());
                                                 }
                                             }}
                                         />
-                                        <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white">
+                                        <Button variant="ghost" size="sm" className="text-gray-400 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white">
                                             <Smile className="h-4 w-4" />
                                         </Button>
                                         <Button
@@ -700,9 +700,9 @@ export default function DealCommandCenter() {
 
                             {/* Notes Section */}
                             {deal.notes && (
-                                <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
-                                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Observações do Deal</p>
-                                    <p className="text-sm text-slate-300">{deal.notes}</p>
+                                <div className="bg-white dark:bg-slate-900 rounded-xl p-4 border border-gray-200 dark:border-slate-800 shadow-sm">
+                                    <p className="text-xs font-medium text-gray-500 dark:text-slate-500 uppercase tracking-wider mb-2">Observações do Deal</p>
+                                    <p className="text-sm text-gray-700 dark:text-slate-300">{deal.notes}</p>
                                 </div>
                             )}
                         </div>
