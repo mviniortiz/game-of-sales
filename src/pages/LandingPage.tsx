@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,10 @@ import {
     Sparkles,
     Target,
     Rocket,
-    Award
+    Award,
+    Play,
+    Volume2,
+    VolumeX
 } from "lucide-react";
 import brandLogo from "@/assets/logo-full.png";
 import brandLogoWhite from "@/assets/logo 1 - white.png";
@@ -49,6 +52,9 @@ const LandingPage = () => {
     const [isAnnual, setIsAnnual] = useState(true); // Default to annual for 10% discount
     const [isNavigating, setIsNavigating] = useState(false);
     const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+    const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+    const [isMuted, setIsMuted] = useState(true);
+    const videoRef = useRef<HTMLVideoElement>(null);
 
     const scrollToSection = (id: string) => {
         const element = document.getElementById(id);
@@ -229,47 +235,8 @@ const LandingPage = () => {
                                 </p>
                             </motion.div>
 
-                            {/* Stats Row */}
-                            <motion.div
-                                initial={{ y: 20, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.2 }}
-                                className="grid grid-cols-3 gap-4 mb-10"
-                            >
-                                <div className="text-center p-4 bg-white/5 rounded-xl border border-white/10">
-                                    <motion.p
-                                        className="text-2xl font-bold text-emerald-400"
-                                        initial={{ scale: 0 }}
-                                        animate={{ scale: 1 }}
-                                        transition={{ delay: 0.3, type: "spring" }}
-                                    >
-                                        +30%
-                                    </motion.p>
-                                    <p className="text-xs text-white/50 mt-1">Aumento em vendas</p>
-                                </div>
-                                <div className="text-center p-4 bg-white/5 rounded-xl border border-white/10">
-                                    <motion.p
-                                        className="text-2xl font-bold text-indigo-400"
-                                        initial={{ scale: 0 }}
-                                        animate={{ scale: 1 }}
-                                        transition={{ delay: 0.4, type: "spring" }}
-                                    >
-                                        500+
-                                    </motion.p>
-                                    <p className="text-xs text-white/50 mt-1">Empresas ativas</p>
-                                </div>
-                                <div className="text-center p-4 bg-white/5 rounded-xl border border-white/10">
-                                    <motion.p
-                                        className="text-2xl font-bold text-amber-400"
-                                        initial={{ scale: 0 }}
-                                        animate={{ scale: 1 }}
-                                        transition={{ delay: 0.5, type: "spring" }}
-                                    >
-                                        4.9★
-                                    </motion.p>
-                                    <p className="text-xs text-white/50 mt-1">Avaliação média</p>
-                                </div>
-                            </motion.div>
+
+
 
                             {/* Value Props - Animated List */}
                             <motion.div
@@ -413,7 +380,7 @@ const LandingPage = () => {
                         <motion.div {...fadeInUp}>
                             <Badge className="mb-6 bg-white/80 backdrop-blur-sm text-indigo-700 border-indigo-200/50 hover:bg-white/90 shadow-sm">
                                 <Sparkles className="h-3 w-3 mr-1" />
-                                🔥 +500 empresas já aumentaram suas vendas
+                                CRM Gamificado para Times de Vendas
                             </Badge>
 
 
@@ -446,34 +413,7 @@ const LandingPage = () => {
                                 </Button>
                             </div>
 
-                            {/* Social Proof */}
-                            <div className="mt-10 pt-10 border-t border-slate-200/50">
-                                <p className="text-sm text-slate-500 mb-4">Confiado por times de vendas em todo Brasil</p>
-                                <div className="flex flex-wrap items-center justify-center gap-6">
-                                    <div className="flex items-center gap-2">
-                                        <div className="flex -space-x-2">
-                                            {["RS", "AM", "LC", "MP", "JF"].map((initials, i) => (
-                                                <div
-                                                    key={i}
-                                                    className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold border-2 border-white"
-                                                >
-                                                    {initials}
-                                                </div>
-                                            ))}
-                                        </div>
-                                        <span className="text-sm font-medium text-slate-700">+500 empresas</span>
-                                    </div>
-                                    <div className="flex items-center gap-1">
-                                        {[1, 2, 3, 4, 5].map((_, i) => (
-                                            <Award key={i} className="h-4 w-4 text-amber-400 fill-amber-400" />
-                                        ))}
-                                        <span className="text-sm font-medium text-slate-700 ml-1">4.9/5</span>
-                                    </div>
-                                    <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">
-                                        +30% em vendas
-                                    </Badge>
-                                </div>
-                            </div>
+
                         </motion.div>
                     </div>
                 </div>
@@ -491,11 +431,11 @@ const LandingPage = () => {
                             👀 Tour Completo em 2 Minutos
                         </Badge>
                         <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
-                            Isso É o Que Seus Concorrentes Não Querem Que Você Veja
+                            Veja o Game Sales Em Ação
                         </h2>
                         <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-                            O sistema que já gerou <strong className="text-slate-800">+R$ 50 milhões</strong> em vendas para nossos clientes.
                             Interface simples, resultados extraordinários.
+                            Assista e descubra como transformar sua gestão de vendas.
                         </p>
                     </motion.div>
 
@@ -507,16 +447,78 @@ const LandingPage = () => {
                         {/* Glow effect */}
                         <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/30 via-blue-500/30 to-indigo-500/30 rounded-3xl blur-3xl -z-10 scale-105" />
 
-                        {/* Video Container */}
-                        <div className="bg-slate-900 rounded-2xl shadow-2xl border border-slate-700/50 overflow-hidden">
+                        {/* Video Container with Overlay */}
+                        <div
+                            className="bg-slate-900 rounded-2xl shadow-2xl border border-slate-700/50 overflow-hidden relative group cursor-pointer"
+                            onClick={() => {
+                                if (videoRef.current) {
+                                    if (isVideoPlaying) {
+                                        videoRef.current.pause();
+                                    } else {
+                                        videoRef.current.play();
+                                    }
+                                    setIsVideoPlaying(!isVideoPlaying);
+                                }
+                            }}
+                        >
                             <video
+                                ref={videoRef}
                                 src={demoVideo}
-                                autoPlay
                                 loop
-                                muted
+                                muted={isMuted}
                                 playsInline
                                 className="w-full h-auto"
                             />
+
+                            {/* Play Overlay */}
+                            {!isVideoPlaying && (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/50 to-slate-900/30 flex flex-col items-center justify-center"
+                                >
+                                    {/* Play Button */}
+                                    <motion.div
+                                        whileHover={{ scale: 1.1 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-white/95 shadow-2xl flex items-center justify-center mb-6 group-hover:bg-white transition-colors"
+                                    >
+                                        <Play className="h-8 w-8 sm:h-10 sm:w-10 text-indigo-600 ml-1" fill="currentColor" />
+                                    </motion.div>
+
+                                    {/* Text CTA */}
+                                    <h3 className="text-white text-xl sm:text-2xl font-bold mb-2">
+                                        Clique para assistir a demo
+                                    </h3>
+                                    <p className="text-white/70 text-sm sm:text-base">
+                                        Veja como funciona em 2 minutos
+                                    </p>
+
+                                    {/* Animated pulse ring */}
+                                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                        <motion.div
+                                            animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0, 0.5] }}
+                                            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                                            className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-2 border-white/30"
+                                        />
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {/* Mute/Unmute Button (visible when playing) */}
+                            {isVideoPlaying && (
+                                <motion.button
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setIsMuted(!isMuted);
+                                    }}
+                                    className="absolute bottom-4 right-4 w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+                                >
+                                    {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+                                </motion.button>
+                            )}
                         </div>
 
                         {/* Feature highlights below video */}
@@ -798,90 +800,7 @@ const LandingPage = () => {
                 </div>
             </section>
 
-            {/* Testimonials Section */}
-            <section className="py-24 px-4 sm:px-6 lg:px-8 relative">
-                <div className="max-w-7xl mx-auto">
-                    <motion.div
-                        {...fadeInUp}
-                        className="text-center mb-16"
-                    >
-                        <Badge className="mb-4 bg-amber-100 text-amber-700 border-amber-200">
-                            <Award className="h-3 w-3 mr-1" />
-                            Histórias de Sucesso
-                        </Badge>
-                        <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
-                            O que nossos clientes dizem
-                        </h2>
-                        <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-                            Resultados reais de times que transformaram suas vendas com o Game Sales.
-                        </p>
-                    </motion.div>
 
-                    <motion.div
-                        variants={staggerContainer}
-                        initial="initial"
-                        whileInView="whileInView"
-                        viewport={{ once: true }}
-                        className="grid md:grid-cols-3 gap-8"
-                    >
-                        {[
-                            {
-                                quote: "Nosso time bateu a meta 3 meses seguidos depois que implementamos o Game Sales. O ranking gamificado deixou todo mundo competindo saudavelmente.",
-                                author: "Ricardo Silva",
-                                role: "Gerente Comercial",
-                                company: "TechSales Brasil",
-                                result: "+47% em vendas",
-                                avatar: "RS"
-                            },
-                            {
-                                quote: "A integração automática com Hotmart economizou 4 horas por dia do meu time. Agora focamos em vender, não em planilhas.",
-                                author: "Amanda Costa",
-                                role: "Head de Vendas",
-                                company: "Digital Academy",
-                                result: "-4h/dia em tarefas manuais",
-                                avatar: "AC"
-                            },
-                            {
-                                quote: "O dashboard em tempo real mudou completamente nossa gestão. Consigo ver exatamente onde preciso agir para bater a meta.",
-                                author: "Lucas Mendes",
-                                role: "CEO",
-                                company: "Mendes Consulting",
-                                result: "3x mais fechamentos",
-                                avatar: "LM"
-                            }
-                        ].map((testimonial, idx) => (
-                            <motion.div
-                                key={idx}
-                                variants={fadeInUp}
-                                className="bg-slate-50 rounded-2xl p-6 border border-slate-200 hover:shadow-lg transition-shadow"
-                            >
-                                <div className="flex items-center gap-1 mb-4">
-                                    {[1, 2, 3, 4, 5].map((_, i) => (
-                                        <Award key={i} className="h-4 w-4 text-amber-400 fill-amber-400" />
-                                    ))}
-                                </div>
-                                <p className="text-slate-700 mb-6 leading-relaxed">
-                                    "{testimonial.quote}"
-                                </p>
-                                <div className="flex items-center justify-between pt-4 border-t border-slate-200">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm">
-                                            {testimonial.avatar}
-                                        </div>
-                                        <div>
-                                            <p className="font-semibold text-slate-900">{testimonial.author}</p>
-                                            <p className="text-xs text-slate-500">{testimonial.role}, {testimonial.company}</p>
-                                        </div>
-                                    </div>
-                                    <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-xs">
-                                        {testimonial.result}
-                                    </Badge>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </motion.div>
-                </div>
-            </section>
 
             {/* FAQ Section */}
             <section className="py-24 px-4 sm:px-6 lg:px-8 bg-slate-50">

@@ -40,7 +40,7 @@ import {
 
 // Itens agrupados por categoria
 const visaoGeralItems = [
-  { title: "Dashboard", url: "/", icon: Home },
+  { title: "Dashboard", url: "/dashboard", icon: Home },
   { title: "CRM Pipeline", url: "/crm", icon: Kanban },
   { title: "Performance de Calls", url: "/calls", icon: PhoneCall },
   { title: "Calendário", url: "/calendario", icon: Calendar },
