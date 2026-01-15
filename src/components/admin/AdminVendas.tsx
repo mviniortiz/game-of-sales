@@ -15,6 +15,7 @@ import {
 import { Download, MoreHorizontal, FileText, Edit, Trash2, TrendingUp, DollarSign, ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
+import { useTenant } from "@/contexts/TenantContext";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,6 +40,7 @@ const ITEMS_PER_PAGE = 20;
 
 export const AdminVendas = () => {
   const queryClient = useQueryClient();
+  const { activeCompanyId } = useTenant();
   const [currentPage, setCurrentPage] = useState(1);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [filters, setFilters] = useState<FilterValues>({
@@ -49,41 +51,50 @@ export const AdminVendas = () => {
   });
 
   const { data: vendedores } = useQuery({
-    queryKey: ["vendedores-filter"],
+    queryKey: ["vendedores-filter", activeCompanyId],
     queryFn: async () => {
+      if (!activeCompanyId) return [];
       const { data, error } = await supabase
         .from("profiles")
         .select("id, nome, avatar_url")
+        .eq("company_id", activeCompanyId)
         .order("nome");
-      
+
       if (error) throw error;
       return data;
     },
+    enabled: !!activeCompanyId,
   });
 
   const { data: produtos } = useQuery({
-    queryKey: ["produtos-filter"],
+    queryKey: ["produtos-filter", activeCompanyId],
     queryFn: async () => {
+      if (!activeCompanyId) return [];
       const { data, error } = await supabase
         .from("produtos")
         .select("id, nome")
+        .eq("company_id", activeCompanyId)
         .eq("ativo", true)
         .order("nome");
-      
+
       if (error) throw error;
       return data;
     },
+    enabled: !!activeCompanyId,
   });
 
   const { data: vendas, isLoading } = useQuery({
-    queryKey: ["admin-vendas", filters],
+    queryKey: ["admin-vendas", filters, activeCompanyId],
     queryFn: async () => {
+      if (!activeCompanyId) return [];
+
       let query = supabase
         .from("vendas")
         .select(`
           *,
           profiles:user_id (nome, avatar_url)
         `)
+        .eq("company_id", activeCompanyId)
         .order("data_venda", { ascending: false });
 
       if (filters.vendedorId && filters.vendedorId !== "todos") {
@@ -109,12 +120,13 @@ export const AdminVendas = () => {
       if (error) throw error;
       return data;
     },
+    enabled: !!activeCompanyId,
   });
 
   // Calculate KPIs
   const kpis = useMemo(() => {
     if (!vendas) return { total: 0, valorTotal: 0, ticketMedio: 0 };
-    
+
     const total = vendas.length;
     const valorTotal = vendas.reduce((acc, v) => acc + Number(v.valor), 0);
     const ticketMedio = total > 0 ? valorTotal / total : 0;
@@ -316,21 +328,21 @@ export const AdminVendas = () => {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="bg-background border-border z-50">
-                          <DropdownMenuItem 
+                          <DropdownMenuItem
                             onClick={() => toast.info("Funcionalidade em desenvolvimento")}
                             className="cursor-pointer"
                           >
                             <FileText className="h-4 w-4 mr-2" />
                             Ver Detalhes
                           </DropdownMenuItem>
-                          <DropdownMenuItem 
+                          <DropdownMenuItem
                             onClick={() => toast.info("Funcionalidade em desenvolvimento")}
                             className="cursor-pointer"
                           >
                             <Edit className="h-4 w-4 mr-2" />
                             Editar
                           </DropdownMenuItem>
-                          <DropdownMenuItem 
+                          <DropdownMenuItem
                             onClick={() => setDeleteId(venda.id)}
                             className="cursor-pointer text-destructive focus:text-destructive"
                           >
@@ -351,7 +363,7 @@ export const AdminVendas = () => {
             <Pagination>
               <PaginationContent>
                 <PaginationItem>
-                  <PaginationPrevious 
+                  <PaginationPrevious
                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                     className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                   />
@@ -368,7 +380,7 @@ export const AdminVendas = () => {
                   </PaginationItem>
                 ))}
                 <PaginationItem>
-                  <PaginationNext 
+                  <PaginationNext
                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                     className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
                   />

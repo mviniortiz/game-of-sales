@@ -19,7 +19,6 @@ import AdminCompanyDetail from "./pages/AdminCompanyDetail";
 import Integracoes from "./pages/Integracoes";
 import Calendario from "./pages/Calendario";
 import CRM from "./pages/CRM";
-import DealDetails from "./pages/DealDetails";
 import DealCommandCenter from "./pages/DealCommandCenter";
 import RecuperarSenha from "./pages/RecuperarSenha";
 import Profile from "./pages/Profile";
@@ -39,12 +38,16 @@ const App = () => (
             <Toaster />
             <Sonner />
             <Routes>
+              {/* Public routes */}
+              <Route path="/" element={<LandingPage />} />
               <Route path="/landing" element={<LandingPage />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/register" element={<Register />} />
               <Route path="/recuperar-senha" element={<RecuperarSenha />} />
+
+              {/* Protected routes */}
               <Route
-                path="/"
+                path="/dashboard"
                 element={
                   <ProtectedRoute>
                     <AppLayout>

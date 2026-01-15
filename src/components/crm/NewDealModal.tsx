@@ -67,7 +67,7 @@ interface NewDealModalProps {
 }
 
 export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalProps) => {
-  const { user } = useAuth();
+  const { user, companyId } = useAuth();
   const [valorFormatado, setValorFormatado] = useState("");
 
   const form = useForm<DealFormData>({
@@ -91,15 +91,18 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
 
   // Fetch products
   const { data: produtos = [] } = useQuery({
-    queryKey: ["produtos-ativos"],
+    queryKey: ["produtos-ativos", companyId],
     queryFn: async () => {
+      if (!companyId) return [];
       const { data } = await supabase
         .from("produtos")
         .select("id, nome")
         .eq("ativo", true)
+        .eq("company_id", companyId)
         .order("nome");
       return data || [];
     },
+    enabled: !!companyId,
   });
 
   // Create deal mutation
@@ -144,14 +147,14 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Deal criado com sucesso!");
+      toast.success("Negociação criada com sucesso!");
       form.reset();
       setValorFormatado("");
       onSuccess();
     },
     onError: (error) => {
       console.error("Error creating deal:", error);
-      toast.error("Erro ao criar deal");
+      toast.error("Erro ao criar negociação");
     },
   });
 
@@ -186,14 +189,14 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[540px] bg-card border border-border shadow-lg">
-        <DialogHeader className="pb-4 border-b border-border">
+      <DialogContent className="sm:max-w-[540px] max-h-[90vh] overflow-y-auto bg-card border border-border shadow-lg">
+        <DialogHeader className="pb-4 border-b border-border sticky top-0 bg-card z-10">
           <DialogTitle className="flex items-center gap-3 text-foreground">
             <div className="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 ring-1 ring-indigo-100 dark:ring-indigo-500/20">
               <Target className="h-5 w-5 text-indigo-600 dark:text-indigo-200" />
             </div>
             <div>
-              <span className="text-lg font-semibold">Novo Deal</span>
+              <span className="text-lg font-semibold">Nova Negociação</span>
               <p className="text-[12px] text-muted-foreground font-normal mt-0.5">Adicione uma nova oportunidade ao pipeline</p>
             </div>
           </DialogTitle>
@@ -210,7 +213,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-foreground text-[13px] font-medium">Título do Deal</FormLabel>
+                    <FormLabel className="text-foreground text-[13px] font-medium">Título da Negociação</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -426,8 +429,8 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
               render={({ field }) => (
                 <FormItem>
                   <div className={`flex items-center justify-between p-3 rounded-lg border transition-all ${field.value
-                      ? 'bg-orange-50 dark:bg-orange-500/10 border-orange-200 dark:border-orange-500/30'
-                      : 'bg-muted/30 border-border'
+                    ? 'bg-orange-50 dark:bg-orange-500/10 border-orange-200 dark:border-orange-500/30'
+                    : 'bg-muted/30 border-border'
                     }`}>
                     <Label htmlFor="hot-deal" className="flex items-center gap-2 cursor-pointer">
                       <Flame className={`h-4 w-4 ${field.value ? 'text-orange-500' : 'text-muted-foreground'}`} />
@@ -459,7 +462,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
                   <FormControl>
                     <Textarea
                       {...field}
-                      placeholder="Informações adicionais sobre o deal..."
+                      placeholder="Informações adicionais sobre a negociação..."
                       className="min-h-[60px] bg-white dark:bg-secondary border-gray-300 dark:border-border focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 resize-none placeholder:text-muted-foreground text-sm"
                     />
                   </FormControl>
@@ -489,7 +492,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
                     Criando...
                   </>
                 ) : (
-                  "Criar Deal"
+                  "Criar Negociação"
                 )}
               </Button>
             </div>

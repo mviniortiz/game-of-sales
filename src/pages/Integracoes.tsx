@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,9 @@ import {
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { HotmartConfigModal } from "@/components/integrations/HotmartConfigModal";
+import { GoogleCalendarConfigModal } from "@/components/integrations/GoogleCalendarConfigModal";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Import logo images
 import googleCalendarLogo from "@/assets/integrations/google-calendar.png";
@@ -49,7 +52,7 @@ const INTEGRATIONS: Integration[] = [
     description: "Sincronize agendamentos e calls de vendas automaticamente",
     logo: googleCalendarLogo,
     logoBg: "bg-white",
-    status: "active",
+    status: "available", // Base status - will be overridden if user is connected
     category: "productivity",
   },
   {
@@ -110,7 +113,7 @@ const FILTER_TABS: { id: IntegrationCategory; label: string }[] = [
 ];
 
 // Integration Card Component
-const IntegrationCard = ({ integration, onConnect }: { integration: Integration; onConnect?: () => void }) => {
+const IntegrationCard = ({ integration, onConnect, onManage }: { integration: Integration; onConnect?: () => void; onManage?: () => void }) => {
   const [votes, setVotes] = useState(integration.votes || 0);
   const [hasVoted, setHasVoted] = useState(false);
 
@@ -183,7 +186,12 @@ const IntegrationCard = ({ integration, onConnect }: { integration: Integration;
               <Check className="w-3.5 h-3.5" />
               Conectado
             </span>
-            <Button variant="ghost" size="sm" className="h-7 text-xs gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs gap-1"
+              onClick={onManage}
+            >
               <Settings className="w-3 h-3" />
               Gerenciar
             </Button>
@@ -223,19 +231,118 @@ const IntegrationCard = ({ integration, onConnect }: { integration: Integration;
   );
 };
 
+// Type for integration config from database
+interface IntegrationConfig {
+  id: string;
+  company_id: string;
+  platform: string;
+  is_active: boolean;
+}
+
 // Main Component - Full Width Layout
 const Integracoes = () => {
   const { needsUpgrade } = usePlan();
+  const { companyId } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<IntegrationCategory>("all");
   const [hotmartModalOpen, setHotmartModalOpen] = useState(false);
+  const [googleCalendarModalOpen, setGoogleCalendarModalOpen] = useState(false);
+  const [activeIntegrationIds, setActiveIntegrationIds] = useState<Set<string>>(new Set());
+  const [googleCalendarConnected, setGoogleCalendarConnected] = useState(false);
+
+  // Check Google Calendar connection status (per-user, not per-company)
+  const checkGoogleCalendarStatus = useCallback(async (userId: string) => {
+    try {
+      const { data } = await supabase
+        .from("profiles")
+        .select("google_access_token, google_token_expires_at")
+        .eq("id", userId)
+        .single();
+
+      if (data?.google_access_token) {
+        // Check if token is expired
+        const expiresAt = data.google_token_expires_at ? new Date(data.google_token_expires_at) : null;
+        const now = new Date();
+        setGoogleCalendarConnected(!(expiresAt && expiresAt < now));
+      } else {
+        setGoogleCalendarConnected(false);
+      }
+    } catch (error) {
+      console.error("Error checking Google Calendar status:", error);
+      setGoogleCalendarConnected(false);
+    }
+  }, []);
+
+  // Fetch active integrations from database
+  const loadIntegrationStatuses = useCallback(async () => {
+    if (!companyId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("integration_configs" as any)
+        .select("platform, is_active")
+        .eq("company_id", companyId)
+        .eq("is_active", true);
+
+      if (error) {
+        console.error("Error loading integration statuses:", error);
+        return;
+      }
+
+      if (data) {
+        const configs = data as unknown as IntegrationConfig[];
+        const activeIds = new Set<string>(
+          configs.map((config) => config.platform)
+        );
+        setActiveIntegrationIds(activeIds);
+      }
+    } catch (error) {
+      console.error("Error loading integration statuses:", error);
+    }
+  }, [companyId]);
+
+  // Load on mount and when companyId changes
+  useEffect(() => {
+    loadIntegrationStatuses();
+  }, [loadIntegrationStatuses]);
+
+  // Check Google Calendar status separately (user-level, not company-level)
+  useEffect(() => {
+    if (supabase.auth.getUser) {
+      supabase.auth.getUser().then(({ data }) => {
+        if (data?.user?.id) {
+          checkGoogleCalendarStatus(data.user.id);
+        }
+      });
+    }
+  }, [checkGoogleCalendarStatus]);
+
+  // Handle when modal saves - refresh statuses
+  const handleIntegrationSaved = () => {
+    loadIntegrationStatuses();
+    // Also refresh Google Calendar status
+    supabase.auth.getUser().then(({ data }) => {
+      if (data?.user?.id) {
+        checkGoogleCalendarStatus(data.user.id);
+      }
+    });
+  };
+
+  // Handle manage button click
+  const handleManageIntegration = (integrationId: string) => {
+    if (integrationId === "google-calendar") {
+      setGoogleCalendarModalOpen(true);
+    } else if (integrationId === "hotmart") {
+      setHotmartModalOpen(true);
+    }
+  };
 
   // Feature gate check
   if (needsUpgrade('integrations')) {
     return <UpgradePrompt feature="integrations" />;
   }
 
-  // Filter integrations
+  // Filter integrations and compute effective status
   const filteredIntegrations = INTEGRATIONS.filter(integration => {
     const matchesSearch = integration.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       integration.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -243,10 +350,22 @@ const Integracoes = () => {
     return matchesSearch && matchesFilter;
   });
 
-  // Group by status
-  const activeIntegrations = filteredIntegrations.filter(i => i.status === "active");
-  const availableIntegrations = filteredIntegrations.filter(i => i.status === "available");
-  const roadmapIntegrations = filteredIntegrations.filter(i => i.status === "roadmap");
+  // Compute effective status: if DB says it's active, show as active
+  const getEffectiveStatus = (integration: Integration): IntegrationStatus => {
+    // Special case: Google Calendar uses user-level token, not company-level config
+    if (integration.id === "google-calendar") {
+      return googleCalendarConnected ? "active" : "available";
+    }
+    if (activeIntegrationIds.has(integration.id)) {
+      return "active";
+    }
+    return integration.status;
+  };
+
+  // Group by effective status (considering database)
+  const activeIntegrations = filteredIntegrations.filter(i => getEffectiveStatus(i) === "active");
+  const availableIntegrations = filteredIntegrations.filter(i => getEffectiveStatus(i) === "available");
+  const roadmapIntegrations = filteredIntegrations.filter(i => getEffectiveStatus(i) === "roadmap");
 
   return (
     <>
@@ -322,7 +441,11 @@ const Integracoes = () => {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {activeIntegrations.map(integration => (
-                  <IntegrationCard key={integration.id} integration={integration} />
+                  <IntegrationCard
+                    key={integration.id}
+                    integration={{ ...integration, status: "active" }}
+                    onManage={() => handleManageIntegration(integration.id)}
+                  />
                 ))}
               </div>
             </section>
@@ -344,7 +467,13 @@ const Integracoes = () => {
                   <IntegrationCard
                     key={integration.id}
                     integration={integration}
-                    onConnect={integration.id === "hotmart" ? () => setHotmartModalOpen(true) : undefined}
+                    onConnect={
+                      integration.id === "hotmart"
+                        ? () => setHotmartModalOpen(true)
+                        : integration.id === "google-calendar"
+                          ? () => setGoogleCalendarModalOpen(true)
+                          : undefined
+                    }
                   />
                 ))}
               </div>
@@ -404,6 +533,14 @@ const Integracoes = () => {
       <HotmartConfigModal
         open={hotmartModalOpen}
         onClose={() => setHotmartModalOpen(false)}
+        onSaved={handleIntegrationSaved}
+      />
+
+      {/* Google Calendar Config Modal */}
+      <GoogleCalendarConfigModal
+        open={googleCalendarModalOpen}
+        onClose={() => setGoogleCalendarModalOpen(false)}
+        onSaved={handleIntegrationSaved}
       />
     </>
   );

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -12,12 +12,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     ArrowLeft,
     Phone,
     MessageSquare,
     Mail,
-    Linkedin,
     Trophy,
     XCircle,
     Archive,
@@ -55,6 +55,13 @@ import { toast } from "sonner";
 import { syncWonDealToSale } from "@/utils/salesSync";
 import { LostDealModal } from "@/components/crm/LostDealModal";
 import { Confetti } from "@/components/crm/Confetti";
+import { NovaTarefaModal } from "@/components/crm/NovaTarefaModal";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // Pipeline stages with colors
 const PIPELINE_STAGES = [
@@ -174,57 +181,96 @@ const CircularProgress = ({ value, size = 48 }: { value: number; size?: number }
     );
 };
 
-// Quick Action Button Component
+// Quick Action Button Component with Tooltip
 const QuickActionButton = ({ icon: Icon, label, onClick, color }: { icon: typeof Phone; label: string; onClick?: () => void; color: string }) => (
-    <motion.button
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={onClick}
-        className={`
-      p-3 rounded-full transition-all duration-200
-      bg-gray-100 dark:bg-slate-800 hover:${color} ring-1 ring-gray-200 dark:ring-slate-700 hover:ring-transparent
-      group
-    `}
-        title={label}
-    >
-        <Icon className="h-4 w-4 text-gray-500 dark:text-slate-400 group-hover:text-white transition-colors" />
-    </motion.button>
+    <Tooltip>
+        <TooltipTrigger asChild>
+            <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={onClick}
+                className={`
+                    p-3 rounded-full transition-all duration-200
+                    bg-gray-100 dark:bg-slate-800 hover:${color} ring-1 ring-gray-200 dark:ring-slate-700 hover:ring-transparent
+                    group
+                `}
+            >
+                <Icon className="h-4 w-4 text-gray-500 dark:text-slate-400 group-hover:text-white transition-colors" />
+            </motion.button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom" className="bg-slate-800 text-white text-xs px-2 py-1 rounded-md">
+            {label}
+        </TooltipContent>
+    </Tooltip>
 );
 
-// Timeline Event Component
-const TimelineEvent = ({ event, isLast }: { event: any; isLast: boolean }) => {
+// Timeline Event Component - RD Station Style
+const TimelineEvent = ({ event, isLast, isFirst }: { event: any; isLast: boolean; isFirst?: boolean }) => {
     const config = EVENT_ICONS[event.type] || EVENT_ICONS.note;
     const Icon = config.icon;
+    const isCreation = event.type === "creation" || event.title?.includes("criada");
 
     return (
-        <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex gap-3"
-        >
-            {/* Timeline connector */}
+        <div className="relative flex gap-4">
+            {/* Vertical Line */}
             <div className="flex flex-col items-center">
-                <div className={`p-2 rounded-lg ${config.bg}`}>
-                    <Icon className={`h-4 w-4 ${config.color}`} />
-                </div>
-                {!isLast && <div className="w-0.5 flex-1 bg-gray-200 dark:bg-slate-700 mt-2" />}
+                {/* Top line segment */}
+                {!isFirst && (
+                    <div className="w-0.5 h-3 bg-indigo-400 dark:bg-indigo-500" />
+                )}
+
+                {/* Bullet/Icon */}
+                {isCreation ? (
+                    <div className="w-8 h-8 rounded-full bg-indigo-500 dark:bg-indigo-600 flex items-center justify-center ring-4 ring-indigo-100 dark:ring-indigo-500/20 z-10">
+                        <Icon className="h-4 w-4 text-white" />
+                    </div>
+                ) : (
+                    <div className="w-3 h-3 rounded-full bg-gray-400 dark:bg-slate-500 ring-4 ring-gray-100 dark:ring-slate-800 z-10 flex-shrink-0 mt-1.5" />
+                )}
+
+                {/* Bottom line segment */}
+                {!isLast && (
+                    <div className="w-0.5 flex-1 bg-indigo-400 dark:bg-indigo-500 min-h-[20px]" />
+                )}
             </div>
 
             {/* Content */}
-            <div className="flex-1 pb-6">
-                <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">{event.title}</span>
-                    <span className="text-xs text-gray-500 dark:text-slate-500">
-                        {formatDistanceToNow(new Date(event.created_at), { addSuffix: true, locale: ptBR })}
-                    </span>
-                </div>
-                {event.content && (
-                    <p className="text-sm text-gray-600 dark:text-slate-400 bg-gray-50 dark:bg-slate-800/50 rounded-lg p-3 border border-gray-200 dark:border-slate-700/50">
-                        {event.content}
-                    </p>
+            <div className={`flex-1 ${isLast ? 'pb-2' : 'pb-5'} ${isCreation ? '-mt-1' : ''}`}>
+                {isCreation ? (
+                    // Special styling for creation events
+                    <>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                            {event.title}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-slate-500 mt-0.5">
+                            {format(new Date(event.created_at), "dd/MM/yy 'às' HH:mm", { locale: ptBR })}
+                        </p>
+                    </>
+                ) : (
+                    // Regular event styling
+                    <>
+                        <p className="text-sm text-gray-700 dark:text-slate-300">
+                            <span className="font-semibold text-indigo-600 dark:text-indigo-400">
+                                {event.user_name || "Você"}
+                            </span>
+                            {" "}{event.title || event.content}
+                        </p>
+                        <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">
+                            {format(new Date(event.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                        </p>
+                    </>
+                )}
+
+                {/* Content box for notes */}
+                {event.content && !isCreation && event.type === "note" && (
+                    <div className="mt-2 p-3 bg-gray-50 dark:bg-slate-800/50 rounded-lg border border-gray-200 dark:border-slate-700/50">
+                        <p className="text-sm text-gray-600 dark:text-slate-400">
+                            {event.content}
+                        </p>
+                    </div>
                 )}
             </div>
-        </motion.div>
+        </div>
     );
 };
 
@@ -314,6 +360,10 @@ export default function DealCommandCenter() {
     const [showConfetti, setShowConfetti] = useState(false);
     const [newNote, setNewNote] = useState("");
     const [editedDeal, setEditedDeal] = useState<any>(null);
+    const [activeTab, setActiveTab] = useState("historico");
+    const [showTaskModal, setShowTaskModal] = useState(false);
+    const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Fetch deal details
     const { data: deal, isLoading } = useQuery({
@@ -544,18 +594,19 @@ export default function DealCommandCenter() {
                             {/* Quick Actions */}
                             <div className="bg-white dark:bg-slate-900 rounded-xl p-4 border border-gray-200 dark:border-slate-800 shadow-sm">
                                 <p className="text-xs font-medium text-gray-500 dark:text-slate-500 uppercase tracking-wider mb-3">Ações Rápidas</p>
-                                <div className="flex items-center justify-around">
-                                    <QuickActionButton icon={Phone} label="Ligar" color="bg-emerald-500" onClick={() => {
-                                        if (deal.customer_phone) window.open(`tel:${deal.customer_phone}`, "_self");
-                                    }} />
-                                    <QuickActionButton icon={MessageSquare} label="WhatsApp" color="bg-green-500" onClick={() => {
-                                        if (deal.customer_phone) window.open(`https://wa.me/${deal.customer_phone.replace(/\D/g, "")}`, "_blank");
-                                    }} />
-                                    <QuickActionButton icon={Mail} label="Email" color="bg-blue-500" onClick={() => {
-                                        if (deal.customer_email) window.open(`mailto:${deal.customer_email}`, "_blank");
-                                    }} />
-                                    <QuickActionButton icon={Linkedin} label="LinkedIn" color="bg-sky-500" />
-                                </div>
+                                <TooltipProvider delayDuration={100}>
+                                    <div className="flex items-center justify-around">
+                                        <QuickActionButton icon={Phone} label="Ligar" color="bg-emerald-500" onClick={() => {
+                                            if (deal.customer_phone) window.open(`tel:${deal.customer_phone}`, "_self");
+                                        }} />
+                                        <QuickActionButton icon={MessageSquare} label="WhatsApp" color="bg-green-500" onClick={() => {
+                                            if (deal.customer_phone) window.open(`https://wa.me/${deal.customer_phone.replace(/\D/g, "")}`, "_blank");
+                                        }} />
+                                        <QuickActionButton icon={Mail} label="Email" color="bg-blue-500" onClick={() => {
+                                            if (deal.customer_email) window.open(`mailto:${deal.customer_email}`, "_blank");
+                                        }} />
+                                    </div>
+                                </TooltipProvider>
                             </div>
 
                             {/* Deal Health */}
@@ -637,65 +688,236 @@ export default function DealCommandCenter() {
                                 }}
                             />
 
-                            {/* Timeline */}
-                            <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm">
-                                <div className="p-4 border-b border-gray-200 dark:border-slate-800">
-                                    <p className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                                        <Clock className="h-4 w-4 text-indigo-500" />
-                                        Linha do Tempo
-                                    </p>
+                            {/* Tabs Section */}
+                            <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                                {/* Tab Navigation */}
+                                <div className="border-b border-gray-200 dark:border-slate-800">
+                                    <nav className="flex gap-1 px-4 pt-3" aria-label="Tabs">
+                                        {[
+                                            { id: "historico", label: "Histórico", icon: Clock },
+                                            { id: "tarefas", label: "Tarefas", icon: CheckCircle2 },
+                                            { id: "arquivos", label: "Arquivos", icon: Paperclip },
+                                            { id: "propostas", label: "Propostas", icon: FileText },
+                                        ].map((tab) => {
+                                            const TabIcon = tab.icon;
+                                            const isActive = activeTab === tab.id;
+                                            return (
+                                                <button
+                                                    key={tab.id}
+                                                    onClick={() => setActiveTab(tab.id)}
+                                                    className={`
+                                                        px-4 py-2.5 text-sm font-medium rounded-t-lg transition-all flex items-center gap-2
+                                                        ${isActive
+                                                            ? "bg-gray-100 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-500 -mb-px"
+                                                            : "text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800/50"
+                                                        }
+                                                    `}
+                                                >
+                                                    <TabIcon className="h-4 w-4" />
+                                                    {tab.label}
+                                                </button>
+                                            );
+                                        })}
+                                    </nav>
                                 </div>
 
-                                <ScrollArea className="h-[400px]">
-                                    <div className="p-4">
-                                        {timeline.length === 0 ? (
-                                            <div className="flex flex-col items-center justify-center py-12 text-gray-400 dark:text-slate-500 bg-gray-50 dark:bg-slate-800/30 rounded-lg">
-                                                <StickyNote className="h-8 w-8 mb-2 opacity-50" />
-                                                <p className="text-sm">Nenhuma atividade registrada</p>
-                                                <p className="text-xs">Adicione a primeira nota abaixo</p>
+                                {/* Tab Content: Histórico */}
+                                {activeTab === "historico" && (
+                                    <>
+                                        <ScrollArea className="h-[350px]">
+                                            <div className="p-4">
+                                                {timeline.length === 0 ? (
+                                                    <div className="flex flex-col items-center justify-center py-12 text-gray-400 dark:text-slate-500 bg-gray-50 dark:bg-slate-800/30 rounded-lg">
+                                                        <StickyNote className="h-8 w-8 mb-2 opacity-50" />
+                                                        <p className="text-sm">Nenhuma atividade registrada</p>
+                                                        <p className="text-xs">Adicione a primeira nota abaixo</p>
+                                                    </div>
+                                                ) : (
+                                                    timeline.map((event: any, index: number) => (
+                                                        <TimelineEvent
+                                                            key={event.id}
+                                                            event={event}
+                                                            isFirst={index === 0}
+                                                            isLast={index === timeline.length - 1}
+                                                        />
+                                                    ))
+                                                )}
                                             </div>
-                                        ) : (
-                                            timeline.map((event: any, index: number) => (
-                                                <TimelineEvent
-                                                    key={event.id}
-                                                    event={event}
-                                                    isLast={index === timeline.length - 1}
-                                                />
-                                            ))
-                                        )}
-                                    </div>
-                                </ScrollArea>
+                                        </ScrollArea>
 
-                                {/* Chat Input - Fixed Toolbar Style */}
-                                <div className="p-4 border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 shadow-[0_-4px_16px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_16px_rgba(0,0,0,0.3)]">
-                                    <div className="flex items-center gap-2">
-                                        <Button variant="ghost" size="sm" className="text-gray-400 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white">
-                                            <Paperclip className="h-4 w-4" />
-                                        </Button>
-                                        <Input
-                                            value={newNote}
-                                            onChange={(e) => setNewNote(e.target.value)}
-                                            placeholder="Digite uma nota ou comando..."
-                                            className="flex-1 bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:ring-indigo-500"
-                                            onKeyPress={(e) => {
-                                                if (e.key === "Enter" && newNote.trim()) {
-                                                    addNoteMutation.mutate(newNote.trim());
+                                        {/* Chat Input */}
+                                        <div className="p-4 border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800">
+                                            <div className="flex items-center gap-2">
+                                                <Input
+                                                    value={newNote}
+                                                    onChange={(e) => setNewNote(e.target.value)}
+                                                    placeholder="Digite uma nota ou comando..."
+                                                    className="flex-1 bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-700"
+                                                    onKeyPress={(e) => {
+                                                        if (e.key === "Enter" && newNote.trim()) {
+                                                            addNoteMutation.mutate(newNote.trim());
+                                                        }
+                                                    }}
+                                                />
+                                                <Button variant="ghost" size="sm" className="text-gray-400 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white">
+                                                    <Smile className="h-4 w-4" />
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    onClick={() => newNote.trim() && addNoteMutation.mutate(newNote.trim())}
+                                                    disabled={!newNote.trim() || addNoteMutation.isPending}
+                                                    className="bg-indigo-500 hover:bg-indigo-400 text-white"
+                                                >
+                                                    <Send className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+
+                                {/* Tab Content: Tarefas */}
+                                {activeTab === "tarefas" && (
+                                    <div className="p-6">
+                                        <div className="flex flex-col items-center justify-center py-12 text-gray-400 dark:text-slate-500">
+                                            <CheckCircle2 className="h-10 w-10 mb-3 opacity-50" />
+                                            <p className="text-sm font-medium">Nenhuma tarefa pendente</p>
+                                            <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">Tarefas criadas aparecerão aqui</p>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="mt-4 gap-2"
+                                                onClick={() => setShowTaskModal(true)}
+                                            >
+                                                <Zap className="h-4 w-4" />
+                                                Nova Tarefa
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Tab Content: Arquivos */}
+                                {activeTab === "arquivos" && (
+                                    <div className="p-6">
+                                        {/* Hidden file input */}
+                                        <input
+                                            ref={fileInputRef}
+                                            type="file"
+                                            multiple
+                                            accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                const files = Array.from(e.target.files || []);
+                                                if (files.length > 0) {
+                                                    setUploadedFiles(prev => [...prev, ...files]);
+                                                    toast.success(`${files.length} arquivo(s) selecionado(s)`);
                                                 }
                                             }}
                                         />
-                                        <Button variant="ghost" size="sm" className="text-gray-400 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white">
-                                            <Smile className="h-4 w-4" />
-                                        </Button>
-                                        <Button
-                                            size="sm"
-                                            onClick={() => newNote.trim() && addNoteMutation.mutate(newNote.trim())}
-                                            disabled={!newNote.trim() || addNoteMutation.isPending}
-                                            className="bg-indigo-500 hover:bg-indigo-400 text-white"
-                                        >
-                                            <Send className="h-4 w-4" />
-                                        </Button>
+
+                                        {uploadedFiles.length === 0 ? (
+                                            <div
+                                                className="flex flex-col items-center justify-center py-12 text-gray-400 dark:text-slate-500 border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-xl cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 transition-colors"
+                                                onClick={() => fileInputRef.current?.click()}
+                                                onDragOver={(e) => {
+                                                    e.preventDefault();
+                                                    e.currentTarget.classList.add('border-indigo-400', 'bg-indigo-50/50', 'dark:bg-indigo-500/5');
+                                                }}
+                                                onDragLeave={(e) => {
+                                                    e.currentTarget.classList.remove('border-indigo-400', 'bg-indigo-50/50', 'dark:bg-indigo-500/5');
+                                                }}
+                                                onDrop={(e) => {
+                                                    e.preventDefault();
+                                                    e.currentTarget.classList.remove('border-indigo-400', 'bg-indigo-50/50', 'dark:bg-indigo-500/5');
+                                                    const files = Array.from(e.dataTransfer.files || []);
+                                                    if (files.length > 0) {
+                                                        setUploadedFiles(prev => [...prev, ...files]);
+                                                        toast.success(`${files.length} arquivo(s) adicionado(s)`);
+                                                    }
+                                                }}
+                                            >
+                                                <Paperclip className="h-10 w-10 mb-3 opacity-50" />
+                                                <p className="text-sm font-medium">Nenhum arquivo anexado</p>
+                                                <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">Arraste arquivos ou clique para anexar</p>
+                                                <p className="text-xs text-gray-300 dark:text-slate-600 mt-2">Fotos, vídeos, áudios, PDFs, documentos</p>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-3">
+                                                {/* File list */}
+                                                <div className="space-y-2">
+                                                    {uploadedFiles.map((file, index) => (
+                                                        <div
+                                                            key={index}
+                                                            className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700"
+                                                        >
+                                                            {file.type.startsWith('image/') && (
+                                                                <img
+                                                                    src={URL.createObjectURL(file)}
+                                                                    alt={file.name}
+                                                                    className="w-10 h-10 rounded object-cover"
+                                                                />
+                                                            )}
+                                                            {file.type.startsWith('video/') && (
+                                                                <div className="w-10 h-10 rounded bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center">
+                                                                    <FileText className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                                                                </div>
+                                                            )}
+                                                            {file.type.startsWith('audio/') && (
+                                                                <div className="w-10 h-10 rounded bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center">
+                                                                    <FileText className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                                                                </div>
+                                                            )}
+                                                            {!file.type.startsWith('image/') && !file.type.startsWith('video/') && !file.type.startsWith('audio/') && (
+                                                                <div className="w-10 h-10 rounded bg-gray-100 dark:bg-slate-700 flex items-center justify-center">
+                                                                    <FileText className="h-5 w-5 text-gray-500 dark:text-slate-400" />
+                                                                </div>
+                                                            )}
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{file.name}</p>
+                                                                <p className="text-xs text-gray-500 dark:text-slate-400">
+                                                                    {(file.size / 1024 / 1024).toFixed(2)} MB
+                                                                </p>
+                                                            </div>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={() => setUploadedFiles(prev => prev.filter((_, i) => i !== index))}
+                                                                className="text-gray-400 hover:text-rose-500"
+                                                            >
+                                                                <X className="h-4 w-4" />
+                                                            </Button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+
+                                                {/* Add more button */}
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="w-full gap-2"
+                                                    onClick={() => fileInputRef.current?.click()}
+                                                >
+                                                    <Paperclip className="h-4 w-4" />
+                                                    Anexar Mais Arquivos
+                                                </Button>
+                                            </div>
+                                        )}
                                     </div>
-                                </div>
+                                )}
+
+                                {/* Tab Content: Propostas */}
+                                {activeTab === "propostas" && (
+                                    <div className="p-6">
+                                        <div className="flex flex-col items-center justify-center py-12 text-gray-400 dark:text-slate-500">
+                                            <FileText className="h-10 w-10 mb-3 opacity-50" />
+                                            <p className="text-sm font-medium">Nenhuma proposta criada</p>
+                                            <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">Crie propostas para enviar ao cliente</p>
+                                            <Button variant="outline" size="sm" className="mt-4 gap-2">
+                                                <FileText className="h-4 w-4" />
+                                                Nova Proposta
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Notes Section */}
@@ -715,6 +937,14 @@ export default function DealCommandCenter() {
                     onClose={() => setShowLostModal(false)}
                     onConfirm={handleLost}
                     dealTitle={deal.title || "Deal"}
+                />
+
+                {/* Task Modal */}
+                <NovaTarefaModal
+                    open={showTaskModal}
+                    onClose={() => setShowTaskModal(false)}
+                    dealId={id || ""}
+                    dealTitle={deal.title}
                 />
             </div>
         </AppLayout>

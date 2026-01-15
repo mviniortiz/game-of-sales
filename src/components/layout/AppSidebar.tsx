@@ -1,11 +1,13 @@
+import { useState } from "react";
 import { Home, Trophy, PlusCircle, Target, PhoneCall, Shield, LogOut, User, Settings, Calendar, Kanban, Lock } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePlan } from "@/hooks/usePlan";
-import { CompanySwitcher } from "./CompanySwitcher";
 import brandLogo from "@/assets/logo-full.png";
 import brandLogoIcon from "@/assets/logo-icon.png";
+import { AnimatedIcon } from "@/components/ui/animated-icon";
+import { NovaVendaModal } from "@/components/vendas/NovaVendaModal";
 import {
   Sidebar,
   SidebarContent,
@@ -59,6 +61,7 @@ export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const collapsed = state === "collapsed";
+  const [isNovaVendaOpen, setIsNovaVendaOpen] = useState(false);
 
   // Filter menu items based on plan features
   const filteredVisaoGeralItems = visaoGeralItems.filter(item => {
@@ -98,18 +101,13 @@ export function AppSidebar() {
             )}
           </div>
 
-          {/* God Mode - Company Switcher (Super Admin Only) */}
-          <div className="px-4 pt-4">
-            <CompanySwitcher />
-          </div>
-
           {/* CTA Button - Registrar Venda */}
           <div className="p-4" data-tour="register-sale-btn">
             {collapsed ? (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    onClick={() => navigate("/nova-venda")}
+                    onClick={() => setIsNovaVendaOpen(true)}
                     className="w-full bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-semibold shadow-md hover:shadow-lg transition-all h-12 gap-2"
                   >
                     <PlusCircle className="h-5 w-5" />
@@ -121,7 +119,7 @@ export function AppSidebar() {
               </Tooltip>
             ) : (
               <Button
-                onClick={() => navigate("/nova-venda")}
+                onClick={() => setIsNovaVendaOpen(true)}
                 className="w-full bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-semibold shadow-md hover:shadow-lg transition-all h-12 gap-2"
               >
                 <PlusCircle className="h-5 w-5" />
@@ -153,7 +151,7 @@ export function AppSidebar() {
                                 className="flex items-center gap-3 hover:bg-sidebar-accent transition-all group py-2.5"
                                 activeClassName="bg-indigo-50 text-indigo-600 font-medium border-l-4 border-indigo-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
                               >
-                                <item.icon className={`h-5 w-5 transition-colors ${isActive ? 'text-indigo-500' : 'text-muted-foreground'}`} />
+                                <AnimatedIcon icon={item.icon} isActive={isActive} />
                               </NavLink>
                             </SidebarMenuButton>
                           </TooltipTrigger>
@@ -169,7 +167,7 @@ export function AppSidebar() {
                             className="flex items-center gap-3 hover:bg-sidebar-accent transition-all group py-2.5"
                             activeClassName="bg-indigo-50 text-indigo-600 font-medium border-l-4 border-indigo-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
                           >
-                            <item.icon className={`h-5 w-5 transition-colors ${isActive ? 'text-indigo-500' : 'text-muted-foreground'}`} />
+                            <AnimatedIcon icon={item.icon} isActive={isActive} />
                             <span className="flex-1">{item.title}</span>
                           </NavLink>
                         </SidebarMenuButton>
@@ -204,7 +202,7 @@ export function AppSidebar() {
                                 className="flex items-center gap-3 hover:bg-sidebar-accent transition-all group py-2.5"
                                 activeClassName="bg-indigo-50 text-indigo-600 font-medium border-l-4 border-indigo-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
                               >
-                                <item.icon className={`h-5 w-5 transition-colors ${isActive ? 'text-indigo-500' : 'text-muted-foreground'}`} />
+                                <AnimatedIcon icon={item.icon} isActive={isActive} />
                               </NavLink>
                             </SidebarMenuButton>
                           </TooltipTrigger>
@@ -220,7 +218,7 @@ export function AppSidebar() {
                             className="flex items-center gap-3 hover:bg-sidebar-accent transition-all group py-2.5"
                             activeClassName="bg-indigo-50 text-indigo-600 font-medium border-l-4 border-indigo-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
                           >
-                            <item.icon className={`h-5 w-5 transition-colors ${isActive ? 'text-indigo-500' : 'text-muted-foreground'}`} />
+                            <AnimatedIcon icon={item.icon} isActive={isActive} />
                             <span className="flex-1">{item.title}</span>
                           </NavLink>
                         </SidebarMenuButton>
@@ -253,7 +251,7 @@ export function AppSidebar() {
                               className="flex items-center gap-3 hover:bg-sidebar-accent transition-all group py-2.5"
                               activeClassName="bg-indigo-50 text-indigo-600 font-medium border-l-4 border-indigo-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
                             >
-                              <adminMenuItem.icon className={`h-5 w-5 transition-colors ${location.pathname === adminMenuItem.url ? 'text-indigo-500' : 'text-muted-foreground'}`} />
+                              <AnimatedIcon icon={adminMenuItem.icon} isActive={location.pathname === adminMenuItem.url} />
                             </NavLink>
                           </SidebarMenuButton>
                         </TooltipTrigger>
@@ -269,7 +267,7 @@ export function AppSidebar() {
                           className="flex items-center gap-3 hover:bg-sidebar-accent transition-all group py-2.5"
                           activeClassName="bg-indigo-50 text-indigo-600 font-medium border-l-4 border-indigo-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
                         >
-                          <adminMenuItem.icon className={`h-5 w-5 transition-colors ${location.pathname === adminMenuItem.url ? 'text-indigo-500' : 'text-muted-foreground'}`} />
+                          <AnimatedIcon icon={adminMenuItem.icon} isActive={location.pathname === adminMenuItem.url} />
                           <span className="flex-1">{adminMenuItem.title}</span>
                         </NavLink>
                       </SidebarMenuButton>
@@ -358,6 +356,12 @@ export function AppSidebar() {
           )}
         </SidebarFooter>
       </Sidebar>
+
+      {/* Nova Venda Modal */}
+      <NovaVendaModal
+        open={isNovaVendaOpen}
+        onClose={() => setIsNovaVendaOpen(false)}
+      />
     </TooltipProvider>
   );
 }

@@ -56,26 +56,26 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
           .single();
 
         if (profileData) {
-          setIsSuperAdmin(profileData.is_super_admin || false);
+          const isSuperAdminUser = profileData.is_super_admin === true;
+          setIsSuperAdmin(isSuperAdminUser);
 
-          // If super admin, load all companies
-          if (profileData.is_super_admin) {
-            const { data: companiesData } = await supabase
+          if (isSuperAdminUser) {
+            // Super admin can see all companies
+            const { data: allCompanies } = await supabase
               .from('companies')
               .select('*')
               .order('name');
 
-            if (companiesData) {
-              setCompanies(companiesData);
-              // Prefer stored selection if valid; otherwise fallback to first
-              const validStored = companiesData.find(c => c.id === storedCompanyId)?.id;
-              setActiveCompanyId(validStored || profileData.company_id || companiesData[0]?.id || null);
-              if (validStored) {
-                localStorage.setItem('activeCompanyId', validStored);
-              }
+            if (allCompanies) {
+              setCompanies(allCompanies);
+              // Use stored company or first one
+              const targetCompany = storedCompanyId && allCompanies.find(c => c.id === storedCompanyId)
+                ? storedCompanyId
+                : allCompanies[0]?.id || null;
+              setActiveCompanyId(targetCompany);
             }
           } else {
-            // Regular user, load only their company
+            // Regular users load only their own company
             const { data: companyData } = await supabase
               .from('companies')
               .select('*')

@@ -185,22 +185,21 @@ export const CallsFilters = ({
             </span>
           ) : (
             activeFilters.map((f) => (
-              <Button
+              <div
                 key={f.key}
-                variant="secondary"
-                size="sm"
-                className="h-8 rounded-full px-3 text-xs bg-muted text-foreground border-border hover:bg-muted/80 dark:bg-white/10 dark:text-white"
+                className="h-8 rounded-full px-3 text-xs bg-muted text-foreground border border-border flex items-center gap-1 dark:bg-white/10 dark:text-white"
               >
                 <span className="font-semibold text-primary">{f.label}:</span>
                 <span className="ml-1">{f.value}</span>
-                <X
-                  className="ml-2 h-3.5 w-3.5 text-muted-foreground hover:text-foreground"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleRemoveFilter(f.key);
-                  }}
-                />
-              </Button>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveFilter(f.key)}
+                  className="ml-2 p-0.5 rounded-full hover:bg-rose-100 dark:hover:bg-rose-500/20 transition-colors"
+                  aria-label={`Remover filtro ${f.label}`}
+                >
+                  <X className="h-3.5 w-3.5 text-muted-foreground hover:text-rose-500 cursor-pointer" />
+                </button>
+              </div>
             ))
           )}
         </div>
@@ -278,7 +277,7 @@ export const CallsFilters = ({
                   <SelectValue placeholder="Todos" />
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border">
-                  <SelectItem value="todos">Todos os vendedores</SelectItem>
+                  <SelectItem value="todos">Vendedores</SelectItem>
                   {vendedores.map((v) => (
                     <SelectItem key={v.id} value={v.id}>
                       {v.nome}

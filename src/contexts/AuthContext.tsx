@@ -46,7 +46,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .select("nome, avatar_url, is_super_admin, company_id")
         .eq("id", userId)
         .single();
-      
+
       if (data) {
         setProfile(data);
         setIsSuperAdmin(data.is_super_admin || false);
@@ -84,7 +84,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           .eq("user_id", userId)
           .eq("role", "admin")
           .maybeSingle();
-        
+
         if (mounted) {
           setIsAdmin(!!data);
         }
@@ -111,7 +111,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         setSession(session);
         setUser(session?.user ?? null);
-        
+
         // Defer async operations to prevent blocking
         if (session?.user) {
           setTimeout(() => {
@@ -132,10 +132,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!mounted) return;
-      
+
       setSession(session);
       setUser(session?.user ?? null);
-      
+
       if (session?.user) {
         Promise.all([
           checkAdminRole(session.user.id),
@@ -159,7 +159,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signUp = async (email: string, password: string, nome: string, companyId?: string) => {
     const redirectUrl = `${window.location.origin}/`;
-    
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -171,11 +171,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       }
     });
-    
+
     if (!error) {
-      navigate("/");
+      navigate("/dashboard");
     }
-    
+
     return { error };
   };
 
@@ -184,11 +184,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       email,
       password,
     });
-    
+
     if (!error) {
-      navigate("/");
+      navigate("/dashboard");
     }
-    
+
     return { error };
   };
 
@@ -204,18 +204,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      session, 
-      loading, 
-      isAdmin, 
+    <AuthContext.Provider value={{
+      user,
+      session,
+      loading,
+      isAdmin,
       isSuperAdmin,
       companyId,
-      profile, 
-      refreshProfile, 
-      signUp, 
-      signIn, 
-      signOut 
+      profile,
+      refreshProfile,
+      signUp,
+      signIn,
+      signOut
     }}>
       {children}
     </AuthContext.Provider>

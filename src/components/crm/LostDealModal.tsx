@@ -36,7 +36,7 @@ export const LostDealModal = ({ open, onClose, onConfirm, dealTitle }: LostDealM
 
   const handleConfirm = async () => {
     if (!selectedReason) return;
-    
+
     setIsLoading(true);
     try {
       const reasonLabel = LOSS_REASONS.find(r => r.id === selectedReason)?.label || selectedReason;
@@ -57,14 +57,14 @@ export const LostDealModal = ({ open, onClose, onConfirm, dealTitle }: LostDealM
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[480px] bg-slate-900/98 backdrop-blur-xl border-slate-800/80 shadow-2xl">
+      <DialogContent className="sm:max-w-[480px] max-h-[90vh] overflow-y-auto bg-slate-900/98 backdrop-blur-xl border-slate-800/80 shadow-2xl">
         <DialogHeader className="pb-4 border-b border-slate-800/60">
           <DialogTitle className="flex items-center gap-3 text-white">
             <div className="p-2.5 rounded-xl bg-rose-500/10 ring-1 ring-rose-500/20">
               <XCircle className="h-5 w-5 text-rose-400" />
             </div>
             <div>
-              <span className="text-lg font-semibold">Marcar como Perdido</span>
+              <span className="text-lg font-semibold">Marcar como Perdida</span>
               <p className="text-[12px] text-slate-500 font-normal mt-0.5 truncate max-w-[300px]">
                 {dealTitle}
               </p>
@@ -80,9 +80,9 @@ export const LostDealModal = ({ open, onClose, onConfirm, dealTitle }: LostDealM
             <Label className="text-[13px] text-slate-300 font-medium mb-3 block">
               Qual o motivo da perda?
             </Label>
-            
-            <RadioGroup 
-              value={selectedReason} 
+
+            <RadioGroup
+              value={selectedReason}
               onValueChange={setSelectedReason}
               className="space-y-2"
             >
@@ -91,8 +91,8 @@ export const LostDealModal = ({ open, onClose, onConfirm, dealTitle }: LostDealM
                   key={reason.id}
                   className={`
                     flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all
-                    border ${selectedReason === reason.id 
-                      ? "border-rose-500/50 bg-rose-500/10" 
+                    border ${selectedReason === reason.id
+                      ? "border-rose-500/50 bg-rose-500/10"
                       : "border-slate-700/50 bg-slate-800/30 hover:bg-slate-800/50"
                     }
                   `}

@@ -27,6 +27,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useTenant } from "@/contexts/TenantContext";
+import { logger } from "@/utils/logger";
 
 const Metas = () => {
   const { user, isAdmin } = useAuth();
@@ -43,7 +44,11 @@ const Metas = () => {
 
 
   const applyCompanyFilter = (query: any) => {
-    return activeCompanyId ? query.eq("company_id", activeCompanyId) : query;
+    // SECURITY: Always require a valid company_id to prevent data leakage
+    if (!activeCompanyId) {
+      return query.eq("company_id", "00000000-0000-0000-0000-000000000000");
+    }
+    return query.eq("company_id", activeCompanyId);
   };
 
   // Filter profiles join, not metas columns
@@ -109,7 +114,7 @@ const Metas = () => {
       const ultimoDia = new Date(yearNum, monthNum, 0).getDate(); // Último dia do mês
       const fimMes = `${year}-${month}-${String(ultimoDia).padStart(2, '0')}`;
 
-      console.log(`[Metas] Buscando vendas de ${inicioMes} até ${fimMes}`);
+      logger.log(`[Metas] Buscando vendas de ${inicioMes} até ${fimMes}`);
 
       const { data, error } = await applyCompanyFilter(
         supabase
@@ -122,7 +127,7 @@ const Metas = () => {
 
       if (error) throw error;
 
-      console.log(`[Metas] Vendas encontradas:`, data);
+      logger.log(`[Metas] Vendas encontradas:`, data);
       return data || [];
     },
     enabled: !!metaConsolidadaSelecionada,
@@ -138,7 +143,7 @@ const Metas = () => {
       const mesRef = metaConsolidadaSelecionada.mes_referencia;
 
       // Use exact match on mes_referencia (format: "YYYY-MM-01")
-      console.log(`[Metas] Buscando metas individuais para mes_referencia: ${mesRef}, company: ${activeCompanyId}`);
+      logger.log(`[Metas] Buscando metas individuais para mes_referencia: ${mesRef}, company: ${activeCompanyId}`);
 
       // First, fetch metas for this month and company (using same join syntax as AdminMetas)
       let metasQuery = supabase
@@ -154,11 +159,11 @@ const Metas = () => {
       const { data: metas, error: metasError } = await metasQuery;
 
       if (metasError) {
-        console.error("[Metas] Erro ao buscar metas individuais:", metasError);
+        logger.error("[Metas] Erro ao buscar metas individuais:", metasError);
         throw metasError;
       }
 
-      console.log(`[Metas] Metas individuais encontradas (raw):`, metas);
+      logger.log(`[Metas] Metas individuais encontradas (raw):`, metas);
 
       // Calculate total vendas by user from the already fetched vendas
       const vendasPorUsuario: { [key: string]: number } = {};

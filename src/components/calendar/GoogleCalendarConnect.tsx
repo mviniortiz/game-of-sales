@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays, Check, Loader2, RefreshCw } from "lucide-react";
+import { logger } from "@/utils/logger";
 
 export const GoogleCalendarConnect = () => {
   const { user } = useAuth();
@@ -57,21 +58,35 @@ export const GoogleCalendarConnect = () => {
     try {
       setConnecting(true);
       toast.loading("Iniciando conexão com Google Calendar...", { id: "google-connect" });
-      
+
+      logger.log("[GoogleCalendarConnect] Calling google-oauth-init for user:", user!.id);
+
       // Chamar edge function para obter URL de autorização
       const response = await supabase.functions.invoke("google-oauth-init", {
         body: { userId: user!.id },
       });
 
-      if (response.error) throw response.error;
+      logger.log("[GoogleCalendarConnect] Response:", response);
+
+      if (response.error) {
+        logger.error("[GoogleCalendarConnect] Error from function:", response.error);
+        throw new Error(response.error.message || "Erro na edge function");
+      }
+
+      if (!response.data?.authUrl) {
+        logger.error("[GoogleCalendarConnect] No authUrl in response:", response.data);
+        throw new Error("URL de autorização não retornada");
+      }
 
       toast.loading("Redirecionando para autenticação do Google...", { id: "google-connect" });
-      
+
       // Redirecionar para autorização do Google
+      logger.log("[GoogleCalendarConnect] Redirecting to:", response.data.authUrl);
       window.location.href = response.data.authUrl;
     } catch (error) {
-      console.error("Error initiating Google OAuth:", error);
-      toast.error("Erro ao iniciar conexão com Google Calendar", { id: "google-connect" });
+      logger.error("[GoogleCalendarConnect] Error initiating Google OAuth:", error);
+      const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
+      toast.error(`Erro ao conectar: ${errorMessage}`, { id: "google-connect" });
       setConnecting(false);
     }
   };
@@ -80,9 +95,9 @@ export const GoogleCalendarConnect = () => {
     try {
       setSyncing(true);
       toast.loading("Sincronizando eventos do Google Calendar...", { id: "google-sync" });
-      
-      console.log("[GoogleCalendarConnect] Starting sync for user:", user!.id);
-      
+
+      logger.log("[GoogleCalendarConnect] Starting sync for user:", user!.id);
+
       const response = await supabase.functions.invoke(
         "google-calendar-sync",
         {
@@ -93,19 +108,19 @@ export const GoogleCalendarConnect = () => {
         }
       );
 
-      console.log("[GoogleCalendarConnect] Response:", response);
+      logger.log("[GoogleCalendarConnect] Response:", response);
 
       if (response.error) {
-        console.error("[GoogleCalendarConnect] Error from function:", response.error);
+        logger.error("[GoogleCalendarConnect] Error from function:", response.error);
         throw response.error;
       }
-      
+
       toast.success(
         `${response.data?.synced || 0} eventos sincronizados do Google Calendar!`,
         { id: "google-sync" }
       );
     } catch (error) {
-      console.error("[GoogleCalendarConnect] Error syncing events:", error);
+      logger.error("[GoogleCalendarConnect] Error syncing events:", error);
       toast.error("Erro ao sincronizar eventos", { id: "google-sync" });
     } finally {
       setSyncing(false);
@@ -116,7 +131,7 @@ export const GoogleCalendarConnect = () => {
     try {
       setDisconnecting(true);
       toast.loading("Desconectando do Google Calendar...", { id: "google-disconnect" });
-      
+
       await supabase
         .from("profiles")
         .update({
@@ -130,7 +145,7 @@ export const GoogleCalendarConnect = () => {
       setIsConnected(false);
       toast.success("Desconectado do Google Calendar", { id: "google-disconnect" });
     } catch (error) {
-      console.error("Error disconnecting:", error);
+      logger.error("Error disconnecting:", error);
       toast.error("Erro ao desconectar", { id: "google-disconnect" });
     } finally {
       setDisconnecting(false);

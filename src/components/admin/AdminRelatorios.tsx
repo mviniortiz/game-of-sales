@@ -29,6 +29,7 @@ import { ComparativoVendedoresChart } from "./charts/ComparativoVendedoresChart"
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import { useTenant } from "@/contexts/TenantContext";
 import {
   AreaChart,
   Area,
@@ -111,8 +112,8 @@ const KPICard = ({
             <div className="flex items-center gap-2 mt-2">
               {trend !== undefined && (
                 <span className={`flex items-center text-sm font-semibold ${isPositive
-                    ? 'text-emerald-600 dark:text-emerald-400'
-                    : 'text-rose-600 dark:text-rose-400'
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : 'text-rose-600 dark:text-rose-400'
                   }`}>
                   <TrendIcon className="h-4 w-4 mr-0.5" />
                   {Math.abs(trend).toFixed(1)}%
@@ -212,6 +213,7 @@ const TopItem = ({ rank, name, subtitle, value, maxValue, currentValue, avatarUr
 };
 
 export const AdminRelatorios = () => {
+  const { activeCompanyId } = useTenant();
   const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
     from: startOfMonth(new Date()),
     to: endOfMonth(new Date()),
@@ -219,19 +221,23 @@ export const AdminRelatorios = () => {
 
   // Fetch profiles for avatar URLs
   const { data: profiles } = useQuery({
-    queryKey: ["profiles-avatars"],
+    queryKey: ["profiles-avatars", activeCompanyId],
     queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("id, nome, avatar_url");
+      if (!activeCompanyId) return [];
+      const { data } = await supabase.from("profiles").select("id, nome, avatar_url").eq("company_id", activeCompanyId);
       return data || [];
     },
+    enabled: !!activeCompanyId,
   });
 
   const { data: stats, isLoading } = useQuery({
-    queryKey: ["admin-stats", dateRange],
+    queryKey: ["admin-stats", dateRange, activeCompanyId],
     queryFn: async () => {
+      if (!activeCompanyId) return null;
       const { data: vendas, error } = await supabase
         .from("vendas")
         .select("*, profiles:user_id(id, nome, avatar_url)")
+        .eq("company_id", activeCompanyId)
         .gte("data_venda", dateRange.from.toISOString())
         .lte("data_venda", dateRange.to.toISOString());
 
@@ -248,6 +254,7 @@ export const AdminRelatorios = () => {
       const { data: prevVendas } = await supabase
         .from("vendas")
         .select("id, valor")
+        .eq("company_id", activeCompanyId)
         .gte("data_venda", prevStart.toISOString())
         .lte("data_venda", prevEnd.toISOString());
 
@@ -329,17 +336,20 @@ export const AdminRelatorios = () => {
         sparklineFaturamento,
       };
     },
+    enabled: !!activeCompanyId,
   });
 
   // Chart data queries
   const { data: evolucaoData } = useQuery({
-    queryKey: ["evolucao-vendas", dateRange],
+    queryKey: ["evolucao-vendas", dateRange, activeCompanyId],
     queryFn: async () => {
+      if (!activeCompanyId) return [];
       const sixMonthsAgo = subMonths(dateRange.from, 6);
 
       const { data: vendas, error } = await supabase
         .from("vendas")
         .select("data_venda, valor")
+        .eq("company_id", activeCompanyId)
         .gte("data_venda", sixMonthsAgo.toISOString())
         .order("data_venda");
 
@@ -363,14 +373,17 @@ export const AdminRelatorios = () => {
         faturamento: data.faturamento,
       }));
     },
+    enabled: !!activeCompanyId,
   });
 
   const { data: produtosData } = useQuery({
-    queryKey: ["distribuicao-produtos", dateRange],
+    queryKey: ["distribuicao-produtos", dateRange, activeCompanyId],
     queryFn: async () => {
+      if (!activeCompanyId) return [];
       const { data: vendas, error } = await supabase
         .from("vendas")
         .select("produto_nome, valor")
+        .eq("company_id", activeCompanyId)
         .gte("data_venda", dateRange.from.toISOString())
         .lte("data_venda", dateRange.to.toISOString());
 
@@ -391,14 +404,17 @@ export const AdminRelatorios = () => {
         vendas: data.vendas,
       }));
     },
+    enabled: !!activeCompanyId,
   });
 
   const { data: vendedoresData } = useQuery({
-    queryKey: ["comparativo-vendedores", dateRange],
+    queryKey: ["comparativo-vendedores", dateRange, activeCompanyId],
     queryFn: async () => {
+      if (!activeCompanyId) return [];
       const { data: vendas, error } = await supabase
         .from("vendas")
         .select("user_id, valor, profiles:user_id(nome)")
+        .eq("company_id", activeCompanyId)
         .gte("data_venda", dateRange.from.toISOString())
         .lte("data_venda", dateRange.to.toISOString());
 
@@ -423,6 +439,7 @@ export const AdminRelatorios = () => {
         .sort((a, b) => b.faturamento - a.faturamento)
         .slice(0, 10);
     },
+    enabled: !!activeCompanyId,
   });
 
   const formatCurrency = (value: number) => {

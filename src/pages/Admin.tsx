@@ -11,10 +11,12 @@ import { AdminRelatorios } from "@/components/admin/AdminRelatorios";
 import { AdminMetas } from "@/components/admin/AdminMetas";
 import { AdminManagement } from "@/components/profile/AdminManagement";
 import { AdminCompanies } from "@/components/admin/AdminCompanies";
+import { AdminProdutos } from "@/components/admin/AdminProdutos";
+import { AdminFormasPagamento } from "@/components/admin/AdminFormasPagamento";
 import { Button } from "@/components/ui/button";
 
 const Admin = () => {
-  const { isAdmin, loading } = useAuth();
+  const { isAdmin, isSuperAdmin, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -55,12 +57,14 @@ const Admin = () => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="vendedores" className="w-full">
-            <TabsList className="grid w-full grid-cols-6">
+            <TabsList className={`grid w-full ${isSuperAdmin ? 'grid-cols-8' : 'grid-cols-7'}`}>
               <TabsTrigger value="vendedores">Vendedores</TabsTrigger>
               <TabsTrigger value="vendas">Vendas</TabsTrigger>
+              <TabsTrigger value="produtos">Produtos</TabsTrigger>
+              <TabsTrigger value="pagamentos">Pagamentos</TabsTrigger>
               <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
               <TabsTrigger value="metas">Metas</TabsTrigger>
-              <TabsTrigger value="empresas">Empresas</TabsTrigger>
+              {isSuperAdmin && <TabsTrigger value="empresas">Empresas</TabsTrigger>}
               <TabsTrigger value="usuarios">Usuários</TabsTrigger>
             </TabsList>
 
@@ -72,6 +76,14 @@ const Admin = () => {
               <AdminVendas />
             </TabsContent>
 
+            <TabsContent value="produtos" className="mt-6">
+              <AdminProdutos />
+            </TabsContent>
+
+            <TabsContent value="pagamentos" className="mt-6">
+              <AdminFormasPagamento />
+            </TabsContent>
+
             <TabsContent value="relatorios" className="mt-6">
               <AdminRelatorios />
             </TabsContent>
@@ -80,9 +92,11 @@ const Admin = () => {
               <AdminMetas />
             </TabsContent>
 
-            <TabsContent value="empresas" className="mt-6">
-              <AdminCompanies />
-            </TabsContent>
+            {isSuperAdmin && (
+              <TabsContent value="empresas" className="mt-6">
+                <AdminCompanies />
+              </TabsContent>
+            )}
 
             <TabsContent value="usuarios" className="mt-6">
               <AdminManagement />

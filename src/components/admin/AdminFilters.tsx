@@ -47,7 +47,7 @@ export const AdminFilters = ({
   const setQuickRange = (range: string) => {
     const today = new Date();
     const from = new Date();
-    
+
     switch (range) {
       case "hoje":
         setDateRange({ from: today, to: today });
@@ -81,14 +81,14 @@ export const AdminFilters = ({
       : null,
     selectedVendedor !== "todos"
       ? {
-          key: "vendedor",
-          label: "Vendedor",
-          value: vendedores.find((v) => v.id === selectedVendedor)?.nome || "Selecionado",
-        }
+        key: "vendedor",
+        label: "Vendedor",
+        value: vendedores.find((v) => v.id === selectedVendedor)?.nome || "Selecionado",
+      }
       : null,
     setSelectedFormaPagamento &&
-    selectedFormaPagamento &&
-    selectedFormaPagamento !== "todas"
+      selectedFormaPagamento &&
+      selectedFormaPagamento !== "todas"
       ? { key: "formaPagamento", label: "Pagamento", value: selectedFormaPagamento }
       : null,
     setSelectedProduto && selectedProduto && selectedProduto !== "todos"
@@ -199,22 +199,20 @@ export const AdminFilters = ({
             </span>
           ) : (
             activeFilters.map((f) => (
-              <Button
+              <div
                 key={f.key}
-                variant="secondary"
-                size="sm"
-                className="h-8 rounded-full px-3 text-xs bg-indigo-50 border-indigo-100 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:border-indigo-500/30 dark:text-indigo-100"
+                className="inline-flex items-center h-8 rounded-full px-3 text-xs bg-indigo-50 border border-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:border-indigo-500/30 dark:text-indigo-100"
               >
                 <span className="font-semibold text-indigo-700 dark:text-indigo-100">{f.label}:</span>
                 <span className="ml-1 text-foreground">{f.value}</span>
-                <X
-                  className="ml-2 h-3.5 w-3.5 text-indigo-500 dark:text-indigo-200 hover:text-indigo-700 dark:hover:text-indigo-100"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleRemoveFilter(f.key);
-                  }}
-                />
-              </Button>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveFilter(f.key)}
+                  className="ml-2 p-0.5 rounded-full hover:bg-indigo-200 dark:hover:bg-indigo-500/30 transition-colors"
+                >
+                  <X className="h-3.5 w-3.5 text-indigo-500 dark:text-indigo-200 hover:text-indigo-700 dark:hover:text-indigo-100 cursor-pointer" />
+                </button>
+              </div>
             ))
           )}
         </div>
@@ -292,7 +290,7 @@ export const AdminFilters = ({
                 <SelectValue placeholder="Selecione um vendedor" />
               </SelectTrigger>
               <SelectContent className="z-50 bg-white dark:bg-card border border-gray-200 dark:border-border shadow-sm">
-                <SelectItem value="todos">Todos os vendedores</SelectItem>
+                <SelectItem value="todos">Vendedores</SelectItem>
                 {vendedores.map((v) => (
                   <SelectItem key={v.id} value={v.id}>
                     {v.nome}

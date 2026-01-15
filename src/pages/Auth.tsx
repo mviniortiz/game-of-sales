@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -72,7 +72,7 @@ const Auth = () => {
           {/* Back Button */}
           <Button
             variant="ghost"
-            onClick={() => navigate("/landing")}
+            onClick={() => navigate("/")}
             className="text-muted-foreground hover:text-foreground -ml-2"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -173,9 +173,9 @@ const Auth = () => {
             {/* Register Link */}
             <p className="text-center text-sm text-muted-foreground animate-fade-in" style={{ animationDelay: '0.8s', animationFillMode: 'both' }}>
               Não tem uma conta?{" "}
-              <a href="/register" className="text-indigo-600 hover:text-indigo-500 font-medium">
+              <Link to="/register" className="text-indigo-600 hover:text-indigo-500 font-medium">
                 Criar conta
-              </a>
+              </Link>
             </p>
           </form>
         </div>

@@ -27,7 +27,7 @@ serve(async (req) => {
   }
 
   try {
-    const { nome, email, sendPassword = true } = await req.json();
+    const { nome, email, sendPassword = true, companyId } = await req.json();
 
     if (!nome || !email) {
       return new Response(JSON.stringify({ error: "Nome e e-mail são obrigatórios" }), {
@@ -57,11 +57,17 @@ serve(async (req) => {
     // Envia convite (link de acesso)
     await supabaseAdmin.auth.admin.inviteUserByEmail(email);
 
-    // Atualiza/inclui profile
+    // Atualiza/inclui profile COM o company_id para associar à empresa
     if (created?.user?.id) {
       await supabaseAdmin
         .from("profiles")
-        .upsert({ id: created.user.id, nome, email }, { onConflict: "id" });
+        .upsert({
+          id: created.user.id,
+          nome,
+          email,
+          company_id: companyId || null, // Associa à empresa do admin
+          role: "vendedor",
+        }, { onConflict: "id" });
     }
 
     return new Response(JSON.stringify({ password }), {

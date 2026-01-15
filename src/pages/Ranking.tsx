@@ -13,6 +13,7 @@ import { Target, Loader2, Trophy, TrendingUp, RefreshCw, Users } from "lucide-re
 import { Button } from "@/components/ui/button";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { logger } from "@/utils/logger";
 
 interface VendedorRanking {
   user_id: string;
@@ -27,7 +28,7 @@ interface VendedorRanking {
 const Ranking = () => {
   const { isAdmin, isSuperAdmin, companyId } = useAuth();
   const { activeCompanyId } = useTenant();
-  
+
   // Determine which company to filter by for permissions
   const effectiveCompanyId = isSuperAdmin ? activeCompanyId : companyId;
 
@@ -35,16 +36,16 @@ const Ranking = () => {
   const hoje = new Date();
   const ano = hoje.getFullYear();
   const mes = hoje.getMonth(); // 0-indexed
-  
+
   // Create dates in local timezone
   const inicioMesDate = new Date(ano, mes, 1);
   const fimMesDate = new Date(ano, mes + 1, 0); // Last day of current month
-  
+
   const inicioMes = format(inicioMesDate, "yyyy-MM-dd");
   const fimMes = format(fimMesDate, "yyyy-MM-dd");
   const mesReferencia = format(inicioMesDate, "yyyy-MM-dd");
-  
-  console.log("[Ranking] Período:", { inicioMes, fimMes, mesReferencia });
+
+  logger.log("[Ranking] Período:", { inicioMes, fimMes, mesReferencia });
 
   // Fetch meta consolidada (optional - won't block ranking)
   const { data: metaAtual, isLoading: loadingMeta, refetch: refetchMeta } = useQuery({
@@ -73,15 +74,15 @@ const Ranking = () => {
   const { data: vendedoresRanking = [], isLoading: loadingVendedores, refetch: refetchVendedores } = useQuery({
     queryKey: ["vendedores-ranking", inicioMes, fimMes, effectiveCompanyId, isSuperAdmin],
     queryFn: async () => {
-      console.log("[Ranking] Buscando dados...", { 
-        inicioMes, 
-        fimMes, 
+      logger.log("[Ranking] Buscando dados...", {
+        inicioMes,
+        fimMes,
         effectiveCompanyId,
         isSuperAdmin,
         companyId,
-        activeCompanyId 
+        activeCompanyId
       });
-      
+
       // 1. Fetch profiles (sellers) scoped by company
       if (!effectiveCompanyId) return [];
 
@@ -94,19 +95,19 @@ const Ranking = () => {
       const { data: profiles, error: profilesError } = await profilesQuery;
 
       if (profilesError) {
-        console.error("[Ranking] Erro ao buscar profiles:", profilesError);
+        logger.error("[Ranking] Erro ao buscar profiles:", profilesError);
         throw profilesError;
       }
-      
-      console.log("[Ranking] Profiles encontrados:", profiles?.length, profiles);
+
+      logger.log("[Ranking] Profiles encontrados:", profiles?.length, profiles);
 
       // Get the user IDs from profiles to filter sales
       const userIds = profiles?.map(p => p.id) || [];
-      
-      console.log("[Ranking] User IDs:", userIds);
-      
+
+      logger.log("[Ranking] User IDs:", userIds);
+
       if (userIds.length === 0) {
-        console.log("[Ranking] Nenhum perfil encontrado - retornando vazio");
+        logger.log("[Ranking] Nenhum perfil encontrado - retornando vazio");
         return [];
       }
 
@@ -119,7 +120,7 @@ const Ranking = () => {
         .gte("data_venda", inicioMes)
         .lte("data_venda", fimMes)
         .in("user_id", userIds);
-      
+
       if (vendasError) throw vendasError;
 
       // 3. Fetch individual goals for this month
@@ -131,19 +132,19 @@ const Ranking = () => {
         .in("user_id", userIds);
 
       if (metasError) {
-        console.error("[Ranking] Erro ao buscar metas:", metasError);
+        logger.error("[Ranking] Erro ao buscar metas:", metasError);
         throw metasError;
       }
-      
-      console.log("[Ranking] Metas encontradas:", metas?.length);
+
+      logger.log("[Ranking] Metas encontradas:", metas?.length);
 
       // 4. Aggregate sales by user
       const vendasPorUsuario: Record<string, number> = {};
       vendas?.forEach((venda) => {
         vendasPorUsuario[venda.user_id] = (vendasPorUsuario[venda.user_id] || 0) + Number(venda.valor);
       });
-      
-      console.log("[Ranking] Vendas por usuário:", vendasPorUsuario);
+
+      logger.log("[Ranking] Vendas por usuário:", vendasPorUsuario);
 
       // 5. Map goals by user
       const metasPorUsuario: Record<string, number> = {};
@@ -155,8 +156,8 @@ const Ranking = () => {
       const ranking: VendedorRanking[] = (profiles || []).map((profile: any) => {
         const valorVendido = vendasPorUsuario[profile.id] || 0;
         const metaIndividual = metasPorUsuario[profile.id];
-        const percentualMeta = metaIndividual && metaIndividual > 0 
-          ? (valorVendido / metaIndividual) * 100 
+        const percentualMeta = metaIndividual && metaIndividual > 0
+          ? (valorVendido / metaIndividual) * 100
           : undefined;
 
         return {
@@ -244,8 +245,8 @@ const Ranking = () => {
     nome: v.nome,
     avatar_url: v.avatar_url || null,
     contribuicao: v.valor_vendido,
-    percentual_contribuicao: metaAtual 
-      ? (v.valor_vendido / Number(metaAtual.valor_meta)) * 100 
+    percentual_contribuicao: metaAtual
+      ? (v.valor_vendido / Number(metaAtual.valor_meta)) * 100
       : 0,
     posicao_ranking: index + 1,
     nivel: v.nivel,
@@ -325,27 +326,25 @@ const Ranking = () => {
                   {vendedoresRanking.map((vendedor, index) => {
                     const posicao = index + 1;
                     const hasIndividualMeta = vendedor.meta_individual && vendedor.meta_individual > 0;
-                    const progressValue = hasIndividualMeta 
+                    const progressValue = hasIndividualMeta
                       ? Math.min((vendedor.valor_vendido / vendedor.meta_individual!) * 100, 100)
                       : 100; // Full bar if no individual goal
 
                     return (
-                      <div 
+                      <div
                         key={vendedor.user_id}
-                        className={`flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 rounded-lg transition-all hover:scale-[1.01] gap-3 ${
-                          posicao <= 3 
-                            ? "bg-gradient-to-r from-primary/10 to-transparent border border-primary/20" 
+                        className={`flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 rounded-lg transition-all hover:scale-[1.01] gap-3 ${posicao <= 3
+                            ? "bg-gradient-to-r from-primary/10 to-transparent border border-primary/20"
                             : "bg-muted/30 hover:bg-muted/50"
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center gap-3 sm:gap-4">
                           {/* Position */}
-                          <div className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full font-bold text-sm sm:text-lg flex-shrink-0 ${
-                            posicao === 1 ? "bg-yellow-500 text-yellow-900" :
-                            posicao === 2 ? "bg-gray-300 text-gray-700" :
-                            posicao === 3 ? "bg-amber-600 text-amber-100" :
-                            "bg-muted text-muted-foreground"
-                          }`}>
+                          <div className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full font-bold text-sm sm:text-lg flex-shrink-0 ${posicao === 1 ? "bg-yellow-500 text-yellow-900" :
+                              posicao === 2 ? "bg-gray-300 text-gray-700" :
+                                posicao === 3 ? "bg-amber-600 text-amber-100" :
+                                  "bg-muted text-muted-foreground"
+                            }`}>
                             {posicao <= 3 ? (
                               posicao === 1 ? "🥇" : posicao === 2 ? "🥈" : "🥉"
                             ) : (
@@ -369,15 +368,15 @@ const Ranking = () => {
                                 {vendedor.nivel || 'Bronze'}
                               </Badge>
                             </div>
-                            
+
                             {/* Progress Bar - Hidden on mobile, shown in separate row */}
                             <div className="hidden sm:flex mt-2 items-center gap-2">
-                              <Progress 
-                                value={progressValue} 
+                              <Progress
+                                value={progressValue}
                                 className={`h-2 flex-1 ${!hasIndividualMeta ? 'opacity-50' : ''}`}
                               />
                               <span className="text-xs text-muted-foreground w-16 text-right">
-                                {hasIndividualMeta 
+                                {hasIndividualMeta
                                   ? `${vendedor.percentual_meta?.toFixed(0)}%`
                                   : "Sem meta"
                                 }
@@ -401,8 +400,8 @@ const Ranking = () => {
                         {/* Mobile: Value and Progress */}
                         <div className="sm:hidden flex items-center justify-between pl-11">
                           <div className="flex-1 mr-3">
-                            <Progress 
-                              value={progressValue} 
+                            <Progress
+                              value={progressValue}
                               className={`h-1.5 ${!hasIndividualMeta ? 'opacity-50' : ''}`}
                             />
                           </div>
@@ -426,7 +425,7 @@ const Ranking = () => {
               <div className="flex items-center gap-3 text-amber-400">
                 <Target className="h-5 w-5" />
                 <p className="text-sm">
-                  {isAdmin 
+                  {isAdmin
                     ? "Nenhuma meta consolidada definida para este mês. Defina uma meta na página de Metas para acompanhar o progresso global."
                     : "Aguardando definição da meta consolidada do mês pelo administrador."}
                 </p>

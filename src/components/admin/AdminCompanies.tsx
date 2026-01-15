@@ -67,7 +67,6 @@ interface CompanyWithCounts {
 const getPlanBadge = (plan: string) => {
   switch (plan?.toLowerCase()) {
     case "pro":
-    case "enterprise":
       return (
         <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white border-0 shadow-sm">
           <Crown className="h-3 w-3 mr-1" />
@@ -323,7 +322,6 @@ export function AdminCompanies() {
                     <SelectItem value="free">Starter (Gratuito)</SelectItem>
                     <SelectItem value="plus">Plus</SelectItem>
                     <SelectItem value="pro">Pro</SelectItem>
-                    <SelectItem value="enterprise">Enterprise</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -376,8 +374,9 @@ export function AdminCompanies() {
             <TableRow className="bg-gray-50 dark:bg-slate-800/50 border-b border-gray-200 dark:border-slate-800">
               <TableHead className="text-gray-600 dark:text-gray-300 font-semibold">Empresa</TableHead>
               <TableHead className="text-gray-600 dark:text-gray-300 font-semibold">Plano</TableHead>
-              <TableHead className="text-gray-600 dark:text-gray-300 font-semibold text-center">Usuários</TableHead>
+              <TableHead className="text-gray-600 dark:text-gray-300 font-semibold text-center">Vendedores</TableHead>
               <TableHead className="text-gray-600 dark:text-gray-300 font-semibold text-center">Produtos</TableHead>
+              <TableHead className="text-gray-600 dark:text-gray-300 font-semibold">Data de Criação</TableHead>
               <TableHead className="text-gray-600 dark:text-gray-300 font-semibold">Status</TableHead>
               <TableHead className="text-gray-600 dark:text-gray-300 font-semibold text-right">Ações</TableHead>
             </TableRow>
@@ -385,13 +384,13 @@ export function AdminCompanies() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-12 text-gray-500">
+                <TableCell colSpan={7} className="text-center py-12 text-gray-500">
                   Carregando empresas...
                 </TableCell>
               </TableRow>
             ) : filteredCompanies.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-12">
+                <TableCell colSpan={7} className="text-center py-12">
                   <Building2 className="h-12 w-12 mx-auto text-gray-300 dark:text-gray-700 mb-3" />
                   <p className="text-gray-500 dark:text-gray-400">Nenhuma empresa encontrada</p>
                 </TableCell>
@@ -444,6 +443,13 @@ export function AdminCompanies() {
                       <Package className="h-4 w-4 text-gray-400" />
                       <span className="font-medium">{company.product_count}</span>
                     </div>
+                  </TableCell>
+
+                  {/* Data de Criação */}
+                  <TableCell>
+                    <span className="text-sm text-gray-600 dark:text-gray-300">
+                      {new Date(company.created_at).toLocaleDateString('pt-BR')}
+                    </span>
                   </TableCell>
 
                   {/* Status */}
@@ -525,7 +531,6 @@ export function AdminCompanies() {
                     <SelectItem value="free">Starter</SelectItem>
                     <SelectItem value="plus">Plus</SelectItem>
                     <SelectItem value="pro">Pro</SelectItem>
-                    <SelectItem value="enterprise">Enterprise</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

@@ -18,6 +18,7 @@ import {
     Loader2,
     HelpCircle,
     ShieldCheck,
+    Unlink,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -51,6 +52,7 @@ export const HotmartConfigModal = ({ open, onClose, onSaved }: HotmartConfigModa
     const [isActive, setIsActive] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [isDisconnecting, setIsDisconnecting] = useState(false);
     const [copied, setCopied] = useState(false);
     const [configId, setConfigId] = useState<string | null>(null);
 
@@ -140,12 +142,40 @@ export const HotmartConfigModal = ({ open, onClose, onSaved }: HotmartConfigModa
         }
     };
 
+    const handleDisconnect = async () => {
+        if (!configId) return;
+
+        setIsDisconnecting(true);
+        try {
+            const { error } = await supabase
+                .from("integration_configs" as any)
+                .update({ is_active: false, hottok: null })
+                .eq("id", configId);
+
+            if (error) throw error;
+
+            // Clear local state
+            setIsActive(false);
+            setHottok("");
+
+            toast.success("Integração desconectada com sucesso!");
+            onSaved?.();
+            onClose();
+        } catch (error: any) {
+            console.error("Error disconnecting:", error);
+            toast.error("Erro ao desconectar: " + error.message);
+        } finally {
+            setIsDisconnecting(false);
+        }
+    };
+
     const handleCopyUrl = () => {
         navigator.clipboard.writeText(WEBHOOK_URL);
         setCopied(true);
         toast.success("URL copiada!");
         setTimeout(() => setCopied(false), 2000);
     };
+
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
@@ -279,18 +309,40 @@ export const HotmartConfigModal = ({ open, onClose, onSaved }: HotmartConfigModa
                 )}
 
                 {/* Footer */}
-                <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
-                    <Button variant="outline" onClick={onClose}>
-                        Cancelar
-                    </Button>
-                    <Button
-                        onClick={handleSave}
-                        disabled={isSaving || !hottok.trim()}
-                        className="bg-indigo-600 hover:bg-indigo-500"
-                    >
-                        {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                        Salvar Configuração
-                    </Button>
+                <div className="flex justify-between pt-4 border-t border-slate-200 dark:border-slate-800">
+                    {/* Left side - Disconnect button (only when connected) */}
+                    <div>
+                        {configId && isActive && (
+                            <Button
+                                variant="ghost"
+                                onClick={handleDisconnect}
+                                disabled={isDisconnecting}
+                                className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:text-rose-400 dark:hover:text-rose-300 dark:hover:bg-rose-500/10"
+                            >
+                                {isDisconnecting ? (
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                ) : (
+                                    <Unlink className="w-4 h-4 mr-2" />
+                                )}
+                                Desconectar
+                            </Button>
+                        )}
+                    </div>
+
+                    {/* Right side - Cancel and Save */}
+                    <div className="flex gap-3">
+                        <Button variant="outline" onClick={onClose}>
+                            Cancelar
+                        </Button>
+                        <Button
+                            onClick={handleSave}
+                            disabled={isSaving || !hottok.trim()}
+                            className="bg-indigo-600 hover:bg-indigo-500"
+                        >
+                            {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                            Salvar Configuração
+                        </Button>
+                    </div>
                 </div>
             </DialogContent>
         </Dialog>

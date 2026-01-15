@@ -3,16 +3,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { AdminDashboardOverview } from "@/components/dashboard/AdminDashboardOverview";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  DollarSign, 
-  TrendingUp, 
-  ShoppingCart, 
-  Target, 
+import {
+  DollarSign,
+  TrendingUp,
+  ShoppingCart,
+  Target,
   UserCheck,
   ArrowUpRight,
   ArrowDownRight,
   BarChart3,
-  Sparkles
+  Sparkles,
+  Percent
 } from "lucide-react";
 import {
   AreaChart,
@@ -41,7 +42,7 @@ const formatCurrencyCompact = (value: number) => {
   if (value >= 1000) {
     return `R$ ${(value / 1000).toFixed(1).replace('.', ',')} k`;
   }
-  return `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  return `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} `;
 };
 
 const formatCurrency = (value: number) => {
@@ -65,33 +66,33 @@ interface KPICardProps {
   glowColor?: string;
 }
 
-const KPICard = ({ 
-  title, 
-  value, 
+const KPICard = ({
+  title,
+  value,
   fullValue,
-  subtitle, 
-  icon: Icon, 
-  trend, 
+  subtitle,
+  icon: Icon,
+  trend,
   trendLabel,
   iconColor = "text-indigo-600 dark:text-indigo-200",
   iconBg = "bg-indigo-50 dark:bg-indigo-500/10",
 }: KPICardProps) => {
   const isPositive = trend && trend > 0;
   const TrendIcon = isPositive ? ArrowUpRight : ArrowDownRight;
-  
+
   const cardContent = (
     <Card className="relative overflow-hidden bg-card border-border shadow-sm hover:shadow-md transition-all duration-300 group cursor-default">
       <CardContent className="relative p-5">
         <div className="flex items-start justify-between gap-4">
           {/* Left: Icon */}
           <div className={`
-            relative p-3 rounded-2xl ${iconBg}
-            group-hover:scale-105
-            transition-all duration-200 ease-out
-          `}>
-            <Icon className={`h-6 w-6 ${iconColor} relative z-10`} />
+            relative p - 3 rounded - 2xl ${iconBg}
+group - hover: scale - 105
+transition - all duration - 200 ease - out
+  `}>
+            <Icon className={`h - 6 w - 6 ${iconColor} relative z - 10`} />
           </div>
-          
+
           {/* Right: Content */}
           <div className="flex-1 text-right">
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.1em] mb-2">
@@ -100,18 +101,18 @@ const KPICard = ({
             <p className="text-3xl font-bold text-foreground tabular-nums tracking-tight leading-none">
               {value}
             </p>
-            
+
             {/* Trend or Subtitle */}
             <div className="flex items-center justify-end gap-2 mt-2">
               {trend !== undefined && (
                 <span className={`
-                  inline-flex items-center gap-0.5 
-                  px-2 py-0.5 rounded-full text-[11px] font-semibold
-                  ${isPositive 
-                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 ring-1 ring-emerald-200/80 dark:ring-emerald-500/20' 
+inline - flex items - center gap - 0.5
+px - 2 py - 0.5 rounded - full text - [11px] font - semibold
+                  ${isPositive
+                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 ring-1 ring-emerald-200/80 dark:ring-emerald-500/20'
                     : 'bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300 ring-1 ring-rose-200/80 dark:ring-rose-500/20'
                   }
-                `}>
+`}>
                   <TrendIcon className="h-3 w-3" />
                   {Math.abs(trend).toFixed(1)}%
                 </span>
@@ -135,8 +136,8 @@ const KPICard = ({
         <TooltipTrigger asChild>
           {cardContent}
         </TooltipTrigger>
-        <TooltipContent 
-          side="bottom" 
+        <TooltipContent
+          side="bottom"
           className="bg-slate-900/95 border-white/10 text-white font-mono"
         >
           {fullValue}
@@ -167,7 +168,7 @@ const Dashboard = () => {
         .select("*")
         .eq("user_id", user?.id)
         .gte("data_venda", startOfMonthDate);
-      
+
       if (error) throw error;
       return data;
     },
@@ -185,9 +186,9 @@ const Dashboard = () => {
         .eq("status", "Aprovado")
         .gte("data_venda", startOfMonthDate)
         .order("data_venda", { ascending: true });
-      
+
       if (error) throw error;
-      
+
       // Group by date
       const grouped = (data || []).reduce((acc: Record<string, number>, v) => {
         const date = format(new Date(v.data_venda), "dd/MM");
@@ -206,7 +207,7 @@ const Dashboard = () => {
           valor: grouped[dateKey] || 0,
         });
       }
-      
+
       return result;
     },
     enabled: !!user?.id,
@@ -220,9 +221,9 @@ const Dashboard = () => {
         .select("produto_nome, valor")
         .eq("user_id", user?.id)
         .gte("data_venda", startOfMonthDate);
-      
+
       if (error) throw error;
-      
+
       const agregado = data.reduce((acc: any, venda) => {
         const produto = venda.produto_nome;
         if (!acc[produto]) {
@@ -232,7 +233,7 @@ const Dashboard = () => {
         acc[produto].total += Number(venda.valor);
         return acc;
       }, {});
-      
+
       return Object.values(agregado).sort((a: any, b: any) => b.total - a.total).slice(0, 5) as Array<{ produto: string; quantidade: number; total: number }>;
     },
     enabled: !!user?.id,
@@ -246,7 +247,7 @@ const Dashboard = () => {
         .select("*")
         .eq("id", user?.id)
         .single();
-      
+
       if (error) throw error;
       return data;
     },
@@ -262,14 +263,47 @@ const Dashboard = () => {
         .select("id, attendance_status")
         .eq("user_id", user?.id)
         .gte("data_call", startOfMonthDate);
-      
+
       if (error) throw error;
-      
+
       const totalCalls = calls?.length || 0;
       const showCalls = calls?.filter((c: any) => c.attendance_status === 'show').length || 0;
       const showRate = totalCalls > 0 ? (showCalls / totalCalls) * 100 : 0;
-      
+
       return { totalCalls, showCalls, showRate };
+    },
+    enabled: !!user?.id,
+  });
+
+  // Conversion Rate KPI (Calls Realizadas -> Vendas)
+  const { data: conversionRateData } = useQuery({
+    queryKey: ["conversion-rate", user?.id],
+    queryFn: async () => {
+      // Get calls that were realized (status = show)
+      const { data: calls, error: callsError } = await supabase
+        .from("calls")
+        .select("id")
+        .eq("user_id", user?.id)
+        .eq("attendance_status", "show")
+        .gte("data_call", startOfMonthDate);
+
+      if (callsError) throw callsError;
+
+      // Get approved sales in the same period
+      const { data: sales, error: salesError } = await supabase
+        .from("vendas")
+        .select("id")
+        .eq("user_id", user?.id)
+        .eq("status", "Aprovado")
+        .gte("data_venda", startOfMonthDate);
+
+      if (salesError) throw salesError;
+
+      const callsRealizadas = calls?.length || 0;
+      const vendasRealizadas = sales?.length || 0;
+      const conversionRate = callsRealizadas > 0 ? (vendasRealizadas / callsRealizadas) * 100 : 0;
+
+      return { callsRealizadas, vendasRealizadas, conversionRate };
     },
     enabled: !!user?.id,
   });
@@ -285,7 +319,7 @@ const Dashboard = () => {
         .eq("user_id", user?.id)
         .eq("mes_referencia", mesRef)
         .maybeSingle();
-      
+
       if (error) throw error;
       return data;
     },
@@ -316,8 +350,8 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Row 1: KPI Cards - 4 columns */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+      {/* Row 1: KPI Cards - 5 columns */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
         <KPICard
           title="Faturamento"
           value={formatCurrencyCompact(totalVendas)}
@@ -353,7 +387,7 @@ const Dashboard = () => {
         />
         <KPICard
           title="Taxa de Show"
-          value={`${(showRateData?.showRate || 0).toFixed(0)}%`}
+          value={`${(showRateData?.showRate || 0).toFixed(0)}% `}
           subtitle={`${showRateData?.showCalls || 0}/${showRateData?.totalCalls || 0} calls`}
           icon={UserCheck}
           trend={showRateData?.showRate ? showRateData.showRate - 75 : 0}
@@ -361,6 +395,17 @@ const Dashboard = () => {
           iconColor="text-amber-400"
           iconBg="bg-amber-500/10"
           glowColor="shadow-amber-500/20"
+        />
+        <KPICard
+          title="Taxa de Conversão"
+          value={`${(conversionRateData?.conversionRate || 0).toFixed(0)}%`}
+          subtitle={`${conversionRateData?.vendasRealizadas || 0}/${conversionRateData?.callsRealizadas || 0} vendas`}
+          icon={Percent}
+          trend={conversionRateData?.conversionRate ? conversionRateData.conversionRate - 30 : 0}
+          trendLabel="vs média"
+          iconColor="text-rose-400"
+          iconBg="bg-rose-500/10"
+          glowColor="shadow-rose-500/20"
         />
       </div>
 
@@ -386,21 +431,21 @@ const Dashboard = () => {
               <AreaChart data={vendasEvolution || []} margin={{ top: 20, right: 10, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorValor" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#6366F1" stopOpacity={0.5}/>
-                    <stop offset="50%" stopColor="#4F46E5" stopOpacity={0.2}/>
-                    <stop offset="100%" stopColor="#4F46E5" stopOpacity={0}/>
+                    <stop offset="0%" stopColor="#6366F1" stopOpacity={0.5} />
+                    <stop offset="50%" stopColor="#4F46E5" stopOpacity={0.2} />
+                    <stop offset="100%" stopColor="#4F46E5" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.25)" vertical={false} />
-                <XAxis 
-                  dataKey="date" 
+                <XAxis
+                  dataKey="date"
                   stroke="rgba(100,116,139,0.6)"
                   fontSize={10}
                   tickLine={false}
                   axisLine={false}
                   dy={10}
                 />
-                <YAxis 
+                <YAxis
                   stroke="rgba(100,116,139,0.6)"
                   fontSize={10}
                   tickLine={false}
@@ -418,7 +463,7 @@ const Dashboard = () => {
                   }}
                   labelStyle={{ color: "var(--muted-foreground)", fontSize: 11, marginBottom: 4 }}
                   formatter={(value: number) => [
-                    <span className="text-foreground font-semibold">{formatCurrency(value)}</span>, 
+                    <span className="text-foreground font-semibold">{formatCurrency(value)}</span>,
                     "Faturamento"
                   ]}
                 />
@@ -429,10 +474,10 @@ const Dashboard = () => {
                   strokeWidth={2.5}
                   fill="url(#colorValor)"
                   dot={false}
-                  activeDot={{ 
-                    r: 6, 
-                    fill: "#6366F1", 
-                    stroke: "#fff", 
+                  activeDot={{
+                    r: 6,
+                    fill: "#6366F1",
+                    stroke: "#fff",
                     strokeWidth: 2,
                     filter: "drop-shadow(0 0 8px rgba(99, 102, 241, 0.5))"
                   }}
@@ -440,10 +485,10 @@ const Dashboard = () => {
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
-        </Card>
+        </Card >
 
         {/* Secondary Chart - Top Products (40%) */}
-        <Card className="lg:col-span-2 relative overflow-hidden bg-card border-border shadow-sm">
+        < Card className="lg:col-span-2 relative overflow-hidden bg-card border-border shadow-sm" >
           <CardHeader className="pb-2 relative">
             <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
               <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/10">
@@ -455,8 +500,8 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent className="pt-0 relative">
             <ResponsiveContainer width="100%" height={280}>
-              <BarChart 
-                data={vendasPorProduto || []} 
+              <BarChart
+                data={vendasPorProduto || []}
                 layout="vertical"
                 margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
                 barSize={24}
@@ -468,7 +513,7 @@ const Dashboard = () => {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.25)" horizontal={false} />
-                <XAxis 
+                <XAxis
                   type="number"
                   stroke="rgba(100,116,139,0.6)"
                   fontSize={10}
@@ -476,7 +521,7 @@ const Dashboard = () => {
                   axisLine={false}
                   tickFormatter={(v) => formatCurrencyCompact(v)}
                 />
-                <YAxis 
+                <YAxis
                   type="category"
                   dataKey="produto"
                   stroke="rgba(100,116,139,0.6)"
@@ -495,87 +540,87 @@ const Dashboard = () => {
                     padding: "12px 16px",
                   }}
                   formatter={(value: number) => [
-                    <span className="text-emerald-600 dark:text-emerald-300 font-semibold">{formatCurrency(value)}</span>, 
+                    <span className="text-emerald-600 dark:text-emerald-300 font-semibold">{formatCurrency(value)}</span>,
                     "Total"
                   ]}
                 />
-                <Bar 
-                  dataKey="total" 
+                <Bar
+                  dataKey="total"
                   fill="url(#barGradient)"
                   radius={[0, 6, 6, 0]}
                 />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
-        </Card>
-      </div>
+        </Card >
+      </div >
 
       {/* Row 3: Meta Progress - Premium Card */}
-      {metaValor > 0 && (
-        <Card className="relative overflow-hidden bg-card border-border shadow-sm">
-          <CardContent className="relative p-5">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-4">
-                <div className="relative p-3 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 group-hover:scale-105 transition-transform">
-                  <Target className="h-6 w-6 text-indigo-600 dark:text-indigo-200 relative z-10" />
+      {
+        metaValor > 0 && (
+          <Card className="relative overflow-hidden bg-card border-border shadow-sm">
+            <CardContent className="relative p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-4">
+                  <div className="relative p-3 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 group-hover:scale-105 transition-transform">
+                    <Target className="h-6 w-6 text-indigo-600 dark:text-indigo-200 relative z-10" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Meta do Mês</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      <span className="text-emerald-600 dark:text-emerald-300 font-medium">{formatCurrency(totalVendas)}</span>
+                      <span className="mx-1.5 text-muted-foreground">/</span>
+                      <span>{formatCurrency(metaValor)}</span>
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">Meta do Mês</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    <span className="text-emerald-600 dark:text-emerald-300 font-medium">{formatCurrency(totalVendas)}</span>
-                    <span className="mx-1.5 text-muted-foreground">/</span>
-                    <span>{formatCurrency(metaValor)}</span>
+                <div className="text-right">
+                  <p className={`text-3xl font-bold tabular-nums ${metaProgress >= 100 ? 'text-emerald-600 dark:text-emerald-300' :
+                    metaProgress >= 70 ? 'text-indigo-600 dark:text-indigo-200' :
+                      'text-amber-500 dark:text-amber-300'
+                    }`}>
+                    {metaProgress.toFixed(1)}%
                   </p>
+                  <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">alcançado</p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className={`text-3xl font-bold tabular-nums ${
-                  metaProgress >= 100 ? 'text-emerald-600 dark:text-emerald-300' : 
-                  metaProgress >= 70 ? 'text-indigo-600 dark:text-indigo-200' : 
-                  'text-amber-500 dark:text-amber-300'
-                }`}>
-                  {metaProgress.toFixed(1)}%
-                </p>
-                <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">alcançado</p>
-              </div>
-            </div>
-            
-            {/* Premium Progress Bar */}
-            <div className="relative h-3 bg-muted rounded-full overflow-hidden ring-1 ring-border/60">
-              <div 
-                className={`absolute inset-y-0 left-0 rounded-full transition-all duration-1000 ease-out ${
-                  metaProgress >= 100 
-                    ? 'bg-gradient-to-r from-emerald-500 via-emerald-400 to-emerald-300' 
+
+              {/* Premium Progress Bar */}
+              <div className="relative h-3 bg-muted rounded-full overflow-hidden ring-1 ring-border/60">
+                <div
+                  className={`absolute inset-y-0 left-0 rounded-full transition-all duration-1000 ease-out ${metaProgress >= 100
+                    ? 'bg-gradient-to-r from-emerald-500 via-emerald-400 to-emerald-300'
                     : 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-400'
-                }`}
-                style={{ width: `${Math.min(metaProgress, 100)}%` }}
-              >
-                {/* Shimmer effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
+                    }`}
+                  style={{ width: `${Math.min(metaProgress, 100)}%` }}
+                >
+                  {/* Shimmer effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
+                </div>
+
+                {/* Milestone markers */}
+                <div className="absolute inset-0 flex justify-between px-0.5">
+                  {[25, 50, 75].map((milestone) => (
+                    <div
+                      key={milestone}
+                      className="w-px h-full bg-border"
+                      style={{ marginLeft: `${milestone}%` }}
+                    />
+                  ))}
+                </div>
               </div>
-              
-              {/* Milestone markers */}
-              <div className="absolute inset-0 flex justify-between px-0.5">
-                {[25, 50, 75].map((milestone) => (
-                  <div 
-                    key={milestone}
-                    className="w-px h-full bg-border"
-                    style={{ marginLeft: `${milestone}%` }}
-                  />
-                ))}
+
+              {/* Milestone labels */}
+              <div className="flex justify-between mt-2 px-1">
+                <span className="text-[10px] text-muted-foreground">0%</span>
+                <span className="text-[10px] text-muted-foreground">50%</span>
+                <span className="text-[10px] text-muted-foreground">100%</span>
               </div>
-            </div>
-            
-            {/* Milestone labels */}
-            <div className="flex justify-between mt-2 px-1">
-              <span className="text-[10px] text-muted-foreground">0%</span>
-              <span className="text-[10px] text-muted-foreground">50%</span>
-              <span className="text-[10px] text-muted-foreground">100%</span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+            </CardContent>
+          </Card>
+        )
+      }
+    </div >
   );
 };
 

@@ -135,9 +135,9 @@ export const AdminCompaniesPage = () => {
                   onChange={(e) => setPlan(e.target.value)}
                   className="w-full h-10 rounded-md border border-border bg-card text-foreground px-3"
                 >
-                  <option value="free">Free</option>
+                  <option value="free">Starter</option>
+                  <option value="plus">Plus</option>
                   <option value="pro">Pro</option>
-                  <option value="enterprise">Enterprise</option>
                 </select>
               </div>
             </div>

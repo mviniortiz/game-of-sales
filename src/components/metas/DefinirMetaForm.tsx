@@ -8,24 +8,29 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Target } from "lucide-react";
+import { useTenant } from "@/contexts/TenantContext";
 
 export const DefinirMetaForm = () => {
   const queryClient = useQueryClient();
+  const { activeCompanyId } = useTenant();
   const [userId, setUserId] = useState("");
   const [mesReferencia, setMesReferencia] = useState("");
   const [valorMeta, setValorMeta] = useState("");
 
   const { data: vendedores } = useQuery({
-    queryKey: ["vendedores-metas"],
+    queryKey: ["vendedores-metas", activeCompanyId],
     queryFn: async () => {
+      if (!activeCompanyId) return [];
       const { data, error } = await supabase
         .from("profiles")
         .select("id, nome, email")
+        .eq("company_id", activeCompanyId)
         .order("nome");
-      
+
       if (error) throw error;
       return data;
     },
+    enabled: !!activeCompanyId,
   });
 
   const definirMetaMutation = useMutation({

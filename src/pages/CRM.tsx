@@ -135,9 +135,13 @@ export interface Deal {
   } | null;
 }
 
-// LocalStorage key for pipeline config
-const PIPELINE_CONFIG_KEY = "gamesales_pipeline_config_v2";
-const LEGACY_PIPELINE_KEYS = ["vyzon_pipeline_config_v2"];
+// LocalStorage key for pipeline config - now includes company ID
+const PIPELINE_CONFIG_KEY_PREFIX = "gamesales_pipeline_config_v3_";
+const LEGACY_PIPELINE_KEYS = ["vyzon_pipeline_config_v2", "gamesales_pipeline_config_v2"];
+
+// Helper to get company-specific key
+const getPipelineConfigKey = (companyId: string | null) =>
+  companyId ? `${PIPELINE_CONFIG_KEY_PREFIX}${companyId}` : null;
 
 // Validate that loaded stages have valid structure (no longer filtering by enum)
 const validateStages = (stages: StageConfig[]): StageConfig[] => {
@@ -171,33 +175,44 @@ export default function CRM() {
   const [selectedSeller, setSelectedSeller] = useState<string>("all");
   const [dealToDelete, setDealToDelete] = useState<Deal | null>(null);
 
-  // Load stages from localStorage or use defaults
-  const [stageConfigs, setStageConfigs] = useState<StageConfig[]>(() => {
-    if (typeof window === "undefined") return DEFAULT_STAGES;
+  const effectiveCompanyId = isSuperAdmin ? activeCompanyId : companyId;
 
-    const saved =
-      localStorage.getItem(PIPELINE_CONFIG_KEY) ??
-      LEGACY_PIPELINE_KEYS.map((key) => localStorage.getItem(key)).find(Boolean);
+  // Load stages from localStorage based on company - defaults if none found
+  const [stageConfigs, setStageConfigs] = useState<StageConfig[]>(DEFAULT_STAGES);
+
+  // Reload stages when company changes
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const configKey = getPipelineConfigKey(effectiveCompanyId);
+
+    if (!configKey) {
+      // No company context - use defaults
+      setStageConfigs(DEFAULT_STAGES);
+      return;
+    }
+
+    const saved = localStorage.getItem(configKey);
 
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         const validated = validateStages(parsed);
-        localStorage.setItem(PIPELINE_CONFIG_KEY, JSON.stringify(validated));
-        LEGACY_PIPELINE_KEYS.forEach((key) => localStorage.removeItem(key));
-        return validated;
+        setStageConfigs(validated);
       } catch {
-        return DEFAULT_STAGES;
+        setStageConfigs(DEFAULT_STAGES);
       }
+    } else {
+      // No saved config for this company - use defaults
+      setStageConfigs(DEFAULT_STAGES);
     }
 
-    return DEFAULT_STAGES;
-  });
+    // Clean up legacy keys (one-time migration)
+    LEGACY_PIPELINE_KEYS.forEach((key) => localStorage.removeItem(key));
+  }, [effectiveCompanyId]);
 
   // Convert configs to full stage objects
   const STAGES = useMemo(() => stageConfigs.map(configToStage), [stageConfigs]);
-
-  const effectiveCompanyId = isSuperAdmin ? activeCompanyId : companyId;
 
   // Optimized sensors for fast, responsive drag
   const sensors = useSensors(
@@ -209,11 +224,13 @@ export default function CRM() {
     })
   );
 
-  // Save stages to localStorage when they change
+  // Save stages to localStorage when they change - now company-specific
   const handleSaveStages = (newConfigs: StageConfig[]) => {
     setStageConfigs(newConfigs);
-    localStorage.setItem(PIPELINE_CONFIG_KEY, JSON.stringify(newConfigs));
-    LEGACY_PIPELINE_KEYS.forEach((key) => localStorage.removeItem(key));
+    const configKey = getPipelineConfigKey(effectiveCompanyId);
+    if (configKey) {
+      localStorage.setItem(configKey, JSON.stringify(newConfigs));
+    }
   };
 
   // Fetch deals
@@ -386,10 +403,10 @@ export default function CRM() {
 
         try {
           await syncWonDealToSale(deal, queryClient);
-          toast.success("Deal ganho e venda sincronizada!");
+          toast.success("Negociação ganha e venda sincronizada!");
         } catch (syncError) {
           console.error("Erro ao sincronizar venda do deal:", syncError);
-          toast.error("Deal ganho, mas a venda não foi sincronizada.");
+          toast.error("Negociação ganha, mas a venda não foi sincronizada.");
         }
       }
     },
@@ -401,7 +418,7 @@ export default function CRM() {
         setLocalDeals(context.previousDeals);
         queryClient.setQueryData(["deals", effectiveCompanyId], context.previousDeals);
       }
-      toast.error("Erro ao mover deal");
+      toast.error("Erro ao mover negociação");
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["deals", effectiveCompanyId] });
@@ -610,7 +627,7 @@ export default function CRM() {
               </h1>
               <p className="text-xs sm:text-[13px] text-muted-foreground font-medium mt-0.5">
                 {isLoading ? "Carregando..." : (
-                  <>{deals.length} deals • <span className="text-emerald-600 dark:text-emerald-300">{formatCurrency(pipelineTotal)}</span></>
+                  <>{deals.length} negociações • <span className="text-emerald-600 dark:text-emerald-300">{formatCurrency(pipelineTotal)}</span></>
                 )}
               </p>
             </div>
@@ -643,7 +660,7 @@ export default function CRM() {
                 <SelectValue placeholder="Vendedor" />
               </SelectTrigger>
               <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
-                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="all">Vendedores</SelectItem>
                 {vendors.map((vendor: any) => (
                   <SelectItem key={vendor.id} value={vendor.id}>
                     {vendor.nome}
@@ -657,7 +674,7 @@ export default function CRM() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500" />
               <Input
                 type="text"
-                placeholder="Buscar deals..."
+                placeholder="Buscar negociações..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-48 pl-9 h-9 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-indigo-500"
@@ -682,7 +699,7 @@ export default function CRM() {
               className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all duration-200 h-9"
             >
               <Plus className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Novo Deal</span>
+              <span className="hidden sm:inline">Nova Negociação</span>
             </Button>
           </div>
         </div>
@@ -736,7 +753,7 @@ export default function CRM() {
           ) : (
             <div className="p-4 sm:p-6 space-y-3 sm:space-y-4 max-w-6xl">
               {sortedDealsForList.length === 0 && (
-                <div className="text-muted-foreground text-sm">Nenhum deal cadastrado.</div>
+                <div className="text-muted-foreground text-sm">Nenhuma negociação cadastrada.</div>
               )}
               {sortedDealsForList.map((deal) => (
                 <div
@@ -831,7 +848,7 @@ export default function CRM() {
           queryClient.invalidateQueries({ queryKey: ["deals"] });
           setShowLostModal(false);
           setDealToLose(null);
-          toast.success("Deal marcado como perdido");
+          toast.success("Negociação marcada como perdida");
         }}
         dealTitle={dealToLose?.title || ""}
       />

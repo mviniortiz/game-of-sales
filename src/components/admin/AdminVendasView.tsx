@@ -3,24 +3,24 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { 
-  Users, 
-  TrendingUp, 
-  Target, 
-  DollarSign, 
+import {
+  Users,
+  TrendingUp,
+  Target,
+  DollarSign,
   Award,
   ArrowUpRight,
   ArrowDownRight,
   BarChart3,
   UserCheck
 } from "lucide-react";
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   AreaChart,
   Area,
@@ -34,6 +34,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useTenant } from "@/contexts/TenantContext";
+import { logger } from "@/utils/logger";
 
 interface AdminVendasViewProps {
   dateRange: { from?: Date; to?: Date };
@@ -76,13 +77,13 @@ interface KPICardProps {
   glowColor?: string;
 }
 
-const KPICard = ({ 
-  title, 
-  value, 
+const KPICard = ({
+  title,
+  value,
   fullValue,
-  subtitle, 
-  icon: Icon, 
-  trend, 
+  subtitle,
+  icon: Icon,
+  trend,
   trendLabel,
   iconColor = "text-indigo-400",
   iconBg = "bg-indigo-500/10",
@@ -90,7 +91,7 @@ const KPICard = ({
 }: KPICardProps) => {
   const isPositive = trend && trend > 0;
   const TrendIcon = isPositive ? ArrowUpRight : ArrowDownRight;
-  
+
   const cardContent = (
     <Card className={`
       relative overflow-hidden
@@ -111,7 +112,7 @@ const KPICard = ({
           `}>
             <Icon className={`h-6 w-6 ${iconColor}`} />
           </div>
-          
+
           {/* Right: Content */}
           <div className="flex-1 text-right">
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.1em] mb-2">
@@ -120,15 +121,15 @@ const KPICard = ({
             <p className="text-3xl font-bold text-foreground tabular-nums tracking-tight leading-none">
               {value}
             </p>
-            
+
             {/* Trend or Subtitle */}
             <div className="flex items-center justify-end gap-2 mt-2">
               {trend !== undefined && (
                 <span className={`
                   inline-flex items-center gap-0.5 
                   px-2 py-0.5 rounded-full text-[11px] font-semibold
-                  ${isPositive 
-                    ? 'bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-200 dark:ring-emerald-500/20' 
+                  ${isPositive
+                    ? 'bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-200 dark:ring-emerald-500/20'
                     : 'bg-rose-50 text-rose-600 ring-1 ring-rose-100 dark:bg-rose-500/10 dark:text-rose-200 dark:ring-rose-500/20'
                   }
                 `}>
@@ -155,8 +156,8 @@ const KPICard = ({
         <TooltipTrigger asChild>
           {cardContent}
         </TooltipTrigger>
-        <TooltipContent 
-          side="bottom" 
+        <TooltipContent
+          side="bottom"
           className="bg-card border border-border text-foreground font-mono shadow-md"
         >
           {fullValue}
@@ -168,8 +169,8 @@ const KPICard = ({
   return cardContent;
 };
 
-export const AdminVendasView = ({ 
-  dateRange, 
+export const AdminVendasView = ({
+  dateRange,
   selectedVendedor,
   selectedFormaPagamento = "todas",
   selectedProduto = "todos",
@@ -183,7 +184,11 @@ export const AdminVendasView = ({
   const { activeCompanyId } = useTenant();
 
   const applyCompanyFilter = <T,>(query: any) => {
-    return activeCompanyId ? query.eq("company_id", activeCompanyId) : query;
+    // SECURITY: Always require a valid company_id to prevent data leakage
+    if (!activeCompanyId) {
+      return query.eq("company_id", "00000000-0000-0000-0000-000000000000");
+    }
+    return query.eq("company_id", activeCompanyId);
   };
 
   // Estatísticas gerais
@@ -391,7 +396,7 @@ export const AdminVendasView = ({
           valor: grouped[dateKey] || 0,
         });
       }
-      
+
       return result;
     },
   });
@@ -406,7 +411,7 @@ export const AdminVendasView = ({
         dataFiltro.getMonth() + 1
       ).padStart(2, "0")}-01`;
 
-      console.log("[Dashboard] Buscando meta consolidada para:", mesReferencia);
+      logger.log("[Dashboard] Buscando meta consolidada para:", mesReferencia);
 
       const { data, error } = await applyCompanyFilter(
         supabase
@@ -416,7 +421,7 @@ export const AdminVendasView = ({
           .maybeSingle()
       );
 
-      console.log("[Dashboard] Meta consolidada encontrada:", data);
+      logger.log("[Dashboard] Meta consolidada encontrada:", data);
 
       if (error) throw error;
       return data;
@@ -492,8 +497,8 @@ export const AdminVendasView = ({
 
   const valorConsolidadoAtingido = vendedoresMetas?.reduce((acc, v) => acc + v.valorRealizado, 0) || 0;
   const metaTotalConsolidada = Number(metaConsolidada?.valor_meta || 0);
-  const percentualConsolidado = metaTotalConsolidada > 0 
-    ? (valorConsolidadoAtingido / metaTotalConsolidada) * 100 
+  const percentualConsolidado = metaTotalConsolidada > 0
+    ? (valorConsolidadoAtingido / metaTotalConsolidada) * 100
     : 0;
 
   const getInitials = (name: string) => {
@@ -557,17 +562,17 @@ export const AdminVendasView = ({
         <Card className="lg:col-span-3 relative overflow-hidden border border-border bg-card shadow-sm">
           {/* Subtle corner accent */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-3xl pointer-events-none" />
-          
+
           <CardHeader className="pb-2 relative">
             <div className="flex items-center justify-between">
               <div>
-          <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-500/10">
-              <TrendingUp className="h-4 w-4 text-indigo-600 dark:text-indigo-200" />
+                <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-500/10">
+                    <TrendingUp className="h-4 w-4 text-indigo-600 dark:text-indigo-200" />
                   </div>
                   Evolução de Vendas
                 </CardTitle>
-          <p className="text-[11px] text-muted-foreground mt-1 ml-8">Últimos 15 dias • Faturamento diário</p>
+                <p className="text-[11px] text-muted-foreground mt-1 ml-8">Últimos 15 dias • Faturamento diário</p>
               </div>
             </div>
           </CardHeader>
@@ -576,21 +581,21 @@ export const AdminVendasView = ({
               <AreaChart data={vendasEvolution || []} margin={{ top: 20, right: 10, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorValorAdmin" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#6366F1" stopOpacity={0.5}/>
-                    <stop offset="50%" stopColor="#4F46E5" stopOpacity={0.2}/>
-                    <stop offset="100%" stopColor="#4F46E5" stopOpacity={0}/>
+                    <stop offset="0%" stopColor="#6366F1" stopOpacity={0.5} />
+                    <stop offset="50%" stopColor="#4F46E5" stopOpacity={0.2} />
+                    <stop offset="100%" stopColor="#4F46E5" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.25)" vertical={false} />
-                <XAxis 
-                  dataKey="date" 
+                <XAxis
+                  dataKey="date"
                   stroke="rgba(100,116,139,0.6)"
                   fontSize={10}
                   tickLine={false}
                   axisLine={false}
                   dy={10}
                 />
-                <YAxis 
+                <YAxis
                   stroke="rgba(100,116,139,0.6)"
                   fontSize={10}
                   tickLine={false}
@@ -608,7 +613,7 @@ export const AdminVendasView = ({
                   }}
                   labelStyle={{ color: "#475569", fontSize: 11, marginBottom: 4 }}
                   formatter={(value: number) => [
-                    <span className="text-indigo-600 font-semibold">{formatCurrency(value)}</span>, 
+                    <span className="text-indigo-600 font-semibold">{formatCurrency(value)}</span>,
                     "Faturamento"
                   ]}
                 />
@@ -619,10 +624,10 @@ export const AdminVendasView = ({
                   strokeWidth={2.5}
                   fill="url(#colorValorAdmin)"
                   dot={false}
-                  activeDot={{ 
-                    r: 6, 
-                    fill: "#6366F1", 
-                    stroke: "#fff", 
+                  activeDot={{
+                    r: 6,
+                    fill: "#6366F1",
+                    stroke: "#fff",
                     strokeWidth: 2,
                     filter: "drop-shadow(0 0 8px rgba(99, 102, 241, 0.5))"
                   }}
@@ -636,7 +641,7 @@ export const AdminVendasView = ({
         <Card className="lg:col-span-2 relative overflow-hidden border border-border bg-card shadow-sm">
           {/* Subtle corner accent */}
           <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 blur-3xl pointer-events-none" />
-          
+
           <CardHeader className="pb-2 relative">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
@@ -670,8 +675,8 @@ export const AdminVendasView = ({
           </CardHeader>
           <CardContent className="pt-0 relative">
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart 
-                data={(topView === "vendedores" ? topVendedores : topProdutos) || []} 
+              <BarChart
+                data={(topView === "vendedores" ? topVendedores : topProdutos) || []}
                 layout="vertical"
                 margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
                 barSize={24}
@@ -683,7 +688,7 @@ export const AdminVendasView = ({
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.25)" horizontal={false} />
-                <XAxis 
+                <XAxis
                   type="number"
                   stroke="rgba(100,116,139,0.6)"
                   fontSize={10}
@@ -691,7 +696,7 @@ export const AdminVendasView = ({
                   axisLine={false}
                   tickFormatter={(v) => formatCurrencyCompact(v)}
                 />
-                <YAxis 
+                <YAxis
                   type="category"
                   dataKey="nome"
                   stroke="rgba(100,116,139,0.6)"
@@ -710,12 +715,12 @@ export const AdminVendasView = ({
                     padding: "12px 16px"
                   }}
                   formatter={(value: number) => [
-                    <span className="text-emerald-600 font-semibold">{formatCurrency(value)}</span>, 
+                    <span className="text-emerald-600 font-semibold">{formatCurrency(value)}</span>,
                     "Faturamento"
                   ]}
                 />
-                <Bar 
-                  dataKey="total" 
+                <Bar
+                  dataKey="total"
                   fill="url(#barGradientAdmin)"
                   radius={[0, 6, 6, 0]}
                 />
@@ -729,7 +734,7 @@ export const AdminVendasView = ({
       {/* Row 4: Ranking de Metas */}
       {(metaConsolidada || vendedoresMetas || true) && (() => {
         const hasActiveFilters = selectedVendedor !== "todos" || selectedFormaPagamento !== "todas" || selectedProduto !== "todos";
-        
+
         const filterParts = [];
         if (selectedVendedor !== "todos") {
           const vendedorNome = vendedores?.find(v => v.id === selectedVendedor)?.nome;
@@ -742,8 +747,8 @@ export const AdminVendasView = ({
           const produtoNome = produtos?.find(p => p.id === selectedProduto)?.nome;
           if (produtoNome) filterParts.push(`Produto: ${produtoNome}`);
         }
-        
-        const filterDescription = filterParts.length > 0 
+
+        const filterDescription = filterParts.length > 0
           ? `Filtros ativos: ${filterParts.join(" • ")}`
           : "Acompanhamento mensal de performance";
 

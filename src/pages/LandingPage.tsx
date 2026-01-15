@@ -23,7 +23,8 @@ import {
 } from "lucide-react";
 import brandLogo from "@/assets/logo-full.png";
 import brandLogoWhite from "@/assets/logo 1 - white.png";
-import dashboardPreview from "@/assets/dashboard-preview.png";
+import demoVideo from "@/assets/demo.mp4";
+import StripeGradient from "@/components/ui/StripeGradient";
 
 // Animation variants
 const fadeInUp = {
@@ -399,32 +400,38 @@ const LandingPage = () => {
                 )}
             </nav>
 
-            {/* Hero Section */}
-            <section className="pt-32 pb-24 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-7xl mx-auto">
-                    <div className="grid lg:grid-cols-2 gap-12 items-center">
-                        {/* Left Content */}
+            {/* Hero Section with Stripe WebGL Gradient */}
+            <section className="relative pt-32 pb-24 px-4 sm:px-6 lg:px-8 min-h-[700px] overflow-hidden">
+                {/* Stripe WebGL Gradient Background */}
+                <div className="absolute inset-0 z-0">
+                    <StripeGradient />
+                </div>
+
+                <div className="max-w-7xl mx-auto relative z-10">
+                    <div className="max-w-3xl mx-auto text-center">
+                        {/* Hero Content */}
                         <motion.div {...fadeInUp}>
-                            <Badge className="mb-6 bg-indigo-100 text-indigo-700 border-indigo-200 hover:bg-indigo-100">
+                            <Badge className="mb-6 bg-white/80 backdrop-blur-sm text-indigo-700 border-indigo-200/50 hover:bg-white/90 shadow-sm">
                                 <Sparkles className="h-3 w-3 mr-1" />
-                                Novo: Integração com Hotmart
+                                🔥 +500 empresas já aumentaram suas vendas
                             </Badge>
 
+
                             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 mb-6 leading-tight">
-                                Transforme seu Time de Vendas em uma{" "}
-                                <span className="text-indigo-600">Máquina de Performance.</span>
+                                Pare de Perder Vendas.{" "}
+                                <span className="bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent">Comece a Dominar.</span>
                             </h1>
 
-                            <p className="text-lg sm:text-xl text-slate-600 mb-10 leading-relaxed">
-                                O CRM que une gestão, gamificação e automação financeira.
-                                Integrado nativamente com Kiwify, Greenn e Hotmart.
+                            <p className="text-lg sm:text-xl text-slate-600 mb-10 leading-relaxed max-w-2xl mx-auto">
+                                O único CRM que transforma seu time comercial em campeões de vendas.
+                                <strong className="text-slate-800"> Gamificação + Automação + Integrações</strong> — tudo em um só lugar.
                             </p>
 
-                            <div className="flex flex-col sm:flex-row gap-4">
+                            <div className="flex flex-col sm:flex-row gap-4 justify-center">
                                 <Button
                                     size="lg"
-                                    onClick={() => goToRegister('plus')}
-                                    className="bg-indigo-600 hover:bg-indigo-700 text-white text-base h-12 px-8"
+                                    onClick={() => scrollToSection("pricing")}
+                                    className="bg-indigo-600 hover:bg-indigo-700 text-white text-base h-12 px-8 font-semibold shadow-lg"
                                 >
                                     Começar Agora Grátis
                                     <ArrowRight className="ml-2 h-5 w-5" />
@@ -432,23 +439,23 @@ const LandingPage = () => {
                                 <Button
                                     size="lg"
                                     variant="outline"
-                                    onClick={() => scrollToSection("features")}
-                                    className="text-base h-12 px-8 border-slate-300 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 font-medium"
+                                    onClick={() => scrollToSection("demo")}
+                                    className="text-base h-12 px-8 border-slate-300 bg-white/80 backdrop-blur-sm text-slate-700 hover:bg-white hover:text-slate-900 font-medium"
                                 >
                                     Ver Demo
                                 </Button>
                             </div>
 
                             {/* Social Proof */}
-                            <div className="mt-10 pt-10 border-t border-slate-200">
+                            <div className="mt-10 pt-10 border-t border-slate-200/50">
                                 <p className="text-sm text-slate-500 mb-4">Confiado por times de vendas em todo Brasil</p>
-                                <div className="flex flex-wrap items-center gap-6">
+                                <div className="flex flex-wrap items-center justify-center gap-6">
                                     <div className="flex items-center gap-2">
                                         <div className="flex -space-x-2">
                                             {["RS", "AM", "LC", "MP", "JF"].map((initials, i) => (
                                                 <div
                                                     key={i}
-                                                    className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold border-2 border-white"
+                                                    className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold border-2 border-white"
                                                 >
                                                     {initials}
                                                 </div>
@@ -468,43 +475,96 @@ const LandingPage = () => {
                                 </div>
                             </div>
                         </motion.div>
-
-                        {/* Right - Dashboard Mockup */}
-                        <motion.div
-                            {...fadeInUp}
-                            transition={{ delay: 0.2, duration: 0.5 }}
-                            className="relative"
-                        >
-                            <div className="relative transform rotate-2 hover:rotate-0 transition-transform duration-500">
-                                {/* Glow effect */}
-                                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl blur-2xl opacity-20 -z-10 scale-105" />
-
-                                {/* Dashboard image */}
-                                <div className="bg-slate-900 rounded-2xl shadow-2xl border border-slate-700 overflow-hidden">
-                                    <img
-                                        src={dashboardPreview}
-                                        alt="Game Sales Dashboard"
-                                        className="w-full h-auto"
-                                    />
-                                </div>
-                            </div>
-                        </motion.div>
                     </div>
                 </div>
             </section>
 
+            {/* Demo Section */}
+            <section id="demo" className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-slate-50 to-white">
+                <div className="max-w-6xl mx-auto">
+                    <motion.div
+                        {...fadeInUp}
+                        className="text-center mb-12"
+                    >
+                        <Badge className="mb-4 bg-indigo-100 text-indigo-700 border-indigo-200">
+                            <Zap className="h-3 w-3 mr-1" />
+                            👀 Tour Completo em 2 Minutos
+                        </Badge>
+                        <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
+                            Isso É o Que Seus Concorrentes Não Querem Que Você Veja
+                        </h2>
+                        <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+                            O sistema que já gerou <strong className="text-slate-800">+R$ 50 milhões</strong> em vendas para nossos clientes.
+                            Interface simples, resultados extraordinários.
+                        </p>
+                    </motion.div>
+
+                    <motion.div
+                        {...fadeInUp}
+                        transition={{ delay: 0.2 }}
+                        className="relative"
+                    >
+                        {/* Glow effect */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/30 via-blue-500/30 to-indigo-500/30 rounded-3xl blur-3xl -z-10 scale-105" />
+
+                        {/* Video Container */}
+                        <div className="bg-slate-900 rounded-2xl shadow-2xl border border-slate-700/50 overflow-hidden">
+                            <video
+                                src={demoVideo}
+                                autoPlay
+                                loop
+                                muted
+                                playsInline
+                                className="w-full h-auto"
+                            />
+                        </div>
+
+                        {/* Feature highlights below video */}
+                        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="flex items-center gap-3 bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-slate-200/50 shadow-sm">
+                                <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
+                                    <Kanban className="h-5 w-5 text-indigo-600" />
+                                </div>
+                                <div>
+                                    <h4 className="font-semibold text-slate-900">CRM Visual</h4>
+                                    <p className="text-sm text-slate-500">Kanban intuitivo</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3 bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-slate-200/50 shadow-sm">
+                                <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
+                                    <Trophy className="h-5 w-5 text-indigo-600" />
+                                </div>
+                                <div>
+                                    <h4 className="font-semibold text-slate-900">Gamificação</h4>
+                                    <p className="text-sm text-slate-500">Rankings e conquistas</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3 bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-slate-200/50 shadow-sm">
+                                <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
+                                    <Target className="h-5 w-5 text-indigo-600" />
+                                </div>
+                                <div>
+                                    <h4 className="font-semibold text-slate-900">Metas Inteligentes</h4>
+                                    <p className="text-sm text-slate-500">Acompanhamento em tempo real</p>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+                </div>
+            </section>
+
             {/* 4 Pilares Section */}
-            <section className="py-24 px-4 sm:px-6 lg:px-8 bg-white">
+            <section className="py-24 px-4 sm:px-6 lg:px-8 relative">
                 <div className="max-w-7xl mx-auto">
                     <motion.div
                         {...fadeInUp}
                         className="text-center mb-16"
                     >
                         <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
-                            Os 4 Pilares do Game Sales
+                            Por Que Times Campeões Escolhem o Game Sales?
                         </h2>
                         <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-                            O que nos diferencia: Gamificação + Automação em um só lugar.
+                            4 pilares que transformam vendedores comuns em <strong className="text-slate-800">máquinas de resultados</strong>.
                         </p>
                     </motion.div>
 
@@ -578,10 +638,10 @@ const LandingPage = () => {
                         className="text-center mb-16"
                     >
                         <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
-                            Tudo para sua operação de vendas
+                            Arsenal Completo Para Vender Mais
                         </h2>
                         <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-                            Ferramentas integradas para gestão, gamificação e automação.
+                            Cada ferramenta foi pensada para <strong className="text-slate-800">eliminar fricção</strong> e <strong className="text-slate-800">acelerar fechamentos</strong>.
                         </p>
                     </motion.div>
 
@@ -619,10 +679,10 @@ const LandingPage = () => {
                         className="text-center mb-16"
                     >
                         <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
-                            Planos que crescem com você
+                            Investimento Que Se Paga em 1 Venda
                         </h2>
                         <p className="text-lg text-slate-600 mb-8">
-                            Sem surpresas, sem taxas escondidas. Cancele quando quiser.
+                            O retorno médio dos nossos clientes é de <strong className="text-slate-800">12x o valor investido</strong>. Sem surpresas, sem taxas escondidas.
                         </p>
 
                         {/* Billing Toggle - Tabs/Pills Style */}
@@ -739,7 +799,7 @@ const LandingPage = () => {
             </section>
 
             {/* Testimonials Section */}
-            <section className="py-24 px-4 sm:px-6 lg:px-8 bg-white">
+            <section className="py-24 px-4 sm:px-6 lg:px-8 relative">
                 <div className="max-w-7xl mx-auto">
                     <motion.div
                         {...fadeInUp}
@@ -805,7 +865,7 @@ const LandingPage = () => {
                                 </p>
                                 <div className="flex items-center justify-between pt-4 border-t border-slate-200">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
+                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm">
                                             {testimonial.avatar}
                                         </div>
                                         <div>
@@ -831,10 +891,10 @@ const LandingPage = () => {
                         className="text-center mb-12"
                     >
                         <h2 className="text-3xl font-bold text-slate-900 mb-4">
-                            Perguntas Frequentes
+                            Dúvidas? Temos Respostas.
                         </h2>
                         <p className="text-slate-600">
-                            Tire suas dúvidas sobre o Game Sales.
+                            Tudo que você precisa saber antes de começar a dominar.
                         </p>
                     </motion.div>
 
@@ -899,13 +959,13 @@ const LandingPage = () => {
                 >
                     <Badge className="mb-6 bg-white/20 text-white border-white/30">
                         <Sparkles className="h-3 w-3 mr-1" />
-                        Oferta por Tempo Limitado
+                        ⚡ Últimas Vagas do Mês
                     </Badge>
                     <h2 className="text-3xl sm:text-5xl font-bold mb-4">
-                        Pronto para escalar suas vendas?
+                        Seus Concorrentes Já Estão Vendendo Mais.
                     </h2>
                     <p className="text-lg text-indigo-100 mb-8 max-w-2xl mx-auto">
-                        Junte-se a mais de 500 empresas que já transformaram seus resultados com o Game Sales.
+                        <strong>E você?</strong> Começe agora e veja resultados em 7 dias ou devolvemos seu dinheiro.
                     </p>
 
                     {/* Trust badges */}

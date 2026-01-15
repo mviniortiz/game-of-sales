@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,19 +17,26 @@ interface UserWithRole {
 }
 
 export function AdminManagement() {
+  const { companyId } = useAuth();
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadUsers();
-  }, []);
+    if (companyId) {
+      loadUsers();
+    }
+  }, [companyId]);
 
   const loadUsers = async () => {
+    if (!companyId) return;
+
     setLoading(true);
 
+    // Filtra profiles pela empresa do usuário logado
     const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
-      .select("id, nome, email, avatar_url");
+      .select("id, nome, email, avatar_url")
+      .eq("company_id", companyId);
 
     if (profilesError) {
       toast.error("Erro ao carregar usuários");

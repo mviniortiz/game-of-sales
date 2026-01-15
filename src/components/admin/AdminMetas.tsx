@@ -50,6 +50,7 @@ import {
 import { format, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useTenant } from "@/contexts/TenantContext";
+import { logger } from "@/utils/logger";
 
 export const AdminMetas = () => {
   const queryClient = useQueryClient();
@@ -98,7 +99,12 @@ export const AdminMetas = () => {
   };
 
   const applyCompanyFilter = (query: any) => {
-    return activeCompanyId ? query.eq("company_id", activeCompanyId) : query;
+    // SECURITY: Always require a valid company_id to prevent data leakage
+    if (!activeCompanyId) {
+      // Return a query that matches nothing (impossible condition)
+      return query.eq("company_id", "00000000-0000-0000-0000-000000000000");
+    }
+    return query.eq("company_id", activeCompanyId);
   };
 
   // Fetch vendedores with avatar
@@ -403,7 +409,7 @@ export const AdminMetas = () => {
 
   const deleteMetaConsolidada = useMutation({
     mutationFn: async (metaId: string) => {
-      console.log("[AdminMetas] Tentando excluir meta consolidada:", metaId);
+      logger.log("[AdminMetas] Tentando excluir meta consolidada:", metaId);
 
       const { error, data } = await supabase
         .from("metas_consolidadas")
@@ -411,17 +417,17 @@ export const AdminMetas = () => {
         .eq("id", metaId)
         .select();
 
-      console.log("[AdminMetas] Resultado da exclusão:", { error, data });
+      logger.log("[AdminMetas] Resultado da exclusão:", { error, data });
 
       if (error) {
-        console.error("[AdminMetas] Erro ao excluir:", error);
+        logger.error("[AdminMetas] Erro ao excluir:", error);
         throw error;
       }
 
       return data;
     },
     onSuccess: (data) => {
-      console.log("[AdminMetas] Meta excluída com sucesso:", data);
+      logger.log("[AdminMetas] Meta excluída com sucesso:", data);
       queryClient.invalidateQueries({ queryKey: ["admin-metas-consolidadas"] });
       queryClient.invalidateQueries({ queryKey: ["metas-progresso"] });
       queryClient.invalidateQueries({ queryKey: ["metas-ranking"] });
@@ -431,7 +437,7 @@ export const AdminMetas = () => {
       toast.success("Meta consolidada removida com sucesso!");
     },
     onError: (error: any) => {
-      console.error("[AdminMetas] Erro na mutation:", error);
+      logger.error("[AdminMetas] Erro na mutation:", error);
       toast.error(`Erro ao remover meta consolidada: ${error.message}`);
     },
   });

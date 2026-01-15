@@ -12,14 +12,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
-import { 
-  PlusCircle, 
-  CalendarIcon, 
-  User, 
-  DollarSign, 
-  Package, 
-  CreditCard, 
-  Store, 
+import {
+  PlusCircle,
+  CalendarIcon,
+  User,
+  DollarSign,
+  Package,
+  CreditCard,
+  Store,
   CheckCircle,
   Trophy,
   TrendingUp
@@ -33,9 +33,7 @@ import { playSaleChime } from "@/utils/sounds";
 const vendaSchema = z.object({
   clienteNome: z.string().trim().min(1, "Nome do cliente é obrigatório").max(200, "Nome muito longo"),
   valor: z.number().positive("Valor deve ser positivo").max(999999999, "Valor muito alto"),
-  formaPagamento: z.enum(['Cartão de Crédito', 'PIX', 'Recorrência', 'Boleto', 'Parte PIX Parte Cartão', 'Múltiplos Cartões'], {
-    errorMap: () => ({ message: "Forma de pagamento inválida" })
-  }),
+  formaPagamento: z.string().min(1, "Forma de pagamento é obrigatória"),
   plataforma: z.enum(['Celetus', 'Cakto', 'Greenn', 'Pix/Boleto'], {
     errorMap: () => ({ message: "Plataforma inválida" })
   }),
@@ -69,7 +67,7 @@ const NovaVenda = () => {
         .select("*")
         .eq("ativo", true)
         .eq("company_id", activeCompanyId);
-      
+
       if (error) throw error;
       return data;
     },
@@ -80,18 +78,44 @@ const NovaVenda = () => {
     queryKey: ["vendedores", activeCompanyId],
     queryFn: async () => {
       if (!isAdmin) return [];
-      
+
       const { data, error } = await supabase
         .from("profiles")
         .select("id, nome, email, company_id")
         .eq("company_id", activeCompanyId)
         .order("nome");
-      
+
       if (error) throw error;
       return data;
     },
     enabled: isAdmin && !!activeCompanyId,
   });
+
+  // Formas de pagamento dinâmicas do banco de dados
+  const { data: formasPagamento } = useQuery({
+    queryKey: ["formas-pagamento", activeCompanyId],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("formas_pagamento")
+        .select("id, nome")
+        .eq("ativo", true)
+        .eq("company_id", activeCompanyId)
+        .order("nome");
+
+      if (error) throw error;
+      return data as { id: string; nome: string }[];
+    },
+    enabled: !!activeCompanyId,
+  });
+
+  // Fallback para formas de pagamento padrão caso não haja cadastradas
+  const formasPagamentoOptions = formasPagamento && formasPagamento.length > 0
+    ? formasPagamento
+    : [
+      { id: "cartao", nome: "Cartão de Crédito" },
+      { id: "pix", nome: "PIX" },
+      { id: "boleto", nome: "Boleto" },
+    ];
 
   const createVenda = useMutation({
     mutationFn: async (vendaData: any) => {
@@ -100,7 +124,7 @@ const NovaVenda = () => {
         .insert([vendaData])
         .select()
         .single();
-      
+
       if (error) throw error;
       return data;
     },
@@ -118,12 +142,12 @@ const NovaVenda = () => {
       queryClient.invalidateQueries({ queryKey: ["metas-progresso"] });
       queryClient.invalidateQueries({ queryKey: ["vendedores-metas"] });
       queryClient.invalidateQueries({ queryKey: ["seller-ranking"] });
-      
+
       playSaleChime();
       toast.success("🎉 Venda registrada com sucesso!", {
         description: `Você ganhou ${Math.floor(parseFloat(valor) || 0)} pontos!`
       });
-      
+
       // Reset form
       setClienteNome("");
       setProdutoId("");
@@ -143,7 +167,7 @@ const NovaVenda = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!produtoId) {
       toast.error("Selecione um produto");
       return;
@@ -176,7 +200,7 @@ const NovaVenda = () => {
       toast.error("Produto não encontrado");
       return;
     }
-    
+
     createVenda.mutate({
       user_id: isAdmin ? vendedorId : user?.id,
       cliente_nome: validationResult.data.clienteNome,
@@ -196,17 +220,17 @@ const NovaVenda = () => {
   const formatarMoeda = (value: string) => {
     // Remove tudo que não é número
     const numero = value.replace(/\D/g, "");
-    
+
     if (!numero) {
       setValor("");
       setValorFormatado("");
       return;
     }
-    
+
     // Converte para número com centavos
     const valorNumerico = parseFloat(numero) / 100;
     setValor(valorNumerico.toString());
-    
+
     // Formata como moeda brasileira
     const valorFormatadoBR = valorNumerico.toLocaleString("pt-BR", {
       style: "currency",
@@ -214,7 +238,7 @@ const NovaVenda = () => {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
-    
+
     setValorFormatado(valorFormatadoBR);
   };
 
@@ -238,7 +262,7 @@ const NovaVenda = () => {
               <PlusCircle className="h-5 w-5 text-muted-foreground" />
               Informações da Venda
             </CardTitle>
-            
+
             {/* Card de Pontuação - Compacto */}
             <div className="rounded-lg p-4 min-w-[280px] border border-yellow-500/20 bg-yellow-500/10 backdrop-blur-md shadow-lg shadow-yellow-500/10">
               <div className="flex items-center gap-3">
@@ -247,7 +271,7 @@ const NovaVenda = () => {
                   <div className="absolute inset-0 bg-yellow-400/25 rounded-full blur-xl"></div>
                   <Trophy className="relative h-12 w-12 text-yellow-400 drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]" />
                 </div>
-                
+
                 {/* Pontuação */}
                 <div className="flex-1">
                   <div className="text-xs text-gray-300 uppercase tracking-wide mb-1">
@@ -259,7 +283,7 @@ const NovaVenda = () => {
                   <div className="text-xs text-gray-400">pontos</div>
                 </div>
               </div>
-              
+
               {pontosPrevistos > 0 ? (
                 <div className="mt-3 pt-3 border-t border-yellow-500/20">
                   <div className="flex items-center gap-2 text-xs text-gray-300">
@@ -327,12 +351,11 @@ const NovaVenda = () => {
                         <SelectValue placeholder="Selecione a forma de pagamento" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Cartão de Crédito">Cartão de Crédito</SelectItem>
-                        <SelectItem value="PIX">PIX</SelectItem>
-                        <SelectItem value="Recorrência">Recorrência</SelectItem>
-                        <SelectItem value="Boleto">Boleto</SelectItem>
-                        <SelectItem value="Parte PIX Parte Cartão">Parte PIX Parte Cartão</SelectItem>
-                        <SelectItem value="Múltiplos Cartões">Múltiplos Cartões</SelectItem>
+                        {formasPagamentoOptions.map((forma) => (
+                          <SelectItem key={forma.id} value={forma.nome}>
+                            {forma.nome}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -430,12 +453,12 @@ const NovaVenda = () => {
                 {/* Campo Admin ao lado do Status */}
                 {isAdmin && (
                   <div className="space-y-2">
-                  <Label htmlFor="vendedor" className="text-sm font-semibold flex items-center gap-2">
-                    <User className="h-4 w-4 text-muted-foreground" />
+                    <Label htmlFor="vendedor" className="text-sm font-semibold flex items-center gap-2">
+                      <User className="h-4 w-4 text-muted-foreground" />
                       Vendedor
                     </Label>
                     <Select value={vendedorId} onValueChange={setVendedorId} required>
-                    <SelectTrigger className="h-11 bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:border-indigo-500">
+                      <SelectTrigger className="h-11 bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:border-indigo-500">
                         <SelectValue placeholder="Selecione o vendedor" />
                       </SelectTrigger>
                       <SelectContent>
@@ -472,7 +495,7 @@ const NovaVenda = () => {
                     <CheckCircle className="h-5 w-5" />
                     Resumo da Venda
                   </h3>
-                  
+
                   <div className="grid md:grid-cols-2 gap-4">
                     {clienteNome && (
                       <div className="flex items-start gap-3 p-3 bg-muted/60 dark:bg-slate-900/40 rounded-md border border-border">
@@ -483,7 +506,7 @@ const NovaVenda = () => {
                         </div>
                       </div>
                     )}
-                    
+
                     {produtoId && produtos && (
                       <div className="flex items-start gap-3 p-3 bg-muted/60 dark:bg-slate-900/40 rounded-md border border-border">
                         <Package className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
@@ -495,7 +518,7 @@ const NovaVenda = () => {
                         </div>
                       </div>
                     )}
-                    
+
                     {valor && (
                       <div className="flex items-start gap-3 p-3 bg-muted/60 dark:bg-slate-900/40 rounded-md border border-border">
                         <DollarSign className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
@@ -505,7 +528,7 @@ const NovaVenda = () => {
                         </div>
                       </div>
                     )}
-                    
+
                     {plataforma && (
                       <div className="flex items-start gap-3 p-3 bg-muted/60 dark:bg-slate-900/40 rounded-md border border-border">
                         <Store className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
@@ -515,7 +538,7 @@ const NovaVenda = () => {
                         </div>
                       </div>
                     )}
-                    
+
                     {formaPagamento && (
                       <div className="flex items-start gap-3 p-3 bg-muted/60 dark:bg-slate-900/40 rounded-md border border-border">
                         <CreditCard className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
@@ -525,7 +548,7 @@ const NovaVenda = () => {
                         </div>
                       </div>
                     )}
-                    
+
                     {status && (
                       <div className="flex items-start gap-3 p-3 bg-muted/60 dark:bg-slate-900/40 rounded-md border border-border">
                         <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
@@ -535,7 +558,7 @@ const NovaVenda = () => {
                         </div>
                       </div>
                     )}
-                    
+
                     {dataVenda && (
                       <div className="flex items-start gap-3 p-3 bg-muted/60 dark:bg-slate-900/40 rounded-md border border-border">
                         <CalendarIcon className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
@@ -545,7 +568,7 @@ const NovaVenda = () => {
                         </div>
                       </div>
                     )}
-                    
+
                     {isAdmin && vendedorId && vendedores && (
                       <div className="flex items-start gap-3 p-3 bg-muted/60 dark:bg-slate-900/40 rounded-md border border-border">
                         <User className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
@@ -558,14 +581,14 @@ const NovaVenda = () => {
                       </div>
                     )}
                   </div>
-                  
+
                   {observacoes && (
                     <div className="mt-4 p-3 bg-muted/60 dark:bg-slate-900/40 rounded-md border border-border">
                       <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Observações</p>
                       <p className="text-sm text-foreground/80 whitespace-pre-wrap">{observacoes}</p>
                     </div>
                   )}
-                  
+
                   {pontosPrevistos > 0 && (
                     <div className="mt-4 p-4 bg-amber-500/10 border border-amber-500/20 rounded-md">
                       <div className="flex items-center justify-center gap-2">

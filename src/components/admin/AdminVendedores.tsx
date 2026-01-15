@@ -164,7 +164,7 @@ export const AdminVendedores = () => {
   const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const queryClient = useQueryClient();
-  const { isSuperAdmin } = useTenant();
+  const { isSuperAdmin, activeCompanyId } = useTenant();
 
   // Transfer company states
   const [showTransferModal, setShowTransferModal] = useState(false);
@@ -177,8 +177,11 @@ export const AdminVendedores = () => {
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
 
   const { data: vendedores, isLoading } = useQuery({
-    queryKey: ["admin-vendedores"],
+    queryKey: ["admin-vendedores", activeCompanyId],
     queryFn: async () => {
+      // SECURITY: Don't fetch if no company context
+      if (!activeCompanyId) return [];
+
       const now = new Date();
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
@@ -187,7 +190,8 @@ export const AdminVendedores = () => {
         .select(`
           *,
           vendas:vendas(id, valor, data_venda, created_at)
-        `);
+        `)
+        .eq("company_id", activeCompanyId); // CRITICAL: Filter by company!
 
       if (error) throw error;
 
@@ -216,6 +220,7 @@ export const AdminVendedores = () => {
         };
       }) || [];
     },
+    enabled: !!activeCompanyId,
   });
 
   // Calculate KPI summaries
@@ -309,7 +314,7 @@ export const AdminVendedores = () => {
     setGeneratedPassword(null);
     try {
       const { data, error } = await supabase.functions.invoke("admin-create-seller", {
-        body: { nome, email, sendPassword },
+        body: { nome, email, sendPassword, companyId: activeCompanyId },
       });
 
       if (error) throw error;

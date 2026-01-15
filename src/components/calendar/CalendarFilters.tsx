@@ -48,14 +48,14 @@ export const CalendarFilters = ({
         <Filter className="h-4 w-4" />
         Filtros:
       </div>
-      
+
       {!hideVendedorFilter && (
         <Select value={selectedVendedor} onValueChange={onVendedorChange}>
           <SelectTrigger className="w-[200px] bg-background/50 border-border/50">
-            <SelectValue placeholder="Todos os vendedores" />
+            <SelectValue placeholder="Vendedores" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos os vendedores</SelectItem>
+            <SelectItem value="all">Vendedores</SelectItem>
             {vendedores.map((v) => (
               <SelectItem key={v.id} value={v.id}>
                 {v.nome}

@@ -31,7 +31,7 @@ export const UpgradePrompt = ({
         `A funcionalidade "${featureName}" requer o plano ${requiredPlanInfo.label} ou superior.`;
 
     // Get features comparison
-    const planOrder: PlanType[] = ['starter', 'plus', 'pro', 'enterprise'];
+    const planOrder: PlanType[] = ['starter', 'plus', 'pro'];
     const requiredIndex = planOrder.indexOf(requiredPlan);
     const availablePlans = planOrder.slice(requiredIndex);
 

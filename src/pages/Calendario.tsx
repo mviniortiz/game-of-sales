@@ -39,7 +39,7 @@ interface Agendamento {
 // Helper function to map status to attendance status
 const mapStatusToAttendance = (status?: string): AttendanceStatus => {
   if (!status) return 'pending';
-  
+
   switch (status) {
     case 'realizado':
       return 'show';
@@ -55,13 +55,13 @@ const mapStatusToAttendance = (status?: string): AttendanceStatus => {
 // Helper function to get status colors with defensive fallback
 const getStatusColors = (status?: string) => {
   const attendanceStatus = mapStatusToAttendance(status);
-  
+
   const colorMap: Record<AttendanceStatus, { bg: string; border: string; text: string }> = {
     show: { bg: "bg-green-500/10", border: "border-green-500", text: "text-green-400" },
     no_show: { bg: "bg-red-500/10", border: "border-red-500", text: "text-red-400" },
     pending: { bg: "bg-gray-500/10", border: "border-gray-500", text: "text-gray-400" },
   };
-  
+
   return colorMap[attendanceStatus] || colorMap.pending;
 };
 
@@ -86,10 +86,10 @@ export default function Calendario() {
   // 2. Admin (Company): Sees only sellers from their own company
   // 3. Seller: Sees only their own calendar
   // ==========================================
-  
+
   // Check if user can see team calendar
   const canSeeTeamCalendar = isAdmin || isSuperAdmin;
-  
+
   // Check if we're showing team view (all sellers)
   const showingTeam = canSeeTeamCalendar && selectedVendedor === "all";
 
@@ -208,7 +208,7 @@ export default function Calendario() {
     if (!user) return;
 
     setLoading(true);
-    
+
     let start: Date;
     let end: Date;
 
@@ -241,7 +241,7 @@ export default function Calendario() {
       // - Can see all sellers' appointments
       // - CANNOT see other Super Admins' appointments
       // - Can filter by company if one is selected
-      
+
       if (selectedVendedor !== "all") {
         query = query.eq("user_id", selectedVendedor);
       } else if (activeCompanyId) {
@@ -251,7 +251,7 @@ export default function Calendario() {
       // Company Admin:
       // - Can see only their company's sellers
       // - CANNOT see Super Admins
-      
+
       if (selectedVendedor !== "all") {
         query = query.eq("user_id", selectedVendedor);
       }
@@ -322,10 +322,10 @@ export default function Calendario() {
               </Button>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-3">
             <CalendarViewSelector view={view} onViewChange={setView} />
-            
+
             <Dialog open={showNewAgendamento} onOpenChange={setShowNewAgendamento}>
               <DialogTrigger asChild>
                 <Button>
@@ -356,7 +356,7 @@ export default function Calendario() {
                 <Users className="h-5 w-5" />
                 <span className="font-semibold">Filtrar Agenda</span>
               </div>
-              
+
               {/* Filtro de Vendedor */}
               <Select value={selectedVendedor} onValueChange={setSelectedVendedor}>
                 <SelectTrigger className="w-[200px] bg-background border-amber-500/30">
@@ -366,7 +366,7 @@ export default function Calendario() {
                   <SelectItem value="all">
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4" />
-                      Todos os Vendedores
+                      Vendedores
                     </div>
                   </SelectItem>
                   {sellers.map((seller: any) => (
@@ -445,18 +445,16 @@ export default function Calendario() {
                   return (
                     <div
                       key={index}
-                      className={`group relative min-h-[120px] border-b border-r border-border/10 p-2 transition-all cursor-pointer ${
-                        !isCurrentMonth ? "bg-muted/5 text-muted-foreground" : ""
-                      } ${isToday ? "bg-primary/5 border-primary/20" : ""} hover:bg-accent/8`}
+                      className={`group relative min-h-[120px] border-b border-r border-border/10 p-2 transition-all cursor-pointer ${!isCurrentMonth ? "bg-muted/5 text-muted-foreground" : ""
+                        } ${isToday ? "bg-primary/5 border-primary/20" : ""} hover:bg-accent/8`}
                       onClick={() => setSelectedDate(day)}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <span
-                          className={`text-sm font-semibold ${
-                            isToday
+                          className={`text-sm font-semibold ${isToday
                               ? "bg-primary text-primary-foreground rounded-full h-7 w-7 flex items-center justify-center"
                               : ""
-                          }`}
+                            }`}
                         >
                           {format(day, "d")}
                         </span>
@@ -466,7 +464,7 @@ export default function Calendario() {
                         {dayAgendamentos.slice(0, 3).map((ag) => {
                           const colors = getStatusColors(ag.status);
                           const isGoogleEvent = !!ag.google_event_id;
-                          
+
                           return (
                             <div
                               key={ag.id}
@@ -483,10 +481,10 @@ export default function Calendario() {
                               <div className="flex items-center gap-1.5">
                                 {isGoogleEvent ? (
                                   <svg className="h-3 w-3 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M22.46 12c0-1.28-.11-2.53-.32-3.75H12v7.1h5.84c-.25 1.35-1.03 2.49-2.18 3.26v2.72h3.53c2.07-1.9 3.27-4.7 3.27-8.33z" fill="#4285F4"/>
-                                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.53-2.72c-.98.66-2.24 1.05-3.75 1.05-2.88 0-5.32-1.95-6.19-4.57H2.19v2.81C4.01 20.53 7.7 23 12 23z" fill="#34A853"/>
-                                    <path d="M5.81 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.09H2.19C1.46 8.55 1 10.22 1 12s.46 3.45 1.19 4.91l3.62-2.81z" fill="#FBBC05"/>
-                                    <path d="M12 5.38c1.62 0 3.08.56 4.23 1.64l3.17-3.17C17.45 2.09 14.97 1 12 1 7.7 1 4.01 3.47 2.19 7.09l3.62 2.81C6.68 7.33 9.12 5.38 12 5.38z" fill="#EA4335"/>
+                                    <path d="M22.46 12c0-1.28-.11-2.53-.32-3.75H12v7.1h5.84c-.25 1.35-1.03 2.49-2.18 3.26v2.72h3.53c2.07-1.9 3.27-4.7 3.27-8.33z" fill="#4285F4" />
+                                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.53-2.72c-.98.66-2.24 1.05-3.75 1.05-2.88 0-5.32-1.95-6.19-4.57H2.19v2.81C4.01 20.53 7.7 23 12 23z" fill="#34A853" />
+                                    <path d="M5.81 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.09H2.19C1.46 8.55 1 10.22 1 12s.46 3.45 1.19 4.91l3.62-2.81z" fill="#FBBC05" />
+                                    <path d="M12 5.38c1.62 0 3.08.56 4.23 1.64l3.17-3.17C17.45 2.09 14.97 1 12 1 7.7 1 4.01 3.47 2.19 7.09l3.62 2.81C6.68 7.33 9.12 5.38 12 5.38z" fill="#EA4335" />
                                   </svg>
                                 ) : (
                                   <Phone className="h-3 w-3 flex-shrink-0" />
@@ -511,7 +509,7 @@ export default function Calendario() {
                           </div>
                         )}
                       </div>
-                      
+
                       {/* Plus icon on hover for empty days */}
                       {dayAgendamentos.length === 0 && (
                         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
