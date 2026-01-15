@@ -36,14 +36,14 @@ const planDetails: Record<string, { name: string; price: string; color: string; 
         color: "text-blue-400",
         gradient: "from-blue-500 to-cyan-500"
     },
-    pro: {
-        name: "Pro",
+    plus: {
+        name: "Plus",
         price: "R$ 297/mês",
         color: "text-indigo-400",
         gradient: "from-indigo-500 to-purple-500"
     },
-    business: {
-        name: "Business",
+    pro: {
+        name: "Pro",
         price: "R$ 797/mês",
         color: "text-amber-400",
         gradient: "from-amber-500 to-orange-500"
