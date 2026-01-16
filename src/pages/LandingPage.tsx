@@ -124,6 +124,7 @@ const LandingPage = () => {
             ],
             popular: false,
             extraInfo: null,
+            checkoutUrl: "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=dd862f815f6b4d6285b2b8119710553b",
         },
         {
             name: "Plus",
@@ -140,6 +141,7 @@ const LandingPage = () => {
             ],
             popular: true,
             extraInfo: "+R$ 49,97/vendedor adicional",
+            checkoutUrl: "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=7c2c9ac396684c229987a7501cf4f88c",
         },
         {
             name: "Pro",
@@ -156,6 +158,7 @@ const LandingPage = () => {
             ],
             popular: false,
             extraInfo: "+R$ 48,99/vendedor adicional",
+            checkoutUrl: "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=7f7561d2b1174aacb31ab92dce72ded4",
         },
     ];
 
@@ -788,9 +791,9 @@ const LandingPage = () => {
                                                 ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
                                                 : 'bg-slate-100 hover:bg-slate-200 text-slate-900'
                                                 }`}
-                                            onClick={() => goToRegister(plan.name)}
+                                            onClick={() => window.open(plan.checkoutUrl, '_blank')}
                                         >
-                                            Começar com {plan.name}
+                                            Assinar {plan.name}
                                         </Button>
                                     </CardContent>
                                 </Card>
