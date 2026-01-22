@@ -4,7 +4,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -56,6 +55,7 @@ import { syncWonDealToSale } from "@/utils/salesSync";
 import { LostDealModal } from "@/components/crm/LostDealModal";
 import { Confetti } from "@/components/crm/Confetti";
 import { NovaTarefaModal } from "@/components/crm/NovaTarefaModal";
+import { DealProducts } from "@/components/crm/DealProducts";
 import {
     Tooltip,
     TooltipContent,
@@ -481,30 +481,30 @@ export default function DealCommandCenter() {
 
     if (isLoading) {
         return (
-            <AppLayout>
+            <>
                 <div className="flex items-center justify-center h-[calc(100vh-64px)] bg-gray-50 dark:bg-slate-900">
                     <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}>
                         <Target className="h-8 w-8 text-indigo-500" />
                     </motion.div>
                 </div>
-            </AppLayout>
+            </>
         );
     }
 
     if (!deal) {
         return (
-            <AppLayout>
+            <>
                 <div className="flex flex-col items-center justify-center h-[calc(100vh-64px)] gap-4 bg-gray-50 dark:bg-slate-900">
                     <AlertTriangle className="h-12 w-12 text-amber-500" />
                     <p className="text-gray-500 dark:text-slate-400">Deal não encontrado</p>
                     <Button onClick={() => navigate("/crm")} variant="outline">Voltar ao Pipeline</Button>
                 </div>
-            </AppLayout>
+            </>
         );
     }
 
     return (
-        <AppLayout>
+        <>
             <div className="min-h-[calc(100vh-64px)] bg-gray-50 dark:bg-slate-950">
                 {/* Confetti Effect */}
                 {showConfetti && <Confetti show={showConfetti} />}
@@ -697,7 +697,7 @@ export default function DealCommandCenter() {
                                             { id: "historico", label: "Histórico", icon: Clock },
                                             { id: "tarefas", label: "Tarefas", icon: CheckCircle2 },
                                             { id: "arquivos", label: "Arquivos", icon: Paperclip },
-                                            { id: "propostas", label: "Propostas", icon: FileText },
+                                            { id: "propostas", label: "Produtos/Proposta", icon: FileText },
                                         ].map((tab) => {
                                             const TabIcon = tab.icon;
                                             const isActive = activeTab === tab.id;
@@ -904,18 +904,27 @@ export default function DealCommandCenter() {
                                     </div>
                                 )}
 
-                                {/* Tab Content: Propostas */}
+                                {/* Tab Content: Propostas/Produtos */}
                                 {activeTab === "propostas" && (
-                                    <div className="p-6">
-                                        <div className="flex flex-col items-center justify-center py-12 text-gray-400 dark:text-slate-500">
-                                            <FileText className="h-10 w-10 mb-3 opacity-50" />
-                                            <p className="text-sm font-medium">Nenhuma proposta criada</p>
-                                            <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">Crie propostas para enviar ao cliente</p>
-                                            <Button variant="outline" size="sm" className="mt-4 gap-2">
-                                                <FileText className="h-4 w-4" />
-                                                Nova Proposta
-                                            </Button>
-                                        </div>
+                                    <div className="p-5">
+                                        {deal?.company_id ? (
+                                            <DealProducts
+                                                dealId={id!}
+                                                companyId={deal.company_id}
+                                                deal={{
+                                                    id: deal.id,
+                                                    title: deal.title,
+                                                    customer_name: deal.customer_name,
+                                                    customer_email: deal.customer_email,
+                                                    customer_phone: deal.customer_phone,
+                                                }}
+                                            />
+                                        ) : (
+                                            <div className="flex flex-col items-center justify-center py-12 text-gray-400 dark:text-slate-500">
+                                                <FileText className="h-10 w-10 mb-3 opacity-50" />
+                                                <p className="text-sm font-medium">Carregando...</p>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -947,6 +956,6 @@ export default function DealCommandCenter() {
                     dealTitle={deal.title}
                 />
             </div>
-        </AppLayout>
+        </>
     );
 }

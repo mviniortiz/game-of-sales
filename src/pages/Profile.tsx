@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -118,7 +117,7 @@ export default function Profile() {
   };
 
   return (
-    <AppLayout>
+    <>
       <div className="container max-w-4xl py-8">
         <h1 className="text-3xl font-bold mb-8">Meu Perfil</h1>
 
@@ -168,6 +167,6 @@ export default function Profile() {
           {isAdmin && <AdminManagement />}
         </div>
       </div>
-    </AppLayout>
+    </>
   );
 }

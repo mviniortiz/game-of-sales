@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -37,9 +36,12 @@ import {
   MessageSquare,
   PhoneCall,
   RefreshCw,
+  Package,
 } from "lucide-react";
 import { LostDealModal } from "@/components/crm/LostDealModal";
 import { syncWonDealToSale } from "@/utils/salesSync";
+import { DealProducts } from "@/components/crm/DealProducts";
+import { ProposalPDFButton } from "@/components/crm/ProposalPDFGenerator";
 
 // Pipeline stages configuration
 const PIPELINE_STAGES = [
@@ -210,17 +212,21 @@ export default function DealDetails() {
     },
   });
 
-  // Add note mutation (table may not exist yet - using 'as any')
+  // Add note mutation
   const addNoteMutation = useMutation({
     mutationFn: async (content: string) => {
-      const { error } = await (supabase as any).from("deal_notes").insert({
+      if (!deal?.company_id) throw new Error("Company ID não encontrado");
+
+      const { error } = await supabase.from("deal_notes" as any).insert({
         deal_id: id,
         user_id: user?.id,
+        company_id: deal.company_id,
         content,
       });
 
       if (error) throw error;
     },
+
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["deal-notes", id] });
       setNewNote("");
@@ -299,7 +305,7 @@ export default function DealDetails() {
 
   if (isLoading) {
     return (
-      <AppLayout>
+      <>
         <div className="p-6 space-y-6">
           <Skeleton className="h-10 w-48" />
           <Skeleton className="h-16 w-full" />
@@ -312,13 +318,13 @@ export default function DealDetails() {
             </div>
           </div>
         </div>
-      </AppLayout>
+      </>
     );
   }
 
   if (!deal) {
     return (
-      <AppLayout>
+      <>
         <div className="flex items-center justify-center h-[calc(100vh-100px)]">
           <div className="text-center">
             <XCircle className="h-12 w-12 text-rose-400 mx-auto mb-4" />
@@ -328,14 +334,14 @@ export default function DealDetails() {
             </Button>
           </div>
         </div>
-      </AppLayout>
+      </>
     );
   }
 
   const currentStageIndex = PIPELINE_STAGES.findIndex((s) => s.id === deal.stage);
 
   return (
-    <AppLayout>
+    <>
       <div className="min-h-screen bg-background text-foreground">
         {/* Header */}
         <div className="border-b border-border bg-card backdrop-blur-sm sticky top-0 z-10 shadow-sm">
@@ -424,9 +430,8 @@ export default function DealDetails() {
                       </span>
                     </button>
                     {!isLast && (
-                      <ChevronRight className={`h-4 sm:h-5 w-4 sm:w-5 -mx-0.5 sm:-mx-1 z-10 flex-shrink-0 ${
-                        isPast || isActive ? "text-indigo-500" : "text-muted-foreground/60"
-                      }`} />
+                      <ChevronRight className={`h-4 sm:h-5 w-4 sm:w-5 -mx-0.5 sm:-mx-1 z-10 flex-shrink-0 ${isPast || isActive ? "text-indigo-500" : "text-muted-foreground/60"
+                        }`} />
                     )}
                   </div>
                 );
@@ -603,8 +608,8 @@ export default function DealDetails() {
                       <span className="text-muted-foreground text-xs">
                         {deal.expected_close_date
                           ? format(new Date(deal.expected_close_date), "dd/MM/yyyy", {
-                              locale: ptBR,
-                            })
+                            locale: ptBR,
+                          })
                           : "Não definida"}
                       </span>
                     )}
@@ -616,9 +621,8 @@ export default function DealDetails() {
                       <Label className="text-[10px] text-slate-500 uppercase tracking-wider">
                         Probabilidade
                       </Label>
-                      <span className={`text-sm font-bold ${
-                        deal.probability >= 80 ? "text-emerald-400" : "text-indigo-400"
-                      }`}>
+                      <span className={`text-sm font-bold ${deal.probability >= 80 ? "text-emerald-400" : "text-indigo-400"
+                        }`}>
                         {deal.probability}%
                       </span>
                     </div>
@@ -639,11 +643,10 @@ export default function DealDetails() {
                     ) : (
                       <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
                         <div
-                          className={`h-full rounded-full transition-all ${
-                            deal.probability >= 80
-                              ? "bg-gradient-to-r from-emerald-500 to-emerald-400"
-                              : "bg-gradient-to-r from-indigo-600 to-indigo-400"
-                          }`}
+                          className={`h-full rounded-full transition-all ${deal.probability >= 80
+                            ? "bg-gradient-to-r from-emerald-500 to-emerald-400"
+                            : "bg-gradient-to-r from-indigo-600 to-indigo-400"
+                            }`}
                           style={{ width: `${deal.probability}%` }}
                         />
                       </div>
@@ -682,6 +685,13 @@ export default function DealDetails() {
                     >
                       <FileText className="h-4 w-4 mr-2" />
                       Anotações
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="products"
+                      className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 rounded-none px-6 py-3"
+                    >
+                      <Package className="h-4 w-4 mr-2" />
+                      Produtos
                     </TabsTrigger>
                     <TabsTrigger
                       value="history"
@@ -764,6 +774,23 @@ export default function DealDetails() {
                     </div>
                   </TabsContent>
 
+                  {/* Products Tab */}
+                  <TabsContent value="products" className="p-5">
+                    {deal?.company_id && (
+                      <DealProducts
+                        dealId={id!}
+                        companyId={deal.company_id}
+                        deal={{
+                          id: deal.id,
+                          title: deal.title,
+                          customer_name: deal.customer_name,
+                          customer_email: deal.customer_email,
+                          customer_phone: deal.customer_phone,
+                        }}
+                      />
+                    )}
+                  </TabsContent>
+
                   {/* History Tab */}
                   <TabsContent value="history" className="p-5">
                     <div className="relative">
@@ -777,23 +804,22 @@ export default function DealDetails() {
                         <div className="relative">
                           {/* Vertical Timeline Line */}
                           <div className="absolute left-4 top-0 bottom-0 w-px bg-gradient-to-b from-indigo-500/50 via-slate-700 to-transparent" />
-                          
+
                           <div className="space-y-0">
                             {activities.map((activity, index) => (
                               <div key={activity.id} className="relative flex gap-4 pb-4">
                                 {/* Timeline Node */}
                                 <div className="relative z-10 flex flex-col items-center">
-                                  <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${
-                                    activity.activity_type === "won" 
-                                      ? "bg-emerald-500/20 border-emerald-500/50" 
-                                      : activity.activity_type === "lost"
-                                        ? "bg-rose-500/20 border-rose-500/50"
-                                        : activity.activity_type === "stage_changed"
-                                          ? "bg-blue-500/20 border-blue-500/50"
-                                          : activity.activity_type === "created"
-                                            ? "bg-indigo-500/20 border-indigo-500/50"
-                                            : "bg-slate-800 border-slate-700"
-                                  }`}>
+                                  <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${activity.activity_type === "won"
+                                    ? "bg-emerald-500/20 border-emerald-500/50"
+                                    : activity.activity_type === "lost"
+                                      ? "bg-rose-500/20 border-rose-500/50"
+                                      : activity.activity_type === "stage_changed"
+                                        ? "bg-blue-500/20 border-blue-500/50"
+                                        : activity.activity_type === "created"
+                                          ? "bg-indigo-500/20 border-indigo-500/50"
+                                          : "bg-slate-800 border-slate-700"
+                                    }`}>
                                     {getActivityIcon(activity.activity_type)}
                                   </div>
                                 </div>
@@ -846,7 +872,7 @@ export default function DealDetails() {
         onConfirm={handleLostDeal}
         dealTitle={deal.title}
       />
-    </AppLayout>
+    </>
   );
 }
 

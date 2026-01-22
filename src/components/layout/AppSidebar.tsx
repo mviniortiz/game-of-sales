@@ -87,7 +87,7 @@ export function AppSidebar() {
 
   return (
     <TooltipProvider delayDuration={300}>
-      <Sidebar className="border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
+      <Sidebar collapsible="offcanvas" className="border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
         <SidebarContent className="gap-0">
           {/* Logo Section */}
           <div className="p-4 border-b border-sidebar-border">
@@ -260,6 +260,7 @@ export function AppSidebar() {
                         </TooltipContent>
                       </Tooltip>
                     ) : (
+
                       <SidebarMenuButton asChild>
                         <NavLink
                           to={adminMenuItem.url}

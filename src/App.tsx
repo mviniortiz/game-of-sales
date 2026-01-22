@@ -142,7 +142,9 @@ const App = () => (
                 path="/calendario"
                 element={
                   <ProtectedRoute>
-                    <Calendario />
+                    <AppLayout>
+                      <Calendario />
+                    </AppLayout>
                   </ProtectedRoute>
                 }
               />
@@ -150,7 +152,9 @@ const App = () => (
                 path="/crm"
                 element={
                   <ProtectedRoute>
-                    <CRM />
+                    <AppLayout>
+                      <CRM />
+                    </AppLayout>
                   </ProtectedRoute>
                 }
               />
@@ -166,7 +170,9 @@ const App = () => (
                 path="/profile"
                 element={
                   <ProtectedRoute>
-                    <Profile />
+                    <AppLayout>
+                      <Profile />
+                    </AppLayout>
                   </ProtectedRoute>
                 }
               />

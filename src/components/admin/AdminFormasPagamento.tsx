@@ -187,13 +187,7 @@ export const AdminFormasPagamento = () => {
         }
     };
 
-    if (isLoading) {
-        return (
-            <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </div>
-        );
-    }
+    // Nota: removido loading spinner - exibe diretamente as formas padrão enquanto carrega as personalizadas
 
     return (
         <div className="space-y-6">

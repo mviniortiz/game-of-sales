@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AppLayout } from "@/components/layout/AppLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -304,7 +303,7 @@ export default function Calendario() {
   };
 
   return (
-    <AppLayout>
+    <>
       <div className="container py-6 space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -452,8 +451,8 @@ export default function Calendario() {
                       <div className="flex items-center justify-between mb-2">
                         <span
                           className={`text-sm font-semibold ${isToday
-                              ? "bg-primary text-primary-foreground rounded-full h-7 w-7 flex items-center justify-center"
-                              : ""
+                            ? "bg-primary text-primary-foreground rounded-full h-7 w-7 flex items-center justify-center"
+                            : ""
                             }`}
                         >
                           {format(day, "d")}
@@ -560,6 +559,6 @@ export default function Calendario() {
         onClose={handleCloseDetailsModal}
         onUpdate={loadAgendamentos}
       />
-    </AppLayout>
+    </>
   );
 }

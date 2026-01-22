@@ -16,7 +16,6 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { useNavigate } from "react-router-dom";
-import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -608,7 +607,7 @@ export default function CRM() {
   };
 
   return (
-    <AppLayout>
+    <>
       <div className="h-[calc(100vh-64px)] flex flex-col bg-background text-foreground">
         {/* Header - Premium Style */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-6 py-4 sm:py-5 border-b border-border bg-card backdrop-blur-sm shadow-sm">
@@ -862,6 +861,6 @@ export default function CRM() {
         show={showConfetti}
         message={celebrationMessage}
       />
-    </AppLayout>
+    </>
   );
 }
