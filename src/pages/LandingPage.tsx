@@ -25,9 +25,17 @@ import {
     VolumeX
 } from "lucide-react";
 import brandLogo from "@/assets/logo-full.png";
-import brandLogoWhite from "@/assets/logo 1 - white.png";
+import brandLogoWhite from "@/assets/logo-only.png";
 import demoVideo from "@/assets/demo.mp4";
 import StripeGradient from "@/components/ui/StripeGradient";
+import { HeroSection } from "@/components/landing/HeroSection";
+import { ImpactMetrics } from "@/components/landing/ImpactMetrics";
+import { ProductBentoGrid } from "@/components/landing/ProductBentoGrid";
+import { HowItWorks } from "@/components/landing/HowItWorks";
+import { IntegrationHub } from "@/components/landing/IntegrationHub";
+import { UseCasesSection } from "@/components/landing/UseCasesSection";
+import { FinalCTA } from "@/components/landing/FinalCTA";
+import { Testimonials } from "@/components/landing/Testimonials";
 
 // Animation variants
 const fadeInUp = {
@@ -68,13 +76,9 @@ const LandingPage = () => {
         setSelectedPlan(planId || 'plus');
         setIsNavigating(true);
 
-        // Animate then navigate
+        // Animate then navigate to onboarding (trial flow)
         setTimeout(() => {
-            if (planId) {
-                navigate(`/register?plan=${planId.toLowerCase()}`);
-            } else {
-                navigate('/register');
-            }
+            navigate('/onboarding');
         }, 3000);
     };
 
@@ -163,7 +167,7 @@ const LandingPage = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-900">
+        <div className="min-h-screen w-full bg-slate-950 text-slate-50 selection:bg-indigo-500/30">
             {/* Loading Overlay - Immersive Experience */}
             {isNavigating && (
                 <motion.div
@@ -216,7 +220,7 @@ const LandingPage = () => {
                                 animate={{ opacity: 1 }}
                             >
                                 <motion.div
-                                    className="h-full bg-gradient-to-r from-indigo-500 to-purple-500"
+                                    className="h-full bg-gradient-to-r from-indigo-500 to-indigo-600"
                                     initial={{ width: "0%" }}
                                     animate={{ width: "100%" }}
                                     transition={{ duration: 0.8, ease: "easeOut" }}
@@ -284,159 +288,42 @@ const LandingPage = () => {
                 </motion.div>
             )}
 
-            {/* Navbar */}
-            <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-slate-200">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between h-16">
-                        {/* Logo */}
-                        <div className="flex items-center">
-                            <img src={brandLogo} alt="Game Sales" className="h-10 w-auto" />
-                        </div>
 
-                        {/* Desktop Menu */}
-                        <div className="hidden md:flex items-center gap-8">
-                            <button
-                                onClick={() => scrollToSection("features")}
-                                className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
-                            >
-                                Funcionalidades
-                            </button>
-                            <button
-                                onClick={() => scrollToSection("pricing")}
-                                className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
-                            >
-                                Preços
-                            </button>
-                            <button
-                                onClick={() => scrollToSection("contact")}
-                                className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
-                            >
-                                Contato
-                            </button>
-                        </div>
+            {/* New Dark Premium Hero with built-in navbar */}
+            <HeroSection
+                onCTAClick={() => scrollToSection("pricing")}
+                onDemoClick={() => scrollToSection("demo")}
+                onLoginClick={() => navigate("/auth")}
+            />
 
-                        {/* CTA Buttons */}
-                        <div className="hidden md:flex items-center gap-3">
-                            <Button
-                                variant="outline"
-                                onClick={() => navigate("/auth")}
-                                className="border-slate-300 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 font-medium"
-                            >
-                                Entrar
-                            </Button>
-                            <Button
-                                onClick={() => scrollToSection("pricing")}
-                                className="bg-indigo-600 hover:bg-indigo-700 text-white"
-                            >
-                                Começar Agora
-                            </Button>
-                        </div>
+            {/* Impact Metrics Bar - Social Proof */}
+            <ImpactMetrics />
 
-                        {/* Mobile Menu Button */}
-                        <button
-                            className="md:hidden p-2"
-                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                        >
-                            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-                        </button>
-                    </div>
-                </div>
+            {/* Product Bento Grid - Replaces old Features */}
+            <ProductBentoGrid />
 
-                {/* Mobile Menu */}
-                {mobileMenuOpen && (
-                    <div className="md:hidden bg-white border-b border-slate-200">
-                        <div className="px-4 py-4 space-y-3">
-                            <button onClick={() => scrollToSection("features")} className="block w-full text-left py-2 text-slate-700">
-                                Funcionalidades
-                            </button>
-                            <button onClick={() => scrollToSection("pricing")} className="block w-full text-left py-2 text-slate-700">
-                                Preços
-                            </button>
-                            <button onClick={() => scrollToSection("contact")} className="block w-full text-left py-2 text-slate-700">
-                                Contato
-                            </button>
-                            <hr className="border-slate-200" />
-                            <Button variant="outline" className="w-full" onClick={() => navigate("/auth")}>
-                                Entrar
-                            </Button>
-                            <Button
-                                className="w-full bg-indigo-600 hover:bg-indigo-700"
-                                onClick={() => { scrollToSection("pricing"); setMobileMenuOpen(false); }}
-                            >
-                                Começar Agora
-                            </Button>
-                        </div>
-                    </div>
-                )}
-            </nav>
+            {/* Testimonials - Social Proof */}
+            <Testimonials />
 
-            {/* Hero Section with Stripe WebGL Gradient */}
-            <section className="relative pt-32 pb-24 px-4 sm:px-6 lg:px-8 min-h-[700px] overflow-hidden">
-                {/* Stripe WebGL Gradient Background */}
-                <div className="absolute inset-0 z-0">
-                    <StripeGradient />
-                </div>
+            {/* How It Works - The Loop */}
+            <HowItWorks />
 
-                <div className="max-w-7xl mx-auto relative z-10">
-                    <div className="max-w-3xl mx-auto text-center">
-                        {/* Hero Content */}
-                        <motion.div {...fadeInUp}>
-                            <Badge className="mb-6 bg-white/80 backdrop-blur-sm text-indigo-700 border-indigo-200/50 hover:bg-white/90 shadow-sm">
-                                <Sparkles className="h-3 w-3 mr-1" />
-                                CRM Gamificado para Times de Vendas
-                            </Badge>
-
-
-                            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 mb-6 leading-tight">
-                                Pare de Perder Vendas.{" "}
-                                <span className="bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent">Comece a Dominar.</span>
-                            </h1>
-
-                            <p className="text-lg sm:text-xl text-slate-600 mb-10 leading-relaxed max-w-2xl mx-auto">
-                                O único CRM que transforma seu time comercial em campeões de vendas.
-                                <strong className="text-slate-800"> Gamificação + Automação + Integrações</strong> — tudo em um só lugar.
-                            </p>
-
-                            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                                <Button
-                                    size="lg"
-                                    onClick={() => scrollToSection("pricing")}
-                                    className="bg-indigo-600 hover:bg-indigo-700 text-white text-base h-12 px-8 font-semibold shadow-lg"
-                                >
-                                    Começar Agora Grátis
-                                    <ArrowRight className="ml-2 h-5 w-5" />
-                                </Button>
-                                <Button
-                                    size="lg"
-                                    variant="outline"
-                                    onClick={() => scrollToSection("demo")}
-                                    className="text-base h-12 px-8 border-slate-300 bg-white/80 backdrop-blur-sm text-slate-700 hover:bg-white hover:text-slate-900 font-medium"
-                                >
-                                    Ver Demo
-                                </Button>
-                            </div>
-
-
-                        </motion.div>
-                    </div>
-                </div>
-            </section>
 
             {/* Demo Section */}
-            <section id="demo" className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-slate-50 to-white">
+            <section id="demo" className="py-24 px-4 sm:px-6 lg:px-8 bg-slate-950">
                 <div className="max-w-6xl mx-auto">
                     <motion.div
                         {...fadeInUp}
                         className="text-center mb-12"
                     >
-                        <Badge className="mb-4 bg-indigo-100 text-indigo-700 border-indigo-200">
+                        <Badge className="mb-4 bg-indigo-500/20 text-indigo-300 border-indigo-500/30">
                             <Zap className="h-3 w-3 mr-1" />
                             👀 Tour Completo em 2 Minutos
                         </Badge>
-                        <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
+                        <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
                             Veja o Game Sales Em Ação
                         </h2>
-                        <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+                        <p className="text-lg text-gray-400 max-w-2xl mx-auto">
                             Interface simples, resultados extraordinários.
                             Assista e descubra como transformar sua gestão de vendas.
                         </p>
@@ -526,31 +413,31 @@ const LandingPage = () => {
 
                         {/* Feature highlights below video */}
                         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="flex items-center gap-3 bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-slate-200/50 shadow-sm">
-                                <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
-                                    <Kanban className="h-5 w-5 text-indigo-600" />
+                            <div className="flex items-center gap-3 bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+                                <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center">
+                                    <Kanban className="h-5 w-5 text-indigo-400" />
                                 </div>
                                 <div>
-                                    <h4 className="font-semibold text-slate-900">CRM Visual</h4>
-                                    <p className="text-sm text-slate-500">Kanban intuitivo</p>
+                                    <h4 className="font-semibold text-white">CRM Visual</h4>
+                                    <p className="text-sm text-gray-400">Kanban intuitivo</p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-3 bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-slate-200/50 shadow-sm">
-                                <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
-                                    <Trophy className="h-5 w-5 text-indigo-600" />
+                            <div className="flex items-center gap-3 bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+                                <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                                    <Trophy className="h-5 w-5 text-amber-400" />
                                 </div>
                                 <div>
-                                    <h4 className="font-semibold text-slate-900">Gamificação</h4>
-                                    <p className="text-sm text-slate-500">Rankings e conquistas</p>
+                                    <h4 className="font-semibold text-white">Gamificação</h4>
+                                    <p className="text-sm text-gray-400">Rankings e conquistas</p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-3 bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-slate-200/50 shadow-sm">
-                                <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
-                                    <Target className="h-5 w-5 text-indigo-600" />
+                            <div className="flex items-center gap-3 bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+                                <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center">
+                                    <Target className="h-5 w-5 text-indigo-400" />
                                 </div>
                                 <div>
-                                    <h4 className="font-semibold text-slate-900">Metas Inteligentes</h4>
-                                    <p className="text-sm text-slate-500">Acompanhamento em tempo real</p>
+                                    <h4 className="font-semibold text-white">Metas Inteligentes</h4>
+                                    <p className="text-sm text-gray-400">Acompanhamento em tempo real</p>
                                 </div>
                             </div>
                         </div>
@@ -558,145 +445,44 @@ const LandingPage = () => {
                 </div>
             </section>
 
-            {/* 4 Pilares Section */}
-            <section className="py-24 px-4 sm:px-6 lg:px-8 relative">
-                <div className="max-w-7xl mx-auto">
+            {/* Use Cases Section */}
+            <UseCasesSection />
+
+            {/* Pricing Section - Dark Theme with Neon */}
+            <section id="pricing" className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-slate-900 to-slate-950 relative overflow-hidden">
+                {/* Background glow effects */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-indigo-600/10 rounded-full blur-3xl" />
+
+                <div className="max-w-7xl mx-auto relative z-10">
                     <motion.div
                         {...fadeInUp}
                         className="text-center mb-16"
                     >
-                        <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
-                            Por Que Times Campeões Escolhem o Game Sales?
+                        {/* ROI Promise Badge */}
+                        <motion.div
+                            className="inline-flex items-center gap-2 bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 px-4 py-2 rounded-full text-sm font-medium mb-6"
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            whileInView={{ scale: 1, opacity: 1 }}
+                            viewport={{ once: true }}
+                        >
+                            <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+                            Garantia de ROI: Se paga em 1 venda extra
+                        </motion.div>
+
+                        <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+                            Investimento Que Se <span className="text-indigo-400">Multiplica</span>
                         </h2>
-                        <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-                            4 pilares que transformam vendedores comuns em <strong className="text-slate-800">máquinas de resultados</strong>.
-                        </p>
-                    </motion.div>
-
-                    <motion.div
-                        variants={staggerContainer}
-                        initial="initial"
-                        whileInView="whileInView"
-                        viewport={{ once: true }}
-                        className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto"
-                    >
-                        {/* Pilar 1 - Verdade em Tempo Real */}
-                        <motion.div variants={fadeInUp}>
-                            <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm hover:shadow-md transition-shadow h-full">
-                                <div className="h-14 w-14 rounded-xl bg-amber-100 flex items-center justify-center mb-5">
-                                    <Zap className="h-7 w-7 text-amber-500" />
-                                </div>
-                                <h3 className="text-xl font-semibold text-slate-900 mb-3">Verdade em Tempo Real</h3>
-                                <p className="text-slate-600 leading-relaxed">
-                                    Integração nativa com Kiwify e Greenn. O Game Sales audita cada centavo: só sobe no ranking o dinheiro que realmente caiu.
-                                </p>
-                            </div>
-                        </motion.div>
-
-                        {/* Pilar 2 - Gamificação Neural */}
-                        <motion.div variants={fadeInUp}>
-                            <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm hover:shadow-md transition-shadow h-full">
-                                <div className="h-14 w-14 rounded-xl bg-indigo-100 flex items-center justify-center mb-5">
-                                    <Trophy className="h-7 w-7 text-indigo-600" />
-                                </div>
-                                <h3 className="text-xl font-semibold text-slate-900 mb-3">Gamificação Neural</h3>
-                                <p className="text-slate-600 leading-relaxed">
-                                    O único CRM que parece um jogo. Rankings, sons de level-up e feedback visual instantâneo para viciar seu time em vender.
-                                </p>
-                            </div>
-                        </motion.div>
-
-                        {/* Pilar 3 - Produtividade Invisível */}
-                        <motion.div variants={fadeInUp}>
-                            <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm hover:shadow-md transition-shadow h-full">
-                                <div className="h-14 w-14 rounded-xl bg-cyan-100 flex items-center justify-center mb-5">
-                                    <Rocket className="h-7 w-7 text-cyan-500" />
-                                </div>
-                                <h3 className="text-xl font-semibold text-slate-900 mb-3">Produtividade Invisível</h3>
-                                <p className="text-slate-600 leading-relaxed">
-                                    Seu time joga, o sistema anota. Com a Extensão Game Sales, eliminamos o preenchimento manual chato.
-                                </p>
-                            </div>
-                        </motion.div>
-
-                        {/* Pilar 4 - Cultura de Elite */}
-                        <motion.div variants={fadeInUp}>
-                            <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm hover:shadow-md transition-shadow h-full">
-                                <div className="h-14 w-14 rounded-xl bg-yellow-100 flex items-center justify-center mb-5">
-                                    <Award className="h-7 w-7 text-yellow-500" />
-                                </div>
-                                <h3 className="text-xl font-semibold text-slate-900 mb-3">Cultura de Elite</h3>
-                                <p className="text-slate-600 leading-relaxed">
-                                    Meritocracia automática. Quem vende mais desbloqueia novas patentes e domina o lobby da empresa.
-                                </p>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                </div>
-            </section>
-
-            {/* Features Section - Bento Grid */}
-            <section id="features" className="py-24 px-4 sm:px-6 lg:px-8 bg-white">
-                <div className="max-w-7xl mx-auto">
-                    <motion.div
-                        {...fadeInUp}
-                        className="text-center mb-16"
-                    >
-                        <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
-                            Arsenal Completo Para Vender Mais
-                        </h2>
-                        <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-                            Cada ferramenta foi pensada para <strong className="text-slate-800">eliminar fricção</strong> e <strong className="text-slate-800">acelerar fechamentos</strong>.
-                        </p>
-                    </motion.div>
-
-                    <motion.div
-                        variants={staggerContainer}
-                        initial="initial"
-                        whileInView="whileInView"
-                        viewport={{ once: true }}
-                        className="grid md:grid-cols-2 lg:grid-cols-4 gap-6"
-                    >
-                        {features.map((feature, index) => (
-                            <motion.div
-                                key={index}
-                                variants={fadeInUp}
-                                className={`group ${feature.size}`}
-                            >
-                                <div className="h-full bg-slate-50 rounded-2xl p-6 border border-slate-200 hover:border-indigo-300 hover:shadow-lg transition-all duration-300">
-                                    <div className={`h-12 w-12 rounded-xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                                        <feature.icon className="h-6 w-6 text-white" />
-                                    </div>
-                                    <h3 className="text-lg font-semibold text-slate-900 mb-2">{feature.title}</h3>
-                                    <p className="text-slate-600 text-sm leading-relaxed">{feature.description}</p>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </motion.div>
-                </div>
-            </section>
-
-            {/* Pricing Section */}
-            <section id="pricing" className="py-24 px-4 sm:px-6 lg:px-8 bg-slate-50">
-                <div className="max-w-7xl mx-auto">
-                    <motion.div
-                        {...fadeInUp}
-                        className="text-center mb-16"
-                    >
-                        <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
-                            Investimento Que Se Paga em 1 Venda
-                        </h2>
-                        <p className="text-lg text-slate-600 mb-8">
-                            O retorno médio dos nossos clientes é de <strong className="text-slate-800">12x o valor investido</strong>. Sem surpresas, sem taxas escondidas.
+                        <p className="text-lg text-gray-400 mb-8">
+                            Retorno médio de <strong className="text-white">12x o valor investido</strong>. Sem surpresas, sem taxas escondidas.
                         </p>
 
-                        {/* Billing Toggle - Tabs/Pills Style */}
-                        <div className="inline-flex items-center bg-slate-100 rounded-full p-1">
+                        {/* Billing Toggle - Enhanced Dark Style */}
+                        <div className="inline-flex items-center bg-slate-800/50 border border-white/10 rounded-full p-1">
                             <button
                                 onClick={() => setIsAnnual(false)}
                                 className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 ${!isAnnual
-                                    ? 'bg-white text-slate-900 shadow-sm'
-                                    : 'text-slate-500 hover:text-slate-700'
+                                    ? 'bg-white text-slate-900 shadow-lg'
+                                    : 'text-gray-400 hover:text-white'
                                     }`}
                             >
                                 Mensal
@@ -704,13 +490,13 @@ const LandingPage = () => {
                             <button
                                 onClick={() => setIsAnnual(true)}
                                 className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2 ${isAnnual
-                                    ? 'bg-indigo-600 text-white shadow-sm'
-                                    : 'text-slate-500 hover:text-slate-700'
+                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
+                                    : 'text-gray-400 hover:text-white'
                                     }`}
                             >
                                 Anual
                                 {isAnnual && (
-                                    <span className="bg-emerald-400 text-white text-[10px] px-2 py-0.5 rounded-full font-semibold">
+                                    <span className="bg-emerald-400 text-emerald-950 text-[10px] px-2 py-0.5 rounded-full font-bold">
                                         -10%
                                     </span>
                                 )}
@@ -732,47 +518,50 @@ const LandingPage = () => {
                                 className={plan.popular ? "md:-mt-4 md:mb-4" : ""}
                             >
                                 <Card
-                                    className={`relative h-full ${plan.popular
-                                        ? 'border-2 border-indigo-500 shadow-xl shadow-indigo-500/10 bg-slate-900'
-                                        : 'border-slate-200 bg-white'
+                                    className={`relative h-full transition-all duration-300 ${plan.popular
+                                        ? 'border-2 border-indigo-500 bg-slate-800/80 backdrop-blur-sm'
+                                        : 'border-white/10 bg-slate-800/40 backdrop-blur-sm hover:border-white/20'
                                         }`}
+                                    style={plan.popular ? {
+                                        boxShadow: '0 0 40px rgba(99, 102, 241, 0.3), 0 0 80px rgba(99, 102, 241, 0.1)'
+                                    } : {}}
                                 >
                                     {plan.popular && (
                                         <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                                            <Badge className="bg-indigo-600 text-white px-4 py-1 shadow-lg">
-                                                Mais Popular
+                                            <Badge className="bg-indigo-600 text-white px-4 py-1 shadow-lg shadow-indigo-500/30 border-0">
+                                                ⚡ Mais Popular
                                             </Badge>
                                         </div>
                                     )}
                                     <CardHeader className={`text-center ${plan.popular ? 'pt-10' : 'pt-6'}`}>
-                                        <CardTitle className={`text-2xl ${plan.popular ? 'text-white' : 'text-slate-900'}`}>{plan.name}</CardTitle>
-                                        <CardDescription className={plan.popular ? 'text-slate-300' : 'text-slate-600'}>{plan.tagline}</CardDescription>
+                                        <CardTitle className="text-2xl text-white">{plan.name}</CardTitle>
+                                        <CardDescription className="text-gray-400">{plan.tagline}</CardDescription>
                                         <div className="mt-4">
                                             {plan.priceNumber === 0 ? (
-                                                <span className={`text-4xl font-bold ${plan.popular ? 'text-white' : 'text-slate-900'}`}>
+                                                <span className="text-4xl font-bold text-white">
                                                     Grátis
                                                 </span>
                                             ) : isAnnual ? (
                                                 <>
                                                     <div className="flex flex-col items-center">
-                                                        <span className={`text-sm line-through ${plan.popular ? 'text-slate-500' : 'text-slate-400'}`}>
+                                                        <span className="text-sm line-through text-gray-500">
                                                             R$ {plan.priceNumber}/mês
                                                         </span>
-                                                        <span className={`text-4xl font-bold ${plan.popular ? 'text-white' : 'text-slate-900'}`}>
+                                                        <span className="text-4xl font-bold text-white">
                                                             R$ {Math.round(plan.priceNumber * 0.9)}
                                                         </span>
-                                                        <span className={plan.popular ? 'text-slate-400' : 'text-slate-500'}>/mês</span>
-                                                        <span className={`text-xs mt-1 ${plan.popular ? 'text-emerald-400' : 'text-emerald-600'}`}>
+                                                        <span className="text-gray-400">/mês</span>
+                                                        <span className="text-xs mt-1 text-slate-500">
                                                             Cobrado R$ {Math.round(plan.priceNumber * 0.9 * 12).toLocaleString('pt-BR')}/ano
                                                         </span>
                                                     </div>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <span className={`text-4xl font-bold ${plan.popular ? 'text-white' : 'text-slate-900'}`}>
+                                                    <span className="text-4xl font-bold text-white">
                                                         R$ {plan.priceNumber}
                                                     </span>
-                                                    <span className={plan.popular ? 'text-slate-400' : 'text-slate-500'}>/mês</span>
+                                                    <span className="text-gray-400">/mês</span>
                                                 </>
                                             )}
                                         </div>
@@ -781,24 +570,43 @@ const LandingPage = () => {
                                         <ul className="space-y-3">
                                             {plan.features.map((feature, i) => (
                                                 <li key={i} className="flex items-center gap-3">
-                                                    <Check className={`h-5 w-5 flex-shrink-0 ${plan.popular ? 'text-indigo-400' : 'text-indigo-600'}`} />
-                                                    <span className={`text-sm ${plan.popular ? 'text-slate-300' : 'text-slate-700'}`}>{feature}</span>
+                                                    <Check className={`h-5 w-5 flex-shrink-0 ${plan.popular ? 'text-indigo-400' : 'text-emerald-400'}`} />
+                                                    <span className="text-sm text-gray-300">{feature}</span>
                                                 </li>
                                             ))}
                                         </ul>
                                         <Button
                                             className={`w-full mt-6 ${plan.popular
-                                                ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
-                                                : 'bg-slate-100 hover:bg-slate-200 text-slate-900'
+                                                ? 'bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-lg shadow-indigo-500/30'
+                                                : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
                                                 }`}
-                                            onClick={() => window.open(plan.checkoutUrl, '_blank')}
+                                            onClick={() => window.location.href = `/register?plan=${plan.name.toLowerCase()}`}
                                         >
-                                            Assinar {plan.name}
+                                            🚀 Testar Grátis por 7 Dias
                                         </Button>
                                     </CardContent>
                                 </Card>
                             </motion.div>
                         ))}
+                    </motion.div>
+
+                    {/* Trust Signals */}
+                    <motion.div
+                        {...fadeInUp}
+                        className="flex flex-wrap items-center justify-center gap-6 mt-12 text-sm text-slate-400"
+                    >
+                        <div className="flex items-center gap-2">
+                            <span>💳</span>
+                            <span>Não precisa de cartão de crédito</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span>🔓</span>
+                            <span>Cancele a qualquer momento</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span>🛡️</span>
+                            <span>7 dias de acesso total ao PRO</span>
+                        </div>
                     </motion.div>
                 </div>
             </section>
@@ -806,16 +614,16 @@ const LandingPage = () => {
 
 
             {/* FAQ Section */}
-            <section className="py-24 px-4 sm:px-6 lg:px-8 bg-slate-50">
+            <section className="py-24 px-4 sm:px-6 lg:px-8 bg-slate-950">
                 <div className="max-w-3xl mx-auto">
                     <motion.div
                         {...fadeInUp}
                         className="text-center mb-12"
                     >
-                        <h2 className="text-3xl font-bold text-slate-900 mb-4">
+                        <h2 className="text-3xl font-bold text-white mb-4">
                             Dúvidas? Temos Respostas.
                         </h2>
-                        <p className="text-slate-600">
+                        <p className="text-gray-400">
                             Tudo que você precisa saber antes de começar a dominar.
                         </p>
                     </motion.div>
@@ -834,7 +642,7 @@ const LandingPage = () => {
                             },
                             {
                                 q: "Posso testar antes de assinar?",
-                                a: "Sim! Oferecemos 7 dias de teste grátis em todos os planos pagos. Cancele a qualquer momento sem compromisso."
+                                a: "Com certeza! Oferecemos 7 dias grátis do plano PRO - sem precisar de cartão de crédito. Teste tudo à vontade e cancele quando quiser."
                             },
                             {
                                 q: "Funciona para qualquer tipo de venda?",
@@ -852,13 +660,13 @@ const LandingPage = () => {
                             <motion.details
                                 key={idx}
                                 variants={fadeInUp}
-                                className="group bg-white rounded-xl border border-slate-200 overflow-hidden"
+                                className="group bg-slate-900 rounded-xl border border-white/10 overflow-hidden"
                             >
-                                <summary className="flex items-center justify-between p-5 cursor-pointer hover:bg-slate-50 transition-colors">
-                                    <span className="font-medium text-slate-900">{faq.q}</span>
-                                    <ArrowRight className="h-5 w-5 text-slate-400 group-open:rotate-90 transition-transform" />
+                                <summary className="flex items-center justify-between p-5 cursor-pointer hover:bg-white/5 transition-colors">
+                                    <span className="font-medium text-white">{faq.q}</span>
+                                    <ArrowRight className="h-5 w-5 text-gray-400 group-open:rotate-90 transition-transform" />
                                 </summary>
-                                <div className="px-5 pb-5 text-slate-600">
+                                <div className="px-5 pb-5 text-gray-400">
                                     {faq.a}
                                 </div>
                             </motion.details>
@@ -867,86 +675,32 @@ const LandingPage = () => {
                 </div>
             </section>
 
-            {/* Contact/CTA Section */}
-            <section id="contact" className="py-24 px-4 sm:px-6 lg:px-8 bg-indigo-600 relative overflow-hidden">
-                {/* Background decoration */}
-                <div className="absolute inset-0 opacity-10">
-                    <div className="absolute top-0 left-1/4 w-96 h-96 bg-white rounded-full blur-3xl" />
-                    <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-white rounded-full blur-3xl" />
-                </div>
 
-                <motion.div
-                    {...fadeInUp}
-                    className="relative z-10 max-w-4xl mx-auto text-center text-white"
-                >
-                    <Badge className="mb-6 bg-white/20 text-white border-white/30">
-                        <Sparkles className="h-3 w-3 mr-1" />
-                        ⚡ Últimas Vagas do Mês
-                    </Badge>
-                    <h2 className="text-3xl sm:text-5xl font-bold mb-4">
-                        Seus Concorrentes Já Estão Vendendo Mais.
-                    </h2>
-                    <p className="text-lg text-indigo-100 mb-8 max-w-2xl mx-auto">
-                        <strong>E você?</strong> Começe agora e veja resultados em 7 dias ou devolvemos seu dinheiro.
-                    </p>
 
-                    {/* Trust badges */}
-                    <div className="flex flex-wrap justify-center gap-4 mb-10">
-                        <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full">
-                            <Check className="h-4 w-4 text-emerald-400" />
-                            <span className="text-sm">7 dias grátis</span>
-                        </div>
-                        <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full">
-                            <Check className="h-4 w-4 text-emerald-400" />
-                            <span className="text-sm">Sem cartão de crédito</span>
-                        </div>
-                        <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full">
-                            <Check className="h-4 w-4 text-emerald-400" />
-                            <span className="text-sm">Cancele quando quiser</span>
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                        <Button
-                            size="lg"
-                            onClick={() => goToRegister('plus')}
-                            className="bg-white text-indigo-600 hover:bg-indigo-50 text-base h-14 px-10 font-semibold shadow-xl"
-                        >
-                            Começar Meu Teste Grátis
-                            <ArrowRight className="ml-2 h-5 w-5" />
-                        </Button>
-                        <Button
-                            size="lg"
-                            className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-indigo-600 text-base h-14 px-8 font-medium"
-                            onClick={() => window.open("https://wa.me/5500000000000", "_blank")}
-                        >
-                            Falar no WhatsApp
-                        </Button>
-                    </div>
-                </motion.div>
-            </section>
+            {/* Final CTA */}
+            <FinalCTA onCTAClick={() => goToRegister('pro')} />
 
             {/* Footer */}
-            <footer className="py-12 px-4 sm:px-6 lg:px-8 bg-white border-t border-slate-200">
+            <footer className="py-12 px-4 sm:px-6 lg:px-8 bg-slate-950 border-t border-white/5">
                 <div className="max-w-7xl mx-auto">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                        <img src={brandLogo} alt="Game Sales" className="h-8" />
-                        <div className="flex gap-8 text-sm text-slate-600">
-                            <button onClick={() => scrollToSection("features")} className="hover:text-slate-900 transition-colors">
+                        <img src={brandLogoWhite} alt="Game Sales" className="h-8" />
+                        <div className="flex gap-8 text-sm text-gray-400">
+                            <button onClick={() => scrollToSection("features")} className="hover:text-white transition-colors">
                                 Funcionalidades
                             </button>
-                            <button onClick={() => scrollToSection("pricing")} className="hover:text-slate-900 transition-colors">
+                            <button onClick={() => scrollToSection("pricing")} className="hover:text-white transition-colors">
                                 Preços
                             </button>
-                            <button onClick={() => navigate("/politica-privacidade")} className="hover:text-slate-900 transition-colors">
+                            <button onClick={() => navigate("/politica-privacidade")} className="hover:text-white transition-colors">
                                 Privacidade
                             </button>
-                            <button onClick={() => navigate("/auth")} className="hover:text-slate-900 transition-colors">
+                            <button onClick={() => navigate("/auth")} className="hover:text-white transition-colors">
                                 Login
                             </button>
                         </div>
                     </div>
-                    <div className="mt-8 text-center text-sm text-slate-500">
+                    <div className="mt-8 text-center text-sm text-gray-500">
                         © 2025 Game Sales. Todos os direitos reservados.
                     </div>
                 </div>

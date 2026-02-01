@@ -32,27 +32,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import gameSalesLogo from "@/assets/logo-full.png";
 import { Confetti } from "@/components/crm/Confetti";
+import { addDays } from "date-fns";
 
-// Plan details
-const planDetails: Record<string, { name: string; price: string; color: string; gradient: string }> = {
-    starter: {
-        name: "Starter",
-        price: "R$ 147/mês",
-        color: "text-blue-400",
-        gradient: "from-blue-500 to-cyan-500"
-    },
-    plus: {
-        name: "Plus",
-        price: "R$ 297/mês",
-        color: "text-indigo-400",
-        gradient: "from-indigo-500 to-purple-500"
-    },
-    pro: {
-        name: "Pro",
-        price: "R$ 797/mês",
-        color: "text-amber-400",
-        gradient: "from-amber-500 to-orange-500"
-    }
+// Trial info - always PRO plan
+const TRIAL_DAYS = 7;
+const TRIAL_PLAN = {
+    name: "Pro",
+    color: "text-amber-400"
 };
 
 // How did you hear about us options
@@ -94,29 +80,23 @@ export default function Onboarding() {
     const { user } = useAuth();
     const inputRef = useRef<HTMLInputElement>(null);
 
-    // Get plan from URL
-    const planParam = searchParams.get("plan") || "starter";
-    const plan = planDetails[planParam] || planDetails.starter;
+    // Trial is always PRO (7 days)
 
     // States
     const [currentStep, setCurrentStep] = useState(1);
-    const [showConfetti, setShowConfetti] = useState(true);
+    const [showConfetti, setShowConfetti] = useState(false); // Only show on completion
     const [isLoading, setIsLoading] = useState(false);
     const [isComplete, setIsComplete] = useState(false);
     const [direction, setDirection] = useState(1); // 1 for forward, -1 for backward
 
     // Form data
     const [userName, setUserName] = useState("");
+    const [userEmail, setUserEmail] = useState("");
+    const [userPassword, setUserPassword] = useState("");
     const [companyName, setCompanyName] = useState("");
     const [teamSize, setTeamSize] = useState("");
     const [referralSource, setReferralSource] = useState("");
     const [mainChallenge, setMainChallenge] = useState("");
-
-    // Hide initial confetti after 3 seconds
-    useEffect(() => {
-        const timer = setTimeout(() => setShowConfetti(false), 3000);
-        return () => clearTimeout(timer);
-    }, []);
 
     // Focus input when step changes
     useEffect(() => {
@@ -139,7 +119,7 @@ export default function Onboarding() {
 
     const canProceed = () => {
         switch (currentStep) {
-            case 1: return userName.length >= 2;
+            case 1: return userName.length >= 2 && userEmail.includes('@') && userPassword.length >= 6;
             case 2: return companyName.length >= 2;
             case 3: return teamSize !== "";
             case 4: return referralSource !== "";
@@ -172,23 +152,41 @@ export default function Onboarding() {
         setIsLoading(true);
 
         try {
-            // Get current user
-            const { data: { user: currentUser } } = await supabase.auth.getUser();
+            let currentUser = user;
 
+            // If not logged in, create account
             if (!currentUser) {
-                throw new Error("Usuário não encontrado. Faça login novamente.");
+                const { data: authData, error: authError } = await supabase.auth.signUp({
+                    email: userEmail,
+                    password: userPassword,
+                    options: {
+                        data: {
+                            nome: userName
+                        }
+                    }
+                });
+
+                if (authError) throw authError;
+                if (!authData.user) throw new Error("Erro ao criar conta. Tente novamente.");
+
+                currentUser = authData.user;
             }
 
-            // Create company with all collected data
+            // Calculate trial end date (7 days from now)
+            const trialEndsAt = addDays(new Date(), 7).toISOString();
+
+            // Create company with trial status - always start on PRO trial
             const { data: companyData, error: companyError } = await supabase
                 .from("companies")
                 .insert({
                     name: companyName,
-                    plan: planParam === "starter" ? "basic" : planParam,
+                    plan: 'pro', // Start on PRO for reverse trial
                     team_size: teamSize,
                     referral_source: referralSource,
-                    main_challenge: mainChallenge
-                })
+                    main_challenge: mainChallenge,
+                    trial_ends_at: trialEndsAt,
+                    subscription_status: 'trialing'
+                } as any) // Type assertion until migration is applied
                 .select()
                 .single();
 
@@ -210,9 +208,9 @@ export default function Onboarding() {
             setIsComplete(true);
             setShowConfetti(true);
 
-            // Redirect after 2.5 seconds
+            // Redirect to dashboard after 2.5 seconds (skip checkout)
             setTimeout(() => {
-                navigate("/dashboard");
+                navigate("/admin/dashboard");
             }, 2500);
 
         } catch (error: any) {
@@ -227,31 +225,48 @@ export default function Onboarding() {
         }
     };
 
-    // Animation variants
+    // Animation variants - smoother spring animations
     const slideVariants = {
         enter: (direction: number) => ({
-            x: direction > 0 ? 100 : -100,
-            opacity: 0
+            x: direction > 0 ? 50 : -50,
+            opacity: 0,
+            scale: 0.98
         }),
         center: {
             x: 0,
-            opacity: 1
+            opacity: 1,
+            scale: 1
         },
         exit: (direction: number) => ({
-            x: direction > 0 ? -100 : 100,
-            opacity: 0
+            x: direction > 0 ? -50 : 50,
+            opacity: 0,
+            scale: 0.98
         })
     };
 
-    // Progress bar component
+    // Auto-advance when selection is made
+    const handleSelectionWithAdvance = (setter: (val: string) => void, value: string) => {
+        setter(value);
+        // Small delay for visual feedback before advancing
+        setTimeout(() => {
+            setDirection(1);
+            if (currentStep < TOTAL_STEPS) {
+                setCurrentStep(prev => prev + 1);
+            } else {
+                handleSubmit();
+            }
+        }, 300);
+    };
+
+    // Progress bar component - Gold XP style
     const ProgressBar = () => (
-        <div className="flex items-center gap-2 mb-8">
+        <div className="flex items-center gap-2 mb-6">
             {Array.from({ length: TOTAL_STEPS }).map((_, index) => (
                 <div
                     key={index}
-                    className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${index + 1 <= currentStep
-                            ? "bg-gradient-to-r from-indigo-500 to-purple-500"
-                            : "bg-white/10"
+                    className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${index + 1 <= currentStep
+                        ? "bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.4)]"
+                        : "bg-slate-800"
                         }`}
                 />
             ))}
@@ -264,36 +279,62 @@ export default function Onboarding() {
             case 1:
                 return (
                     <div className="text-center">
-                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center mx-auto mb-6">
-                            <User className="h-10 w-10 text-white" />
-                        </div>
-                        <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">
-                            Qual é o seu nome?
+                        <motion.div
+                            initial={{ scale: 0, rotate: -10 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                            className="w-14 h-14 rounded-full bg-slate-900 border border-amber-500/30 flex items-center justify-center mx-auto mb-5 shadow-[0_0_15px_-3px_rgba(245,158,11,0.2)]"
+                        >
+                            <User className="h-7 w-7 text-amber-500" />
+                        </motion.div>
+                        <h2 className="text-2xl font-bold text-white tracking-tight mb-1">
+                            Crie sua conta grátis
                         </h2>
-                        <p className="text-white/60 mb-8">
-                            Queremos te conhecer melhor! 👋
+                        <p className="text-amber-400 font-medium mb-5 text-sm">
+                            7 dias grátis do plano <span className="font-bold">PRO</span> 🚀
                         </p>
-                        <Input
-                            ref={inputRef}
-                            placeholder="Digite seu nome"
-                            value={userName}
-                            onChange={(e) => setUserName(e.target.value)}
-                            className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-indigo-400 h-14 text-lg text-center"
-                            autoFocus
-                        />
+                        <div className="space-y-3">
+                            <Input
+                                ref={inputRef}
+                                placeholder="Seu nome"
+                                value={userName}
+                                onChange={(e) => setUserName(e.target.value)}
+                                className="bg-slate-950 border border-slate-800 text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-indigo-600 h-12 text-base rounded-xl"
+                                autoFocus
+                            />
+                            <Input
+                                type="email"
+                                placeholder="E-mail"
+                                value={userEmail}
+                                onChange={(e) => setUserEmail(e.target.value)}
+                                className="bg-slate-950 border border-slate-800 text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-indigo-600 h-12 text-base rounded-xl"
+                            />
+                            <Input
+                                type="password"
+                                placeholder="Senha (mín. 6 caracteres)"
+                                value={userPassword}
+                                onChange={(e) => setUserPassword(e.target.value)}
+                                className="bg-slate-950 border border-slate-800 text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-indigo-600 h-12 text-base rounded-xl"
+                            />
+                        </div>
                     </div>
                 );
 
             case 2:
                 return (
                     <div className="text-center">
-                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center mx-auto mb-6">
-                            <Building2 className="h-10 w-10 text-white" />
-                        </div>
-                        <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">
+                        <motion.div
+                            initial={{ scale: 0, rotate: -10 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                            className="w-14 h-14 rounded-full bg-slate-900 border border-amber-500/30 flex items-center justify-center mx-auto mb-5 shadow-[0_0_15px_-3px_rgba(245,158,11,0.2)]"
+                        >
+                            <Building2 className="h-7 w-7 text-amber-500" />
+                        </motion.div>
+                        <h2 className="text-2xl font-bold text-white tracking-tight mb-1">
                             Qual é o nome da sua empresa?
                         </h2>
-                        <p className="text-white/60 mb-8">
+                        <p className="text-slate-400 mb-5 text-sm">
                             Vamos configurar seu espaço de trabalho
                         </p>
                         <Input
@@ -301,7 +342,7 @@ export default function Onboarding() {
                             placeholder="Ex: Empresa XYZ"
                             value={companyName}
                             onChange={(e) => setCompanyName(e.target.value)}
-                            className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-blue-400 h-14 text-lg text-center"
+                            className="bg-slate-950 border border-slate-800 text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-indigo-600 h-12 text-base text-center rounded-xl"
                             autoFocus
                         />
                     </div>
@@ -310,28 +351,38 @@ export default function Onboarding() {
             case 3:
                 return (
                     <div className="text-center">
-                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center mx-auto mb-6">
-                            <Users className="h-10 w-10 text-white" />
-                        </div>
-                        <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">
+                        <motion.div
+                            initial={{ scale: 0, rotate: -10 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                            className="w-14 h-14 rounded-full bg-slate-900 border border-amber-500/30 flex items-center justify-center mx-auto mb-5 shadow-[0_0_15px_-3px_rgba(245,158,11,0.2)]"
+                        >
+                            <Users className="h-7 w-7 text-amber-500" />
+                        </motion.div>
+                        <h2 className="text-2xl font-bold text-white tracking-tight mb-1">
                             Quantos vendedores você tem?
                         </h2>
-                        <p className="text-white/60 mb-8">
+                        <p className="text-slate-400 mb-5 text-sm">
                             Isso nos ajuda a personalizar sua experiência
                         </p>
-                        <div className="grid gap-3">
-                            {companySizes.map((size) => (
-                                <button
+                        <div className="grid gap-2">
+                            {companySizes.map((size, index) => (
+                                <motion.button
                                     key={size.id}
-                                    onClick={() => setTeamSize(size.id)}
-                                    className={`flex items-center justify-between px-5 py-4 rounded-xl border transition-all ${teamSize === size.id
-                                            ? "bg-emerald-500/20 border-emerald-400/50 text-white"
-                                            : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white"
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: index * 0.05, duration: 0.2 }}
+                                    onClick={() => handleSelectionWithAdvance(setTeamSize, size.id)}
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    className={`flex items-center justify-between px-5 py-3.5 rounded-xl border transition-all duration-200 ${teamSize === size.id
+                                        ? "bg-indigo-600/20 border-indigo-500/50 text-white ring-2 ring-indigo-500/30 scale-[1.02]"
+                                        : "bg-slate-950 border-slate-800 text-slate-400 hover:bg-slate-900 hover:text-white hover:border-slate-700"
                                         }`}
                                 >
                                     <span className="font-medium">{size.label}</span>
-                                    <span className="text-sm text-white/50">{size.description}</span>
-                                </button>
+                                    <span className="text-sm text-slate-500">{size.description}</span>
+                                </motion.button>
                             ))}
                         </div>
                     </div>
@@ -340,31 +391,41 @@ export default function Onboarding() {
             case 4:
                 return (
                     <div className="text-center">
-                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center mx-auto mb-6">
-                            <Sparkles className="h-10 w-10 text-white" />
-                        </div>
-                        <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">
+                        <motion.div
+                            initial={{ scale: 0, rotate: -10 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                            className="w-14 h-14 rounded-full bg-slate-900 border border-amber-500/30 flex items-center justify-center mx-auto mb-5 shadow-[0_0_15px_-3px_rgba(245,158,11,0.2)]"
+                        >
+                            <Sparkles className="h-7 w-7 text-amber-500" />
+                        </motion.div>
+                        <h2 className="text-2xl font-bold text-white tracking-tight mb-1">
                             Por onde nos conheceu?
                         </h2>
-                        <p className="text-white/60 mb-8">
+                        <p className="text-slate-400 mb-5 text-sm">
                             Adoramos saber como você chegou até nós!
                         </p>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                            {referralSources.map((source) => {
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            {referralSources.map((source, index) => {
                                 const Icon = source.icon;
                                 const isSelected = referralSource === source.id;
                                 return (
-                                    <button
+                                    <motion.button
                                         key={source.id}
-                                        onClick={() => setReferralSource(source.id)}
-                                        className={`flex flex-col items-center gap-2 px-4 py-4 rounded-xl border transition-all ${isSelected
-                                                ? "bg-pink-500/20 border-pink-400/50 text-white"
-                                                : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white"
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: index * 0.04, duration: 0.2 }}
+                                        onClick={() => handleSelectionWithAdvance(setReferralSource, source.id)}
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        className={`flex flex-col items-center gap-2 px-4 py-3.5 rounded-xl border transition-all duration-200 ${isSelected
+                                            ? "bg-indigo-600/20 border-indigo-500/50 text-white ring-2 ring-indigo-500/30 scale-105"
+                                            : "bg-slate-950 border-slate-800 text-slate-400 hover:bg-slate-900 hover:text-white hover:border-slate-700"
                                             }`}
                                     >
-                                        <Icon className="h-6 w-6" />
-                                        <span className="text-sm font-medium">{source.label}</span>
-                                    </button>
+                                        <Icon className="h-5 w-5" />
+                                        <span className="text-xs font-medium">{source.label}</span>
+                                    </motion.button>
                                 );
                             })}
                         </div>
@@ -374,31 +435,41 @@ export default function Onboarding() {
             case 5:
                 return (
                     <div className="text-center">
-                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center mx-auto mb-6">
-                            <Target className="h-10 w-10 text-white" />
-                        </div>
-                        <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">
+                        <motion.div
+                            initial={{ scale: 0, rotate: -10 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                            className="w-14 h-14 rounded-full bg-slate-900 border border-amber-500/30 flex items-center justify-center mx-auto mb-5 shadow-[0_0_15px_-3px_rgba(245,158,11,0.2)]"
+                        >
+                            <Target className="h-7 w-7 text-amber-500" />
+                        </motion.div>
+                        <h2 className="text-2xl font-bold text-white tracking-tight mb-1">
                             Qual o maior desafio do seu time?
                         </h2>
-                        <p className="text-white/60 mb-8">
+                        <p className="text-slate-400 mb-5 text-sm">
                             Queremos ajudar você a superar esse obstáculo! 💪
                         </p>
-                        <div className="grid gap-3">
-                            {mainChallenges.map((challenge) => {
+                        <div className="grid gap-2">
+                            {mainChallenges.map((challenge, index) => {
                                 const Icon = challenge.icon;
                                 const isSelected = mainChallenge === challenge.id;
                                 return (
-                                    <button
+                                    <motion.button
                                         key={challenge.id}
-                                        onClick={() => setMainChallenge(challenge.id)}
-                                        className={`flex items-center gap-4 px-5 py-4 rounded-xl border transition-all ${isSelected
-                                                ? "bg-amber-500/20 border-amber-400/50 text-white"
-                                                : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white"
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: index * 0.05, duration: 0.2 }}
+                                        onClick={() => handleSelectionWithAdvance(setMainChallenge, challenge.id)}
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        className={`flex items-center gap-4 px-5 py-3.5 rounded-xl border transition-all duration-200 ${isSelected
+                                            ? "bg-indigo-600/20 border-indigo-500/50 text-white ring-2 ring-indigo-500/30 scale-[1.02]"
+                                            : "bg-slate-950 border-slate-800 text-slate-400 hover:bg-slate-900 hover:text-white hover:border-slate-700"
                                             }`}
                                     >
                                         <Icon className="h-5 w-5 flex-shrink-0" />
                                         <span className="font-medium text-left">{challenge.label}</span>
-                                    </button>
+                                    </motion.button>
                                 );
                             })}
                         </div>
@@ -413,7 +484,7 @@ export default function Onboarding() {
     // Success screen
     if (isComplete) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex items-center justify-center p-4">
+            <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 selection:bg-indigo-500/30">
                 <Confetti show={showConfetti} />
 
                 <motion.div
@@ -425,25 +496,33 @@ export default function Onboarding() {
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ type: "spring", delay: 0.2 }}
-                        className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center mx-auto mb-8"
+                        className="w-20 h-20 rounded-full bg-emerald-500 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-500/30"
                     >
-                        <CheckCircle2 className="h-12 w-12 text-white" />
+                        <Trophy className="h-10 w-10 text-white" />
                     </motion.div>
 
-                    <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3">
-                        Tudo pronto, {userName}! 🚀
+                    <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.3 }}
+                        className="text-amber-400 font-bold text-sm uppercase tracking-wider mb-2"
+                    >
+                        🏆 Level 1 Desbloqueado
+                    </motion.p>
+                    <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">
+                        Bem-vindo, {userName}!
                     </h1>
-                    <p className="text-white/60 text-lg mb-6">
-                        Sua conta foi configurada com sucesso
+                    <p className="text-slate-400 text-lg mb-8">
+                        Sua jornada no Game Sales começa agora
                     </p>
 
                     <div className="flex items-center justify-center gap-1">
-                        <div className="w-2 h-2 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                        <div className="w-2 h-2 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                        <div className="w-2 h-2 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                        <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                        <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                        <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
                     </div>
-                    <p className="text-white/40 text-sm mt-4">
-                        Redirecionando para o dashboard...
+                    <p className="text-slate-600 text-sm mt-4">
+                        Entrando no dashboard...
                     </p>
                 </motion.div>
             </div>
@@ -451,20 +530,14 @@ export default function Onboarding() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 selection:bg-indigo-500/30">
             {/* Confetti */}
             <Confetti show={showConfetti} />
-
-            {/* Background decoration */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl" />
-                <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl" />
-            </div>
 
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="relative z-10 w-full max-w-lg"
+                className="relative z-10 w-full max-w-xl"
             >
                 {/* Logo */}
                 <div className="text-center mb-6">
@@ -475,7 +548,7 @@ export default function Onboarding() {
                             animate={{ opacity: 1 }}
                             className="text-white/60 text-sm"
                         >
-                            Plano <span className={`font-semibold ${plan.color}`}>{plan.name}</span> ativado ✓
+                            🎮 Trial de <span className="font-semibold text-amber-400">7 dias</span> do plano <span className="font-semibold text-amber-400">PRO</span>
                         </motion.p>
                     )}
                 </div>
@@ -483,11 +556,11 @@ export default function Onboarding() {
                 {/* Progress bar */}
                 <ProgressBar />
 
-                {/* Card */}
-                <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 sm:p-8">
+                {/* Card - The Console */}
+                <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-800/50 rounded-2xl shadow-2xl shadow-black p-8">
                     {/* Step counter */}
                     <div className="text-center mb-6">
-                        <span className="text-white/40 text-sm">
+                        <span className="text-slate-500 text-sm">
                             Passo {currentStep} de {TOTAL_STEPS}
                         </span>
                     </div>
@@ -501,7 +574,12 @@ export default function Onboarding() {
                             initial="enter"
                             animate="center"
                             exit="exit"
-                            transition={{ duration: 0.3, ease: "easeInOut" }}
+                            transition={{
+                                type: "spring",
+                                stiffness: 300,
+                                damping: 30,
+                                duration: 0.25
+                            }}
                         >
                             {renderStep()}
                         </motion.div>
@@ -510,21 +588,20 @@ export default function Onboarding() {
                     {/* Navigation buttons */}
                     <div className="flex items-center gap-3 mt-8">
                         {currentStep > 1 && (
-                            <Button
-                                variant="outline"
+                            <button
                                 onClick={handleBack}
                                 disabled={isLoading}
-                                className="flex-1 h-12 bg-white/5 border-white/20 text-white hover:bg-white/10"
+                                className="text-slate-500 hover:text-white transition-colors px-4 py-2 disabled:opacity-50"
                             >
-                                <ArrowLeft className="mr-2 h-4 w-4" />
+                                <ArrowLeft className="inline mr-1 h-4 w-4" />
                                 Voltar
-                            </Button>
+                            </button>
                         )}
 
                         <Button
                             onClick={handleNext}
                             disabled={!canProceed() || isLoading}
-                            className={`flex-1 h-12 bg-gradient-to-r ${plan.gradient} hover:opacity-90 text-white font-semibold`}
+                            className="flex-1 h-12 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/20 border-none transition-all hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:hover:translate-y-0"
                         >
                             {isLoading ? (
                                 <>
@@ -546,8 +623,8 @@ export default function Onboarding() {
                     </div>
 
                     {/* Keyboard hint */}
-                    <p className="text-center text-white/30 text-xs mt-4">
-                        Pressione <kbd className="px-1.5 py-0.5 bg-white/10 rounded">Enter</kbd> para continuar
+                    <p className="text-center text-slate-600 text-xs mt-4">
+                        Pressione <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-slate-400">Enter</kbd> para continuar
                     </p>
                 </div>
             </motion.div>

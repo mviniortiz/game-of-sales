@@ -37,11 +37,7 @@ const Metas = () => {
   const [selectedMetaId, setSelectedMetaId] = useState<string>("all");
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Feature gate check
-  if (needsUpgrade('metas')) {
-    return <UpgradePrompt feature="metas" />;
-  }
-
+  // Note: Feature gate check moved after all hooks (React rules of hooks)
 
   const applyCompanyFilter = (query: any) => {
     // SECURITY: Always require a valid company_id to prevent data leakage
@@ -301,6 +297,11 @@ const Metas = () => {
   };
 
   const isLoading = loadingConsolidadas || loadingIndividuais;
+
+  // Feature gate check - must be after all hooks
+  if (needsUpgrade('metas')) {
+    return <UpgradePrompt feature="metas" />;
+  }
 
   return (
     <div className="space-y-4 sm:space-y-6 px-2 sm:px-1">

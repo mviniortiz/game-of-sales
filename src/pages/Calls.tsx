@@ -62,8 +62,32 @@ interface KPICardProps {
   trend?: number;
   trendLabel?: string;
   highlight?: boolean;
-  highlightColor?: string;
+  highlightColor?: "emerald" | "indigo" | "cyan" | "amber";
 }
+
+// Static Tailwind classes map to ensure proper CSS generation
+const highlightColorClasses = {
+  emerald: {
+    ring: "ring-2 ring-emerald-500/50",
+    text: "text-emerald-600 dark:text-emerald-400",
+    bg: "bg-emerald-100 dark:bg-emerald-500/20",
+  },
+  indigo: {
+    ring: "ring-2 ring-indigo-500/50",
+    text: "text-indigo-600 dark:text-indigo-400",
+    bg: "bg-indigo-100 dark:bg-indigo-500/20",
+  },
+  cyan: {
+    ring: "ring-2 ring-cyan-500/50",
+    text: "text-cyan-600 dark:text-cyan-400",
+    bg: "bg-cyan-100 dark:bg-cyan-500/20",
+  },
+  amber: {
+    ring: "ring-2 ring-amber-500/50",
+    text: "text-amber-600 dark:text-amber-400",
+    bg: "bg-amber-100 dark:bg-amber-500/20",
+  },
+};
 
 const KPICard = ({
   title,
@@ -77,26 +101,24 @@ const KPICard = ({
 }: KPICardProps) => {
   const isPositive = trend && trend > 0;
   const TrendIcon = isPositive ? ArrowUpRight : ArrowDownRight;
+  const colorClasses = highlightColorClasses[highlightColor];
 
   return (
-    <Card className={`border bg-card shadow-sm hover:shadow-md transition-all duration-300 ${highlight ? `ring-2 ring-${highlightColor}-500/50` : 'border-border'
-      }`}>
+    <Card className={`border bg-card shadow-sm hover:shadow-md transition-all duration-300 ${highlight ? colorClasses.ring : 'border-border'}`}>
       <CardContent className="p-5">
         <div className="flex items-center justify-between">
           <div className="flex-1">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
               {title}
             </p>
-            <p className={`text-3xl font-bold tabular-nums tracking-tight ${highlight ? `text-${highlightColor}-600 dark:text-${highlightColor}-400` : 'text-foreground'
-              }`}>
+            <p className={`text-3xl font-bold tabular-nums tracking-tight ${highlight ? colorClasses.text : 'text-foreground'}`}>
               {value}
             </p>
 
             {/* Trend or Subtitle */}
             <div className="flex items-center gap-2 mt-2">
               {trend !== undefined && (
-                <span className={`flex items-center text-xs font-medium ${isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
-                  }`}>
+                <span className={`flex items-center text-xs font-medium ${isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                   <TrendIcon className="h-3 w-3 mr-0.5" />
                   {Math.abs(trend).toFixed(1)}%
                 </span>
@@ -110,14 +132,8 @@ const KPICard = ({
           </div>
 
           {/* Icon */}
-          <div className={`p-3 rounded-xl ${highlight
-            ? `bg-${highlightColor}-100 dark:bg-${highlightColor}-500/20`
-            : 'bg-indigo-50 dark:bg-indigo-500/10'
-            }`}>
-            <Icon className={`h-6 w-6 ${highlight
-              ? `text-${highlightColor}-600 dark:text-${highlightColor}-400`
-              : 'text-indigo-600 dark:text-indigo-400'
-              }`} />
+          <div className={`p-3 rounded-xl ${highlight ? colorClasses.bg : 'bg-indigo-50 dark:bg-indigo-500/10'}`}>
+            <Icon className={`h-6 w-6 ${highlight ? colorClasses.text : 'text-indigo-600 dark:text-indigo-400'}`} />
           </div>
         </div>
       </CardContent>
@@ -310,6 +326,7 @@ const CallHistoryTable = ({ data }: { data: CallHistory[] }) => {
   };
 
   const getInitials = (name: string) => {
+    if (!name) return "?";
     return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
   };
 
@@ -377,12 +394,7 @@ const Calls = () => {
   const queryClient = useQueryClient();
   const { activeCompanyId } = useTenant();
 
-  // Feature gate check
-  if (needsUpgrade('calls')) {
-    return <UpgradePrompt feature="calls" />;
-  }
-
-  // Sheet states
+  // Sheet states - hooks must be called unconditionally
   const [showCallSheet, setShowCallSheet] = useState(false);
   const [showAgendamentoSheet, setShowAgendamentoSheet] = useState(false);
 
@@ -538,7 +550,7 @@ const Calls = () => {
       const { data } = await query;
 
       return (data || []).map((call: any) => {
-        const status = call.attendance_status === 'noshow'
+        const status: CallHistory['status'] = call.attendance_status === 'noshow'
           ? 'noshow'
           : call.resultado === 'venda'
             ? 'venda'
@@ -568,6 +580,11 @@ const Calls = () => {
     }
     return `R$ ${value.toFixed(0)}`;
   };
+
+  // Feature gate check - must be after all hooks
+  if (needsUpgrade('calls')) {
+    return <UpgradePrompt feature="calls" />;
+  }
 
   return (
     <div className="space-y-6 px-1">

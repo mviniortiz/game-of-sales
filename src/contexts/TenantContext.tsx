@@ -9,6 +9,8 @@ interface Company {
   name: string;
   plan: string;
   logo_url: string | null;
+  trial_ends_at: string | null;
+  subscription_status: 'active' | 'trialing' | 'expired' | 'cancelled';
 }
 
 interface TenantContextType {
@@ -63,27 +65,30 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
             // Super admin can see all companies
             const { data: allCompanies } = await supabase
               .from('companies')
-              .select('*')
+              .select('id, name, plan, logo_url, trial_ends_at, subscription_status')
               .order('name');
 
             if (allCompanies) {
-              setCompanies(allCompanies);
+              // Type assertion needed until migration adds trial columns
+              const typedCompanies = allCompanies as unknown as Company[];
+              setCompanies(typedCompanies);
               // Use stored company or first one
-              const targetCompany = storedCompanyId && allCompanies.find(c => c.id === storedCompanyId)
+              const targetCompany = storedCompanyId && typedCompanies.find(c => c.id === storedCompanyId)
                 ? storedCompanyId
-                : allCompanies[0]?.id || null;
+                : typedCompanies[0]?.id || null;
               setActiveCompanyId(targetCompany);
             }
           } else {
             // Regular users load only their own company
             const { data: companyData } = await supabase
               .from('companies')
-              .select('*')
+              .select('id, name, plan, logo_url, trial_ends_at, subscription_status')
               .eq('id', profileData.company_id)
               .single();
 
             if (companyData) {
-              setCompanies([companyData]);
+              // Type assertion needed until migration adds trial columns
+              setCompanies([companyData as unknown as Company]);
               setActiveCompanyId(profileData.company_id);
             }
           }
