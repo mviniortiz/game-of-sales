@@ -1,10 +1,12 @@
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Filter, Users, CreditCard, Package, X } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { CalendarIcon, Filter, Users, CreditCard, Package, X, ChevronDown, SlidersHorizontal } from "lucide-react";
 import { format, isSameDay, differenceInCalendarDays, startOfMonth, startOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -36,6 +38,8 @@ export const AdminFilters = ({
   produtos = [],
   activeCompanyId,
 }: AdminFiltersProps) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   const formasPagamento = [
     "Cartão de Crédito",
     "PIX",
@@ -153,201 +157,209 @@ export const AdminFilters = ({
   };
 
   return (
-    <Card className="border border-border bg-card shadow-sm">
+    <Card className="border border-slate-800 bg-slate-900 shadow-sm rounded-xl overflow-hidden">
       <CardContent className="p-4 space-y-4">
+        {/* Header with quick actions - Always visible */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <div className="h-9 w-9 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/30 flex items-center justify-center">
-              <Filter className="h-4 w-4 text-indigo-600 dark:text-indigo-200" />
+            <div className="h-9 w-9 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center">
+              <Filter className="h-4 w-4 text-indigo-400" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                Filtros Globais
-                <span className="text-xs font-medium text-indigo-600 dark:text-indigo-200 bg-indigo-50 dark:bg-indigo-500/15 px-2 py-1 rounded-full">
-                  {activeCount} ativo{activeCount === 1 ? "" : "s"}
-                </span>
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                Filtros
+                {activeCount > 0 && (
+                  <span className="text-xs font-medium text-indigo-300 bg-indigo-500/15 px-2 py-1 rounded-full ring-1 ring-indigo-500/20">
+                    {activeCount} ativo{activeCount === 1 ? "" : "s"}
+                  </span>
+                )}
               </h3>
-              <p className="text-xs text-muted-foreground">Aplique combinações rápidas ou escolha filtros individuais.</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 border-gray-200 dark:border-border bg-white dark:bg-secondary text-gray-700 dark:text-foreground hover:bg-gray-50 dark:hover:bg-secondary/80"
-              onClick={() => setDateRange({ from: new Date(), to: new Date() })}
-            >
-              Hoje
-            </Button>
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Quick Period Buttons - Always visible */}
+            {[
+              { id: "hoje", label: "Hoje" },
+              { id: "semana", label: "Esta Semana" },
+              { id: "mes", label: "Este Mês" },
+              { id: "30dias", label: "30 dias" },
+            ].map((range) => (
+              <Button
+                key={range.id}
+                variant={isQuickRangeActive(range.id) ? "default" : "outline"}
+                size="sm"
+                className={cn(
+                  "h-8 text-xs",
+                  isQuickRangeActive(range.id)
+                    ? "bg-indigo-600 text-white border-indigo-500 hover:bg-indigo-700"
+                    : "bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white"
+                )}
+                onClick={() => setQuickRange(range.id)}
+              >
+                {range.label}
+              </Button>
+            ))}
             {activeCount > 0 && (
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-9 text-rose-600 dark:text-rose-300 hover:text-rose-700 dark:hover:text-rose-200 hover:bg-rose-50 dark:hover:bg-rose-500/10"
+                className="h-8 text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-500/10"
                 onClick={handleClearAll}
               >
-                Limpar tudo
+                <X className="h-3 w-3 mr-1" />
+                Limpar
               </Button>
             )}
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 min-h-[38px] border border-border rounded-xl bg-card px-3 py-2">
-          {activeFilters.length === 0 ? (
-            <span className="text-xs text-muted-foreground flex items-center gap-1">
-              Nenhum filtro ativo
-            </span>
-          ) : (
-            activeFilters.map((f) => (
+        {/* Active Filters Pills - Always visible when there are filters */}
+        {activeFilters.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {activeFilters.map((f) => (
               <div
                 key={f.key}
-                className="inline-flex items-center h-8 rounded-full px-3 text-xs bg-indigo-50 border border-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:border-indigo-500/30 dark:text-indigo-100"
+                className="inline-flex items-center h-7 rounded-full px-3 text-xs bg-indigo-500/10 border border-indigo-500/20 text-indigo-200"
               >
-                <span className="font-semibold text-indigo-700 dark:text-indigo-100">{f.label}:</span>
-                <span className="ml-1 text-foreground">{f.value}</span>
+                <span className="font-medium text-indigo-300">{f.label}:</span>
+                <span className="ml-1 text-slate-300">{f.value}</span>
                 <button
                   type="button"
                   onClick={() => handleRemoveFilter(f.key)}
-                  className="ml-2 p-0.5 rounded-full hover:bg-indigo-200 dark:hover:bg-indigo-500/30 transition-colors"
+                  className="ml-2 p-0.5 rounded-full hover:bg-indigo-500/30 transition-colors"
                 >
-                  <X className="h-3.5 w-3.5 text-indigo-500 dark:text-indigo-200 hover:text-indigo-700 dark:hover:text-indigo-100 cursor-pointer" />
+                  <X className="h-3 w-3 text-indigo-400 hover:text-indigo-200 cursor-pointer" />
                 </button>
               </div>
-            ))
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-          {/* Período Customizado */}
-          <div className="space-y-2 lg:col-span-2">
-            <Label className="flex items-center gap-2 text-sm text-foreground">
-              <CalendarIcon className="h-4 w-4 text-indigo-600 dark:text-indigo-200" />
-              Período Customizado
-            </Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={cn(
-                    "w-full justify-start text-left font-normal h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground hover:bg-gray-50 dark:hover:bg-secondary/80",
-                    !dateRange.from && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4 text-gray-400 dark:text-gray-300" />
-                  {formatRangeLabel() || <span className="text-muted-foreground">Selecione o período</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 z-50 bg-white dark:bg-card border border-gray-200 dark:border-border shadow-md" align="start">
-                <Calendar
-                  mode="range"
-                  selected={{ from: dateRange.from, to: dateRange.to }}
-                  onSelect={(range) => setDateRange({ from: range?.from, to: range?.to })}
-                  locale={ptBR}
-                  numberOfMonths={2}
-                  className="pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
+            ))}
           </div>
+        )}
 
-          {/* Períodos Rápidos */}
-          <div className="space-y-2 lg:col-span-4">
-            <Label className="text-sm text-foreground">Períodos Rápidos</Label>
-            <div className="flex gap-2 flex-wrap">
-              {[
-                { id: "hoje", label: "Hoje" },
-                { id: "semana", label: "Esta Semana" },
-                { id: "mes", label: "Este Mês" },
-                { id: "30dias", label: "Últimos 30 dias" },
-              ].map((range) => (
-                <Button
-                  key={range.id}
-                  variant={isQuickRangeActive(range.id) ? "default" : "outline"}
-                  size="sm"
-                  className={cn(
-                    "h-9",
-                    isQuickRangeActive(range.id)
-                      ? "bg-indigo-600 text-white border-indigo-500"
-                      : "bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground hover:bg-gray-50 dark:hover:bg-secondary/80"
-                  )}
-                  onClick={() => setQuickRange(range.id)}
-                >
-                  {range.label}
-                </Button>
-              ))}
-            </div>
-          </div>
+        {/* Collapsible Advanced Filters */}
+        <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
+          <CollapsibleTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full h-9 justify-between text-slate-400 hover:text-white hover:bg-slate-800/50 border border-slate-800 rounded-lg"
+            >
+              <div className="flex items-center gap-2">
+                <SlidersHorizontal className="h-4 w-4" />
+                <span className="text-sm font-medium">Filtros Avançados</span>
+              </div>
+              <ChevronDown className={cn(
+                "h-4 w-4 transition-transform duration-200",
+                isExpanded && "rotate-180"
+              )} />
+            </Button>
+          </CollapsibleTrigger>
 
-          {/* Vendedor */}
-          <div className="space-y-2">
-            <Label className="flex items-center gap-2 text-sm text-foreground">
-              <Users className="h-4 w-4 text-indigo-600 dark:text-indigo-200" />
-              Vendedor
-            </Label>
-            <Select value={selectedVendedor} onValueChange={setSelectedVendedor}>
-              <SelectTrigger className="w-full h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground">
-                <SelectValue placeholder="Selecione um vendedor" />
-              </SelectTrigger>
-              <SelectContent className="z-50 bg-white dark:bg-card border border-gray-200 dark:border-border shadow-sm">
-                <SelectItem value="todos">Vendedores</SelectItem>
-                {vendedores.map((v) => (
-                  <SelectItem key={v.id} value={v.id}>
-                    {v.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <CollapsibleContent className="pt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-slate-800/30 border border-slate-800 rounded-xl">
+              {/* Período Customizado */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2 text-sm text-slate-300">
+                  <CalendarIcon className="h-4 w-4 text-indigo-400" />
+                  Período
+                </Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={cn(
+                        "w-full justify-start text-left font-normal h-10 bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white",
+                        !dateRange.from && "text-slate-500"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4 text-slate-500" />
+                      {formatRangeLabel() || <span className="text-slate-500">Selecione</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 z-50 bg-slate-900 border border-slate-700 shadow-xl" align="start">
+                    <Calendar
+                      mode="range"
+                      selected={{ from: dateRange.from, to: dateRange.to }}
+                      onSelect={(range) => setDateRange({ from: range?.from, to: range?.to })}
+                      locale={ptBR}
+                      numberOfMonths={2}
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
 
-          {/* Forma de Pagamento */}
-          {setSelectedFormaPagamento && (
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2 text-sm text-foreground">
-                <CreditCard className="h-4 w-4 text-indigo-600 dark:text-indigo-200" />
-                Forma de Pagamento
-              </Label>
-              <Select value={selectedFormaPagamento} onValueChange={setSelectedFormaPagamento}>
-                <SelectTrigger className="w-full h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground">
-                  <SelectValue placeholder="Todas" />
-                </SelectTrigger>
-                <SelectContent className="z-50 bg-white dark:bg-card border border-gray-200 dark:border-border shadow-sm">
-                  <SelectItem value="todas">Todas</SelectItem>
-                  {formasPagamento.map((forma) => (
-                    <SelectItem key={forma} value={forma}>
-                      {forma}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          {/* Produto */}
-          {setSelectedProduto && (
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2 text-sm text-foreground">
-                <Package className="h-4 w-4 text-indigo-600 dark:text-indigo-200" />
-                Produto
-              </Label>
-              <Select value={selectedProduto} onValueChange={setSelectedProduto}>
-                <SelectTrigger className="w-full h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground">
-                  <SelectValue placeholder="Todos" />
-                </SelectTrigger>
-                <SelectContent className="z-50 bg-white dark:bg-card border border-gray-200 dark:border-border shadow-sm">
-                  <SelectItem value="todos">Todos</SelectItem>
-                  {produtos
-                    .filter((produto) => !activeCompanyId || produto.company_id === activeCompanyId)
-                    .map((produto) => (
-                      <SelectItem key={produto.id} value={produto.id}>
-                        {produto.nome}
+              {/* Vendedor */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2 text-sm text-slate-300">
+                  <Users className="h-4 w-4 text-indigo-400" />
+                  Vendedor
+                </Label>
+                <Select value={selectedVendedor} onValueChange={setSelectedVendedor}>
+                  <SelectTrigger className="w-full h-10 bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-700">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent className="z-50 bg-slate-900 border border-slate-700 shadow-xl">
+                    <SelectItem value="todos">Todos</SelectItem>
+                    {vendedores.map((v) => (
+                      <SelectItem key={v.id} value={v.id}>
+                        {v.nome}
                       </SelectItem>
                     ))}
-                </SelectContent>
-              </Select>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Forma de Pagamento */}
+              {setSelectedFormaPagamento && (
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2 text-sm text-slate-300">
+                    <CreditCard className="h-4 w-4 text-indigo-400" />
+                    Pagamento
+                  </Label>
+                  <Select value={selectedFormaPagamento} onValueChange={setSelectedFormaPagamento}>
+                    <SelectTrigger className="w-full h-10 bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-700">
+                      <SelectValue placeholder="Todas" />
+                    </SelectTrigger>
+                    <SelectContent className="z-50 bg-slate-900 border border-slate-700 shadow-xl">
+                      <SelectItem value="todas">Todas</SelectItem>
+                      {formasPagamento.map((forma) => (
+                        <SelectItem key={forma} value={forma}>
+                          {forma}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Produto */}
+              {setSelectedProduto && (
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2 text-sm text-slate-300">
+                    <Package className="h-4 w-4 text-indigo-400" />
+                    Produto
+                  </Label>
+                  <Select value={selectedProduto} onValueChange={setSelectedProduto}>
+                    <SelectTrigger className="w-full h-10 bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-700">
+                      <SelectValue placeholder="Todos" />
+                    </SelectTrigger>
+                    <SelectContent className="z-50 bg-slate-900 border border-slate-700 shadow-xl">
+                      <SelectItem value="todos">Todos</SelectItem>
+                      {produtos
+                        .filter((produto) => !activeCompanyId || produto.company_id === activeCompanyId)
+                        .map((produto) => (
+                          <SelectItem key={produto.id} value={produto.id}>
+                            {produto.nome}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </CollapsibleContent>
+        </Collapsible>
       </CardContent>
     </Card>
   );

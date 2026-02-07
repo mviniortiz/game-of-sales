@@ -95,12 +95,13 @@ const KPICard = ({
   const cardContent = (
     <Card className={`
       relative overflow-hidden
-      border border-border 
-      bg-card
+      border border-slate-800 
+      bg-slate-900
       shadow-sm
-      hover:shadow-md hover:${glowColor}
+      hover:shadow-lg hover:${glowColor}
       transition-all duration-300 ease-out
       group cursor-default
+      rounded-xl
     `}>
       <CardContent className="relative p-5">
         <div className="flex items-start justify-between gap-4">
@@ -559,7 +560,7 @@ export const AdminVendasView = ({
       {/* Row 2: Charts - 60/40 split */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Main Chart - Sales Evolution (60%) */}
-        <Card className="lg:col-span-3 relative overflow-hidden border border-border bg-card shadow-sm">
+        <Card className="lg:col-span-3 relative overflow-hidden border border-slate-800 bg-slate-900 shadow-sm rounded-xl">
           {/* Subtle corner accent */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-3xl pointer-events-none" />
 
@@ -567,8 +568,8 @@ export const AdminVendasView = ({
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-500/10">
-                    <TrendingUp className="h-4 w-4 text-indigo-600 dark:text-indigo-200" />
+                  <div className="p-1.5 rounded-lg bg-indigo-500/10">
+                    <TrendingUp className="h-4 w-4 text-indigo-400" />
                   </div>
                   Evolução de Vendas
                 </CardTitle>
@@ -605,16 +606,17 @@ export const AdminVendasView = ({
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "rgba(255,255,255,0.96)",
-                    border: "1px solid rgba(148,163,184,0.3)",
+                    backgroundColor: "rgba(15, 23, 42, 0.95)",
+                    backdropFilter: "blur(12px)",
+                    border: "1px solid rgba(51, 65, 85, 0.5)",
                     borderRadius: "12px",
-                    boxShadow: "0 8px 32px rgba(15,23,42,0.15)",
+                    boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
                     padding: "12px 16px"
                   }}
-                  labelStyle={{ color: "#475569", fontSize: 11, marginBottom: 4 }}
+                  labelStyle={{ color: "#94a3b8", fontSize: 11, marginBottom: 4 }}
                   formatter={(value: number) => [
-                    <span className="text-indigo-600 font-semibold">{formatCurrency(value)}</span>,
-                    "Faturamento"
+                    <span className="text-indigo-400 font-semibold">{formatCurrency(value)}</span>,
+                    <span className="text-slate-400">Faturamento</span>
                   ]}
                 />
                 <Area
@@ -638,15 +640,15 @@ export const AdminVendasView = ({
         </Card>
 
         {/* Secondary Chart - Top Sellers / Products (40%) */}
-        <Card className="lg:col-span-2 relative overflow-hidden border border-border bg-card shadow-sm">
+        <Card className="lg:col-span-2 relative overflow-hidden border border-slate-800 bg-slate-900 shadow-sm rounded-xl">
           {/* Subtle corner accent */}
           <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 blur-3xl pointer-events-none" />
 
           <CardHeader className="pb-2 relative">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-500/10">
-                  <Award className="h-4 w-4 text-amber-500 dark:text-amber-200" />
+                <div className="p-1.5 rounded-lg bg-amber-500/10">
+                  <Award className="h-4 w-4 text-amber-400" />
                 </div>
                 {topView === "vendedores" ? "Top 5 Vendedores" : "Top 5 Produtos"}
               </CardTitle>
@@ -708,15 +710,16 @@ export const AdminVendasView = ({
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "rgba(255,255,255,0.96)",
-                    border: "1px solid rgba(148,163,184,0.3)",
+                    backgroundColor: "rgba(15, 23, 42, 0.95)",
+                    backdropFilter: "blur(12px)",
+                    border: "1px solid rgba(51, 65, 85, 0.5)",
                     borderRadius: "12px",
-                    boxShadow: "0 8px 32px rgba(15,23,42,0.15)",
+                    boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
                     padding: "12px 16px"
                   }}
                   formatter={(value: number) => [
-                    <span className="text-emerald-600 font-semibold">{formatCurrency(value)}</span>,
-                    "Faturamento"
+                    <span className="text-emerald-400 font-semibold">{formatCurrency(value)}</span>,
+                    <span className="text-slate-400">Faturamento</span>
                   ]}
                 />
                 <Bar

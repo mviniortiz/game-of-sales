@@ -63,12 +63,16 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
 
           if (isSuperAdminUser) {
             // Super admin can see all companies
-            const { data: allCompanies } = await supabase
+            const { data: allCompanies, error: companiesError } = await supabase
               .from('companies')
-              .select('id, name, plan, logo_url, trial_ends_at, subscription_status')
+              .select('id, name, plan, logo_url')
               .order('name');
 
-            if (allCompanies) {
+            if (companiesError) {
+              console.warn('[TenantContext] Super admin - error loading companies:', companiesError);
+            }
+
+            if (allCompanies && allCompanies.length > 0) {
               // Type assertion needed until migration adds trial columns
               const typedCompanies = allCompanies as unknown as Company[];
               setCompanies(typedCompanies);
@@ -77,12 +81,33 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
                 ? storedCompanyId
                 : typedCompanies[0]?.id || null;
               setActiveCompanyId(targetCompany);
+              console.log('[TenantContext] Super admin - activeCompanyId set to:', targetCompany, 'from', typedCompanies.length, 'companies');
+            } else {
+              // Fallback: Use super admin's own company_id if they have one
+              console.warn('[TenantContext] Super admin - no companies found from query, falling back to own company_id');
+              if (profileData.company_id) {
+                const { data: ownCompany } = await supabase
+                  .from('companies')
+                  .select('id, name, plan, logo_url')
+                  .eq('id', profileData.company_id)
+                  .single();
+
+                if (ownCompany) {
+                  setCompanies([ownCompany as unknown as Company]);
+                  setActiveCompanyId(profileData.company_id);
+                  console.log('[TenantContext] Super admin - using own company_id:', profileData.company_id);
+                } else {
+                  console.error('[TenantContext] Super admin - could not load own company either');
+                }
+              } else {
+                console.error('[TenantContext] Super admin - no company_id in profile and no companies accessible');
+              }
             }
           } else {
             // Regular users load only their own company
             const { data: companyData } = await supabase
               .from('companies')
-              .select('id, name, plan, logo_url, trial_ends_at, subscription_status')
+              .select('id, name, plan, logo_url')
               .eq('id', profileData.company_id)
               .single();
 
@@ -90,13 +115,19 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
               // Type assertion needed until migration adds trial columns
               setCompanies([companyData as unknown as Company]);
               setActiveCompanyId(profileData.company_id);
+              console.log('[TenantContext] Regular user - activeCompanyId set to:', profileData.company_id);
+            } else {
+              console.warn('[TenantContext] Regular user - no company data found for company_id:', profileData.company_id);
             }
           }
+        } else {
+          console.warn('[TenantContext] No profile data found for user:', user.id);
         }
       } catch (error) {
         console.error('Error loading tenant data:', error);
       } finally {
         setLoading(false);
+        console.log('[TenantContext] Loading complete');
       }
     };
 

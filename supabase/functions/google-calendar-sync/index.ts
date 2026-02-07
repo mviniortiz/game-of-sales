@@ -61,9 +61,9 @@ serve(async (req) => {
     // Verificar se token expirou e renovar se necessário
     let accessToken = user.google_access_token;
     const tokenExpired = user.google_token_expires_at && new Date(user.google_token_expires_at) < new Date();
-    
+
     console.log(`[Google Calendar Sync] Token expired: ${tokenExpired}`);
-    
+
     if (tokenExpired && user.google_refresh_token) {
       console.log(`[Google Calendar Sync] Refreshing token...`);
       try {
@@ -244,14 +244,17 @@ async function deleteGoogleCalendarEvent(accessToken: string, eventId: string) {
 }
 
 async function syncAllEvents(accessToken: string, userId: string, supabase: any) {
-  const timeMin = new Date().toISOString();
+  // Start from beginning of today to include all events for today
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const timeMin = today.toISOString();
   const timeMax = new Date(
     Date.now() + 30 * 24 * 60 * 60 * 1000
   ).toISOString();
 
   const response = await fetch(
     `https://www.googleapis.com/calendar/v3/calendars/primary/events?` +
-      `timeMin=${timeMin}&timeMax=${timeMax}&singleEvents=true&orderBy=startTime`,
+    `timeMin=${timeMin}&timeMax=${timeMax}&singleEvents=true&orderBy=startTime`,
     {
       headers: { Authorization: `Bearer ${accessToken}` },
     }
@@ -278,9 +281,9 @@ async function syncAllEvents(accessToken: string, userId: string, supabase: any)
 
   // Filtrar apenas eventos novos com summary válido
   const newEvents = events
-    .filter((event: any) => 
-      event.summary && 
-      (event.start?.dateTime || event.start?.date) && 
+    .filter((event: any) =>
+      event.summary &&
+      (event.start?.dateTime || event.start?.date) &&
       !existingIds.has(event.id)
     )
     .map((event: any) => ({
@@ -297,20 +300,20 @@ async function syncAllEvents(accessToken: string, userId: string, supabase: any)
   // Insert em batch
   console.log(`[Google Calendar Sync] Found ${events.length} events from Google`);
   console.log(`[Google Calendar Sync] New events to insert: ${newEvents.length}`);
-  
+
   if (newEvents.length > 0) {
     console.log(`[Google Calendar Sync] Sample event:`, JSON.stringify(newEvents[0]));
-    
+
     const { data: insertedData, error: insertError } = await supabase
       .from("agendamentos")
       .insert(newEvents)
       .select();
-    
+
     if (insertError) {
       console.error(`[Google Calendar Sync] Insert error:`, insertError);
       throw new Error(`Failed to insert events: ${insertError.message}`);
     }
-    
+
     console.log(`[Google Calendar Sync] Successfully inserted ${insertedData?.length || 0} events`);
     return { synced: events.length, inserted: insertedData?.length || 0 };
   }

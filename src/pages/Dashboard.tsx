@@ -183,7 +183,6 @@ const Dashboard = () => {
         .from("vendas")
         .select("data_venda, valor")
         .eq("user_id", user?.id)
-        .eq("status", "Aprovado")
         .gte("data_venda", startOfMonthDate)
         .order("data_venda", { ascending: true });
 

@@ -124,6 +124,44 @@ export default function Calendario() {
     enabled: canSeeTeamCalendar,
   });
 
+  // Track if we already synced to avoid multiple syncs
+  const [googleSynced, setGoogleSynced] = useState(false);
+
+  // Auto-sync Google Calendar on page load (silent, no toast)
+  useEffect(() => {
+    const syncGoogleCalendar = async () => {
+      if (!user || googleSynced) return;
+
+      try {
+        // Check if user has Google Calendar connected
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("google_access_token")
+          .eq("id", user.id)
+          .single();
+
+        if (profile?.google_access_token) {
+          // Silently sync in background
+          const response = await supabase.functions.invoke("google-calendar-sync", {
+            body: { action: "sync_all", userId: user.id },
+          });
+
+          // If new events were inserted, reload agendamentos
+          if (response.data?.inserted > 0) {
+            loadAgendamentos();
+          }
+        }
+      } catch (error) {
+        // Silent fail - don't show error to user
+        console.error("[Calendario] Auto-sync error:", error);
+      } finally {
+        setGoogleSynced(true);
+      }
+    };
+
+    syncGoogleCalendar();
+  }, [user, googleSynced]);
+
   useEffect(() => {
     loadAgendamentos();
   }, [currentDate, user, view, selectedVendedor, selectedStatus, activeCompanyId]);
@@ -225,12 +263,13 @@ export default function Calendario() {
     }
 
     // Build query with seller name join and super_admin flag
+    // Note: We don't filter out super_admins here - we do it in JavaScript to allow
+    // the current super_admin to see their OWN appointments
     let query = supabase
       .from("agendamentos")
       .select("*, profiles!agendamentos_user_id_fkey(nome, is_super_admin, company_id)")
       .gte("data_agendamento", start.toISOString())
-      .lte("data_agendamento", end.toISOString())
-      .eq("profiles.is_super_admin", false);
+      .lte("data_agendamento", end.toISOString());
 
     // ==========================================
     // PERMISSION-BASED FILTERING:
@@ -278,9 +317,16 @@ export default function Calendario() {
     } else {
       // Map data and apply permission filters
       let filteredData = (data || []).filter((ag: any) => {
-        if (ag.profiles?.is_super_admin && ag.user_id !== user.id) return false;
+        // Super-admins can ALWAYS see their own appointments
+        if (ag.user_id === user.id) return true;
+
+        // Hide OTHER super-admins' appointments from everyone
+        if (ag.profiles?.is_super_admin) return false;
+
+        // Company filtering
         if (activeCompanyId && ag.profiles?.company_id !== activeCompanyId) return false;
         if (isAdmin && !isSuperAdmin && companyId && ag.profiles?.company_id !== companyId) return false;
+
         return true;
       });
 

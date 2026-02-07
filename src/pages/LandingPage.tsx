@@ -21,12 +21,14 @@ import {
     Rocket,
     Award,
     Play,
+    Pause,
     Volume2,
-    VolumeX
+    VolumeX,
+    Maximize
 } from "lucide-react";
 import brandLogo from "@/assets/logo-full.png";
 import brandLogoWhite from "@/assets/logo-only.png";
-import demoVideo from "@/assets/demo.mp4";
+import demoVideo from "/videos/sales-video.mp4";
 import StripeGradient from "@/components/ui/StripeGradient";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { ImpactMetrics } from "@/components/landing/ImpactMetrics";
@@ -62,7 +64,11 @@ const LandingPage = () => {
     const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
     const [isVideoPlaying, setIsVideoPlaying] = useState(false);
     const [isMuted, setIsMuted] = useState(true);
+    const [videoProgress, setVideoProgress] = useState(0);
+    const [videoDuration, setVideoDuration] = useState(0);
+    const [showControls, setShowControls] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null);
+    const videoContainerRef = useRef<HTMLDivElement>(null);
 
     const scrollToSection = (id: string) => {
         const element = document.getElementById(id);
@@ -337,78 +343,152 @@ const LandingPage = () => {
                         {/* Glow effect */}
                         <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/30 via-blue-500/30 to-indigo-500/30 rounded-3xl blur-3xl -z-10 scale-105" />
 
-                        {/* Video Container with Overlay */}
+                        {/* Premium Video Player */}
                         <div
-                            className="bg-slate-900 rounded-2xl shadow-2xl border border-slate-700/50 overflow-hidden relative group cursor-pointer"
-                            onClick={() => {
-                                if (videoRef.current) {
-                                    if (isVideoPlaying) {
-                                        videoRef.current.pause();
-                                    } else {
-                                        videoRef.current.play();
-                                    }
-                                    setIsVideoPlaying(!isVideoPlaying);
-                                }
-                            }}
+                            ref={videoContainerRef}
+                            className="relative rounded-2xl overflow-hidden shadow-2xl border border-slate-700/50 group"
+                            onMouseEnter={() => setShowControls(true)}
+                            onMouseLeave={() => setShowControls(false)}
                         >
-                            <video
-                                ref={videoRef}
-                                src={demoVideo}
-                                loop
-                                muted={isMuted}
-                                playsInline
-                                className="w-full h-auto"
-                            />
+                            {/* Glow effect behind video */}
+                            <div className="absolute -inset-1 bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-amber-500/20 rounded-2xl blur-xl opacity-60" />
 
-                            {/* Play Overlay */}
-                            {!isVideoPlaying && (
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/50 to-slate-900/30 flex flex-col items-center justify-center"
+                            <div className="relative bg-slate-900 rounded-2xl overflow-hidden">
+                                <video
+                                    ref={videoRef}
+                                    src={demoVideo}
+                                    loop
+                                    muted={isMuted}
+                                    playsInline
+                                    autoPlay
+                                    preload="auto"
+                                    className="w-full h-auto"
+                                    onPlay={() => setIsVideoPlaying(true)}
+                                    onPause={() => setIsVideoPlaying(false)}
+                                    onEnded={() => setIsVideoPlaying(false)}
+                                    onLoadedMetadata={(e) => setVideoDuration(e.currentTarget.duration)}
+                                    onTimeUpdate={(e) => setVideoProgress((e.currentTarget.currentTime / e.currentTarget.duration) * 100)}
+                                />
+
+                                {/* Click anywhere to toggle play/pause */}
+                                <div
+                                    className="absolute inset-0 cursor-pointer"
+                                    onClick={() => {
+                                        if (videoRef.current) {
+                                            if (isVideoPlaying) {
+                                                videoRef.current.pause();
+                                            } else {
+                                                videoRef.current.play();
+                                            }
+                                        }
+                                    }}
                                 >
-                                    {/* Play Button */}
+                                    {/* Center play/pause indicator on click */}
                                     <motion.div
-                                        whileHover={{ scale: 1.1 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-white/95 shadow-2xl flex items-center justify-center mb-6 group-hover:bg-white transition-colors"
+                                        initial={{ opacity: 0, scale: 0.8 }}
+                                        animate={{ opacity: showControls || !isVideoPlaying ? 1 : 0, scale: 1 }}
+                                        className="absolute inset-0 flex items-center justify-center"
                                     >
-                                        <Play className="h-8 w-8 sm:h-10 sm:w-10 text-indigo-600 ml-1" fill="currentColor" />
+                                        {!isVideoPlaying && (
+                                            <motion.div
+                                                whileHover={{ scale: 1.1 }}
+                                                whileTap={{ scale: 0.95 }}
+                                                className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 shadow-2xl shadow-amber-500/30 flex items-center justify-center"
+                                            >
+                                                <Play className="h-8 w-8 text-white ml-1" fill="currentColor" />
+                                            </motion.div>
+                                        )}
                                     </motion.div>
+                                </div>
 
-                                    {/* Text CTA */}
-                                    <h3 className="text-white text-xl sm:text-2xl font-bold mb-2">
-                                        Clique para assistir a demo
-                                    </h3>
-                                    <p className="text-white/70 text-sm sm:text-base">
-                                        Veja como funciona em 2 minutos
-                                    </p>
-
-                                    {/* Animated pulse ring */}
-                                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                {/* Bottom Controls Bar */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: showControls || !isVideoPlaying ? 1 : 0, y: 0 }}
+                                    className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent pt-12 pb-4 px-4"
+                                >
+                                    {/* Progress Bar */}
+                                    <div className="relative h-1.5 bg-white/20 rounded-full mb-4 cursor-pointer group/progress"
+                                        onClick={(e) => {
+                                            if (videoRef.current) {
+                                                const rect = e.currentTarget.getBoundingClientRect();
+                                                const percent = (e.clientX - rect.left) / rect.width;
+                                                videoRef.current.currentTime = percent * videoRef.current.duration;
+                                            }
+                                        }}
+                                    >
+                                        {/* Buffered */}
+                                        <div className="absolute inset-0 bg-white/10 rounded-full" />
+                                        {/* Progress */}
                                         <motion.div
-                                            animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0, 0.5] }}
-                                            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                                            className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-2 border-white/30"
+                                            className="absolute top-0 left-0 h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full"
+                                            style={{ width: `${videoProgress}%` }}
+                                        />
+                                        {/* Hover preview dot */}
+                                        <div
+                                            className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg opacity-0 group-hover/progress:opacity-100 transition-opacity"
+                                            style={{ left: `calc(${videoProgress}% - 8px)` }}
                                         />
                                     </div>
-                                </motion.div>
-                            )}
 
-                            {/* Mute/Unmute Button (visible when playing) */}
-                            {isVideoPlaying && (
-                                <motion.button
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setIsMuted(!isMuted);
-                                    }}
-                                    className="absolute bottom-4 right-4 w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors"
-                                >
-                                    {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
-                                </motion.button>
-                            )}
+                                    {/* Control Buttons */}
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            {/* Play/Pause */}
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (videoRef.current) {
+                                                        isVideoPlaying ? videoRef.current.pause() : videoRef.current.play();
+                                                    }
+                                                }}
+                                                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all"
+                                            >
+                                                {isVideoPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" fill="currentColor" />}
+                                            </button>
+
+                                            {/* Volume */}
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setIsMuted(!isMuted);
+                                                }}
+                                                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all"
+                                            >
+                                                {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+                                            </button>
+
+                                            {/* Time */}
+                                            <span className="text-white/70 text-sm font-mono">
+                                                {videoRef.current ? `${Math.floor(videoRef.current.currentTime / 60)}:${String(Math.floor(videoRef.current.currentTime % 60)).padStart(2, '0')}` : '0:00'}
+                                                <span className="text-white/40"> / </span>
+                                                {videoDuration ? `${Math.floor(videoDuration / 60)}:${String(Math.floor(videoDuration % 60)).padStart(2, '0')}` : '0:00'}
+                                            </span>
+                                        </div>
+
+                                        <div className="flex items-center gap-2">
+                                            {/* Fullscreen */}
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (videoContainerRef.current) {
+                                                        if (document.fullscreenElement) {
+                                                            document.exitFullscreen();
+                                                        } else if (videoContainerRef.current.requestFullscreen) {
+                                                            videoContainerRef.current.requestFullscreen();
+                                                        } else if ((videoContainerRef.current as any).webkitRequestFullscreen) {
+                                                            (videoContainerRef.current as any).webkitRequestFullscreen();
+                                                        }
+                                                    }
+                                                }}
+                                                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all"
+                                            >
+                                                <Maximize className="h-5 w-5" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            </div>
                         </div>
 
                         {/* Feature highlights below video */}

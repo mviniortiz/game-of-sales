@@ -171,8 +171,15 @@ const Metas = () => {
       const totalVendasMes = Object.values(vendasPorUsuario).reduce((a, b) => a + b, 0);
 
       // Map data with real sales values
+      // Note: Allow current user's meta even if super_admin, but hide OTHER super_admins' metas
       const resultado = (metas || [])
-        .filter((meta: any) => !meta.profiles?.is_super_admin)
+        .filter((meta: any) => {
+          // Always show current user's own meta
+          if (meta.user_id === user?.id) return true;
+          // Hide other super_admins' metas
+          if (meta.profiles?.is_super_admin) return false;
+          return true;
+        })
         .map((meta: any) => {
           const valorMeta = Number(meta.valor_meta) || 0;
           const valorRealizado = vendasPorUsuario[meta.user_id] || 0;

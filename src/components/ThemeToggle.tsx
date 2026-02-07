@@ -9,7 +9,9 @@ const legacyStorageKeys = ["vyzon-theme"];
 
 const getStoredTheme = (): Theme => {
   const stored = localStorage.getItem(storageKey) ?? legacyStorageKeys.map(key => localStorage.getItem(key)).find(Boolean);
-  return stored === "dark" ? "dark" : "light";
+  if (stored === "light") return "light";
+  if (stored === "dark") return "dark";
+  return "dark"; // Default to dark mode for Sales Command Center experience
 };
 
 export const ThemeToggle = () => {

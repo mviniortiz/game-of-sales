@@ -322,19 +322,48 @@ export const AdminMetas = () => {
 
   const createMetaConsolidada = useMutation({
     mutationFn: async () => {
+      // Debug: log the current state
+      logger.log("[AdminMetas] Estado atual antes de criar meta consolidada:", {
+        activeCompanyId,
+        isSuperAdmin,
+        mesReferenciaConsolidada,
+        valorMetaConsolidada,
+      });
+
+      // Validate company_id is set
+      if (!activeCompanyId) {
+        logger.error("[AdminMetas] activeCompanyId is null/undefined!", { isSuperAdmin });
+        throw new Error("company_id não está definido. Faça login novamente.");
+      }
+
       const [year, month] = mesReferenciaConsolidada.split("-");
       const dataReferencia = `${year}-${month}-01`;
 
+      logger.log("[AdminMetas] Criando meta consolidada:", {
+        mesReferencia: dataReferencia,
+        valorMeta: parseFloat(valorMetaConsolidada),
+        companyId: activeCompanyId,
+        descricao: descricaoConsolidada,
+      });
+
       // Check if consolidated meta already exists for this month
-      const { data: existingMeta } = await supabase
+      const { data: existingMeta, error: selectError } = await supabase
         .from("metas_consolidadas")
         .select("id")
         .eq("mes_referencia", dataReferencia)
         .eq("company_id", activeCompanyId)
         .maybeSingle();
 
+      if (selectError) {
+        logger.error("[AdminMetas] Erro ao verificar meta existente:", selectError);
+        throw selectError;
+      }
+
+      logger.log("[AdminMetas] Meta existente encontrada:", existingMeta);
+
       if (existingMeta) {
         // Update existing
+        logger.log("[AdminMetas] Atualizando meta existente:", existingMeta.id);
         const { error } = await supabase
           .from("metas_consolidadas")
           .update({
@@ -344,29 +373,46 @@ export const AdminMetas = () => {
           })
           .eq("id", existingMeta.id);
 
-        if (error) throw error;
+        if (error) {
+          logger.error("[AdminMetas] Erro ao atualizar meta:", error);
+          throw error;
+        }
+        logger.log("[AdminMetas] Meta atualizada com sucesso!");
         return { updated: true };
       } else {
         // Create new
-        const { error } = await supabase.from("metas_consolidadas").insert({
+        logger.log("[AdminMetas] Criando nova meta consolidada...");
+        const insertData = {
           mes_referencia: dataReferencia,
           valor_meta: parseFloat(valorMetaConsolidada),
           descricao: descricaoConsolidada || null,
           produto_alvo: produtoAlvo || null,
           company_id: activeCompanyId,
-        });
+        };
+        logger.log("[AdminMetas] Dados para inserção:", insertData);
 
-        if (error) throw error;
+        const { data: newMeta, error } = await supabase
+          .from("metas_consolidadas")
+          .insert(insertData)
+          .select()
+          .single();
+
+        if (error) {
+          logger.error("[AdminMetas] Erro ao criar meta:", error);
+          throw error;
+        }
+        logger.log("[AdminMetas] Meta criada com sucesso:", newMeta);
         return { updated: false };
       }
     },
     onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: ["admin-metas-consolidadas"] });
+      // Include activeCompanyId to match the query key in the useQuery
+      queryClient.invalidateQueries({ queryKey: ["admin-metas-consolidadas", activeCompanyId] });
       queryClient.invalidateQueries({ queryKey: ["metas-progresso"] });
       queryClient.invalidateQueries({ queryKey: ["metas-ranking"] });
       queryClient.invalidateQueries({ queryKey: ["vendedores-metas"] });
       queryClient.invalidateQueries({ queryKey: ["admin-progresso-metas"] });
-      queryClient.invalidateQueries({ queryKey: ["metas-consolidadas"] });
+      queryClient.invalidateQueries({ queryKey: ["metas-consolidadas", activeCompanyId] });
 
       if (result?.updated) {
         toast.success("Meta consolidada atualizada!");
@@ -428,12 +474,12 @@ export const AdminMetas = () => {
     },
     onSuccess: (data) => {
       logger.log("[AdminMetas] Meta excluída com sucesso:", data);
-      queryClient.invalidateQueries({ queryKey: ["admin-metas-consolidadas"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-metas-consolidadas", activeCompanyId] });
       queryClient.invalidateQueries({ queryKey: ["metas-progresso"] });
       queryClient.invalidateQueries({ queryKey: ["metas-ranking"] });
       queryClient.invalidateQueries({ queryKey: ["vendedores-metas"] });
       queryClient.invalidateQueries({ queryKey: ["admin-progresso-metas"] });
-      queryClient.invalidateQueries({ queryKey: ["metas-consolidadas"] });
+      queryClient.invalidateQueries({ queryKey: ["metas-consolidadas", activeCompanyId] });
       toast.success("Meta consolidada removida com sucesso!");
     },
     onError: (error: any) => {

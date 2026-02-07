@@ -84,12 +84,13 @@ const Ranking = () => {
       });
 
       // 1. Fetch profiles (sellers) scoped by company
+      // Note: We don't filter out super_admins here - we do it below to allow
+      // the current super_admin to see their OWN data
       if (!effectiveCompanyId) return [];
 
       let profilesQuery = supabase
         .from("profiles")
         .select("id, nome, avatar_url, nivel, is_super_admin, company_id")
-        .eq("is_super_admin", false)
         .eq("company_id", effectiveCompanyId);
 
       const { data: profiles, error: profilesError } = await profilesQuery;
@@ -152,24 +153,36 @@ const Ranking = () => {
         metasPorUsuario[meta.user_id] = Number(meta.valor_meta) || 0;
       });
 
-      // 6. Build ranking list
-      const ranking: VendedorRanking[] = (profiles || []).map((profile: any) => {
-        const valorVendido = vendasPorUsuario[profile.id] || 0;
-        const metaIndividual = metasPorUsuario[profile.id];
-        const percentualMeta = metaIndividual && metaIndividual > 0
-          ? (valorVendido / metaIndividual) * 100
-          : undefined;
+      // 6. Build ranking list - filter out OTHER super_admins but include current user
+      // Get current user ID for filtering
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      const currentUserId = currentUser?.id;
 
-        return {
-          user_id: profile.id,
-          nome: profile.nome || "Sem nome",
-          avatar_url: profile.avatar_url,
-          valor_vendido: valorVendido,
-          meta_individual: metaIndividual,
-          percentual_meta: percentualMeta,
-          nivel: profile.nivel || "Bronze",
-        };
-      });
+      const ranking: VendedorRanking[] = (profiles || [])
+        .filter((profile: any) => {
+          // Always include current user
+          if (profile.id === currentUserId) return true;
+          // Exclude other super_admins
+          if (profile.is_super_admin) return false;
+          return true;
+        })
+        .map((profile: any) => {
+          const valorVendido = vendasPorUsuario[profile.id] || 0;
+          const metaIndividual = metasPorUsuario[profile.id];
+          const percentualMeta = metaIndividual && metaIndividual > 0
+            ? (valorVendido / metaIndividual) * 100
+            : undefined;
+
+          return {
+            user_id: profile.id,
+            nome: profile.nome || "Sem nome",
+            avatar_url: profile.avatar_url,
+            valor_vendido: valorVendido,
+            meta_individual: metaIndividual,
+            percentual_meta: percentualMeta,
+            nivel: profile.nivel || "Bronze",
+          };
+        });
 
       // 7. Sort by valor_vendido descending
       return ranking.sort((a, b) => b.valor_vendido - a.valor_vendido);
@@ -334,16 +347,16 @@ const Ranking = () => {
                       <div
                         key={vendedor.user_id}
                         className={`flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 rounded-lg transition-all hover:scale-[1.01] gap-3 ${posicao <= 3
-                            ? "bg-gradient-to-r from-primary/10 to-transparent border border-primary/20"
-                            : "bg-muted/30 hover:bg-muted/50"
+                          ? "bg-gradient-to-r from-primary/10 to-transparent border border-primary/20"
+                          : "bg-muted/30 hover:bg-muted/50"
                           }`}
                       >
                         <div className="flex items-center gap-3 sm:gap-4">
                           {/* Position */}
                           <div className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full font-bold text-sm sm:text-lg flex-shrink-0 ${posicao === 1 ? "bg-yellow-500 text-yellow-900" :
-                              posicao === 2 ? "bg-gray-300 text-gray-700" :
-                                posicao === 3 ? "bg-amber-600 text-amber-100" :
-                                  "bg-muted text-muted-foreground"
+                            posicao === 2 ? "bg-gray-300 text-gray-700" :
+                              posicao === 3 ? "bg-amber-600 text-amber-100" :
+                                "bg-muted text-muted-foreground"
                             }`}>
                             {posicao <= 3 ? (
                               posicao === 1 ? "🥇" : posicao === 2 ? "🥈" : "🥉"
