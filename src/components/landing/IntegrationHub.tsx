@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, useAnimationFrame } from "framer-motion";
 import {
     MessageCircle,
     Globe,
@@ -52,8 +52,8 @@ export const IntegrationHub = () => {
 
     const rightItems = [
         { name: "Hotmart", logo: hotmartLogo, hasLogo: true },
-        { name: "Stripe", icon: CreditCard, color: "#6366f1", hasLogo: false },
-        { name: "Website", icon: Globe, color: "#8b5cf6", hasLogo: false },
+        { name: "Stripe", icon: CreditCard, color: "#10b981", hasLogo: false },
+        { name: "Website", icon: Globe, color: "#10b981", hasLogo: false },
     ];
 
     const bottomItems = [
@@ -72,9 +72,9 @@ export const IntegrationHub = () => {
                     viewport={{ once: true }}
                     className="text-center mb-16"
                 >
-                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">
+                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white font-serif">
                         A solução que{" "}
-                        <span className="text-indigo-400">
+                        <span className="text-emerald-400">
                             unifica tudo
                         </span>
                     </h2>
@@ -87,7 +87,7 @@ export const IntegrationHub = () => {
                     <div className="flex flex-col items-end gap-4 relative">
                         {/* Branch label */}
                         <motion.span
-                            className="absolute -right-12 top-1/2 -translate-y-1/2 text-xs font-semibold text-purple-600"
+                            className="absolute -right-12 top-1/2 -translate-y-1/2 text-xs font-semibold text-emerald-600"
                             initial={{ opacity: 0 }}
                             whileInView={{ opacity: 1 }}
                             viewport={{ once: true }}
@@ -100,7 +100,7 @@ export const IntegrationHub = () => {
                             <div key={item.name} className="relative">
                                 {/* Line to card */}
                                 <motion.div
-                                    className="absolute right-full top-1/2 h-[2px] bg-gradient-to-r from-purple-400 to-purple-500"
+                                    className="absolute right-full top-1/2 h-[2px] bg-gradient-to-r from-emerald-400 to-emerald-500"
                                     style={{ width: "60px", marginRight: "-4px" }}
                                     initial={{ scaleX: 0 }}
                                     whileInView={{ scaleX: 1 }}
@@ -116,7 +116,7 @@ export const IntegrationHub = () => {
                     <div className="relative py-8">
                         {/* Main horizontal line going left */}
                         <motion.div
-                            className="absolute right-full top-1/2 h-[2px] w-16 bg-gradient-to-r from-purple-300 to-purple-500"
+                            className="absolute right-full top-1/2 h-[2px] w-16 bg-gradient-to-r from-emerald-300 to-emerald-500"
                             style={{ marginRight: "12px" }}
                             initial={{ scaleX: 0 }}
                             whileInView={{ scaleX: 1 }}
@@ -152,11 +152,15 @@ export const IntegrationHub = () => {
                             transition={{ type: "spring", delay: 0.1 }}
                             className="relative"
                         >
-                            <div className="absolute inset-[-16px] rounded-full border-2 border-indigo-500/30" />
-                            <div className="absolute inset-[-28px] rounded-full border border-indigo-500/20" />
+                            <motion.div
+                                className="absolute inset-[-16px] rounded-full border-2 border-emerald-500/30"
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                            />
+                            <div className="absolute inset-[-28px] rounded-full border border-emerald-500/20" />
                             <div
                                 className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center bg-slate-900 border border-white/10"
-                                style={{ boxShadow: "0 0 30px rgba(99, 102, 241, 0.25)" }}
+                                style={{ boxShadow: "0 0 30px rgba(16, 185, 129, 0.25)" }}
                             >
                                 <img src={gameSalesLogo} alt="Game Sales" className="w-12 h-12 sm:w-14 sm:h-14 object-contain" />
                             </div>

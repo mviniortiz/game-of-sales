@@ -539,7 +539,7 @@ export default function Calendario() {
                                 </span>
                                 {/* Show seller name when viewing team */}
                                 {showingTeam && (
-                                  <span className="px-1 py-0.5 rounded bg-indigo-500/20 text-indigo-300 text-[10px] font-semibold flex-shrink-0">
+                                  <span className="px-1 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-semibold flex-shrink-0">
                                     {getSellerInitials(ag.seller_name || "")}
                                   </span>
                                 )}
@@ -586,7 +586,7 @@ export default function Calendario() {
                 <>
                   <span className="text-muted-foreground ml-4">|</span>
                   <div className="flex items-center gap-2">
-                    <span className="px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 text-[10px] font-semibold">
+                    <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-semibold">
                       AB
                     </span>
                     <span>= Iniciais do Vendedor</span>

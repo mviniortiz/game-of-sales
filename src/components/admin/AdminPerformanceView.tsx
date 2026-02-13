@@ -183,7 +183,7 @@ export const AdminPerformanceView = ({ dateRange, selectedVendedor }: AdminPerfo
             title="Calls Realizadas"
             value={metricas?.callsRealizadas.toString() || "0"}
             icon={Phone}
-            iconClassName="bg-indigo-500/10 text-indigo-500"
+            iconClassName="bg-emerald-500/10 text-emerald-500"
           />
         </div>
         <div className="animate-fade-in" style={{ animationDelay: "200ms" }}>
@@ -199,7 +199,7 @@ export const AdminPerformanceView = ({ dateRange, selectedVendedor }: AdminPerfo
             title="Taxa de Conversão"
             value={`${metricas?.taxaConversao.toFixed(1) || "0.0"}%`}
             icon={CheckCircle}
-            iconClassName="bg-purple-500/10 text-purple-500"
+            iconClassName="bg-emerald-500/10 text-emerald-500"
           />
         </div>
       </div>

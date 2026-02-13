@@ -148,8 +148,8 @@ export const NovaTarefaModal = ({ open, onClose, dealId, dealTitle, onSuccess }:
             <DialogContent className="sm:max-w-[500px] bg-card border border-border">
                 <DialogHeader className="pb-4 border-b border-border">
                     <DialogTitle className="flex items-center gap-3 text-foreground">
-                        <div className="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 ring-1 ring-indigo-100 dark:ring-indigo-500/20">
-                            <Zap className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                        <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 ring-1 ring-emerald-100 dark:ring-emerald-500/20">
+                            <Zap className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                         </div>
                         <div>
                             <span className="text-lg font-semibold">Criar Tarefa</span>
@@ -323,7 +323,7 @@ export const NovaTarefaModal = ({ open, onClose, dealId, dealTitle, onSuccess }:
                         <Button
                             type="submit"
                             disabled={createTaskMutation.isPending}
-                            className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold"
+                            className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold"
                         >
                             {createTaskMutation.isPending ? (
                                 <>

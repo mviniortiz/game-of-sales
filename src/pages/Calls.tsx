@@ -73,9 +73,9 @@ const highlightColorClasses = {
     bg: "bg-emerald-100 dark:bg-emerald-500/20",
   },
   indigo: {
-    ring: "ring-2 ring-indigo-500/50",
-    text: "text-indigo-600 dark:text-indigo-400",
-    bg: "bg-indigo-100 dark:bg-indigo-500/20",
+    ring: "ring-2 ring-emerald-500/50",
+    text: "text-emerald-600 dark:text-emerald-400",
+    bg: "bg-emerald-100 dark:bg-emerald-500/20",
   },
   cyan: {
     ring: "ring-2 ring-cyan-500/50",
@@ -132,8 +132,8 @@ const KPICard = ({
           </div>
 
           {/* Icon */}
-          <div className={`p-3 rounded-xl ${highlight ? colorClasses.bg : 'bg-indigo-50 dark:bg-indigo-500/10'}`}>
-            <Icon className={`h-6 w-6 ${highlight ? colorClasses.text : 'text-indigo-600 dark:text-indigo-400'}`} />
+          <div className={`p-3 rounded-xl ${highlight ? colorClasses.bg : 'bg-emerald-50 dark:bg-emerald-500/10'}`}>
+            <Icon className={`h-6 w-6 ${highlight ? colorClasses.text : 'text-emerald-600 dark:text-emerald-400'}`} />
           </div>
         </div>
       </CardContent>
@@ -158,8 +158,8 @@ const VerticalFunnel = ({ agendamentos, compareceram, vendas }: FunnelProps) => 
       value: agendamentos,
       percentage: 100,
       width: "100%",
-      color: "bg-indigo-500",
-      textColor: "text-indigo-600 dark:text-indigo-400"
+      color: "bg-emerald-500",
+      textColor: "text-emerald-600 dark:text-emerald-400"
     },
     {
       label: "Compareceram",
@@ -183,7 +183,7 @@ const VerticalFunnel = ({ agendamentos, compareceram, vendas }: FunnelProps) => 
     <Card className="border border-border bg-card shadow-sm h-full">
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
-          <TrendingUp className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+          <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
           Funil de Conversão
         </CardTitle>
       </CardHeader>
@@ -253,7 +253,7 @@ const OutcomeStackedChart = ({ data }: { data: StackedChartData[] }) => {
     <Card className="border border-border bg-card shadow-sm h-full">
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+          <Calendar className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
           Volume por Resultado
         </CardTitle>
         <p className="text-xs text-muted-foreground">Últimos 7 dias</p>
@@ -319,7 +319,7 @@ const CallHistoryTable = ({ data }: { data: CallHistory[] }) => {
       perdido: { label: "Perdido", className: "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400" },
       noshow: { label: "No-Show", className: "bg-gray-100 text-gray-700 dark:bg-gray-500/20 dark:text-gray-400" },
       followup: { label: "Follow-up", className: "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400" },
-      agendado: { label: "Agendado", className: "bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-400" },
+      agendado: { label: "Agendado", className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400" },
     };
     const config = statusConfig[status] || statusConfig.agendado;
     return <Badge className={config.className}>{config.label}</Badge>;
@@ -334,7 +334,7 @@ const CallHistoryTable = ({ data }: { data: CallHistory[] }) => {
     <Card className="border border-border bg-card shadow-sm">
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
-          <Clock className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+          <Clock className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
           Histórico Recente
         </CardTitle>
         <p className="text-xs text-muted-foreground">Últimas 10 calls registradas</p>
@@ -365,7 +365,7 @@ const CallHistoryTable = ({ data }: { data: CallHistory[] }) => {
                     <div className="flex items-center gap-2">
                       <Avatar className="h-7 w-7">
                         <AvatarImage src={call.vendedorAvatar} />
-                        <AvatarFallback className="bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-400 text-xs">
+                        <AvatarFallback className="bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 text-xs">
                           {getInitials(call.vendedor)}
                         </AvatarFallback>
                       </Avatar>
@@ -621,7 +621,7 @@ const Calls = () => {
 
           <Sheet open={showCallSheet} onOpenChange={setShowCallSheet}>
             <SheetTrigger asChild>
-              <Button className="gap-2 bg-indigo-600 hover:bg-indigo-700">
+              <Button className="gap-2 bg-emerald-600 hover:bg-emerald-700">
                 <Phone className="h-4 w-4" />
                 Registrar Resultado
               </Button>

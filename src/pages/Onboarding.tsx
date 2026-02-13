@@ -25,7 +25,11 @@ import {
     Target,
     Zap,
     BarChart3,
-    Settings2
+    Settings2,
+    CreditCard,
+    Check,
+    Star,
+    Shield
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -33,13 +37,43 @@ import { useAuth } from "@/contexts/AuthContext";
 import gameSalesLogo from "@/assets/logo-full.png";
 import { Confetti } from "@/components/crm/Confetti";
 import { addDays } from "date-fns";
+import { CardPayment } from "@mercadopago/sdk-react";
+import { initializeMercadoPago } from "@/lib/mercadopago";
 
-// Trial info - always PRO plan
+// Trial info
 const TRIAL_DAYS = 7;
-const TRIAL_PLAN = {
-    name: "Pro",
-    color: "text-amber-400"
-};
+
+// Subscription plans with real MP plan IDs
+const subscriptionPlans = [
+    {
+        id: "starter",
+        mpPlanId: "dd862f815f6b4d6285b2b8119710553b",
+        name: "Starter",
+        price: 147,
+        color: "from-slate-500 to-slate-600",
+        borderColor: "border-slate-500/30",
+        features: ["Até 10 vendedores", "Ranking básico", "Metas simples"]
+    },
+    {
+        id: "plus",
+        mpPlanId: "7c2c9ac396684c229987a7501cf4f88c",
+        name: "Plus",
+        price: 397,
+        color: "from-emerald-500 to-emerald-600",
+        borderColor: "border-emerald-500/30",
+        popular: true,
+        features: ["Até 30 vendedores", "Ranking + Gamificação", "CRM completo", "Relatórios avançados"]
+    },
+    {
+        id: "pro",
+        mpPlanId: "7f7561d2b1174aacb31ab92dce72ded4",
+        name: "Pro",
+        price: 797,
+        color: "from-amber-500 to-amber-600",
+        borderColor: "border-amber-500/30",
+        features: ["Vendedores ilimitados", "Tudo do Plus", "API + Integrações", "Suporte prioritário"]
+    }
+];
 
 // How did you hear about us options
 const referralSources = [
@@ -71,7 +105,7 @@ const mainChallenges = [
     { id: "outro", label: "Outro desafio", icon: MessageCircle }
 ];
 
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 6; // Now includes checkout step
 
 export default function Onboarding() {
     const navigate = useNavigate();
@@ -80,14 +114,13 @@ export default function Onboarding() {
     const { user } = useAuth();
     const inputRef = useRef<HTMLInputElement>(null);
 
-    // Trial is always PRO (7 days)
-
     // States
     const [currentStep, setCurrentStep] = useState(1);
-    const [showConfetti, setShowConfetti] = useState(false); // Only show on completion
+    const [showConfetti, setShowConfetti] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [isComplete, setIsComplete] = useState(false);
-    const [direction, setDirection] = useState(1); // 1 for forward, -1 for backward
+    const [direction, setDirection] = useState(1);
+    const [mpInitialized, setMpInitialized] = useState(false);
 
     // Form data
     const [userName, setUserName] = useState("");
@@ -97,6 +130,17 @@ export default function Onboarding() {
     const [teamSize, setTeamSize] = useState("");
     const [referralSource, setReferralSource] = useState("");
     const [mainChallenge, setMainChallenge] = useState("");
+    const [selectedPlan, setSelectedPlan] = useState("plus"); // Default to Plus
+    const [createdCompanyId, setCreatedCompanyId] = useState<string | null>(null);
+    const [createdUserId, setCreatedUserId] = useState<string | null>(null);
+
+    // Initialize MP SDK when reaching step 6
+    useEffect(() => {
+        if (currentStep === 6 && !mpInitialized) {
+            initializeMercadoPago();
+            setMpInitialized(true);
+        }
+    }, [currentStep, mpInitialized]);
 
     // Focus input when step changes
     useEffect(() => {
@@ -108,7 +152,7 @@ export default function Onboarding() {
     // Handle Enter key to go to next step
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Enter" && canProceed()) {
+            if (e.key === "Enter" && canProceed() && currentStep < 6) {
                 e.preventDefault();
                 handleNext();
             }
@@ -124,99 +168,136 @@ export default function Onboarding() {
             case 3: return teamSize !== "";
             case 4: return referralSource !== "";
             case 5: return mainChallenge !== "";
+            case 6: return selectedPlan !== "";
             default: return false;
         }
     };
 
-    const handleNext = () => {
+    const handleNext = async () => {
         if (!canProceed()) return;
+
+        // Step 5 → 6: Create account and company first
+        if (currentStep === 5) {
+            setIsLoading(true);
+            try {
+                // Always sign out first to ensure clean session for new user
+                if (user) {
+                    await supabase.auth.signOut();
+                }
+
+                // Create new account
+                const { data: authData, error: authError } = await supabase.auth.signUp({
+                    email: userEmail,
+                    password: userPassword,
+                    options: {
+                        data: { nome: userName }
+                    }
+                });
+
+                if (authError) throw authError;
+                if (!authData.user) throw new Error("Erro ao criar conta.");
+
+                const currentUser = authData.user;
+
+                setCreatedUserId(currentUser.id);
+
+                // Calculate trial end date
+                const trialEndsAt = addDays(new Date(), TRIAL_DAYS).toISOString();
+
+                // Create company with trialing status
+                const { data: companyData, error: companyError } = await supabase
+                    .from("companies")
+                    .insert({
+                        name: companyName,
+                        plan: selectedPlan,
+                        team_size: teamSize,
+                        referral_source: referralSource,
+                        main_challenge: mainChallenge,
+                        trial_ends_at: trialEndsAt,
+                        subscription_status: 'trialing'
+                    } as any)
+                    .select()
+                    .single();
+
+                if (companyError) throw companyError;
+
+                setCreatedCompanyId(companyData.id);
+
+                // Update user profile
+                const { error: profileError } = await supabase
+                    .from("profiles")
+                    .update({
+                        company_id: companyData.id,
+                        role: "admin",
+                        nome: userName
+                    })
+                    .eq("id", currentUser.id);
+
+                if (profileError) throw profileError;
+
+                // Proceed to step 6 (payment)
+                setDirection(1);
+                setCurrentStep(6);
+            } catch (error: any) {
+                console.error("Account creation error:", error);
+                toast({
+                    title: "Erro no cadastro",
+                    description: error.message || "Tente novamente",
+                    variant: "destructive"
+                });
+            } finally {
+                setIsLoading(false);
+            }
+            return;
+        }
 
         if (currentStep < TOTAL_STEPS) {
             setDirection(1);
             setCurrentStep(prev => prev + 1);
-        } else {
-            handleSubmit();
         }
     };
 
     const handleBack = () => {
-        if (currentStep > 1) {
+        if (currentStep > 1 && currentStep !== 6) {
+            // Don't allow going back from payment step (account already created)
             setDirection(-1);
             setCurrentStep(prev => prev - 1);
         }
     };
 
-    const handleSubmit = async () => {
-        if (!canProceed()) return;
-
+    // Handle card payment submission
+    const handleCardPayment = async (formData: any) => {
         setIsLoading(true);
 
         try {
-            let currentUser = user;
-
-            // If not logged in, create account
-            if (!currentUser) {
-                const { data: authData, error: authError } = await supabase.auth.signUp({
+            // Call Edge Function to create subscription
+            const { data, error } = await supabase.functions.invoke('mercadopago-create-subscription', {
+                body: {
+                    token: formData.token,
                     email: userEmail,
-                    password: userPassword,
-                    options: {
-                        data: {
-                            nome: userName
-                        }
+                    planId: subscriptionPlans.find(p => p.id === selectedPlan)?.mpPlanId,
+                    companyId: createdCompanyId,
+                    payerInfo: {
+                        email: userEmail,
+                        identification: formData.payer?.identification
                     }
-                });
+                }
+            });
 
-                if (authError) throw authError;
-                if (!authData.user) throw new Error("Erro ao criar conta. Tente novamente.");
-
-                currentUser = authData.user;
-            }
-
-            // Calculate trial end date (7 days from now)
-            const trialEndsAt = addDays(new Date(), 7).toISOString();
-
-            // Create company with trial status - always start on PRO trial
-            const { data: companyData, error: companyError } = await supabase
-                .from("companies")
-                .insert({
-                    name: companyName,
-                    plan: 'pro', // Start on PRO for reverse trial
-                    team_size: teamSize,
-                    referral_source: referralSource,
-                    main_challenge: mainChallenge,
-                    trial_ends_at: trialEndsAt,
-                    subscription_status: 'trialing'
-                } as any) // Type assertion until migration is applied
-                .select()
-                .single();
-
-            if (companyError) throw companyError;
-
-            // Update user profile with company_id and name
-            const { error: profileError } = await supabase
-                .from("profiles")
-                .update({
-                    company_id: companyData.id,
-                    role: "admin",
-                    nome: userName
-                })
-                .eq("id", currentUser.id);
-
-            if (profileError) throw profileError;
+            if (error) throw error;
 
             // Success!
             setIsComplete(true);
             setShowConfetti(true);
 
-            // Redirect to dashboard after 2.5 seconds (skip checkout)
             setTimeout(() => {
-                navigate("/admin/dashboard");
+                navigate("/dashboard");
             }, 2500);
 
         } catch (error: any) {
-            console.error("Onboarding error:", error);
+            console.error("Payment error:", error);
             toast({
-                title: "Erro no cadastro",
+                title: "Erro no pagamento",
                 description: error.message || "Tente novamente",
                 variant: "destructive"
             });
@@ -225,7 +306,7 @@ export default function Onboarding() {
         }
     };
 
-    // Animation variants - smoother spring animations
+    // Animation variants
     const slideVariants = {
         enter: (direction: number) => ({
             x: direction > 0 ? 50 : -50,
@@ -247,18 +328,17 @@ export default function Onboarding() {
     // Auto-advance when selection is made
     const handleSelectionWithAdvance = (setter: (val: string) => void, value: string) => {
         setter(value);
-        // Small delay for visual feedback before advancing
         setTimeout(() => {
             setDirection(1);
-            if (currentStep < TOTAL_STEPS) {
+            if (currentStep < 5) {
                 setCurrentStep(prev => prev + 1);
-            } else {
-                handleSubmit();
+            } else if (currentStep === 5) {
+                handleNext();
             }
         }, 300);
     };
 
-    // Progress bar component - Gold XP style
+    // Progress bar
     const ProgressBar = () => (
         <div className="flex items-center gap-2 mb-6">
             {Array.from({ length: TOTAL_STEPS }).map((_, index) => (
@@ -291,7 +371,7 @@ export default function Onboarding() {
                             Crie sua conta grátis
                         </h2>
                         <p className="text-amber-400 font-medium mb-5 text-sm">
-                            7 dias grátis do plano <span className="font-bold">PRO</span> 🚀
+                            7 dias grátis em qualquer plano 🚀
                         </p>
                         <div className="space-y-3">
                             <Input
@@ -299,7 +379,7 @@ export default function Onboarding() {
                                 placeholder="Seu nome"
                                 value={userName}
                                 onChange={(e) => setUserName(e.target.value)}
-                                className="bg-slate-950 border border-slate-800 text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-indigo-600 h-12 text-base rounded-xl"
+                                className="bg-slate-950 border border-slate-800 text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-emerald-600 h-12 text-base rounded-xl"
                                 autoFocus
                             />
                             <Input
@@ -307,14 +387,14 @@ export default function Onboarding() {
                                 placeholder="E-mail"
                                 value={userEmail}
                                 onChange={(e) => setUserEmail(e.target.value)}
-                                className="bg-slate-950 border border-slate-800 text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-indigo-600 h-12 text-base rounded-xl"
+                                className="bg-slate-950 border border-slate-800 text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-emerald-600 h-12 text-base rounded-xl"
                             />
                             <Input
                                 type="password"
                                 placeholder="Senha (mín. 6 caracteres)"
                                 value={userPassword}
                                 onChange={(e) => setUserPassword(e.target.value)}
-                                className="bg-slate-950 border border-slate-800 text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-indigo-600 h-12 text-base rounded-xl"
+                                className="bg-slate-950 border border-slate-800 text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-emerald-600 h-12 text-base rounded-xl"
                             />
                         </div>
                     </div>
@@ -342,7 +422,7 @@ export default function Onboarding() {
                             placeholder="Ex: Empresa XYZ"
                             value={companyName}
                             onChange={(e) => setCompanyName(e.target.value)}
-                            className="bg-slate-950 border border-slate-800 text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-indigo-600 h-12 text-base text-center rounded-xl"
+                            className="bg-slate-950 border border-slate-800 text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-emerald-600 h-12 text-base text-center rounded-xl"
                             autoFocus
                         />
                     </div>
@@ -376,7 +456,7 @@ export default function Onboarding() {
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
                                     className={`flex items-center justify-between px-5 py-3.5 rounded-xl border transition-all duration-200 ${teamSize === size.id
-                                        ? "bg-indigo-600/20 border-indigo-500/50 text-white ring-2 ring-indigo-500/30 scale-[1.02]"
+                                        ? "bg-emerald-600/20 border-emerald-500/50 text-white ring-2 ring-emerald-500/30 scale-[1.02]"
                                         : "bg-slate-950 border-slate-800 text-slate-400 hover:bg-slate-900 hover:text-white hover:border-slate-700"
                                         }`}
                                 >
@@ -419,7 +499,7 @@ export default function Onboarding() {
                                         whileHover={{ scale: 1.05 }}
                                         whileTap={{ scale: 0.95 }}
                                         className={`flex flex-col items-center gap-2 px-4 py-3.5 rounded-xl border transition-all duration-200 ${isSelected
-                                            ? "bg-indigo-600/20 border-indigo-500/50 text-white ring-2 ring-indigo-500/30 scale-105"
+                                            ? "bg-emerald-600/20 border-emerald-500/50 text-white ring-2 ring-emerald-500/30 scale-105"
                                             : "bg-slate-950 border-slate-800 text-slate-400 hover:bg-slate-900 hover:text-white hover:border-slate-700"
                                             }`}
                                     >
@@ -463,7 +543,7 @@ export default function Onboarding() {
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
                                         className={`flex items-center gap-4 px-5 py-3.5 rounded-xl border transition-all duration-200 ${isSelected
-                                            ? "bg-indigo-600/20 border-indigo-500/50 text-white ring-2 ring-indigo-500/30 scale-[1.02]"
+                                            ? "bg-emerald-600/20 border-emerald-500/50 text-white ring-2 ring-emerald-500/30 scale-[1.02]"
                                             : "bg-slate-950 border-slate-800 text-slate-400 hover:bg-slate-900 hover:text-white hover:border-slate-700"
                                             }`}
                                     >
@@ -476,6 +556,106 @@ export default function Onboarding() {
                     </div>
                 );
 
+            case 6:
+                const currentPlan = subscriptionPlans.find(p => p.id === selectedPlan)!;
+                return (
+                    <div className="text-center">
+                        <motion.div
+                            initial={{ scale: 0, rotate: -10 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                            className="w-14 h-14 rounded-full bg-slate-900 border border-amber-500/30 flex items-center justify-center mx-auto mb-5 shadow-[0_0_15px_-3px_rgba(245,158,11,0.2)]"
+                        >
+                            <CreditCard className="h-7 w-7 text-amber-500" />
+                        </motion.div>
+                        <h2 className="text-2xl font-bold text-white tracking-tight mb-1">
+                            Escolha seu plano
+                        </h2>
+                        <p className="text-amber-400 font-medium mb-5 text-sm">
+                            🎁 7 dias grátis, cancele quando quiser
+                        </p>
+
+                        {/* Plan selection */}
+                        <div className="grid gap-3 mb-6">
+                            {subscriptionPlans.map((plan) => (
+                                <motion.button
+                                    key={plan.id}
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => setSelectedPlan(plan.id)}
+                                    className={`relative flex items-center justify-between px-4 py-4 rounded-xl border transition-all duration-200 ${selectedPlan === plan.id
+                                        ? `bg-gradient-to-r ${plan.color} border-transparent text-white shadow-lg`
+                                        : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700"
+                                        }`}
+                                >
+                                    {plan.popular && (
+                                        <span className="absolute -top-2 left-4 px-2 py-0.5 bg-amber-500 text-xs font-bold text-black rounded-full">
+                                            POPULAR
+                                        </span>
+                                    )}
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedPlan === plan.id ? "border-white bg-white" : "border-slate-600"
+                                            }`}>
+                                            {selectedPlan === plan.id && (
+                                                <Check className="h-3 w-3 text-emerald-600" />
+                                            )}
+                                        </div>
+                                        <div className="text-left">
+                                            <p className="font-bold">{plan.name}</p>
+                                            <p className="text-xs opacity-75">
+                                                {plan.features[0]}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-xl font-bold">R${plan.price}</p>
+                                        <p className="text-xs opacity-75">/mês</p>
+                                    </div>
+                                </motion.button>
+                            ))}
+                        </div>
+
+                        {/* Card Payment Brick */}
+                        <div className="bg-slate-950 rounded-xl p-4 border border-slate-800">
+                            <div className="flex items-center gap-2 mb-4 text-slate-400 text-sm">
+                                <Shield className="h-4 w-4" />
+                                <span>Pagamento seguro via Mercado Pago</span>
+                            </div>
+
+                            {mpInitialized ? (
+                                <CardPayment
+                                    initialization={{
+                                        amount: currentPlan.price
+                                    }}
+                                    customization={{
+                                        paymentMethods: {
+                                            maxInstallments: 1
+                                        },
+                                        visual: {
+                                            style: {
+                                                theme: 'dark'
+                                            }
+                                        }
+                                    }}
+                                    onSubmit={handleCardPayment}
+                                    onError={(error) => {
+                                        console.error("Card error:", error);
+                                        toast({
+                                            title: "Erro no cartão",
+                                            description: "Verifique os dados e tente novamente",
+                                            variant: "destructive"
+                                        });
+                                    }}
+                                />
+                            ) : (
+                                <div className="flex items-center justify-center py-8">
+                                    <Loader2 className="h-6 w-6 animate-spin text-slate-500" />
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+
             default:
                 return null;
         }
@@ -484,7 +664,7 @@ export default function Onboarding() {
     // Success screen
     if (isComplete) {
         return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 selection:bg-indigo-500/30">
+            <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 selection:bg-emerald-500/30">
                 <Confetti show={showConfetti} />
 
                 <motion.div
@@ -517,9 +697,9 @@ export default function Onboarding() {
                     </p>
 
                     <div className="flex items-center justify-center gap-1">
-                        <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                        <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                        <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
                     </div>
                     <p className="text-slate-600 text-sm mt-4">
                         Entrando no dashboard...
@@ -530,8 +710,7 @@ export default function Onboarding() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 selection:bg-indigo-500/30">
-            {/* Confetti */}
+        <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 selection:bg-emerald-500/30">
             <Confetti show={showConfetti} />
 
             <motion.div
@@ -548,7 +727,7 @@ export default function Onboarding() {
                             animate={{ opacity: 1 }}
                             className="text-white/60 text-sm"
                         >
-                            🎮 Trial de <span className="font-semibold text-amber-400">7 dias</span> do plano <span className="font-semibold text-amber-400">PRO</span>
+                            🎮 Trial de <span className="font-semibold text-amber-400">7 dias</span> grátis
                         </motion.p>
                     )}
                 </div>
@@ -556,7 +735,7 @@ export default function Onboarding() {
                 {/* Progress bar */}
                 <ProgressBar />
 
-                {/* Card - The Console */}
+                {/* Card */}
                 <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-800/50 rounded-2xl shadow-2xl shadow-black p-8">
                     {/* Step counter */}
                     <div className="text-center mb-6">
@@ -585,47 +764,46 @@ export default function Onboarding() {
                         </motion.div>
                     </AnimatePresence>
 
-                    {/* Navigation buttons */}
-                    <div className="flex items-center gap-3 mt-8">
-                        {currentStep > 1 && (
-                            <button
-                                onClick={handleBack}
-                                disabled={isLoading}
-                                className="text-slate-500 hover:text-white transition-colors px-4 py-2 disabled:opacity-50"
-                            >
-                                <ArrowLeft className="inline mr-1 h-4 w-4" />
-                                Voltar
-                            </button>
-                        )}
-
-                        <Button
-                            onClick={handleNext}
-                            disabled={!canProceed() || isLoading}
-                            className="flex-1 h-12 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/20 border-none transition-all hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:hover:translate-y-0"
-                        >
-                            {isLoading ? (
-                                <>
-                                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                    Configurando...
-                                </>
-                            ) : currentStep === TOTAL_STEPS ? (
-                                <>
-                                    <Rocket className="mr-2 h-5 w-5" />
-                                    Começar a usar!
-                                </>
-                            ) : (
-                                <>
-                                    Continuar
-                                    <ArrowRight className="ml-2 h-5 w-5" />
-                                </>
+                    {/* Navigation buttons (hidden on step 6 since CardPayment has its own submit) */}
+                    {currentStep < 6 && (
+                        <div className="flex items-center gap-3 mt-8">
+                            {currentStep > 1 && (
+                                <button
+                                    onClick={handleBack}
+                                    disabled={isLoading}
+                                    className="text-slate-500 hover:text-white transition-colors px-4 py-2 disabled:opacity-50"
+                                >
+                                    <ArrowLeft className="inline mr-1 h-4 w-4" />
+                                    Voltar
+                                </button>
                             )}
-                        </Button>
-                    </div>
+
+                            <Button
+                                onClick={handleNext}
+                                disabled={!canProceed() || isLoading}
+                                className="flex-1 h-12 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 border-none transition-all hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:hover:translate-y-0"
+                            >
+                                {isLoading ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                        {currentStep === 5 ? "Criando conta..." : "Processando..."}
+                                    </>
+                                ) : (
+                                    <>
+                                        Continuar
+                                        <ArrowRight className="ml-2 h-5 w-5" />
+                                    </>
+                                )}
+                            </Button>
+                        </div>
+                    )}
 
                     {/* Keyboard hint */}
-                    <p className="text-center text-slate-600 text-xs mt-4">
-                        Pressione <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-slate-400">Enter</kbd> para continuar
-                    </p>
+                    {currentStep < 6 && (
+                        <p className="text-center text-slate-600 text-xs mt-4">
+                            Pressione <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-slate-400">Enter</kbd> para continuar
+                        </p>
+                    )}
                 </div>
             </motion.div>
         </div>

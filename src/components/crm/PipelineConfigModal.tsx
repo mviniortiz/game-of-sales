@@ -51,8 +51,8 @@ const AVAILABLE_ICONS: { id: string; icon: LucideIcon; label: string }[] = [
 const AVAILABLE_COLORS = [
   { id: "gray", textColor: "text-gray-500 dark:text-gray-400", dotColor: "bg-gray-500", label: "Cinza" },
   { id: "blue", textColor: "text-blue-500 dark:text-blue-400", dotColor: "bg-blue-500", label: "Azul" },
-  { id: "indigo", textColor: "text-indigo-500 dark:text-indigo-400", dotColor: "bg-indigo-500", label: "Índigo" },
-  { id: "purple", textColor: "text-purple-500 dark:text-purple-400", dotColor: "bg-purple-500", label: "Roxo" },
+  { id: "indigo", textColor: "text-emerald-500 dark:text-emerald-400", dotColor: "bg-emerald-500", label: "Índigo" },
+  { id: "purple", textColor: "text-emerald-500 dark:text-emerald-400", dotColor: "bg-emerald-500", label: "Roxo" },
   { id: "amber", textColor: "text-amber-500 dark:text-amber-400", dotColor: "bg-amber-500", label: "Âmbar" },
   { id: "emerald", textColor: "text-emerald-500 dark:text-emerald-400", dotColor: "bg-emerald-500", label: "Verde" },
   { id: "rose", textColor: "text-rose-500 dark:text-rose-400", dotColor: "bg-rose-500", label: "Rosa" },
@@ -121,7 +121,7 @@ const StageRow = ({
         bg-white dark:bg-slate-800 
         border border-slate-200 dark:border-slate-700 
         rounded-xl
-        hover:border-indigo-300 dark:hover:border-indigo-600
+        hover:border-emerald-300 dark:hover:border-emerald-600
         transition-colors duration-150
         group
       ">
@@ -162,9 +162,9 @@ const StageRow = ({
               onChange={(e) => onUpdate("title", e.target.value)}
               onBlur={() => setIsEditing(false)}
               onKeyDown={(e) => e.key === "Enter" && setIsEditing(false)}
-              className="h-8 bg-transparent border-0 border-b-2 border-indigo-500 rounded-none 
+              className="h-8 bg-transparent border-0 border-b-2 border-emerald-500 rounded-none 
                 text-slate-800 dark:text-white font-medium
-                focus:ring-0 focus:border-indigo-500
+                focus:ring-0 focus:border-emerald-500
                 px-0"
             />
           ) : (
@@ -205,13 +205,13 @@ const StageRow = ({
                     }}
                     className={`p-2 rounded-lg transition-all
                       ${stage.iconId === iconOption.id
-                        ? "bg-indigo-100 dark:bg-indigo-500/20 ring-2 ring-indigo-500"
+                        ? "bg-emerald-100 dark:bg-emerald-500/20 ring-2 ring-emerald-500"
                         : "hover:bg-slate-100 dark:hover:bg-slate-700"
                       }`}
                     title={iconOption.label}
                   >
                     <Icon className={`h-4 w-4 ${stage.iconId === iconOption.id
-                      ? "text-indigo-600 dark:text-indigo-400"
+                      ? "text-emerald-600 dark:text-emerald-400"
                       : "text-slate-500 dark:text-slate-400"}`}
                     />
                   </button>
@@ -243,7 +243,7 @@ const StageRow = ({
                   }}
                   className={`p-1.5 rounded-lg transition-all
                     ${stage.colorId === colorOption.id
-                      ? "bg-slate-100 dark:bg-slate-700 ring-2 ring-indigo-500"
+                      ? "bg-slate-100 dark:bg-slate-700 ring-2 ring-emerald-500"
                       : "hover:bg-slate-100 dark:hover:bg-slate-700"
                     }`}
                   title={colorOption.label}
@@ -338,8 +338,8 @@ export const PipelineEditor = ({
         {/* Header */}
         <DialogHeader className="p-5 pb-4 border-b border-slate-200 dark:border-slate-800">
           <DialogTitle className="flex items-center gap-3 text-slate-900 dark:text-white">
-            <div className="p-2.5 rounded-xl bg-indigo-100 dark:bg-indigo-500/10 ring-1 ring-indigo-200 dark:ring-indigo-500/20">
-              <Settings2 className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+            <div className="p-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-500/10 ring-1 ring-emerald-200 dark:ring-emerald-500/20">
+              <Settings2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
               <span className="text-lg font-semibold">Editar Pipeline</span>
@@ -384,9 +384,9 @@ export const PipelineEditor = ({
             className="w-full mt-3 py-3 px-4 rounded-xl border-2 border-dashed 
               border-slate-300 dark:border-slate-700
               text-slate-500 dark:text-slate-400
-              hover:border-indigo-400 dark:hover:border-indigo-500
-              hover:text-indigo-600 dark:hover:text-indigo-400
-              hover:bg-indigo-50 dark:hover:bg-indigo-500/5
+              hover:border-emerald-400 dark:hover:border-emerald-500
+              hover:text-emerald-600 dark:hover:text-emerald-400
+              hover:bg-emerald-50 dark:hover:bg-emerald-500/5
               transition-all flex items-center justify-center gap-2 font-medium"
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
@@ -414,7 +414,7 @@ export const PipelineEditor = ({
             </Button>
             <Button
               onClick={handleSave}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold shadow-lg shadow-indigo-500/25"
+              className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-lg shadow-emerald-500/25"
             >
               Salvar Pipeline
             </Button>

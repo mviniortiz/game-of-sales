@@ -94,7 +94,7 @@ export const PerformanceTable = ({ data }: PerformanceTableProps) => {
                 <div className="flex items-center gap-4">
                   <div className="text-right">
                     <div className="text-sm text-muted-foreground">Comparec.</div>
-                    <div className="font-semibold text-indigo-400">
+                    <div className="font-semibold text-emerald-400">
                       {row.taxaComparecimento.toFixed(1)}%
                     </div>
                   </div>

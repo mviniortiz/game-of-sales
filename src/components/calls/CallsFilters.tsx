@@ -273,7 +273,7 @@ export const CallsFilters = ({
                 Vendedor
               </Label>
               <Select value={selectedVendedor} onValueChange={setSelectedVendedor}>
-                <SelectTrigger className="h-10 bg-background border-border text-foreground focus:ring-indigo-500">
+                <SelectTrigger className="h-10 bg-background border-border text-foreground focus:ring-emerald-500">
                   <SelectValue placeholder="Todos" />
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border">
@@ -295,7 +295,7 @@ export const CallsFilters = ({
               Resultado
             </Label>
             <Select value={selectedResultado} onValueChange={setSelectedResultado}>
-              <SelectTrigger className="h-10 bg-background border-border text-foreground focus:ring-indigo-500">
+              <SelectTrigger className="h-10 bg-background border-border text-foreground focus:ring-emerald-500">
                 <SelectValue placeholder="Todos" />
               </SelectTrigger>
               <SelectContent className="bg-card border-border">

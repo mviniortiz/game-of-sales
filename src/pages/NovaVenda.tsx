@@ -249,7 +249,7 @@ const NovaVenda = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-6xl mx-auto space-y-6">
         <div>
-          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-indigo-500 to-indigo-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-emerald-500 to-emerald-600 bg-clip-text text-transparent">
             Registrar Nova Venda
           </h1>
           <p className="text-muted-foreground">Preencha os dados da venda para ganhar pontos e subir no ranking</p>
@@ -318,7 +318,7 @@ const NovaVenda = () => {
                       placeholder="Ex: João Silva"
                       value={clienteNome}
                       onChange={(e) => setClienteNome(e.target.value)}
-                      className="h-11 bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:border-indigo-500"
+                      className="h-11 bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:border-emerald-500"
                       required
                     />
                   </div>
@@ -329,7 +329,7 @@ const NovaVenda = () => {
                       Plataforma
                     </Label>
                     <Select value={plataforma} onValueChange={setPlataforma} required>
-                      <SelectTrigger className="h-11 bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:border-indigo-500">
+                      <SelectTrigger className="h-11 bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:border-emerald-500">
                         <SelectValue placeholder="Selecione a plataforma" />
                       </SelectTrigger>
                       <SelectContent>
@@ -347,7 +347,7 @@ const NovaVenda = () => {
                       Forma de Pagamento
                     </Label>
                     <Select value={formaPagamento} onValueChange={setFormaPagamento} required>
-                      <SelectTrigger className="h-11 bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:border-indigo-500">
+                      <SelectTrigger className="h-11 bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:border-emerald-500">
                         <SelectValue placeholder="Selecione a forma de pagamento" />
                       </SelectTrigger>
                       <SelectContent>
@@ -369,7 +369,7 @@ const NovaVenda = () => {
                       Produto
                     </Label>
                     <Select value={produtoId} onValueChange={setProdutoId} required>
-                      <SelectTrigger className="h-11 bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:border-indigo-500">
+                      <SelectTrigger className="h-11 bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:border-emerald-500">
                         <SelectValue placeholder="Selecione um produto" />
                       </SelectTrigger>
                       <SelectContent>
@@ -394,7 +394,7 @@ const NovaVenda = () => {
                       placeholder="R$ 0,00"
                       value={valorFormatado}
                       onChange={(e) => formatarMoeda(e.target.value)}
-                      className="h-11 text-base font-medium bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:border-indigo-500"
+                      className="h-11 text-base font-medium bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:border-emerald-500"
                       required
                     />
                   </div>
@@ -409,7 +409,7 @@ const NovaVenda = () => {
                         <Button
                           variant="outline"
                           className={cn(
-                            "w-full justify-start text-left font-normal h-11 bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white hover:bg-muted dark:hover:bg-slate-800 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:border-indigo-500",
+                            "w-full justify-start text-left font-normal h-11 bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white hover:bg-muted dark:hover:bg-slate-800 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:border-emerald-500",
                             !dataVenda && "text-muted-foreground"
                           )}
                         >
@@ -439,7 +439,7 @@ const NovaVenda = () => {
                     Status
                   </Label>
                   <Select value={status} onValueChange={setStatus} required>
-                    <SelectTrigger className="h-11 bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:border-indigo-500">
+                    <SelectTrigger className="h-11 bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:border-emerald-500">
                       <SelectValue placeholder="Selecione o status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -458,7 +458,7 @@ const NovaVenda = () => {
                       Vendedor
                     </Label>
                     <Select value={vendedorId} onValueChange={setVendedorId} required>
-                      <SelectTrigger className="h-11 bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:border-indigo-500">
+                      <SelectTrigger className="h-11 bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:border-emerald-500">
                         <SelectValue placeholder="Selecione o vendedor" />
                       </SelectTrigger>
                       <SelectContent>
@@ -484,7 +484,7 @@ const NovaVenda = () => {
                   value={observacoes}
                   onChange={(e) => setObservacoes(e.target.value)}
                   rows={3}
-                  className="resize-none bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:border-indigo-500"
+                  className="resize-none bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:border-emerald-500"
                 />
               </div>
 
@@ -611,7 +611,7 @@ const NovaVenda = () => {
               {/* Botão de Submit - Melhorado */}
               <Button
                 type="submit"
-                className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 shadow-lg shadow-indigo-500/25 transition-all transform hover:scale-[1.01] active:scale-[0.98]"
+                className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 shadow-lg shadow-emerald-500/25 transition-all transform hover:scale-[1.01] active:scale-[0.98]"
                 disabled={createVenda.isPending}
               >
                 {createVenda.isPending ? (

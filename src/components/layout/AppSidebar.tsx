@@ -108,7 +108,7 @@ export function AppSidebar() {
                 <TooltipTrigger asChild>
                   <Button
                     onClick={() => setIsNovaVendaOpen(true)}
-                    className="w-full bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-semibold shadow-md hover:shadow-lg transition-all h-12 gap-2"
+                    className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-semibold shadow-md hover:shadow-lg transition-all h-12 gap-2"
                   >
                     <PlusCircle className="h-5 w-5" />
                   </Button>
@@ -120,7 +120,7 @@ export function AppSidebar() {
             ) : (
               <Button
                 onClick={() => setIsNovaVendaOpen(true)}
-                className="w-full bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-semibold shadow-md hover:shadow-lg transition-all h-12 gap-2"
+                className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-semibold shadow-md hover:shadow-lg transition-all h-12 gap-2"
               >
                 <PlusCircle className="h-5 w-5" />
                 <span>Registrar Venda</span>
@@ -149,7 +149,7 @@ export function AppSidebar() {
                                 to={item.url}
                                 end
                                 className="flex items-center gap-3 hover:bg-sidebar-accent transition-all group py-2.5"
-                                activeClassName="bg-indigo-50 text-indigo-600 font-medium border-l-4 border-indigo-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
+                                activeClassName="bg-emerald-50 text-emerald-600 font-medium border-l-4 border-emerald-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
                               >
                                 <AnimatedIcon icon={item.icon} isActive={isActive} />
                               </NavLink>
@@ -165,7 +165,7 @@ export function AppSidebar() {
                             to={item.url}
                             end
                             className="flex items-center gap-3 hover:bg-sidebar-accent transition-all group py-2.5"
-                            activeClassName="bg-indigo-50 text-indigo-600 font-medium border-l-4 border-indigo-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
+                            activeClassName="bg-emerald-50 text-emerald-600 font-medium border-l-4 border-emerald-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
                           >
                             <AnimatedIcon icon={item.icon} isActive={isActive} />
                             <span className="flex-1">{item.title}</span>
@@ -200,7 +200,7 @@ export function AppSidebar() {
                                 to={item.url}
                                 end
                                 className="flex items-center gap-3 hover:bg-sidebar-accent transition-all group py-2.5"
-                                activeClassName="bg-indigo-50 text-indigo-600 font-medium border-l-4 border-indigo-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
+                                activeClassName="bg-emerald-50 text-emerald-600 font-medium border-l-4 border-emerald-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
                               >
                                 <AnimatedIcon icon={item.icon} isActive={isActive} />
                               </NavLink>
@@ -216,7 +216,7 @@ export function AppSidebar() {
                             to={item.url}
                             end
                             className="flex items-center gap-3 hover:bg-sidebar-accent transition-all group py-2.5"
-                            activeClassName="bg-indigo-50 text-indigo-600 font-medium border-l-4 border-indigo-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
+                            activeClassName="bg-emerald-50 text-emerald-600 font-medium border-l-4 border-emerald-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
                           >
                             <AnimatedIcon icon={item.icon} isActive={isActive} />
                             <span className="flex-1">{item.title}</span>
@@ -249,7 +249,7 @@ export function AppSidebar() {
                               to={adminMenuItem.url}
                               end
                               className="flex items-center gap-3 hover:bg-sidebar-accent transition-all group py-2.5"
-                              activeClassName="bg-indigo-50 text-indigo-600 font-medium border-l-4 border-indigo-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
+                              activeClassName="bg-emerald-50 text-emerald-600 font-medium border-l-4 border-emerald-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
                             >
                               <AnimatedIcon icon={adminMenuItem.icon} isActive={location.pathname === adminMenuItem.url} />
                             </NavLink>
@@ -266,7 +266,7 @@ export function AppSidebar() {
                           to={adminMenuItem.url}
                           end
                           className="flex items-center gap-3 hover:bg-sidebar-accent transition-all group py-2.5"
-                          activeClassName="bg-indigo-50 text-indigo-600 font-medium border-l-4 border-indigo-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
+                          activeClassName="bg-emerald-50 text-emerald-600 font-medium border-l-4 border-emerald-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
                         >
                           <AnimatedIcon icon={adminMenuItem.icon} isActive={location.pathname === adminMenuItem.url} />
                           <span className="flex-1">{adminMenuItem.title}</span>
@@ -289,9 +289,9 @@ export function AppSidebar() {
                   variant="ghost"
                   className="w-full justify-start gap-3 h-auto py-3 hover:bg-sidebar-accent rounded-lg transition-all"
                 >
-                  <Avatar className="h-10 w-10 ring-2 ring-indigo-500/20">
+                  <Avatar className="h-10 w-10 ring-2 ring-emerald-500/20">
                     {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt="Avatar" />}
-                    <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white">
+                    <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
                       {profile?.nome ? getInitials(profile.nome) : "U"}
                     </AvatarFallback>
                   </Avatar>
@@ -323,9 +323,9 @@ export function AppSidebar() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="mx-auto hover:bg-gray-100">
-                  <Avatar className="h-10 w-10 ring-2 ring-indigo-500/20">
+                  <Avatar className="h-10 w-10 ring-2 ring-emerald-500/20">
                     {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt="Avatar" />}
-                    <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white">
+                    <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
                       {profile?.nome ? getInitials(profile.nome) : "U"}
                     </AvatarFallback>
                   </Avatar>

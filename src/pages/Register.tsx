@@ -147,7 +147,7 @@ const Register = () => {
     return (
         <div className="min-h-screen flex">
             {/* Left Side - Value Proposition (Dark) */}
-            <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-indigo-900 via-indigo-800 to-slate-900 overflow-hidden">
+            <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-emerald-900 via-emerald-800 to-slate-900 overflow-hidden">
                 {/* Subtle pattern overlay */}
                 <div
                     className="absolute inset-0 opacity-10"
@@ -165,17 +165,17 @@ const Register = () => {
                     {/* Testimonial */}
                     <div className="max-w-md">
                         <div className="relative">
-                            <Quote className="h-12 w-12 text-indigo-400 opacity-50 mb-4" />
+                            <Quote className="h-12 w-12 text-emerald-400 opacity-50 mb-4" />
                             <blockquote className="text-2xl font-light leading-relaxed mb-6">
                                 "O Game Sales aumentou nossas vendas em <span className="font-semibold text-emerald-400">30%</span> no primeiro mês. O ranking gamificado deixou o time completamente viciado em bater metas."
                             </blockquote>
                             <div className="flex items-center gap-3">
-                                <div className="h-12 w-12 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-lg">
+                                <div className="h-12 w-12 rounded-full bg-emerald-600 flex items-center justify-center font-bold text-lg">
                                     RS
                                 </div>
                                 <div>
                                     <p className="font-semibold">Ricardo Silva</p>
-                                    <p className="text-sm text-indigo-300">Gerente Comercial, TechSales Brasil</p>
+                                    <p className="text-sm text-emerald-300">Gerente Comercial, TechSales Brasil</p>
                                 </div>
                             </div>
                         </div>
@@ -183,14 +183,14 @@ const Register = () => {
 
                     {/* Value Props */}
                     <div className="space-y-4">
-                        <p className="text-sm font-medium text-indigo-300 uppercase tracking-wider">
+                        <p className="text-sm font-medium text-emerald-300 uppercase tracking-wider">
                             O que você ganha:
                         </p>
                         <div className="space-y-3">
                             {VALUE_PROPS.map((prop, idx) => (
                                 <div key={idx} className="flex items-center gap-3">
-                                    <div className="p-2 rounded-lg bg-indigo-700/50">
-                                        <prop.icon className="h-5 w-5 text-indigo-300" />
+                                    <div className="p-2 rounded-lg bg-emerald-700/50">
+                                        <prop.icon className="h-5 w-5 text-emerald-300" />
                                     </div>
                                     <span className="text-white/90">{prop.text}</span>
                                 </div>
@@ -243,7 +243,7 @@ const Register = () => {
                                     placeholder="João Silva"
                                     value={nome}
                                     onChange={(e) => setNome(e.target.value)}
-                                    className="pl-10 h-11 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500/20"
+                                    className="pl-10 h-11 bg-gray-50 border-gray-200 focus:border-emerald-500 focus:ring-emerald-500/20"
                                     required
                                 />
                             </div>
@@ -262,7 +262,7 @@ const Register = () => {
                                     placeholder="voce@suaempresa.com"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="pl-10 h-11 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500/20"
+                                    className="pl-10 h-11 bg-gray-50 border-gray-200 focus:border-emerald-500 focus:ring-emerald-500/20"
                                     required
                                 />
                             </div>
@@ -281,7 +281,7 @@ const Register = () => {
                                     placeholder="Sua Empresa Ltda"
                                     value={companyName}
                                     onChange={(e) => setCompanyName(e.target.value)}
-                                    className="pl-10 h-11 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500/20"
+                                    className="pl-10 h-11 bg-gray-50 border-gray-200 focus:border-emerald-500 focus:ring-emerald-500/20"
                                     required
                                 />
                             </div>
@@ -300,7 +300,7 @@ const Register = () => {
                                     placeholder="Mínimo 8 caracteres"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="pl-10 h-11 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500/20"
+                                    className="pl-10 h-11 bg-gray-50 border-gray-200 focus:border-emerald-500 focus:ring-emerald-500/20"
                                     required
                                 />
                             </div>
@@ -325,7 +325,7 @@ const Register = () => {
                                             className={`
                                                 relative w-full p-4 rounded-xl border-2 transition-all text-left
                                                 ${isSelected
-                                                    ? "border-indigo-500 bg-indigo-50 ring-2 ring-indigo-500/20"
+                                                    ? "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500/20"
                                                     : "border-gray-200 bg-white hover:border-gray-300"
                                                 }
                                             `}
@@ -336,7 +336,7 @@ const Register = () => {
                                                     <div className={`
                                                         h-5 w-5 rounded-full border-2 flex items-center justify-center
                                                         ${isSelected
-                                                            ? "border-indigo-600 bg-indigo-600"
+                                                            ? "border-emerald-600 bg-emerald-600"
                                                             : "border-gray-300"
                                                         }
                                                     `}>
@@ -346,12 +346,12 @@ const Register = () => {
                                                     </div>
 
                                                     <div className="flex items-center gap-2">
-                                                        <Icon className={`h-5 w-5 ${isSelected ? 'text-indigo-600' : 'text-gray-400'}`} />
+                                                        <Icon className={`h-5 w-5 ${isSelected ? 'text-emerald-600' : 'text-gray-400'}`} />
                                                         <div>
                                                             <div className="flex items-center gap-2">
                                                                 <span className="font-semibold text-gray-900">{p.name}</span>
                                                                 {isRecommended && (
-                                                                    <Badge className="bg-indigo-100 text-indigo-700 border-0 text-[10px] px-2">
+                                                                    <Badge className="bg-emerald-100 text-emerald-700 border-0 text-[10px] px-2">
                                                                         Recomendado
                                                                     </Badge>
                                                                 )}
@@ -390,7 +390,7 @@ const Register = () => {
                         <Button
                             type="submit"
                             disabled={loading}
-                            className="w-full h-12 text-base font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/25"
+                            className="w-full h-12 text-base font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/25"
                         >
                             {loading ? (
                                 "Criando conta..."
@@ -418,7 +418,7 @@ const Register = () => {
                         {/* Login Link */}
                         <p className="text-center text-sm text-gray-500">
                             Já tem uma conta?{" "}
-                            <Link to="/auth" className="text-indigo-600 hover:text-indigo-500 font-medium">
+                            <Link to="/auth" className="text-emerald-600 hover:text-emerald-500 font-medium">
                                 Entrar
                             </Link>
                         </p>

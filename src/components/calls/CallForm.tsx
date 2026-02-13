@@ -275,7 +275,7 @@ export const CallForm = ({ onSuccess }: CallFormProps) => {
       <Card className="border border-border bg-card shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
-            <ClipboardList className="h-4 w-4 text-indigo-600 dark:text-indigo-300" />
+            <ClipboardList className="h-4 w-4 text-emerald-600 dark:text-emerald-300" />
             Resultado da Call
           </CardTitle>
           <p className="text-xs text-muted-foreground">Registrar resultado de uma call</p>
@@ -289,7 +289,7 @@ export const CallForm = ({ onSuccess }: CallFormProps) => {
                 value={formData.agendamento_id}
                 onValueChange={handleAgendamentoChange}
               >
-                <SelectTrigger className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-indigo-500">
+                <SelectTrigger className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-emerald-500">
                   <SelectValue placeholder="Selecionar agendamento..." />
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border">
@@ -315,7 +315,7 @@ export const CallForm = ({ onSuccess }: CallFormProps) => {
                   setFormData({ ...formData, cliente_nome: e.target.value })
                 }
                 placeholder="Nome completo"
-                className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground placeholder:text-muted-foreground focus:ring-indigo-500"
+                className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground placeholder:text-muted-foreground focus:ring-emerald-500"
               />
             </div>
 
@@ -448,13 +448,13 @@ export const CallForm = ({ onSuccess }: CallFormProps) => {
                 }
                 placeholder="Informações adicionais..."
                 rows={2}
-                className="bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground placeholder:text-muted-foreground resize-none focus:ring-indigo-500"
+                className="bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground placeholder:text-muted-foreground resize-none focus:ring-emerald-500"
               />
             </div>
 
             <Button 
               type="submit" 
-              className="w-full h-10 bg-gradient-to-r from-indigo-600 to-indigo-500 text-white font-medium shadow-lg shadow-indigo-500/25 hover:scale-[1.01] transition-transform"
+              className="w-full h-10 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-medium shadow-lg shadow-emerald-500/25 hover:scale-[1.01] transition-transform"
               disabled={loading}
             >
               {loading ? "Registrando..." : "Registrar Resultado"}
@@ -492,7 +492,7 @@ export const CallForm = ({ onSuccess }: CallFormProps) => {
                   });
                 }}
               >
-                <SelectTrigger className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-indigo-500">
+                <SelectTrigger className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-emerald-500">
                   <SelectValue placeholder="Selecionar produto..." />
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border">
@@ -514,7 +514,7 @@ export const CallForm = ({ onSuccess }: CallFormProps) => {
                 value={valorFormatado}
                 onChange={(e) => formatarMoeda(e.target.value)}
                 placeholder="R$ 0,00"
-                className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-indigo-500"
+                className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-emerald-500"
               />
             </div>
 
@@ -527,7 +527,7 @@ export const CallForm = ({ onSuccess }: CallFormProps) => {
                   setFormData({ ...formData, plataforma: e.target.value })
                 }
                 placeholder="Ex: WhatsApp, Instagram..."
-                className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-indigo-500"
+                className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-emerald-500"
               />
             </div>
 
@@ -539,7 +539,7 @@ export const CallForm = ({ onSuccess }: CallFormProps) => {
                   setFormData({ ...formData, forma_pagamento: value })
                 }
               >
-                <SelectTrigger className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-indigo-500">
+                <SelectTrigger className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-emerald-500">
                   <SelectValue placeholder="Selecionar..." />
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border">
@@ -597,7 +597,7 @@ export const CallForm = ({ onSuccess }: CallFormProps) => {
                 value={formData.loss_reason}
                 onValueChange={(value) => setFormData({ ...formData, loss_reason: value })}
               >
-                <SelectTrigger className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-indigo-500">
+                <SelectTrigger className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-emerald-500">
                   <SelectValue placeholder="Selecionar motivo..." />
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border">
@@ -620,7 +620,7 @@ export const CallForm = ({ onSuccess }: CallFormProps) => {
                   onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
                   placeholder="Descreva o motivo..."
                   rows={2}
-                  className="bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground resize-none focus:ring-indigo-500"
+                  className="bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground resize-none focus:ring-emerald-500"
                 />
               </div>
             )}

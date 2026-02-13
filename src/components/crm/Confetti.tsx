@@ -16,11 +16,11 @@ const generateConfetti = (count: number) => {
         scale: 0.5 + Math.random() * 0.5,
         color: [
             "#10B981", // Emerald
-            "#6366F1", // Indigo
+            "#10b981", // Indigo
             "#F59E0B", // Amber
             "#EC4899", // Pink
             "#3B82F6", // Blue
-            "#8B5CF6", // Violet
+            "#10b981", // Violet
         ][Math.floor(Math.random() * 6)],
     }));
 };

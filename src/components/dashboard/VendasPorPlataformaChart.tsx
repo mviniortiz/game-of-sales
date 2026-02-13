@@ -10,7 +10,7 @@ const COLORS = [
   "#4F46E5", // Indigo
   "#10B981", // Emerald
   "#F59E0B", // Amber
-  "#8B5CF6", // Violet
+  "#10b981", // Violet
   "#EF4444", // Red
   "#06B6D4", // Cyan
 ];

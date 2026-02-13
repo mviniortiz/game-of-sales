@@ -47,7 +47,7 @@ import { ProposalPDFButton } from "@/components/crm/ProposalPDFGenerator";
 const PIPELINE_STAGES = [
   { id: "lead", title: "Lead", shortTitle: "Lead", color: "bg-gray-500" },
   { id: "qualification", title: "Qualificação", shortTitle: "Qualif.", color: "bg-blue-500" },
-  { id: "proposal", title: "Proposta", shortTitle: "Prop.", color: "bg-indigo-500" },
+  { id: "proposal", title: "Proposta", shortTitle: "Prop.", color: "bg-emerald-500" },
   { id: "negotiation", title: "Negociação", shortTitle: "Negoc.", color: "bg-amber-500" },
   { id: "closed_won", title: "Ganho", shortTitle: "Ganho", color: "bg-emerald-500" },
   { id: "closed_lost", title: "Perdido", shortTitle: "Perdido", color: "bg-rose-500" },
@@ -289,7 +289,7 @@ export default function DealDetails() {
   const getActivityIcon = (type: string) => {
     switch (type) {
       case "created":
-        return <Sparkles className="h-4 w-4 text-indigo-400" />;
+        return <Sparkles className="h-4 w-4 text-emerald-400" />;
       case "stage_changed":
         return <ArrowRight className="h-4 w-4 text-blue-400" />;
       case "won":
@@ -415,22 +415,22 @@ export default function DealDetails() {
                             ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/25"
                             : stage.id === "closed_lost"
                               ? "bg-rose-600 text-white shadow-md shadow-rose-500/25"
-                              : "bg-indigo-600 text-white shadow-md shadow-indigo-500/25"
+                              : "bg-emerald-600 text-white shadow-md shadow-emerald-500/25"
                           : isPast
-                            ? "bg-indigo-50 text-indigo-700 border border-indigo-100"
+                            ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
                             : "bg-muted text-muted-foreground hover:bg-muted/70"
                         }
                         ${isClosed && !isActive ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}
                       `}
                     >
                       <span className="flex items-center justify-center gap-1">
-                        {isPast && !isActive && <Check className="h-3 w-3 text-indigo-500 hidden sm:block" />}
+                        {isPast && !isActive && <Check className="h-3 w-3 text-emerald-500 hidden sm:block" />}
                         <span className="sm:hidden">{stage.shortTitle}</span>
                         <span className="hidden sm:inline">{stage.title}</span>
                       </span>
                     </button>
                     {!isLast && (
-                      <ChevronRight className={`h-4 sm:h-5 w-4 sm:w-5 -mx-0.5 sm:-mx-1 z-10 flex-shrink-0 ${isPast || isActive ? "text-indigo-500" : "text-muted-foreground/60"
+                      <ChevronRight className={`h-4 sm:h-5 w-4 sm:w-5 -mx-0.5 sm:-mx-1 z-10 flex-shrink-0 ${isPast || isActive ? "text-emerald-500" : "text-muted-foreground/60"
                         }`} />
                     )}
                   </div>
@@ -454,7 +454,7 @@ export default function DealDetails() {
                       variant="ghost"
                       size="sm"
                       onClick={() => setIsEditing(true)}
-                      className="text-indigo-600 hover:text-indigo-700 h-7 px-2 text-xs"
+                      className="text-emerald-600 hover:text-emerald-700 h-7 px-2 text-xs"
                     >
                       Editar
                     </Button>
@@ -475,7 +475,7 @@ export default function DealDetails() {
                         size="sm"
                         onClick={handleSave}
                         disabled={updateDealMutation.isPending}
-                        className="bg-indigo-600 hover:bg-indigo-500 h-7 px-2 text-white shadow-sm"
+                        className="bg-emerald-600 hover:bg-emerald-500 h-7 px-2 text-white shadow-sm"
                       >
                         {updateDealMutation.isPending ? (
                           <Loader2 className="h-3 w-3 animate-spin" />
@@ -621,7 +621,7 @@ export default function DealDetails() {
                       <Label className="text-[10px] text-slate-500 uppercase tracking-wider">
                         Probabilidade
                       </Label>
-                      <span className={`text-sm font-bold ${deal.probability >= 80 ? "text-emerald-400" : "text-indigo-400"
+                      <span className={`text-sm font-bold ${deal.probability >= 80 ? "text-emerald-400" : "text-emerald-400"
                         }`}>
                         {deal.probability}%
                       </span>
@@ -645,7 +645,7 @@ export default function DealDetails() {
                         <div
                           className={`h-full rounded-full transition-all ${deal.probability >= 80
                             ? "bg-gradient-to-r from-emerald-500 to-emerald-400"
-                            : "bg-gradient-to-r from-indigo-600 to-indigo-400"
+                            : "bg-gradient-to-r from-emerald-600 to-emerald-400"
                             }`}
                           style={{ width: `${deal.probability}%` }}
                         />
@@ -681,21 +681,21 @@ export default function DealDetails() {
                   <TabsList className="w-full justify-start border-b border-slate-800/60 bg-transparent rounded-none p-0">
                     <TabsTrigger
                       value="notes"
-                      className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 rounded-none px-6 py-3"
+                      className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-emerald-500 rounded-none px-6 py-3"
                     >
                       <FileText className="h-4 w-4 mr-2" />
                       Anotações
                     </TabsTrigger>
                     <TabsTrigger
                       value="products"
-                      className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 rounded-none px-6 py-3"
+                      className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-emerald-500 rounded-none px-6 py-3"
                     >
                       <Package className="h-4 w-4 mr-2" />
                       Produtos
                     </TabsTrigger>
                     <TabsTrigger
                       value="history"
-                      className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 rounded-none px-6 py-3"
+                      className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-emerald-500 rounded-none px-6 py-3"
                     >
                       <History className="h-4 w-4 mr-2" />
                       Histórico
@@ -717,7 +717,7 @@ export default function DealDetails() {
                           onClick={() => newNote.trim() && addNoteMutation.mutate(newNote)}
                           disabled={!newNote.trim() || addNoteMutation.isPending}
                           size="sm"
-                          className="bg-indigo-600 hover:bg-indigo-500 h-8 px-4 gap-2"
+                          className="bg-emerald-600 hover:bg-emerald-500 h-8 px-4 gap-2"
                         >
                           {addNoteMutation.isPending ? (
                             <Loader2 className="h-3 w-3 animate-spin" />
@@ -748,7 +748,7 @@ export default function DealDetails() {
                             <div className="flex items-start gap-3">
                               <Avatar className="h-7 w-7">
                                 <AvatarImage src={note.profiles?.avatar_url || undefined} />
-                                <AvatarFallback className="bg-indigo-500/20 text-indigo-300 text-[10px]">
+                                <AvatarFallback className="bg-emerald-500/20 text-emerald-300 text-[10px]">
                                   {note.profiles?.nome?.substring(0, 2).toUpperCase() || "?"}
                                 </AvatarFallback>
                               </Avatar>
@@ -803,7 +803,7 @@ export default function DealDetails() {
                       ) : (
                         <div className="relative">
                           {/* Vertical Timeline Line */}
-                          <div className="absolute left-4 top-0 bottom-0 w-px bg-gradient-to-b from-indigo-500/50 via-slate-700 to-transparent" />
+                          <div className="absolute left-4 top-0 bottom-0 w-px bg-gradient-to-b from-emerald-500/50 via-slate-700 to-transparent" />
 
                           <div className="space-y-0">
                             {activities.map((activity, index) => (
@@ -817,7 +817,7 @@ export default function DealDetails() {
                                       : activity.activity_type === "stage_changed"
                                         ? "bg-blue-500/20 border-blue-500/50"
                                         : activity.activity_type === "created"
-                                          ? "bg-indigo-500/20 border-indigo-500/50"
+                                          ? "bg-emerald-500/20 border-emerald-500/50"
                                           : "bg-slate-800 border-slate-700"
                                     }`}>
                                     {getActivityIcon(activity.activity_type)}
@@ -829,7 +829,7 @@ export default function DealDetails() {
                                   <div className="flex items-start justify-between gap-2">
                                     <p className="text-sm text-white leading-relaxed">{activity.description}</p>
                                     {activity.activity_type === "stage_changed" && activity.new_value && (
-                                      <span className="px-2 py-0.5 bg-indigo-500/20 text-indigo-300 text-[10px] rounded-full font-medium whitespace-nowrap">
+                                      <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 text-[10px] rounded-full font-medium whitespace-nowrap">
                                         → {activity.new_value}
                                       </span>
                                     )}

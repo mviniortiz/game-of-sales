@@ -534,7 +534,7 @@ export const AdminMetas = () => {
     if (percent >= 150) return "bg-gradient-to-r from-amber-500 to-yellow-400"; // God Mode
     if (percent >= 100) return "bg-gradient-to-r from-emerald-500 to-emerald-400";
     if (percent >= 50) return "bg-gradient-to-r from-cyan-500 to-cyan-400";
-    return "bg-gradient-to-r from-indigo-500 to-indigo-400";
+    return "bg-gradient-to-r from-emerald-500 to-emerald-400";
   };
 
   const getCardBorderClass = (percent: number) => {
@@ -546,7 +546,7 @@ export const AdminMetas = () => {
   const getStatusText = (percent: number, falta: number) => {
     if (percent >= 150) return { text: "🔥 GOD MODE!", color: "text-amber-500 dark:text-amber-400" };
     if (percent >= 100) return { text: "✅ Meta Batida!", color: "text-emerald-600 dark:text-emerald-400" };
-    return { text: `Falta ${formatCurrencyCompact(falta)}`, color: "text-indigo-600 dark:text-indigo-300" };
+    return { text: `Falta ${formatCurrencyCompact(falta)}`, color: "text-emerald-600 dark:text-emerald-300" };
   };
 
   // Calculate team health stats
@@ -581,14 +581,14 @@ export const AdminMetas = () => {
       <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 bg-card border border-border shadow-sm">
         <TabsTrigger
           value="individual"
-          className="flex items-center gap-2 data-[state=active]:bg-indigo-600 data-[state=active]:text-white"
+          className="flex items-center gap-2 data-[state=active]:bg-emerald-600 data-[state=active]:text-white"
         >
           <Target className="h-4 w-4" />
           Metas Individuais
         </TabsTrigger>
         <TabsTrigger
           value="consolidada"
-          className="flex items-center gap-2 data-[state=active]:bg-indigo-600 data-[state=active]:text-white"
+          className="flex items-center gap-2 data-[state=active]:bg-emerald-600 data-[state=active]:text-white"
         >
           <TrendingUp className="h-4 w-4" />
           Meta Consolidada
@@ -605,7 +605,7 @@ export const AdminMetas = () => {
                 <CardContent className="p-6 space-y-5">
                   {/* Header */}
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-200">
+                    <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-200">
                       <Target className="h-5 w-5" />
                     </div>
                     <div>
@@ -619,7 +619,7 @@ export const AdminMetas = () => {
                     <div className="space-y-2">
                       <Label className="text-muted-foreground text-sm">Vendedor</Label>
                       <Select value={userId} onValueChange={setUserId}>
-                        <SelectTrigger className="bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-indigo-500">
+                        <SelectTrigger className="bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-emerald-500">
                           <SelectValue placeholder="Selecione um vendedor" />
                         </SelectTrigger>
                         <SelectContent className="bg-card border-border">
@@ -627,10 +627,10 @@ export const AdminMetas = () => {
                             <SelectItem
                               key={vendedor.id}
                               value={vendedor.id}
-                              className="data-[state=checked]:bg-indigo-100 data-[state=checked]:text-indigo-700 dark:data-[state=checked]:bg-indigo-500/20 dark:data-[state=checked]:text-white"
+                              className="data-[state=checked]:bg-emerald-100 data-[state=checked]:text-emerald-700 dark:data-[state=checked]:bg-emerald-500/20 dark:data-[state=checked]:text-white"
                             >
                               <div className="flex items-center gap-2">
-                                <Avatar className="h-5 w-5 ring-2 ring-indigo-100 dark:ring-indigo-500/30">
+                                <Avatar className="h-5 w-5 ring-2 ring-emerald-100 dark:ring-emerald-500/30">
                                   {vendedor.avatar_url && <AvatarImage src={vendedor.avatar_url} />}
                                   <AvatarFallback className="text-[10px] bg-muted text-foreground">
                                     {getInitials(vendedor.nome)}
@@ -646,7 +646,7 @@ export const AdminMetas = () => {
 
                     {/* Performance Insight Box */}
                     {userId && (
-                      <div className="p-4 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-700 dark:bg-indigo-500/10 dark:border-indigo-500/20 dark:text-indigo-100">
+                      <div className="p-4 rounded-lg bg-emerald-50 border border-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-100">
                         <div className="flex items-center gap-2 mb-2">
                           <Sparkles className="h-4 w-4" />
                           <span className="text-xs font-medium uppercase tracking-wider">
@@ -718,7 +718,7 @@ export const AdminMetas = () => {
                           value={valorMetaFormatado}
                           onChange={(e) => formatarMoeda(e.target.value, setValorMeta, setValorMetaFormatado)}
                           placeholder="R$ 0,00"
-                          className="pl-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-indigo-500"
+                          className="pl-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-emerald-500"
                           required
                         />
                       </div>
@@ -727,7 +727,7 @@ export const AdminMetas = () => {
                     <Button
                       type="submit"
                       disabled={createMeta.isPending}
-                      className="w-full bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-500/20 hover:scale-[1.01] transition-transform"
+                      className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-lg shadow-emerald-500/20 hover:scale-[1.01] transition-transform"
                     >
                       {createMeta.isPending ? "Definindo..." : "Definir Meta"}
                     </Button>
@@ -764,11 +764,11 @@ export const AdminMetas = () => {
 
             {/* Team Health Summary */}
             {metas && metas.length > 0 && (
-              <Card className="mb-6 border border-gray-200 dark:border-gray-800 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20">
+              <Card className="mb-6 border border-gray-200 dark:border-gray-800 bg-gradient-to-r from-emerald-50 to-emerald-50 dark:from-emerald-900/20 dark:to-emerald-900/20">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="p-2 rounded-lg bg-indigo-100 dark:bg-indigo-500/20">
-                      <Users className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                    <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-500/20">
+                      <Users className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                     </div>
                     <div>
                       <h4 className="font-semibold text-gray-900 dark:text-white text-sm">Saúde do Time</h4>
@@ -780,7 +780,7 @@ export const AdminMetas = () => {
                   <div className="space-y-2 mb-4">
                     <div className="flex justify-between text-xs">
                       <span className="text-gray-600 dark:text-gray-400">Progresso do Time</span>
-                      <span className={`font-bold ${teamHealthStats.teamProgress >= 100 ? 'text-emerald-600 dark:text-emerald-400' : 'text-indigo-600 dark:text-indigo-400'}`}>
+                      <span className={`font-bold ${teamHealthStats.teamProgress >= 100 ? 'text-emerald-600 dark:text-emerald-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
                         {teamHealthStats.teamProgress.toFixed(1)}%
                       </span>
                     </div>
@@ -876,7 +876,7 @@ export const AdminMetas = () => {
                       <CardContent className="p-4 space-y-4">
                         {/* Header: Avatar + Name + Month */}
                         <div className="flex items-center gap-3">
-                          <Avatar className="h-10 w-10 ring-2 ring-indigo-100 dark:ring-indigo-500/30">
+                          <Avatar className="h-10 w-10 ring-2 ring-emerald-100 dark:ring-emerald-500/30">
                             {meta.profiles?.avatar_url && (
                               <AvatarImage src={meta.profiles.avatar_url} />
                             )}
@@ -920,7 +920,7 @@ export const AdminMetas = () => {
                               {exactProgress >= 150 && <Crown className="h-3 w-3 text-amber-500" />}
                               <span className={`font-bold text-sm ${exactProgress >= 150 ? "text-amber-500" :
                                 exactProgress >= 100 ? "text-emerald-600 dark:text-emerald-400" :
-                                  "text-indigo-600 dark:text-indigo-400"
+                                  "text-emerald-600 dark:text-emerald-400"
                                 }`}>
                                 {exactProgress.toFixed(0)}%
                               </span>
@@ -957,7 +957,7 @@ export const AdminMetas = () => {
                 <CardContent className="p-6 space-y-5">
                   {/* Header */}
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-200">
+                    <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-200">
                       <Zap className="h-5 w-5" />
                     </div>
                     <div>
@@ -1015,13 +1015,13 @@ export const AdminMetas = () => {
                           value={valorMetaConsolidadaFormatado}
                           onChange={(e) => formatarMoeda(e.target.value, setValorMetaConsolidada, setValorMetaConsolidadaFormatado)}
                           placeholder="R$ 0,00"
-                          className="pl-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-indigo-500"
+                          className="pl-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-emerald-500"
                           required
                         />
                       </div>
                       {/* Helper: Sum of individual metas */}
                       {metas && metas.length > 0 && (
-                        <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-2 flex items-center gap-1">
+                        <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-2 flex items-center gap-1">
                           <Sparkles className="h-3 w-3" />
                           Soma das Metas Individuais: <span className="font-semibold">{formatCurrencyCompact(teamHealthStats?.totalTarget || 0)}</span>
                         </p>
@@ -1035,7 +1035,7 @@ export const AdminMetas = () => {
                         value={descricaoConsolidada}
                         onChange={(e) => setDescricaoConsolidada(e.target.value)}
                         placeholder="Ex: Meta Black Friday..."
-                        className="bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-indigo-500 min-h-[80px]"
+                        className="bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-emerald-500 min-h-[80px]"
                       />
                     </div>
 
@@ -1046,14 +1046,14 @@ export const AdminMetas = () => {
                         value={produtoAlvo}
                         onChange={(e) => setProdutoAlvo(e.target.value)}
                         placeholder="Ex: Plano Premium..."
-                        className="bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-indigo-500"
+                        className="bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-emerald-500"
                       />
                     </div>
 
                     <Button
                       type="submit"
                       disabled={createMetaConsolidada.isPending}
-                      className="w-full bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-500/20 hover:scale-[1.01] transition-transform"
+                      className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-lg shadow-emerald-500/20 hover:scale-[1.01] transition-transform"
                     >
                       {createMetaConsolidada.isPending ? "Definindo..." : "Definir Meta Consolidada"}
                     </Button>
@@ -1092,7 +1092,7 @@ export const AdminMetas = () => {
               <Card className="border-dashed border-gray-300 dark:border-gray-700 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
                 <CardContent className="py-16 text-center space-y-3">
                   <div className="relative inline-block">
-                    <Rocket className="h-16 w-16 mx-auto text-indigo-400 dark:text-indigo-500" />
+                    <Rocket className="h-16 w-16 mx-auto text-emerald-400 dark:text-emerald-500" />
                     <Star className="h-6 w-6 absolute -top-1 -right-1 text-amber-400 animate-pulse" />
                   </div>
                   <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -1197,7 +1197,7 @@ export const AdminMetas = () => {
                         {/* Header: Title + Month */}
                         <div>
                           <div className="flex items-center gap-2 mb-1">
-                            <Zap className="h-4 w-4 text-indigo-600 dark:text-indigo-300" />
+                            <Zap className="h-4 w-4 text-emerald-600 dark:text-emerald-300" />
                             <h4 className="font-semibold text-foreground">
                               {meta.descricao || "Meta Consolidada"}
                             </h4>
@@ -1207,7 +1207,7 @@ export const AdminMetas = () => {
                             {format(new Date(meta.mes_referencia + "T12:00:00"), "MMMM yyyy", { locale: ptBR })}
                           </Badge>
                           {meta.produto_alvo && (
-                            <Badge className="bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300 text-xs ml-2">
+                            <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 text-xs ml-2">
                               🎯 Foco: {meta.produto_alvo}
                             </Badge>
                           )}
@@ -1224,7 +1224,7 @@ export const AdminMetas = () => {
                                     <TooltipTrigger asChild>
                                       <Avatar className={`h-7 w-7 border-2 border-white dark:border-gray-900 ${idx === 0 ? 'ring-2 ring-amber-400' : ''}`}>
                                         <AvatarImage src={contributor.avatarUrl || ''} />
-                                        <AvatarFallback className="bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-200 text-[10px] font-semibold">
+                                        <AvatarFallback className="bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200 text-[10px] font-semibold">
                                           {contributor.nome.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                                         </AvatarFallback>
                                       </Avatar>
@@ -1248,7 +1248,7 @@ export const AdminMetas = () => {
                           <div className="flex items-center gap-2 mt-2">
                             {isGodMode && <Flame className="h-4 w-4 text-amber-500 animate-pulse" />}
                             {isCompleted && !isGodMode && <CheckCircle className="h-4 w-4 text-emerald-500" />}
-                            <span className={`text-sm font-semibold ${isGodMode ? 'text-amber-500' : isCompleted ? 'text-emerald-600 dark:text-emerald-400' : 'text-indigo-600 dark:text-indigo-400'
+                            <span className={`text-sm font-semibold ${isGodMode ? 'text-amber-500' : isCompleted ? 'text-emerald-600 dark:text-emerald-400' : 'text-emerald-600 dark:text-emerald-400'
                               }`}>
                               {isGodMode ? '🔥 SUPER META!' : isCompleted ? '✅ Meta Batida!' : `Falta ${formatCurrencyCompact(falta)}`}
                             </span>

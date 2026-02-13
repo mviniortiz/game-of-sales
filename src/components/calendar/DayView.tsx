@@ -107,7 +107,7 @@ function SortableAgendamento({
               <div className="flex items-center gap-2">
                 <h3 className={`font-semibold text-lg ${getStatusColor(agendamento.status).text}`}>
                   {showSellerName && agendamento.seller_name && (
-                    <span className="text-indigo-400">[{agendamento.seller_name}] </span>
+                    <span className="text-emerald-400">[{agendamento.seller_name}] </span>
                   )}
                   {agendamento.cliente_nome}
                 </h3>
@@ -131,7 +131,7 @@ function SortableAgendamento({
                 <span>{format(new Date(agendamento.data_agendamento), "HH:mm", { locale: ptBR })}</span>
               </div>
               {showSellerName && agendamento.seller_name && (
-                <div className="flex items-center gap-1 text-sm text-indigo-400">
+                <div className="flex items-center gap-1 text-sm text-emerald-400">
                   <User className="h-3 w-3" />
                   <span>{agendamento.seller_name}</span>
                 </div>

@@ -193,8 +193,8 @@ export const AdminProdutos = () => {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-indigo-100 dark:bg-indigo-500/20">
-                        <Package className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                    <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-500/20">
+                        <Package className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                     </div>
                     <div>
                         <h3 className="text-lg font-semibold text-foreground">Produtos</h3>

@@ -198,7 +198,7 @@ export const HotmartConfigModal = ({ open, onClose, onSaved }: HotmartConfigModa
 
                 {isLoading ? (
                     <div className="flex items-center justify-center py-8">
-                        <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
+                        <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
                     </div>
                 ) : (
                     <div className="space-y-6 py-4">
@@ -235,7 +235,7 @@ export const HotmartConfigModal = ({ open, onClose, onSaved }: HotmartConfigModa
                                     href="https://app-vlc.hotmart.com/tools/webhook"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-indigo-500 hover:text-indigo-600"
+                                    className="text-emerald-500 hover:text-emerald-600"
                                     title="Onde encontrar o HOTTOK"
                                 >
                                     <HelpCircle className="w-4 h-4" />
@@ -280,12 +280,12 @@ export const HotmartConfigModal = ({ open, onClose, onSaved }: HotmartConfigModa
                         </div>
 
                         {/* Instructions */}
-                        <div className="p-4 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20">
-                            <h4 className="font-medium text-indigo-900 dark:text-indigo-300 mb-2 flex items-center gap-2">
+                        <div className="p-4 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
+                            <h4 className="font-medium text-emerald-900 dark:text-emerald-300 mb-2 flex items-center gap-2">
                                 <ShieldCheck className="w-4 h-4" />
                                 Como Configurar
                             </h4>
-                            <ol className="text-sm text-indigo-700 dark:text-indigo-400 space-y-1 list-decimal list-inside">
+                            <ol className="text-sm text-emerald-700 dark:text-emerald-400 space-y-1 list-decimal list-inside">
                                 <li>Copie a URL do webhook acima</li>
                                 <li>Acesse o painel da Hotmart → Ferramentas → Webhook</li>
                                 <li>Crie uma nova configuração com a URL</li>
@@ -300,7 +300,7 @@ export const HotmartConfigModal = ({ open, onClose, onSaved }: HotmartConfigModa
                             href="https://app-vlc.hotmart.com/tools/webhook"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center justify-center gap-2 w-full py-2 text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
+                            className="flex items-center justify-center gap-2 w-full py-2 text-sm text-emerald-600 dark:text-emerald-400 hover:underline"
                         >
                             <ExternalLink className="w-4 h-4" />
                             Abrir Painel de Webhooks da Hotmart
@@ -337,7 +337,7 @@ export const HotmartConfigModal = ({ open, onClose, onSaved }: HotmartConfigModa
                         <Button
                             onClick={handleSave}
                             disabled={isSaving || !hottok.trim()}
-                            className="bg-indigo-600 hover:bg-indigo-500"
+                            className="bg-emerald-600 hover:bg-emerald-500"
                         >
                             {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                             Salvar Configuração

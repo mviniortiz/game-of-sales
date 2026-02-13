@@ -68,7 +68,7 @@ export const KanbanColumn = memo(({
           border border-slate-200/50 dark:border-slate-700/50
           transition-all duration-150
           ${isOver
-            ? "ring-2 ring-indigo-500/50 dark:ring-indigo-400/50 ring-offset-2 ring-offset-slate-100 dark:ring-offset-slate-900 scale-[1.01]"
+            ? "ring-2 ring-emerald-500/50 dark:ring-emerald-400/50 ring-offset-2 ring-offset-slate-100 dark:ring-offset-slate-900 scale-[1.01]"
             : ""
           }
         `}
@@ -124,7 +124,7 @@ export const KanbanColumn = memo(({
             overflow-hidden
             max-h-[calc(100vh-280px)]
             transition-colors duration-100
-            ${isOver ? "bg-indigo-50 dark:bg-indigo-500/10" : ""}
+            ${isOver ? "bg-emerald-50 dark:bg-emerald-500/10" : ""}
           `}
         >
           <ScrollArea className="h-full max-h-[calc(100vh-300px)] pr-1">
@@ -143,13 +143,13 @@ export const KanbanColumn = memo(({
                     <div className={`
                       p-3 rounded-xl mb-2
                       ${isOver
-                        ? "bg-indigo-100 dark:bg-indigo-500/20"
+                        ? "bg-emerald-100 dark:bg-emerald-500/20"
                         : "bg-slate-200 dark:bg-slate-700"
                       }
                     `}>
-                      <Inbox className={`h-6 w-6 ${isOver ? "text-indigo-500 dark:text-indigo-400" : "text-slate-400 dark:text-slate-500"}`} />
+                      <Inbox className={`h-6 w-6 ${isOver ? "text-emerald-500 dark:text-emerald-400" : "text-slate-400 dark:text-slate-500"}`} />
                     </div>
-                    <p className={`text-[11px] font-medium ${isOver ? "text-indigo-600 dark:text-indigo-400" : "text-slate-500 dark:text-slate-500"}`}>
+                    <p className={`text-[11px] font-medium ${isOver ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-500"}`}>
                       {isOver ? "Solte aqui" : "Sem deals"}
                     </p>
                   </div>

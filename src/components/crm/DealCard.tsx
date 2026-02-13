@@ -135,8 +135,8 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onClic
         cursor-grab active:cursor-grabbing
         transition-all duration-150
         ${isBeingDragged
-          ? `scale-105 rotate-1 shadow-2xl ${rottingColors.glow} border-indigo-500 dark:border-indigo-400 z-50 !opacity-100`
-          : "hover:border-indigo-400/50 dark:hover:border-indigo-500/50 hover:shadow-md dark:hover:shadow-indigo-500/5"
+          ? `scale-105 rotate-1 shadow-2xl ${rottingColors.glow} border-emerald-500 dark:border-emerald-400 z-50 !opacity-100`
+          : "hover:border-emerald-400/50 dark:hover:border-emerald-500/50 hover:shadow-md dark:hover:shadow-emerald-500/5"
         }
         ${isSortableDragging ? "opacity-50" : "opacity-100"}
       `}
@@ -166,10 +166,10 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onClic
             </button>
             <button
               onClick={(e) => handleQuickAction(e, 'calendar')}
-              className="p-1.5 rounded-md hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors group/btn"
+              className="p-1.5 rounded-md hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors group/btn"
               title="Agendar"
             >
-              <Calendar className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400 group-hover/btn:text-indigo-600 dark:group-hover/btn:text-indigo-400" />
+              <Calendar className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400 group-hover/btn:text-emerald-600 dark:group-hover/btn:text-emerald-400" />
             </button>
             <button
               onClick={(e) => handleQuickAction(e, 'check')}
@@ -183,7 +183,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onClic
       </AnimatePresence>
 
       {/* Subtle gradient overlay on hover */}
-      <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-indigo-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+      <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-emerald-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
 
       {/* Content */}
       <div className="relative">
@@ -207,7 +207,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onClic
               </div>
             )}
             {/* Avatar */}
-            <Avatar className="h-7 w-7 ring-2 ring-indigo-100 dark:ring-indigo-500/30">
+            <Avatar className="h-7 w-7 ring-2 ring-emerald-100 dark:ring-emerald-500/30">
               <AvatarImage src={deal.profiles?.avatar_url || undefined} />
               <AvatarFallback className="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-bold">
                 {getInitials(deal.profiles?.nome || "")}

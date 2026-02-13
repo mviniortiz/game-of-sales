@@ -61,14 +61,14 @@ export const MetasRankingCard = ({
   const getProgressBarColor = (percentual: number) => {
     if (percentual >= 100) return "bg-gradient-to-r from-emerald-500 to-emerald-400";
     if (percentual >= 50) return "bg-gradient-to-r from-cyan-500 to-cyan-400";
-    return "bg-gradient-to-r from-indigo-500 to-indigo-400";
+    return "bg-gradient-to-r from-emerald-500 to-emerald-400";
   };
 
   // Avatar ring color
   const getAvatarRingColor = (percentual: number) => {
     if (percentual >= 100) return "ring-emerald-500 ring-2";
     if (percentual >= 50) return "ring-cyan-500 ring-2";
-    return "ring-indigo-500/50 ring-2";
+    return "ring-emerald-500/50 ring-2";
   };
 
   // Status badge
@@ -90,7 +90,7 @@ export const MetasRankingCard = ({
       );
     }
     return (
-      <Badge className="bg-indigo-500/20 text-indigo-400 border-indigo-500/30 px-2 py-0.5 text-xs">
+      <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 px-2 py-0.5 text-xs">
         <TrendingUp className="h-3 w-3 mr-1" />
         Em progresso
       </Badge>
@@ -109,14 +109,14 @@ export const MetasRankingCard = ({
       {/* Header with Filter */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-500/10">
-            <Medal className="h-5 w-5 text-indigo-600 dark:text-indigo-200" />
+          <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-500/10">
+            <Medal className="h-5 w-5 text-emerald-600 dark:text-emerald-200" />
           </div>
           <div>
             <div className="flex items-center gap-3">
               <h2 className="text-xl font-bold text-foreground">Metas de Vendas</h2>
               {hasActiveFilters && (
-                <Badge variant="outline" className="bg-indigo-50 text-indigo-600 border-indigo-100 text-xs dark:bg-indigo-500/10 dark:text-indigo-200 dark:border-indigo-500/30">
+                <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-100 text-xs dark:bg-emerald-500/10 dark:text-emerald-200 dark:border-emerald-500/30">
                   Filtrado
                 </Badge>
               )}
@@ -142,7 +142,7 @@ export const MetasRankingCard = ({
 
       {/* Hero Card - Meta Consolidada */}
       <Card className="relative overflow-hidden border border-border bg-card shadow-sm">
-        <div className="absolute top-0 left-0 w-64 h-64 bg-indigo-500/5 dark:bg-indigo-500/10 rounded-full blur-3xl -ml-32 -mt-32 pointer-events-none" />
+        <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-3xl -ml-32 -mt-32 pointer-events-none" />
         <div className="absolute bottom-0 right-0 w-48 h-48 bg-cyan-500/5 dark:bg-cyan-500/10 rounded-full blur-3xl -mr-24 -mb-24 pointer-events-none" />
         
         <CardContent className="relative z-10 p-6">
@@ -150,8 +150,8 @@ export const MetasRankingCard = ({
             {/* Left - Info */}
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-500/10">
-                  <Zap className="h-5 w-5 text-indigo-600 dark:text-indigo-200" />
+                <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-500/10">
+                  <Zap className="h-5 w-5 text-emerald-600 dark:text-emerald-200" />
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-foreground">Meta Consolidada</h3>
@@ -175,7 +175,7 @@ export const MetasRankingCard = ({
               <div className="space-y-2">
                 <div className="relative h-3.5 bg-muted rounded-full overflow-hidden border border-border">
                   <div
-                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-indigo-600 via-indigo-500 to-emerald-400 rounded-full transition-all duration-700"
+                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-400 rounded-full transition-all duration-700"
                     style={{ width: `${Math.min(percentualConsolidado, 100)}%` }}
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-60" />
@@ -187,7 +187,7 @@ export const MetasRankingCard = ({
             {/* Right - Big Percentage */}
             <div className="text-center md:text-right">
               <div className="inline-block">
-                <span className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-indigo-600 via-cyan-500 to-emerald-500 bg-clip-text text-transparent tabular-nums">
+                <span className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-emerald-600 via-cyan-500 to-emerald-500 bg-clip-text text-transparent tabular-nums">
                   {percentualConsolidado.toFixed(1)}
                 </span>
                 <span className="text-2xl font-bold text-muted-foreground">%</span>
@@ -203,7 +203,7 @@ export const MetasRankingCard = ({
       {/* Individual Contributions */}
       <div className="space-y-3">
         <div className="flex items-center gap-2">
-          <TrendingUp className="h-4 w-4 text-indigo-600 dark:text-indigo-200" />
+          <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-200" />
           <h3 className="text-sm font-semibold text-foreground">Contribuição Individual</h3>
           <span className="text-xs text-muted-foreground">
             ({filteredVendedores.length} {filteredVendedores.length === 1 ? "vendedor" : "vendedores"})
@@ -287,7 +287,7 @@ export const MetasRankingCard = ({
                           ? "text-emerald-600 dark:text-emerald-300" 
                           : vendedor.percentual >= 50 
                             ? "text-cyan-600 dark:text-cyan-300" 
-                            : "text-indigo-600 dark:text-indigo-300"
+                            : "text-emerald-600 dark:text-emerald-300"
                       }`}>
                         {vendedor.percentual.toFixed(0)}%
                       </span>

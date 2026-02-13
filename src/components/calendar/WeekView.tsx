@@ -101,7 +101,7 @@ function SortableAgendamento({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
               {showSellerName && agendamento.seller_name && (
-                <span className="px-1 py-0.5 rounded bg-indigo-500/20 text-indigo-300 text-[10px] font-semibold flex-shrink-0">
+                <span className="px-1 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-semibold flex-shrink-0">
                   {getSellerInitials(agendamento.seller_name)}
                 </span>
               )}

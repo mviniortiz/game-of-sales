@@ -29,7 +29,7 @@ const plans = [
         period: '/mês',
         description: 'Para times em crescimento',
         icon: Sparkles,
-        color: 'from-indigo-500 to-purple-500',
+        color: 'from-emerald-500 to-emerald-500',
         features: [
             'Até 10 vendedores',
             'Relatórios avançados',
@@ -65,7 +65,7 @@ export default function UpgradeLock() {
             {/* Background effects */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-red-500/10 rounded-full blur-3xl" />
-                <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl" />
+                <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl" />
             </div>
 
             {/* Content */}
@@ -114,13 +114,13 @@ export default function UpgradeLock() {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.4 + index * 0.1 }}
                                 className={`relative rounded-2xl p-6 ${plan.highlight
-                                        ? 'bg-white/15 border-2 border-indigo-400/50 shadow-xl shadow-indigo-500/20'
+                                        ? 'bg-white/15 border-2 border-emerald-400/50 shadow-xl shadow-emerald-500/20'
                                         : 'bg-white/5 border border-white/10'
                                     }`}
                             >
                                 {plan.highlight && (
                                     <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                                        <span className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                                        <span className="bg-gradient-to-r from-emerald-500 to-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-full">
                                             Mais Popular
                                         </span>
                                     </div>
@@ -145,7 +145,7 @@ export default function UpgradeLock() {
                                 <ul className="space-y-3 mb-6">
                                     {plan.features.map((feature, i) => (
                                         <li key={i} className="flex items-center gap-2 text-white/80 text-sm">
-                                            <Check className={`h-4 w-4 flex-shrink-0 ${plan.highlight ? 'text-indigo-400' : 'text-green-400'}`} />
+                                            <Check className={`h-4 w-4 flex-shrink-0 ${plan.highlight ? 'text-emerald-400' : 'text-green-400'}`} />
                                             {feature}
                                         </li>
                                     ))}
@@ -155,7 +155,7 @@ export default function UpgradeLock() {
                                 <Link to={`/checkout?plan=${plan.id}`} className="block">
                                     <Button
                                         className={`w-full h-12 font-semibold ${plan.highlight
-                                                ? 'bg-gradient-to-r from-indigo-500 to-purple-500 hover:opacity-90 text-white'
+                                                ? 'bg-gradient-to-r from-emerald-500 to-emerald-500 hover:opacity-90 text-white'
                                                 : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
                                             }`}
                                     >
@@ -175,7 +175,7 @@ export default function UpgradeLock() {
                     className="text-white/40 text-sm mt-8 text-center"
                 >
                     Dúvidas? Entre em contato com{' '}
-                    <a href="mailto:suporte@gamesales.app" className="text-indigo-400 hover:underline">
+                    <a href="mailto:suporte@gamesales.app" className="text-emerald-400 hover:underline">
                         suporte@gamesales.app
                     </a>
                 </motion.p>

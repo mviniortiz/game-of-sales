@@ -85,9 +85,9 @@ const KPICard = ({
   icon: Icon,
   trend,
   trendLabel,
-  iconColor = "text-indigo-400",
-  iconBg = "bg-indigo-500/10",
-  glowColor = "shadow-indigo-500/20"
+  iconColor = "text-emerald-400",
+  iconBg = "bg-emerald-500/10",
+  glowColor = "shadow-emerald-500/20"
 }: KPICardProps) => {
   const isPositive = trend && trend > 0;
   const TrendIcon = isPositive ? ArrowUpRight : ArrowDownRight;
@@ -531,18 +531,18 @@ export const AdminVendasView = ({
           icon={TrendingUp}
           trend={5.2}
           trendLabel="vs período anterior"
-          iconColor="text-indigo-400"
-          iconBg="bg-indigo-500/10"
-          glowColor="shadow-indigo-500/20"
+          iconColor="text-emerald-400"
+          iconBg="bg-emerald-500/10"
+          glowColor="shadow-emerald-500/20"
         />
         <KPICard
           title="Vendedores Ativos"
           value={(stats?.totalVendedores || 0).toString()}
           subtitle={`${stats?.totalTransacoes || 0} vendas no período`}
           icon={Users}
-          iconColor="text-violet-400"
-          iconBg="bg-violet-500/10"
-          glowColor="shadow-violet-500/20"
+          iconColor="text-emerald-400"
+          iconBg="bg-emerald-500/10"
+          glowColor="shadow-emerald-500/20"
         />
         <KPICard
           title="Taxa de Show"
@@ -562,14 +562,14 @@ export const AdminVendasView = ({
         {/* Main Chart - Sales Evolution (60%) */}
         <Card className="lg:col-span-3 relative overflow-hidden border border-slate-800 bg-slate-900 shadow-sm rounded-xl">
           {/* Subtle corner accent */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-3xl pointer-events-none" />
+          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl pointer-events-none" />
 
           <CardHeader className="pb-2 relative">
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-indigo-500/10">
-                    <TrendingUp className="h-4 w-4 text-indigo-400" />
+                  <div className="p-1.5 rounded-lg bg-emerald-500/10">
+                    <TrendingUp className="h-4 w-4 text-emerald-400" />
                   </div>
                   Evolução de Vendas
                 </CardTitle>
@@ -582,7 +582,7 @@ export const AdminVendasView = ({
               <AreaChart data={vendasEvolution || []} margin={{ top: 20, right: 10, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorValorAdmin" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#6366F1" stopOpacity={0.5} />
+                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.5} />
                     <stop offset="50%" stopColor="#4F46E5" stopOpacity={0.2} />
                     <stop offset="100%" stopColor="#4F46E5" stopOpacity={0} />
                   </linearGradient>
@@ -615,23 +615,23 @@ export const AdminVendasView = ({
                   }}
                   labelStyle={{ color: "#94a3b8", fontSize: 11, marginBottom: 4 }}
                   formatter={(value: number) => [
-                    <span className="text-indigo-400 font-semibold">{formatCurrency(value)}</span>,
+                    <span className="text-emerald-400 font-semibold">{formatCurrency(value)}</span>,
                     <span className="text-slate-400">Faturamento</span>
                   ]}
                 />
                 <Area
                   type="monotone"
                   dataKey="valor"
-                  stroke="#6366F1"
+                  stroke="#10b981"
                   strokeWidth={2.5}
                   fill="url(#colorValorAdmin)"
                   dot={false}
                   activeDot={{
                     r: 6,
-                    fill: "#6366F1",
+                    fill: "#10b981",
                     stroke: "#fff",
                     strokeWidth: 2,
-                    filter: "drop-shadow(0 0 8px rgba(99, 102, 241, 0.5))"
+                    filter: "drop-shadow(0 0 8px rgba(16, 185, 129, 0.5))"
                   }}
                 />
               </AreaChart>
@@ -686,7 +686,7 @@ export const AdminVendasView = ({
                 <defs>
                   <linearGradient id="barGradientAdmin" x1="0" y1="0" x2="1" y2="0">
                     <stop offset="0%" stopColor="#4F46E5" />
-                    <stop offset="100%" stopColor="#6366F1" />
+                    <stop offset="100%" stopColor="#10b981" />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.25)" horizontal={false} />

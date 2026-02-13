@@ -68,8 +68,8 @@ const ICON_MAP: Record<string, LucideIcon> = {
 const COLOR_MAP: Record<string, { color: string; bgColor: string; borderColor: string }> = {
   gray: { color: "text-gray-400", bgColor: "bg-gray-500/10", borderColor: "border-gray-500/30" },
   blue: { color: "text-blue-400", bgColor: "bg-blue-500/10", borderColor: "border-blue-500/30" },
-  indigo: { color: "text-indigo-400", bgColor: "bg-indigo-500/10", borderColor: "border-indigo-500/30" },
-  purple: { color: "text-purple-400", bgColor: "bg-purple-500/10", borderColor: "border-purple-500/30" },
+  indigo: { color: "text-emerald-400", bgColor: "bg-emerald-500/10", borderColor: "border-emerald-500/30" },
+  purple: { color: "text-emerald-400", bgColor: "bg-emerald-500/10", borderColor: "border-emerald-500/30" },
   amber: { color: "text-amber-400", bgColor: "bg-amber-500/10", borderColor: "border-amber-500/30" },
   emerald: { color: "text-emerald-400", bgColor: "bg-emerald-500/10", borderColor: "border-emerald-500/30" },
   rose: { color: "text-rose-400", bgColor: "bg-rose-500/10", borderColor: "border-rose-500/30" },
@@ -612,14 +612,14 @@ export default function CRM() {
         {/* Header - Premium Style */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-6 py-4 sm:py-5 border-b border-border bg-card backdrop-blur-sm shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="p-2 sm:p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 ring-1 ring-indigo-100 dark:ring-indigo-500/20">
-              <Target className="h-4 sm:h-5 w-4 sm:w-5 text-indigo-600 dark:text-indigo-200" />
+            <div className="p-2 sm:p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 ring-1 ring-emerald-100 dark:ring-emerald-500/20">
+              <Target className="h-4 sm:h-5 w-4 sm:w-5 text-emerald-600 dark:text-emerald-200" />
             </div>
             <div>
               <h1 className="text-lg sm:text-xl font-bold text-foreground tracking-tight flex items-center gap-2">
                 <span className="hidden sm:inline">Pipeline de Vendas</span>
                 <span className="sm:hidden">Pipeline</span>
-                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-semibold uppercase tracking-wider ring-1 ring-indigo-100 dark:bg-indigo-500/10 dark:text-indigo-200 dark:ring-indigo-500/20">
+                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-semibold uppercase tracking-wider ring-1 ring-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-200 dark:ring-emerald-500/20">
                   <Sparkles className="h-3 w-3" />
                   Live
                 </span>
@@ -676,7 +676,7 @@ export default function CRM() {
                 placeholder="Buscar negociações..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-48 pl-9 h-9 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-indigo-500"
+                className="w-48 pl-9 h-9 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-emerald-500"
               />
             </div>
 
@@ -695,7 +695,7 @@ export default function CRM() {
             <Button
               size="sm"
               onClick={() => setShowNewDeal(true)}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all duration-200 h-9"
+              className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all duration-200 h-9"
             >
               <Plus className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Nova Negociação</span>
@@ -757,7 +757,7 @@ export default function CRM() {
               {sortedDealsForList.map((deal) => (
                 <div
                   key={deal.id}
-                  className="bg-card border border-border rounded-xl p-4 sm:p-5 shadow-sm hover:border-indigo-500/30 hover:shadow-md transition-all"
+                  className="bg-card border border-border rounded-xl p-4 sm:p-5 shadow-sm hover:border-emerald-500/30 hover:shadow-md transition-all"
                 >
                   <div className="flex flex-col gap-3 sm:gap-2">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">

@@ -26,7 +26,7 @@ const getUrgencyStage = (daysRemaining: number): UrgencyStage => {
 
 const urgencyConfigs: Record<UrgencyStage, UrgencyConfig> = {
     comfortable: {
-        bgClass: 'bg-gradient-to-r from-indigo-600 to-indigo-700',
+        bgClass: 'bg-gradient-to-r from-emerald-600 to-emerald-700',
         icon: Rocket,
         iconClass: 'text-white',
         textClass: 'text-white',

@@ -104,7 +104,7 @@ export const AdminCompaniesPage = () => {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-200">
+          <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-200">
             <Building2 className="h-5 w-5" />
           </div>
           <div>
@@ -114,7 +114,7 @@ export const AdminCompaniesPage = () => {
         </div>
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-indigo-600 hover:bg-indigo-500 text-white gap-2">
+            <Button className="bg-emerald-600 hover:bg-emerald-500 text-white gap-2">
               <Plus className="h-4 w-4" />
               Nova Empresa
             </Button>
@@ -156,7 +156,7 @@ export const AdminCompaniesPage = () => {
       <Card className="border border-border bg-card shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-indigo-600" />
+            <Sparkles className="h-4 w-4 text-emerald-600" />
             Lista de Empresas
           </CardTitle>
         </CardHeader>

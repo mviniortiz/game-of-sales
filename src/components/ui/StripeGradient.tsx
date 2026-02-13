@@ -571,8 +571,8 @@ const StripeGradient = ({ className = '' }: StripeGradientProps) => {
         // Light color scheme - White with light Indigo waves
         const colors = [
             normalizeColor(0xffffff),  // Pure white base
-            normalizeColor(0xc7d2fe),  // Indigo-200 (light indigo)
-            normalizeColor(0xa5b4fc),  // Indigo-300 (medium light indigo)
+            normalizeColor(0xc7d2fe),  // emerald-200 (light indigo)
+            normalizeColor(0xa5b4fc),  // emerald-300 (medium light indigo)
         ];
 
         let minigl: MiniGl;

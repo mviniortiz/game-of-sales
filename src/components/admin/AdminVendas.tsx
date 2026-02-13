@@ -248,11 +248,11 @@ export const AdminVendas = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Ticket Médio</p>
-                <p className="text-2xl font-bold text-indigo-400">
+                <p className="text-2xl font-bold text-emerald-400">
                   R$ {kpis.ticketMedio.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                 </p>
               </div>
-              <TrendingUp className="h-8 w-8 text-indigo-400" />
+              <TrendingUp className="h-8 w-8 text-emerald-400" />
             </div>
           </CardContent>
         </Card>

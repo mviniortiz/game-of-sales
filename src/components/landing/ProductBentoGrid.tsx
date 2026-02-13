@@ -22,20 +22,20 @@ export const ProductBentoGrid = () => {
     return (
         <section id="features" className="py-24 px-4 sm:px-6 lg:px-8 bg-slate-950 relative overflow-hidden">
             {/* Background gradient accents */}
-            <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl" />
-            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl" />
+            <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-600/10 rounded-full blur-3xl" />
+            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-emerald-600/10 rounded-full blur-3xl" />
 
             <div className="max-w-7xl mx-auto relative z-10">
                 <motion.div
                     {...fadeInUp}
                     className="text-center mb-16"
                 >
-                    <Badge className="mb-4 bg-indigo-500/20 text-indigo-300 border-indigo-500/30">
+                    <Badge className="mb-4 bg-emerald-500/20 text-emerald-300 border-emerald-500/30">
                         <Zap className="h-3 w-3 mr-1" />
                         Arsenal Completo
                     </Badge>
-                    <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-                        Ferramentas Que <span className="text-indigo-400">Vendem Por Você</span>
+                    <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 font-serif">
+                        Ferramentas Que <span className="text-emerald-400">Vendem Por Você</span>
                     </h2>
                     <p className="text-lg text-gray-400 max-w-2xl mx-auto">
                         Cada funcionalidade foi pensada para <strong className="text-white">eliminar fricção</strong> e <strong className="text-white">acelerar fechamentos</strong>.
@@ -53,6 +53,7 @@ export const ProductBentoGrid = () => {
                     <motion.div
                         variants={fadeInUp}
                         className="group"
+                        whileHover={{ y: -4, transition: { duration: 0.2 } }}
                     >
                         <div className="h-full bg-white/5 border border-white/10 backdrop-blur-md rounded-2xl p-6 hover:border-amber-500/30 hover:bg-white/[0.07] transition-all duration-300">
                             {/* Visual: Rank Badge with Gold Glow */}
@@ -91,15 +92,15 @@ export const ProductBentoGrid = () => {
                                 </motion.div>
                                 {/* Mini avatar */}
                                 <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-slate-700 border-2 border-amber-500 overflow-hidden">
-                                    <div className="w-full h-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
+                                    <div className="w-full h-full bg-gradient-to-br from-emerald-400 to-emerald-500 flex items-center justify-center text-white font-bold text-sm">
                                         CM
                                     </div>
                                 </div>
                             </div>
 
-                            <h3 className="text-lg font-semibold text-white mb-2 text-center">Gamificação Neural</h3>
+                            <h3 className="text-lg font-semibold text-white mb-2 text-center">Ranking ao Vivo</h3>
                             <p className="text-gray-400 text-sm leading-relaxed text-center">
-                                Rankings em tempo real, sons de level-up e feedback visual instantâneo. Vicie seu time em vender.
+                                Cada venda atualiza o ranking na hora. Seu time acompanha quem está na frente em tempo real.
                             </p>
                         </div>
                     </motion.div>
@@ -108,6 +109,7 @@ export const ProductBentoGrid = () => {
                     <motion.div
                         variants={fadeInUp}
                         className="group"
+                        whileHover={{ y: -4, transition: { duration: 0.2 } }}
                     >
                         <div className="h-full bg-white/5 border border-white/10 backdrop-blur-md rounded-2xl p-6 hover:border-emerald-500/30 hover:bg-white/[0.07] transition-all duration-300">
                             {/* Visual: Animated Toast */}
@@ -148,6 +150,7 @@ export const ProductBentoGrid = () => {
                     <motion.div
                         variants={fadeInUp}
                         className="group"
+                        whileHover={{ y: -4, transition: { duration: 0.2 } }}
                     >
                         <div className="h-full bg-white/5 border border-white/10 backdrop-blur-md rounded-2xl p-6 hover:border-green-500/30 hover:bg-white/[0.07] transition-all duration-300">
                             {/* Visual: WhatsApp + Sidebar Mockup */}
@@ -169,7 +172,7 @@ export const ProductBentoGrid = () => {
 
                                 {/* Sidebar preview */}
                                 <motion.div
-                                    className="bg-indigo-600/90 rounded-lg p-2 w-20 shadow-xl"
+                                    className="bg-emerald-600/90 rounded-lg p-2 w-20 shadow-xl"
                                     initial={{ x: 10, opacity: 0 }}
                                     whileInView={{ x: 0, opacity: 1 }}
                                     transition={{ delay: 0.4 }}
@@ -195,6 +198,6 @@ export const ProductBentoGrid = () => {
                     </motion.div>
                 </motion.div>
             </div>
-        </section>
+        </section >
     );
 };

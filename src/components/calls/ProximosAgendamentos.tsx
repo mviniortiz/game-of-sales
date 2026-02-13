@@ -46,12 +46,12 @@ export const ProximosAgendamentos = ({
               return (
                 <div
                   key={agendamento.id}
-                  className="p-3 border border-border rounded-lg hover:border-indigo-500/30 bg-muted/60 dark:bg-slate-800/30 transition-all group"
+                  className="p-3 border border-border rounded-lg hover:border-emerald-500/30 bg-muted/60 dark:bg-slate-800/30 transition-all group"
                 >
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <div className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-500/20 transition-colors">
-                        <Clock className="h-4 w-4 text-indigo-600 dark:text-indigo-300" />
+                      <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-500/20 transition-colors">
+                        <Clock className="h-4 w-4 text-emerald-600 dark:text-emerald-300" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">

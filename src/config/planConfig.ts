@@ -45,7 +45,7 @@ export const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
 export const PLANS_INFO: Record<PlanType, { label: string; color: string }> = {
     starter: { label: 'Starter', color: 'bg-gray-500' },
     plus: { label: 'Plus', color: 'bg-blue-500' },
-    pro: { label: 'Pro', color: 'bg-indigo-600' },
+    pro: { label: 'Pro', color: 'bg-emerald-600' },
 };
 
 // Feature display names for upgrade prompts

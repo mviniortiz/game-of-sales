@@ -113,7 +113,7 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                         </Button>
                         <Button
                             onClick={onCTAClick}
-                            className="bg-white text-purple-900 hover:bg-white/90 font-semibold shadow-lg shadow-purple-500/20"
+                            className="bg-white text-emerald-900 hover:bg-white/90 font-semibold shadow-lg shadow-emerald-500/20"
                         >
                             Acesse a plataforma
                         </Button>
@@ -130,14 +130,14 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6 }}
                     >
-                        <Badge className="mb-6 bg-purple-500/20 text-purple-300 border-purple-500/30 hover:bg-purple-500/30">
+                        <Badge className="mb-6 bg-emerald-500/20 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/30">
                             <Sparkles className="h-3 w-3 mr-1" />
                             TECNOLOGIA GAME SALES + GAMIFICAÇÃO
                         </Badge>
 
                         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
                             Transforme seu{" "}
-                            <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+                            <span className="bg-gradient-to-r from-emerald-400 via-pink-400 to-emerald-400 bg-clip-text text-transparent">
                                 Time de Vendas
                             </span>{" "}
                             em Campeões
@@ -153,7 +153,7 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                                 onClick={onCTAClick}
                                 className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-semibold text-white rounded-xl overflow-hidden transition-all duration-300"
                                 style={{
-                                    background: "linear-gradient(135deg, #8b5cf6 0%, #ec4899 50%, #8b5cf6 100%)",
+                                    background: "linear-gradient(135deg, #10b981 0%, #ec4899 50%, #10b981 100%)",
                                     backgroundSize: "200% 200%",
                                 }}
                                 whileHover={{
@@ -302,21 +302,21 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                                     </motion.div>
 
                                     <motion.div
-                                        className="bg-gradient-to-br from-purple-500/20 to-purple-600/5 rounded-xl p-3 border border-purple-500/20"
+                                        className="bg-gradient-to-br from-emerald-500/20 to-emerald-600/5 rounded-xl p-3 border border-emerald-500/20"
                                         initial={{ y: 20, opacity: 0 }}
                                         animate={{ y: 0, opacity: 1 }}
                                         transition={{ delay: 0.6 }}
                                     >
                                         <div className="flex items-center gap-2 mb-1.5">
-                                            <div className="w-6 h-6 rounded-lg bg-purple-500/20 flex items-center justify-center">
-                                                <Target className="h-3 w-3 text-purple-400" />
+                                            <div className="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                                                <Target className="h-3 w-3 text-emerald-400" />
                                             </div>
                                             <span className="text-[10px] text-white/50 uppercase">Meta</span>
                                         </div>
-                                        <p className="text-xl font-bold text-purple-400">127%</p>
-                                        <div className="w-full bg-purple-900/50 rounded-full h-1.5 mt-2">
+                                        <p className="text-xl font-bold text-emerald-400">127%</p>
+                                        <div className="w-full bg-emerald-900/50 rounded-full h-1.5 mt-2">
                                             <motion.div
-                                                className="bg-gradient-to-r from-purple-400 to-pink-400 h-full rounded-full"
+                                                className="bg-gradient-to-r from-emerald-400 to-pink-400 h-full rounded-full"
                                                 initial={{ width: 0 }}
                                                 animate={{ width: "100%" }}
                                                 transition={{ delay: 1, duration: 1 }}
@@ -461,11 +461,11 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
 
                             {/* Achievement Badge */}
                             <motion.div
-                                className="absolute -right-8 top-16 bg-slate-900/90 backdrop-blur-xl rounded-full p-2 border border-purple-500/30 shadow-2xl"
+                                className="absolute -right-8 top-16 bg-slate-900/90 backdrop-blur-xl rounded-full p-2 border border-emerald-500/30 shadow-2xl"
                                 animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
                                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                             >
-                                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-emerald-500 to-pink-500 flex items-center justify-center">
                                     <Star className="h-7 w-7 text-white" fill="white" />
                                 </div>
                             </motion.div>

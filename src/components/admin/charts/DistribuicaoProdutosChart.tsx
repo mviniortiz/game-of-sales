@@ -15,9 +15,9 @@ interface DistribuicaoProdutosChartProps {
 const BAR_COLORS = [
   "#4F46E5", // Indigo
   "#7C3AED", // Purple
-  "#8B5CF6", // Violet
-  "#A78BFA", // Light Violet
-  "#C4B5FD", // Lavender
+  "#10b981", // Violet
+  "#34d399", // Light Violet
+  "#6ee7b7", // Lavender
   "#94A3B8", // Gray for "Others"
 ];
 
@@ -71,8 +71,8 @@ export const DistribuicaoProdutosChart = ({ data }: DistribuicaoProdutosChartPro
     <Card className="border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
-          <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-500/20">
-            <Package className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+          <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-500/20">
+            <Package className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
             <CardTitle className="text-base font-semibold text-gray-900 dark:text-white">

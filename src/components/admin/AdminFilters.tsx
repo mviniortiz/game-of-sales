@@ -162,14 +162,14 @@ export const AdminFilters = ({
         {/* Header with quick actions - Always visible */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <div className="h-9 w-9 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center">
-              <Filter className="h-4 w-4 text-indigo-400" />
+            <div className="h-9 w-9 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
+              <Filter className="h-4 w-4 text-emerald-400" />
             </div>
             <div>
               <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                 Filtros
                 {activeCount > 0 && (
-                  <span className="text-xs font-medium text-indigo-300 bg-indigo-500/15 px-2 py-1 rounded-full ring-1 ring-indigo-500/20">
+                  <span className="text-xs font-medium text-emerald-300 bg-emerald-500/15 px-2 py-1 rounded-full ring-1 ring-emerald-500/20">
                     {activeCount} ativo{activeCount === 1 ? "" : "s"}
                   </span>
                 )}
@@ -191,7 +191,7 @@ export const AdminFilters = ({
                 className={cn(
                   "h-8 text-xs",
                   isQuickRangeActive(range.id)
-                    ? "bg-indigo-600 text-white border-indigo-500 hover:bg-indigo-700"
+                    ? "bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700"
                     : "bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white"
                 )}
                 onClick={() => setQuickRange(range.id)}
@@ -219,16 +219,16 @@ export const AdminFilters = ({
             {activeFilters.map((f) => (
               <div
                 key={f.key}
-                className="inline-flex items-center h-7 rounded-full px-3 text-xs bg-indigo-500/10 border border-indigo-500/20 text-indigo-200"
+                className="inline-flex items-center h-7 rounded-full px-3 text-xs bg-emerald-500/10 border border-emerald-500/20 text-emerald-200"
               >
-                <span className="font-medium text-indigo-300">{f.label}:</span>
+                <span className="font-medium text-emerald-300">{f.label}:</span>
                 <span className="ml-1 text-slate-300">{f.value}</span>
                 <button
                   type="button"
                   onClick={() => handleRemoveFilter(f.key)}
-                  className="ml-2 p-0.5 rounded-full hover:bg-indigo-500/30 transition-colors"
+                  className="ml-2 p-0.5 rounded-full hover:bg-emerald-500/30 transition-colors"
                 >
-                  <X className="h-3 w-3 text-indigo-400 hover:text-indigo-200 cursor-pointer" />
+                  <X className="h-3 w-3 text-emerald-400 hover:text-emerald-200 cursor-pointer" />
                 </button>
               </div>
             ))}
@@ -259,7 +259,7 @@ export const AdminFilters = ({
               {/* Período Customizado */}
               <div className="space-y-2">
                 <Label className="flex items-center gap-2 text-sm text-slate-300">
-                  <CalendarIcon className="h-4 w-4 text-indigo-400" />
+                  <CalendarIcon className="h-4 w-4 text-emerald-400" />
                   Período
                 </Label>
                 <Popover>
@@ -292,7 +292,7 @@ export const AdminFilters = ({
               {/* Vendedor */}
               <div className="space-y-2">
                 <Label className="flex items-center gap-2 text-sm text-slate-300">
-                  <Users className="h-4 w-4 text-indigo-400" />
+                  <Users className="h-4 w-4 text-emerald-400" />
                   Vendedor
                 </Label>
                 <Select value={selectedVendedor} onValueChange={setSelectedVendedor}>
@@ -314,7 +314,7 @@ export const AdminFilters = ({
               {setSelectedFormaPagamento && (
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2 text-sm text-slate-300">
-                    <CreditCard className="h-4 w-4 text-indigo-400" />
+                    <CreditCard className="h-4 w-4 text-emerald-400" />
                     Pagamento
                   </Label>
                   <Select value={selectedFormaPagamento} onValueChange={setSelectedFormaPagamento}>
@@ -337,7 +337,7 @@ export const AdminFilters = ({
               {setSelectedProduto && (
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2 text-sm text-slate-300">
-                    <Package className="h-4 w-4 text-indigo-400" />
+                    <Package className="h-4 w-4 text-emerald-400" />
                     Produto
                   </Label>
                   <Select value={selectedProduto} onValueChange={setSelectedProduto}>

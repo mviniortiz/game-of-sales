@@ -22,8 +22,8 @@ export const EvolucaoVendasChart = ({ data }: EvolucaoVendasChartProps) => {
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-indigo-100 dark:bg-indigo-500/20">
-              <TrendingUp className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+            <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-500/20">
+              <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
               <CardTitle className="text-base font-semibold text-gray-900 dark:text-white">

@@ -30,7 +30,7 @@ export const Testimonials = () => {
                     viewport={{ once: true }}
                 >
                     <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-                        Quem Usa, <span className="text-indigo-400">Recomenda</span>
+                        Quem Usa, <span className="text-emerald-400">Recomenda</span>
                     </h2>
                     <p className="text-gray-400 max-w-xl mx-auto">
                         Veja o que gestores e times de vendas estão dizendo sobre o Game Sales.
@@ -61,8 +61,8 @@ export const Testimonials = () => {
 
                             {/* Author */}
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center">
-                                    <span className="text-indigo-400 font-semibold text-sm">
+                                <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                                    <span className="text-emerald-400 font-semibold text-sm">
                                         {testimonial.author.charAt(0)}
                                     </span>
                                 </div>

@@ -41,13 +41,13 @@ export const AdminDashboardOverview = () => {
       {/* Header - Sales Command Center Style */}
       <div className="relative">
         {/* Subtle gradient accent */}
-        <div className="absolute -top-4 -left-4 w-64 h-64 bg-indigo-500/5 blur-3xl pointer-events-none" />
+        <div className="absolute -top-4 -left-4 w-64 h-64 bg-emerald-500/5 blur-3xl pointer-events-none" />
 
         <div className="relative flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground tracking-tight flex items-center gap-3">
               Visão Geral
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-400 text-xs font-semibold uppercase tracking-wider ring-1 ring-indigo-500/20">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-semibold uppercase tracking-wider ring-1 ring-emerald-500/20">
                 Live
               </span>
             </h1>

@@ -280,7 +280,7 @@ export function AdminCompanies() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Building2 className="h-6 w-6 text-indigo-600" />
+            <Building2 className="h-6 w-6 text-emerald-600" />
             Empresas Clientes
           </h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -290,7 +290,7 @@ export function AdminCompanies() {
 
         <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
           <DialogTrigger asChild>
-            <Button className="bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/25">
+            <Button className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/25">
               <Plus className="h-4 w-4 mr-2" />
               Nova Empresa Manual
             </Button>
@@ -342,7 +342,7 @@ export function AdminCompanies() {
               <Button
                 onClick={() => createCompany.mutate()}
                 disabled={!companyName || createCompany.isPending}
-                className="bg-indigo-600 hover:bg-indigo-500 text-white"
+                className="bg-emerald-600 hover:bg-emerald-500 text-white"
               >
                 {createCompany.isPending ? "Criando..." : "Criar Empresa"}
               </Button>
@@ -408,7 +408,7 @@ export function AdminCompanies() {
                         {company.logo_url ? (
                           <AvatarImage src={company.logo_url} alt={company.name || "Empresa"} />
                         ) : null}
-                        <AvatarFallback className="bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 font-semibold">
+                        <AvatarFallback className="bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-semibold">
                           {(company.name || "??").substring(0, 2).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
@@ -464,7 +464,7 @@ export function AdminCompanies() {
                         size="sm"
                         variant="outline"
                         onClick={() => handleManage(company)}
-                        className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 dark:border-indigo-500/30 dark:hover:bg-indigo-500/10"
+                        className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-500/30 dark:hover:bg-emerald-500/10"
                       >
                         <LogIn className="h-4 w-4 mr-1" />
                         Gerenciar
@@ -550,7 +550,7 @@ export function AdminCompanies() {
                 }
               }}
               disabled={updateCompany.isPending}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white"
+              className="bg-emerald-600 hover:bg-emerald-500 text-white"
             >
               {updateCompany.isPending ? "Salvando..." : "Salvar Alterações"}
             </Button>

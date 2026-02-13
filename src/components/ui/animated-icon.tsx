@@ -27,7 +27,7 @@ export const AnimatedIcon = ({ icon: Icon, isActive = false, className = "" }: A
         >
             {/* Glow effect background - works on both light and dark modes */}
             <motion.div
-                className="absolute inset-0 rounded-full bg-indigo-500 dark:bg-indigo-400 blur-md"
+                className="absolute inset-0 rounded-full bg-emerald-500 dark:bg-emerald-400 blur-md"
                 initial={{ opacity: 0, scale: 0.5 }}
                 animate={{
                     opacity: isHovered || isActive ? 0.4 : 0,
@@ -42,7 +42,7 @@ export const AnimatedIcon = ({ icon: Icon, isActive = false, className = "" }: A
             {/* Pulse ring on hover - visible on both modes */}
             {isHovered && (
                 <motion.div
-                    className="absolute inset-0 rounded-full border-2 border-indigo-500/60 dark:border-indigo-400/60"
+                    className="absolute inset-0 rounded-full border-2 border-emerald-500/60 dark:border-emerald-400/60"
                     initial={{ opacity: 0.8, scale: 1 }}
                     animate={{ opacity: 0, scale: 2.2 }}
                     transition={{
@@ -65,9 +65,9 @@ export const AnimatedIcon = ({ icon: Icon, isActive = false, className = "" }: A
             >
                 <Icon
                     className={`h-5 w-5 relative z-10 transition-colors duration-200 ${isActive
-                            ? 'text-indigo-600 dark:text-indigo-400'
+                            ? 'text-emerald-600 dark:text-emerald-400'
                             : isHovered
-                                ? 'text-indigo-500 dark:text-indigo-300'
+                                ? 'text-emerald-500 dark:text-emerald-300'
                                 : 'text-gray-600 dark:text-gray-400'
                         } ${className}`}
                 />

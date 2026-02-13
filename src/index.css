@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  scroll-behavior: smooth;
+}
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */
@@ -9,16 +13,19 @@ All colors MUST be HSL.
 @layer base {
   :root {
     /* Light mode defaults */
-    --background: 220 14% 96%; /* Gray-50 */
-    --foreground: 220 13% 18%; /* Gray-900 */
+    --background: 220 14% 96%;
+    /* Gray-50 */
+    --foreground: 220 13% 18%;
+    /* Gray-900 */
 
-    --card: 0 0% 100%; /* White cards */
+    --card: 0 0% 100%;
+    /* White cards */
     --card-foreground: 220 13% 18%;
 
     --popover: 0 0% 100%;
     --popover-foreground: 220 13% 18%;
 
-    --primary: 243 75% 59%;
+    --primary: 160 84% 39%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 220 14% 96%;
@@ -27,7 +34,7 @@ All colors MUST be HSL.
     --muted: 220 14% 94%;
     --muted-foreground: 220 10% 45%;
 
-    --accent: 243 75% 59%;
+    --accent: 160 84% 39%;
     --accent-foreground: 0 0% 100%;
 
     --success: 142 76% 45%;
@@ -41,27 +48,27 @@ All colors MUST be HSL.
 
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 243 75% 59%;
+    --ring: 160 84% 39%;
 
     --radius: 0.75rem;
 
-    --gradient-primary: linear-gradient(135deg, hsl(243 75% 59%), hsl(243 75% 49%));
-    --gradient-accent: linear-gradient(135deg, hsl(243 75% 59%), hsl(230 35% 7%));
+    --gradient-primary: linear-gradient(135deg, hsl(160 84% 39%), hsl(160 84% 35%));
+    --gradient-accent: linear-gradient(135deg, hsl(160 84% 39%), hsl(230 35% 7%));
     --gradient-success: linear-gradient(135deg, hsl(142 76% 45%), hsl(142 76% 35%));
 
-    --shadow-glow: 0 0 40px hsl(243 75% 59% / 0.15);
+    --shadow-glow: 0 0 40px hsl(160 84% 39% / 0.15);
     --shadow-card: 0 12px 30px -12px hsl(220 10% 30% / 0.12);
 
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 220 13% 18%;
-    --sidebar-primary: 243 75% 59%;
+    --sidebar-primary: 160 84% 39%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 220 14% 96%;
     --sidebar-accent-foreground: 220 13% 18%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 243 75% 59%;
+    --sidebar-ring: 160 84% 39%;
   }
 
   .dark {
@@ -74,7 +81,7 @@ All colors MUST be HSL.
     --popover: 230 30% 10%;
     --popover-foreground: 180 100% 90%;
 
-    --primary: 243 75% 59%;
+    --primary: 160 84% 39%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 230 25% 15%;
@@ -83,7 +90,7 @@ All colors MUST be HSL.
     --muted: 230 25% 20%;
     --muted-foreground: 180 20% 65%;
 
-    --accent: 243 75% 59%;
+    --accent: 160 84% 39%;
     --accent-foreground: 0 0% 100%;
 
     --success: 142 76% 45%;
@@ -97,19 +104,19 @@ All colors MUST be HSL.
 
     --border: 230 20% 20%;
     --input: 230 20% 18%;
-    --ring: 243 75% 59%;
+    --ring: 160 84% 39%;
 
-    --shadow-glow: 0 0 40px hsl(243 75% 59% / 0.2);
+    --shadow-glow: 0 0 40px hsl(160 84% 39% / 0.2);
     --shadow-card: 0 10px 30px -10px hsl(0 0% 0% / 0.5);
 
     --sidebar-background: 230 30% 10%;
     --sidebar-foreground: 180 100% 90%;
-    --sidebar-primary: 243 75% 59%;
+    --sidebar-primary: 160 84% 39%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 230 25% 15%;
     --sidebar-accent-foreground: 180 100% 90%;
     --sidebar-border: 230 20% 20%;
-    --sidebar-ring: 243 75% 59%;
+    --sidebar-ring: 160 84% 39%;
   }
 }
 
@@ -125,8 +132,13 @@ All colors MUST be HSL.
 }
 
 @keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 .animate-shimmer {

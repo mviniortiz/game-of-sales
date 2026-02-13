@@ -38,7 +38,7 @@ export const generateProposalPDF = (data: ProposalData) => {
     let yPos = 20;
 
     // Colors
-    const primaryColor: [number, number, number] = [79, 70, 229]; // indigo-600
+    const primaryColor: [number, number, number] = [79, 70, 229]; // emerald-600
     const textColor: [number, number, number] = [30, 41, 59]; // slate-800
     const mutedColor: [number, number, number] = [100, 116, 139]; // slate-500
 

@@ -259,14 +259,14 @@ const Metas = () => {
     if (percentual >= 50) {
       return "bg-gradient-to-r from-cyan-500 to-cyan-400";
     }
-    return "bg-gradient-to-r from-indigo-500 to-indigo-400";
+    return "bg-gradient-to-r from-emerald-500 to-emerald-400";
   };
 
   // Avatar ring color based on status
   const getAvatarRingColor = (percentual: number) => {
     if (percentual >= 100) return "ring-emerald-500 ring-2";
     if (percentual >= 50) return "ring-cyan-500 ring-2";
-    return "ring-indigo-500/50 ring-2";
+    return "ring-emerald-500/50 ring-2";
   };
 
   // Status badge based on percentage
@@ -289,7 +289,7 @@ const Metas = () => {
     }
     if (percentual >= 50) {
       return (
-        <Badge className="bg-indigo-500/20 text-indigo-400 border-indigo-500/30 px-2 py-0.5 text-xs">
+        <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 px-2 py-0.5 text-xs">
           <TrendingUp className="h-3 w-3 mr-1" />
           Em progresso
         </Badge>
@@ -336,7 +336,7 @@ const Metas = () => {
           <button
             onClick={() => setSelectedMetaId("all")}
             className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${selectedMetaId === "all"
-              ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30"
+              ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/30"
               : "bg-muted text-muted-foreground hover:bg-muted/80"
               }`}
           >
@@ -347,7 +347,7 @@ const Metas = () => {
               key={meta.id}
               onClick={() => setSelectedMetaId(meta.id)}
               className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${selectedMetaId === meta.id
-                ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30"
+                ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/30"
                 : "bg-muted text-muted-foreground hover:bg-muted/80"
                 }`}
             >
@@ -359,7 +359,7 @@ const Metas = () => {
 
       {isLoading ? (
         <div className="text-center py-12 text-muted-foreground">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-indigo-500 border-r-transparent"></div>
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-emerald-500 border-r-transparent"></div>
           <p className="mt-4">Carregando metas...</p>
         </div>
       ) : !metaConsolidadaSelecionada ? (
@@ -379,10 +379,10 @@ const Metas = () => {
                   {/* Title */}
                   <div>
                     <div className="flex items-center gap-3 mb-2">
-                      <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-200">
+                      <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-200">
                         <Zap className="h-5 w-5" />
                       </div>
-                      <span className="text-xs font-medium text-indigo-600 dark:text-indigo-200 uppercase tracking-wider">
+                      <span className="text-xs font-medium text-emerald-600 dark:text-emerald-200 uppercase tracking-wider">
                         Meta Consolidada
                       </span>
                     </div>
@@ -414,7 +414,7 @@ const Metas = () => {
                   <div className="space-y-2">
                     <div className="relative h-6 bg-muted rounded-full overflow-hidden">
                       <div
-                        className="absolute inset-y-0 left-0 bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-400 rounded-full transition-all duration-1000"
+                        className="absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-600 via-emerald-500 to-cyan-400 rounded-full transition-all duration-1000"
                         style={{ width: `${Math.min(percentualConsolidado, 100)}%` }}
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
@@ -439,7 +439,7 @@ const Metas = () => {
                   <div className="inline-block">
                     {/* Giant Percentage */}
                     <div className="relative">
-                      <span className="text-7xl sm:text-8xl lg:text-9xl font-bold bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-500 bg-clip-text text-transparent tabular-nums">
+                      <span className="text-7xl sm:text-8xl lg:text-9xl font-bold bg-gradient-to-r from-emerald-500 via-cyan-500 to-emerald-500 bg-clip-text text-transparent tabular-nums">
                         {percentualConsolidado.toFixed(1)}
                       </span>
                       <span className="text-3xl sm:text-4xl font-bold text-muted-foreground">%</span>
@@ -453,7 +453,7 @@ const Metas = () => {
                           <span className="font-semibold">Meta Atingida!</span>
                         </div>
                       ) : (
-                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 dark:bg-indigo-500/10 dark:border-indigo-500/30 dark:text-indigo-200">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-500/30 dark:text-emerald-200">
                           <Target className="h-5 w-5" />
                           <span className="font-semibold">
                             Faltam {formatCurrencyCompact(Math.max(0, metaConsolidadaTotal - valorConsolidadoAtingido))}
@@ -472,7 +472,7 @@ const Metas = () => {
             {/* Section Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-200">
+                <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-200">
                   <Users className="h-5 w-5" />
                 </div>
                 <div>
@@ -506,7 +506,7 @@ const Metas = () => {
                       className={`relative overflow-hidden border border-border bg-card shadow-sm transition-all duration-300 hover:shadow-md ${isWinner
                         ? "ring-2 ring-emerald-200 dark:ring-emerald-500/50 shadow-lg shadow-emerald-500/20"
                         : isTop3
-                          ? "ring-1 ring-indigo-200 dark:ring-indigo-500/30"
+                          ? "ring-1 ring-emerald-200 dark:ring-emerald-500/30"
                           : ""
                         }`}
                     >
@@ -564,7 +564,7 @@ const Metas = () => {
                               ? "text-emerald-600 dark:text-emerald-300"
                               : vendedor.percentual >= 50
                                 ? "text-cyan-600 dark:text-cyan-300"
-                                : "text-indigo-600 dark:text-indigo-300"
+                                : "text-emerald-600 dark:text-emerald-300"
                               }`}>
                               {vendedor.percentual.toFixed(0)}%
                             </span>
@@ -603,14 +603,14 @@ const Metas = () => {
                         <div className="pt-3 border-t border-border">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <PieChart className="h-4 w-4 text-indigo-600 dark:text-indigo-300" />
+                              <PieChart className="h-4 w-4 text-emerald-600 dark:text-emerald-300" />
                               <span className="text-xs text-muted-foreground">Contribuição para Meta Global</span>
                             </div>
                             <span className={`text-sm font-bold ${vendedor.contribuicaoPercentual >= 30
                               ? "text-emerald-600 dark:text-emerald-300"
                               : vendedor.contribuicaoPercentual >= 15
                                 ? "text-cyan-600 dark:text-cyan-300"
-                                : "text-indigo-600 dark:text-indigo-300"
+                                : "text-emerald-600 dark:text-emerald-300"
                               }`}>
                               {vendedor.contribuicaoPercentual.toFixed(1)}%
                             </span>
@@ -618,7 +618,7 @@ const Metas = () => {
                           {/* Mini contribution bar */}
                           <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
                             <div
-                              className="h-full bg-gradient-to-r from-indigo-500 to-cyan-400 rounded-full"
+                              className="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 rounded-full"
                               style={{ width: `${Math.min(vendedor.contribuicaoPercentual, 100)}%` }}
                             />
                           </div>

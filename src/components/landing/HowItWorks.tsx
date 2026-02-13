@@ -12,25 +12,25 @@ export const HowItWorks = () => {
     return (
         <section className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-slate-950 to-slate-900 relative overflow-hidden">
             {/* Background accent */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-600/5 rounded-full blur-3xl" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-600/5 rounded-full blur-3xl" />
 
             <div className="max-w-4xl mx-auto relative z-10">
                 <motion.div
                     {...fadeInUp}
                     className="text-center mb-16"
                 >
-                    <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-                        3 Passos Para <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">Dominar</span>
+                    <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 font-serif">
+                        Funcionando em <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">5 minutos</span>
                     </h2>
                     <p className="text-lg text-gray-400">
-                        De zero a vendedor campeão em minutos.
+                        Sem treinamento. Sem consultoria. Sem dor de cabeça.
                     </p>
                 </motion.div>
 
                 {/* Vertical Timeline */}
                 <div className="relative">
                     {/* Connecting line */}
-                    <div className="absolute left-8 md:left-1/2 md:-translate-x-0.5 top-0 h-full w-0.5 bg-gradient-to-b from-indigo-500 via-emerald-500 to-amber-500 opacity-30" />
+                    <div className="absolute left-8 md:left-1/2 md:-translate-x-0.5 top-0 h-full w-0.5 bg-gradient-to-b from-emerald-500 via-emerald-500 to-amber-500 opacity-30" />
 
                     {/* Step 1: Conecte - Toggle Switch */}
                     <motion.div
@@ -39,15 +39,15 @@ export const HowItWorks = () => {
                     >
                         {/* Left content (on md+) */}
                         <div className="md:w-1/2 md:text-right md:pr-12 order-2 md:order-1">
-                            <h3 className="text-xl font-semibold text-white mb-2">Conecte</h3>
+                            <h3 className="text-xl font-semibold text-white mb-2">Cole o webhook</h3>
                             <p className="text-gray-400">
-                                Integre Kiwify, Greenn ou Hotmart em segundos. Basta copiar o webhook.
+                                Kiwify, Greenn, Hotmart. Copie e cole. As vendas começam a aparecer sozinhas.
                             </p>
                         </div>
 
                         {/* Center icon/animation */}
                         <div className="relative z-10 order-1 md:order-2">
-                            <div className="w-16 h-16 rounded-full bg-slate-800 border-2 border-indigo-500 flex items-center justify-center shadow-xl shadow-indigo-500/20">
+                            <div className="w-16 h-16 rounded-full bg-slate-800 border-2 border-emerald-500 flex items-center justify-center shadow-xl shadow-emerald-500/20">
                                 {/* Toggle Switch Animation */}
                                 <div className="relative w-10 h-5 bg-slate-700 rounded-full p-0.5">
                                     <motion.div
@@ -68,7 +68,7 @@ export const HowItWorks = () => {
                             </div>
                             {/* Pulse ring */}
                             <motion.div
-                                className="absolute inset-0 rounded-full border-2 border-indigo-500"
+                                className="absolute inset-0 rounded-full border-2 border-emerald-500"
                                 initial={{ scale: 1, opacity: 0.5 }}
                                 whileInView={{ scale: 1.5, opacity: 0 }}
                                 transition={{ delay: 0.5, duration: 0.8 }}
@@ -120,9 +120,9 @@ export const HowItWorks = () => {
 
                         {/* Right content */}
                         <div className="md:w-1/2 md:text-left md:pl-12 order-2 md:order-3">
-                            <h3 className="text-xl font-semibold text-white mb-2">Venda</h3>
+                            <h3 className="text-xl font-semibold text-white mb-2">O ranking atualiza sozinho</h3>
                             <p className="text-gray-400">
-                                Cada venda aprovada atualiza o ranking automaticamente. Zero trabalho manual.
+                                Cada venda aprovada sobe no ranking. Zero planilha. Zero trabalho manual.
                             </p>
                         </div>
                     </motion.div>
@@ -135,9 +135,9 @@ export const HowItWorks = () => {
                     >
                         {/* Left content */}
                         <div className="md:w-1/2 md:text-right md:pr-12 order-2 md:order-1">
-                            <h3 className="text-xl font-semibold text-white mb-2">Comemore</h3>
+                            <h3 className="text-xl font-semibold text-white mb-2">Seu time compete</h3>
                             <p className="text-gray-400">
-                                Conquistas desbloqueadas, ranking atualizado e seu time motivado.
+                                Ninguém quer ficar pra trás. A competição saudável move seu time sem você precisar cobrar.
                             </p>
                         </div>
 

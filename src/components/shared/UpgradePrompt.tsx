@@ -39,8 +39,8 @@ export const UpgradePrompt = ({
         <div className={`flex items-center justify-center min-h-[400px] p-6 ${className}`}>
             <Card className="w-full max-w-lg border-border bg-card shadow-xl">
                 <CardHeader className="text-center pb-2">
-                    <div className="mx-auto mb-4 p-4 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 ring-1 ring-indigo-500/30">
-                        <Lock className="h-8 w-8 text-indigo-500" />
+                    <div className="mx-auto mb-4 p-4 rounded-full bg-gradient-to-br from-emerald-500/20 to-emerald-500/20 ring-1 ring-emerald-500/30">
+                        <Lock className="h-8 w-8 text-emerald-500" />
                     </div>
                     <CardTitle className="text-2xl font-bold text-foreground">
                         {defaultTitle}
@@ -111,7 +111,7 @@ export const UpgradePrompt = ({
                     <div className="flex flex-col gap-3">
                         <Button
                             size="lg"
-                            className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold shadow-lg"
+                            className="w-full bg-gradient-to-r from-emerald-600 to-emerald-600 hover:from-emerald-500 hover:to-emerald-500 text-white font-semibold shadow-lg"
                             onClick={() => navigate('/planos')}
                         >
                             <Sparkles className="h-4 w-4 mr-2" />

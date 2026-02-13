@@ -1,22 +1,5 @@
 import { motion } from "framer-motion";
-
-const metrics = [
-    {
-        label: "Aumento Médio de Vendas",
-        value: "+27%",
-        color: "text-indigo-400"
-    },
-    {
-        label: "Tempo Gasto em Planilhas",
-        value: "ZERO",
-        color: "text-white"
-    },
-    {
-        label: "Setup e Integração",
-        value: "< 5 min",
-        color: "text-amber-400"
-    }
-];
+import { AnimatedCounter } from "./AnimatedCounter";
 
 export const ImpactMetrics = () => {
     return (
@@ -29,23 +12,63 @@ export const ImpactMetrics = () => {
                     viewport={{ once: true }}
                     transition={{ duration: 0.5 }}
                 >
-                    {metrics.map((metric, index) => (
+                    {/* Metric 1: Trophy */}
+                    <motion.div
+                        className="text-center"
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0, duration: 0.5, type: "spring", bounce: 0.3 }}
+                    >
                         <motion.div
-                            key={index}
-                            className="text-center"
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ delay: index * 0.1, duration: 0.4 }}
+                            className="text-4xl sm:text-5xl font-bold text-amber-400 mb-2"
+                            animate={{ rotate: [0, -5, 5, -5, 0] }}
+                            transition={{ delay: 1, duration: 0.6, ease: "easeInOut" }}
                         >
-                            <div className={`text-4xl sm:text-5xl font-bold ${metric.color} mb-2`}>
-                                {metric.value}
-                            </div>
-                            <div className="text-sm text-gray-400 uppercase tracking-wide">
-                                {metric.label}
-                            </div>
+                            🏆
                         </motion.div>
-                    ))}
+                        <div className="text-sm text-gray-400 uppercase tracking-wide">
+                            Mais motivação
+                        </div>
+                    </motion.div>
+
+                    {/* Metric 2: ZERO */}
+                    <motion.div
+                        className="text-center"
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.15, duration: 0.5, type: "spring", bounce: 0.3 }}
+                    >
+                        <div className="text-4xl sm:text-5xl font-bold text-white mb-2 font-serif">
+                            ZERO
+                        </div>
+                        <div className="text-sm text-gray-400 uppercase tracking-wide">
+                            Tempo gasto em planilhas
+                        </div>
+                    </motion.div>
+
+                    {/* Metric 3: < 5 min (animated counter) */}
+                    <motion.div
+                        className="text-center"
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.3, duration: 0.5, type: "spring", bounce: 0.3 }}
+                    >
+                        <div className="text-4xl sm:text-5xl font-bold text-emerald-400 mb-2">
+                            {"< "}
+                            <AnimatedCounter
+                                target={5}
+                                duration={1.2}
+                                className="inline"
+                            />
+                            {" min"}
+                        </div>
+                        <div className="text-sm text-gray-400 uppercase tracking-wide">
+                            Setup e integração
+                        </div>
+                    </motion.div>
                 </motion.div>
             </div>
         </section>

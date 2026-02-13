@@ -12,7 +12,7 @@ interface RankingEvolutionChartProps {
 
 export const RankingEvolutionChart = ({ vendedores }: RankingEvolutionChartProps) => {
   // Cores para cada vendedor (top 5)
-  const colors = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
+  const colors = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#10b981"];
   
   // Simular dados de evolução ao longo do mês (dias 1, 7, 14, 21, 28)
   const topVendedores = vendedores.slice(0, 5);

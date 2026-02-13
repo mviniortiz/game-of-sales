@@ -15,6 +15,37 @@ import { startOfMonth, endOfMonth, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { logger } from "@/utils/logger";
 
+// ============================================
+// Hoisted utilities - evita recriação a cada render
+// (react-best-practices: js-cache-function-results)
+// ============================================
+
+// Cached Intl.NumberFormat instance - criado uma vez
+const currencyFormatter = new Intl.NumberFormat("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+});
+
+const formatCurrency = (value: number) => currencyFormatter.format(value);
+
+// Mapa de cores por nível - O(1) lookup
+const NIVEL_COLORS: Record<string, string> = {
+  "Bronze": "bg-amber-700",
+  "Prata": "bg-gray-400",
+  "Ouro": "bg-yellow-500",
+  "Platina": "bg-blue-400",
+  "Diamante": "bg-emerald-400",
+};
+
+const getNivelColor = (nivel: string) => NIVEL_COLORS[nivel] || "bg-gray-500";
+
+const getInitials = (name: string) => {
+  if (!name) return "?";
+  const parts = name.trim().split(" ");
+  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+};
+
 interface VendedorRanking {
   user_id: string;
   nome: string;
@@ -222,30 +253,7 @@ const Ranking = () => {
 
   const diasRestantes = calcularDiasRestantes();
 
-  const getNivelColor = (nivel: string) => {
-    const colors: Record<string, string> = {
-      "Bronze": "bg-amber-700",
-      "Prata": "bg-gray-400",
-      "Ouro": "bg-yellow-500",
-      "Platina": "bg-blue-400",
-      "Diamante": "bg-indigo-400"
-    };
-    return colors[nivel] || "bg-gray-500";
-  };
-
-  const getInitials = (name: string) => {
-    if (!name) return "?";
-    const parts = name.trim().split(" ");
-    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  };
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(value);
-  };
+  // Funções utilitárias agora são hoisted no topo do arquivo
 
   // Top 3 for podium
   const top3 = vendedoresRanking.slice(0, 3);

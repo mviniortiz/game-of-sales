@@ -276,7 +276,7 @@ export const AdminVendedores = () => {
       case "Ouro":
         return "bg-yellow-100 text-yellow-700 border-yellow-300 dark:bg-yellow-600/50 dark:text-yellow-200 dark:border-yellow-700";
       case "Platina":
-        return "bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-500/50 dark:text-indigo-200 dark:border-indigo-600";
+        return "bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-500/50 dark:text-emerald-200 dark:border-emerald-600";
       case "Diamante":
         return "bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-500/50 dark:text-blue-200 dark:border-blue-600";
       default:
@@ -428,16 +428,16 @@ export const AdminVendedores = () => {
           title="Total Vendedores"
           value={kpiData.total}
           icon={Users}
-          iconColor="text-indigo-600 dark:text-indigo-400"
-          iconBg="bg-indigo-100 dark:bg-indigo-500/20"
+          iconColor="text-emerald-600 dark:text-emerald-400"
+          iconBg="bg-emerald-100 dark:bg-emerald-500/20"
           subtitle="Cadastrados"
         />
         <KPICard
           title="Vendas (Mês)"
           value={kpiData.vendasMes}
           icon={ShoppingBag}
-          iconColor="text-purple-600 dark:text-purple-400"
-          iconBg="bg-purple-100 dark:bg-purple-500/20"
+          iconColor="text-emerald-600 dark:text-emerald-400"
+          iconBg="bg-emerald-100 dark:bg-emerald-500/20"
           subtitle="Este mês"
         />
         <KPICard
@@ -470,12 +470,12 @@ export const AdminVendedores = () => {
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className={`gap-2 ${hasActiveFilters ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400' : 'border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300'}`}
+                className={`gap-2 ${hasActiveFilters ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300'}`}
               >
                 <Filter className="h-4 w-4" />
                 Filtrar
                 {hasActiveFilters && (
-                  <span className="ml-1 bg-indigo-100 dark:bg-indigo-500/30 text-indigo-600 dark:text-indigo-300 text-xs px-1.5 py-0.5 rounded-full">
+                  <span className="ml-1 bg-emerald-100 dark:bg-emerald-500/30 text-emerald-600 dark:text-emerald-300 text-xs px-1.5 py-0.5 rounded-full">
                     {filterLevels.length + filterStatus.length}
                   </span>
                 )}
@@ -555,7 +555,7 @@ export const AdminVendedores = () => {
 
         {/* Add Button */}
         <Button
-          className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/40 transition-all"
+          className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/40 transition-all"
           onClick={() => setShowAdd(true)}
         >
           <Plus className="h-4 w-4 mr-2" />
@@ -591,7 +591,7 @@ export const AdminVendedores = () => {
                       <div className="relative">
                         <Avatar className="h-10 w-10 ring-2 ring-gray-100 dark:ring-gray-800">
                           <AvatarImage src={vendedor.avatar_url || ""} />
-                          <AvatarFallback className="bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-200 font-semibold">
+                          <AvatarFallback className="bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200 font-semibold">
                             {getInitials(vendedor.nome)}
                           </AvatarFallback>
                         </Avatar>
@@ -671,7 +671,7 @@ export const AdminVendedores = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400"
+                          className="h-8 w-8 p-0 text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400"
                           onClick={() => toast.info("Chat em desenvolvimento")}
                         >
                           <MessageCircle className="h-4 w-4" />
@@ -679,7 +679,7 @@ export const AdminVendedores = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400"
+                          className="h-8 w-8 p-0 text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400"
                           onClick={() => toast.info("Estatísticas em desenvolvimento")}
                         >
                           <BarChart2 className="h-4 w-4" />
@@ -704,7 +704,7 @@ export const AdminVendedores = () => {
                           {isSuperAdmin && (
                             <DropdownMenuItem
                               onClick={() => openTransferModal(vendedor)}
-                              className="cursor-pointer text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300"
+                              className="cursor-pointer text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300"
                             >
                               <ArrowRightLeft className="h-4 w-4 mr-2" />
                               Transferir Empresa
@@ -796,7 +796,7 @@ export const AdminVendedores = () => {
               <Button
                 onClick={handleCreateSeller}
                 disabled={submitting}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white"
               >
                 {submitting ? "Criando..." : "Criar"}
               </Button>
@@ -810,7 +810,7 @@ export const AdminVendedores = () => {
         <DialogContent className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-gray-900 dark:text-white flex items-center gap-2">
-              <Building2 className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+              <Building2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
               Transferir Empresa
             </DialogTitle>
             <DialogDescription className="text-gray-500 dark:text-gray-400">
@@ -857,7 +857,7 @@ export const AdminVendedores = () => {
             <Button
               onClick={handleTransferCompany}
               disabled={transferring || !targetCompanyId}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
             >
               {transferring ? "Transferindo..." : "Confirmar Transferência"}
             </Button>

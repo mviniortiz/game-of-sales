@@ -110,7 +110,7 @@ const Auth = () => {
                     placeholder="seu@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 h-12 bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-indigo-500 focus:ring-indigo-500/20"
+                    className="pl-10 h-12 bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-emerald-500/20"
                     required
                     autoComplete="email"
                   />
@@ -130,7 +130,7 @@ const Auth = () => {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 h-12 bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-indigo-500 focus:ring-indigo-500/20"
+                    className="pl-10 h-12 bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-emerald-500/20"
                     required
                     autoComplete="current-password"
                   />
@@ -157,7 +157,7 @@ const Auth = () => {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-12 text-base font-semibold bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all animate-fade-in"
+              className="w-full h-12 text-base font-semibold bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all animate-fade-in"
               style={{ animationDelay: '0.7s', animationFillMode: 'both' }}
             >
               {loading ? (
@@ -173,7 +173,7 @@ const Auth = () => {
             {/* Register Link */}
             <p className="text-center text-sm text-muted-foreground animate-fade-in" style={{ animationDelay: '0.8s', animationFillMode: 'both' }}>
               Não tem uma conta?{" "}
-              <Link to="/register" className="text-indigo-600 hover:text-indigo-500 font-medium">
+              <Link to="/register" className="text-emerald-600 hover:text-emerald-500 font-medium">
                 Criar conta
               </Link>
             </p>

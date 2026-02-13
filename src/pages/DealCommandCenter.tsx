@@ -67,7 +67,7 @@ import {
 const PIPELINE_STAGES = [
     { id: "lead", label: "Lead", shortLabel: "L", color: "bg-slate-500" },
     { id: "qualification", label: "Qualificação", shortLabel: "Q", color: "bg-blue-500" },
-    { id: "proposal", label: "Proposta", shortLabel: "P", color: "bg-indigo-500" },
+    { id: "proposal", label: "Proposta", shortLabel: "P", color: "bg-emerald-500" },
     { id: "negotiation", label: "Negociação", shortLabel: "N", color: "bg-amber-500" },
     { id: "closed_won", label: "Ganho", shortLabel: "W", color: "bg-emerald-500" },
 ];
@@ -76,7 +76,7 @@ const PIPELINE_STAGES = [
 const EVENT_ICONS: Record<string, { icon: typeof StickyNote; color: string; bg: string }> = {
     note: { icon: StickyNote, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-100 dark:bg-blue-500/20" },
     call: { icon: PhoneCall, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-100 dark:bg-emerald-500/20" },
-    stage_change: { icon: Rocket, color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-100 dark:bg-purple-500/20" },
+    stage_change: { icon: Rocket, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-100 dark:bg-emerald-500/20" },
     email: { icon: Mail, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-100 dark:bg-amber-500/20" },
     task_completed: { icon: CheckCircle2, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-100 dark:bg-emerald-500/20" },
 };
@@ -117,7 +117,7 @@ const PipelineProgressBar = ({ currentStage }: { currentStage: string }) => {
                 relative flex items-center justify-center w-8 h-8 rounded-lg text-xs font-bold
                 transition-all duration-300
                 ${isCompleted ? `${stage.color} text-white` : ""}
-                ${isCurrent ? `${stage.color} text-white ring-2 ring-offset-2 ring-offset-white dark:ring-offset-slate-900 ring-indigo-500/50` : ""}
+                ${isCurrent ? `${stage.color} text-white ring-2 ring-offset-2 ring-offset-white dark:ring-offset-slate-900 ring-emerald-500/50` : ""}
                 ${isPending ? "bg-gray-200 text-gray-600 dark:bg-slate-700 dark:text-slate-500" : ""}
               `}
                             animate={isCurrent ? { scale: [1, 1.05, 1] } : {}}
@@ -216,12 +216,12 @@ const TimelineEvent = ({ event, isLast, isFirst }: { event: any; isLast: boolean
             <div className="flex flex-col items-center">
                 {/* Top line segment */}
                 {!isFirst && (
-                    <div className="w-0.5 h-3 bg-indigo-400 dark:bg-indigo-500" />
+                    <div className="w-0.5 h-3 bg-emerald-400 dark:bg-emerald-500" />
                 )}
 
                 {/* Bullet/Icon */}
                 {isCreation ? (
-                    <div className="w-8 h-8 rounded-full bg-indigo-500 dark:bg-indigo-600 flex items-center justify-center ring-4 ring-indigo-100 dark:ring-indigo-500/20 z-10">
+                    <div className="w-8 h-8 rounded-full bg-emerald-500 dark:bg-emerald-600 flex items-center justify-center ring-4 ring-emerald-100 dark:ring-emerald-500/20 z-10">
                         <Icon className="h-4 w-4 text-white" />
                     </div>
                 ) : (
@@ -230,7 +230,7 @@ const TimelineEvent = ({ event, isLast, isFirst }: { event: any; isLast: boolean
 
                 {/* Bottom line segment */}
                 {!isLast && (
-                    <div className="w-0.5 flex-1 bg-indigo-400 dark:bg-indigo-500 min-h-[20px]" />
+                    <div className="w-0.5 flex-1 bg-emerald-400 dark:bg-emerald-500 min-h-[20px]" />
                 )}
             </div>
 
@@ -250,7 +250,7 @@ const TimelineEvent = ({ event, isLast, isFirst }: { event: any; isLast: boolean
                     // Regular event styling
                     <>
                         <p className="text-sm text-gray-700 dark:text-slate-300">
-                            <span className="font-semibold text-indigo-600 dark:text-indigo-400">
+                            <span className="font-semibold text-emerald-600 dark:text-emerald-400">
                                 {event.user_name || "Você"}
                             </span>
                             {" "}{event.title || event.content}
@@ -484,7 +484,7 @@ export default function DealCommandCenter() {
             <>
                 <div className="flex items-center justify-center h-[calc(100vh-64px)] bg-gray-50 dark:bg-slate-900">
                     <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}>
-                        <Target className="h-8 w-8 text-indigo-500" />
+                        <Target className="h-8 w-8 text-emerald-500" />
                     </motion.div>
                 </div>
             </>
@@ -525,8 +525,8 @@ export default function DealCommandCenter() {
                                 </Button>
 
                                 <div className="flex items-center gap-3">
-                                    <div className="p-2.5 rounded-xl bg-indigo-100 dark:bg-indigo-500/20 ring-1 ring-indigo-200 dark:ring-indigo-500/30">
-                                        <Building2 className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                                    <div className="p-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-500/20 ring-1 ring-emerald-200 dark:ring-emerald-500/30">
+                                        <Building2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                                     </div>
                                     <div>
                                         <h1 className="text-lg font-bold text-gray-900 dark:text-white truncate max-w-[200px] sm:max-w-none">
@@ -627,7 +627,7 @@ export default function DealCommandCenter() {
                                 <p className="text-xs font-medium text-gray-500 dark:text-slate-500 uppercase tracking-wider mb-3">Contato</p>
                                 <div className="flex items-center gap-3">
                                     <Avatar className="h-12 w-12 ring-2 ring-gray-200 dark:ring-slate-700">
-                                        <AvatarFallback className="bg-indigo-500 text-white font-bold">
+                                        <AvatarFallback className="bg-emerald-500 text-white font-bold">
                                             {deal.customer_name?.substring(0, 2).toUpperCase() || "?"}
                                         </AvatarFallback>
                                     </Avatar>
@@ -708,7 +708,7 @@ export default function DealCommandCenter() {
                                                     className={`
                                                         px-4 py-2.5 text-sm font-medium rounded-t-lg transition-all flex items-center gap-2
                                                         ${isActive
-                                                            ? "bg-gray-100 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-500 -mb-px"
+                                                            ? "bg-gray-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 border-b-2 border-emerald-500 -mb-px"
                                                             : "text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800/50"
                                                         }
                                                     `}
@@ -766,7 +766,7 @@ export default function DealCommandCenter() {
                                                     size="sm"
                                                     onClick={() => newNote.trim() && addNoteMutation.mutate(newNote.trim())}
                                                     disabled={!newNote.trim() || addNoteMutation.isPending}
-                                                    className="bg-indigo-500 hover:bg-indigo-400 text-white"
+                                                    className="bg-emerald-500 hover:bg-emerald-400 text-white"
                                                 >
                                                     <Send className="h-4 w-4" />
                                                 </Button>
@@ -816,18 +816,18 @@ export default function DealCommandCenter() {
 
                                         {uploadedFiles.length === 0 ? (
                                             <div
-                                                className="flex flex-col items-center justify-center py-12 text-gray-400 dark:text-slate-500 border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-xl cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 transition-colors"
+                                                className="flex flex-col items-center justify-center py-12 text-gray-400 dark:text-slate-500 border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-xl cursor-pointer hover:border-emerald-400 dark:hover:border-emerald-500 transition-colors"
                                                 onClick={() => fileInputRef.current?.click()}
                                                 onDragOver={(e) => {
                                                     e.preventDefault();
-                                                    e.currentTarget.classList.add('border-indigo-400', 'bg-indigo-50/50', 'dark:bg-indigo-500/5');
+                                                    e.currentTarget.classList.add('border-emerald-400', 'bg-emerald-50/50', 'dark:bg-emerald-500/5');
                                                 }}
                                                 onDragLeave={(e) => {
-                                                    e.currentTarget.classList.remove('border-indigo-400', 'bg-indigo-50/50', 'dark:bg-indigo-500/5');
+                                                    e.currentTarget.classList.remove('border-emerald-400', 'bg-emerald-50/50', 'dark:bg-emerald-500/5');
                                                 }}
                                                 onDrop={(e) => {
                                                     e.preventDefault();
-                                                    e.currentTarget.classList.remove('border-indigo-400', 'bg-indigo-50/50', 'dark:bg-indigo-500/5');
+                                                    e.currentTarget.classList.remove('border-emerald-400', 'bg-emerald-50/50', 'dark:bg-emerald-500/5');
                                                     const files = Array.from(e.dataTransfer.files || []);
                                                     if (files.length > 0) {
                                                         setUploadedFiles(prev => [...prev, ...files]);
@@ -857,8 +857,8 @@ export default function DealCommandCenter() {
                                                                 />
                                                             )}
                                                             {file.type.startsWith('video/') && (
-                                                                <div className="w-10 h-10 rounded bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center">
-                                                                    <FileText className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                                                                <div className="w-10 h-10 rounded bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center">
+                                                                    <FileText className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                                                                 </div>
                                                             )}
                                                             {file.type.startsWith('audio/') && (

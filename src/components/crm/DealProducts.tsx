@@ -241,7 +241,7 @@ export const DealProducts = ({ dealId, companyId, deal }: DealProductsProps) => 
             {/* Header */}
             <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2">
-                    <Package className="h-5 w-5 text-indigo-400" />
+                    <Package className="h-5 w-5 text-emerald-400" />
                     <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
                         Produtos da Proposta
                     </h3>
@@ -253,7 +253,7 @@ export const DealProducts = ({ dealId, companyId, deal }: DealProductsProps) => 
                     <Button
                         size="sm"
                         onClick={() => setShowAddModal(true)}
-                        className="gap-2 bg-indigo-600 hover:bg-indigo-500"
+                        className="gap-2 bg-emerald-600 hover:bg-emerald-500"
                     >
                         <Plus className="h-4 w-4" />
                         Adicionar Produto
@@ -413,13 +413,13 @@ export const DealProducts = ({ dealId, companyId, deal }: DealProductsProps) => 
                         ) : (
                             <>
                                 {/* Selected Product */}
-                                <div className="p-3 bg-indigo-50 dark:bg-indigo-500/10 rounded-lg border border-indigo-200 dark:border-indigo-500/30">
+                                <div className="p-3 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg border border-emerald-200 dark:border-emerald-500/30">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <p className="font-semibold text-indigo-700 dark:text-indigo-300">
+                                            <p className="font-semibold text-emerald-700 dark:text-emerald-300">
                                                 {selectedProduct.nome}
                                             </p>
-                                            <p className="text-sm text-indigo-600/70 dark:text-indigo-400/70">
+                                            <p className="text-sm text-emerald-600/70 dark:text-emerald-400/70">
                                                 Preço base: {formatCurrency(selectedProduct.preco_base)}
                                             </p>
                                         </div>
@@ -427,7 +427,7 @@ export const DealProducts = ({ dealId, companyId, deal }: DealProductsProps) => 
                                             variant="ghost"
                                             size="sm"
                                             onClick={() => setSelectedProduct(null)}
-                                            className="text-indigo-600 hover:bg-indigo-100 dark:hover:bg-indigo-500/20"
+                                            className="text-emerald-600 hover:bg-emerald-100 dark:hover:bg-emerald-500/20"
                                         >
                                             Trocar
                                         </Button>
@@ -502,7 +502,7 @@ export const DealProducts = ({ dealId, companyId, deal }: DealProductsProps) => 
                         <Button
                             onClick={() => addProductMutation.mutate()}
                             disabled={!selectedProduct || addProductMutation.isPending}
-                            className="bg-indigo-600 hover:bg-indigo-500"
+                            className="bg-emerald-600 hover:bg-emerald-500"
                         >
                             {addProductMutation.isPending ? (
                                 <Loader2 className="h-4 w-4 animate-spin mr-2" />

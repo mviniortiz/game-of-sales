@@ -192,8 +192,8 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
       <DialogContent className="sm:max-w-[540px] max-h-[90vh] overflow-y-auto bg-card border border-border shadow-lg">
         <DialogHeader className="pb-4 border-b border-border sticky top-0 bg-card z-10">
           <DialogTitle className="flex items-center gap-3 text-foreground">
-            <div className="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 ring-1 ring-indigo-100 dark:ring-indigo-500/20">
-              <Target className="h-5 w-5 text-indigo-600 dark:text-indigo-200" />
+            <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 ring-1 ring-emerald-100 dark:ring-emerald-500/20">
+              <Target className="h-5 w-5 text-emerald-600 dark:text-emerald-200" />
             </div>
             <div>
               <span className="text-lg font-semibold">Nova Negociação</span>
@@ -218,7 +218,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
                       <Input
                         {...field}
                         placeholder="Ex: Implementação CRM"
-                        className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 placeholder:text-muted-foreground"
+                        className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 placeholder:text-muted-foreground"
                       />
                     </FormControl>
                     <FormMessage />
@@ -320,7 +320,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
                       <Input
                         {...field}
                         placeholder="Nome do cliente"
-                        className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 placeholder:text-muted-foreground"
+                        className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 placeholder:text-muted-foreground"
                       />
                     </FormControl>
                     <FormMessage />
@@ -342,7 +342,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
                             {...field}
                             type="email"
                             placeholder="Email"
-                            className="h-10 pl-9 bg-white dark:bg-secondary border-gray-300 dark:border-border focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 placeholder:text-muted-foreground"
+                            className="h-10 pl-9 bg-white dark:bg-secondary border-gray-300 dark:border-border focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 placeholder:text-muted-foreground"
                           />
                         </div>
                       </FormControl>
@@ -362,7 +362,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
                           <Input
                             {...field}
                             placeholder="Telefone"
-                            className="h-10 pl-9 bg-white dark:bg-secondary border-gray-300 dark:border-border focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 placeholder:text-muted-foreground"
+                            className="h-10 pl-9 bg-white dark:bg-secondary border-gray-300 dark:border-border focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 placeholder:text-muted-foreground"
                           />
                         </div>
                       </FormControl>
@@ -413,7 +413,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
                       <Input
                         {...field}
                         type="date"
-                        className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
+                        className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
                       />
                     </FormControl>
                     <FormMessage />
@@ -463,7 +463,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
                     <Textarea
                       {...field}
                       placeholder="Informações adicionais sobre a negociação..."
-                      className="min-h-[60px] bg-white dark:bg-secondary border-gray-300 dark:border-border focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 resize-none placeholder:text-muted-foreground text-sm"
+                      className="min-h-[60px] bg-white dark:bg-secondary border-gray-300 dark:border-border focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 resize-none placeholder:text-muted-foreground text-sm"
                     />
                   </FormControl>
                   <FormMessage />
@@ -484,7 +484,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
               <Button
                 type="submit"
                 disabled={createDealMutation.isPending}
-                className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all"
+                className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all"
               >
                 {createDealMutation.isPending ? (
                   <>

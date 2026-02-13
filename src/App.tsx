@@ -28,6 +28,7 @@ import NotFound from "./pages/NotFound";
 import LandingPage from "./pages/LandingPage";
 import Register from "./pages/Register";
 import Onboarding from "./pages/Onboarding";
+import SalesPerformanceCenter from "./pages/SalesPerformanceCenter";
 
 const queryClient = new QueryClient();
 
@@ -174,6 +175,16 @@ const App = () => (
                   <ProtectedRoute>
                     <AppLayout>
                       <Profile />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/sales-performance-test"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <SalesPerformanceCenter />
                     </AppLayout>
                   </ProtectedRoute>
                 }

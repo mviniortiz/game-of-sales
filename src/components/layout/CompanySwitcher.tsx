@@ -29,7 +29,7 @@ export function CompanySwitcher() {
           className="w-full justify-between gap-2 h-auto py-2 px-3 bg-card border-border hover:bg-muted transition-all"
         >
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600 dark:bg-amber-500/20 dark:text-amber-200">
+            <div className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 dark:bg-amber-500/20 dark:text-amber-200">
               <Building2 className="h-4 w-4" />
             </div>
             <div className="flex flex-col items-start">
@@ -57,7 +57,7 @@ export function CompanySwitcher() {
             onClick={() => switchCompany(company.id)}
             className={`flex items-center justify-between cursor-pointer ${
               company.id === activeCompanyId 
-                ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-500/20 dark:text-white" 
+                ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/20 dark:text-white" 
                 : "text-foreground hover:bg-muted"
             }`}
           >
@@ -84,7 +84,7 @@ export function CompanySwitcher() {
               </div>
             </div>
             {company.id === activeCompanyId && (
-              <Check className="h-4 w-4 text-indigo-600 dark:text-indigo-300" />
+              <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-300" />
             )}
           </DropdownMenuItem>
         ))}

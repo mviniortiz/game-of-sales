@@ -74,8 +74,8 @@ const KPICard = ({
   icon: Icon,
   trend,
   trendLabel,
-  iconColor = "text-indigo-600 dark:text-indigo-200",
-  iconBg = "bg-indigo-50 dark:bg-indigo-500/10",
+  iconColor = "text-emerald-600 dark:text-emerald-200",
+  iconBg = "bg-emerald-50 dark:bg-emerald-500/10",
 }: KPICardProps) => {
   const isPositive = trend && trend > 0;
   const TrendIcon = isPositive ? ArrowUpRight : ArrowDownRight;
@@ -338,7 +338,7 @@ const Dashboard = () => {
         <div>
           <div className="flex items-center gap-3 mb-1">
             <h1 className="text-2xl font-bold text-foreground tracking-tight">Dashboard</h1>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-200 text-[10px] font-semibold uppercase tracking-wider ring-1 ring-indigo-200/70 dark:ring-indigo-500/20">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-200 text-[10px] font-semibold uppercase tracking-wider ring-1 ring-emerald-200/70 dark:ring-emerald-500/20">
               <Sparkles className="h-3 w-3" />
               Live
             </span>
@@ -369,9 +369,9 @@ const Dashboard = () => {
           icon={TrendingUp}
           trend={5.2}
           trendLabel="vs mês anterior"
-          iconColor="text-indigo-400"
-          iconBg="bg-indigo-500/10"
-          glowColor="shadow-indigo-500/20"
+          iconColor="text-emerald-400"
+          iconBg="bg-emerald-500/10"
+          glowColor="shadow-emerald-500/20"
         />
         <KPICard
           title="Transações"
@@ -380,9 +380,9 @@ const Dashboard = () => {
           icon={ShoppingCart}
           trend={12.3}
           trendLabel="vs mês anterior"
-          iconColor="text-violet-400"
-          iconBg="bg-violet-500/10"
-          glowColor="shadow-violet-500/20"
+          iconColor="text-emerald-400"
+          iconBg="bg-emerald-500/10"
+          glowColor="shadow-emerald-500/20"
         />
         <KPICard
           title="Taxa de Show"
@@ -416,8 +416,8 @@ const Dashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-500/10">
-                    <TrendingUp className="h-4 w-4 text-indigo-600 dark:text-indigo-300" />
+                  <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/10">
+                    <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-300" />
                   </div>
                   Evolução de Vendas
                 </CardTitle>
@@ -430,7 +430,7 @@ const Dashboard = () => {
               <AreaChart data={vendasEvolution || []} margin={{ top: 20, right: 10, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorValor" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#6366F1" stopOpacity={0.5} />
+                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.5} />
                     <stop offset="50%" stopColor="#4F46E5" stopOpacity={0.2} />
                     <stop offset="100%" stopColor="#4F46E5" stopOpacity={0} />
                   </linearGradient>
@@ -469,16 +469,16 @@ const Dashboard = () => {
                 <Area
                   type="monotone"
                   dataKey="valor"
-                  stroke="#6366F1"
+                  stroke="#10b981"
                   strokeWidth={2.5}
                   fill="url(#colorValor)"
                   dot={false}
                   activeDot={{
                     r: 6,
-                    fill: "#6366F1",
+                    fill: "#10b981",
                     stroke: "#fff",
                     strokeWidth: 2,
-                    filter: "drop-shadow(0 0 8px rgba(99, 102, 241, 0.5))"
+                    filter: "drop-shadow(0 0 8px rgba(16, 185, 129, 0.5))"
                   }}
                 />
               </AreaChart>
@@ -508,7 +508,7 @@ const Dashboard = () => {
                 <defs>
                   <linearGradient id="barGradient" x1="0" y1="0" x2="1" y2="0">
                     <stop offset="0%" stopColor="#4F46E5" />
-                    <stop offset="100%" stopColor="#6366F1" />
+                    <stop offset="100%" stopColor="#10b981" />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.25)" horizontal={false} />
@@ -561,8 +561,8 @@ const Dashboard = () => {
             <CardContent className="relative p-5">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-4">
-                  <div className="relative p-3 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 group-hover:scale-105 transition-transform">
-                    <Target className="h-6 w-6 text-indigo-600 dark:text-indigo-200 relative z-10" />
+                  <div className="relative p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 group-hover:scale-105 transition-transform">
+                    <Target className="h-6 w-6 text-emerald-600 dark:text-emerald-200 relative z-10" />
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-foreground">Meta do Mês</p>
@@ -575,7 +575,7 @@ const Dashboard = () => {
                 </div>
                 <div className="text-right">
                   <p className={`text-3xl font-bold tabular-nums ${metaProgress >= 100 ? 'text-emerald-600 dark:text-emerald-300' :
-                    metaProgress >= 70 ? 'text-indigo-600 dark:text-indigo-200' :
+                    metaProgress >= 70 ? 'text-emerald-600 dark:text-emerald-200' :
                       'text-amber-500 dark:text-amber-300'
                     }`}>
                     {metaProgress.toFixed(1)}%
@@ -589,7 +589,7 @@ const Dashboard = () => {
                 <div
                   className={`absolute inset-y-0 left-0 rounded-full transition-all duration-1000 ease-out ${metaProgress >= 100
                     ? 'bg-gradient-to-r from-emerald-500 via-emerald-400 to-emerald-300'
-                    : 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-400'
+                    : 'bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-400'
                     }`}
                   style={{ width: `${Math.min(metaProgress, 100)}%` }}
                 >

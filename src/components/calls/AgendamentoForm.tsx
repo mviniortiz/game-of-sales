@@ -171,7 +171,7 @@ export const AgendamentoForm = ({ onSuccess }: AgendamentoFormProps) => {
                 setFormData({ ...formData, cliente_nome: e.target.value })
               }
               placeholder="Nome completo"
-              className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground placeholder:text-muted-foreground focus:ring-indigo-500 focus:border-indigo-500"
+              className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground placeholder:text-muted-foreground focus:ring-emerald-500 focus:border-emerald-500"
             />
           </div>
 
@@ -274,13 +274,13 @@ export const AgendamentoForm = ({ onSuccess }: AgendamentoFormProps) => {
               }
               placeholder="Informações adicionais..."
               rows={2}
-              className="bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground placeholder:text-muted-foreground resize-none focus:ring-indigo-500 focus:border-indigo-500"
+              className="bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground placeholder:text-muted-foreground resize-none focus:ring-emerald-500 focus:border-emerald-500"
             />
           </div>
 
           <Button 
             type="submit" 
-            className="w-full h-10 bg-gradient-to-r from-indigo-600 to-indigo-500 text-white font-medium shadow-lg shadow-indigo-500/25 hover:scale-[1.01] transition-transform" 
+            className="w-full h-10 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-medium shadow-lg shadow-emerald-500/25 hover:scale-[1.01] transition-transform" 
             disabled={loading}
           >
             {loading ? "Agendando..." : "Agendar Call"}

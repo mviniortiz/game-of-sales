@@ -37,7 +37,7 @@ import { HowItWorks } from "@/components/landing/HowItWorks";
 import { IntegrationHub } from "@/components/landing/IntegrationHub";
 import { UseCasesSection } from "@/components/landing/UseCasesSection";
 import { FinalCTA } from "@/components/landing/FinalCTA";
-import { Testimonials } from "@/components/landing/Testimonials";
+import { PainPoints } from "@/components/landing/PainPoints";
 
 // Animation variants
 const fadeInUp = {
@@ -107,7 +107,7 @@ const LandingPage = () => {
             icon: Kanban,
             title: "Gestão Visual",
             description: "Arrastar e soltar nunca foi tão lucrativo.",
-            gradient: "from-indigo-500 to-purple-600",
+            gradient: "from-emerald-500 to-emerald-600",
             size: "md:col-span-1"
         },
         {
@@ -173,13 +173,13 @@ const LandingPage = () => {
     ];
 
     return (
-        <div className="min-h-screen w-full bg-slate-950 text-slate-50 selection:bg-indigo-500/30">
+        <div className="min-h-screen w-full bg-slate-950 text-slate-50 selection:bg-emerald-500/30">
             {/* Loading Overlay - Immersive Experience */}
             {isNavigating && (
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="fixed inset-0 z-[100] bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 overflow-hidden"
+                    className="fixed inset-0 z-[100] bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 overflow-hidden"
                 >
                     {/* Subtle grid pattern */}
                     <div
@@ -191,7 +191,7 @@ const LandingPage = () => {
 
                     {/* Animated glow orbs */}
                     <motion.div
-                        className="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-600/30 rounded-full blur-3xl"
+                        className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-600/30 rounded-full blur-3xl"
                         animate={{
                             scale: [1, 1.2, 1],
                             opacity: [0.3, 0.5, 0.3]
@@ -199,7 +199,7 @@ const LandingPage = () => {
                         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                     />
                     <motion.div
-                        className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-600/30 rounded-full blur-3xl"
+                        className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-600/30 rounded-full blur-3xl"
                         animate={{
                             scale: [1.2, 1, 1.2],
                             opacity: [0.3, 0.5, 0.3]
@@ -226,7 +226,7 @@ const LandingPage = () => {
                                 animate={{ opacity: 1 }}
                             >
                                 <motion.div
-                                    className="h-full bg-gradient-to-r from-indigo-500 to-indigo-600"
+                                    className="h-full bg-gradient-to-r from-emerald-500 to-emerald-600"
                                     initial={{ width: "0%" }}
                                     animate={{ width: "100%" }}
                                     transition={{ duration: 0.8, ease: "easeOut" }}
@@ -271,7 +271,7 @@ const LandingPage = () => {
                                         transition={{ delay: 0.4 + idx * 0.1, type: "spring" }}
                                         className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/10"
                                     >
-                                        <item.icon className="h-4 w-4 text-indigo-400" />
+                                        <item.icon className="h-4 w-4 text-emerald-400" />
                                         <span className="text-sm text-white/80">{item.text}</span>
                                     </motion.div>
                                 ))}
@@ -305,13 +305,13 @@ const LandingPage = () => {
             {/* Impact Metrics Bar - Social Proof */}
             <ImpactMetrics />
 
-            {/* Product Bento Grid - Replaces old Features */}
+            {/* Pain Points - Valida a dor antes da solução */}
+            <PainPoints />
+
+            {/* Product Bento Grid - Features/Solução */}
             <ProductBentoGrid />
 
-            {/* Testimonials - Social Proof */}
-            <Testimonials />
-
-            {/* How It Works - The Loop */}
+            {/* How It Works - 3 passos simples */}
             <HowItWorks />
 
 
@@ -322,11 +322,11 @@ const LandingPage = () => {
                         {...fadeInUp}
                         className="text-center mb-12"
                     >
-                        <Badge className="mb-4 bg-indigo-500/20 text-indigo-300 border-indigo-500/30">
+                        <Badge className="mb-4 bg-emerald-500/20 text-emerald-300 border-emerald-500/30">
                             <Zap className="h-3 w-3 mr-1" />
                             👀 Tour Completo em 2 Minutos
                         </Badge>
-                        <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+                        <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 font-serif">
                             Veja o Game Sales Em Ação
                         </h2>
                         <p className="text-lg text-gray-400 max-w-2xl mx-auto">
@@ -341,7 +341,7 @@ const LandingPage = () => {
                         className="relative"
                     >
                         {/* Glow effect */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/30 via-blue-500/30 to-indigo-500/30 rounded-3xl blur-3xl -z-10 scale-105" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/30 via-blue-500/30 to-emerald-500/30 rounded-3xl blur-3xl -z-10 scale-105" />
 
                         {/* Premium Video Player */}
                         <div
@@ -494,8 +494,8 @@ const LandingPage = () => {
                         {/* Feature highlights below video */}
                         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="flex items-center gap-3 bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
-                                <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center">
-                                    <Kanban className="h-5 w-5 text-indigo-400" />
+                                <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                                    <Kanban className="h-5 w-5 text-emerald-400" />
                                 </div>
                                 <div>
                                     <h4 className="font-semibold text-white">CRM Visual</h4>
@@ -512,8 +512,8 @@ const LandingPage = () => {
                                 </div>
                             </div>
                             <div className="flex items-center gap-3 bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
-                                <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center">
-                                    <Target className="h-5 w-5 text-indigo-400" />
+                                <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                                    <Target className="h-5 w-5 text-emerald-400" />
                                 </div>
                                 <div>
                                     <h4 className="font-semibold text-white">Metas Inteligentes</h4>
@@ -531,7 +531,7 @@ const LandingPage = () => {
             {/* Pricing Section - Dark Theme with Neon */}
             <section id="pricing" className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-slate-900 to-slate-950 relative overflow-hidden">
                 {/* Background glow effects */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-indigo-600/10 rounded-full blur-3xl" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-emerald-600/10 rounded-full blur-3xl" />
 
                 <div className="max-w-7xl mx-auto relative z-10">
                     <motion.div
@@ -549,8 +549,8 @@ const LandingPage = () => {
                             Garantia de ROI: Se paga em 1 venda extra
                         </motion.div>
 
-                        <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-                            Investimento Que Se <span className="text-indigo-400">Multiplica</span>
+                        <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 font-serif">
+                            Investimento Que Se <span className="text-emerald-400">Multiplica</span>
                         </h2>
                         <p className="text-lg text-gray-400 mb-8">
                             Retorno médio de <strong className="text-white">12x o valor investido</strong>. Sem surpresas, sem taxas escondidas.
@@ -570,7 +570,7 @@ const LandingPage = () => {
                             <button
                                 onClick={() => setIsAnnual(true)}
                                 className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2 ${isAnnual
-                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
+                                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/30'
                                     : 'text-gray-400 hover:text-white'
                                     }`}
                             >
@@ -596,25 +596,26 @@ const LandingPage = () => {
                                 key={index}
                                 variants={fadeInUp}
                                 className={plan.popular ? "md:-mt-4 md:mb-4" : ""}
+                                whileHover={{ y: -6, transition: { duration: 0.25 } }}
                             >
                                 <Card
                                     className={`relative h-full transition-all duration-300 ${plan.popular
-                                        ? 'border-2 border-indigo-500 bg-slate-800/80 backdrop-blur-sm'
+                                        ? 'border-2 border-emerald-500 bg-slate-800/80 backdrop-blur-sm'
                                         : 'border-white/10 bg-slate-800/40 backdrop-blur-sm hover:border-white/20'
                                         }`}
                                     style={plan.popular ? {
-                                        boxShadow: '0 0 40px rgba(99, 102, 241, 0.3), 0 0 80px rgba(99, 102, 241, 0.1)'
+                                        boxShadow: '0 0 40px rgba(16, 185, 129, 0.3), 0 0 80px rgba(16, 185, 129, 0.1)'
                                     } : {}}
                                 >
                                     {plan.popular && (
                                         <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                                            <Badge className="bg-indigo-600 text-white px-4 py-1 shadow-lg shadow-indigo-500/30 border-0">
+                                            <Badge className="bg-emerald-600 text-white px-4 py-1 shadow-lg shadow-emerald-500/30 border-0">
                                                 ⚡ Mais Popular
                                             </Badge>
                                         </div>
                                     )}
                                     <CardHeader className={`text-center ${plan.popular ? 'pt-10' : 'pt-6'}`}>
-                                        <CardTitle className="text-2xl text-white">{plan.name}</CardTitle>
+                                        <CardTitle className="text-2xl text-white font-serif">{plan.name}</CardTitle>
                                         <CardDescription className="text-gray-400">{plan.tagline}</CardDescription>
                                         <div className="mt-4">
                                             {plan.priceNumber === 0 ? (
@@ -650,14 +651,14 @@ const LandingPage = () => {
                                         <ul className="space-y-3">
                                             {plan.features.map((feature, i) => (
                                                 <li key={i} className="flex items-center gap-3">
-                                                    <Check className={`h-5 w-5 flex-shrink-0 ${plan.popular ? 'text-indigo-400' : 'text-emerald-400'}`} />
+                                                    <Check className={`h-5 w-5 flex-shrink-0 ${plan.popular ? 'text-emerald-400' : 'text-emerald-400'}`} />
                                                     <span className="text-sm text-gray-300">{feature}</span>
                                                 </li>
                                             ))}
                                         </ul>
                                         <Button
                                             className={`w-full mt-6 ${plan.popular
-                                                ? 'bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-lg shadow-indigo-500/30'
+                                                ? 'bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-lg shadow-emerald-500/30'
                                                 : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
                                                 }`}
                                             onClick={() => window.location.href = `/register?plan=${plan.name.toLowerCase()}`}
@@ -675,10 +676,6 @@ const LandingPage = () => {
                         {...fadeInUp}
                         className="flex flex-wrap items-center justify-center gap-6 mt-12 text-sm text-slate-400"
                     >
-                        <div className="flex items-center gap-2">
-                            <span>💳</span>
-                            <span>Não precisa de cartão de crédito</span>
-                        </div>
                         <div className="flex items-center gap-2">
                             <span>🔓</span>
                             <span>Cancele a qualquer momento</span>
@@ -700,7 +697,7 @@ const LandingPage = () => {
                         {...fadeInUp}
                         className="text-center mb-12"
                     >
-                        <h2 className="text-3xl font-bold text-white mb-4">
+                        <h2 className="text-3xl font-bold text-white mb-4 font-serif">
                             Dúvidas? Temos Respostas.
                         </h2>
                         <p className="text-gray-400">
@@ -722,7 +719,7 @@ const LandingPage = () => {
                             },
                             {
                                 q: "Posso testar antes de assinar?",
-                                a: "Com certeza! Oferecemos 7 dias grátis do plano PRO - sem precisar de cartão de crédito. Teste tudo à vontade e cancele quando quiser."
+                                a: "Com certeza! Oferecemos 7 dias grátis do plano PRO. Teste tudo à vontade e cancele quando quiser."
                             },
                             {
                                 q: "Funciona para qualquer tipo de venda?",

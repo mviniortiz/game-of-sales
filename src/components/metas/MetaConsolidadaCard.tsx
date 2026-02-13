@@ -110,8 +110,8 @@ export const MetaConsolidadaCard = ({
             <div className="text-xs text-muted-foreground">Dias restantes</div>
           </div>
           <div className="bg-muted/50 rounded-lg p-3 border border-border">
-            <TrendingUp className="h-5 w-5 text-purple-500 mx-auto mb-1" />
-            <div className="text-2xl font-bold text-purple-500">
+            <TrendingUp className="h-5 w-5 text-emerald-500 mx-auto mb-1" />
+            <div className="text-2xl font-bold text-emerald-500">
               R${" "}
               {mediaDiaria.toLocaleString("pt-BR", {
                 minimumFractionDigits: 0,

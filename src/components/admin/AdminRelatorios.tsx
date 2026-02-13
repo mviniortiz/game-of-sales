@@ -177,7 +177,7 @@ const TopItem = ({ rank, name, subtitle, value, maxValue, currentValue, avatarUr
         <div className="relative">
           <Avatar className={`h-10 w-10 ${getRankBg(rank)}`}>
             <AvatarImage src={avatarUrl || ""} />
-            <AvatarFallback className="bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-200 font-semibold text-xs">
+            <AvatarFallback className="bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200 font-semibold text-xs">
               {getInitials(name)}
             </AvatarFallback>
           </Avatar>
@@ -523,8 +523,8 @@ export const AdminRelatorios = () => {
           value={stats?.totalVendas || 0}
           subtitle="vs mês anterior"
           icon={ShoppingBag}
-          iconBg="bg-indigo-100 dark:bg-indigo-500/20"
-          iconColor="text-indigo-600 dark:text-indigo-400"
+          iconBg="bg-emerald-100 dark:bg-emerald-500/20"
+          iconColor="text-emerald-600 dark:text-emerald-400"
           trend={stats?.trendVendas}
           sparklineData={stats?.sparklineVendas}
           sparklineColor="#4F46E5"
@@ -547,8 +547,8 @@ export const AdminRelatorios = () => {
           value={formatCurrency(stats?.ticketMedio || 0)}
           subtitle="por venda"
           icon={TrendingUp}
-          iconBg="bg-purple-100 dark:bg-purple-500/20"
-          iconColor="text-purple-600 dark:text-purple-400"
+          iconBg="bg-emerald-100 dark:bg-emerald-500/20"
+          iconColor="text-emerald-600 dark:text-emerald-400"
         />
 
         <KPICard
@@ -623,8 +623,8 @@ export const AdminRelatorios = () => {
         <Card className="border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2">
-              <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-500/20">
-                <Package className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+              <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-500/20">
+                <Package className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               </div>
               <div>
                 <CardTitle className="text-base font-semibold text-gray-900 dark:text-white">
