@@ -132,6 +132,7 @@ export interface Deal {
     nome: string;
     avatar_url?: string | null;
   } | null;
+  is_hot?: boolean | null;
 }
 
 // LocalStorage key for pipeline config - now includes company ID
@@ -278,6 +279,7 @@ export default function CRM() {
         probability: d.probability || 50,
         created_at: d.created_at,
         updated_at: d.updated_at,
+        is_hot: d.is_hot || false,
         profiles: profilesMap.get(d.user_id) || null,
       })) as Deal[];
     },
@@ -720,14 +722,17 @@ export default function CRM() {
                 },
               }}
             >
-              <div className="flex gap-3 sm:gap-5 p-4 sm:p-6 h-full min-w-max">
-                {STAGES.map((stage) => (
+              <div className="flex gap-2 sm:gap-3 p-4 sm:p-6 h-full min-w-max">
+                {STAGES.map((stage, idx) => (
                   <KanbanColumn
                     key={stage.id}
                     stage={stage}
                     deals={dealsByStage[stage.id] || []}
                     total={stageTotals[stage.id] || { count: 0, value: 0 }}
                     formatCurrency={formatCurrency}
+                    showConversionRate={idx > 0}
+                    previousStageCount={idx > 0 ? stageTotals[STAGES[idx - 1].id]?.count : undefined}
+                    isLast={idx === STAGES.length - 1}
                   />
                 ))}
               </div>

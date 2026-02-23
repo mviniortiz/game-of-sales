@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,19 +32,27 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Loader2, Target, User, DollarSign, Phone, Mail, Calendar, Flame } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Loader2, Target, User, DollarSign, Phone, Mail,
+  Calendar, Flame, CheckCircle2, ChevronDown
+} from "lucide-react";
 import type { Stage } from "@/pages/CRM";
 
-// Stage to probability mapping
-const STAGE_PROBABILITY: Record<string, number> = {
+// Stage → probability
+const STAGE_PROB: Record<string, number> = {
   lead: 10,
-  qualificacao: 30,
-  proposta: 60,
+  qualification: 25,
+  qualificacao: 25,
+  proposal: 55,
+  proposta: 55,
+  negotiation: 80,
   negociacao: 80,
+  closed_won: 100,
   fechado: 100,
 };
 
-const dealSchema = z.object({
+const schema = z.object({
   title: z.string().min(1, "Título é obrigatório"),
   value: z.string().min(1, "Valor é obrigatório"),
   customer_name: z.string().min(1, "Nome do cliente é obrigatório"),
@@ -57,7 +65,7 @@ const dealSchema = z.object({
   is_hot: z.boolean().default(false),
 });
 
-type DealFormData = z.infer<typeof dealSchema>;
+type FormData = z.infer<typeof schema>;
 
 interface NewDealModalProps {
   open: boolean;
@@ -66,19 +74,31 @@ interface NewDealModalProps {
   stages: Stage[];
 }
 
+// Format BRL as user types
+const formatBRL = (raw: string) => {
+  const digits = raw.replace(/\D/g, "");
+  if (!digits) return "";
+  const num = parseInt(digits, 10) / 100;
+  return num.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+};
+
+const parseBRL = (formatted: string) =>
+  parseFloat(formatted.replace(/[^\d,]/g, "").replace(",", ".")) || 0;
+
 export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalProps) => {
   const { user, companyId } = useAuth();
-  const [valorFormatado, setValorFormatado] = useState("");
+  const [displayValue, setDisplayValue] = useState("");
+  const [submitted, setSubmitted] = useState(false);
 
-  const form = useForm<DealFormData>({
-    resolver: zodResolver(dealSchema),
+  const form = useForm<FormData>({
+    resolver: zodResolver(schema),
     defaultValues: {
       title: "",
       value: "",
       customer_name: "",
       customer_email: "",
       customer_phone: "",
-      stage: "lead",
+      stage: stages[0]?.id || "lead",
       product_id: "",
       notes: "",
       expected_close_date: "",
@@ -86,51 +106,45 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
     },
   });
 
-  const selectedStage = form.watch("stage");
-  const probability = STAGE_PROBABILITY[selectedStage] || 10;
+  const watchedStage = form.watch("stage");
+  const watchedHot = form.watch("is_hot");
+  const probability = STAGE_PROB[watchedStage] ?? 10;
 
-  // Fetch products
+  const probColor =
+    probability >= 70 ? { bar: "bg-emerald-500", text: "text-emerald-400" } :
+      probability >= 30 ? { bar: "bg-amber-500", text: "text-amber-400" } :
+        { bar: "bg-slate-500", text: "text-slate-400" };
+
+  const selectedStage = stages.find(s => s.id === watchedStage);
+
+  // Products
   const { data: produtos = [] } = useQuery({
     queryKey: ["produtos-ativos", companyId],
     queryFn: async () => {
       if (!companyId) return [];
       const { data } = await supabase
-        .from("produtos")
-        .select("id, nome")
-        .eq("ativo", true)
-        .eq("company_id", companyId)
-        .order("nome");
+        .from("produtos").select("id, nome")
+        .eq("ativo", true).eq("company_id", companyId).order("nome");
       return data || [];
     },
     enabled: !!companyId,
   });
 
-  // Create deal mutation
-  const createDealMutation = useMutation({
-    mutationFn: async (data: DealFormData) => {
-      if (!user) throw new Error("Usuário não autenticado");
+  const createMutation = useMutation({
+    mutationFn: async (data: FormData) => {
+      if (!user) throw new Error("Não autenticado");
+      const numValue = parseBRL(data.value);
 
-      // Parse value from formatted string
-      const numericValue = parseFloat(
-        data.value.replace(/[^\d,]/g, "").replace(",", ".")
-      );
-
-      // Get max position for the stage
-      const { data: existingDeals } = await supabase
-        .from("deals")
-        .select("position")
+      const { data: existing } = await supabase
+        .from("deals").select("position")
         .eq("stage", data.stage as any)
-        .order("position", { ascending: false })
-        .limit(1);
+        .order("position", { ascending: false }).limit(1);
 
-      const nextPosition = existingDeals?.[0]?.position
-        ? existingDeals[0].position + 1
-        : 0;
+      const nextPos = existing?.[0]?.position != null ? existing[0].position + 1 : 0;
 
-      // Insert new deal with auto-calculated probability
       const { error } = await supabase.from("deals").insert({
         title: data.title,
-        value: numericValue,
+        value: numValue,
         customer_name: data.customer_name,
         customer_email: data.customer_email || null,
         customer_phone: data.customer_phone || null,
@@ -138,87 +152,101 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
         product_id: data.product_id || null,
         notes: data.notes || null,
         expected_close_date: data.expected_close_date || null,
-        probability: STAGE_PROBABILITY[data.stage] || 10,
+        probability,
         is_hot: data.is_hot,
-        position: nextPosition,
+        position: nextPos,
         user_id: user.id,
       });
-
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Negociação criada com sucesso!");
-      form.reset();
-      setValorFormatado("");
-      onSuccess();
+      setSubmitted(true);
+      setTimeout(() => {
+        setSubmitted(false);
+        toast.success("Negociação criada!");
+        form.reset();
+        setDisplayValue("");
+        onSuccess();
+      }, 700);
     },
-    onError: (error) => {
-      console.error("Error creating deal:", error);
-      toast.error("Erro ao criar negociação");
-    },
+    onError: () => toast.error("Erro ao criar negociação"),
   });
 
-  // Format currency input
-  const formatarMoeda = (valor: string) => {
-    const apenasNumeros = valor.replace(/\D/g, "");
-    const numero = parseInt(apenasNumeros || "0", 10) / 100;
-    return numero.toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    });
-  };
+  const onSubmit = (data: FormData) => createMutation.mutate(data);
 
-  const handleValorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatarMoeda(e.target.value);
-    setValorFormatado(formatted);
-    form.setValue("value", formatted);
+  const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = formatBRL(e.target.value);
+    setDisplayValue(f);
+    form.setValue("value", f, { shouldValidate: true });
   };
-
-  const onSubmit = (data: DealFormData) => {
-    createDealMutation.mutate(data);
-  };
-
-  // Get probability color
-  const getProbabilityColor = (prob: number) => {
-    if (prob >= 70) return { bar: "bg-emerald-500", text: "text-emerald-600 dark:text-emerald-400" };
-    if (prob >= 30) return { bar: "bg-amber-500", text: "text-amber-600 dark:text-amber-400" };
-    return { bar: "bg-rose-500", text: "text-rose-600 dark:text-rose-400" };
-  };
-
-  const probColors = getProbabilityColor(probability);
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[540px] max-h-[90vh] overflow-y-auto bg-card border border-border shadow-lg">
-        <DialogHeader className="pb-4 border-b border-border sticky top-0 bg-card z-10">
-          <DialogTitle className="flex items-center gap-3 text-foreground">
-            <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 ring-1 ring-emerald-100 dark:ring-emerald-500/20">
-              <Target className="h-5 w-5 text-emerald-600 dark:text-emerald-200" />
+    <Dialog open={open} onOpenChange={(v) => { if (!v) { form.reset(); setDisplayValue(""); onClose(); } }}>
+      <DialogContent className="sm:max-w-[520px] max-h-[92vh] overflow-y-auto bg-slate-900 border border-slate-700/80 shadow-2xl p-0">
+
+        {/* ── Header ─────────────────────────────────────── */}
+        <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-700/60 sticky top-0 bg-slate-900 z-10">
+          <DialogTitle className="flex items-center gap-3 text-white">
+            <div className="p-2 rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/20">
+              <Target className="h-5 w-5 text-emerald-400" />
             </div>
             <div>
-              <span className="text-lg font-semibold">Nova Negociação</span>
-              <p className="text-[12px] text-muted-foreground font-normal mt-0.5">Adicione uma nova oportunidade ao pipeline</p>
+              <p className="text-[17px] font-bold">Nova Negociação</p>
+              <p className="text-[12px] text-slate-500 font-normal mt-0.5">
+                Adicione uma nova oportunidade ao pipeline
+              </p>
             </div>
           </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="px-6 py-5 space-y-5">
 
-            {/* Group 1: Title + Value + Stage */}
-            <div className="space-y-4">
-              {/* Title */}
+            {/* ── Title ──────────────────────────────────── */}
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-slate-300 text-[13px] font-medium">
+                    Título da Negociação
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      autoFocus
+                      placeholder="Ex: Implementação CRM"
+                      className="h-10 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500
+                        focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* ── Value + Stage ─────────────────────────── */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Value */}
               <FormField
                 control={form.control}
-                name="title"
-                render={({ field }) => (
+                name="value"
+                render={() => (
                   <FormItem>
-                    <FormLabel className="text-foreground text-[13px] font-medium">Título da Negociação</FormLabel>
+                    <FormLabel className="text-slate-300 text-[13px] font-medium flex items-center gap-1.5">
+                      <DollarSign className="h-3.5 w-3.5 text-emerald-400" />
+                      Valor
+                    </FormLabel>
                     <FormControl>
                       <Input
-                        {...field}
-                        placeholder="Ex: Implementação CRM"
-                        className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 placeholder:text-muted-foreground"
+                        type="text"
+                        inputMode="numeric"
+                        value={displayValue}
+                        onChange={handleValueChange}
+                        placeholder="R$ 0,00"
+                        className="h-12 text-lg font-bold bg-emerald-500/10 border-emerald-500/30
+                          text-emerald-300 placeholder:text-emerald-500/40
+                          focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                       />
                     </FormControl>
                     <FormMessage />
@@ -226,91 +254,76 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
                 )}
               />
 
-              {/* Value + Stage Row */}
-              <div className="grid grid-cols-2 gap-4">
-                {/* VALUE - Emphasized */}
-                <FormField
-                  control={form.control}
-                  name="value"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-foreground text-[13px] font-medium flex items-center gap-1.5">
-                        <DollarSign className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                        Valor
-                      </FormLabel>
+              {/* Stage */}
+              <FormField
+                control={form.control}
+                name="stage"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-slate-300 text-[13px] font-medium">Estágio</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <Input
-                          type="text"
-                          inputMode="numeric"
-                          value={valorFormatado}
-                          onChange={handleValorChange}
-                          placeholder="R$ 0,00"
-                          className="h-12 text-lg font-semibold bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 text-emerald-700 dark:text-emerald-300 placeholder:text-emerald-400/60"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Stage */}
-                <FormField
-                  control={form.control}
-                  name="stage"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-foreground text-[13px] font-medium">Estágio</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value || stages[0]?.id}>
-                        <FormControl>
-                          <SelectTrigger className="h-12 bg-white dark:bg-secondary border-gray-300 dark:border-border">
+                        <SelectTrigger className="h-12 bg-slate-800 border-slate-600 text-white">
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            {selectedStage && (
+                              <div className={`p-1 rounded-md ${selectedStage.bgColor} flex-shrink-0`}>
+                                <selectedStage.icon className={`h-3.5 w-3.5 ${selectedStage.color}`} />
+                              </div>
+                            )}
                             <SelectValue placeholder="Selecione..." />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="bg-card border border-border shadow-sm">
-                          {stages.map((stage) => {
-                            const Icon = stage.icon;
-                            return (
-                              <SelectItem key={stage.id} value={stage.id}>
-                                <div className="flex items-center gap-2">
-                                  <Icon className={`h-4 w-4 ${stage.color}`} />
-                                  {stage.title}
-                                </div>
-                              </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                          </div>
+                          <ChevronDown className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-slate-800 border-slate-700">
+                        {stages.map((stage) => (
+                          <SelectItem
+                            key={stage.id}
+                            value={stage.id}
+                            className="text-white focus:bg-slate-700"
+                          >
+                            <div className="flex items-center gap-2">
+                              <div className={`p-1 rounded-md ${stage.bgColor}`}>
+                                <stage.icon className={`h-3.5 w-3.5 ${stage.color}`} />
+                              </div>
+                              {stage.title}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
-              {/* Auto Probability Bar */}
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border border-border">
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-xs text-muted-foreground">Probabilidade (auto)</span>
-                    <span className={`text-sm font-bold ${probColors.text}`}>{probability}%</span>
-                  </div>
-                  <div className="h-2 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className={`h-full ${probColors.bar} transition-all duration-300`}
-                      style={{ width: `${probability}%` }}
-                    />
-                  </div>
-                </div>
+            {/* ── Auto probability bar ──────────────────── */}
+            <div className="p-3 rounded-xl bg-slate-800/60 border border-slate-700/50">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] text-slate-500 uppercase tracking-wider font-medium">
+                  Probabilidade (automática)
+                </span>
+                <span className={`text-sm font-bold tabular-nums ${probColor.text}`}>
+                  {probability}%
+                </span>
+              </div>
+              <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                <motion.div
+                  className={`h-full ${probColor.bar} rounded-full`}
+                  animate={{ width: `${probability}%` }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
+                />
               </div>
             </div>
 
-            {/* Group 2: Contact Info */}
-            <div className="space-y-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+            {/* ── Contact group ─────────────────────────── */}
+            <div className="space-y-3 p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
+              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
                 <User className="h-3 w-3" />
                 Contato
               </p>
 
-              {/* Customer Name */}
               <FormField
                 control={form.control}
                 name="customer_name"
@@ -320,7 +333,8 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
                       <Input
                         {...field}
                         placeholder="Nome do cliente"
-                        className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 placeholder:text-muted-foreground"
+                        className="h-10 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500
+                          focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
                       />
                     </FormControl>
                     <FormMessage />
@@ -328,7 +342,6 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
                 )}
               />
 
-              {/* Email + Phone Row */}
               <div className="grid grid-cols-2 gap-3">
                 <FormField
                   control={form.control}
@@ -337,12 +350,13 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
                     <FormItem>
                       <FormControl>
                         <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500" />
                           <Input
                             {...field}
                             type="email"
                             placeholder="Email"
-                            className="h-10 pl-9 bg-white dark:bg-secondary border-gray-300 dark:border-border focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 placeholder:text-muted-foreground"
+                            className="h-10 pl-9 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500
+                              focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
                           />
                         </div>
                       </FormControl>
@@ -350,7 +364,6 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
                     </FormItem>
                   )}
                 />
-
                 <FormField
                   control={form.control}
                   name="customer_phone"
@@ -358,11 +371,12 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
                     <FormItem>
                       <FormControl>
                         <div className="relative">
-                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500" />
                           <Input
                             {...field}
                             placeholder="Telefone"
-                            className="h-10 pl-9 bg-white dark:bg-secondary border-gray-300 dark:border-border focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 placeholder:text-muted-foreground"
+                            className="h-10 pl-9 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500
+                              focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
                           />
                         </div>
                       </FormControl>
@@ -373,26 +387,30 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
               </div>
             </div>
 
-            {/* Group 3: Product + Forecast + Hot Deal */}
+            {/* ── Product + Date ────────────────────────── */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="product_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-foreground text-[13px] font-medium">Produto</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormLabel className="text-slate-300 text-[13px] font-medium">Produto</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border">
+                        <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-white">
                           <SelectValue placeholder="Selecione..." />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="bg-card border border-border shadow-sm">
-                        {produtos.map((produto: any) => (
-                          <SelectItem key={produto.id} value={produto.id}>
-                            {produto.nome}
-                          </SelectItem>
-                        ))}
+                      <SelectContent className="bg-slate-800 border-slate-700">
+                        {produtos.length === 0 ? (
+                          <div className="px-3 py-2 text-xs text-slate-500">Nenhum produto</div>
+                        ) : (
+                          produtos.map((p: any) => (
+                            <SelectItem key={p.id} value={p.id} className="text-white focus:bg-slate-700">
+                              {p.nome}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -405,15 +423,17 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
                 name="expected_close_date"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-foreground text-[13px] font-medium flex items-center gap-1.5">
-                      <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                    <FormLabel className="text-slate-300 text-[13px] font-medium flex items-center gap-1.5">
+                      <Calendar className="h-3.5 w-3.5 text-slate-500" />
                       Previsão
                     </FormLabel>
                     <FormControl>
                       <Input
                         {...field}
                         type="date"
-                        className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
+                        className="h-10 bg-slate-800 border-slate-600 text-white
+                          focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20
+                          [color-scheme:dark]"
                       />
                     </FormControl>
                     <FormMessage />
@@ -422,22 +442,34 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
               />
             </div>
 
-            {/* Hot Deal Toggle */}
+            {/* ── Hot Deal toggle ───────────────────────── */}
             <FormField
               control={form.control}
               name="is_hot"
               render={({ field }) => (
                 <FormItem>
-                  <div className={`flex items-center justify-between p-3 rounded-lg border transition-all ${field.value
-                    ? 'bg-orange-50 dark:bg-orange-500/10 border-orange-200 dark:border-orange-500/30'
-                    : 'bg-muted/30 border-border'
+                  <div className={`flex items-center justify-between p-3.5 rounded-xl border transition-all duration-200 ${field.value
+                      ? "bg-orange-500/10 border-orange-500/30"
+                      : "bg-slate-800/50 border-slate-700/50"
                     }`}>
-                    <Label htmlFor="hot-deal" className="flex items-center gap-2 cursor-pointer">
-                      <Flame className={`h-4 w-4 ${field.value ? 'text-orange-500' : 'text-muted-foreground'}`} />
-                      <span className={`text-sm font-medium ${field.value ? 'text-orange-700 dark:text-orange-400' : 'text-foreground'}`}>
-                        🔥 Hot Deal
-                      </span>
-                      <span className="text-xs text-muted-foreground">(Prioridade Alta)</span>
+                    <Label htmlFor="hot-deal" className="flex items-center gap-2.5 cursor-pointer">
+                      <AnimatePresence mode="wait">
+                        <motion.div
+                          key={field.value ? "on" : "off"}
+                          initial={{ scale: 0.8, rotate: -10 }}
+                          animate={{ scale: 1, rotate: 0 }}
+                          exit={{ scale: 0.8 }}
+                          transition={{ duration: 0.15 }}
+                        >
+                          <Flame className={`h-4.5 w-4.5 ${field.value ? "text-orange-400" : "text-slate-500"}`} />
+                        </motion.div>
+                      </AnimatePresence>
+                      <div>
+                        <span className={`text-sm font-semibold ${field.value ? "text-orange-300" : "text-slate-300"}`}>
+                          Hot Deal
+                        </span>
+                        <p className="text-[11px] text-slate-500 font-normal">Prioridade alta — aparecerá em destaque</p>
+                      </div>
                     </Label>
                     <FormControl>
                       <Switch
@@ -452,18 +484,20 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
               )}
             />
 
-            {/* Notes - Collapsed by default visual */}
+            {/* ── Notes ────────────────────────────────── */}
             <FormField
               control={form.control}
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-foreground text-[13px] font-medium">Observações</FormLabel>
+                  <FormLabel className="text-slate-300 text-[13px] font-medium">Observações</FormLabel>
                   <FormControl>
                     <Textarea
                       {...field}
                       placeholder="Informações adicionais sobre a negociação..."
-                      className="min-h-[60px] bg-white dark:bg-secondary border-gray-300 dark:border-border focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 resize-none placeholder:text-muted-foreground text-sm"
+                      rows={2}
+                      className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-500
+                        focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 resize-none text-sm"
                     />
                   </FormControl>
                   <FormMessage />
@@ -471,30 +505,54 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
               )}
             />
 
-            {/* Actions */}
-            <div className="flex justify-end gap-3 pt-4 border-t border-border">
+            {/* ── Actions ──────────────────────────────── */}
+            <div className="flex justify-end gap-3 pt-2 border-t border-slate-700/50">
               <Button
                 type="button"
                 variant="outline"
                 onClick={onClose}
-                className="border-border hover:bg-muted text-foreground"
+                className="border-slate-700 hover:bg-slate-800 text-slate-300"
               >
                 Cancelar
               </Button>
-              <Button
-                type="submit"
-                disabled={createDealMutation.isPending}
-                className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all"
-              >
-                {createDealMutation.isPending ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Criando...
-                  </>
-                ) : (
-                  "Criar Negociação"
-                )}
-              </Button>
+
+              <motion.div whileTap={{ scale: 0.97 }}>
+                <Button
+                  type="submit"
+                  disabled={createMutation.isPending || submitted}
+                  className="min-w-[160px] bg-emerald-600 hover:bg-emerald-500 text-white font-semibold
+                    shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-all"
+                >
+                  <AnimatePresence mode="wait" initial={false}>
+                    {submitted ? (
+                      <motion.span
+                        key="done"
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        className="flex items-center gap-2"
+                      >
+                        <CheckCircle2 className="h-4 w-4" />
+                        Criado!
+                      </motion.span>
+                    ) : createMutation.isPending ? (
+                      <motion.span
+                        key="loading"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="flex items-center gap-2"
+                      >
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Criando...
+                      </motion.span>
+                    ) : (
+                      <motion.span key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                        Criar Negociação
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </Button>
+              </motion.div>
             </div>
           </form>
         </Form>
