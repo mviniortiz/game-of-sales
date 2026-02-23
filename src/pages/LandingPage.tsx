@@ -39,6 +39,7 @@ import { UseCasesSection } from "@/components/landing/UseCasesSection";
 import { FinalCTA } from "@/components/landing/FinalCTA";
 import { FAQSection } from "@/components/landing/FAQSection";
 import { PainPoints } from "@/components/landing/PainPoints";
+import { LandingNav } from "@/components/landing/LandingNav";
 
 // Animation variants
 const fadeInUp = {
@@ -296,7 +297,13 @@ const LandingPage = () => {
             )}
 
 
-            {/* New Dark Premium Hero with built-in navbar */}
+            {/* Sticky scroll-aware navbar */}
+            <LandingNav
+                onCTAClick={() => scrollToSection("pricing")}
+                onLoginClick={() => navigate("/auth")}
+            />
+
+            {/* Hero */}
             <HeroSection
                 onCTAClick={() => scrollToSection("pricing")}
                 onDemoClick={() => scrollToSection("demo")}
@@ -312,8 +319,10 @@ const LandingPage = () => {
             {/* Product Bento Grid - Features/Solução */}
             <ProductBentoGrid />
 
-            {/* How It Works - 3 passos simples */}
-            <HowItWorks />
+            {/* How It Works */}
+            <div id="how-it-works">
+                <HowItWorks />
+            </div>
 
 
             {/* Demo Section */}
@@ -513,7 +522,9 @@ const LandingPage = () => {
             </section>
 
             {/* Use Cases Section */}
-            <UseCasesSection />
+            <div id="use-cases">
+                <UseCasesSection />
+            </div>
 
             {/* ── Pricing Section ───────────────────────────────────────────── */}
             <section id="pricing" className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-slate-950 to-slate-900 relative overflow-hidden">
@@ -584,8 +595,8 @@ const LandingPage = () => {
                             return (
                                 <motion.div key={plan.name}
                                     className={`relative flex flex-col ${isPopular
-                                            ? "order-first md:order-none md:-mt-7 pt-8 md:pt-0"
-                                            : ""
+                                        ? "order-first md:order-none md:-mt-7 pt-8 md:pt-0"
+                                        : ""
                                         }`}
                                     initial={{ opacity: 0, y: 24 }}
                                     whileInView={{ opacity: 1, y: 0 }}
@@ -768,7 +779,9 @@ const LandingPage = () => {
 
 
             {/* FAQ Section */}
-            <FAQSection />
+            <div id="faq">
+                <FAQSection />
+            </div>
             {/* old FAQ removed — FAQSection component used above */}
             <section className="py-0" style={{ display: 'none' }}>
                 <div className="max-w-3xl mx-auto">

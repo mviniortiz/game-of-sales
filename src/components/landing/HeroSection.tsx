@@ -1,9 +1,7 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Sparkles, Play, TrendingUp, Users, Target, Trophy, Star, Zap } from "lucide-react";
-import brandLogoWhite from "@/assets/logo-only.png";
 
 // Hoisted animation objects
 const gradientPulseAnimation = { opacity: [0.3, 0.6, 0.3] };
@@ -344,48 +342,10 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onLoginClick }: HeroSecti
                 transition={orbAltTransition}
             />
 
-            {/* Navbar */}
-            <nav className="relative z-50 px-4 sm:px-6 lg:px-8 py-5">
-                <div className="max-w-7xl mx-auto flex items-center justify-between">
-                    <motion.img
-                        src={brandLogoWhite}
-                        alt="Game Sales"
-                        className="h-9 w-auto"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                    />
 
-                    <div className="hidden md:flex items-center gap-8">
-                        {["Produto", "Soluções", "Preços", "Sobre Nós"].map(item => (
-                            <button
-                                key={item}
-                                className="text-sm font-medium text-white/70 hover:text-white transition-colors"
-                            >
-                                {item}
-                            </button>
-                        ))}
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                        <Button
-                            variant="ghost"
-                            onClick={onLoginClick}
-                            className="text-white/80 hover:text-white hover:bg-white/10"
-                        >
-                            Entrar
-                        </Button>
-                        <Button
-                            onClick={onCTAClick}
-                            className="bg-emerald-500 text-white hover:bg-emerald-400 font-semibold shadow-lg shadow-emerald-500/30 border-0"
-                        >
-                            Testar Grátis
-                        </Button>
-                    </div>
-                </div>
-            </nav>
-
+            {/* Hero Content — pt-24 clears the 64px sticky LandingNav */}
             {/* Hero Content */}
-            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-32">
+            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-32">
                 <div className="grid lg:grid-cols-2 gap-12 items-center">
 
                     {/* Left: Text */}
