@@ -568,11 +568,11 @@ const StripeGradient = ({ className = '' }: StripeGradientProps) => {
         const canvas = canvasRef.current;
         if (!canvas) return;
 
-        // Light color scheme - White with light Indigo waves
+        // Emerald brand color scheme — white base with emerald waves
         const colors = [
             normalizeColor(0xffffff),  // Pure white base
-            normalizeColor(0xc7d2fe),  // emerald-200 (light indigo)
-            normalizeColor(0xa5b4fc),  // emerald-300 (medium light indigo)
+            normalizeColor(0x6ee7b7),  // emerald-300 (light wave)
+            normalizeColor(0x34d399),  // emerald-400 (medium wave)
         ];
 
         let minigl: MiniGl;

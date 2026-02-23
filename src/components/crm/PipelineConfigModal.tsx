@@ -51,8 +51,8 @@ const AVAILABLE_ICONS: { id: string; icon: LucideIcon; label: string }[] = [
 const AVAILABLE_COLORS = [
   { id: "gray", textColor: "text-gray-500 dark:text-gray-400", dotColor: "bg-gray-500", label: "Cinza" },
   { id: "blue", textColor: "text-blue-500 dark:text-blue-400", dotColor: "bg-blue-500", label: "Azul" },
-  { id: "indigo", textColor: "text-emerald-500 dark:text-emerald-400", dotColor: "bg-emerald-500", label: "Índigo" },
-  { id: "purple", textColor: "text-emerald-500 dark:text-emerald-400", dotColor: "bg-emerald-500", label: "Roxo" },
+  { id: "indigo", textColor: "text-emerald-500 dark:text-emerald-400", dotColor: "bg-emerald-500", label: "Verde" },
+  { id: "purple", textColor: "text-emerald-500 dark:text-emerald-400", dotColor: "bg-emerald-500", label: "Verde Escuro" },
   { id: "amber", textColor: "text-amber-500 dark:text-amber-400", dotColor: "bg-amber-500", label: "Âmbar" },
   { id: "emerald", textColor: "text-emerald-500 dark:text-emerald-400", dotColor: "bg-emerald-500", label: "Verde" },
   { id: "rose", textColor: "text-rose-500 dark:text-rose-400", dotColor: "bg-rose-500", label: "Rosa" },

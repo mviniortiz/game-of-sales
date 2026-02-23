@@ -29,6 +29,7 @@ import LandingPage from "./pages/LandingPage";
 import Register from "./pages/Register";
 import Onboarding from "./pages/Onboarding";
 import SalesPerformanceCenter from "./pages/SalesPerformanceCenter";
+import LogoPreview from "./pages/LogoPreview";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,7 @@ const App = () => (
               <Route path="/register" element={<Register />} />
               <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/recuperar-senha" element={<RecuperarSenha />} />
+              <Route path="/logo-preview" element={<LogoPreview />} />
 
               {/* Protected routes */}
               <Route

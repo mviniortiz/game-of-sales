@@ -7,12 +7,12 @@ interface VendasPorPlataformaChartProps {
 }
 
 const COLORS = [
-  "#4F46E5", // Indigo
-  "#10B981", // Emerald
-  "#F59E0B", // Amber
-  "#10b981", // Violet
+  "#10b981", // Emerald-500 (primary)
+  "#059669", // Emerald-600
+  "#F59E0B", // Amber (gamification — keep)
+  "#0891b2", // Cyan-600
   "#EF4444", // Red
-  "#06B6D4", // Cyan
+  "#06B6D4", // Cyan-500
 ];
 
 export const VendasPorPlataformaChart = ({ data }: VendasPorPlataformaChartProps) => {
@@ -39,11 +39,11 @@ export const VendasPorPlataformaChart = ({ data }: VendasPorPlataformaChartProps
     if (percent < 0.05) return null; // Don't show label for small slices
 
     return (
-      <text 
-        x={x} 
-        y={y} 
-        fill="white" 
-        textAnchor="middle" 
+      <text
+        x={x}
+        y={y}
+        fill="white"
+        textAnchor="middle"
         dominantBaseline="central"
         className="text-xs font-bold"
         style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
@@ -100,12 +100,12 @@ export const VendasPorPlataformaChart = ({ data }: VendasPorPlataformaChartProps
               />
             </PieChart>
           </ResponsiveContainer>
-          
+
           {/* Legend */}
           <div className="flex-1 space-y-2">
             {chartData.map((item, index) => (
               <div key={item.name} className="flex items-center gap-2">
-                <div 
+                <div
                   className="w-3 h-3 rounded-full flex-shrink-0"
                   style={{ backgroundColor: COLORS[index % COLORS.length] }}
                 />

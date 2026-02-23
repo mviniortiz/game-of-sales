@@ -58,8 +58,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const refreshProfile = async () => {
+    // Primary: use user from state (fast path)
     if (user?.id) {
       await loadProfile(user.id);
+      return;
+    }
+    // Fallback: state may not yet reflect new session (e.g. right after
+    // supabase.auth.signUp() before onAuthStateChange fires). Read directly
+    // from the Supabase client to get the freshest session.
+    const { data: { session: freshSession } } = await supabase.auth.getSession();
+    if (freshSession?.user?.id) {
+      setUser(freshSession.user);
+      setSession(freshSession);
+      await loadProfile(freshSession.user.id);
     }
   };
 
@@ -101,7 +112,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       (event, session) => {
         if (!mounted) return;
 
-        if (event === "TOKEN_REFRESH_FAILED") {
+        if ((event as string) === "TOKEN_REFRESH_FAILED") {
           console.warn("Token refresh failed; clearing session");
           clearAuthState();
           navigate("/auth");

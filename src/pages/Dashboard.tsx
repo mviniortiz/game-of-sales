@@ -52,18 +52,18 @@ const formatCurrency = (value: number) => {
   }).format(value);
 };
 
-// Premium KPI Card Component - Linear/Stripe Style
+// Premium KPI Card — Game Sales Identity
 interface KPICardProps {
   title: string;
   value: string;
-  fullValue?: string; // For tooltip
+  fullValue?: string;
   subtitle?: string;
   icon: React.ElementType;
   trend?: number;
   trendLabel?: string;
   iconColor?: string;
   iconBg?: string;
-  glowColor?: string;
+  accentColor?: string; // CSS color for left border accent
 }
 
 const KPICard = ({
@@ -74,67 +74,65 @@ const KPICard = ({
   icon: Icon,
   trend,
   trendLabel,
-  iconColor = "text-emerald-600 dark:text-emerald-200",
-  iconBg = "bg-emerald-50 dark:bg-emerald-500/10",
+  iconColor = "text-emerald-400",
+  iconBg = "bg-emerald-500/10",
+  accentColor = "#10b981",
 }: KPICardProps) => {
-  const isPositive = trend && trend > 0;
+  const isPositive = trend !== undefined && trend >= 0;
   const TrendIcon = isPositive ? ArrowUpRight : ArrowDownRight;
 
   const cardContent = (
-    <Card className="relative overflow-hidden bg-card border-border shadow-sm hover:shadow-md transition-all duration-300 group cursor-default">
-      <CardContent className="relative p-5">
-        <div className="flex items-start justify-between gap-4">
-          {/* Left: Icon */}
-          <div className={`
-            relative p - 3 rounded - 2xl ${iconBg}
-group - hover: scale - 105
-transition - all duration - 200 ease - out
-  `}>
-            <Icon className={`h - 6 w - 6 ${iconColor} relative z - 10`} />
-          </div>
+    <div className="relative overflow-hidden rounded-xl border border-border bg-card shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group cursor-default">
+      {/* Left accent bar */}
+      <div
+        className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-xl"
+        style={{ background: accentColor, opacity: 0.7 }}
+      />
 
-          {/* Right: Content */}
-          <div className="flex-1 text-right">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.1em] mb-2">
-              {title}
-            </p>
-            <p className="text-3xl font-bold text-foreground tabular-nums tracking-tight leading-none">
-              {value}
-            </p>
-
-            {/* Trend or Subtitle */}
-            <div className="flex items-center justify-end gap-2 mt-2">
-              {trend !== undefined && (
-                <span className={`
-inline - flex items - center gap - 0.5
-px - 2 py - 0.5 rounded - full text - [11px] font - semibold
-                  ${isPositive
-                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 ring-1 ring-emerald-200/80 dark:ring-emerald-500/20'
-                    : 'bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300 ring-1 ring-rose-200/80 dark:ring-rose-500/20'
-                  }
-`}>
-                  <TrendIcon className="h-3 w-3" />
-                  {Math.abs(trend).toFixed(1)}%
-                </span>
-              )}
-              {(trendLabel || subtitle) && (
-                <span className="text-[11px] text-muted-foreground font-medium">
-                  {trendLabel || subtitle}
-                </span>
-              )}
-            </div>
+      <div className="p-5">
+        {/* Top row: icon + title */}
+        <div className="flex items-center gap-3 mb-3">
+          <div className={`p-2 rounded-lg ${iconBg} group-hover:scale-105 transition-transform duration-200`}>
+            <Icon className={`h-4 w-4 ${iconColor}`} />
           </div>
+          <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.12em]">
+            {title}
+          </p>
         </div>
-      </CardContent>
-    </Card>
+
+        {/* Value */}
+        <p className="text-2xl font-bold text-foreground tabular-nums tracking-tight leading-none mb-3">
+          {value}
+        </p>
+
+        {/* Trend chip + label */}
+        <div className="flex items-center gap-2">
+          {trend !== undefined && (
+            <span
+              className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${isPositive
+                ? "bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20"
+                : "bg-rose-500/10 text-rose-400 ring-1 ring-rose-500/20"
+                }`}
+            >
+              <TrendIcon className="h-3 w-3" />
+              {Math.abs(trend).toFixed(1)}%
+            </span>
+          )}
+          {(trendLabel || subtitle) && (
+            <span className="text-[11px] text-muted-foreground font-medium">
+              {trendLabel || subtitle}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
   );
 
-  // Wrap with tooltip if fullValue is provided
   if (fullValue) {
     return (
       <UITooltip>
         <TooltipTrigger asChild>
-          {cardContent}
+          <div>{cardContent}</div>
         </TooltipTrigger>
         <TooltipContent
           side="bottom"
@@ -360,7 +358,7 @@ const Dashboard = () => {
           trendLabel="vs mês anterior"
           iconColor="text-emerald-400"
           iconBg="bg-emerald-500/10"
-          glowColor="shadow-emerald-500/20"
+          accentColor="#10b981"
         />
         <KPICard
           title="Ticket Médio"
@@ -369,9 +367,9 @@ const Dashboard = () => {
           icon={TrendingUp}
           trend={5.2}
           trendLabel="vs mês anterior"
-          iconColor="text-emerald-400"
-          iconBg="bg-emerald-500/10"
-          glowColor="shadow-emerald-500/20"
+          iconColor="text-sky-400"
+          iconBg="bg-sky-500/10"
+          accentColor="#0ea5e9"
         />
         <KPICard
           title="Transações"
@@ -380,20 +378,20 @@ const Dashboard = () => {
           icon={ShoppingCart}
           trend={12.3}
           trendLabel="vs mês anterior"
-          iconColor="text-emerald-400"
-          iconBg="bg-emerald-500/10"
-          glowColor="shadow-emerald-500/20"
+          iconColor="text-violet-400"
+          iconBg="bg-violet-500/10"
+          accentColor="#8b5cf6"
         />
         <KPICard
           title="Taxa de Show"
-          value={`${(showRateData?.showRate || 0).toFixed(0)}% `}
+          value={`${(showRateData?.showRate || 0).toFixed(0)}%`}
           subtitle={`${showRateData?.showCalls || 0}/${showRateData?.totalCalls || 0} calls`}
           icon={UserCheck}
           trend={showRateData?.showRate ? showRateData.showRate - 75 : 0}
           trendLabel="vs média"
           iconColor="text-amber-400"
           iconBg="bg-amber-500/10"
-          glowColor="shadow-amber-500/20"
+          accentColor="#f59e0b"
         />
         <KPICard
           title="Taxa de Conversão"
@@ -404,7 +402,7 @@ const Dashboard = () => {
           trendLabel="vs média"
           iconColor="text-rose-400"
           iconBg="bg-rose-500/10"
-          glowColor="shadow-rose-500/20"
+          accentColor="#f43f5e"
         />
       </div>
 

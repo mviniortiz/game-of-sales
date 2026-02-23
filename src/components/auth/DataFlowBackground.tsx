@@ -30,9 +30,9 @@ const DataFlowBackground = () => {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    // Branding colors: Indigo/Cyan/Violet
+    // Branding colors: Emerald/Cyan/Blue
     const colors = [
-      'rgba(16, 185, 129, 0.85)',   // Indigo
+      'rgba(16, 185, 129, 0.85)',   // Emerald
       'rgba(34, 211, 238, 0.85)',   // Cyan
       'rgba(59, 130, 246, 0.75)',   // Blue
       'rgba(168, 85, 247, 0.7)',    // Violet
@@ -68,7 +68,7 @@ const DataFlowBackground = () => {
 
       // Add multiple radial gradients for mesh effect
       const time = Date.now() * 0.0003;
-      
+
       // First gradient (Cyan)
       const gradient1 = ctx.createRadialGradient(
         canvas.width * (0.3 + Math.sin(time) * 0.1),

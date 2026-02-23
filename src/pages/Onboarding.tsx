@@ -111,7 +111,7 @@ export default function Onboarding() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const { toast } = useToast();
-    const { user } = useAuth();
+    const { user, refreshProfile } = useAuth();
     const inputRef = useRef<HTMLInputElement>(null);
 
     // States
@@ -235,6 +235,12 @@ export default function Onboarding() {
 
                 if (profileError) throw profileError;
 
+                // Force AuthContext to reload the NEW user's profile.
+                // Without this, the sidebar/header may still show the
+                // previous logged-in user's avatar (race condition between
+                // onAuthStateChange and the profile update above).
+                await refreshProfile();
+
                 // Proceed to step 6 (payment)
                 setDirection(1);
                 setCurrentStep(6);
@@ -286,7 +292,10 @@ export default function Onboarding() {
 
             if (error) throw error;
 
-            // Success!
+            // Success! Reload profile before navigating so the sidebar
+            // shows the correct avatar/name for the newly created account.
+            await refreshProfile();
+
             setIsComplete(true);
             setShowConfetti(true);
 
@@ -358,43 +367,43 @@ export default function Onboarding() {
         switch (currentStep) {
             case 1:
                 return (
-                    <div className="text-center">
+                    <div className="text-center group">
                         <motion.div
                             initial={{ scale: 0, rotate: -10 }}
                             animate={{ scale: 1, rotate: 0 }}
                             transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                            className="w-14 h-14 rounded-full bg-slate-900 border border-amber-500/30 flex items-center justify-center mx-auto mb-5 shadow-[0_0_15px_-3px_rgba(245,158,11,0.2)]"
+                            className="w-16 h-16 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 border border-amber-500/30 flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_-3px_rgba(245,158,11,0.2)]"
                         >
-                            <User className="h-7 w-7 text-amber-500" />
+                            <User className="h-8 w-8 text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
                         </motion.div>
-                        <h2 className="text-2xl font-bold text-white tracking-tight mb-1">
+                        <h2 className="text-2xl font-bold text-white tracking-tight mb-2">
                             Crie sua conta grátis
                         </h2>
-                        <p className="text-amber-400 font-medium mb-5 text-sm">
+                        <p className="text-amber-400 font-medium mb-8 text-sm bg-amber-500/10 inline-block px-4 py-1.5 rounded-full border border-amber-500/20">
                             7 dias grátis em qualquer plano 🚀
                         </p>
-                        <div className="space-y-3">
+                        <div className="space-y-4">
                             <Input
                                 ref={inputRef}
-                                placeholder="Seu nome"
+                                placeholder="Seu nome completo"
                                 value={userName}
                                 onChange={(e) => setUserName(e.target.value)}
-                                className="bg-slate-950 border border-slate-800 text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-emerald-600 h-12 text-base rounded-xl"
+                                className="bg-slate-900/50 backdrop-blur-sm border-slate-800 text-white placeholder:text-slate-500 focus-visible:bg-slate-900 focus-visible:ring-1 focus-visible:ring-emerald-500 focus-visible:border-emerald-500 focus-visible:shadow-[0_0_20px_-5px_rgba(16,185,129,0.3)] hover:border-slate-700 h-14 text-base rounded-2xl transition-all duration-300"
                                 autoFocus
                             />
                             <Input
                                 type="email"
-                                placeholder="E-mail"
+                                placeholder="Seu melhor e-mail corporativo"
                                 value={userEmail}
                                 onChange={(e) => setUserEmail(e.target.value)}
-                                className="bg-slate-950 border border-slate-800 text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-emerald-600 h-12 text-base rounded-xl"
+                                className="bg-slate-900/50 backdrop-blur-sm border-slate-800 text-white placeholder:text-slate-500 focus-visible:bg-slate-900 focus-visible:ring-1 focus-visible:ring-emerald-500 focus-visible:border-emerald-500 focus-visible:shadow-[0_0_20px_-5px_rgba(16,185,129,0.3)] hover:border-slate-700 h-14 text-base rounded-2xl transition-all duration-300"
                             />
                             <Input
                                 type="password"
-                                placeholder="Senha (mín. 6 caracteres)"
+                                placeholder="Crie uma senha forte (mínimo 6 caracteres)"
                                 value={userPassword}
                                 onChange={(e) => setUserPassword(e.target.value)}
-                                className="bg-slate-950 border border-slate-800 text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-emerald-600 h-12 text-base rounded-xl"
+                                className="bg-slate-900/50 backdrop-blur-sm border-slate-800 text-white placeholder:text-slate-500 focus-visible:bg-slate-900 focus-visible:ring-1 focus-visible:ring-emerald-500 focus-visible:border-emerald-500 focus-visible:shadow-[0_0_20px_-5px_rgba(16,185,129,0.3)] hover:border-slate-700 h-14 text-base rounded-2xl transition-all duration-300"
                             />
                         </div>
                     </div>
@@ -407,22 +416,22 @@ export default function Onboarding() {
                             initial={{ scale: 0, rotate: -10 }}
                             animate={{ scale: 1, rotate: 0 }}
                             transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                            className="w-14 h-14 rounded-full bg-slate-900 border border-amber-500/30 flex items-center justify-center mx-auto mb-5 shadow-[0_0_15px_-3px_rgba(245,158,11,0.2)]"
+                            className="w-16 h-16 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 border border-amber-500/30 flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_-3px_rgba(245,158,11,0.2)]"
                         >
-                            <Building2 className="h-7 w-7 text-amber-500" />
+                            <Building2 className="h-8 w-8 text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
                         </motion.div>
-                        <h2 className="text-2xl font-bold text-white tracking-tight mb-1">
+                        <h2 className="text-2xl font-bold text-white tracking-tight mb-2">
                             Qual é o nome da sua empresa?
                         </h2>
-                        <p className="text-slate-400 mb-5 text-sm">
-                            Vamos configurar seu espaço de trabalho
+                        <p className="text-slate-400 mb-8 text-sm">
+                            Vamos configurar seu espaço de trabalho personalizado
                         </p>
                         <Input
                             ref={inputRef}
-                            placeholder="Ex: Empresa XYZ"
+                            placeholder="Ex: Acme Inc."
                             value={companyName}
                             onChange={(e) => setCompanyName(e.target.value)}
-                            className="bg-slate-950 border border-slate-800 text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-emerald-600 h-12 text-base text-center rounded-xl"
+                            className="bg-slate-900/50 backdrop-blur-sm border-slate-800 text-white placeholder:text-slate-500 focus-visible:bg-slate-900 focus-visible:ring-1 focus-visible:ring-emerald-500 focus-visible:border-emerald-500 focus-visible:shadow-[0_0_20px_-5px_rgba(16,185,129,0.3)] hover:border-slate-700 h-14 text-base text-center rounded-2xl transition-all duration-300"
                             autoFocus
                         />
                     </div>
@@ -435,35 +444,49 @@ export default function Onboarding() {
                             initial={{ scale: 0, rotate: -10 }}
                             animate={{ scale: 1, rotate: 0 }}
                             transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                            className="w-14 h-14 rounded-full bg-slate-900 border border-amber-500/30 flex items-center justify-center mx-auto mb-5 shadow-[0_0_15px_-3px_rgba(245,158,11,0.2)]"
+                            className="w-16 h-16 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 border border-amber-500/30 flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_-3px_rgba(245,158,11,0.2)]"
                         >
-                            <Users className="h-7 w-7 text-amber-500" />
+                            <Users className="h-8 w-8 text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
                         </motion.div>
-                        <h2 className="text-2xl font-bold text-white tracking-tight mb-1">
+                        <h2 className="text-2xl font-bold text-white tracking-tight mb-2">
                             Quantos vendedores você tem?
                         </h2>
-                        <p className="text-slate-400 mb-5 text-sm">
-                            Isso nos ajuda a personalizar sua experiência
+                        <p className="text-slate-400 mb-8 text-sm">
+                            Isso nos ajuda a personalizar sua experiência e dimensionar o ambiente
                         </p>
-                        <div className="grid gap-2">
-                            {companySizes.map((size, index) => (
-                                <motion.button
-                                    key={size.id}
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: index * 0.05, duration: 0.2 }}
-                                    onClick={() => handleSelectionWithAdvance(setTeamSize, size.id)}
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    className={`flex items-center justify-between px-5 py-3.5 rounded-xl border transition-all duration-200 ${teamSize === size.id
-                                        ? "bg-emerald-600/20 border-emerald-500/50 text-white ring-2 ring-emerald-500/30 scale-[1.02]"
-                                        : "bg-slate-950 border-slate-800 text-slate-400 hover:bg-slate-900 hover:text-white hover:border-slate-700"
-                                        }`}
-                                >
-                                    <span className="font-medium">{size.label}</span>
-                                    <span className="text-sm text-slate-500">{size.description}</span>
-                                </motion.button>
-                            ))}
+                        <div className="grid gap-3">
+                            {companySizes.map((size, index) => {
+                                const isSelected = teamSize === size.id;
+                                return (
+                                    <motion.button
+                                        key={size.id}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: index * 0.05, duration: 0.3 }}
+                                        onClick={() => handleSelectionWithAdvance(setTeamSize, size.id)}
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        className={`group relative flex items-center justify-between px-6 py-5 rounded-2xl border transition-all duration-300 overflow-hidden ${isSelected
+                                            ? "bg-emerald-500/10 border-emerald-500/50 shadow-[0_0_20px_-5px_rgba(16,185,129,0.2)] text-white"
+                                            : "bg-slate-900/40 backdrop-blur-sm border-slate-800 text-slate-400 hover:bg-slate-800/80 hover:text-white hover:border-slate-700 hover:shadow-lg"
+                                            }`}
+                                    >
+                                        {/* Hover glare effect */}
+                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-shimmer" />
+
+                                        <span className={`font-semibold text-lg transition-colors ${isSelected ? "text-emerald-400" : ""}`}>{size.label}</span>
+                                        <span className={`text-sm transition-colors ${isSelected ? "text-emerald-200" : "text-slate-500"}`}>{size.description}</span>
+
+                                        {isSelected && (
+                                            <motion.div layoutId="teamSizeCheck" className="absolute right-6">
+                                                <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center shadow-[0_0_10px_rgba(16,185,129,0.5)]">
+                                                    <Check className="w-3.5 h-3.5 text-white" />
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </motion.button>
+                                );
+                            })}
                         </div>
                     </div>
                 );
@@ -475,36 +498,47 @@ export default function Onboarding() {
                             initial={{ scale: 0, rotate: -10 }}
                             animate={{ scale: 1, rotate: 0 }}
                             transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                            className="w-14 h-14 rounded-full bg-slate-900 border border-amber-500/30 flex items-center justify-center mx-auto mb-5 shadow-[0_0_15px_-3px_rgba(245,158,11,0.2)]"
+                            className="w-16 h-16 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 border border-amber-500/30 flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_-3px_rgba(245,158,11,0.2)]"
                         >
-                            <Sparkles className="h-7 w-7 text-amber-500" />
+                            <Sparkles className="h-8 w-8 text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
                         </motion.div>
-                        <h2 className="text-2xl font-bold text-white tracking-tight mb-1">
+                        <h2 className="text-2xl font-bold text-white tracking-tight mb-2">
                             Por onde nos conheceu?
                         </h2>
-                        <p className="text-slate-400 mb-5 text-sm">
-                            Adoramos saber como você chegou até nós!
+                        <p className="text-slate-400 mb-8 text-sm">
+                            Adoramos saber como as empresas de sucesso chegam até nós!
                         </p>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                             {referralSources.map((source, index) => {
                                 const Icon = source.icon;
                                 const isSelected = referralSource === source.id;
                                 return (
                                     <motion.button
                                         key={source.id}
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: index * 0.04, duration: 0.2 }}
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ delay: index * 0.05, duration: 0.3 }}
                                         onClick={() => handleSelectionWithAdvance(setReferralSource, source.id)}
                                         whileHover={{ scale: 1.05 }}
                                         whileTap={{ scale: 0.95 }}
-                                        className={`flex flex-col items-center gap-2 px-4 py-3.5 rounded-xl border transition-all duration-200 ${isSelected
-                                            ? "bg-emerald-600/20 border-emerald-500/50 text-white ring-2 ring-emerald-500/30 scale-105"
-                                            : "bg-slate-950 border-slate-800 text-slate-400 hover:bg-slate-900 hover:text-white hover:border-slate-700"
+                                        className={`group relative flex flex-col items-center justify-center gap-3 px-4 py-6 rounded-2xl border transition-all duration-300 overflow-hidden ${isSelected
+                                            ? "bg-emerald-500/10 border-emerald-500/50 text-white shadow-[0_0_20px_-5px_rgba(16,185,129,0.2)]"
+                                            : "bg-slate-900/40 backdrop-blur-sm border-slate-800 text-slate-400 hover:bg-slate-800/80 hover:border-slate-700 hover:shadow-lg hover:text-white"
                                             }`}
                                     >
-                                        <Icon className="h-5 w-5" />
-                                        <span className="text-xs font-medium">{source.label}</span>
+                                        <div className="absolute inset-0 bg-gradient-to-t from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                                        <div className={`p-3 rounded-xl transition-colors ${isSelected ? "bg-emerald-500/20 text-emerald-400" : "bg-slate-800 text-slate-500 group-hover:text-amber-500 group-hover:bg-amber-500/10"}`}>
+                                            <Icon className="h-6 w-6" />
+                                        </div>
+                                        <span className="text-sm font-semibold">{source.label}</span>
+                                        {isSelected && (
+                                            <motion.div layoutId="referralCheck" className="absolute top-2 right-2">
+                                                <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center shadow-[0_0_10px_rgba(16,185,129,0.5)]">
+                                                    <Check className="w-3 h-3 text-white" />
+                                                </div>
+                                            </motion.div>
+                                        )}
                                     </motion.button>
                                 );
                             })}
@@ -519,17 +553,17 @@ export default function Onboarding() {
                             initial={{ scale: 0, rotate: -10 }}
                             animate={{ scale: 1, rotate: 0 }}
                             transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                            className="w-14 h-14 rounded-full bg-slate-900 border border-amber-500/30 flex items-center justify-center mx-auto mb-5 shadow-[0_0_15px_-3px_rgba(245,158,11,0.2)]"
+                            className="w-16 h-16 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 border border-amber-500/30 flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_-3px_rgba(245,158,11,0.2)]"
                         >
-                            <Target className="h-7 w-7 text-amber-500" />
+                            <Target className="h-8 w-8 text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
                         </motion.div>
-                        <h2 className="text-2xl font-bold text-white tracking-tight mb-1">
+                        <h2 className="text-2xl font-bold text-white tracking-tight mb-2">
                             Qual o maior desafio do seu time?
                         </h2>
-                        <p className="text-slate-400 mb-5 text-sm">
-                            Queremos ajudar você a superar esse obstáculo! 💪
+                        <p className="text-slate-400 mb-8 text-sm">
+                            Queremos configurar a plataforma para atacar o seu gargalo primeiro 💪
                         </p>
-                        <div className="grid gap-2">
+                        <div className="grid gap-3">
                             {mainChallenges.map((challenge, index) => {
                                 const Icon = challenge.icon;
                                 const isSelected = mainChallenge === challenge.id;
@@ -538,17 +572,30 @@ export default function Onboarding() {
                                         key={challenge.id}
                                         initial={{ opacity: 0, x: -20 }}
                                         animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: index * 0.05, duration: 0.2 }}
+                                        transition={{ delay: index * 0.05, duration: 0.3 }}
                                         onClick={() => handleSelectionWithAdvance(setMainChallenge, challenge.id)}
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
-                                        className={`flex items-center gap-4 px-5 py-3.5 rounded-xl border transition-all duration-200 ${isSelected
-                                            ? "bg-emerald-600/20 border-emerald-500/50 text-white ring-2 ring-emerald-500/30 scale-[1.02]"
-                                            : "bg-slate-950 border-slate-800 text-slate-400 hover:bg-slate-900 hover:text-white hover:border-slate-700"
+                                        className={`group relative flex items-center gap-4 px-6 py-5 rounded-2xl border transition-all duration-300 overflow-hidden ${isSelected
+                                            ? "bg-emerald-500/10 border-emerald-500/50 text-white shadow-[0_0_20px_-5px_rgba(16,185,129,0.2)]"
+                                            : "bg-slate-900/40 backdrop-blur-sm border-slate-800 text-slate-400 hover:bg-slate-800/80 hover:text-white hover:border-slate-700 hover:shadow-lg"
                                             }`}
                                     >
-                                        <Icon className="h-5 w-5 flex-shrink-0" />
-                                        <span className="font-medium text-left">{challenge.label}</span>
+                                        {/* Hover glare effect */}
+                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-shimmer" />
+
+                                        <div className={`p-2.5 rounded-lg transition-colors ${isSelected ? "bg-emerald-500/20 text-emerald-400" : "bg-slate-800 text-slate-400 group-hover:text-amber-500 group-hover:bg-amber-500/10"}`}>
+                                            <Icon className="h-5 w-5 flex-shrink-0" />
+                                        </div>
+                                        <span className={`font-semibold text-left transition-colors ${isSelected ? "text-emerald-400" : ""}`}>{challenge.label}</span>
+
+                                        {isSelected && (
+                                            <motion.div layoutId="challengeCheck" className="absolute right-6 ml-auto">
+                                                <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center shadow-[0_0_10px_rgba(16,185,129,0.5)]">
+                                                    <Check className="w-3.5 h-3.5 text-white" />
+                                                </div>
+                                            </motion.div>
+                                        )}
                                     </motion.button>
                                 );
                             })}
@@ -556,7 +603,8 @@ export default function Onboarding() {
                     </div>
                 );
 
-            case 6:
+            // Note: The payment wrapper (step 6) is in another chunk to avoid making this chunk too large.
+            case 6: {
                 const currentPlan = subscriptionPlans.find(p => p.id === selectedPlan)!;
                 return (
                     <div className="text-center">
@@ -564,52 +612,61 @@ export default function Onboarding() {
                             initial={{ scale: 0, rotate: -10 }}
                             animate={{ scale: 1, rotate: 0 }}
                             transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                            className="w-14 h-14 rounded-full bg-slate-900 border border-amber-500/30 flex items-center justify-center mx-auto mb-5 shadow-[0_0_15px_-3px_rgba(245,158,11,0.2)]"
+                            className="w-16 h-16 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 border border-amber-500/30 flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_-3px_rgba(245,158,11,0.2)]"
                         >
-                            <CreditCard className="h-7 w-7 text-amber-500" />
+                            <CreditCard className="h-8 w-8 text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
                         </motion.div>
-                        <h2 className="text-2xl font-bold text-white tracking-tight mb-1">
+                        <h2 className="text-2xl font-bold text-white tracking-tight mb-2">
                             Escolha seu plano
                         </h2>
-                        <p className="text-amber-400 font-medium mb-5 text-sm">
+                        <p className="inline-block text-amber-400 font-medium mb-8 text-sm bg-amber-500/10 px-4 py-1.5 rounded-full border border-amber-500/20">
                             🎁 7 dias grátis, cancele quando quiser
                         </p>
 
                         {/* Plan selection */}
-                        <div className="grid gap-3 mb-6">
+                        <div className="grid gap-4 mb-8">
                             {subscriptionPlans.map((plan) => (
                                 <motion.button
                                     key={plan.id}
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
                                     onClick={() => setSelectedPlan(plan.id)}
-                                    className={`relative flex items-center justify-between px-4 py-4 rounded-xl border transition-all duration-200 ${selectedPlan === plan.id
-                                        ? `bg-gradient-to-r ${plan.color} border-transparent text-white shadow-lg`
-                                        : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700"
+                                    className={`relative flex items-center justify-between px-6 py-6 rounded-2xl border transition-all duration-300 overflow-hidden group ${selectedPlan === plan.id
+                                        ? `bg-gradient-to-r ${plan.color} border-transparent text-white shadow-[0_0_30px_-5px_rgba(16,185,129,0.4)]`
+                                        : "bg-slate-900/40 backdrop-blur-sm border-slate-800 text-slate-400 hover:bg-slate-800/80 hover:border-slate-700 hover:shadow-lg"
                                         }`}
                                 >
-                                    {plan.popular && (
-                                        <span className="absolute -top-2 left-4 px-2 py-0.5 bg-amber-500 text-xs font-bold text-black rounded-full">
-                                            POPULAR
-                                        </span>
+                                    {selectedPlan !== plan.id && (
+                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-shimmer" />
                                     )}
-                                    <div className="flex items-center gap-3">
-                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedPlan === plan.id ? "border-white bg-white" : "border-slate-600"
+
+                                    {plan.popular && (
+                                        <div className="absolute top-0 right-0 overflow-hidden w-24 h-24">
+                                            <div className="absolute -top-6 -right-6 w-32 bg-amber-500 text-black text-[10px] font-bold py-1 px-8 rotate-45 text-center shadow-lg">
+                                                POPULAR
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="flex items-center gap-4 relative z-10">
+                                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${selectedPlan === plan.id ? "border-white bg-white shadow-[0_0_10px_white]" : "border-slate-600 group-hover:border-slate-400"
                                             }`}>
                                             {selectedPlan === plan.id && (
-                                                <Check className="h-3 w-3 text-emerald-600" />
+                                                <Check className="h-4 w-4 text-emerald-600" />
                                             )}
                                         </div>
                                         <div className="text-left">
-                                            <p className="font-bold">{plan.name}</p>
-                                            <p className="text-xs opacity-75">
-                                                {plan.features[0]}
+                                            <p className={`font-bold text-lg ${selectedPlan === plan.id ? "text-white" : "text-emerald-400"}`}>{plan.name}</p>
+                                            <p className="text-sm opacity-90 mt-0.5 max-w-[180px] leading-tight flex items-center gap-1">
+                                                <Check className="w-3 h-3 opacity-70" /> {plan.features[0]}
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="text-xl font-bold">R${plan.price}</p>
-                                        <p className="text-xs opacity-75">/mês</p>
+                                    <div className="text-right relative z-10 mr-4">
+                                        <p className="text-2xl font-black tabular-nums tracking-tight">
+                                            R${plan.price}
+                                        </p>
+                                        <p className="text-xs uppercase tracking-wider font-semibold opacity-80">/mês</p>
                                     </div>
                                 </motion.button>
                             ))}
@@ -655,6 +712,7 @@ export default function Onboarding() {
                         </div>
                     </div>
                 );
+            }
 
             default:
                 return null;
@@ -676,9 +734,9 @@ export default function Onboarding() {
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ type: "spring", delay: 0.2 }}
-                        className="w-20 h-20 rounded-full bg-emerald-500 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-500/30"
+                        className="w-24 h-24 rounded-full bg-slate-900 border border-emerald-500/30 flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_-5px_rgba(16,185,129,0.3)]"
                     >
-                        <Trophy className="h-10 w-10 text-white" />
+                        <Trophy className="h-12 w-12 text-emerald-500" />
                     </motion.div>
 
                     <motion.p
@@ -701,8 +759,8 @@ export default function Onboarding() {
                         <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
                         <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
                     </div>
-                    <p className="text-slate-600 text-sm mt-4">
-                        Entrando no dashboard...
+                    <p className="text-slate-500 text-sm mt-6 font-medium">
+                        Preparando seu dashboard...
                     </p>
                 </motion.div>
             </div>
@@ -710,102 +768,151 @@ export default function Onboarding() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 selection:bg-emerald-500/30">
+        <div className="min-h-screen bg-slate-950 flex selection:bg-emerald-500/30">
             <Confetti show={showConfetti} />
 
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="relative z-10 w-full max-w-xl"
-            >
-                {/* Logo */}
-                <div className="text-center mb-6">
-                    <img src={gameSalesLogo} alt="Game Sales" className="h-10 mx-auto mb-4" />
-                    {currentStep === 1 && (
-                        <motion.p
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="text-white/60 text-sm"
-                        >
-                            🎮 Trial de <span className="font-semibold text-amber-400">7 dias</span> grátis
-                        </motion.p>
-                    )}
+            {/* Left Panel - Branding & Social Proof (Hidden on Mobile) */}
+            <div className="hidden lg:flex w-1/2 relative bg-slate-900 border-r border-slate-800 overflow-hidden flex-col justify-between p-12">
+                {/* Background effects */}
+                <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none" />
+                <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 bg-amber-500/10 rounded-full blur-[100px] pointer-events-none" />
+
+                {/* Abstract grid pattern */}
+                <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay pointer-events-none" />
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+
+                <div className="relative z-10">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6 }}
+                    >
+                        <img src={gameSalesLogo} alt="Game Sales" className="h-12 mb-8" />
+                        <h1 className="text-4xl xl:text-5xl font-bold text-white leading-tight mb-6">
+                            Transforme sua operação comercial em uma <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-600">máquina de vendas</span>.
+                        </h1>
+                        <p className="text-lg text-slate-400 max-w-md">
+                            Milhares de empresas já estão batendo suas metas através de nossa plataforma gameficada de CRM.
+                        </p>
+                    </motion.div>
                 </div>
 
-                {/* Progress bar */}
-                <ProgressBar />
+                <div className="relative z-10">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="bg-slate-900/50 backdrop-blur-md rounded-2xl border border-slate-800 p-6 shadow-xl"
+                    >
+                        <div className="flex items-center gap-1 mb-3">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                                <Star key={star} className="w-5 h-5 fill-amber-500 text-amber-500" />
+                            ))}
+                        </div>
+                        <p className="text-slate-300 font-medium italic mb-4 text-base">
+                            "Desde que implementamos o Game of Sales, o engajamento do time explodiu. A conversão de leads nunca esteve tão alta e finalmente temos visão clara das metas."
+                        </p>
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-full bg-slate-800 overflow-hidden border-2 border-slate-700">
+                                <img src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="Avatar" className="w-full h-full object-cover" />
+                            </div>
+                            <div>
+                                <h4 className="text-white font-bold text-sm">Mariana Costa</h4>
+                                <p className="text-slate-400 text-xs text-left">Diretora de Vendas • TechGrowth</p>
+                            </div>
+                        </div>
+                    </motion.div>
+                </div>
+            </div>
 
-                {/* Card */}
-                <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-800/50 rounded-2xl shadow-2xl shadow-black p-8">
-                    {/* Step counter */}
-                    <div className="text-center mb-6">
-                        <span className="text-slate-500 text-sm">
-                            Passo {currentStep} de {TOTAL_STEPS}
-                        </span>
+            {/* Right Panel - Form Steps */}
+            <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12">
+                <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="w-full max-w-lg"
+                >
+                    {/* Mobile Logo */}
+                    <div className="lg:hidden text-center mb-10">
+                        <img src={gameSalesLogo} alt="Game Sales" className="h-10 mx-auto" />
                     </div>
 
-                    {/* Step content with animation */}
-                    <AnimatePresence mode="wait" custom={direction}>
-                        <motion.div
-                            key={currentStep}
-                            custom={direction}
-                            variants={slideVariants}
-                            initial="enter"
-                            animate="center"
-                            exit="exit"
-                            transition={{
-                                type: "spring",
-                                stiffness: 300,
-                                damping: 30,
-                                duration: 0.25
-                            }}
-                        >
-                            {renderStep()}
-                        </motion.div>
-                    </AnimatePresence>
-
-                    {/* Navigation buttons (hidden on step 6 since CardPayment has its own submit) */}
-                    {currentStep < 6 && (
-                        <div className="flex items-center gap-3 mt-8">
-                            {currentStep > 1 && (
-                                <button
-                                    onClick={handleBack}
-                                    disabled={isLoading}
-                                    className="text-slate-500 hover:text-white transition-colors px-4 py-2 disabled:opacity-50"
-                                >
-                                    <ArrowLeft className="inline mr-1 h-4 w-4" />
-                                    Voltar
-                                </button>
+                    {/* Progress Indicator */}
+                    <div className="mb-10">
+                        <div className="flex items-center justify-between mb-4">
+                            <span className="text-slate-400 text-sm font-medium">Passo {currentStep} de {TOTAL_STEPS}</span>
+                            {currentStep === 1 && (
+                                <span className="text-amber-400 text-sm font-bold bg-amber-500/10 px-3 py-1 rounded-full flex items-center gap-1 border border-amber-500/20">
+                                    <Sparkles className="w-4 h-4" /> 7 dias grátis
+                                </span>
                             )}
-
-                            <Button
-                                onClick={handleNext}
-                                disabled={!canProceed() || isLoading}
-                                className="flex-1 h-12 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 border-none transition-all hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:hover:translate-y-0"
-                            >
-                                {isLoading ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                        {currentStep === 5 ? "Criando conta..." : "Processando..."}
-                                    </>
-                                ) : (
-                                    <>
-                                        Continuar
-                                        <ArrowRight className="ml-2 h-5 w-5" />
-                                    </>
-                                )}
-                            </Button>
                         </div>
-                    )}
+                        <ProgressBar />
+                    </div>
 
-                    {/* Keyboard hint */}
-                    {currentStep < 6 && (
-                        <p className="text-center text-slate-600 text-xs mt-4">
-                            Pressione <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-slate-400">Enter</kbd> para continuar
-                        </p>
-                    )}
-                </div>
-            </motion.div>
+                    {/* Step Card */}
+                    <div className="bg-slate-900 border border-slate-800 shadow-2xl shadow-black/50 rounded-3xl p-8 relative overflow-hidden">
+                        {/* Shimmer effect top border */}
+                        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
+
+                        {/* Step content with animation */}
+                        <AnimatePresence mode="wait" custom={direction}>
+                            <motion.div
+                                key={currentStep}
+                                custom={direction}
+                                variants={slideVariants}
+                                initial="enter"
+                                animate="center"
+                                exit="exit"
+                                transition={{
+                                    type: "spring",
+                                    stiffness: 400,
+                                    damping: 35,
+                                    duration: 0.3
+                                }}
+                            >
+                                {renderStep()}
+                            </motion.div>
+                        </AnimatePresence>
+
+                        {/* Navigation buttons */}
+                        {currentStep < 6 && (
+                            <div className="flex items-center gap-4 mt-10">
+                                {currentStep > 1 && (
+                                    <Button
+                                        variant="outline"
+                                        onClick={handleBack}
+                                        disabled={isLoading}
+                                        className="h-12 w-12 shrink-0 p-0 border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl transition-colors disabled:opacity-50"
+                                    >
+                                        <ArrowLeft className="h-5 w-5" />
+                                    </Button>
+                                )}
+
+                                <Button
+                                    onClick={handleNext}
+                                    disabled={!canProceed() || isLoading}
+                                    className="flex-1 h-12 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-base rounded-xl shadow-lg shadow-emerald-500/20 border-none transition-all hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:hover:translate-y-0 group"
+                                >
+                                    {isLoading ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                            {currentStep === 5 ? "Configurando conta..." : "Processando..."}
+                                        </>
+                                    ) : (
+                                        <span className="flex items-center justify-center gap-2">
+                                            {currentStep === 5 ? "Começar Trial Agora" : "Continuar"}
+                                            <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                                        </span>
+                                    )}
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                </motion.div>
+            </div>
         </div>
     );
 }
+{/* End of Onboarding */ }

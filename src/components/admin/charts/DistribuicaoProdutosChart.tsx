@@ -11,14 +11,14 @@ interface DistribuicaoProdutosChartProps {
   }>;
 }
 
-// Color palette for bars
+// Color palette for bars — Emerald brand palette
 const BAR_COLORS = [
-  "#4F46E5", // Indigo
-  "#7C3AED", // Purple
-  "#10b981", // Violet
-  "#34d399", // Light Violet
-  "#6ee7b7", // Lavender
-  "#94A3B8", // Gray for "Others"
+  "#10b981", // Emerald-500 (primary)
+  "#059669", // Emerald-600
+  "#34d399", // Emerald-400
+  "#6ee7b7", // Emerald-300
+  "#0891b2", // Cyan-600 (accent)
+  "#94A3B8", // Slate-400 for "Others"
 ];
 
 export const DistribuicaoProdutosChart = ({ data }: DistribuicaoProdutosChartProps) => {

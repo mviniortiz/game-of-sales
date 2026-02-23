@@ -62,7 +62,7 @@ interface KPICardProps {
   trend?: number;
   trendLabel?: string;
   highlight?: boolean;
-  highlightColor?: "emerald" | "indigo" | "cyan" | "amber";
+  highlightColor?: "emerald" | "cyan" | "amber";
 }
 
 // Static Tailwind classes map to ensure proper CSS generation
@@ -72,11 +72,7 @@ const highlightColorClasses = {
     text: "text-emerald-600 dark:text-emerald-400",
     bg: "bg-emerald-100 dark:bg-emerald-500/20",
   },
-  indigo: {
-    ring: "ring-2 ring-emerald-500/50",
-    text: "text-emerald-600 dark:text-emerald-400",
-    bg: "bg-emerald-100 dark:bg-emerald-500/20",
-  },
+
   cyan: {
     ring: "ring-2 ring-cyan-500/50",
     text: "text-cyan-600 dark:text-cyan-400",

@@ -37,6 +37,7 @@ import { HowItWorks } from "@/components/landing/HowItWorks";
 import { IntegrationHub } from "@/components/landing/IntegrationHub";
 import { UseCasesSection } from "@/components/landing/UseCasesSection";
 import { FinalCTA } from "@/components/landing/FinalCTA";
+import { FAQSection } from "@/components/landing/FAQSection";
 import { PainPoints } from "@/components/landing/PainPoints";
 
 // Animation variants
@@ -316,43 +317,65 @@ const LandingPage = () => {
 
 
             {/* Demo Section */}
-            <section id="demo" className="py-24 px-4 sm:px-6 lg:px-8 bg-slate-950">
-                <div className="max-w-6xl mx-auto">
-                    <motion.div
-                        {...fadeInUp}
-                        className="text-center mb-12"
-                    >
-                        <Badge className="mb-4 bg-emerald-500/20 text-emerald-300 border-emerald-500/30">
-                            <Zap className="h-3 w-3 mr-1" />
-                            👀 Tour Completo em 2 Minutos
-                        </Badge>
-                        <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 font-serif">
-                            Veja o Game Sales Em Ação
+            <section id="demo" className="py-24 px-4 sm:px-6 lg:px-8 bg-slate-950 relative overflow-hidden">
+                {/* Background glow */}
+                <div
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] rounded-full pointer-events-none"
+                    style={{ background: "radial-gradient(ellipse, rgba(16,185,129,0.05) 0%, transparent 70%)", filter: "blur(60px)" }}
+                />
+
+                <div className="max-w-5xl mx-auto relative z-10">
+
+                    {/* Header */}
+                    <motion.div {...fadeInUp} className="text-center mb-12">
+                        <span
+                            className="inline-flex items-center gap-1.5 text-xs text-emerald-400 border border-emerald-500/25 bg-emerald-500/8 rounded-full px-4 py-1.5 mb-5"
+                            style={{ letterSpacing: "var(--ls-widest)", fontWeight: "var(--fw-semibold)" }}
+                        >
+                            <Play className="h-3 w-3" fill="currentColor" />
+                            TOUR COMPLETO EM 2 MINUTOS
+                        </span>
+
+                        <h2
+                            className="text-white mb-4"
+                            style={{ fontWeight: "var(--fw-extrabold)", fontSize: "clamp(1.75rem, 4vw, 2.5rem)", lineHeight: "var(--lh-tight)", letterSpacing: "var(--ls-snug)" }}
+                        >
+                            Veja o Game Sales em{" "}
+                            <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
+                                ação
+                            </span>
                         </h2>
-                        <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-                            Interface simples, resultados extraordinários.
-                            Assista e descubra como transformar sua gestão de vendas.
+
+                        <p className="text-body text-gray-400 max-w-xl mx-auto" style={{ fontSize: "1.0625rem" }}>
+                            Interface simples, resultados extraordinários. Assista e descubra como
+                            transformar sua gestão de vendas em minutos.
                         </p>
                     </motion.div>
 
+                    {/* Video container */}
                     <motion.div
                         {...fadeInUp}
-                        transition={{ delay: 0.2 }}
+                        transition={{ delay: 0.15 }}
                         className="relative"
                     >
-                        {/* Glow effect */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/30 via-blue-500/30 to-emerald-500/30 rounded-3xl blur-3xl -z-10 scale-105" />
+                        {/* Outer glow */}
+                        <div
+                            className="absolute -inset-px rounded-2xl pointer-events-none"
+                            style={{ background: "linear-gradient(135deg, rgba(16,185,129,0.2), rgba(6,182,212,0.1), rgba(16,185,129,0.05))", filter: "blur(1px)" }}
+                        />
+                        <div
+                            className="absolute -inset-6 rounded-3xl pointer-events-none"
+                            style={{ background: "radial-gradient(ellipse, rgba(16,185,129,0.08) 0%, transparent 70%)", filter: "blur(20px)" }}
+                        />
 
                         {/* Premium Video Player */}
                         <div
                             ref={videoContainerRef}
-                            className="relative rounded-2xl overflow-hidden shadow-2xl border border-slate-700/50 group"
+                            className="relative rounded-2xl overflow-hidden border group"
+                            style={{ borderColor: "rgba(16,185,129,0.2)", boxShadow: "0 32px 80px -20px rgba(0,0,0,0.8), 0 0 0 1px rgba(16,185,129,0.08)" }}
                             onMouseEnter={() => setShowControls(true)}
                             onMouseLeave={() => setShowControls(false)}
                         >
-                            {/* Glow effect behind video */}
-                            <div className="absolute -inset-1 bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-amber-500/20 rounded-2xl blur-xl opacity-60" />
-
                             <div className="relative bg-slate-900 rounded-2xl overflow-hidden">
                                 <video
                                     ref={videoRef}
@@ -370,20 +393,15 @@ const LandingPage = () => {
                                     onTimeUpdate={(e) => setVideoProgress((e.currentTarget.currentTime / e.currentTarget.duration) * 100)}
                                 />
 
-                                {/* Click anywhere to toggle play/pause */}
+                                {/* Click overlay for play/pause */}
                                 <div
                                     className="absolute inset-0 cursor-pointer"
                                     onClick={() => {
                                         if (videoRef.current) {
-                                            if (isVideoPlaying) {
-                                                videoRef.current.pause();
-                                            } else {
-                                                videoRef.current.play();
-                                            }
+                                            isVideoPlaying ? videoRef.current.pause() : videoRef.current.play();
                                         }
                                     }}
                                 >
-                                    {/* Center play/pause indicator on click */}
                                     <motion.div
                                         initial={{ opacity: 0, scale: 0.8 }}
                                         animate={{ opacity: showControls || !isVideoPlaying ? 1 : 0, scale: 1 }}
@@ -391,9 +409,10 @@ const LandingPage = () => {
                                     >
                                         {!isVideoPlaying && (
                                             <motion.div
-                                                whileHover={{ scale: 1.1 }}
+                                                whileHover={{ scale: 1.08 }}
                                                 whileTap={{ scale: 0.95 }}
-                                                className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 shadow-2xl shadow-amber-500/30 flex items-center justify-center"
+                                                className="w-20 h-20 rounded-full flex items-center justify-center"
+                                                style={{ background: "linear-gradient(135deg, #10b981, #059669)", boxShadow: "0 0 60px rgba(16,185,129,0.4), 0 8px 32px rgba(0,0,0,0.4)" }}
                                             >
                                                 <Play className="h-8 w-8 text-white ml-1" fill="currentColor" />
                                             </motion.div>
@@ -401,125 +420,93 @@ const LandingPage = () => {
                                     </motion.div>
                                 </div>
 
-                                {/* Bottom Controls Bar */}
+                                {/* Controls Bar */}
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: showControls || !isVideoPlaying ? 1 : 0, y: 0 }}
-                                    className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent pt-12 pb-4 px-4"
+                                    className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent pt-16 pb-4 px-5"
                                 >
                                     {/* Progress Bar */}
-                                    <div className="relative h-1.5 bg-white/20 rounded-full mb-4 cursor-pointer group/progress"
+                                    <div
+                                        className="relative h-1 bg-white/15 rounded-full mb-4 cursor-pointer group/progress hover:h-1.5 transition-all"
                                         onClick={(e) => {
                                             if (videoRef.current) {
                                                 const rect = e.currentTarget.getBoundingClientRect();
-                                                const percent = (e.clientX - rect.left) / rect.width;
-                                                videoRef.current.currentTime = percent * videoRef.current.duration;
+                                                videoRef.current.currentTime = ((e.clientX - rect.left) / rect.width) * videoRef.current.duration;
                                             }
                                         }}
                                     >
-                                        {/* Buffered */}
-                                        <div className="absolute inset-0 bg-white/10 rounded-full" />
-                                        {/* Progress */}
-                                        <motion.div
-                                            className="absolute top-0 left-0 h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full"
-                                            style={{ width: `${videoProgress}%` }}
-                                        />
-                                        {/* Hover preview dot */}
                                         <div
-                                            className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg opacity-0 group-hover/progress:opacity-100 transition-opacity"
-                                            style={{ left: `calc(${videoProgress}% - 8px)` }}
+                                            className="absolute top-0 left-0 h-full rounded-full"
+                                            style={{ width: `${videoProgress}%`, background: "linear-gradient(90deg, #10b981, #34d399)" }}
+                                        />
+                                        <div
+                                            className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg opacity-0 group-hover/progress:opacity-100 transition-opacity"
+                                            style={{ left: `calc(${videoProgress}% - 6px)` }}
                                         />
                                     </div>
 
-                                    {/* Control Buttons */}
+                                    {/* Buttons */}
                                     <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            {/* Play/Pause */}
+                                        <div className="flex items-center gap-2">
                                             <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    if (videoRef.current) {
-                                                        isVideoPlaying ? videoRef.current.pause() : videoRef.current.play();
-                                                    }
-                                                }}
-                                                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all"
+                                                onClick={(e) => { e.stopPropagation(); videoRef.current && (isVideoPlaying ? videoRef.current.pause() : videoRef.current.play()); }}
+                                                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
                                             >
-                                                {isVideoPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" fill="currentColor" />}
+                                                {isVideoPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" fill="currentColor" />}
                                             </button>
-
-                                            {/* Volume */}
                                             <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setIsMuted(!isMuted);
-                                                }}
-                                                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all"
+                                                onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); }}
+                                                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
                                             >
-                                                {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+                                                {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
                                             </button>
-
-                                            {/* Time */}
-                                            <span className="text-white/70 text-sm font-mono">
+                                            <span className="text-white/50 text-xs font-mono ml-1">
                                                 {videoRef.current ? `${Math.floor(videoRef.current.currentTime / 60)}:${String(Math.floor(videoRef.current.currentTime % 60)).padStart(2, '0')}` : '0:00'}
-                                                <span className="text-white/40"> / </span>
+                                                <span className="text-white/25"> / </span>
                                                 {videoDuration ? `${Math.floor(videoDuration / 60)}:${String(Math.floor(videoDuration % 60)).padStart(2, '0')}` : '0:00'}
                                             </span>
                                         </div>
-
-                                        <div className="flex items-center gap-2">
-                                            {/* Fullscreen */}
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    if (videoContainerRef.current) {
-                                                        if (document.fullscreenElement) {
-                                                            document.exitFullscreen();
-                                                        } else if (videoContainerRef.current.requestFullscreen) {
-                                                            videoContainerRef.current.requestFullscreen();
-                                                        } else if ((videoContainerRef.current as any).webkitRequestFullscreen) {
-                                                            (videoContainerRef.current as any).webkitRequestFullscreen();
-                                                        }
-                                                    }
-                                                }}
-                                                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all"
-                                            >
-                                                <Maximize className="h-5 w-5" />
-                                            </button>
-                                        </div>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (videoContainerRef.current) {
+                                                    document.fullscreenElement
+                                                        ? document.exitFullscreen()
+                                                        : videoContainerRef.current.requestFullscreen?.() ?? (videoContainerRef.current as any).webkitRequestFullscreen?.();
+                                                }
+                                            }}
+                                            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                                        >
+                                            <Maximize className="h-4 w-4" />
+                                        </button>
                                     </div>
                                 </motion.div>
                             </div>
                         </div>
 
-                        {/* Feature highlights below video */}
-                        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="flex items-center gap-3 bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
-                                <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                                    <Kanban className="h-5 w-5 text-emerald-400" />
-                                </div>
-                                <div>
-                                    <h4 className="font-semibold text-white">CRM Visual</h4>
-                                    <p className="text-sm text-gray-400">Kanban intuitivo</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-3 bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
-                                <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
-                                    <Trophy className="h-5 w-5 text-amber-400" />
-                                </div>
-                                <div>
-                                    <h4 className="font-semibold text-white">Gamificação</h4>
-                                    <p className="text-sm text-gray-400">Rankings e conquistas</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-3 bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
-                                <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                                    <Target className="h-5 w-5 text-emerald-400" />
-                                </div>
-                                <div>
-                                    <h4 className="font-semibold text-white">Metas Inteligentes</h4>
-                                    <p className="text-sm text-gray-400">Acompanhamento em tempo real</p>
-                                </div>
-                            </div>
+                        {/* Feature pills below video */}
+                        <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
+                            {[
+                                { icon: Kanban, color: "text-emerald-400", bg: "bg-emerald-500/10", title: "CRM Visual", desc: "Kanban intuitivo" },
+                                { icon: Trophy, color: "text-amber-400", bg: "bg-amber-500/10", title: "Gamificação", desc: "Rankings e conquistas" },
+                                { icon: Target, color: "text-emerald-400", bg: "bg-emerald-500/10", title: "Metas Inteligentes", desc: "Acompanhamento em tempo real" },
+                            ].map(({ icon: Icon, color, bg, title, desc }) => (
+                                <motion.div
+                                    key={title}
+                                    className="flex items-center gap-3 rounded-xl p-4 border border-white/6 bg-slate-900/40 backdrop-blur-sm"
+                                    whileHover={{ y: -3, borderColor: "rgba(16,185,129,0.2)" }}
+                                    transition={{ duration: 0.2 }}
+                                >
+                                    <div className={`w-9 h-9 rounded-lg ${bg} flex items-center justify-center flex-shrink-0`}>
+                                        <Icon className={`h-4 w-4 ${color}`} strokeWidth={2} />
+                                    </div>
+                                    <div>
+                                        <p className="text-white text-sm" style={{ fontWeight: "var(--fw-semibold)" }}>{title}</p>
+                                        <p className="text-white/40 text-xs" style={{ fontWeight: "var(--fw-light)" }}>{desc}</p>
+                                    </div>
+                                </motion.div>
+                            ))}
                         </div>
                     </motion.div>
                 </div>
@@ -528,170 +515,262 @@ const LandingPage = () => {
             {/* Use Cases Section */}
             <UseCasesSection />
 
-            {/* Pricing Section - Dark Theme with Neon */}
-            <section id="pricing" className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-slate-900 to-slate-950 relative overflow-hidden">
-                {/* Background glow effects */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-emerald-600/10 rounded-full blur-3xl" />
+            {/* ── Pricing Section ───────────────────────────────────────────── */}
+            <section id="pricing" className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-slate-950 to-slate-900 relative overflow-hidden">
+                {/* Ambient glow */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full pointer-events-none"
+                    style={{ background: "radial-gradient(ellipse, rgba(16,185,129,0.05) 0%, transparent 60%)", filter: "blur(80px)" }} />
+                {/* Subtle dot grid */}
+                <div className="absolute inset-0 opacity-[0.018] pointer-events-none"
+                    style={{ backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.6) 1px, transparent 1px)", backgroundSize: "32px 32px" }} />
 
-                <div className="max-w-7xl mx-auto relative z-10">
-                    <motion.div
-                        {...fadeInUp}
-                        className="text-center mb-16"
-                    >
-                        {/* ROI Promise Badge */}
-                        <motion.div
-                            className="inline-flex items-center gap-2 bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 px-4 py-2 rounded-full text-sm font-medium mb-6"
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            whileInView={{ scale: 1, opacity: 1 }}
-                            viewport={{ once: true }}
-                        >
-                            <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                            Garantia de ROI: Se paga em 1 venda extra
-                        </motion.div>
+                <div className="max-w-5xl mx-auto relative z-10">
 
-                        <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 font-serif">
-                            Investimento Que Se <span className="text-emerald-400">Multiplica</span>
+                    {/* Header */}
+                    <motion.div className="text-center mb-14"
+                        initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }} transition={{ duration: 0.5 }}>
+
+                        <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400 border border-emerald-500/25 bg-emerald-500/8 rounded-full px-4 py-1.5 mb-5"
+                            style={{ letterSpacing: "var(--ls-widest)", fontWeight: "var(--fw-semibold)" }}>
+                            <Zap className="h-3 w-3" />
+                            PLANOS E PREÇOS
+                        </span>
+
+                        <h2 className="text-white mb-4"
+                            style={{ fontWeight: "var(--fw-extrabold)", fontSize: "clamp(1.75rem, 4vw, 2.5rem)", lineHeight: "var(--lh-tight)", letterSpacing: "var(--ls-snug)" }}>
+                            Investimento que se{" "}
+                            <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
+                                multiplica
+                            </span>
                         </h2>
-                        <p className="text-lg text-gray-400 mb-8">
-                            Retorno médio de <strong className="text-white">12x o valor investido</strong>. Sem surpresas, sem taxas escondidas.
+
+                        <p className="text-gray-400 max-w-xl mx-auto mb-8" style={{ fontSize: "1.0625rem" }}>
+                            Retorno médio de <strong className="text-white">12× o valor investido</strong>. Sem surpresas, sem taxas escondidas.
                         </p>
 
-                        {/* Billing Toggle - Enhanced Dark Style */}
-                        <div className="inline-flex items-center bg-slate-800/50 border border-white/10 rounded-full p-1">
-                            <button
-                                onClick={() => setIsAnnual(false)}
-                                className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 ${!isAnnual
-                                    ? 'bg-white text-slate-900 shadow-lg'
-                                    : 'text-gray-400 hover:text-white'
-                                    }`}
-                            >
-                                Mensal
-                            </button>
-                            <button
-                                onClick={() => setIsAnnual(true)}
-                                className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2 ${isAnnual
-                                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/30'
-                                    : 'text-gray-400 hover:text-white'
-                                    }`}
-                            >
-                                Anual
-                                {isAnnual && (
-                                    <span className="bg-emerald-400 text-emerald-950 text-[10px] px-2 py-0.5 rounded-full font-bold">
-                                        -10%
-                                    </span>
-                                )}
-                            </button>
+                        {/* Billing toggle */}
+                        <div className="inline-flex gap-1 p-1 rounded-2xl border border-white/6"
+                            style={{ background: "rgba(15,23,42,0.85)" }}>
+                            {([false, true] as const).map((annual) => (
+                                <button key={String(annual)} onClick={() => setIsAnnual(annual)}
+                                    className={`relative flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm transition-all duration-200 ${isAnnual === annual ? "text-white" : "text-white/35 hover:text-white/55"}`}
+                                    style={{ fontWeight: "var(--fw-semibold)" }}>
+                                    {isAnnual === annual && (
+                                        <motion.div layoutId="billing-pill"
+                                            className="absolute inset-0 rounded-xl border border-white/8"
+                                            style={{ background: "rgba(30,41,59,0.9)" }}
+                                            transition={{ type: "spring", bounce: 0.18, duration: 0.38 }} />
+                                    )}
+                                    <span className="relative">{annual ? "Anual" : "Mensal"}</span>
+                                    {annual && (
+                                        <span className="relative text-[10px] bg-emerald-500 text-white px-2 py-0.5 rounded-full"
+                                            style={{ fontWeight: "var(--fw-bold)" }}>
+                                            −10%
+                                        </span>
+                                    )}
+                                </button>
+                            ))}
                         </div>
                     </motion.div>
 
-                    <motion.div
-                        variants={staggerContainer}
-                        initial="initial"
-                        whileInView="whileInView"
-                        viewport={{ once: true }}
-                        className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto items-start"
-                    >
-                        {plans.map((plan, index) => (
-                            <motion.div
-                                key={index}
-                                variants={fadeInUp}
-                                className={plan.popular ? "md:-mt-4 md:mb-4" : ""}
-                                whileHover={{ y: -6, transition: { duration: 0.25 } }}
-                            >
-                                <Card
-                                    className={`relative h-full transition-all duration-300 ${plan.popular
-                                        ? 'border-2 border-emerald-500 bg-slate-800/80 backdrop-blur-sm'
-                                        : 'border-white/10 bg-slate-800/40 backdrop-blur-sm hover:border-white/20'
+                    {/* Cards grid — popular shown first on mobile via order */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:items-end">
+                        {plans.map((plan, i) => {
+                            const monthly = isAnnual ? Math.round(plan.priceNumber * 0.9) : plan.priceNumber;
+                            const annualSaving = Math.round((plan.priceNumber - Math.round(plan.priceNumber * 0.9)) * 12);
+                            const isPopular = plan.popular;
+
+                            return (
+                                <motion.div key={plan.name}
+                                    className={`relative flex flex-col ${isPopular
+                                            ? "order-first md:order-none md:-mt-7 pt-8 md:pt-0"
+                                            : ""
                                         }`}
-                                    style={plan.popular ? {
-                                        boxShadow: '0 0 40px rgba(16, 185, 129, 0.3), 0 0 80px rgba(16, 185, 129, 0.1)'
-                                    } : {}}
-                                >
-                                    {plan.popular && (
-                                        <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                                            <Badge className="bg-emerald-600 text-white px-4 py-1 shadow-lg shadow-emerald-500/30 border-0">
-                                                ⚡ Mais Popular
-                                            </Badge>
+                                    initial={{ opacity: 0, y: 24 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ delay: i * 0.1, duration: 0.45 }}
+                                    whileHover={{ y: -6, transition: { duration: 0.2 } }}>
+
+                                    {/* Popular badge */}
+                                    {isPopular && (
+                                        <div className="absolute -top-4 inset-x-0 flex justify-center z-10">
+                                            <span className="inline-flex items-center gap-1.5 text-[10px] px-4 py-1.5 rounded-full shadow-lg shadow-emerald-500/25"
+                                                style={{
+                                                    background: "linear-gradient(135deg, #10b981, #0d9488)",
+                                                    color: "white",
+                                                    fontWeight: "var(--fw-bold)",
+                                                    letterSpacing: "var(--ls-wide)"
+                                                }}>
+                                                <Zap className="h-2.5 w-2.5" fill="currentColor" />
+                                                MAIS POPULAR
+                                            </span>
                                         </div>
                                     )}
-                                    <CardHeader className={`text-center ${plan.popular ? 'pt-10' : 'pt-6'}`}>
-                                        <CardTitle className="text-2xl text-white font-serif">{plan.name}</CardTitle>
-                                        <CardDescription className="text-gray-400">{plan.tagline}</CardDescription>
-                                        <div className="mt-4">
-                                            {plan.priceNumber === 0 ? (
-                                                <span className="text-4xl font-bold text-white">
-                                                    Grátis
-                                                </span>
-                                            ) : isAnnual ? (
-                                                <>
-                                                    <div className="flex flex-col items-center">
-                                                        <span className="text-sm line-through text-gray-500">
-                                                            R$ {plan.priceNumber}/mês
-                                                        </span>
-                                                        <span className="text-4xl font-bold text-white">
-                                                            R$ {Math.round(plan.priceNumber * 0.9)}
-                                                        </span>
-                                                        <span className="text-gray-400">/mês</span>
-                                                        <span className="text-xs mt-1 text-slate-500">
-                                                            Cobrado R$ {Math.round(plan.priceNumber * 0.9 * 12).toLocaleString('pt-BR')}/ano
-                                                        </span>
-                                                    </div>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <span className="text-4xl font-bold text-white">
-                                                        R$ {plan.priceNumber}
+
+                                    {/* Card */}
+                                    <div className="relative flex flex-col flex-1 rounded-2xl border overflow-hidden"
+                                        style={{
+                                            background: isPopular
+                                                ? "linear-gradient(155deg, rgba(16,185,129,0.07) 0%, rgba(13,21,38,0.97) 55%)"
+                                                : "rgba(15,23,42,0.55)",
+                                            borderColor: isPopular
+                                                ? "rgba(16,185,129,0.28)"
+                                                : "rgba(255,255,255,0.05)",
+                                            boxShadow: isPopular
+                                                ? "0 0 0 1px rgba(16,185,129,0.06), 0 24px 64px rgba(16,185,129,0.1)"
+                                                : "0 1px 2px rgba(0,0,0,0.4)",
+                                        }}>
+                                        {/* Decorative top gradient line (popular only) */}
+                                        {isPopular && (
+                                            <div className="absolute top-0 inset-x-0 h-px"
+                                                style={{ background: "linear-gradient(90deg, transparent, rgba(16,185,129,0.55) 35%, rgba(20,184,166,0.45) 65%, transparent)" }} />
+                                        )}
+                                        <div className="p-5 sm:p-7 flex flex-col flex-1">
+
+                                            {/* Plan name + tagline */}
+                                            <div className="mb-5">
+                                                <p className="text-xs mb-0.5"
+                                                    style={{ color: isPopular ? "#10b981" : "rgba(255,255,255,0.28)", fontWeight: "var(--fw-bold)", letterSpacing: "var(--ls-widest)" }}>
+                                                    {plan.name.toUpperCase()}
+                                                </p>
+                                                <p className="text-white/38 text-sm leading-snug">{plan.tagline}</p>
+                                            </div>
+
+                                            {/* Price */}
+                                            <div className="mb-1">
+                                                <motion.div key={monthly}
+                                                    initial={{ opacity: 0, y: -8 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    transition={{ duration: 0.22 }}
+                                                    className="flex items-end gap-1">
+                                                    <span className="text-white/38 text-base leading-none mb-1.5"
+                                                        style={{ fontWeight: "var(--fw-medium)" }}>R$</span>
+                                                    <span className="text-white leading-none tabular-nums"
+                                                        style={{
+                                                            fontWeight: "var(--fw-extrabold)",
+                                                            fontSize: isPopular
+                                                                ? "clamp(2.4rem, 8vw, 3.25rem)"
+                                                                : "clamp(2rem, 7vw, 2.5rem)"
+                                                        }}>
+                                                        {monthly}
                                                     </span>
-                                                    <span className="text-gray-400">/mês</span>
-                                                </>
+                                                    <span className="text-white/32 text-sm leading-none mb-1.5">/mês</span>
+                                                </motion.div>
+                                            </div>
+
+                                            {/* Annual savings / info line */}
+                                            <div className="min-h-[34px] mb-5">
+                                                {isAnnual ? (
+                                                    <motion.div key="annual-info"
+                                                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}
+                                                        className="flex items-center gap-2 flex-wrap mt-1">
+                                                        <span className="text-[11px] text-white/27">
+                                                            Cobrado R$ {Math.round(monthly * 12).toLocaleString("pt-BR")}/ano
+                                                        </span>
+                                                        {annualSaving > 0 && (
+                                                            <span className="text-[10px] px-1.5 py-0.5 rounded"
+                                                                style={{
+                                                                    background: isPopular ? "rgba(16,185,129,0.12)" : "rgba(255,255,255,0.05)",
+                                                                    color: isPopular ? "#10b981" : "rgba(255,255,255,0.3)",
+                                                                    fontWeight: "var(--fw-semibold)"
+                                                                }}>
+                                                                Economize R$ {annualSaving.toLocaleString("pt-BR")}
+                                                            </span>
+                                                        )}
+                                                    </motion.div>
+                                                ) : (
+                                                    <p className="text-[11px] text-white/22 mt-1">Faturado mensalmente</p>
+                                                )}
+                                                {plan.extraInfo && (
+                                                    <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.2)" }}>{plan.extraInfo}</p>
+                                                )}
+                                            </div>
+
+                                            {/* Divider */}
+                                            <div className="h-px mb-5"
+                                                style={{ background: isPopular ? "rgba(16,185,129,0.1)" : "rgba(255,255,255,0.04)" }} />
+
+                                            {/* Features list */}
+                                            <ul className="flex flex-col gap-2.5 mb-7 flex-1">
+                                                {plan.features.map((f) => (
+                                                    <li key={f} className="flex items-start gap-2.5">
+                                                        <div className="w-4 h-4 mt-0.5 rounded flex items-center justify-center flex-shrink-0"
+                                                            style={{ background: isPopular ? "rgba(16,185,129,0.14)" : "rgba(255,255,255,0.05)" }}>
+                                                            <Check className="h-2.5 w-2.5" strokeWidth={3}
+                                                                style={{ color: isPopular ? "#10b981" : "rgba(255,255,255,0.38)" }} />
+                                                        </div>
+                                                        <span className="text-sm leading-snug"
+                                                            style={{ color: isPopular ? "rgba(255,255,255,0.68)" : "rgba(255,255,255,0.45)", fontWeight: "var(--fw-medium)" }}>
+                                                            {f}
+                                                        </span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+
+                                            {/* CTA */}
+                                            {isPopular ? (
+                                                <a href={plan.checkoutUrl} target="_blank" rel="noopener noreferrer"
+                                                    className="relative w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm text-white overflow-hidden"
+                                                    style={{
+                                                        background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                                                        boxShadow: "0 4px 20px rgba(16,185,129,0.28), 0 1px 4px rgba(0,0,0,0.25)",
+                                                        fontWeight: "var(--fw-semibold)"
+                                                    }}>
+                                                    <motion.span
+                                                        className="absolute inset-0 rounded-xl"
+                                                        style={{ background: "linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.14) 50%, transparent 70%)" }}
+                                                        animate={{ x: ["-120%", "220%"] }}
+                                                        transition={{ duration: 2.4, repeat: Infinity, repeatDelay: 1.8, ease: "easeInOut" }} />
+                                                    <span className="relative">Começar agora</span>
+                                                    <ArrowRight className="relative h-4 w-4" />
+                                                </a>
+                                            ) : (
+                                                <a href={plan.checkoutUrl} target="_blank" rel="noopener noreferrer"
+                                                    className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm transition-all duration-200"
+                                                    style={{
+                                                        background: "rgba(255,255,255,0.04)",
+                                                        border: "1px solid rgba(255,255,255,0.07)",
+                                                        color: "rgba(255,255,255,0.55)",
+                                                        fontWeight: "var(--fw-semibold)"
+                                                    }}>
+                                                    Escolher {plan.name}
+                                                    <ArrowRight className="h-4 w-4" />
+                                                </a>
                                             )}
                                         </div>
-                                    </CardHeader>
-                                    <CardContent className="space-y-4">
-                                        <ul className="space-y-3">
-                                            {plan.features.map((feature, i) => (
-                                                <li key={i} className="flex items-center gap-3">
-                                                    <Check className={`h-5 w-5 flex-shrink-0 ${plan.popular ? 'text-emerald-400' : 'text-emerald-400'}`} />
-                                                    <span className="text-sm text-gray-300">{feature}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                        <Button
-                                            className={`w-full mt-6 ${plan.popular
-                                                ? 'bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-lg shadow-emerald-500/30'
-                                                : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
-                                                }`}
-                                            onClick={() => window.location.href = `/register?plan=${plan.name.toLowerCase()}`}
-                                        >
-                                            🚀 Testar Grátis por 7 Dias
-                                        </Button>
-                                    </CardContent>
-                                </Card>
-                            </motion.div>
-                        ))}
-                    </motion.div>
+                                    </div>
+                                </motion.div>
+                            );
+                        })}
+                    </div>
 
-                    {/* Trust Signals */}
-                    <motion.div
-                        {...fadeInUp}
-                        className="flex flex-wrap items-center justify-center gap-6 mt-12 text-sm text-slate-400"
-                    >
-                        <div className="flex items-center gap-2">
-                            <span>🔓</span>
-                            <span>Cancele a qualquer momento</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <span>🛡️</span>
-                            <span>7 dias de acesso total ao PRO</span>
-                        </div>
+                    {/* Trust bar */}
+                    <motion.div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 mt-12"
+                        initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.55 }}>
+                        {[
+                            { icon: <Check className="h-3.5 w-3.5" />, label: "Cancele quando quiser" },
+                            { icon: <Zap className="h-3.5 w-3.5" />, label: "Setup em 5 minutos" },
+                            { icon: <Award className="h-3.5 w-3.5" />, label: "Suporte via WhatsApp" },
+                        ].map(({ icon, label }) => (
+                            <div key={label} className="flex items-center gap-1.5 text-xs text-white/25"
+                                style={{ fontWeight: "var(--fw-medium)" }}>
+                                <span className="text-emerald-500/45">{icon}</span>
+                                {label}
+                            </div>
+                        ))}
                     </motion.div>
                 </div>
             </section>
 
 
 
+
             {/* FAQ Section */}
-            <section className="py-24 px-4 sm:px-6 lg:px-8 bg-slate-950">
+            <FAQSection />
+            {/* old FAQ removed — FAQSection component used above */}
+            <section className="py-0" style={{ display: 'none' }}>
                 <div className="max-w-3xl mx-auto">
                     <motion.div
                         {...fadeInUp}

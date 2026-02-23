@@ -1,207 +1,303 @@
-import { motion } from "framer-motion";
-import { Trophy, Check, ArrowRight, MoveRight } from "lucide-react";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { useRef } from "react";
+import { Link2, BarChart3, Trophy, ArrowRight } from "lucide-react";
 
-const fadeInUp = {
-    initial: { opacity: 0, y: 20 },
-    whileInView: { opacity: 1, y: 0 },
-    viewport: { once: true },
-    transition: { duration: 0.5 }
-};
+// ─── Step definitions ─────────────────────────────────────────────────────────
+const STEPS = [
+    {
+        number: "01",
+        icon: Link2,
+        iconColor: "text-emerald-400",
+        ringColor: "border-emerald-500/40",
+        glowColor: "rgba(16,185,129,0.15)",
+        badge: "Setup",
+        badgeColor: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+        title: "Cole o webhook",
+        description:
+            "Kiwify, Greenn ou Hotmart. Copie a URL, cole na plataforma e pronto — as vendas começam a aparecer em segundos, sozinhas.",
+        bullets: ["Kiwify", "Greenn", "Hotmart"],
+        delay: 0,
+    },
+    {
+        number: "02",
+        icon: BarChart3,
+        iconColor: "text-emerald-400",
+        ringColor: "border-emerald-500/40",
+        glowColor: "rgba(16,185,129,0.15)",
+        badge: "Automático",
+        badgeColor: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+        title: "O ranking atualiza sozinho",
+        description:
+            "Cada venda aprovada sobe no ranking em tempo real. Sem planilha, sem atualização manual, sem gestor precisando ficar cobrando.",
+        bullets: ["Tempo real", "Sem planilha", "Zero esforço"],
+        delay: 0.15,
+    },
+    {
+        number: "03",
+        icon: Trophy,
+        iconColor: "text-amber-400",
+        ringColor: "border-amber-500/40",
+        glowColor: "rgba(245,158,11,0.15)",
+        badge: "Resultado",
+        badgeColor: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+        title: "Seu time compete — e vende mais",
+        description:
+            "Ninguém quer ficar pra trás. A competição saudável move o time sem você precisar cobrar. Mais vendas, menos reunião.",
+        bullets: ["Motivação natural", "Meta cumprida", "Menos reunião"],
+        delay: 0.3,
+    },
+] as const;
 
+// ─── HowItWorks ───────────────────────────────────────────────────────────────
 export const HowItWorks = () => {
-    return (
-        <section className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-slate-950 to-slate-900 relative overflow-hidden">
-            {/* Background accent */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-600/5 rounded-full blur-3xl" />
+    const sectionRef = useRef<HTMLElement>(null);
+    const { scrollYProgress } = useScroll({
+        target: sectionRef,
+        offset: ["start end", "end start"],
+    });
+    const lineScaleY = useTransform(scrollYProgress, [0.1, 0.8], [0, 1]);
 
-            <div className="max-w-4xl mx-auto relative z-10">
+    return (
+        <section
+            ref={sectionRef}
+            id="how-it-works"
+            className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-slate-950 to-slate-900 relative overflow-hidden"
+        >
+            {/* Background glow */}
+            <div
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full pointer-events-none"
+                style={{
+                    background:
+                        "radial-gradient(circle, rgba(16,185,129,0.05) 0%, transparent 70%)",
+                    filter: "blur(40px)",
+                }}
+            />
+
+            <div className="max-w-5xl mx-auto relative z-10">
+
+                {/* Section header */}
                 <motion.div
-                    {...fadeInUp}
-                    className="text-center mb-16"
+                    className="text-center mb-20"
+                    initial={{ opacity: 0, y: 24 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5 }}
                 >
-                    <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 font-serif">
-                        Funcionando em <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">5 minutos</span>
+                    <span
+                        className="inline-block text-label text-xs text-emerald-400 border border-emerald-500/25 bg-emerald-500/8 rounded-full px-4 py-1.5 mb-5"
+                        style={{ letterSpacing: "var(--ls-widest)" }}
+                    >
+                        COMO FUNCIONA
+                    </span>
+
+                    <h2 className="text-heading text-3xl sm:text-4xl text-white mb-4">
+                        Funcionando em{" "}
+                        <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
+                            5 minutos
+                        </span>
                     </h2>
-                    <p className="text-lg text-gray-400">
+
+                    <p
+                        className="text-body text-gray-400 max-w-xl mx-auto"
+                        style={{ fontSize: "1.0625rem" }}
+                    >
                         Sem treinamento. Sem consultoria. Sem dor de cabeça.
                     </p>
                 </motion.div>
 
-                {/* Vertical Timeline */}
+                {/* Timeline */}
                 <div className="relative">
-                    {/* Connecting line */}
-                    <div className="absolute left-8 md:left-1/2 md:-translate-x-0.5 top-0 h-full w-0.5 bg-gradient-to-b from-emerald-500 via-emerald-500 to-amber-500 opacity-30" />
 
-                    {/* Step 1: Conecte - Toggle Switch */}
-                    <motion.div
-                        {...fadeInUp}
-                        className="relative flex flex-col md:flex-row items-start md:items-center gap-6 mb-16"
-                    >
-                        {/* Left content (on md+) */}
-                        <div className="md:w-1/2 md:text-right md:pr-12 order-2 md:order-1">
-                            <h3 className="text-xl font-semibold text-white mb-2">Cole o webhook</h3>
-                            <p className="text-gray-400">
-                                Kiwify, Greenn, Hotmart. Copie e cole. As vendas começam a aparecer sozinhas.
-                            </p>
-                        </div>
+                    {/* Vertical connecting line — scroll-driven */}
+                    <div className="absolute left-8 md:left-1/2 md:-translate-x-px top-8 bottom-8 w-px overflow-hidden">
+                        <div className="absolute inset-0 bg-white/5" />
+                        <motion.div
+                            className="absolute top-0 left-0 right-0 origin-top"
+                            style={{
+                                background:
+                                    "linear-gradient(to bottom, #10b981, #10b981 70%, #f59e0b)",
+                                scaleY: lineScaleY,
+                                height: "100%",
+                            }}
+                        />
+                    </div>
 
-                        {/* Center icon/animation */}
-                        <div className="relative z-10 order-1 md:order-2">
-                            <div className="w-16 h-16 rounded-full bg-slate-800 border-2 border-emerald-500 flex items-center justify-center shadow-xl shadow-emerald-500/20">
-                                {/* Toggle Switch Animation */}
-                                <div className="relative w-10 h-5 bg-slate-700 rounded-full p-0.5">
-                                    <motion.div
-                                        className="w-4 h-4 rounded-full"
-                                        initial={{ x: 0, backgroundColor: "#64748b" }}
-                                        whileInView={{ x: 20, backgroundColor: "#22c55e" }}
-                                        transition={{ delay: 0.5, duration: 0.3, type: "spring" }}
-                                        viewport={{ once: true }}
-                                    />
-                                    <motion.div
-                                        className="absolute inset-0 rounded-full"
-                                        initial={{ backgroundColor: "transparent" }}
-                                        whileInView={{ backgroundColor: "rgba(34, 197, 94, 0.3)" }}
-                                        transition={{ delay: 0.5, duration: 0.3 }}
-                                        viewport={{ once: true }}
-                                    />
-                                </div>
-                            </div>
-                            {/* Pulse ring */}
+                    {STEPS.map((step, i) => {
+                        const Icon = step.icon;
+                        const isRight = i % 2 === 0; // alternates: left, right, left
+
+                        return (
                             <motion.div
-                                className="absolute inset-0 rounded-full border-2 border-emerald-500"
-                                initial={{ scale: 1, opacity: 0.5 }}
-                                whileInView={{ scale: 1.5, opacity: 0 }}
-                                transition={{ delay: 0.5, duration: 0.8 }}
-                                viewport={{ once: true }}
-                            />
-                        </div>
-
-                        {/* Right content (placeholder on md+) */}
-                        <div className="md:w-1/2 md:pl-12 hidden md:block order-3" />
-                    </motion.div>
-
-                    {/* Step 2: Venda - Kanban Card Moving */}
-                    <motion.div
-                        {...fadeInUp}
-                        transition={{ delay: 0.1 }}
-                        className="relative flex flex-col md:flex-row items-start md:items-center gap-6 mb-16"
-                    >
-                        {/* Left placeholder */}
-                        <div className="md:w-1/2 md:pr-12 hidden md:block order-1" />
-
-                        {/* Center icon/animation */}
-                        <div className="relative z-10 order-1 md:order-2">
-                            <div className="w-16 h-16 rounded-full bg-slate-800 border-2 border-emerald-500 flex items-center justify-center shadow-xl shadow-emerald-500/20 overflow-hidden">
-                                {/* Mini Kanban Card */}
-                                <div className="relative w-10 h-8">
-                                    {/* Card container */}
-                                    <motion.div
-                                        className="absolute top-1 left-0 w-4 h-6 bg-slate-600 rounded-sm flex items-center justify-center"
-                                        initial={{ x: 0 }}
-                                        whileInView={{ x: 24 }}
-                                        transition={{ delay: 0.8, duration: 0.5, type: "spring" }}
-                                        viewport={{ once: true }}
-                                    >
-                                        <div className="w-2 h-2 bg-emerald-400 rounded-full" />
-                                    </motion.div>
-                                    {/* Arrow indicator */}
-                                    <motion.div
-                                        className="absolute top-2.5 left-5"
-                                        initial={{ opacity: 1 }}
-                                        whileInView={{ opacity: 0 }}
-                                        transition={{ delay: 1.2, duration: 0.2 }}
-                                        viewport={{ once: true }}
-                                    >
-                                        <MoveRight className="h-3 w-3 text-emerald-400" />
-                                    </motion.div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Right content */}
-                        <div className="md:w-1/2 md:text-left md:pl-12 order-2 md:order-3">
-                            <h3 className="text-xl font-semibold text-white mb-2">O ranking atualiza sozinho</h3>
-                            <p className="text-gray-400">
-                                Cada venda aprovada sobe no ranking. Zero planilha. Zero trabalho manual.
-                            </p>
-                        </div>
-                    </motion.div>
-
-                    {/* Step 3: Comemore - Trophy Unlocking */}
-                    <motion.div
-                        {...fadeInUp}
-                        transition={{ delay: 0.2 }}
-                        className="relative flex flex-col md:flex-row items-start md:items-center gap-6"
-                    >
-                        {/* Left content */}
-                        <div className="md:w-1/2 md:text-right md:pr-12 order-2 md:order-1">
-                            <h3 className="text-xl font-semibold text-white mb-2">Seu time compete</h3>
-                            <p className="text-gray-400">
-                                Ninguém quer ficar pra trás. A competição saudável move seu time sem você precisar cobrar.
-                            </p>
-                        </div>
-
-                        {/* Center icon/animation */}
-                        <div className="relative z-10 order-1 md:order-2">
-                            <motion.div
-                                className="w-16 h-16 rounded-full bg-slate-800 border-2 border-amber-500 flex items-center justify-center shadow-xl shadow-amber-500/20"
-                                whileInView={{
-                                    boxShadow: [
-                                        "0 10px 40px -15px rgba(245, 158, 11, 0.2)",
-                                        "0 10px 60px -15px rgba(245, 158, 11, 0.5)",
-                                        "0 10px 40px -15px rgba(245, 158, 11, 0.2)"
-                                    ]
+                                key={step.number}
+                                className={`relative flex flex-col md:flex-row items-start md:items-center gap-6 ${i < STEPS.length - 1 ? "mb-20" : ""
+                                    }`}
+                                initial={{ opacity: 0, y: 32 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true, margin: "-60px" }}
+                                transition={{
+                                    duration: 0.55,
+                                    delay: step.delay,
+                                    ease: [0.22, 1, 0.36, 1],
                                 }}
-                                transition={{ delay: 1, duration: 1.5, repeat: 2 }}
-                                viewport={{ once: true }}
                             >
-                                <motion.div
-                                    initial={{ scale: 0.8, opacity: 0.5 }}
-                                    whileInView={{ scale: 1, opacity: 1 }}
-                                    transition={{ delay: 1, duration: 0.3, type: "spring" }}
-                                    viewport={{ once: true }}
+                                {/* ── Card content: left side on desktop ── */}
+                                <div
+                                    className={`md:w-1/2 ${isRight
+                                            ? "md:pr-14 md:text-right order-2 md:order-1"
+                                            : "md:pl-14 md:text-left order-2 md:order-3"
+                                        }`}
                                 >
-                                    <Trophy className="h-6 w-6 text-amber-400" />
-                                </motion.div>
-                            </motion.div>
+                                    {/* Card */}
+                                    <motion.div
+                                        className="relative p-6 rounded-2xl border border-white/6 bg-slate-900/60 backdrop-blur-sm"
+                                        style={{
+                                            boxShadow: `0 0 0 1px rgba(255,255,255,0.04), 0 20px 40px -20px rgba(0,0,0,0.4)`,
+                                        }}
+                                        whileHover={{
+                                            boxShadow: `0 0 0 1px rgba(255,255,255,0.08), 0 20px 40px -20px rgba(0,0,0,0.5), 0 0 60px -20px ${step.glowColor}`,
+                                            y: -4,
+                                        }}
+                                        transition={{ duration: 0.25 }}
+                                    >
+                                        {/* Subtle top glow line */}
+                                        <div
+                                            className="absolute top-0 left-6 right-6 h-px rounded-full"
+                                            style={{
+                                                background: `linear-gradient(90deg, transparent, ${step.iconColor === "text-amber-400"
+                                                        ? "rgba(245,158,11,0.4)"
+                                                        : "rgba(16,185,129,0.4)"
+                                                    }, transparent)`,
+                                            }}
+                                        />
 
-                            {/* Particle bursts */}
-                            {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
-                                <motion.div
-                                    key={i}
-                                    className="absolute w-1.5 h-1.5 bg-amber-400 rounded-full"
-                                    style={{
-                                        top: "50%",
-                                        left: "50%",
-                                        marginTop: "-3px",
-                                        marginLeft: "-3px",
-                                    }}
-                                    initial={{
-                                        x: 0,
-                                        y: 0,
-                                        opacity: 0,
-                                        scale: 0
-                                    }}
-                                    whileInView={{
-                                        x: Math.cos(angle * Math.PI / 180) * 35,
-                                        y: Math.sin(angle * Math.PI / 180) * 35,
-                                        opacity: [0, 1, 0],
-                                        scale: [0, 1, 0]
-                                    }}
-                                    transition={{
-                                        delay: 1.1 + i * 0.02,
-                                        duration: 0.6,
-                                        ease: "easeOut"
-                                    }}
-                                    viewport={{ once: true }}
+                                        {/* Badge */}
+                                        <span
+                                            className={`inline-block text-label text-[10px] border rounded-full px-2.5 py-0.5 mb-4 ${step.badgeColor}`}
+                                        >
+                                            {step.badge}
+                                        </span>
+
+                                        {/* Title */}
+                                        <h3
+                                            className="text-white mb-2"
+                                            style={{
+                                                fontWeight: "var(--fw-bold)",
+                                                fontSize: "1.125rem",
+                                                lineHeight: "var(--lh-snug)",
+                                            }}
+                                        >
+                                            {step.title}
+                                        </h3>
+
+                                        {/* Description */}
+                                        <p
+                                            className="text-body text-gray-400 text-sm mb-4"
+                                        >
+                                            {step.description}
+                                        </p>
+
+                                        {/* Bullets */}
+                                        <ul className={`flex flex-wrap gap-2 ${isRight ? "md:justify-end" : ""}`}>
+                                            {step.bullets.map((b) => (
+                                                <li
+                                                    key={b}
+                                                    className="flex items-center gap-1.5 text-xs text-white/50"
+                                                    style={{ fontWeight: "var(--fw-medium)" }}
+                                                >
+                                                    <span
+                                                        className={`w-1 h-1 rounded-full flex-shrink-0 ${step.iconColor === "text-amber-400"
+                                                                ? "bg-amber-400"
+                                                                : "bg-emerald-400"
+                                                            }`}
+                                                    />
+                                                    {b}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </motion.div>
+                                </div>
+
+                                {/* ── Center node ── */}
+                                <div className="relative z-10 order-1 md:order-2 flex-shrink-0">
+                                    {/* Outer ring */}
+                                    <motion.div
+                                        className={`w-16 h-16 rounded-full border-2 ${step.ringColor} bg-slate-900 flex flex-col items-center justify-center shadow-xl`}
+                                        whileInView={{
+                                            boxShadow: [
+                                                `0 0 0 0 ${step.glowColor}`,
+                                                `0 0 30px 8px ${step.glowColor}`,
+                                                `0 0 0 0 ${step.glowColor}`,
+                                            ],
+                                        }}
+                                        transition={{
+                                            delay: step.delay + 0.4,
+                                            duration: 1.4,
+                                            repeat: 0,
+                                        }}
+                                        viewport={{ once: true }}
+                                    >
+                                        <Icon
+                                            className={`h-5 w-5 ${step.iconColor}`}
+                                            strokeWidth={2}
+                                        />
+                                        <span
+                                            className={`${step.iconColor} mt-0.5`}
+                                            style={{
+                                                fontWeight: "var(--fw-black)",
+                                                fontSize: "0.6rem",
+                                                letterSpacing: "0.05em",
+                                                opacity: 0.6,
+                                            }}
+                                        >
+                                            {step.number}
+                                        </span>
+                                    </motion.div>
+
+                                    {/* Pulse ring on enter */}
+                                    <motion.div
+                                        className={`absolute inset-0 rounded-full border ${step.ringColor}`}
+                                        initial={{ scale: 1, opacity: 0.6 }}
+                                        whileInView={{ scale: 1.7, opacity: 0 }}
+                                        viewport={{ once: true }}
+                                        transition={{ delay: step.delay + 0.3, duration: 0.8 }}
+                                    />
+                                </div>
+
+                                {/* ── Empty side for alternating layout ── */}
+                                <div
+                                    className={`hidden md:block md:w-1/2 ${isRight ? "order-3" : "order-1"
+                                        }`}
                                 />
-                            ))}
-                        </div>
-
-                        {/* Right placeholder */}
-                        <div className="md:w-1/2 md:pl-12 hidden md:block order-3" />
-                    </motion.div>
+                            </motion.div>
+                        );
+                    })}
                 </div>
+
+                {/* Bottom CTA nudge */}
+                <motion.div
+                    className="text-center mt-16"
+                    initial={{ opacity: 0, y: 16 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4, delay: 0.5 }}
+                >
+                    <p
+                        className="text-white/40 text-sm mb-3"
+                        style={{ fontWeight: "var(--fw-light)" }}
+                    >
+                        Pronto em menos tempo do que uma reunião de alinhamento
+                    </p>
+                    <motion.a
+                        href="#pricing"
+                        className="inline-flex items-center gap-2 text-emerald-400 text-sm hover:text-emerald-300 transition-colors"
+                        style={{ fontWeight: "var(--fw-semibold)" }}
+                        whileHover={{ x: 4 }}
+                        transition={{ duration: 0.2 }}
+                    >
+                        Começar agora
+                        <ArrowRight className="h-4 w-4" />
+                    </motion.a>
+                </motion.div>
             </div>
         </section>
     );

@@ -2,6 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Typography Design Tokens ────────────────────────────────────────────────
+   Inter weight scale for the landing page:
+   --fw-light    : 300 — captions, fine print, subtle labels
+   --fw-regular  : 400 — body text, descriptions, support copy
+   --fw-medium   : 500 — UI labels, nav links, secondary CTAs
+   --fw-semibold : 600 — subheadings, card titles, badge text
+   --fw-bold     : 700 — section headings, feature names
+   --fw-extrabold: 800 — hero headline (accent line), metric numbers
+   --fw-black    : 900 — reserved for large display numbers only
+──────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+
+  --fw-light: 300;
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+  --fw-extrabold: 800;
+  --fw-black: 900;
+
+  /* Line heights */
+  --lh-tight: 1.15;
+  --lh-snug: 1.3;
+  --lh-normal: 1.6;
+  --lh-relaxed: 1.75;
+
+  /* Letter spacing */
+  --ls-tight: -0.03em;
+  --ls-snug: -0.015em;
+  --ls-normal: 0em;
+  --ls-wide: 0.04em;
+  --ls-widest: 0.12em;
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -127,7 +164,12 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: var(--font-sans);
+    font-weight: var(--fw-regular);
+    font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 }
 
@@ -194,4 +236,82 @@ All colors MUST be HSL.
 
 .hover\:scrollbar-thumb-slate-600:hover::-webkit-scrollbar-thumb {
   background: hsl(220 10% 60%);
+}
+
+/* ─── Semantic Typography Classes ────────────────────────────────────────────
+   Use these classes instead of ad-hoc font-weight/size combos to ensure
+   consistent typographic hierarchy across the landing page.
+──────────────────────────────────────────────────────────────────────────── */
+@layer components {
+
+  /* Display — Hero headline numbers or giant stats (fw-black, tight tracking) */
+  .text-display {
+    font-family: var(--font-sans);
+    font-weight: var(--fw-black);
+    line-height: var(--lh-tight);
+    letter-spacing: var(--ls-tight);
+  }
+
+  /* Heading — Section titles, H1/H2 (fw-extrabold, snug) */
+  .text-heading {
+    font-family: var(--font-sans);
+    font-weight: var(--fw-extrabold);
+    line-height: var(--lh-snug);
+    letter-spacing: var(--ls-snug);
+  }
+
+  /* Subheading — Card titles, feature names (fw-bold) */
+  .text-subheading {
+    font-family: var(--font-sans);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-snug);
+    letter-spacing: var(--ls-normal);
+  }
+
+  /* Body — Main paragraphs, descriptions (fw-regular, relaxed) */
+  .text-body {
+    font-family: var(--font-sans);
+    font-weight: var(--fw-regular);
+    line-height: var(--lh-relaxed);
+    letter-spacing: var(--ls-normal);
+  }
+
+  /* Body Strong — CTAs, highlighted body (fw-medium) */
+  .text-body-strong {
+    font-family: var(--font-sans);
+    font-weight: var(--fw-medium);
+    line-height: var(--lh-normal);
+    letter-spacing: var(--ls-normal);
+  }
+
+  /* Caption — Fine print, timestamps, meta info (fw-light) */
+  .text-caption {
+    font-family: var(--font-sans);
+    font-weight: var(--fw-light);
+    line-height: var(--lh-normal);
+    letter-spacing: var(--ls-normal);
+  }
+
+  /* Label — Badges, tags, nav links, short UI text (fw-semibold, wide) */
+  .text-label {
+    font-family: var(--font-sans);
+    font-weight: var(--fw-semibold);
+    line-height: 1;
+    letter-spacing: var(--ls-wide);
+    text-transform: uppercase;
+  }
+
+  /* Mono — HUD elements, code snippets, data readouts */
+  .text-mono {
+    font-family: var(--font-mono);
+    font-weight: var(--fw-regular);
+    line-height: var(--lh-normal);
+    letter-spacing: 0;
+  }
+}
+
+/* Landing-page specific font-smoothing guarantee */
+.landing-root * {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
