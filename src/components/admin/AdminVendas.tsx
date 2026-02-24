@@ -16,6 +16,7 @@ import { Download, MoreHorizontal, FileText, Edit, Trash2, TrendingUp, DollarSig
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { useTenant } from "@/contexts/TenantContext";
+import { invalidateSalesQueries } from "@/utils/salesSync";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -145,11 +146,19 @@ export const AdminVendas = () => {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("vendas").delete().eq("id", id);
+      const { data, error } = await supabase
+        .from("vendas")
+        .delete()
+        .eq("id", id)
+        .select("id");
       if (error) throw error;
+      if (!data || data.length === 0) {
+        throw new Error("A venda não foi removida (sem permissão ou registro não encontrado).");
+      }
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ["admin-vendas"] });
+      await invalidateSalesQueries(queryClient);
       toast.success("Venda deletada com sucesso");
       setDeleteId(null);
     },

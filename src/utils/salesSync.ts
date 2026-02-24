@@ -84,3 +84,27 @@ export const syncWonDealToSale = async (
   await invalidateSalesQueries(queryClient);
 };
 
+/**
+ * Remove a venda sincronizada automaticamente para um deal, quando ele deixa de
+ * estar ganho (ex.: foi marcado como perdido depois).
+ */
+export const unsyncDealSale = async (
+  dealId: string,
+  userId: string,
+  queryClient?: QueryClient
+) => {
+  if (!dealId || !userId) return;
+
+  const observacoes = `Sincronizado automaticamente do CRM (deal ${dealId})`;
+
+  const { error } = await supabase
+    .from("vendas")
+    .delete()
+    .eq("observacoes", observacoes)
+    .eq("user_id", userId);
+
+  if (error) throw error;
+
+  await invalidateSalesQueries(queryClient);
+};
+

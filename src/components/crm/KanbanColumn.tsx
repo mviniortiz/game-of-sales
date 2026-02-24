@@ -11,6 +11,7 @@ interface KanbanColumnProps {
   deals: Deal[];
   total: { count: number; value: number };
   formatCurrency: (value: number) => string;
+  onDeleteDeal?: (deal: Deal) => void;
   previousStageCount?: number; // for funnel conversion rate
   showConversionRate?: boolean;
   isLast?: boolean;
@@ -42,6 +43,7 @@ export const KanbanColumn = memo(({
   deals,
   total,
   formatCurrency,
+  onDeleteDeal,
   previousStageCount,
   showConversionRate = false,
   isLast = false,
@@ -155,6 +157,7 @@ export const KanbanColumn = memo(({
                       key={deal.id}
                       deal={deal}
                       formatCurrency={formatCurrency}
+                      onDelete={onDeleteDeal}
                     />
                   ))
                 )}

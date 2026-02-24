@@ -445,13 +445,16 @@ export const AdminVendasView = ({
             id,
             user_id,
             valor_meta,
-            profiles!inner(nome, avatar_url)
+            profiles!inner(nome, avatar_url, company_id)
           `)
           .eq("mes_referencia", mesReferencia)
       );
 
       if (selectedVendedor !== "todos") {
         metasQuery = metasQuery.eq("user_id", selectedVendedor);
+      }
+      if (activeCompanyId) {
+        metasQuery = metasQuery.eq("profiles.company_id", activeCompanyId);
       }
 
       const { data: metas } = await metasQuery;

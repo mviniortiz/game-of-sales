@@ -2,20 +2,22 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
-  Clock, AlertTriangle, Phone, Calendar, CheckCircle2, Flame
+  Clock, AlertTriangle, Phone, Calendar, CheckCircle2, Flame, Trash2
 } from "lucide-react";
 import { format, differenceInDays, isPast, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Deal } from "@/pages/CRM";
-import { memo, useCallback, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 interface DealCardProps {
   deal: Deal;
   isDragging?: boolean;
   formatCurrency: (value: number) => string;
   onClick?: () => void;
+  onDelete?: (deal: Deal) => void;
 }
 
 // Rotting status
@@ -31,10 +33,14 @@ const getXPColor = (p: number) =>
     p >= 40 ? "from-amber-500 to-amber-400" :
       "from-slate-600 to-slate-500";
 
-export const DealCard = memo(({ deal, isDragging = false, formatCurrency }: DealCardProps) => {
+export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDelete }: DealCardProps) => {
   const navigate = useNavigate();
   const clickStartTime = useRef<number>(0);
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  const hideActionsTimerRef = useRef<number | null>(null);
   const [actionsVisible, setActionsVisible] = useState(false);
+  const [actionsPlacement, setActionsPlacement] = useState<"above" | "below" | "inside">("above");
+  const [actionsCoords, setActionsCoords] = useState<{ top: number; left: number } | null>(null);
 
   const {
     attributes,
@@ -45,8 +51,13 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency }: Deal
     isDragging: isSortableDragging,
   } = useSortable({
     id: deal.id,
-    transition: { duration: 150, easing: "ease-out" },
+    transition: { duration: 220, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
   });
+
+  const setRefs = useCallback((node: HTMLDivElement | null) => {
+    cardRef.current = node;
+    setNodeRef(node);
+  }, [setNodeRef]);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -96,12 +107,102 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency }: Deal
       case "check":
         navigate(`/deals/${deal.id}?action=win`);
         break;
+      case "delete":
+        onDelete?.(deal);
+        break;
     }
-  }, [deal, navigate]);
+  }, [deal, navigate, onDelete]);
+
+  const updateActionsPlacement = useCallback(() => {
+    const node = cardRef.current;
+    if (!node) return;
+
+    const viewport =
+      (node.closest("[data-radix-scroll-area-viewport]") as HTMLElement | null) ??
+      node.parentElement;
+
+    if (!viewport) return;
+
+    const cardRect = node.getBoundingClientRect();
+    const viewportRect = viewport.getBoundingClientRect();
+    const menuHeight = 40;
+    const menuWidth = onDelete ? 172 : 126;
+    const gap = 8;
+
+    const topSpace = cardRect.top - viewportRect.top;
+    const bottomSpace = viewportRect.bottom - cardRect.bottom;
+
+    if (topSpace >= menuHeight + gap) {
+      setActionsPlacement("above");
+      setActionsCoords({
+        top: cardRect.top - menuHeight - 6,
+        left: Math.max(8, Math.min(cardRect.left + cardRect.width / 2 - menuWidth / 2, window.innerWidth - menuWidth - 8)),
+      });
+      return;
+    }
+
+    if (bottomSpace >= menuHeight + gap) {
+      setActionsPlacement("below");
+      setActionsCoords({
+        top: cardRect.bottom + 6,
+        left: Math.max(8, Math.min(cardRect.left + cardRect.width / 2 - menuWidth / 2, window.innerWidth - menuWidth - 8)),
+      });
+      return;
+    }
+
+    setActionsPlacement("inside");
+    setActionsCoords({
+      top: cardRect.top + 8,
+      left: Math.max(8, Math.min(cardRect.right - menuWidth - 8, window.innerWidth - menuWidth - 8)),
+    });
+  }, []);
+
+  const clearHideTimer = useCallback(() => {
+    if (hideActionsTimerRef.current !== null) {
+      window.clearTimeout(hideActionsTimerRef.current);
+      hideActionsTimerRef.current = null;
+    }
+  }, []);
+
+  const showActions = useCallback(() => {
+    clearHideTimer();
+    updateActionsPlacement();
+    setActionsVisible(true);
+  }, [clearHideTimer, updateActionsPlacement]);
+
+  const hideActionsSoon = useCallback(() => {
+    clearHideTimer();
+    hideActionsTimerRef.current = window.setTimeout(() => {
+      setActionsVisible(false);
+      hideActionsTimerRef.current = null;
+    }, 120);
+  }, [clearHideTimer]);
+
+  useEffect(() => {
+    if (!actionsVisible) return;
+
+    updateActionsPlacement();
+
+    const handleReposition = () => updateActionsPlacement();
+    window.addEventListener("resize", handleReposition);
+    window.addEventListener("scroll", handleReposition, true);
+
+    return () => {
+      window.removeEventListener("resize", handleReposition);
+      window.removeEventListener("scroll", handleReposition, true);
+    };
+  }, [actionsVisible, updateActionsPlacement]);
+
+  const actionsMotion =
+    actionsPlacement === "above"
+      ? { initial: { opacity: 0, y: 6, scale: 0.92 }, animate: { opacity: 1, y: 0, scale: 1 }, exit: { opacity: 0, y: 6, scale: 0.92 } }
+      : actionsPlacement === "below"
+        ? { initial: { opacity: 0, y: -6, scale: 0.92 }, animate: { opacity: 1, y: 0, scale: 1 }, exit: { opacity: 0, y: -6, scale: 0.92 } }
+        : { initial: { opacity: 0, y: -4, scale: 0.95 }, animate: { opacity: 1, y: 0, scale: 1 }, exit: { opacity: 0, y: -4, scale: 0.95 } };
 
   return (
     <div
-      ref={setNodeRef}
+      ref={setRefs}
       style={style}
       className={`
         group relative
@@ -109,17 +210,17 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency }: Deal
         border-l-4 ${rotting.border}
         rounded-xl p-3.5
         cursor-grab active:cursor-grabbing
-        transition-all duration-150
+        transition-all duration-200 will-change-transform
         ${isBeingDragged
-          ? "scale-[1.03] rotate-[0.8deg] shadow-2xl shadow-black/50 border-emerald-500/60 z-50 !opacity-100"
+          ? "scale-[1.02] rotate-[0.6deg] shadow-2xl shadow-black/45 border-emerald-500/60 z-50 !opacity-100"
           : "hover:border-slate-600 hover:shadow-lg hover:shadow-black/30 hover:-translate-y-0.5"
         }
         ${isSortableDragging ? "opacity-40" : "opacity-100"}
       `}
       onMouseDown={handleMouseDown}
       onClick={handleClick}
-      onMouseEnter={() => setActionsVisible(true)}
-      onMouseLeave={() => setActionsVisible(false)}
+      onMouseEnter={showActions}
+      onMouseLeave={hideActionsSoon}
       {...attributes}
       {...listeners}
     >
@@ -135,42 +236,64 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency }: Deal
       )}
 
       {/* ── Hover quick-action bar ────────────────────────── */}
-      <AnimatePresence>
-        {actionsVisible && !isBeingDragged && (
-          <motion.div
-            initial={{ opacity: 0, y: 6, scale: 0.92 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 6, scale: 0.92 }}
-            transition={{ duration: 0.13, ease: "easeOut" }}
-            className="absolute -top-[34px] left-1/2 -translate-x-1/2 flex items-center gap-0.5 px-2 py-1.5 rounded-xl bg-slate-700 shadow-xl shadow-black/40 ring-1 ring-slate-600 z-50 whitespace-nowrap"
-            onClick={e => e.stopPropagation()}
-          >
-            <button
-              onPointerDown={e => { e.stopPropagation(); handleQuickAction(e as any, "phone"); }}
-              className="p-1.5 rounded-lg hover:bg-emerald-500/20 transition-colors group/b"
-              title="Ligar"
+      {typeof document !== "undefined" && createPortal(
+        <AnimatePresence>
+          {actionsVisible && !isBeingDragged && actionsCoords && (
+            <motion.div
+              initial={actionsMotion.initial}
+              animate={actionsMotion.animate}
+              exit={actionsMotion.exit}
+              transition={{ duration: 0.16, ease: "easeOut" }}
+              style={{
+                position: "fixed",
+                top: actionsCoords.top,
+                left: actionsCoords.left,
+              }}
+              className="flex items-center gap-0.5 px-2 py-1.5 rounded-xl bg-slate-700 shadow-xl shadow-black/40 ring-1 ring-slate-600 z-[9999] whitespace-nowrap"
+              onMouseEnter={showActions}
+              onMouseLeave={hideActionsSoon}
+              onClick={e => e.stopPropagation()}
             >
-              <Phone className="h-3.5 w-3.5 text-slate-400 group-hover/b:text-emerald-400" />
-            </button>
-            <div className="w-px h-4 bg-slate-600" />
-            <button
-              onPointerDown={e => { e.stopPropagation(); handleQuickAction(e as any, "calendar"); }}
-              className="p-1.5 rounded-lg hover:bg-emerald-500/20 transition-colors group/b"
-              title="Agendar"
-            >
-              <Calendar className="h-3.5 w-3.5 text-slate-400 group-hover/b:text-emerald-400" />
-            </button>
-            <div className="w-px h-4 bg-slate-600" />
-            <button
-              onPointerDown={e => { e.stopPropagation(); handleQuickAction(e as any, "check"); }}
-              className="p-1.5 rounded-lg hover:bg-emerald-500/20 transition-colors group/b"
-              title="Marcar como Ganho"
-            >
-              <CheckCircle2 className="h-3.5 w-3.5 text-slate-400 group-hover/b:text-emerald-400" />
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              <button
+                onPointerDown={e => { e.stopPropagation(); handleQuickAction(e as any, "phone"); }}
+                className="p-1.5 rounded-lg hover:bg-emerald-500/20 transition-colors group/b"
+                title="Ligar"
+              >
+                <Phone className="h-3.5 w-3.5 text-slate-400 group-hover/b:text-emerald-400" />
+              </button>
+              <div className="w-px h-4 bg-slate-600" />
+              <button
+                onPointerDown={e => { e.stopPropagation(); handleQuickAction(e as any, "calendar"); }}
+                className="p-1.5 rounded-lg hover:bg-emerald-500/20 transition-colors group/b"
+                title="Agendar"
+              >
+                <Calendar className="h-3.5 w-3.5 text-slate-400 group-hover/b:text-emerald-400" />
+              </button>
+              <div className="w-px h-4 bg-slate-600" />
+              <button
+                onPointerDown={e => { e.stopPropagation(); handleQuickAction(e as any, "check"); }}
+                className="p-1.5 rounded-lg hover:bg-emerald-500/20 transition-colors group/b"
+                title="Marcar como Ganho"
+              >
+                <CheckCircle2 className="h-3.5 w-3.5 text-slate-400 group-hover/b:text-emerald-400" />
+              </button>
+              {onDelete && (
+                <>
+                  <div className="w-px h-4 bg-slate-600" />
+                  <button
+                    onPointerDown={e => { e.stopPropagation(); handleQuickAction(e as any, "delete"); }}
+                    className="p-1.5 rounded-lg hover:bg-rose-500/20 transition-colors group/b"
+                    title="Excluir negociação"
+                  >
+                    <Trash2 className="h-3.5 w-3.5 text-slate-400 group-hover/b:text-rose-400" />
+                  </button>
+                </>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
       <div className="relative">
         {/* ── Row 1: Title + badges + avatar ─────────────── */}
@@ -201,12 +324,18 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency }: Deal
                 <span className="text-[10px] font-bold text-amber-400">{daysSince}d</span>
               </div>
             )}
+            {deal.assignee_outside_company && (
+              <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-rose-500/20">
+                <AlertTriangle className="h-3 w-3 text-rose-400" />
+                <span className="text-[9px] font-bold text-rose-300">Org</span>
+              </div>
+            )}
 
             {/* Avatar */}
-            <Avatar className="h-6 w-6 ring-1 ring-emerald-500/30">
+            <Avatar className={`h-6 w-6 ring-1 ${deal.assignee_outside_company ? "ring-rose-500/40" : "ring-emerald-500/30"}`}>
               <AvatarImage src={deal.profiles?.avatar_url || undefined} />
-              <AvatarFallback className="bg-slate-700 text-slate-300 text-[9px] font-bold">
-                {getInitials(deal.profiles?.nome || "")}
+              <AvatarFallback className={`text-[9px] font-bold ${deal.assignee_outside_company ? "bg-rose-500/10 text-rose-300" : "bg-slate-700 text-slate-300"}`}>
+                {deal.assignee_outside_company ? "!" : getInitials(deal.profiles?.nome || "")}
               </AvatarFallback>
             </Avatar>
           </div>
@@ -216,6 +345,11 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency }: Deal
         <p className="text-[11px] text-slate-400 mb-3 truncate">
           {deal.customer_name}
         </p>
+        {deal.assignee_outside_company && (
+          <p className="text-[10px] text-rose-300/90 mb-3 -mt-2 truncate">
+            Responsável de outra organização
+          </p>
+        )}
 
         {/* ── Value + probability badge ────────────────────── */}
         <div className="flex items-center justify-between mb-2.5">

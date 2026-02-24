@@ -1,7 +1,14 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+
+type AuthProfile = {
+  nome: string;
+  avatar_url: string | null;
+  is_super_admin: boolean;
+  company_id: string | null;
+};
 
 interface AuthContextType {
   user: User | null;
@@ -10,12 +17,7 @@ interface AuthContextType {
   isAdmin: boolean;
   isSuperAdmin: boolean;
   companyId: string | null;
-  profile: {
-    nome: string;
-    avatar_url: string | null;
-    is_super_admin: boolean;
-    company_id: string | null;
-  } | null;
+  profile: AuthProfile | null;
   refreshProfile: () => Promise<void>;
   signUp: (email: string, password: string, nome: string, companyId?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
@@ -31,29 +33,52 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [companyId, setCompanyId] = useState<string | null>(null);
-  const [profile, setProfile] = useState<{
-    nome: string;
-    avatar_url: string | null;
-    is_super_admin: boolean;
-    company_id: string | null;
-  } | null>(null);
+  const [profile, setProfile] = useState<AuthProfile | null>(null);
+  const integrityResetInProgress = useRef(false);
   const navigate = useNavigate();
 
-  const loadProfile = async (userId: string) => {
+  const clearProfileState = () => {
+    setProfile(null);
+    setIsSuperAdmin(false);
+    setCompanyId(null);
+  };
+
+  const loadProfile = async (userId: string): Promise<"ok" | "missing" | "invalid" | "error"> => {
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
         .select("nome, avatar_url, is_super_admin, company_id")
         .eq("id", userId)
-        .single();
+        .maybeSingle();
 
-      if (data) {
-        setProfile(data);
-        setIsSuperAdmin(data.is_super_admin || false);
-        setCompanyId(data.company_id);
+      if (error) {
+        console.error("Error loading profile:", error);
+        clearProfileState();
+        return "error";
       }
+
+      if (!data) {
+        console.warn("[AuthContext] Auth user has no profile row:", userId);
+        clearProfileState();
+        return "missing";
+      }
+
+      // Regular users must be linked to a company. Super admins can operate without
+      // a default company because TenantContext can select one later.
+      if (!data.is_super_admin && !data.company_id) {
+        console.warn("[AuthContext] Profile is missing company_id for non-super-admin user:", userId);
+        clearProfileState();
+        return "invalid";
+      }
+
+      setProfile(data);
+      setIsSuperAdmin(data.is_super_admin || false);
+      setCompanyId(data.company_id);
+      return "ok";
     } catch (error) {
       console.error("Error loading profile:", error);
+      clearProfileState();
+      return "error";
     }
   };
 
@@ -77,11 +102,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const clearAuthState = () => {
     setUser(null);
     setSession(null);
-    setProfile(null);
+    clearProfileState();
     setIsAdmin(false);
-    setIsSuperAdmin(false);
-    setCompanyId(null);
     localStorage.removeItem("activeCompanyId");
+  };
+
+  const forceSignOutForInvalidAccount = async (reason: string) => {
+    if (integrityResetInProgress.current) return;
+
+    integrityResetInProgress.current = true;
+    console.warn("[AuthContext] Forcing sign-out due to invalid account state:", reason);
+
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error("Error during forced signOut:", error);
+    } finally {
+      clearAuthState();
+      setLoading(false);
+      navigate("/auth", {
+        replace: true,
+        state: { authError: "invalid_profile", reason },
+      });
+      integrityResetInProgress.current = false;
+    }
   };
 
   useEffect(() => {
@@ -125,12 +169,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         // Defer async operations to prevent blocking
         if (session?.user) {
+          setLoading(true);
           setTimeout(() => {
             Promise.all([
               checkAdminRole(session.user.id),
               loadProfile(session.user.id)
-            ]).finally(() => {
-              if (mounted) setLoading(false);
+            ]).then(async ([, profileStatus]) => {
+              if (!mounted) return;
+
+              if (profileStatus === "missing" || profileStatus === "invalid") {
+                await forceSignOutForInvalidAccount(profileStatus);
+              }
+            }).finally(() => {
+              if (mounted && !integrityResetInProgress.current) setLoading(false);
             });
           }, 0);
         } else {
@@ -148,11 +199,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(session?.user ?? null);
 
       if (session?.user) {
+        setLoading(true);
         Promise.all([
           checkAdminRole(session.user.id),
           loadProfile(session.user.id)
-        ]).finally(() => {
-          if (mounted) setLoading(false);
+        ]).then(async ([, profileStatus]) => {
+          if (!mounted) return;
+
+          if (profileStatus === "missing" || profileStatus === "invalid") {
+            await forceSignOutForInvalidAccount(profileStatus);
+          }
+        }).finally(() => {
+          if (mounted && !integrityResetInProgress.current) setLoading(false);
         });
       } else {
         setLoading(false);
@@ -195,10 +253,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       email,
       password,
     });
-
-    if (!error) {
-      navigate("/dashboard");
-    }
 
     return { error };
   };

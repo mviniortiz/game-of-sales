@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,14 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, user, profile, isSuperAdmin, companyId, loading: authLoading } = useAuth();
+
+  useEffect(() => {
+    const hasValidAccessContext = !!profile && (profile.is_super_admin || isSuperAdmin || !!companyId);
+    if (!authLoading && user && hasValidAccessContext) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [authLoading, user, profile, isSuperAdmin, companyId, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -156,11 +163,11 @@ const Auth = () => {
             {/* Submit Button */}
             <Button
               type="submit"
-              disabled={loading}
+              disabled={loading || authLoading}
               className="w-full h-12 text-base font-semibold bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all animate-fade-in"
               style={{ animationDelay: '0.7s', animationFillMode: 'both' }}
             >
-              {loading ? (
+              {loading || authLoading ? (
                 "Entrando..."
               ) : (
                 <span className="flex items-center justify-center gap-2">

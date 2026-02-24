@@ -3,13 +3,15 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   DndContext,
   DragOverlay,
-  closestCenter,
+  closestCorners,
+  pointerWithin,
   PointerSensor,
   useSensor,
   useSensors,
   DragStartEvent,
   DragEndEvent,
   MeasuringStrategy,
+  type CollisionDetection,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -41,7 +43,7 @@ import {
   User,
   LucideIcon
 } from "lucide-react";
-import { syncWonDealToSale } from "@/utils/salesSync";
+import { syncWonDealToSale, unsyncDealSale } from "@/utils/salesSync";
 import { KanbanColumn } from "@/components/crm/KanbanColumn";
 import { DealCard } from "@/components/crm/DealCard";
 import { NewDealModal } from "@/components/crm/NewDealModal";
@@ -133,6 +135,7 @@ export interface Deal {
     avatar_url?: string | null;
   } | null;
   is_hot?: boolean | null;
+  assignee_outside_company?: boolean;
 }
 
 // LocalStorage key for pipeline config - now includes company ID
@@ -218,8 +221,7 @@ export default function CRM() {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 3, // Start drag after 3px movement (faster activation)
-        tolerance: 5,
+        distance: 6, // Slightly higher threshold reduces accidental/jittery drags
       },
     })
   );
@@ -252,17 +254,36 @@ export default function CRM() {
         throw error;
       }
 
-      // Fetch profiles separately for each unique user_id
-      const userIds = [...new Set((data || []).map(d => d.user_id))];
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, nome, avatar_url")
-        .in("id", userIds);
+      // Fetch profiles separately for each unique user_id, scoped to the current
+      // company to avoid leaking seller names/avatars from another org when a deal
+      // is incorrectly assigned.
+      const userIds = [...new Set((data || []).map((d) => d.user_id).filter(Boolean))];
+      let profiles: Array<{ id: string; nome: string; avatar_url?: string | null }> = [];
+
+      if (userIds.length > 0) {
+        let profilesQuery = supabase
+          .from("profiles")
+          .select("id, nome, avatar_url")
+          .in("id", userIds);
+
+        if (effectiveCompanyId) {
+          profilesQuery = profilesQuery.eq("company_id", effectiveCompanyId);
+        }
+
+        const { data: scopedProfiles, error: profilesError } = await profilesQuery;
+        if (profilesError) {
+          console.error("Error fetching deal profiles:", profilesError);
+        } else {
+          profiles = scopedProfiles || [];
+        }
+      }
 
       const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
 
       // Map to our Deal interface
-      return (data || []).map((d: any) => ({
+      return (data || []).map((d: any) => {
+        const sellerProfile = profilesMap.get(d.user_id) || null;
+        return {
         id: d.id,
         title: d.title || "Sem título",
         value: d.value || 0,
@@ -280,8 +301,10 @@ export default function CRM() {
         created_at: d.created_at,
         updated_at: d.updated_at,
         is_hot: d.is_hot || false,
-        profiles: profilesMap.get(d.user_id) || null,
-      })) as Deal[];
+        profiles: sellerProfile,
+        assignee_outside_company: !!effectiveCompanyId && !!d.user_id && !sellerProfile,
+      };
+      }) as Deal[];
     },
     refetchInterval: 15000,
     staleTime: 0,
@@ -315,6 +338,14 @@ export default function CRM() {
   // Delete deal mutation
   const deleteDealMutation = useMutation({
     mutationFn: async (dealId: string) => {
+      const deal = localDeals.find((d) => d.id === dealId);
+
+      // If this deal had generated an automatic sale, remove it first to keep
+      // dashboard/goals consistent when deleting the deal entirely.
+      if (deal) {
+        await unsyncDealSale(deal.id, deal.user_id, queryClient);
+      }
+
       const { error } = await supabase
         .from("deals")
         .delete()
@@ -328,7 +359,7 @@ export default function CRM() {
     },
     onError: (error: any) => {
       console.error("Error deleting deal:", error);
-      toast.error("Erro ao excluir negociação");
+      toast.error(error?.message || "Erro ao excluir negociação");
     },
   });
 
@@ -408,6 +439,16 @@ export default function CRM() {
         } catch (syncError) {
           console.error("Erro ao sincronizar venda do deal:", syncError);
           toast.error("Negociação ganha, mas a venda não foi sincronizada.");
+        }
+      }
+
+      if (deal?.stage === "closed_won" && stage !== "closed_won") {
+        try {
+          await unsyncDealSale(deal.id, deal.user_id, queryClient);
+          toast.success("Negociação removida das vendas sincronizadas.");
+        } catch (unsyncError) {
+          console.error("Erro ao remover venda sincronizada do deal:", unsyncError);
+          toast.error("Negociação movida, mas não foi possível remover a venda sincronizada.");
         }
       }
     },
@@ -501,6 +542,45 @@ export default function CRM() {
   // Get the active deal for drag overlay
   const activeDeal = activeId ? localDeals.find((d) => d.id === activeId) : null;
 
+  // Prefer the actual pointer location; fallback to geometric matching for gaps
+  const collisionDetectionStrategy: CollisionDetection = useCallback((args) => {
+    const pointerHits = pointerWithin(args);
+    if (pointerHits.length > 0) return pointerHits;
+    return closestCorners(args);
+  }, []);
+
+  const resolveDropTarget = useCallback((draggedId: string, overId: string) => {
+    let targetStage: StageId;
+    let targetIndex: number;
+
+    const isColumn = STAGES.some((s) => s.id === overId);
+
+    if (isColumn) {
+      targetStage = overId;
+      targetIndex = dealsByStage[targetStage]?.length || 0;
+      return { targetStage, targetIndex };
+    }
+
+    const overDeal = localDeals.find((d) => d.id === overId);
+    if (!overDeal) return null;
+
+    targetStage = overDeal.stage;
+    const targetList = dealsByStage[targetStage] || [];
+    const idx = targetList.findIndex((d) => d.id === overId);
+    targetIndex = idx >= 0 ? idx : targetList.length;
+
+    // If dragging within the same stage and hovering after itself, normalize index
+    const draggedDeal = localDeals.find((d) => d.id === draggedId);
+    if (draggedDeal?.stage === targetStage) {
+      const currentIndex = targetList.findIndex((d) => d.id === draggedId);
+      if (currentIndex >= 0 && currentIndex < targetIndex) {
+        targetIndex -= 1;
+      }
+    }
+
+    return { targetStage, targetIndex };
+  }, [STAGES, dealsByStage, localDeals]);
+
   // DnD handlers - optimized for speed
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
@@ -522,30 +602,13 @@ export default function CRM() {
     const draggedId = active.id as string;
     const overId = over.id as string;
 
-    // Find the deal being dragged
+    const target = resolveDropTarget(draggedId, overId);
+    if (!target) return;
+
+    const targetStage = target.targetStage;
+    const targetIndex = target.targetIndex;
     const draggedDeal = localDeals.find((d) => d.id === draggedId);
     if (!draggedDeal) return;
-
-    // Determine target stage
-    let targetStage: StageId;
-    let targetIndex: number;
-
-    // Check if dropped on a column
-    const isColumn = STAGES.some((s) => s.id === overId);
-
-    if (isColumn) {
-      targetStage = overId;
-      targetIndex = dealsByStage[targetStage]?.length || 0;
-    } else {
-      // Dropped on another deal
-      const overDeal = localDeals.find((d) => d.id === overId);
-      if (!overDeal) return;
-
-      targetStage = overDeal.stage;
-      const targetList = dealsByStage[targetStage] || [];
-      const idx = targetList.findIndex(d => d.id === overId);
-      targetIndex = idx >= 0 ? idx : targetList.length;
-    }
 
     // Only update if stage changed (optimistic update)
     if (draggedDeal.stage !== targetStage) {
@@ -712,36 +775,41 @@ export default function CRM() {
           ) : viewMode === "kanban" ? (
             <DndContext
               sensors={sensors}
-              collisionDetection={closestCenter}
+              collisionDetection={collisionDetectionStrategy}
               onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
               onDragCancel={handleDragCancel}
               measuring={{
                 droppable: {
-                  strategy: MeasuringStrategy.Always,
+                  strategy: MeasuringStrategy.WhileDragging,
                 },
               }}
             >
               <div className="flex gap-2 sm:gap-3 p-4 sm:p-6 h-full min-w-max">
                 {STAGES.map((stage, idx) => (
-                  <KanbanColumn
-                    key={stage.id}
-                    stage={stage}
-                    deals={dealsByStage[stage.id] || []}
-                    total={stageTotals[stage.id] || { count: 0, value: 0 }}
-                    formatCurrency={formatCurrency}
-                    showConversionRate={idx > 0}
-                    previousStageCount={idx > 0 ? stageTotals[STAGES[idx - 1].id]?.count : undefined}
-                    isLast={idx === STAGES.length - 1}
-                  />
+                    <KanbanColumn
+                      key={stage.id}
+                      stage={stage}
+                      deals={dealsByStage[stage.id] || []}
+                      total={stageTotals[stage.id] || { count: 0, value: 0 }}
+                      formatCurrency={formatCurrency}
+                      onDeleteDeal={(deal) => {
+                        if (confirm(`Tem certeza que deseja excluir a negociação "${deal.title}"?`)) {
+                          deleteDealMutation.mutate(deal.id);
+                        }
+                      }}
+                      showConversionRate={idx > 0}
+                      previousStageCount={idx > 0 ? stageTotals[STAGES[idx - 1].id]?.count : undefined}
+                      isLast={idx === STAGES.length - 1}
+                    />
                 ))}
               </div>
 
               {/* Drag Overlay - Fast animation */}
               <DragOverlay
                 dropAnimation={{
-                  duration: 70,
-                  easing: 'ease-out',
+                  duration: 180,
+                  easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
                 }}
                 modifiers={[]}
               >
@@ -842,6 +910,7 @@ export default function CRM() {
         }}
         onConfirm={async (reason) => {
           if (!dealToLose) return;
+          const wasWon = dealToLose.stage === "closed_won";
           await supabase
             .from("deals")
             .update({
@@ -849,6 +918,13 @@ export default function CRM() {
               loss_reason: reason
             })
             .eq("id", dealToLose.id);
+          if (wasWon) {
+            try {
+              await unsyncDealSale(dealToLose.id, dealToLose.user_id, queryClient);
+            } catch (unsyncError) {
+              console.error("Erro ao remover venda sincronizada do deal perdido:", unsyncError);
+            }
+          }
           queryClient.invalidateQueries({ queryKey: ["deals"] });
           setShowLostModal(false);
           setDealToLose(null);

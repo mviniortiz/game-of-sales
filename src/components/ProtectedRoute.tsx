@@ -1,16 +1,27 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
+  const { user, loading, profile, companyId, isSuperAdmin, signOut } = useAuth();
   const navigate = useNavigate();
+  const invalidSessionCleanupInProgress = useRef(false);
 
   useEffect(() => {
     if (!loading && !user) {
       navigate("/auth");
     }
-  }, [user, loading, navigate]);
+
+    const missingProfile = !!user && !profile;
+    const missingCompanyContext = !!user && !!profile && !profile.is_super_admin && !companyId && !isSuperAdmin;
+
+    if (!loading && (missingProfile || missingCompanyContext) && !invalidSessionCleanupInProgress.current) {
+      invalidSessionCleanupInProgress.current = true;
+      void signOut().finally(() => {
+        invalidSessionCleanupInProgress.current = false;
+      });
+    }
+  }, [user, loading, profile, companyId, isSuperAdmin, navigate, signOut]);
 
   if (loading) {
     return (
@@ -24,6 +35,14 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (!user) {
+    return null;
+  }
+
+  if (!profile) {
+    return null;
+  }
+
+  if (!profile.is_super_admin && !companyId) {
     return null;
   }
 

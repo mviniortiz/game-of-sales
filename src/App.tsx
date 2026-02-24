@@ -7,6 +7,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { TenantProvider } from "@/contexts/TenantContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { AdminRoute } from "@/components/AdminRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
@@ -30,6 +31,7 @@ import Register from "./pages/Register";
 import Onboarding from "./pages/Onboarding";
 import SalesPerformanceCenter from "./pages/SalesPerformanceCenter";
 import LogoPreview from "./pages/LogoPreview";
+import WhatsApp from "./pages/WhatsApp";
 
 const queryClient = new QueryClient();
 
@@ -107,9 +109,11 @@ const App = () => (
                 path="/admin"
                 element={
                   <ProtectedRoute>
-                    <AppLayout>
-                      <Admin />
-                    </AppLayout>
+                    <AdminRoute>
+                      <AppLayout>
+                        <Admin />
+                      </AppLayout>
+                    </AdminRoute>
                   </ProtectedRoute>
                 }
               />
@@ -117,9 +121,11 @@ const App = () => (
                 path="/admin/companies"
                 element={
                   <ProtectedRoute>
-                    <AppLayout>
-                      <AdminCompaniesPage />
-                    </AppLayout>
+                    <AdminRoute>
+                      <AppLayout>
+                        <AdminCompaniesPage />
+                      </AppLayout>
+                    </AdminRoute>
                   </ProtectedRoute>
                 }
               />
@@ -127,9 +133,11 @@ const App = () => (
                 path="/admin/companies/:companyId"
                 element={
                   <ProtectedRoute>
-                    <AppLayout>
-                      <AdminCompanyDetail />
-                    </AppLayout>
+                    <AdminRoute>
+                      <AppLayout>
+                        <AdminCompanyDetail />
+                      </AppLayout>
+                    </AdminRoute>
                   </ProtectedRoute>
                 }
               />
@@ -139,6 +147,16 @@ const App = () => (
                   <ProtectedRoute>
                     <AppLayout>
                       <Integracoes />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/whatsapp"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <WhatsApp />
                     </AppLayout>
                   </ProtectedRoute>
                 }
@@ -182,7 +200,7 @@ const App = () => (
                 }
               />
               <Route
-                path="/sales-performance-test"
+                path="/performance"
                 element={
                   <ProtectedRoute>
                     <AppLayout>

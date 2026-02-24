@@ -165,7 +165,9 @@ const Dashboard = () => {
         .from("vendas")
         .select("*")
         .eq("user_id", user?.id)
-        .gte("data_venda", startOfMonthDate);
+        .eq("status", "Aprovado")
+        .gte("data_venda", startOfMonthDate)
+        .lte("data_venda", endOfMonthDate);
 
       if (error) throw error;
       return data;
