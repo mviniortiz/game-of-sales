@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -6,12 +6,8 @@ import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     ArrowLeft,
     Phone,
@@ -19,7 +15,6 @@ import {
     Mail,
     Trophy,
     XCircle,
-    Archive,
     Shield,
     ShieldAlert,
     ShieldOff,
@@ -36,17 +31,16 @@ import {
     DollarSign,
     Target,
     TrendingUp,
-    User,
     Building2,
-    Tag,
     PhoneCall,
     StickyNote,
     Rocket,
     AlertTriangle,
-    MoreHorizontal,
-    Pencil,
-    Save,
     X,
+    ChevronRight,
+    Loader2,
+    MoreHorizontal,
+    Plus,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -63,77 +57,101 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-// Pipeline stages with colors
+// ─── Constants ─────────────────────────────────────────────────────────────────
+
 const PIPELINE_STAGES = [
-    { id: "lead", label: "Lead", shortLabel: "L", color: "bg-slate-500" },
-    { id: "qualification", label: "Qualificação", shortLabel: "Q", color: "bg-blue-500" },
-    { id: "proposal", label: "Proposta", shortLabel: "P", color: "bg-emerald-500" },
-    { id: "negotiation", label: "Negociação", shortLabel: "N", color: "bg-amber-500" },
-    { id: "closed_won", label: "Ganho", shortLabel: "W", color: "bg-emerald-500" },
+    { id: "lead", label: "Lead", shortLabel: "L", color: "bg-slate-500", ring: "ring-slate-400" },
+    { id: "qualification", label: "Qualificação", shortLabel: "Q", color: "bg-blue-500", ring: "ring-blue-400" },
+    { id: "proposal", label: "Proposta", shortLabel: "P", color: "bg-violet-500", ring: "ring-violet-400" },
+    { id: "negotiation", label: "Negociação", shortLabel: "N", color: "bg-amber-500", ring: "ring-amber-400" },
+    { id: "closed_won", label: "Ganho", shortLabel: "✓", color: "bg-emerald-500", ring: "ring-emerald-400" },
 ];
 
-// Timeline event types with icons
 const EVENT_ICONS: Record<string, { icon: typeof StickyNote; color: string; bg: string }> = {
-    note: { icon: StickyNote, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-100 dark:bg-blue-500/20" },
-    call: { icon: PhoneCall, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-100 dark:bg-emerald-500/20" },
-    stage_change: { icon: Rocket, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-100 dark:bg-emerald-500/20" },
-    email: { icon: Mail, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-100 dark:bg-amber-500/20" },
-    task_completed: { icon: CheckCircle2, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-100 dark:bg-emerald-500/20" },
+    note: { icon: StickyNote, color: "text-blue-400", bg: "bg-blue-500/15" },
+    call: { icon: PhoneCall, color: "text-emerald-400", bg: "bg-emerald-500/15" },
+    stage_change: { icon: Rocket, color: "text-violet-400", bg: "bg-violet-500/15" },
+    email: { icon: Mail, color: "text-amber-400", bg: "bg-amber-500/15" },
+    task_completed: { icon: CheckCircle2, color: "text-emerald-400", bg: "bg-emerald-500/15" },
 };
 
-// Health status based on days since last update
+// ─── Helpers ───────────────────────────────────────────────────────────────────
+
 const getHealthStatus = (days: number) => {
-    if (days > 7) return { icon: ShieldOff, color: "text-rose-600 dark:text-rose-400", bg: "bg-rose-100 dark:bg-rose-500/20", label: "Crítico", subtitle: `${days} dias sem contato` };
-    if (days > 3) return { icon: ShieldAlert, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-100 dark:bg-amber-500/20", label: "Atenção", subtitle: `${days} dias sem contato` };
-    return { icon: Shield, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-100 dark:bg-emerald-500/20", label: "Saudável", subtitle: "Engajamento ativo" };
+    if (days > 7) return { icon: ShieldOff, color: "text-rose-400", bg: "bg-rose-500/10", border: "border-rose-500/20", label: "Crítico", subtitle: `${days}d sem contato` };
+    if (days > 3) return { icon: ShieldAlert, color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20", label: "Atenção", subtitle: `${days}d sem contato` };
+    return { icon: Shield, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20", label: "Saudável", subtitle: "Engajamento ativo" };
 };
 
-// Format currency
 const formatCurrency = (value: number) => {
-    if (value >= 1000000) return `R$ ${(value / 1000000).toFixed(1)}M`;
-    if (value >= 1000) return `R$ ${(value / 1000).toFixed(0)}k`;
-    return new Intl.NumberFormat("pt-BR", {
-        style: "currency",
-        currency: "BRL",
-        maximumFractionDigits: 0,
-    }).format(value);
+    if (value >= 1_000_000) return `R$ ${(value / 1_000_000).toFixed(1)}M`;
+    if (value >= 1_000) return `R$ ${(value / 1_000).toFixed(0)}k`;
+    return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(value);
 };
 
-// Pipeline Progress Bar Component
-const PipelineProgressBar = ({ currentStage }: { currentStage: string }) => {
-    const currentIndex = PIPELINE_STAGES.findIndex(s => s.id === currentStage);
+// ─── Sub-components ────────────────────────────────────────────────────────────
 
+/** Circular probability ring */
+const CircularProgress = ({ value, size = 52 }: { value: number; size?: number }) => {
+    const sw = 4;
+    const r = (size - sw) / 2;
+    const c = r * 2 * Math.PI;
+    const offset = ((100 - value) / 100) * c;
+    const stroke = value >= 70 ? "stroke-emerald-500" : value >= 40 ? "stroke-amber-500" : "stroke-rose-500";
     return (
-        <div className="flex items-center gap-1">
-            {PIPELINE_STAGES.map((stage, index) => {
-                const isCompleted = index < currentIndex;
-                const isCurrent = index === currentIndex;
-                const isPending = index > currentIndex;
+        <div className="relative" style={{ width: size, height: size }}>
+            <svg width={size} height={size} className="-rotate-90">
+                <circle cx={size / 2} cy={size / 2} r={r} strokeWidth={sw} className="stroke-slate-700 fill-none" />
+                <motion.circle cx={size / 2} cy={size / 2} r={r} strokeWidth={sw}
+                    className={`${stroke} fill-none`} strokeLinecap="round"
+                    initial={{ strokeDashoffset: c }} animate={{ strokeDashoffset: offset }}
+                    transition={{ duration: 0.9, ease: "easeOut" }} strokeDasharray={c}
+                />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-xs font-bold text-white tabular-nums">{value}%</span>
+            </div>
+        </div>
+    );
+};
 
+/** Pipeline chevron stepper */
+const PipelineStepper = ({ currentStage, onStageChange }: { currentStage: string; onStageChange: (id: string) => void }) => {
+    const idx = PIPELINE_STAGES.findIndex(s => s.id === currentStage);
+    return (
+        <div className="flex items-center gap-0">
+            {PIPELINE_STAGES.map((stage, i) => {
+                const done = i < idx;
+                const active = i === idx;
+                const pending = i > idx;
                 return (
                     <div key={stage.id} className="flex items-center">
-                        <motion.div
+                        <button
+                            onClick={() => onStageChange(stage.id)}
                             className={`
-                relative flex items-center justify-center w-8 h-8 rounded-lg text-xs font-bold
-                transition-all duration-300
-                ${isCompleted ? `${stage.color} text-white` : ""}
-                ${isCurrent ? `${stage.color} text-white ring-2 ring-offset-2 ring-offset-white dark:ring-offset-slate-900 ring-emerald-500/50` : ""}
-                ${isPending ? "bg-gray-200 text-gray-600 dark:bg-slate-700 dark:text-slate-500" : ""}
-              `}
-                            animate={isCurrent ? { scale: [1, 1.05, 1] } : {}}
-                            transition={isCurrent ? { repeat: Infinity, duration: 2 } : {}}
+                                relative px-4 py-1.5 text-xs font-semibold transition-all duration-200
+                                ${i === 0 ? "rounded-l-full" : ""}
+                                ${i === PIPELINE_STAGES.length - 1 ? "rounded-r-full" : ""}
+                                ${active ? `${stage.color} text-white shadow-md` : ""}
+                                ${done ? "bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30" : ""}
+                                ${pending ? "bg-slate-800 text-slate-500 hover:bg-slate-700 hover:text-slate-300" : ""}
+                            `}
                         >
-                            {stage.shortLabel}
-                            {isCurrent && (
+                            <span className="flex items-center gap-1">
+                                {done && <CheckCircle2 className="h-3 w-3" />}
+                                <span className="hidden sm:inline">{stage.label}</span>
+                                <span className="sm:hidden">{stage.shortLabel}</span>
+                            </span>
+                            {active && (
                                 <motion.div
-                                    className="absolute inset-0 rounded-lg bg-white/20"
-                                    animate={{ opacity: [0.2, 0.5, 0.2] }}
+                                    className={`absolute inset-0 ${i === 0 ? "rounded-l-full" : ""} ${i === PIPELINE_STAGES.length - 1 ? "rounded-r-full" : ""} bg-white/10`}
+                                    animate={{ opacity: [0.1, 0.25, 0.1] }}
                                     transition={{ repeat: Infinity, duration: 2 }}
                                 />
                             )}
-                        </motion.div>
-                        {index < PIPELINE_STAGES.length - 1 && (
-                            <div className={`w-4 h-0.5 mx-0.5 ${index < currentIndex ? "bg-emerald-500" : "bg-gray-200 dark:bg-slate-700"}`} />
+                        </button>
+                        {i < PIPELINE_STAGES.length - 1 && (
+                            <ChevronRight className={`h-4 w-4 flex-shrink-0 -mx-0.5 z-10 ${i < idx ? "text-emerald-400" : "text-slate-600"}`} />
                         )}
                     </div>
                 );
@@ -142,246 +160,120 @@ const PipelineProgressBar = ({ currentStage }: { currentStage: string }) => {
     );
 };
 
-// Circular Progress Component
-const CircularProgress = ({ value, size = 48 }: { value: number; size?: number }) => {
-    const strokeWidth = 4;
-    const radius = (size - strokeWidth) / 2;
-    const circumference = radius * 2 * Math.PI;
-    const progress = ((100 - value) / 100) * circumference;
-
-    const color = value >= 70 ? "stroke-emerald-500" : value >= 40 ? "stroke-amber-500" : "stroke-rose-500";
-
-    return (
-        <div className="relative" style={{ width: size, height: size }}>
-            <svg width={size} height={size} className="transform -rotate-90">
-                <circle
-                    cx={size / 2}
-                    cy={size / 2}
-                    r={radius}
-                    strokeWidth={strokeWidth}
-                    className="stroke-gray-200 dark:stroke-slate-700 fill-none"
-                />
-                <motion.circle
-                    cx={size / 2}
-                    cy={size / 2}
-                    r={radius}
-                    strokeWidth={strokeWidth}
-                    className={`${color} fill-none`}
-                    strokeLinecap="round"
-                    initial={{ strokeDashoffset: circumference }}
-                    animate={{ strokeDashoffset: progress }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                    strokeDasharray={circumference}
-                />
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-xs font-bold text-gray-900 dark:text-white tabular-nums">{value}%</span>
-            </div>
-        </div>
-    );
-};
-
-// Quick Action Button Component with Tooltip
-const QuickActionButton = ({ icon: Icon, label, onClick, color }: { icon: typeof Phone; label: string; onClick?: () => void; color: string }) => (
+/** Quick action FAB */
+const QuickBtn = ({ icon: Icon, label, color, onClick }: { icon: typeof Phone; label: string; color: string; onClick?: () => void }) => (
     <Tooltip>
         <TooltipTrigger asChild>
-            <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={onClick}
-                className={`
-                    p-3 rounded-full transition-all duration-200
-                    bg-gray-100 dark:bg-slate-800 hover:${color} ring-1 ring-gray-200 dark:ring-slate-700 hover:ring-transparent
-                    group
-                `}
-            >
-                <Icon className="h-4 w-4 text-gray-500 dark:text-slate-400 group-hover:text-white transition-colors" />
+            <motion.button whileHover={{ scale: 1.12, y: -2 }} whileTap={{ scale: 0.93 }} onClick={onClick}
+                className={`flex flex-col items-center gap-1.5 p-3 rounded-2xl ${color} transition-all duration-200 group`}>
+                <Icon className="h-5 w-5 text-white/90 group-hover:text-white" />
             </motion.button>
         </TooltipTrigger>
-        <TooltipContent side="bottom" className="bg-slate-800 text-white text-xs px-2 py-1 rounded-md">
-            {label}
-        </TooltipContent>
+        <TooltipContent side="bottom" className="bg-slate-800 text-white text-xs">{label}</TooltipContent>
     </Tooltip>
 );
 
-// Timeline Event Component - RD Station Style
-const TimelineEvent = ({ event, isLast, isFirst }: { event: any; isLast: boolean; isFirst?: boolean }) => {
-    const config = EVENT_ICONS[event.type] || EVENT_ICONS.note;
-    const Icon = config.icon;
-    const isCreation = event.type === "creation" || event.title?.includes("criada");
-
+/** Timeline entry */
+const TimelineEntry = ({ event, isLast }: { event: any; isLast: boolean }) => {
+    const cfg = EVENT_ICONS[event.type] || EVENT_ICONS.note;
+    const Icon = cfg.icon;
     return (
-        <div className="relative flex gap-4">
-            {/* Vertical Line */}
+        <div className="flex gap-3">
             <div className="flex flex-col items-center">
-                {/* Top line segment */}
-                {!isFirst && (
-                    <div className="w-0.5 h-3 bg-emerald-400 dark:bg-emerald-500" />
-                )}
-
-                {/* Bullet/Icon */}
-                {isCreation ? (
-                    <div className="w-8 h-8 rounded-full bg-emerald-500 dark:bg-emerald-600 flex items-center justify-center ring-4 ring-emerald-100 dark:ring-emerald-500/20 z-10">
-                        <Icon className="h-4 w-4 text-white" />
-                    </div>
-                ) : (
-                    <div className="w-3 h-3 rounded-full bg-gray-400 dark:bg-slate-500 ring-4 ring-gray-100 dark:ring-slate-800 z-10 flex-shrink-0 mt-1.5" />
-                )}
-
-                {/* Bottom line segment */}
-                {!isLast && (
-                    <div className="w-0.5 flex-1 bg-emerald-400 dark:bg-emerald-500 min-h-[20px]" />
-                )}
+                <div className={`w-8 h-8 rounded-xl ${cfg.bg} flex items-center justify-center flex-shrink-0 ring-1 ring-white/5`}>
+                    <Icon className={`h-3.5 w-3.5 ${cfg.color}`} />
+                </div>
+                {!isLast && <div className="w-0.5 flex-1 bg-slate-800 my-1 min-h-[16px]" />}
             </div>
-
-            {/* Content */}
-            <div className={`flex-1 ${isLast ? 'pb-2' : 'pb-5'} ${isCreation ? '-mt-1' : ''}`}>
-                {isCreation ? (
-                    // Special styling for creation events
-                    <>
-                        <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                            {event.title}
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-slate-500 mt-0.5">
-                            {format(new Date(event.created_at), "dd/MM/yy 'às' HH:mm", { locale: ptBR })}
-                        </p>
-                    </>
-                ) : (
-                    // Regular event styling
-                    <>
-                        <p className="text-sm text-gray-700 dark:text-slate-300">
-                            <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                                {event.user_name || "Você"}
-                            </span>
-                            {" "}{event.title || event.content}
-                        </p>
-                        <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">
-                            {format(new Date(event.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-                        </p>
-                    </>
-                )}
-
-                {/* Content box for notes */}
-                {event.content && !isCreation && event.type === "note" && (
-                    <div className="mt-2 p-3 bg-gray-50 dark:bg-slate-800/50 rounded-lg border border-gray-200 dark:border-slate-700/50">
-                        <p className="text-sm text-gray-600 dark:text-slate-400">
-                            {event.content}
-                        </p>
-                    </div>
-                )}
+            <div className={`flex-1 ${isLast ? "pb-0" : "pb-4"}`}>
+                <div className="bg-slate-800/50 rounded-xl p-3 border border-slate-700/40 hover:border-slate-600/40 transition-colors">
+                    <p className="text-xs text-slate-400 mb-1">
+                        <span className="text-emerald-400 font-medium">{event.user_name || "Você"}</span>
+                        {" · "}
+                        {format(new Date(event.created_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
+                    </p>
+                    <p className="text-sm text-slate-200 leading-relaxed">{event.content || event.title}</p>
+                </div>
             </div>
         </div>
     );
 };
 
-// Active Quest Card Component
-const ActiveQuestCard = ({ task, onComplete }: { task: any; onComplete: () => void }) => {
-    const [isCompleted, setIsCompleted] = useState(false);
-
-    const handleComplete = () => {
-        setIsCompleted(true);
-        setTimeout(() => {
-            onComplete();
-        }, 1000);
-    };
-
+/** Active quest card */
+const QuestCard = ({ task, onComplete }: { task: any; onComplete: () => void }) => {
+    const [done, setDone] = useState(false);
+    const handle = () => { setDone(true); setTimeout(onComplete, 800); };
     return (
         <motion.div
-            className={`
-        relative p-4 rounded-xl border-2 transition-all duration-300
-        ${isCompleted
-                    ? "bg-emerald-50 dark:bg-emerald-500/10 border-emerald-300 dark:border-emerald-500/50"
-                    : "bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-500/10 dark:to-orange-500/10 border-amber-300 dark:border-amber-500/30"
-                }
-      `}
-            animate={isCompleted ? {} : { borderColor: ["rgba(245, 158, 11, 0.3)", "rgba(245, 158, 11, 0.5)", "rgba(245, 158, 11, 0.3)"] }}
-            transition={{ repeat: Infinity, duration: 2 }}
+            className={`relative overflow-hidden rounded-2xl border p-4 transition-all duration-500 ${done
+                    ? "bg-emerald-500/10 border-emerald-500/30"
+                    : "bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-amber-500/25"
+                }`}
+            animate={done ? {} : { borderColor: ["rgba(245,158,11,.25)", "rgba(245,158,11,.45)", "rgba(245,158,11,.25)"] }}
+            transition={{ repeat: Infinity, duration: 2.5 }}
         >
-            <div className="flex items-start gap-4">
-                <motion.button
-                    whileTap={{ scale: 0.9 }}
-                    onClick={handleComplete}
-                    className={`
-            mt-0.5 p-1 rounded-lg transition-all
-            ${isCompleted
-                            ? "bg-emerald-500 text-white"
-                            : "bg-gray-200 dark:bg-slate-700 text-gray-500 dark:text-slate-400 hover:bg-amber-500 hover:text-white"
-                        }
-          `}
-                >
-                    {isCompleted ? (
-                        <CheckCircle2 className="h-5 w-5" />
-                    ) : (
-                        <Circle className="h-5 w-5" />
-                    )}
+            {/* Glow */}
+            {!done && (
+                <div className="absolute -top-10 -right-10 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+            )}
+            <div className="flex items-start gap-3 relative">
+                <motion.button whileTap={{ scale: 0.88 }} onClick={handle}
+                    className={`mt-0.5 p-1.5 rounded-lg flex-shrink-0 transition-all ${done ? "bg-emerald-500 text-white" : "bg-slate-700 text-slate-400 hover:bg-amber-500 hover:text-white"}`}>
+                    {done ? <CheckCircle2 className="h-4 w-4" /> : <Circle className="h-4 w-4" />}
                 </motion.button>
-
                 <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                        <Zap className="h-4 w-4 text-amber-500" />
-                        <span className="text-xs font-medium text-amber-600 dark:text-amber-400 uppercase tracking-wider">Próxima Missão</span>
+                    <div className="flex items-center gap-1.5 mb-1">
+                        <Zap className="h-3.5 w-3.5 text-amber-400" />
+                        <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">Próxima Missão</span>
                     </div>
-                    <p className={`text-lg font-semibold transition-all ${isCompleted ? "text-emerald-600 dark:text-emerald-400 line-through" : "text-gray-900 dark:text-white"}`}>
+                    <p className={`text-base font-semibold transition-all ${done ? "text-emerald-400 line-through opacity-60" : "text-white"}`}>
                         {task.title}
                     </p>
                     {task.due_date && (
-                        <div className="flex items-center gap-1.5 mt-2 text-gray-500 dark:text-slate-400">
-                            <Clock className="h-3.5 w-3.5" />
-                            <span className="text-xs">
-                                {format(new Date(task.due_date), "dd MMM, HH:mm", { locale: ptBR })}
-                            </span>
+                        <div className="flex items-center gap-1.5 mt-1.5 text-slate-400">
+                            <Clock className="h-3 w-3" />
+                            <span className="text-xs">{format(new Date(task.due_date), "dd MMM, HH:mm", { locale: ptBR })}</span>
                         </div>
                     )}
                 </div>
+                {done && (
+                    <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+                        <Sparkles className="h-5 w-5 text-emerald-400" />
+                    </motion.div>
+                )}
             </div>
-
-            {isCompleted && (
-                <motion.div
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    className="absolute top-2 right-2"
-                >
-                    <Sparkles className="h-6 w-6 text-emerald-500" />
-                </motion.div>
-            )}
         </motion.div>
     );
 };
 
-// Main Component
+// ─── Main Component ────────────────────────────────────────────────────────────
+
 export default function DealCommandCenter() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const { user } = useAuth();
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const [isEditing, setIsEditing] = useState(false);
     const [showLostModal, setShowLostModal] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
     const [newNote, setNewNote] = useState("");
-    const [editedDeal, setEditedDeal] = useState<any>(null);
     const [activeTab, setActiveTab] = useState("historico");
     const [showTaskModal, setShowTaskModal] = useState(false);
     const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-    const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Fetch deal details
+    // ── Queries ─────────────────────────────────────────────────────────────────
+
     const { data: deal, isLoading } = useQuery({
         queryKey: ["deal", id],
         queryFn: async () => {
-            const { data, error } = await supabase
-                .from("deals")
-                .select("*")
-                .eq("id", id)
-                .single();
-
+            const { data, error } = await supabase.from("deals").select("*").eq("id", id).single();
             if (error) throw error;
             return data;
         },
         enabled: !!id,
     });
 
-    // Fetch deal notes/timeline
     const { data: timeline = [] } = useQuery({
         queryKey: ["deal-timeline", id],
         queryFn: async () => {
@@ -390,63 +282,34 @@ export default function DealCommandCenter() {
                 .select("*")
                 .eq("deal_id", id)
                 .order("created_at", { ascending: false });
-
             if (error) throw error;
-
-            // Transform to timeline events
-            return (notes || []).map((note: any) => ({
-                id: note.id,
-                type: "note",
-                title: "Nota adicionada",
-                content: note.content,
-                created_at: note.created_at,
+            return (notes || []).map((n: any) => ({
+                id: n.id, type: "note", title: "Nota adicionada",
+                content: n.content, created_at: n.created_at,
             }));
         },
         enabled: !!id,
     });
 
-    // Days since last update for health
-    const daysSinceUpdate = deal?.updated_at
-        ? Math.floor((new Date().getTime() - new Date(deal.updated_at).getTime()) / (1000 * 60 * 60 * 24))
-        : 0;
+    // ── Mutations ────────────────────────────────────────────────────────────────
 
-    const healthStatus = getHealthStatus(daysSinceUpdate);
-    const HealthIcon = healthStatus.icon;
-
-    // Update deal mutation
-    const updateDealMutation = useMutation({
+    const updateDeal = useMutation({
         mutationFn: async (updates: any) => {
-            const { error } = await supabase
-                .from("deals")
-                .update(updates)
-                .eq("id", id);
-
+            const { error } = await supabase.from("deals").update(updates).eq("id", id);
             if (error) throw error;
-
-            if (updates.stage === "closed_won" && deal) {
-                await syncWonDealToSale(deal, queryClient);
-            }
+            if (updates.stage === "closed_won" && deal) await syncWonDealToSale(deal, queryClient);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["deal", id] });
             queryClient.invalidateQueries({ queryKey: ["deals"] });
             toast.success("Deal atualizado!");
-            setIsEditing(false);
         },
-        onError: () => {
-            toast.error("Erro ao atualizar deal");
-        },
+        onError: () => toast.error("Erro ao atualizar deal"),
     });
 
-    // Add note mutation
-    const addNoteMutation = useMutation({
+    const addNote = useMutation({
         mutationFn: async (content: string) => {
-            const { error } = await supabase.from("deal_notes" as any).insert({
-                deal_id: id,
-                user_id: user?.id,
-                content,
-            });
-
+            const { error } = await supabase.from("deal_notes" as any).insert({ deal_id: id, user_id: user?.id, content });
             if (error) throw error;
         },
         onSuccess: () => {
@@ -454,232 +317,250 @@ export default function DealCommandCenter() {
             setNewNote("");
             toast.success("Nota adicionada!");
         },
-        onError: () => {
-            toast.error("Erro ao adicionar nota");
-        },
+        onError: () => toast.error("Erro ao adicionar nota"),
     });
 
-    // Handle won
-    const handleWon = async () => {
-        await updateDealMutation.mutateAsync({ stage: "closed_won", probability: 100 });
-        setShowConfetti(true);
-        setTimeout(() => setShowConfetti(false), 3000);
-    };
+    // ── Derived ─────────────────────────────────────────────────────────────────
 
-    // Handle lost
-    const handleLost = async (reason: string) => {
-        await updateDealMutation.mutateAsync({ stage: "closed_lost", loss_reason: reason, probability: 0 });
-        setShowLostModal(false);
-    };
+    const daysSince = deal?.updated_at
+        ? Math.floor((Date.now() - new Date(deal.updated_at).getTime()) / 86_400_000) : 0;
+    const health = getHealthStatus(daysSince);
+    const HealthIcon = health.icon;
 
-    // Mock active task
     const activeTask = {
         id: "1",
         title: "Ligar para o decisor sobre a proposta",
-        due_date: new Date(Date.now() + 86400000).toISOString(),
+        due_date: new Date(Date.now() + 86_400_000).toISOString(),
     };
+
+    const TABS = [
+        { id: "historico", label: "Histórico", icon: Clock },
+        { id: "tarefas", label: "Tarefas", icon: CheckCircle2 },
+        { id: "arquivos", label: "Arquivos", icon: Paperclip },
+        { id: "propostas", label: "Produtos/Proposta", icon: FileText },
+    ];
+
+    // ── Loading / Not found ──────────────────────────────────────────────────────
 
     if (isLoading) {
         return (
-            <>
-                <div className="flex items-center justify-center h-[calc(100vh-64px)] bg-gray-50 dark:bg-slate-900">
-                    <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}>
-                        <Target className="h-8 w-8 text-emerald-500" />
-                    </motion.div>
-                </div>
-            </>
+            <div className="flex items-center justify-center h-[calc(100vh-64px)] bg-slate-950">
+                <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}>
+                    <Target className="h-8 w-8 text-emerald-500" />
+                </motion.div>
+            </div>
         );
     }
 
     if (!deal) {
         return (
-            <>
-                <div className="flex flex-col items-center justify-center h-[calc(100vh-64px)] gap-4 bg-gray-50 dark:bg-slate-900">
-                    <AlertTriangle className="h-12 w-12 text-amber-500" />
-                    <p className="text-gray-500 dark:text-slate-400">Deal não encontrado</p>
-                    <Button onClick={() => navigate("/crm")} variant="outline">Voltar ao Pipeline</Button>
-                </div>
-            </>
+            <div className="flex flex-col items-center justify-center h-[calc(100vh-64px)] gap-4 bg-slate-950">
+                <AlertTriangle className="h-12 w-12 text-amber-500" />
+                <p className="text-slate-400">Deal não encontrado</p>
+                <Button onClick={() => navigate("/crm")} variant="outline">Voltar ao Pipeline</Button>
+            </div>
         );
     }
 
+    // ── Render ───────────────────────────────────────────────────────────────────
+
     return (
         <>
-            <div className="min-h-[calc(100vh-64px)] bg-gray-50 dark:bg-slate-950">
-                {/* Confetti Effect */}
+            <div className="min-h-[calc(100vh-64px)] bg-slate-950">
                 {showConfetti && <Confetti show={showConfetti} />}
 
-                {/* HUD Header - Sticky */}
-                <div className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-b border-gray-200 dark:border-slate-800">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
-                        <div className="flex items-center justify-between gap-6">
-                            {/* Left: Back + Title */}
-                            <div className="flex items-center gap-4">
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => navigate("/crm")}
-                                    className="text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-800"
-                                >
+                {/* ── HEADER ─────────────────────────────────────────────────── */}
+                <div className="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-xl border-b border-slate-800/60">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6">
+
+                        {/* Row 1: Back + Title + Actions */}
+                        <div className="flex items-center justify-between gap-4 py-3">
+                            <div className="flex items-center gap-3 min-w-0">
+                                <Button variant="ghost" size="sm" onClick={() => navigate("/crm")}
+                                    className="text-slate-400 hover:text-white hover:bg-slate-800 h-8 w-8 p-0 rounded-lg flex-shrink-0">
                                     <ArrowLeft className="h-4 w-4" />
                                 </Button>
 
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-500/20 ring-1 ring-emerald-200 dark:ring-emerald-500/30">
-                                        <Building2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                                    </div>
-                                    <div>
-                                        <h1 className="text-lg font-bold text-gray-900 dark:text-white truncate max-w-[200px] sm:max-w-none">
-                                            {deal.title}
-                                        </h1>
-                                        <p className="text-xs text-gray-500 dark:text-slate-500">{deal.customer_name}</p>
-                                    </div>
+                                <div className="p-2 rounded-xl bg-emerald-500/15 ring-1 ring-emerald-500/25 flex-shrink-0">
+                                    <Building2 className="h-4 w-4 text-emerald-400" />
+                                </div>
+
+                                <div className="min-w-0">
+                                    <h1 className="text-sm sm:text-base font-bold text-white truncate leading-tight">{deal.title}</h1>
+                                    <p className="text-xs text-slate-500 truncate">{deal.customer_name}</p>
                                 </div>
                             </div>
 
-                            {/* Center: Pipeline Progress */}
-                            <div className="hidden md:block">
-                                <PipelineProgressBar currentStage={deal.stage} />
-                            </div>
-
-                            {/* Right: Metrics + Actions */}
-                            <div className="flex items-center gap-4 sm:gap-6">
+                            <div className="flex items-center gap-3 flex-shrink-0">
                                 {/* Value */}
-                                <div className="text-right">
-                                    <p className="text-xs text-gray-500 dark:text-slate-500 uppercase tracking-wider">Valor</p>
-                                    <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
+                                <div className="text-right hidden sm:block">
+                                    <p className="text-[10px] text-slate-500 uppercase tracking-wider">Valor</p>
+                                    <p className="text-lg font-bold text-emerald-400 tabular-nums leading-tight">
                                         {formatCurrency(deal.value || 0)}
                                     </p>
                                 </div>
 
-                                {/* Probability */}
+                                {/* Probability ring */}
                                 <div className="hidden sm:block">
                                     <CircularProgress value={deal.probability || 50} />
                                 </div>
 
-                                {/* Action Buttons */}
-                                <div className="flex items-center gap-2">
-                                    <Button
-                                        size="sm"
-                                        onClick={handleWon}
-                                        disabled={deal.stage === "closed_won"}
-                                        className="bg-emerald-500 hover:bg-emerald-400 text-white font-semibold shadow-lg shadow-emerald-500/25"
-                                    >
-                                        <Trophy className="h-4 w-4 mr-1" />
-                                        Ganho
-                                    </Button>
-                                    <Button
-                                        size="sm"
-                                        variant="destructive"
-                                        onClick={() => setShowLostModal(true)}
-                                        disabled={deal.stage === "closed_lost"}
-                                        className="shadow-lg shadow-rose-500/25"
-                                    >
-                                        <XCircle className="h-4 w-4 mr-1" />
-                                        Perdido
-                                    </Button>
-                                </div>
+                                {/* CTA buttons */}
+                                {deal.stage !== "closed_won" && deal.stage !== "closed_lost" && (
+                                    <div className="flex gap-2">
+                                        <Button size="sm"
+                                            className="bg-emerald-500 hover:bg-emerald-400 text-white font-semibold shadow-lg shadow-emerald-500/20 h-8 px-3 gap-1.5"
+                                            onClick={async () => {
+                                                await updateDeal.mutateAsync({ stage: "closed_won", probability: 100 });
+                                                setShowConfetti(true);
+                                                setTimeout(() => setShowConfetti(false), 3000);
+                                            }}
+                                            disabled={updateDeal.isPending}
+                                        >
+                                            <Trophy className="h-3.5 w-3.5" />
+                                            <span className="hidden sm:inline">Ganho</span>
+                                        </Button>
+                                        <Button size="sm" variant="destructive"
+                                            className="shadow-lg shadow-rose-500/20 h-8 px-3 gap-1.5"
+                                            onClick={() => setShowLostModal(true)}
+                                            disabled={updateDeal.isPending}
+                                        >
+                                            <XCircle className="h-3.5 w-3.5" />
+                                            <span className="hidden sm:inline">Perdido</span>
+                                        </Button>
+                                    </div>
+                                )}
+
+                                {/* Closed badges */}
+                                {deal.stage === "closed_won" && (
+                                    <div className="flex items-center gap-1.5 bg-emerald-500/15 text-emerald-400 px-3 py-1.5 rounded-lg text-xs font-semibold ring-1 ring-emerald-500/25">
+                                        <Trophy className="h-3.5 w-3.5" /> Ganho!
+                                    </div>
+                                )}
+                                {deal.stage === "closed_lost" && (
+                                    <div className="flex items-center gap-1.5 bg-rose-500/15 text-rose-400 px-3 py-1.5 rounded-lg text-xs font-semibold ring-1 ring-rose-500/25">
+                                        <XCircle className="h-3.5 w-3.5" /> Perdido
+                                    </div>
+                                )}
                             </div>
+                        </div>
+
+                        {/* Row 2: Pipeline stepper (full width) */}
+                        <div className="pb-3 overflow-x-auto">
+                            <PipelineStepper
+                                currentStage={deal.stage}
+                                onStageChange={(s) => {
+                                    if (s === "closed_lost") { setShowLostModal(true); return; }
+                                    updateDeal.mutate({ stage: s });
+                                }}
+                            />
                         </div>
                     </div>
                 </div>
 
-                {/* Main Content Grid */}
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-                    <div className="grid grid-cols-12 gap-6">
+                {/* ── MAIN GRID ──────────────────────────────────────────────── */}
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5">
+                    <div className="grid grid-cols-12 gap-5">
 
-                        {/* Left Panel - The Dossier */}
-                        <div className="col-span-12 lg:col-span-3 space-y-5">
+                        {/* ── LEFT PANEL ───────────────────────────────────── */}
+                        <div className="col-span-12 lg:col-span-3 space-y-4">
 
-                            {/* Quick Actions */}
-                            <div className="bg-white dark:bg-slate-900 rounded-xl p-4 border border-gray-200 dark:border-slate-800 shadow-sm">
-                                <p className="text-xs font-medium text-gray-500 dark:text-slate-500 uppercase tracking-wider mb-3">Ações Rápidas</p>
-                                <TooltipProvider delayDuration={100}>
-                                    <div className="flex items-center justify-around">
-                                        <QuickActionButton icon={Phone} label="Ligar" color="bg-emerald-500" onClick={() => {
-                                            if (deal.customer_phone) window.open(`tel:${deal.customer_phone}`, "_self");
-                                        }} />
-                                        <QuickActionButton icon={MessageSquare} label="WhatsApp" color="bg-green-500" onClick={() => {
-                                            if (deal.customer_phone) window.open(`https://wa.me/${deal.customer_phone.replace(/\D/g, "")}`, "_blank");
-                                        }} />
-                                        <QuickActionButton icon={Mail} label="Email" color="bg-blue-500" onClick={() => {
-                                            if (deal.customer_email) window.open(`mailto:${deal.customer_email}`, "_blank");
-                                        }} />
+                            {/* Quick actions */}
+                            <div className="bg-slate-900 rounded-2xl p-4 border border-slate-800/60">
+                                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-3">Ações Rápidas</p>
+                                <TooltipProvider delayDuration={80}>
+                                    <div className="flex items-center justify-around gap-2">
+                                        <QuickBtn icon={Phone} label="Ligar" color="bg-emerald-600 hover:bg-emerald-500"
+                                            onClick={() => deal.customer_phone && window.open(`tel:${deal.customer_phone}`, "_self")} />
+                                        <QuickBtn icon={MessageSquare} label="WhatsApp" color="bg-green-600 hover:bg-green-500"
+                                            onClick={() => deal.customer_phone && window.open(`https://wa.me/${deal.customer_phone.replace(/\D/g, "")}`, "_blank")} />
+                                        <QuickBtn icon={Mail} label="Email" color="bg-blue-600 hover:bg-blue-500"
+                                            onClick={() => deal.customer_email && window.open(`mailto:${deal.customer_email}`, "_blank")} />
+                                        <QuickBtn icon={Plus} label="Nova Tarefa" color="bg-violet-600 hover:bg-violet-500"
+                                            onClick={() => setShowTaskModal(true)} />
                                     </div>
                                 </TooltipProvider>
                             </div>
 
-                            {/* Deal Health */}
-                            <div className={`rounded-xl p-4 border ${healthStatus.bg} border-gray-200 dark:border-slate-800`}>
+                            {/* Deal health */}
+                            <div className={`rounded-2xl p-4 border ${health.bg} ${health.border}`}>
                                 <div className="flex items-center gap-3">
-                                    <div className={`p-2 rounded-lg ${healthStatus.bg}`}>
-                                        <HealthIcon className={`h-5 w-5 ${healthStatus.color}`} />
+                                    <div className={`p-2 rounded-xl ${health.bg} ring-1 ${health.border}`}>
+                                        <HealthIcon className={`h-4 w-4 ${health.color}`} />
                                     </div>
                                     <div>
-                                        <p className={`text-sm font-semibold ${healthStatus.color}`}>{healthStatus.label}</p>
-                                        <p className="text-xs text-gray-500 dark:text-slate-500">{healthStatus.subtitle}</p>
+                                        <p className={`text-sm font-semibold ${health.color}`}>{health.label}</p>
+                                        <p className="text-xs text-slate-500">{health.subtitle}</p>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Contact Card */}
-                            <div className="bg-white dark:bg-slate-900 rounded-xl p-4 border border-gray-200 dark:border-slate-800 shadow-sm">
-                                <p className="text-xs font-medium text-gray-500 dark:text-slate-500 uppercase tracking-wider mb-3">Contato</p>
+                            {/* Contact card */}
+                            <div className="bg-slate-900 rounded-2xl p-4 border border-slate-800/60 space-y-3">
+                                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Contato</p>
                                 <div className="flex items-center gap-3">
-                                    <Avatar className="h-12 w-12 ring-2 ring-gray-200 dark:ring-slate-700">
-                                        <AvatarFallback className="bg-emerald-500 text-white font-bold">
+                                    <Avatar className="h-11 w-11 ring-2 ring-slate-700">
+                                        <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-cyan-500 text-white font-bold text-sm">
                                             {deal.customer_name?.substring(0, 2).toUpperCase() || "?"}
                                         </AvatarFallback>
                                     </Avatar>
-                                    <div>
-                                        <p className="font-semibold text-gray-900 dark:text-white">{deal.customer_name}</p>
-                                        <p className="text-xs text-gray-500 dark:text-slate-400">{deal.customer_email || "Sem email"}</p>
+                                    <div className="min-w-0">
+                                        <p className="font-semibold text-white text-sm truncate">{deal.customer_name}</p>
+                                        <p className="text-xs text-slate-400 truncate">{deal.customer_email || "Sem email"}</p>
                                     </div>
                                 </div>
                                 {deal.customer_phone && (
-                                    <div className="mt-3 flex items-center gap-2 text-gray-500 dark:text-slate-400">
-                                        <Phone className="h-3.5 w-3.5" />
-                                        <span className="text-sm">{deal.customer_phone}</span>
+                                    <div className="flex items-center gap-2 bg-slate-800/50 rounded-xl px-3 py-2">
+                                        <Phone className="h-3.5 w-3.5 text-slate-500 flex-shrink-0" />
+                                        <span className="text-sm text-slate-300">{deal.customer_phone}</span>
                                     </div>
                                 )}
                             </div>
 
-                            {/* Details Widget */}
-                            <div className="bg-white dark:bg-slate-900 rounded-xl p-4 border border-gray-200 dark:border-slate-800 shadow-sm">
-                                <p className="text-xs font-medium text-gray-500 dark:text-slate-500 uppercase tracking-wider mb-3">Detalhes</p>
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-xs text-gray-500 dark:text-slate-500 flex items-center gap-1.5">
-                                            <Target className="h-3.5 w-3.5" />
-                                            Fonte
+                            {/* Details widget */}
+                            <div className="bg-slate-900 rounded-2xl p-4 border border-slate-800/60 space-y-3">
+                                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Detalhes</p>
+                                {[
+                                    { icon: Target, label: "Fonte", value: (deal as any).source || "Manual" },
+                                    { icon: Calendar, label: "Criado", value: format(new Date(deal.created_at), "dd MMM yyyy", { locale: ptBR }) },
+                                    { icon: TrendingUp, label: "Probabilidade", value: `${deal.probability}%` },
+                                ].map(({ icon: Icon, label, value }) => (
+                                    <div key={label} className="flex items-center justify-between">
+                                        <span className="text-xs text-slate-500 flex items-center gap-1.5">
+                                            <Icon className="h-3.5 w-3.5" />{label}
                                         </span>
-                                        <span className="text-sm text-gray-900 dark:text-white">{(deal as any).source || "Manual"}</span>
+                                        <span className="text-sm text-white font-medium">{value}</span>
                                     </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-xs text-gray-500 dark:text-slate-500 flex items-center gap-1.5">
-                                            <Calendar className="h-3.5 w-3.5" />
-                                            Criado
-                                        </span>
-                                        <span className="text-sm text-gray-900 dark:text-white">
-                                            {format(new Date(deal.created_at), "dd MMM yyyy", { locale: ptBR })}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-xs text-gray-500 dark:text-slate-500 flex items-center gap-1.5">
-                                            <TrendingUp className="h-3.5 w-3.5" />
-                                            Probabilidade
-                                        </span>
-                                        <span className="text-sm text-gray-900 dark:text-white">{deal.probability}%</span>
+                                ))}
+
+                                {/* Probability bar */}
+                                <div className="pt-1">
+                                    <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                        <motion.div
+                                            className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-cyan-400"
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${deal.probability}%` }}
+                                            transition={{ duration: 0.8, ease: "easeOut" }}
+                                        />
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Mobile Value / Probability */}
+                            <div className="sm:hidden bg-slate-900 rounded-2xl p-4 border border-slate-800/60 flex items-center justify-between">
+                                <div>
+                                    <p className="text-[10px] text-slate-500 uppercase tracking-wider">Valor</p>
+                                    <p className="text-xl font-bold text-emerald-400">{formatCurrency(deal.value || 0)}</p>
+                                </div>
+                                <CircularProgress value={deal.probability || 50} />
+                            </div>
                         </div>
 
-                        {/* Right Panel - Mission Control */}
-                        <div className="col-span-12 lg:col-span-9 space-y-5">
+                        {/* ── RIGHT PANEL ──────────────────────────────────── */}
+                        <div className="col-span-12 lg:col-span-9 space-y-4">
 
                             {/* Active Quest */}
-                            <ActiveQuestCard
+                            <QuestCard
                                 task={activeTask}
                                 onComplete={() => {
                                     setShowConfetti(true);
@@ -688,267 +569,181 @@ export default function DealCommandCenter() {
                                 }}
                             />
 
-                            {/* Tabs Section */}
-                            <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm overflow-hidden">
-                                {/* Tab Navigation */}
-                                <div className="border-b border-gray-200 dark:border-slate-800">
-                                    <nav className="flex gap-1 px-4 pt-3" aria-label="Tabs">
-                                        {[
-                                            { id: "historico", label: "Histórico", icon: Clock },
-                                            { id: "tarefas", label: "Tarefas", icon: CheckCircle2 },
-                                            { id: "arquivos", label: "Arquivos", icon: Paperclip },
-                                            { id: "propostas", label: "Produtos/Proposta", icon: FileText },
-                                        ].map((tab) => {
-                                            const TabIcon = tab.icon;
-                                            const isActive = activeTab === tab.id;
-                                            return (
-                                                <button
-                                                    key={tab.id}
-                                                    onClick={() => setActiveTab(tab.id)}
-                                                    className={`
-                                                        px-4 py-2.5 text-sm font-medium rounded-t-lg transition-all flex items-center gap-2
-                                                        ${isActive
-                                                            ? "bg-gray-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 border-b-2 border-emerald-500 -mb-px"
-                                                            : "text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800/50"
-                                                        }
-                                                    `}
-                                                >
-                                                    <TabIcon className="h-4 w-4" />
-                                                    {tab.label}
-                                                </button>
-                                            );
-                                        })}
-                                    </nav>
+                            {/* Main panel */}
+                            <div className="bg-slate-900 rounded-2xl border border-slate-800/60 overflow-hidden">
+
+                                {/* Tab bar */}
+                                <div className="flex gap-0 border-b border-slate-800/60 px-2 pt-2">
+                                    {TABS.map((tab) => {
+                                        const TabIcon = tab.icon;
+                                        const active = activeTab === tab.id;
+                                        return (
+                                            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                                                className={`
+                                                    flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium rounded-t-xl transition-all duration-150
+                                                    ${active
+                                                        ? "bg-slate-800 text-emerald-400 border-b-2 border-emerald-500 -mb-px"
+                                                        : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/50"}
+                                                `}
+                                            >
+                                                <TabIcon className="h-3.5 w-3.5" />
+                                                <span className="hidden sm:inline">{tab.label}</span>
+                                            </button>
+                                        );
+                                    })}
                                 </div>
 
-                                {/* Tab Content: Histórico */}
-                                {activeTab === "historico" && (
-                                    <>
-                                        <ScrollArea className="h-[350px]">
-                                            <div className="p-4">
-                                                {timeline.length === 0 ? (
-                                                    <div className="flex flex-col items-center justify-center py-12 text-gray-400 dark:text-slate-500 bg-gray-50 dark:bg-slate-800/30 rounded-lg">
-                                                        <StickyNote className="h-8 w-8 mb-2 opacity-50" />
-                                                        <p className="text-sm">Nenhuma atividade registrada</p>
-                                                        <p className="text-xs">Adicione a primeira nota abaixo</p>
+                                <AnimatePresence mode="wait">
+                                    <motion.div key={activeTab}
+                                        initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }}
+                                    >
+                                        {/* ── Histórico ─────────────────── */}
+                                        {activeTab === "historico" && (
+                                            <>
+                                                <ScrollArea className="h-[360px]">
+                                                    <div className="p-4 space-y-1">
+                                                        {timeline.length === 0 ? (
+                                                            <div className="flex flex-col items-center justify-center py-14 text-slate-600">
+                                                                <StickyNote className="h-9 w-9 mb-3 opacity-40" />
+                                                                <p className="text-sm font-medium text-slate-500">Nenhuma atividade ainda</p>
+                                                                <p className="text-xs mt-1">Adicione a primeira nota abaixo</p>
+                                                            </div>
+                                                        ) : (
+                                                            timeline.map((ev: any, i: number) => (
+                                                                <TimelineEntry key={ev.id} event={ev} isLast={i === timeline.length - 1} />
+                                                            ))
+                                                        )}
                                                     </div>
-                                                ) : (
-                                                    timeline.map((event: any, index: number) => (
-                                                        <TimelineEvent
-                                                            key={event.id}
-                                                            event={event}
-                                                            isFirst={index === 0}
-                                                            isLast={index === timeline.length - 1}
-                                                        />
-                                                    ))
-                                                )}
-                                            </div>
-                                        </ScrollArea>
+                                                </ScrollArea>
 
-                                        {/* Chat Input */}
-                                        <div className="p-4 border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800">
-                                            <div className="flex items-center gap-2">
-                                                <Input
-                                                    value={newNote}
-                                                    onChange={(e) => setNewNote(e.target.value)}
-                                                    placeholder="Digite uma nota ou comando..."
-                                                    className="flex-1 bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-700"
-                                                    onKeyPress={(e) => {
-                                                        if (e.key === "Enter" && newNote.trim()) {
-                                                            addNoteMutation.mutate(newNote.trim());
-                                                        }
+                                                {/* Note input */}
+                                                <div className="p-3 border-t border-slate-800/60 bg-slate-900/80">
+                                                    <div className="flex items-center gap-2 bg-slate-800/60 rounded-xl px-3 py-2 ring-1 ring-slate-700/50 focus-within:ring-emerald-500/40 transition-all">
+                                                        <Input
+                                                            value={newNote}
+                                                            onChange={(e) => setNewNote(e.target.value)}
+                                                            placeholder="Digite uma nota ou comando..."
+                                                            className="flex-1 bg-transparent border-0 text-sm text-slate-200 placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0 h-8 p-0"
+                                                            onKeyDown={(e) => { if (e.key === "Enter" && newNote.trim()) addNote.mutate(newNote.trim()); }}
+                                                        />
+                                                        <Button variant="ghost" size="sm" className="text-slate-500 hover:text-slate-300 h-7 w-7 p-0">
+                                                            <Smile className="h-4 w-4" />
+                                                        </Button>
+                                                        <Button size="sm"
+                                                            onClick={() => newNote.trim() && addNote.mutate(newNote.trim())}
+                                                            disabled={!newNote.trim() || addNote.isPending}
+                                                            className="bg-emerald-500 hover:bg-emerald-400 text-white h-7 w-7 p-0 rounded-lg"
+                                                        >
+                                                            {addNote.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            </>
+                                        )}
+
+                                        {/* ── Tarefas ───────────────────── */}
+                                        {activeTab === "tarefas" && (
+                                            <div className="flex flex-col items-center justify-center py-14 text-slate-600">
+                                                <CheckCircle2 className="h-10 w-10 mb-3 opacity-40" />
+                                                <p className="text-sm font-medium text-slate-500">Nenhuma tarefa pendente</p>
+                                                <p className="text-xs mt-1 mb-4">Tarefas criadas aparecerão aqui</p>
+                                                <Button variant="outline" size="sm" className="gap-2 border-slate-700 text-slate-400 hover:text-white"
+                                                    onClick={() => setShowTaskModal(true)}>
+                                                    <Zap className="h-4 w-4" /> Nova Tarefa
+                                                </Button>
+                                            </div>
+                                        )}
+
+                                        {/* ── Arquivos ──────────────────── */}
+                                        {activeTab === "arquivos" && (
+                                            <div className="p-5">
+                                                <input ref={fileInputRef} type="file" multiple
+                                                    accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+                                                    className="hidden"
+                                                    onChange={(e) => {
+                                                        const files = Array.from(e.target.files || []);
+                                                        if (files.length) { setUploadedFiles(p => [...p, ...files]); toast.success(`${files.length} arquivo(s) selecionado(s)`); }
                                                     }}
                                                 />
-                                                <Button variant="ghost" size="sm" className="text-gray-400 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white">
-                                                    <Smile className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    onClick={() => newNote.trim() && addNoteMutation.mutate(newNote.trim())}
-                                                    disabled={!newNote.trim() || addNoteMutation.isPending}
-                                                    className="bg-emerald-500 hover:bg-emerald-400 text-white"
-                                                >
-                                                    <Send className="h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    </>
-                                )}
-
-                                {/* Tab Content: Tarefas */}
-                                {activeTab === "tarefas" && (
-                                    <div className="p-6">
-                                        <div className="flex flex-col items-center justify-center py-12 text-gray-400 dark:text-slate-500">
-                                            <CheckCircle2 className="h-10 w-10 mb-3 opacity-50" />
-                                            <p className="text-sm font-medium">Nenhuma tarefa pendente</p>
-                                            <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">Tarefas criadas aparecerão aqui</p>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="mt-4 gap-2"
-                                                onClick={() => setShowTaskModal(true)}
-                                            >
-                                                <Zap className="h-4 w-4" />
-                                                Nova Tarefa
-                                            </Button>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Tab Content: Arquivos */}
-                                {activeTab === "arquivos" && (
-                                    <div className="p-6">
-                                        {/* Hidden file input */}
-                                        <input
-                                            ref={fileInputRef}
-                                            type="file"
-                                            multiple
-                                            accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
-                                            className="hidden"
-                                            onChange={(e) => {
-                                                const files = Array.from(e.target.files || []);
-                                                if (files.length > 0) {
-                                                    setUploadedFiles(prev => [...prev, ...files]);
-                                                    toast.success(`${files.length} arquivo(s) selecionado(s)`);
-                                                }
-                                            }}
-                                        />
-
-                                        {uploadedFiles.length === 0 ? (
-                                            <div
-                                                className="flex flex-col items-center justify-center py-12 text-gray-400 dark:text-slate-500 border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-xl cursor-pointer hover:border-emerald-400 dark:hover:border-emerald-500 transition-colors"
-                                                onClick={() => fileInputRef.current?.click()}
-                                                onDragOver={(e) => {
-                                                    e.preventDefault();
-                                                    e.currentTarget.classList.add('border-emerald-400', 'bg-emerald-50/50', 'dark:bg-emerald-500/5');
-                                                }}
-                                                onDragLeave={(e) => {
-                                                    e.currentTarget.classList.remove('border-emerald-400', 'bg-emerald-50/50', 'dark:bg-emerald-500/5');
-                                                }}
-                                                onDrop={(e) => {
-                                                    e.preventDefault();
-                                                    e.currentTarget.classList.remove('border-emerald-400', 'bg-emerald-50/50', 'dark:bg-emerald-500/5');
-                                                    const files = Array.from(e.dataTransfer.files || []);
-                                                    if (files.length > 0) {
-                                                        setUploadedFiles(prev => [...prev, ...files]);
-                                                        toast.success(`${files.length} arquivo(s) adicionado(s)`);
-                                                    }
-                                                }}
-                                            >
-                                                <Paperclip className="h-10 w-10 mb-3 opacity-50" />
-                                                <p className="text-sm font-medium">Nenhum arquivo anexado</p>
-                                                <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">Arraste arquivos ou clique para anexar</p>
-                                                <p className="text-xs text-gray-300 dark:text-slate-600 mt-2">Fotos, vídeos, áudios, PDFs, documentos</p>
-                                            </div>
-                                        ) : (
-                                            <div className="space-y-3">
-                                                {/* File list */}
-                                                <div className="space-y-2">
-                                                    {uploadedFiles.map((file, index) => (
-                                                        <div
-                                                            key={index}
-                                                            className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700"
-                                                        >
-                                                            {file.type.startsWith('image/') && (
-                                                                <img
-                                                                    src={URL.createObjectURL(file)}
-                                                                    alt={file.name}
-                                                                    className="w-10 h-10 rounded object-cover"
-                                                                />
-                                                            )}
-                                                            {file.type.startsWith('video/') && (
-                                                                <div className="w-10 h-10 rounded bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center">
-                                                                    <FileText className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                                                {uploadedFiles.length === 0 ? (
+                                                    <div
+                                                        className="flex flex-col items-center justify-center py-14 border-2 border-dashed border-slate-700 rounded-2xl cursor-pointer hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all"
+                                                        onClick={() => fileInputRef.current?.click()}
+                                                    >
+                                                        <Paperclip className="h-9 w-9 mb-3 text-slate-600" />
+                                                        <p className="text-sm font-medium text-slate-400">Nenhum arquivo anexado</p>
+                                                        <p className="text-xs text-slate-600 mt-1">Arraste ou clique para anexar</p>
+                                                    </div>
+                                                ) : (
+                                                    <div className="space-y-2">
+                                                        {uploadedFiles.map((file, i) => (
+                                                            <div key={i} className="flex items-center gap-3 p-3 bg-slate-800/60 rounded-xl border border-slate-700/40">
+                                                                <div className="w-9 h-9 rounded-lg bg-slate-700 flex items-center justify-center flex-shrink-0">
+                                                                    {file.type.startsWith("image/")
+                                                                        ? <img src={URL.createObjectURL(file)} alt="" className="w-full h-full object-cover rounded-lg" />
+                                                                        : <FileText className="h-4 w-4 text-slate-400" />}
                                                                 </div>
-                                                            )}
-                                                            {file.type.startsWith('audio/') && (
-                                                                <div className="w-10 h-10 rounded bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center">
-                                                                    <FileText className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                                                                <div className="flex-1 min-w-0">
+                                                                    <p className="text-sm font-medium text-white truncate">{file.name}</p>
+                                                                    <p className="text-xs text-slate-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                                                                 </div>
-                                                            )}
-                                                            {!file.type.startsWith('image/') && !file.type.startsWith('video/') && !file.type.startsWith('audio/') && (
-                                                                <div className="w-10 h-10 rounded bg-gray-100 dark:bg-slate-700 flex items-center justify-center">
-                                                                    <FileText className="h-5 w-5 text-gray-500 dark:text-slate-400" />
-                                                                </div>
-                                                            )}
-                                                            <div className="flex-1 min-w-0">
-                                                                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{file.name}</p>
-                                                                <p className="text-xs text-gray-500 dark:text-slate-400">
-                                                                    {(file.size / 1024 / 1024).toFixed(2)} MB
-                                                                </p>
+                                                                <Button variant="ghost" size="sm" onClick={() => setUploadedFiles(p => p.filter((_, j) => j !== i))}
+                                                                    className="text-slate-500 hover:text-rose-400 h-7 w-7 p-0">
+                                                                    <X className="h-3.5 w-3.5" />
+                                                                </Button>
                                                             </div>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                onClick={() => setUploadedFiles(prev => prev.filter((_, i) => i !== index))}
-                                                                className="text-gray-400 hover:text-rose-500"
-                                                            >
-                                                                <X className="h-4 w-4" />
-                                                            </Button>
-                                                        </div>
-                                                    ))}
-                                                </div>
-
-                                                {/* Add more button */}
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="w-full gap-2"
-                                                    onClick={() => fileInputRef.current?.click()}
-                                                >
-                                                    <Paperclip className="h-4 w-4" />
-                                                    Anexar Mais Arquivos
-                                                </Button>
+                                                        ))}
+                                                        <Button variant="outline" size="sm" className="w-full gap-2 border-slate-700 text-slate-400 hover:text-white mt-2"
+                                                            onClick={() => fileInputRef.current?.click()}>
+                                                            <Paperclip className="h-4 w-4" /> Anexar Mais
+                                                        </Button>
+                                                    </div>
+                                                )}
                                             </div>
                                         )}
-                                    </div>
-                                )}
 
-                                {/* Tab Content: Propostas/Produtos */}
-                                {activeTab === "propostas" && (
-                                    <div className="p-5">
-                                        {deal?.company_id ? (
-                                            <DealProducts
-                                                dealId={id!}
-                                                companyId={deal.company_id}
-                                                deal={{
-                                                    id: deal.id,
-                                                    title: deal.title,
-                                                    customer_name: deal.customer_name,
-                                                    customer_email: deal.customer_email,
-                                                    customer_phone: deal.customer_phone,
-                                                }}
-                                            />
-                                        ) : (
-                                            <div className="flex flex-col items-center justify-center py-12 text-gray-400 dark:text-slate-500">
-                                                <FileText className="h-10 w-10 mb-3 opacity-50" />
-                                                <p className="text-sm font-medium">Carregando...</p>
+                                        {/* ── Produtos/Proposta ─────────── */}
+                                        {activeTab === "propostas" && (
+                                            <div className="p-5">
+                                                {deal?.company_id ? (
+                                                    <DealProducts
+                                                        dealId={id!}
+                                                        companyId={deal.company_id}
+                                                        deal={{ id: deal.id, title: deal.title, customer_name: deal.customer_name, customer_email: deal.customer_email, customer_phone: deal.customer_phone }}
+                                                    />
+                                                ) : (
+                                                    <div className="flex items-center justify-center py-12 text-slate-500">
+                                                        <Loader2 className="h-6 w-6 animate-spin" />
+                                                    </div>
+                                                )}
                                             </div>
                                         )}
-                                    </div>
-                                )}
+                                    </motion.div>
+                                </AnimatePresence>
                             </div>
 
-                            {/* Notes Section */}
+                            {/* Deal observations chip */}
                             {deal.notes && (
-                                <div className="bg-white dark:bg-slate-900 rounded-xl p-4 border border-gray-200 dark:border-slate-800 shadow-sm">
-                                    <p className="text-xs font-medium text-gray-500 dark:text-slate-500 uppercase tracking-wider mb-2">Observações do Deal</p>
-                                    <p className="text-sm text-gray-700 dark:text-slate-300">{deal.notes}</p>
+                                <div className="bg-slate-900/60 rounded-2xl p-4 border border-slate-800/40">
+                                    <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-2">Observações do Deal</p>
+                                    <p className="text-sm text-slate-300 leading-relaxed">{deal.notes}</p>
                                 </div>
                             )}
                         </div>
                     </div>
                 </div>
 
-                {/* Lost Deal Modal */}
+                {/* ── MODALS ─────────────────────────────────────────────────── */}
                 <LostDealModal
                     open={showLostModal}
                     onClose={() => setShowLostModal(false)}
-                    onConfirm={handleLost}
+                    onConfirm={async (reason) => {
+                        await updateDeal.mutateAsync({ stage: "closed_lost", loss_reason: reason, probability: 0 });
+                        setShowLostModal(false);
+                    }}
                     dealTitle={deal.title || "Deal"}
                 />
-
-                {/* Task Modal */}
                 <NovaTarefaModal
                     open={showTaskModal}
                     onClose={() => setShowTaskModal(false)}

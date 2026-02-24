@@ -1,172 +1,51 @@
-.rbc-calendar {
-  font-family: inherit;
+/* ── Custom Scrollbar for Calendar Timeline ─────────────────────────────── */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.rbc-header {
-  color: hsl(var(--foreground));
-  font-weight: 600;
-  padding: 16px;
-  border-bottom: 2px solid hsl(var(--border));
-  background: hsl(var(--card) / 0.5);
-  backdrop-filter: blur(8px);
-  text-transform: uppercase;
-  font-size: 0.75rem;
-  letter-spacing: 0.05em;
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.3);
+  border-radius: 4px;
 }
 
-.rbc-today {
-  background: linear-gradient(135deg, hsl(var(--primary) / 0.08), hsl(var(--accent) / 0.08));
-  border: 1px solid hsl(var(--primary) / 0.2) !important;
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.5);
 }
 
-.rbc-off-range-bg {
-  background: hsl(var(--muted) / 0.05);
-}
-
-.rbc-date-cell {
-  padding: 8px;
-  font-weight: 500;
-}
-
-.rbc-event {
-  padding: 8px 12px;
-  font-size: 0.8125rem;
-  border-radius: 8px;
-  border-left: 4px solid !important;
-  background: hsl(var(--card) / 0.6) !important;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 2px 6px hsl(var(--primary) / 0.15);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  font-weight: 500;
-}
-
-.rbc-event:hover {
-  transform: scale(1.02) translateY(-1px);
-  box-shadow: 0 4px 12px hsl(var(--primary) / 0.25);
-  background: hsl(var(--card) / 0.8) !important;
+/* ── Calendar Timeline Layout ───────────────────────────────────────────── */
+.calendar-timeline-gutter {
+  position: sticky;
+  left: 0;
   z-index: 10;
 }
 
-.rbc-event.rbc-selected {
-  background: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--accent) / 0.8));
+/* ── Mini Calendar hover states ─────────────────────────────────────────── */
+.mini-cal-day {
+  transition: background 0.1s, color 0.1s;
 }
 
-.rbc-toolbar {
-  margin-bottom: 24px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  padding: 16px;
-  background: hsl(var(--card) / 0.5);
-  backdrop-filter: blur(8px);
-  border-radius: 12px;
-  border: 1px solid hsl(var(--border));
+/* ── Event pill animations ───────────────────────────────────────────────── */
+.calendar-event-pill {
+  transition: filter 0.15s, transform 0.1s;
 }
 
-.rbc-toolbar button {
-  color: hsl(var(--foreground));
-  background: hsl(var(--background));
-  border: 1px solid hsl(var(--border));
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 3px hsl(var(--border) / 0.1);
+.calendar-event-pill:hover {
+  filter: brightness(1.2);
 }
 
-.rbc-toolbar button:hover {
-  background: hsl(var(--accent));
-  border-color: hsl(var(--accent));
-  transform: translateY(-1px);
-  box-shadow: 0 2px 6px hsl(var(--border) / 0.2);
+/* ── Status colors (border-left accent) ─────────────────────────────────── */
+.status-show {
+  border-left-color: #10b981;
 }
 
-.rbc-toolbar button.rbc-active {
-  background: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
-  border-color: hsl(var(--primary));
-  box-shadow: 0 2px 8px hsl(var(--primary) / 0.3);
+.status-no_show {
+  border-left-color: #f43f5e;
 }
 
-.rbc-toolbar-label {
-  font-weight: 600;
-  font-size: 1.125rem;
-  color: hsl(var(--foreground));
-}
-
-.rbc-month-view,
-.rbc-time-view,
-.rbc-agenda-view {
-  border: 1px solid hsl(var(--border));
-  border-radius: 12px;
-  overflow: hidden;
-  background: hsl(var(--card));
-  box-shadow: 0 4px 12px hsl(var(--border) / 0.1);
-}
-
-.rbc-day-bg {
-  border-color: hsl(var(--border) / 0.15);
-  transition: all 0.2s ease;
-  position: relative;
-}
-
-.rbc-day-bg:hover {
-  background: hsl(var(--accent) / 0.08);
-  border-color: hsl(var(--border) / 0.3);
-}
-
-.rbc-day-bg:hover::after {
-  content: '+';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 2rem;
-  color: hsl(var(--muted-foreground) / 0.3);
-  font-weight: 300;
-  pointer-events: none;
-  transition: all 0.2s ease;
-}
-
-.rbc-month-row {
-  border-color: hsl(var(--border) / 0.15);
-}
-
-.rbc-time-slot {
-  border-color: hsl(var(--border) / 0.3);
-  color: hsl(var(--muted-foreground));
-}
-
-.rbc-current-time-indicator {
-  background-color: hsl(var(--primary));
-  height: 2px;
-}
-
-.rbc-agenda-table {
-  border-color: hsl(var(--border));
-}
-
-.rbc-agenda-date-cell,
-.rbc-agenda-time-cell {
-  color: hsl(var(--muted-foreground));
-  padding: 12px;
-}
-
-.rbc-agenda-event-cell {
-  color: hsl(var(--foreground));
-  padding: 12px;
-}
-
-.rbc-show-more {
-  color: hsl(var(--primary));
-  font-weight: 500;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-}
-
-.rbc-show-more:hover {
-  background: hsl(var(--primary) / 0.1);
+.status-pending {
+  border-left-color: #64748b;
 }
