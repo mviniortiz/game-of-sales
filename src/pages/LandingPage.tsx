@@ -586,6 +586,16 @@ const LandingPage = () => {
                                     O vendedor liga dentro da plataforma e o historico fica no proprio CRM. Gravacao, contexto da conversa e transcricao no deal para ninguem depender de memoria ou anotacoes soltas.
                                 </p>
 
+                                <div className="mb-6 rounded-2xl border border-white/10 bg-white/[0.02] p-4 max-w-xl">
+                                    <p className="text-[11px] uppercase tracking-wider text-emerald-300 mb-1" style={{ fontWeight: "var(--fw-semibold)" }}>
+                                        Como funciona o add-on
+                                    </p>
+                                    <p className="text-xs sm:text-sm text-white/65 leading-relaxed">
+                                        Ligações é uma contratação opcional (cobrada à parte) para empresas nos planos Plus e Pro.
+                                        Você ativa por empresa e adiciona minutos conforme a operação.
+                                    </p>
+                                </div>
+
                                 <div className="grid sm:grid-cols-2 gap-3 mb-7">
                                     {[
                                         {

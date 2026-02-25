@@ -1,31 +1,31 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, X } from "lucide-react";
 
 const FAQS = [
     {
         q: "Quanto tempo leva para implementar?",
-        a: "Menos de 5 minutos. Basta criar sua conta, configurar os webhooks da sua plataforma e pronto. A integração com Hotmart, Kiwify, Greenn e outras é automática e sem código.",
+        a: "Menos de 5 minutos. Basta criar sua conta, configurar os webhooks da sua plataforma e pronto. A integraÃ§Ã£o com Hotmart, Kiwify, Greenn e outras Ã© automÃ¡tica e sem cÃ³digo.",
     },
     {
         q: "Posso testar antes de assinar?",
-        a: "Sim! Nosso plano PRO inclui 7 dias de acesso completo para você ver o impacto real no seu time antes de continuar.",
+        a: "Sim! Nosso plano PRO inclui 7 dias de acesso completo para vocÃª ver o impacto real no seu time antes de continuar.",
     },
     {
-        q: "Tem ligação dentro da plataforma?",
-        a: "Sim. O recurso de Ligações está disponível como add-on nos planos Plus e Pro (com gravação/transcrição em evolução). Assim você centraliza o histórico da conversa no deal sem sair do CRM.",
+        q: "Tem ligaÃ§Ã£o dentro da plataforma?",
+        a: "Sim. Ligações é um add-on (contratação opcional cobrada à parte) para empresas nos planos Plus e Pro. Ao ativar, você libera chamadas dentro do CRM com histórico no deal, gravação e evolução de transcrição/insights.",
     },
     {
         q: "Funciona para qualquer tipo de venda?",
-        a: "O Game Sales é ideal para times que vendem infoprodutos, serviços ou produtos físicos. Se você tem vendedores, o Game Sales transforma a rotina deles em competição saudável.",
+        a: "O Game Sales Ã© ideal para times que vendem infoprodutos, serviÃ§os ou produtos fÃ­sicos. Se vocÃª tem vendedores, o Game Sales transforma a rotina deles em competiÃ§Ã£o saudÃ¡vel.",
     },
     {
-        q: "Meus dados estão seguros?",
-        a: "100%. Usamos criptografia de ponta a ponta e nossa infraestrutura é hospedada em servidores com certificação de segurança. Conformidade total com LGPD.",
+        q: "Meus dados estÃ£o seguros?",
+        a: "100%. Usamos criptografia de ponta a ponta e nossa infraestrutura Ã© hospedada em servidores com certificaÃ§Ã£o de seguranÃ§a. Conformidade total com LGPD.",
     },
     {
         q: "Posso cancelar a qualquer momento?",
-        a: "Sim, sem multas ou taxas. Você cancela diretamente pelo painel, sem precisar falar com ninguém — mas acreditamos que você não vai querer sair.",
+        a: "Sim, sem multas ou taxas. VocÃª cancela diretamente pelo painel, sem precisar falar com ninguÃ©m â€” mas acreditamos que vocÃª nÃ£o vai querer sair.",
     },
 ];
 
@@ -146,13 +146,13 @@ export const FAQSection = () => {
                             letterSpacing: "-0.02em",
                         }}
                     >
-                        Dúvidas?{" "}
+                        DÃºvidas?{" "}
                         <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
                             Temos respostas.
                         </span>
                     </h2>
                     <p className="text-white/35 text-sm">
-                        Tudo que você precisa saber antes de começar.
+                        Tudo que vocÃª precisa saber antes de comeÃ§ar.
                     </p>
                 </motion.div>
 

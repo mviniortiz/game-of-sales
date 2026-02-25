@@ -176,6 +176,32 @@ serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+
+      const { data: addonRow, error: addonError } = await (adminSupabase as any)
+        .from("company_addons")
+        .select("calls_enabled")
+        .eq("company_id", (deal as any).company_id)
+        .maybeSingle();
+
+      if (addonError && !String(addonError.message || "").toLowerCase().includes("relation")) {
+        console.error("[deal-call-initiate] company_addons query error:", addonError);
+        return new Response(JSON.stringify({ error: "Erro ao validar add-on de ligações" }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (addonRow?.calls_enabled !== true) {
+        return new Response(JSON.stringify({
+          error: "Add-on de Ligações não está ativo para esta empresa",
+          code: "CALLS_ADDON_REQUIRED",
+          current_plan: companyPlan,
+          addon: "calls",
+        }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     const sellerPhoneRaw = body.sellerPhone || null;

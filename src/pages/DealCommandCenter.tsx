@@ -55,6 +55,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTenant } from "@/contexts/TenantContext";
 import { toast } from "sonner";
 import { syncWonDealToSale } from "@/utils/salesSync";
 import { LostDealModal } from "@/components/crm/LostDealModal";
@@ -299,8 +300,9 @@ export default function DealCommandCenter() {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const { user } = useAuth();
-    const { hasFeature, currentPlan } = usePlan();
-    const hasCallsAccess = hasFeature("calls");
+    const { activeCompanyId } = useTenant();
+    const { hasFeature, currentPlan, isSuperAdmin } = usePlan();
+    const hasCallsPlanAccess = hasFeature("calls");
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [showLostModal, setShowLostModal] = useState(false);
@@ -330,6 +332,31 @@ export default function DealCommandCenter() {
         enabled: !!id,
     });
 
+    const { data: companyCallsAddon } = useQuery({
+        queryKey: ["company-calls-addon", activeCompanyId],
+        queryFn: async () => {
+            if (!activeCompanyId) return { calls_enabled: false };
+            const { data, error } = await (supabase as any)
+                .from("company_addons")
+                .select("calls_enabled")
+                .eq("company_id", activeCompanyId)
+                .maybeSingle();
+
+            if (error) {
+                if (String(error.message || "").toLowerCase().includes("relation")) {
+                    return { calls_enabled: false };
+                }
+                throw error;
+            }
+
+            return { calls_enabled: data?.calls_enabled === true };
+        },
+        enabled: !!activeCompanyId,
+    });
+
+    const hasCallsAddonEnabled = isSuperAdmin || companyCallsAddon?.calls_enabled === true;
+    const canUseCalls = hasCallsPlanAccess && hasCallsAddonEnabled;
+
     const { data: timeline = [] } = useQuery({
         queryKey: ["deal-timeline", id],
         queryFn: async () => {
@@ -344,7 +371,7 @@ export default function DealCommandCenter() {
                 content: n.content, created_at: n.created_at,
             }));
         },
-        enabled: !!id && hasCallsAccess,
+        enabled: !!id,
     });
 
     const { data: dealCalls = [], isLoading: loadingCalls } = useQuery({
@@ -377,7 +404,7 @@ export default function DealCommandCenter() {
                 insight: insightsMap.get(call.id) || null,
             }));
         },
-        enabled: !!id,
+        enabled: !!id && canUseCalls,
     });
 
     // â”€â”€ Mutations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -411,8 +438,8 @@ export default function DealCommandCenter() {
 
     const initiateDealCall = useMutation({
         mutationFn: async (payload: { mode: "demo" | "twilio"; sellerPhone?: string | null }) => {
-            if (!hasCallsAccess) {
-                throw new Error("LigaÃ§Ãµes disponÃ­veis apenas nos planos Plus e Pro");
+            if (!canUseCalls) {
+                throw new Error("Ligações exigem add-on ativo (Plus/Pro)");
             }
             const response = await supabase.functions.invoke("deal-call-initiate", {
                 body: {
@@ -451,8 +478,8 @@ export default function DealCommandCenter() {
 
     const generateCallInsights = useMutation({
         mutationFn: async (callId: string) => {
-            if (!hasCallsAccess) {
-                throw new Error("LigaÃ§Ãµes disponÃ­veis apenas nos planos Plus e Pro");
+            if (!canUseCalls) {
+                throw new Error("Ligações exigem add-on ativo (Plus/Pro)");
             }
             const response = await supabase.functions.invoke("deal-call-generate-insights", {
                 body: { callId },
@@ -486,7 +513,7 @@ export default function DealCommandCenter() {
 
     const TABS = [
         { id: "historico", label: "Histórico", icon: Clock },
-        { id: "ligacoes", label: "Ligações", icon: PhoneCall, locked: !hasCallsAccess },
+        { id: "ligacoes", label: "Ligações", icon: PhoneCall, locked: !canUseCalls },
         { id: "tarefas", label: "Tarefas", icon: CheckCircle2 },
         { id: "arquivos", label: "Arquivos", icon: Paperclip },
         { id: "propostas", label: "Produtos/Proposta", icon: FileText },
@@ -624,9 +651,9 @@ export default function DealCommandCenter() {
                                     <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:justify-around">
                                         <QuickBtn
                                             icon={Phone}
-                                            label={hasCallsAccess ? "Ligar" : "Ligações (Plus/Pro)"}
+                                            label={canUseCalls ? "Ligar" : (hasCallsPlanAccess ? "Ativar add-on Ligações" : "Ligações (Plus/Pro)")}
                                             color="bg-emerald-600 hover:bg-emerald-500"
-                                            disabled={!hasCallsAccess}
+                                            disabled={!canUseCalls}
                                             onClick={() => setShowCallModal(true)}
                                         />
                                         <QuickBtn icon={MessageSquare} label="WhatsApp" color="bg-green-600 hover:bg-green-500"
@@ -813,25 +840,36 @@ export default function DealCommandCenter() {
                                                     <Button
                                                         size="sm"
                                                         className="bg-emerald-500 hover:bg-emerald-400 text-white gap-2"
-                                                        disabled={!hasCallsAccess}
+                                                        disabled={!canUseCalls}
                                                         onClick={() => setShowCallModal(true)}
                                                     >
                                                         <PhoneCall className="h-4 w-4" />
-                                                        {hasCallsAccess ? "Nova ligação" : "Plus/Pro"}
+                                                        {canUseCalls ? "Nova ligação" : (hasCallsPlanAccess ? "Ativar add-on" : "Plus/Pro")}
                                                     </Button>
                                                 </div>
 
-                                                {!hasCallsAccess ? (
+                                                {!canUseCalls ? (
                                                     <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 sm:p-5">
                                                         <div className="flex items-start gap-3">
                                                             <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
                                                                 <Lock className="h-4 w-4 text-amber-300" />
                                                             </div>
                                                             <div className="min-w-0">
-                                                                <p className="text-sm font-semibold text-white">Ligações disponível no Plus e Pro</p>
+                                                                <p className="text-sm font-semibold text-white">
+                                                                    {hasCallsPlanAccess ? "Ative o add-on Ligações" : "Ligações disponível no Plus e Pro"}
+                                                                </p>
                                                                 <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                                                                    Seu plano atual é <span className="text-amber-300 font-medium capitalize">{currentPlan}</span>.
-                                                                    Faça upgrade para habilitar chamadas, gravação e transcrição dentro do deal.
+                                                                    {hasCallsPlanAccess ? (
+                                                                        <>
+                                                                            Seu plano atual é <span className="text-amber-300 font-medium capitalize">{currentPlan}</span> e já é elegível.
+                                                                            Falta ativar o add-on de Ligações para liberar chamadas, gravação e transcrição dentro do deal.
+                                                                        </>
+                                                                    ) : (
+                                                                        <>
+                                                                            Seu plano atual é <span className="text-amber-300 font-medium capitalize">{currentPlan}</span>.
+                                                                            Faça upgrade para o Plus ou Pro e depois ative o add-on de Ligações.
+                                                                        </>
+                                                                    )}
                                                                 </p>
                                                                 <div className="mt-3">
                                                                     <Button
@@ -840,7 +878,7 @@ export default function DealCommandCenter() {
                                                                         className="border-amber-500/30 text-amber-200 hover:text-white hover:bg-amber-500/10"
                                                                         onClick={() => navigate("/planos")}
                                                                     >
-                                                                        Ver planos
+                                                                        {hasCallsPlanAccess ? "Ver add-on / planos" : "Ver planos"}
                                                                     </Button>
                                                                 </div>
                                                             </div>
