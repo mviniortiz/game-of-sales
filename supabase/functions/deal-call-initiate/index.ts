@@ -150,6 +150,34 @@ serve(async (req) => {
       });
     }
 
+    const { data: profile } = await (adminSupabase as any)
+      .from("profiles")
+      .select("is_super_admin")
+      .eq("id", user.id)
+      .single();
+
+    const isSuperAdmin = profile?.is_super_admin === true;
+    if (!isSuperAdmin) {
+      const { data: company } = await (adminSupabase as any)
+        .from("companies")
+        .select("plan")
+        .eq("id", (deal as any).company_id)
+        .single();
+
+      const companyPlan = String(company?.plan || "starter").toLowerCase();
+      if (!["plus", "pro"].includes(companyPlan)) {
+        return new Response(JSON.stringify({
+          error: "Ligações disponíveis apenas nos planos Plus e Pro",
+          code: "PLAN_UPGRADE_REQUIRED",
+          required_plan: "plus",
+          current_plan: companyPlan,
+        }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     const sellerPhoneRaw = body.sellerPhone || null;
     const customerPhoneRaw = body.customerPhone || (deal as any).customer_phone || null;
     const sellerPhone = normalizePhone(sellerPhoneRaw);
