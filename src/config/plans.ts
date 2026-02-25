@@ -30,7 +30,7 @@ export const PLANS: Record<string, Plan> = {
             "Dashboard em tempo real",
             "Metas individuais",
             "Registro de vendas",
-            "Performance de calls",
+            "Painel de performance básico",
         ],
         limits: {
             sellers: 1,
@@ -51,6 +51,7 @@ export const PLANS: Record<string, Plan> = {
             "Ranking gamificado",
             "Relatórios completos",
             "Metas consolidadas",
+            "Ligações pela plataforma (add-on)",
         ],
         limits: {
             sellers: 3,
@@ -70,6 +71,7 @@ export const PLANS: Record<string, Plan> = {
             "Tudo do Plus",
             "CRM completo",
             "Integrações (Hotmart, Stripe)",
+            "Ligações + transcrição no deal (add-on)",
             "Multi-empresa",
             "API Access",
             "Suporte prioritário",

@@ -5,3 +5,12 @@ verify_jwt = false
 
 [functions.google-calendar-webhook]
 verify_jwt = false
+
+[functions.twilio-voice-bridge]
+verify_jwt = false
+
+[functions.twilio-voice-status-webhook]
+verify_jwt = false
+
+[functions.twilio-voice-recording-webhook]
+verify_jwt = false

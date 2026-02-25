@@ -12,6 +12,10 @@ const FAQS = [
         a: "Sim! Nosso plano PRO inclui 7 dias de acesso completo para você ver o impacto real no seu time antes de continuar.",
     },
     {
+        q: "Tem ligação dentro da plataforma?",
+        a: "Sim. O recurso de Ligações está disponível como add-on nos planos Plus e Pro (com gravação/transcrição em evolução). Assim você centraliza o histórico da conversa no deal sem sair do CRM.",
+    },
+    {
         q: "Funciona para qualquer tipo de venda?",
         a: "O Game Sales é ideal para times que vendem infoprodutos, serviços ou produtos físicos. Se você tem vendedores, o Game Sales transforma a rotina deles em competição saudável.",
     },

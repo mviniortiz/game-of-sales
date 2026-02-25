@@ -20,6 +20,7 @@ import {
     Target,
     Rocket,
     Award,
+    PhoneCall,
     Play,
     Pause,
     Volume2,
@@ -113,9 +114,9 @@ const LandingPage = () => {
             size: "md:col-span-1"
         },
         {
-            icon: MessageCircle,
-            title: "Venda sem sair do Zap",
-            description: "CRM integrado direto no navegador.",
+            icon: PhoneCall,
+            title: "Ligações no CRM",
+            description: "Ligue dentro da plataforma e centralize histórico de contato no deal.",
             gradient: "from-green-500 to-emerald-600",
             size: "md:col-span-1"
         },
@@ -132,7 +133,7 @@ const LandingPage = () => {
                 "1 Vendedor + 1 Admin",
                 "Metas individuais",
                 "Registro de vendas",
-                "Performance de calls",
+                "Painel de performance básico",
             ],
             popular: false,
             extraInfo: null,
@@ -150,9 +151,10 @@ const LandingPage = () => {
                 "Ranking gamificado",
                 "Relatórios completos",
                 "Metas consolidadas",
+                "Ligações na plataforma (add-on)",
             ],
             popular: true,
-            extraInfo: "+R$ 49,97/vendedor adicional",
+            extraInfo: "+R$ 49,97/vendedor adicional • Ligações como add-on",
             checkoutUrl: "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=7c2c9ac396684c229987a7501cf4f88c",
         },
         {
@@ -165,11 +167,12 @@ const LandingPage = () => {
                 "8 Vendedores + 3 Admins",
                 "CRM completo",
                 "Integrações (Hotmart, Stripe)",
+                "Ligações + transcrição no deal (add-on)",
                 "Multi-empresa",
                 "Suporte prioritário",
             ],
             popular: false,
-            extraInfo: "+R$ 48,99/vendedor adicional",
+            extraInfo: "+R$ 48,99/vendedor adicional • Melhor custo para add-on de ligações",
             checkoutUrl: "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=7f7561d2b1174aacb31ab92dce72ded4",
         },
     ];
@@ -499,7 +502,7 @@ const LandingPage = () => {
                             {[
                                 { icon: Kanban, color: "text-emerald-400", bg: "bg-emerald-500/10", title: "CRM Visual", desc: "Kanban intuitivo" },
                                 { icon: Trophy, color: "text-amber-400", bg: "bg-amber-500/10", title: "Gamificação", desc: "Rankings e conquistas" },
-                                { icon: Target, color: "text-emerald-400", bg: "bg-emerald-500/10", title: "Metas Inteligentes", desc: "Acompanhamento em tempo real" },
+                                { icon: PhoneCall, color: "text-cyan-400", bg: "bg-cyan-500/10", title: "Ligações", desc: "Histórico no deal + gravação" },
                             ].map(({ icon: Icon, color, bg, title, desc }) => (
                                 <motion.div
                                     key={title}
@@ -525,6 +528,194 @@ const LandingPage = () => {
             <div id="use-cases">
                 <UseCasesSection />
             </div>
+
+            {/* Ligacoes Section */}
+            <section className="py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+                <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                        background:
+                            "radial-gradient(circle at 18% 20%, rgba(16,185,129,0.09), transparent 45%), radial-gradient(circle at 82% 78%, rgba(34,197,94,0.08), transparent 45%)"
+                    }}
+                />
+                <div
+                    className="absolute inset-0 opacity-[0.025] pointer-events-none"
+                    style={{
+                        backgroundImage:
+                            "linear-gradient(rgba(255,255,255,0.35) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.35) 1px, transparent 1px)",
+                        backgroundSize: "44px 44px"
+                    }}
+                />
+
+                <div className="max-w-6xl mx-auto relative z-10">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.45 }}
+                        className="rounded-3xl border border-white/10 bg-slate-900/65 backdrop-blur-xl p-6 sm:p-8 lg:p-10"
+                    >
+                        <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-8 lg:gap-10 items-start">
+                            <div>
+                                <div className="flex flex-wrap items-center gap-3 mb-5">
+                                    <Badge className="border-emerald-400/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/15">
+                                        <PhoneCall className="h-3.5 w-3.5 mr-1.5" />
+                                        NOVO: LIGACOES NO CRM
+                                    </Badge>
+                                    <Badge variant="secondary" className="bg-white/5 text-white/80 border border-white/10">
+                                        Add-on para Plus e Pro
+                                    </Badge>
+                                </div>
+
+                                <h2
+                                    className="text-white mb-4"
+                                    style={{
+                                        fontWeight: "var(--fw-extrabold)",
+                                        fontSize: "clamp(1.7rem, 3.8vw, 2.35rem)",
+                                        lineHeight: "var(--lh-tight)",
+                                        letterSpacing: "var(--ls-snug)"
+                                    }}
+                                >
+                                    Ligue sem sair do deal.
+                                    <span className="block bg-gradient-to-r from-emerald-300 via-emerald-400 to-teal-300 bg-clip-text text-transparent">
+                                        Registre tudo. Venda melhor.
+                                    </span>
+                                </h2>
+
+                                <p className="text-slate-300/90 max-w-xl mb-6" style={{ fontSize: "1.05rem" }}>
+                                    O vendedor liga dentro da plataforma e o historico fica no proprio CRM. Gravacao, contexto da conversa e transcricao no deal para ninguem depender de memoria ou anotacoes soltas.
+                                </p>
+
+                                <div className="grid sm:grid-cols-2 gap-3 mb-7">
+                                    {[
+                                        {
+                                            icon: PhoneCall,
+                                            title: "Clique para ligar",
+                                            desc: "Chamada iniciada direto do card do lead ou deal."
+                                        },
+                                        {
+                                            icon: MessageCircle,
+                                            title: "Transcricao no historico",
+                                            desc: "Conversa salva no deal para consulta e follow-up."
+                                        },
+                                        {
+                                            icon: Target,
+                                            title: "Mais previsibilidade",
+                                            desc: "Gestor acompanha volume, evolucao e qualidade."
+                                        },
+                                        {
+                                            icon: Sparkles,
+                                            title: "Insights sob demanda",
+                                            desc: "Opcional por botao, sem travar o fluxo do vendedor."
+                                        }
+                                    ].map(({ icon: Icon, title, desc }) => (
+                                        <div key={title} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+                                            <div className="flex items-start gap-3">
+                                                <div className="mt-0.5 w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-400/20 flex items-center justify-center shrink-0">
+                                                    <Icon className="h-4 w-4 text-emerald-300" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-white text-sm mb-1" style={{ fontWeight: "var(--fw-semibold)" }}>{title}</p>
+                                                    <p className="text-white/55 text-xs leading-relaxed">{desc}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="flex flex-col sm:flex-row gap-3">
+                                    <Button
+                                        onClick={() => scrollToSection("pricing")}
+                                        className="h-11 px-5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white border-0"
+                                    >
+                                        Ver planos com Ligacoes
+                                        <ArrowRight className="h-4 w-4 ml-2" />
+                                    </Button>
+                                    <Button
+                                        onClick={() => goToRegister("plus")}
+                                        variant="outline"
+                                        className="h-11 px-5 border-white/15 bg-white/0 hover:bg-white/5 text-white"
+                                    >
+                                        Testar no plano Plus
+                                    </Button>
+                                </div>
+                            </div>
+
+                            <motion.div
+                                initial={{ opacity: 0, x: 16 }}
+                                whileInView={{ opacity: 1, x: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.45, delay: 0.06 }}
+                                className="relative"
+                            >
+                                <div className="absolute -inset-4 rounded-3xl bg-emerald-500/10 blur-2xl opacity-60 pointer-events-none" />
+
+                                <div className="relative rounded-3xl border border-emerald-400/15 bg-slate-950/85 p-4 sm:p-5 shadow-[0_20px_70px_-30px_rgba(16,185,129,0.35)]">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div>
+                                            <p className="text-white text-sm" style={{ fontWeight: "var(--fw-semibold)" }}>Ligacoes no Deal</p>
+                                            <p className="text-white/45 text-xs">Tudo no mesmo contexto da negociacao</p>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                            <span className="text-emerald-300 text-xs">Ao vivo</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+                                            <div className="flex items-center justify-between mb-2 gap-2">
+                                                <p className="text-white text-sm" style={{ fontWeight: "var(--fw-semibold)" }}>Lead: Clinica Horizonte</p>
+                                                <Badge className="bg-cyan-500/10 text-cyan-300 border-cyan-400/20">Deal #A12</Badge>
+                                            </div>
+                                            <p className="text-white/55 text-xs mb-3">Etapa: Proposta enviada • Ultimo contato: ontem, 17:42</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                <div className="h-9 px-3 rounded-xl bg-emerald-500 text-white text-xs font-semibold inline-flex items-center">
+                                                    <PhoneCall className="h-3.5 w-3.5 mr-1.5" />
+                                                    Ligar agora
+                                                </div>
+                                                <div className="h-9 px-3 rounded-xl border border-white/10 bg-white/[0.03] text-white/75 text-xs font-semibold inline-flex items-center">
+                                                    <MessageCircle className="h-3.5 w-3.5 mr-1.5" />
+                                                    Ver historico
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/5 p-4">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <p className="text-white text-sm" style={{ fontWeight: "var(--fw-semibold)" }}>Chamada concluida • 08:31</p>
+                                                <span className="text-emerald-300 text-xs">Gravacao salva</span>
+                                            </div>
+                                            <p className="text-white/65 text-xs leading-relaxed">
+                                                Transcricao vinculada ao deal. Proxima acao sugerida pode ser gerada por botao, somente quando fizer sentido.
+                                            </p>
+                                        </div>
+
+                                        <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <p className="text-white text-sm" style={{ fontWeight: "var(--fw-semibold)" }}>O que seu time ganha</p>
+                                                <Sparkles className="h-4 w-4 text-emerald-300" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                {[
+                                                    "Menos perda de contexto entre vendedores e gestores",
+                                                    "Follow-up mais rapido porque a conversa ja esta no CRM",
+                                                    "Evolucao de abordagem comercial com base em chamadas reais"
+                                                ].map((item) => (
+                                                    <div key={item} className="flex items-start gap-2 text-xs text-white/70">
+                                                        <Check className="h-3.5 w-3.5 text-emerald-300 mt-0.5 shrink-0" />
+                                                        <span>{item}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        </div>
+                    </motion.div>
+                </div>
+            </section>
 
             {/* ── Pricing Section ───────────────────────────────────────────── */}
             <section id="pricing" className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-slate-950 to-slate-900 relative overflow-hidden">
@@ -763,6 +954,7 @@ const LandingPage = () => {
                         {[
                             { icon: <Check className="h-3.5 w-3.5" />, label: "Cancele quando quiser" },
                             { icon: <Zap className="h-3.5 w-3.5" />, label: "Setup em 5 minutos" },
+                            { icon: <PhoneCall className="h-3.5 w-3.5" />, label: "Ligações (Plus e Pro)" },
                             { icon: <Award className="h-3.5 w-3.5" />, label: "Suporte via WhatsApp" },
                         ].map(({ icon, label }) => (
                             <div key={label} className="flex items-center gap-1.5 text-xs text-white/25"

@@ -62,7 +62,7 @@ const subscriptionPlans = [
         color: "from-emerald-500 to-emerald-600",
         borderColor: "border-emerald-500/30",
         popular: true,
-        features: ["Até 30 vendedores", "Ranking + Gamificação", "CRM completo", "Relatórios avançados"]
+        features: ["Até 30 vendedores", "Ranking + Gamificação", "CRM completo", "Ligações na plataforma (add-on)"]
     },
     {
         id: "pro",
@@ -71,7 +71,7 @@ const subscriptionPlans = [
         price: 797,
         color: "from-amber-500 to-amber-600",
         borderColor: "border-amber-500/30",
-        features: ["Vendedores ilimitados", "Tudo do Plus", "API + Integrações", "Suporte prioritário"]
+        features: ["Vendedores ilimitados", "Tudo do Plus", "API + Integrações", "Ligações + transcrição (add-on)"]
     }
 ];
 

@@ -617,31 +617,33 @@ export const AdminMetas = () => {
 
   return (
     <Tabs defaultValue="individual" className="w-full">
-      <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 bg-card border border-border shadow-sm">
+      <TabsList className="grid w-full max-w-full sm:max-w-md mx-auto grid-cols-2 bg-card border border-border shadow-sm gap-1 p-1 h-auto">
         <TabsTrigger
           value="individual"
-          className="flex items-center gap-2 data-[state=active]:bg-emerald-600 data-[state=active]:text-white"
+          className="flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 text-xs sm:text-sm data-[state=active]:bg-emerald-600 data-[state=active]:text-white"
         >
           <Target className="h-4 w-4" />
-          Metas Individuais
+          <span className="sm:hidden">Individuais</span>
+          <span className="hidden sm:inline">Metas Individuais</span>
         </TabsTrigger>
         <TabsTrigger
           value="consolidada"
-          className="flex items-center gap-2 data-[state=active]:bg-emerald-600 data-[state=active]:text-white"
+          className="flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 text-xs sm:text-sm data-[state=active]:bg-emerald-600 data-[state=active]:text-white"
         >
           <TrendingUp className="h-4 w-4" />
-          Meta Consolidada
+          <span className="sm:hidden">Consolidada</span>
+          <span className="hidden sm:inline">Meta Consolidada</span>
         </TabsTrigger>
       </TabsList>
 
       {/* ==================== METAS INDIVIDUAIS ==================== */}
       <TabsContent value="individual" className="mt-6">
-        <div className="grid grid-cols-12 gap-6">
+        <div className="grid grid-cols-12 gap-4 sm:gap-6">
           {/* LEFT COLUMN - The Controller (Sticky) */}
           <div className="col-span-12 lg:col-span-4">
             <div className="lg:sticky lg:top-4 space-y-4">
               <Card className="border border-border bg-card shadow-sm">
-                <CardContent className="p-6 space-y-5">
+                <CardContent className="p-4 sm:p-6 space-y-5">
                   {/* Header */}
                   <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-200">
@@ -791,7 +793,7 @@ export const AdminMetas = () => {
 
           {/* RIGHT COLUMN - The Context */}
           <div className="col-span-12 lg:col-span-8">
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-3 mb-4 flex-wrap">
               <div className="p-2 rounded-lg bg-amber-50 text-amber-700 dark:bg-slate-800 dark:text-amber-200">
                 <Trophy className="h-4 w-4" />
               </div>
@@ -832,7 +834,7 @@ export const AdminMetas = () => {
                   </div>
 
                   {/* Stats Row */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div className="text-center p-2 rounded-lg bg-white/50 dark:bg-gray-800/50">
                       <p className="text-lg font-bold text-gray-900 dark:text-white">
                         {teamHealthStats.sellersOnTarget}/{teamHealthStats.totalSellers}
@@ -886,7 +888,7 @@ export const AdminMetas = () => {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
+                            className="absolute top-2 right-2 h-8 w-8 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -988,12 +990,12 @@ export const AdminMetas = () => {
 
       {/* ==================== META CONSOLIDADA ==================== */}
       <TabsContent value="consolidada" className="mt-6">
-        <div className="grid grid-cols-12 gap-6">
+        <div className="grid grid-cols-12 gap-4 sm:gap-6">
           {/* LEFT COLUMN - The Controller (Sticky) */}
           <div className="col-span-12 lg:col-span-4">
             <div className="lg:sticky lg:top-4 space-y-4">
               <Card className="border border-border bg-card shadow-sm">
-                <CardContent className="p-6 space-y-5">
+                <CardContent className="p-4 sm:p-6 space-y-5">
                   {/* Header */}
                   <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-200">
@@ -1117,7 +1119,7 @@ export const AdminMetas = () => {
 
           {/* RIGHT COLUMN - The Context */}
           <div className="col-span-12 lg:col-span-8">
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-3 mb-4 flex-wrap">
               <div className="p-2 rounded-lg bg-cyan-50 text-cyan-700 dark:bg-slate-800 dark:text-cyan-200">
                 <TrendingUp className="h-4 w-4" />
               </div>

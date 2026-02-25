@@ -392,8 +392,9 @@ export const UseCasesSection = () => {
                 </motion.div>
 
                 {/* Tab selector */}
-                <div className="flex justify-center mb-10">
-                    <div className="inline-flex gap-1 p-1 rounded-2xl bg-slate-900/80 border border-white/6">
+                <div className="mb-10 -mx-4 px-4 sm:mx-0 sm:px-0">
+                    <div className="flex justify-start sm:justify-center overflow-x-auto scrollbar-none pb-1">
+                        <div className="inline-flex gap-1 p-1 rounded-2xl bg-slate-900/80 border border-white/6 min-w-max">
                         {CASES.map((c, i) => {
                             const Icon = c.icon;
                             const isActive = active === i;
@@ -401,7 +402,7 @@ export const UseCasesSection = () => {
                                 <button
                                     key={c.tag}
                                     onClick={() => setActive(i)}
-                                    className={`relative flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm transition-all duration-200 ${isActive ? "text-white" : "text-white/40 hover:text-white/60"}`}
+                                    className={`relative flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm transition-all duration-200 whitespace-nowrap shrink-0 ${isActive ? "text-white" : "text-white/40 hover:text-white/60"}`}
                                     style={{ fontWeight: "var(--fw-semibold)" }}
                                 >
                                     {isActive && (
@@ -416,6 +417,7 @@ export const UseCasesSection = () => {
                                 </button>
                             );
                         })}
+                        </div>
                     </div>
                 </div>
 

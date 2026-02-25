@@ -52,7 +52,7 @@ export const PLANS_INFO: Record<PlanType, { label: string; color: string }> = {
 export const FEATURE_NAMES: Record<keyof Omit<PlanFeatures, 'maxUsers' | 'maxProducts'>, string> = {
     metas: 'Metas & Objetivos',
     gamification: 'Gamificação',
-    calls: 'Performance de Calls',
+    calls: 'Ligações na Plataforma',
     reports: 'Relatórios Avançados',
     integrations: 'Integrações (Hotmart, etc)'
 };

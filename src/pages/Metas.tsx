@@ -411,7 +411,7 @@ const Metas = () => {
                   </div>
 
                   {/* Values - Realizado vs Meta */}
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                     <div>
                       <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Realizado</p>
                       <p className="text-2xl sm:text-3xl font-bold text-foreground">
@@ -442,10 +442,10 @@ const Metas = () => {
                         </span>
                       </div>
                     </div>
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>0%</span>
-                      <span>Faltam {diasRestantes} dias</span>
-                      <span>100%</span>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <span className="shrink-0">0%</span>
+                      <span className="flex-1 text-center min-w-0 truncate">Faltam {diasRestantes} dias</span>
+                      <span className="shrink-0">100%</span>
                     </div>
                   </div>
                 </div>
@@ -486,7 +486,7 @@ const Metas = () => {
           {/* Contribuição Individual */}
           <div className="space-y-4">
             {/* Section Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-200">
                   <Users className="h-5 w-5" />
@@ -600,14 +600,14 @@ const Metas = () => {
                         </div>
 
                         {/* Row 3: Values */}
-                        <div className="flex items-center justify-between text-sm text-foreground">
-                          <div>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-3 text-sm text-foreground">
+                          <div className="min-w-0">
                             <span className="text-muted-foreground">Realizado: </span>
                             <span className="font-semibold text-foreground">
                               {formatCurrency(vendedor.valorRealizado)}
                             </span>
                           </div>
-                          <div>
+                          <div className="min-w-0 sm:text-right">
                             <span className="text-muted-foreground">Meta: </span>
                             <span className="font-medium text-muted-foreground">
                               {formatCurrency(vendedor.valorMeta)}
@@ -617,12 +617,12 @@ const Metas = () => {
 
                         {/* Row 4: Contribution to Consolidated */}
                         <div className="pt-3 border-t border-border">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
+                          <div className="flex items-start sm:items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
                               <PieChart className="h-4 w-4 text-emerald-600 dark:text-emerald-300" />
-                              <span className="text-xs text-muted-foreground">Contribuição para Meta Global</span>
+                              <span className="text-xs text-muted-foreground leading-tight">Contribuição para Meta Global</span>
                             </div>
-                            <span className={`text-sm font-bold ${vendedor.contribuicaoPercentual >= 30
+                            <span className={`text-sm font-bold shrink-0 ${vendedor.contribuicaoPercentual >= 30
                               ? "text-emerald-600 dark:text-emerald-300"
                               : vendedor.contribuicaoPercentual >= 15
                                 ? "text-cyan-600 dark:text-cyan-300"

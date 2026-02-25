@@ -27,7 +27,7 @@ const ItemCard = ({ item, delay }: ItemCardProps) => {
     const Icon = item.icon;
     return (
         <motion.div
-            className="px-4 py-2.5 bg-white/5 rounded-lg border border-white/10 flex items-center gap-2 hover:bg-white/10 transition-all cursor-pointer whitespace-nowrap"
+            className="px-3 sm:px-4 py-2.5 bg-white/5 rounded-lg border border-white/10 flex items-center justify-center sm:justify-start gap-2 hover:bg-white/10 transition-all cursor-pointer whitespace-nowrap"
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
@@ -80,8 +80,55 @@ export const IntegrationHub = () => {
                     </h2>
                 </motion.div>
 
-                {/* Mind Map - Using CSS Grid for precise positioning */}
-                <div className="relative grid grid-cols-[1fr_auto_1fr] gap-x-8 items-center justify-items-center">
+                {/* Mobile layout */}
+                <div className="md:hidden space-y-5">
+                    <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+                        <div className="flex items-center justify-center gap-3 mb-3">
+                            <div
+                                className="w-12 h-12 rounded-full flex items-center justify-center bg-slate-900 border border-white/10"
+                                style={{ boxShadow: "0 0 20px rgba(16, 185, 129, 0.18)" }}
+                            >
+                                <img src={gameSalesLogo} alt="Game Sales" className="w-7 h-7 object-contain" />
+                            </div>
+                            <div className="text-left">
+                                <p className="text-white text-sm font-semibold">Game Sales</p>
+                                <p className="text-xs text-gray-400">Centraliza vendas, pagamentos e operação</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3">
+                            <p className="text-xs font-semibold text-emerald-400 mb-2">Vendas</p>
+                            <div className="space-y-2">
+                                {leftItems.map((item, i) => (
+                                    <ItemCard key={item.name} item={item} delay={0.1 + i * 0.05} />
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="rounded-xl border border-pink-500/20 bg-pink-500/5 p-3">
+                            <p className="text-xs font-semibold text-pink-400 mb-2">Pagamentos</p>
+                            <div className="space-y-2">
+                                {rightItems.map((item, i) => (
+                                    <ItemCard key={item.name} item={item} delay={0.2 + i * 0.05} />
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="rounded-xl border border-orange-500/20 bg-orange-500/5 p-3">
+                        <p className="text-xs font-semibold text-orange-400 mb-2 text-center">Operação</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            {bottomItems.map((item, i) => (
+                                <ItemCard key={item.name} item={item} delay={0.3 + i * 0.05} />
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Desktop mind map */}
+                <div className="relative hidden md:grid grid-cols-[1fr_auto_1fr] gap-x-8 items-center justify-items-center">
 
                     {/* === LEFT COLUMN === */}
                     <div className="flex flex-col items-end gap-4 relative">
