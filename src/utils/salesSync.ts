@@ -22,9 +22,14 @@ const SALES_QUERY_KEYS = [
   "admin-vendas-evolution",
   "metas-consolidadas",
   "metas-individuais",
+  "metas-individuais-full",
   "metas-progresso",
+  "vendas-mes-atual",
   "vendedores-metas",
   "seller-ranking",
+  "vendedores-ranking",
+  "meta-consolidada-atual",
+  "contribuicao-vendedores",
 ];
 
 const formatDate = (date: Date) => {

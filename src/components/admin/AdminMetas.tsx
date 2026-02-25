@@ -50,11 +50,13 @@ import {
 import { format, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useTenant } from "@/contexts/TenantContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { logger } from "@/utils/logger";
 
 export const AdminMetas = () => {
   const queryClient = useQueryClient();
   const { activeCompanyId, isSuperAdmin } = useTenant();
+  const { user } = useAuth();
 
   // Mês atual formatado para input type="month" (YYYY-MM)
   const mesAtual = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
@@ -71,6 +73,11 @@ export const AdminMetas = () => {
   const [valorMetaConsolidadaFormatado, setValorMetaConsolidadaFormatado] = useState(""); // Valor formatado
   const [descricaoConsolidada, setDescricaoConsolidada] = useState("");
   const [produtoAlvo, setProdutoAlvo] = useState("");
+
+  useEffect(() => {
+    // Prevent carrying a seller selection from another tenant when super-admin switches company
+    setUserId("");
+  }, [activeCompanyId]);
 
   // Função para formatar valor como moeda brasileira
   const formatarMoeda = (value: string, setValor: (v: string) => void, setFormatado: (v: string) => void) => {
@@ -112,11 +119,21 @@ export const AdminMetas = () => {
     queryKey: ["vendedores", activeCompanyId],
     queryFn: async () => {
       const { data, error } = await applyCompanyFilter(
-        supabase.from("profiles").select("id, nome, email, avatar_url, is_super_admin").order("nome")
+        supabase
+          .from("profiles")
+          .select("id, nome, email, avatar_url, is_super_admin, company_id")
+          .order("nome")
       );
 
       if (error) throw error;
-      return data;
+
+      // Hide super-admins from other contexts; allow only the current user if they are super-admin.
+      return (data || []).filter((profile: any) => {
+        if (!profile?.id || !profile?.nome) return false;
+        if (profile.company_id && activeCompanyId && profile.company_id !== activeCompanyId) return false;
+        if (profile.is_super_admin && profile.id !== user?.id) return false;
+        return true;
+      });
     },
     enabled: !!activeCompanyId || isSuperAdmin, // allow super-admin to see even if null
   });
@@ -128,12 +145,29 @@ export const AdminMetas = () => {
       const { data, error } = await applyCompanyFilter(
         supabase
           .from("metas")
-          .select("*, profiles:user_id(nome, avatar_url, is_super_admin)")
+          .select("*, profiles:user_id(id, nome, avatar_url, is_super_admin, company_id)")
           .order("mes_referencia", { ascending: false })
       );
 
       if (error) throw error;
-      return data || [];
+
+      const filtered = (data || []).filter((meta: any) => {
+        const profile = meta?.profiles;
+        if (!profile?.id || !profile?.nome) return false;
+        if (!(Number(meta?.valor_meta) > 0)) return false;
+        // Defensive: hide stale metas whose user no longer belongs to the selected company
+        if (activeCompanyId && profile.company_id && profile.company_id !== activeCompanyId) return false;
+        // Keep own meta if current user is super-admin, hide other super-admins
+        if (profile.is_super_admin && meta.user_id !== user?.id) return false;
+        return true;
+      });
+
+      const dropped = (data || []).length - filtered.length;
+      if (dropped > 0) {
+        logger.warn(`[AdminMetas] ${dropped} metas inválidas/cruzadas foram ocultadas na UI`);
+      }
+
+      return filtered;
     },
     enabled: !!activeCompanyId || isSuperAdmin,
   });
@@ -270,6 +304,11 @@ export const AdminMetas = () => {
     mutationFn: async () => {
       const [year, month] = mesReferencia.split("-");
       const dataReferencia = `${year}-${month}-01`;
+
+      // Defensive check: selected seller must exist in the current tenant-filtered list
+      if (!vendedores?.some((v: any) => v.id === userId)) {
+        throw new Error("Selecione um vendedor válido da empresa atual");
+      }
 
       // Check if meta already exists
       const existingMeta = await checkExistingMeta(userId, mesReferencia);

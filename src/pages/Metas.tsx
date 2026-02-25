@@ -134,9 +134,10 @@ const Metas = () => {
   const { data: metasIndividuais = [], isLoading: loadingIndividuais } = useQuery({
     queryKey: ["metas-individuais-full", metaConsolidadaSelecionada?.mes_referencia, vendasMesAtual, activeCompanyId],
     queryFn: async () => {
-      if (!metaConsolidadaSelecionada) return [];
+      if (!metaConsolidadaSelecionada || !activeCompanyId) return [];
 
       const mesRef = metaConsolidadaSelecionada.mes_referencia;
+      const metaConsolidadaValor = Number(metaConsolidadaSelecionada.valor_meta) || 0;
 
       // Use exact match on mes_referencia (format: "YYYY-MM-01")
       logger.log(`[Metas] Buscando metas individuais para mes_referencia: ${mesRef}, company: ${activeCompanyId}`);
@@ -144,13 +145,12 @@ const Metas = () => {
       // First, fetch metas for this month and company (using same join syntax as AdminMetas)
       let metasQuery = supabase
         .from("metas")
-        .select("*, profiles:user_id(id, nome, avatar_url, is_super_admin)")
-        .eq("mes_referencia", mesRef);
+        .select("*, profiles:user_id(id, nome, avatar_url, is_super_admin, company_id)")
+        .eq("mes_referencia", mesRef)
+        .gt("valor_meta", 0);
 
-      // Filter by metas.company_id directly
-      if (activeCompanyId) {
-        metasQuery = metasQuery.eq("company_id", activeCompanyId);
-      }
+      // SECURITY: always filter metas by current tenant
+      metasQuery = metasQuery.eq("company_id", activeCompanyId);
 
       const { data: metas, error: metasError } = await metasQuery;
 
@@ -160,6 +160,12 @@ const Metas = () => {
       }
 
       logger.log(`[Metas] Metas individuais encontradas (raw):`, metas);
+      const metasCrossCompany = (metas || []).filter(
+        (meta: any) => meta?.profiles?.company_id && meta.profiles.company_id !== activeCompanyId
+      );
+      if (metasCrossCompany.length > 0) {
+        logger.warn("[Metas] Metas com user de outra empresa foram ignoradas:", metasCrossCompany);
+      }
 
       // Calculate total vendas by user from the already fetched vendas
       const vendasPorUsuario: { [key: string]: number } = {};
@@ -174,6 +180,12 @@ const Metas = () => {
       // Note: Allow current user's meta even if super_admin, but hide OTHER super_admins' metas
       const resultado = (metas || [])
         .filter((meta: any) => {
+          // Ignore rows with zero/invalid target; they should not count as "meta definida"
+          if (!(Number(meta?.valor_meta) > 0)) return false;
+          // Extra guard against inconsistent rows (meta in company A pointing to a user from company B)
+          if (meta?.profiles?.company_id && meta.profiles.company_id !== activeCompanyId) return false;
+          // Ignore broken joins / orphaned rows
+          if (!meta?.profiles?.nome) return false;
           // Always show current user's own meta
           if (meta.user_id === user?.id) return true;
           // Hide other super_admins' metas
@@ -184,7 +196,11 @@ const Metas = () => {
           const valorMeta = Number(meta.valor_meta) || 0;
           const valorRealizado = vendasPorUsuario[meta.user_id] || 0;
           const percentual = valorMeta > 0 ? (valorRealizado / valorMeta) * 100 : 0;
-          const contribuicaoPercentual = totalVendasMes > 0 ? (valorRealizado / totalVendasMes) * 100 : 0;
+          // This card is labeled as contribution to the global target, so use the
+          // consolidated goal as denominator (not the team's current realized total).
+          const contribuicaoPercentual = metaConsolidadaValor > 0
+            ? (valorRealizado / metaConsolidadaValor) * 100
+            : 0;
           const faltaAtingir = Math.max(0, valorMeta - valorRealizado);
 
           return {
@@ -203,7 +219,7 @@ const Metas = () => {
 
       return resultado;
     },
-    enabled: !!metaConsolidadaSelecionada,
+    enabled: !!metaConsolidadaSelecionada && !!activeCompanyId,
   });
 
   // Calculate consolidated values from actual sales
@@ -612,14 +628,20 @@ const Metas = () => {
                                 ? "text-cyan-600 dark:text-cyan-300"
                                 : "text-emerald-600 dark:text-emerald-300"
                               }`}>
-                              {vendedor.contribuicaoPercentual.toFixed(1)}%
+                              {vendedor.contribuicaoPercentual > 0 && vendedor.contribuicaoPercentual < 0.1
+                                ? "<0,1%"
+                                : `${vendedor.contribuicaoPercentual.toFixed(1)}%`}
                             </span>
                           </div>
                           {/* Mini contribution bar */}
                           <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
                             <div
                               className="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 rounded-full"
-                              style={{ width: `${Math.min(vendedor.contribuicaoPercentual, 100)}%` }}
+                              style={{
+                                width: `${vendedor.contribuicaoPercentual > 0
+                                  ? Math.max(Math.min(vendedor.contribuicaoPercentual, 100), 1)
+                                  : 0}%`
+                              }}
                             />
                           </div>
                         </div>
