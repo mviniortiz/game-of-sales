@@ -130,7 +130,7 @@ export default function Onboarding() {
     const [teamSize, setTeamSize] = useState("");
     const [referralSource, setReferralSource] = useState("");
     const [mainChallenge, setMainChallenge] = useState("");
-    const [selectedPlan, setSelectedPlan] = useState("plus"); // Default to Plus
+    const [selectedPlan, setSelectedPlan] = useState("pro"); // Default to Pro
     const [createdCompanyId, setCreatedCompanyId] = useState<string | null>(null);
     const [createdUserId, setCreatedUserId] = useState<string | null>(null);
 

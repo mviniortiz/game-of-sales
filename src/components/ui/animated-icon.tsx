@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
 import { LucideIcon } from "lucide-react";
-import { useState } from "react";
+import React, { useState } from "react";
 
 interface AnimatedIconProps {
-    icon: LucideIcon;
+    icon: React.ElementType;
     isActive?: boolean;
     className?: string;
 }
@@ -65,10 +65,10 @@ export const AnimatedIcon = ({ icon: Icon, isActive = false, className = "" }: A
             >
                 <Icon
                     className={`h-5 w-5 relative z-10 transition-colors duration-200 ${isActive
-                            ? 'text-emerald-600 dark:text-emerald-400'
-                            : isHovered
-                                ? 'text-emerald-500 dark:text-emerald-300'
-                                : 'text-gray-600 dark:text-gray-400'
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : isHovered
+                            ? 'text-emerald-500 dark:text-emerald-300'
+                            : 'text-gray-600 dark:text-gray-400'
                         } ${className}`}
                 />
             </motion.div>

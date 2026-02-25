@@ -41,15 +41,18 @@ async function processWebhook(req: Request) {
         const body = await req.text();
         const data = JSON.parse(body);
 
-        // Verify webhook signature (if secret is configured)
-        if (MERCADOPAGO_WEBHOOK_SECRET) {
-            const signature = req.headers.get("x-signature");
-            const requestId = req.headers.get("x-request-id");
+        // Verificar assinatura obrigatoriamente
+        if (!MERCADOPAGO_WEBHOOK_SECRET) {
+            console.error("MERCADOPAGO_WEBHOOK_SECRET is not set. Webhook signature validation cannot proceed.");
+            return;
+        }
 
-            if (!verifySignature(body, signature, requestId)) {
-                console.error("Invalid webhook signature");
-                return;
-            }
+        const signature = req.headers.get("x-signature");
+        const requestId = req.headers.get("x-request-id");
+
+        if (!verifySignature(body, signature, requestId)) {
+            console.error("Invalid webhook signature");
+            return;
         }
 
         // Check idempotency - skip if already processed

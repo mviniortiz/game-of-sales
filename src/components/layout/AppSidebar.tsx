@@ -7,6 +7,7 @@ import { usePlan } from "@/hooks/usePlan";
 import brandLogo from "@/assets/logo-full.png";
 import brandLogoIcon from "@/assets/logo-icon.png";
 import { AnimatedIcon } from "@/components/ui/animated-icon";
+import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { NovaVendaModal } from "@/components/vendas/NovaVendaModal";
 import {
   Sidebar,
@@ -41,6 +42,7 @@ import {
 // Itens agrupados por categoria
 const visaoGeralItems = [
   { title: "Dashboard", url: "/dashboard", icon: Home },
+  { title: "WhatsApp", url: "/whatsapp", icon: WhatsAppIcon },
   { title: "CRM Pipeline", url: "/crm", icon: Kanban },
   { title: "Performance de Calls", url: "/calls", icon: PhoneCall },
   { title: "Calendário", url: "/calendario", icon: Calendar },

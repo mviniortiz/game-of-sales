@@ -76,11 +76,15 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
               // Type assertion needed until migration adds trial columns
               const typedCompanies = allCompanies as unknown as Company[];
               setCompanies(typedCompanies);
-              // Use stored company or first one
+              // Use stored company or allocated company or first one
               const targetCompany = storedCompanyId && typedCompanies.find(c => c.id === storedCompanyId)
                 ? storedCompanyId
-                : typedCompanies[0]?.id || null;
+                : (profileData.company_id && typedCompanies.find(c => c.id === profileData.company_id)
+                  ? profileData.company_id
+                  : typedCompanies[0]?.id || null);
               setActiveCompanyId(targetCompany);
+              // Ensure local storage is updated to the newly selected profile 
+              if (targetCompany) localStorage.setItem('activeCompanyId', targetCompany);
               console.log('[TenantContext] Super admin - activeCompanyId set to:', targetCompany, 'from', typedCompanies.length, 'companies');
             } else {
               // Fallback: Use super admin's own company_id if they have one
@@ -115,6 +119,9 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
               // Type assertion needed until migration adds trial columns
               setCompanies([companyData as unknown as Company]);
               setActiveCompanyId(profileData.company_id);
+              if (profileData.company_id) {
+                localStorage.setItem('activeCompanyId', profileData.company_id);
+              }
               console.log('[TenantContext] Regular user - activeCompanyId set to:', profileData.company_id);
             } else {
               console.warn('[TenantContext] Regular user - no company data found for company_id:', profileData.company_id);

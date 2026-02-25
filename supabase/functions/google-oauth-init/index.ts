@@ -22,6 +22,28 @@ serve(async (req) => {
       throw new Error("User ID is required");
     }
 
+    // Criar state assinado para proteção CSRF
+    const secret = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    if (!secret) throw new Error("Missing secret key");
+    const exp = Date.now() + 1000 * 60 * 15; // 15 minutos
+    const payloadStr = JSON.stringify({ userId, exp });
+
+    // Gerar assinatura HMAC-SHA256
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+    const signatureBuffer = await crypto.subtle.sign('HMAC', key, encoder.encode(payloadStr));
+    const signatureHex = Array.from(new Uint8Array(signatureBuffer))
+      .map(b => b.toString(16).padStart(2, '0')).join('');
+
+    // State final em base64 + assinatura
+    const signedState = btoa(payloadStr) + '.' + signatureHex;
+
     // URL de callback para onde o Google vai redirecionar
     const redirectUri = `${SUPABASE_URL}/functions/v1/google-oauth-callback`;
 
@@ -33,7 +55,7 @@ serve(async (req) => {
     authUrl.searchParams.set("scope", "https://www.googleapis.com/auth/calendar");
     authUrl.searchParams.set("access_type", "offline");
     authUrl.searchParams.set("prompt", "consent");
-    authUrl.searchParams.set("state", userId); // Passar userId no state
+    authUrl.searchParams.set("state", signedState); // Passar state assinado com CSRF e expiração
 
     console.log("[Google OAuth Init] Auth URL generated for user:", userId);
 

@@ -14,23 +14,47 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
 serve(async (req) => {
-    // Handle CORS preflight
-    if (req.method === "OPTIONS") {
-        return new Response(null, { headers: corsHeaders });
-    }
-
     try {
-        const { token, email, planId, companyId, payerInfo } = await req.json();
+        const corsOrigin = req.headers.get('origin') || '';
+        const allowedOrigins = ['http://localhost:5173', 'http://localhost:8080', 'https://gamesales.app', 'https://game-of-sales.vercel.app'];
+        const origin = allowedOrigins.includes(corsOrigin) ? corsOrigin : allowedOrigins[0];
 
-        // Validate required fields
-        if (!token || !email || !planId || !companyId) {
-            return new Response(
-                JSON.stringify({ error: "Missing required fields: token, email, planId, companyId" }),
-                { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-            );
+        const strictCorsHeaders = {
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+        };
+
+        if (req.method === "OPTIONS") {
+            return new Response(null, { headers: strictCorsHeaders });
         }
 
-        // Create subscription in Mercado Pago
+        const authHeader = req.headers.get('Authorization');
+        if (!authHeader) {
+            return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: strictCorsHeaders });
+        }
+
+        const userSupabase = createClient(SUPABASE_URL!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+            global: { headers: { Authorization: authHeader } }
+        });
+
+        const { data: { user }, error: userError } = await userSupabase.auth.getUser();
+        if (userError || !user) {
+            return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: strictCorsHeaders });
+        }
+
+        const { token, email, planId, companyId, payerInfo } = await req.json();
+
+        if (!token || !email || !planId || !companyId) {
+            return new Response(JSON.stringify({ error: "Missing required fields" }), { status: 400, headers: strictCorsHeaders });
+        }
+
+        // P0: Validar ownership do tenant
+        const { data: profile } = await userSupabase.from('profiles').select('company_id, is_super_admin').eq('id', user.id).single();
+        if (!profile || (profile.company_id !== companyId && !profile.is_super_admin)) {
+            return new Response(JSON.stringify({ error: "Forbidden: Tenant mismatch" }), { status: 403, headers: strictCorsHeaders });
+        }
+
         const mpResponse = await fetch("https://api.mercadopago.com/preapproval", {
             method: "POST",
             headers: {
@@ -48,14 +72,14 @@ serve(async (req) => {
                     frequency_type: "months",
                     start_date: new Date().toISOString(),
                     end_date: null,
-                    transaction_amount: null, // Will use plan amount
+                    transaction_amount: null,
                     currency_id: "BRL",
                     free_trial: {
                         frequency: 7,
                         frequency_type: "days"
                     }
                 },
-                back_url: "https://gamesales.app/admin/dashboard",
+                back_url: "https://gamesales.app/admin", // P1 Corrigido: /admin em vez de /admin/dashboard
                 status: "authorized"
             })
         });
@@ -66,14 +90,12 @@ serve(async (req) => {
             console.error("MP Error:", mpData);
             return new Response(
                 JSON.stringify({ error: mpData.message || "Error creating subscription" }),
-                { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+                { status: 400, headers: strictCorsHeaders }
             );
         }
 
-        // Update company with subscription info
-        const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
-
-        const { error: updateError } = await supabase
+        const adminSupabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
+        const { error: updateError } = await adminSupabase
             .from("companies")
             .update({
                 mp_subscription_id: mpData.id,
@@ -84,23 +106,18 @@ serve(async (req) => {
 
         if (updateError) {
             console.error("Supabase update error:", updateError);
-            // Don't fail - subscription was created successfully
         }
 
         return new Response(
-            JSON.stringify({
-                success: true,
-                subscriptionId: mpData.id,
-                status: mpData.status
-            }),
-            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            JSON.stringify({ success: true, subscriptionId: mpData.id, status: mpData.status }),
+            { status: 200, headers: strictCorsHeaders }
         );
 
     } catch (error) {
         console.error("Error:", error);
         return new Response(
             JSON.stringify({ error: "Internal server error" }),
-            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            { status: 500, headers: { "Content-Type": "application/json" } }
         );
     }
 });

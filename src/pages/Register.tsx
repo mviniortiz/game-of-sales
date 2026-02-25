@@ -57,7 +57,7 @@ const Register = () => {
 
     // Get plan from URL param (from Landing Page)
     const urlPlan = searchParams.get('plan');
-    const initialPlan = urlPlan && ['starter', 'plus', 'pro'].includes(urlPlan) ? urlPlan : 'plus';
+    const initialPlan = urlPlan && ['starter', 'plus', 'pro'].includes(urlPlan) ? urlPlan : 'pro';
 
     // Form states
     const [nome, setNome] = useState("");

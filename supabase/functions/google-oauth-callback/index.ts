@@ -11,7 +11,7 @@ serve(async (req) => {
   try {
     const url = new URL(req.url);
     const code = url.searchParams.get("code");
-    const state = url.searchParams.get("state"); // userId
+    const state = url.searchParams.get("state");
     const error = url.searchParams.get("error");
 
     console.log("[Google OAuth Callback] Starting...");
@@ -27,7 +27,39 @@ serve(async (req) => {
       );
     }
 
-    const userId = state;
+    // Processar validação do State CSRF
+    if (!state.includes('.')) {
+      console.error("[Google OAuth Callback] Invalid state format");
+      return Response.redirect(`${FRONTEND_URL}/integracoes?error=invalid_state`, 302);
+    }
+
+    const [encodedPayload, signatureHex] = state.split('.');
+    const payloadStr = atob(encodedPayload);
+    const { userId, exp } = JSON.parse(payloadStr);
+
+    if (Date.now() > exp) {
+      console.error("[Google OAuth Callback] State expired");
+      return Response.redirect(`${FRONTEND_URL}/integracoes?error=state_expired`, 302);
+    }
+
+    const secret = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+    const signatureBuffer = await crypto.subtle.sign('HMAC', key, encoder.encode(payloadStr));
+    const expectedSignatureHex = Array.from(new Uint8Array(signatureBuffer))
+      .map(b => b.toString(16).padStart(2, '0')).join('');
+
+    if (signatureHex !== expectedSignatureHex) {
+      console.error("[Google OAuth Callback] Invalid state signature");
+      return Response.redirect(`${FRONTEND_URL}/integracoes?error=invalid_state_signature`, 302);
+    }
+
     const redirectUri = `${SUPABASE_URL}/functions/v1/google-oauth-callback`;
 
     console.log("[Google OAuth Callback] Processing for user:", userId);

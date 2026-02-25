@@ -16,6 +16,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { HotmartConfigModal } from "@/components/integrations/HotmartConfigModal";
 import { GoogleCalendarConfigModal } from "@/components/integrations/GoogleCalendarConfigModal";
+import { WhatsappConfigModal } from "@/components/integrations/WhatsappConfigModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -46,6 +47,16 @@ interface Integration {
 
 // Integration data - Using actual logo images where available
 const INTEGRATIONS: Integration[] = [
+  {
+    id: "evolution-api",
+    name: "Evolution API (WhatsApp)",
+    description: "Conecte seu WhatsApp via QR Code e utilize no CRM (Baseado no Baileys)",
+    logoBg: "bg-emerald-500",
+    logoText: "WA",
+    logoColor: "text-white",
+    status: "available",
+    category: "productivity",
+  },
   {
     id: "google-calendar",
     name: "Google Calendar",
@@ -247,6 +258,7 @@ const Integracoes = () => {
   const [activeFilter, setActiveFilter] = useState<IntegrationCategory>("all");
   const [hotmartModalOpen, setHotmartModalOpen] = useState(false);
   const [googleCalendarModalOpen, setGoogleCalendarModalOpen] = useState(false);
+  const [whatsappModalOpen, setWhatsappModalOpen] = useState(false);
   const [activeIntegrationIds, setActiveIntegrationIds] = useState<Set<string>>(new Set());
   const [googleCalendarConnected, setGoogleCalendarConnected] = useState(false);
 
@@ -334,6 +346,8 @@ const Integracoes = () => {
       setGoogleCalendarModalOpen(true);
     } else if (integrationId === "hotmart") {
       setHotmartModalOpen(true);
+    } else if (integrationId === "evolution-api") {
+      setWhatsappModalOpen(true);
     }
   };
 
@@ -472,7 +486,9 @@ const Integracoes = () => {
                         ? () => setHotmartModalOpen(true)
                         : integration.id === "google-calendar"
                           ? () => setGoogleCalendarModalOpen(true)
-                          : undefined
+                          : integration.id === "evolution-api"
+                            ? () => setWhatsappModalOpen(true)
+                            : undefined
                     }
                   />
                 ))}
@@ -541,6 +557,12 @@ const Integracoes = () => {
         open={googleCalendarModalOpen}
         onClose={() => setGoogleCalendarModalOpen(false)}
         onSaved={handleIntegrationSaved}
+      />
+
+      {/* WhatsApp Config Modal */}
+      <WhatsappConfigModal
+        open={whatsappModalOpen}
+        onClose={() => setWhatsappModalOpen(false)}
       />
     </>
   );
