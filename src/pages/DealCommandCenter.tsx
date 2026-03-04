@@ -91,9 +91,9 @@ const EVENT_ICONS: Record<string, { icon: typeof StickyNote; color: string; bg: 
 // â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const getHealthStatus = (days: number) => {
-    if (days > 7) return { icon: ShieldOff, color: "text-rose-400", bg: "bg-rose-500/10", border: "border-rose-500/20", label: "CrÃ­tico", subtitle: `${days}d sem contato` };
-    if (days > 3) return { icon: ShieldAlert, color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20", label: "AtenÃ§Ã£o", subtitle: `${days}d sem contato` };
-    return { icon: Shield, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20", label: "SaudÃ¡vel", subtitle: "Engajamento ativo" };
+    if (days > 7) return { icon: ShieldOff, color: "text-rose-400", bg: "bg-rose-500/10", border: "border-rose-500/20", label: "Crítico", subtitle: `${days}d sem contato` };
+    if (days > 3) return { icon: ShieldAlert, color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20", label: "Atenção", subtitle: `${days}d sem contato` };
+    return { icon: Shield, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20", label: "Saudável", subtitle: "Engajamento ativo" };
 };
 
 const formatCurrency = (value: number) => {
@@ -118,7 +118,7 @@ const getCallStatusBadge = (status?: string) => {
     switch (status) {
         case "completed":
         case "demo":
-            return <Badge className="bg-emerald-500/15 text-emerald-300 border-emerald-500/25">ConcluÃ­da</Badge>;
+            return <Badge className="bg-emerald-500/15 text-emerald-300 border-emerald-500/25">Concluída</Badge>;
         case "in_progress":
             return <Badge className="bg-blue-500/15 text-blue-300 border-blue-500/25">Em andamento</Badge>;
         case "queued":
@@ -235,8 +235,8 @@ const TimelineEntry = ({ event, isLast }: { event: any; isLast: boolean }) => {
             <div className={`flex-1 ${isLast ? "pb-0" : "pb-4"}`}>
                 <div className="bg-slate-800/50 rounded-xl p-3 border border-slate-700/40 hover:border-slate-600/40 transition-colors">
                     <p className="text-xs text-slate-400 mb-1">
-                        <span className="text-emerald-400 font-medium">{event.user_name || "VocÃª"}</span>
-                        {" Â· "}
+                        <span className="text-emerald-400 font-medium">{event.user_name || "Você"}</span>
+                        {" · "}
                         {format(new Date(event.created_at), "dd/MM 'Ã s' HH:mm", { locale: ptBR })}
                     </p>
                     <p className="text-sm text-slate-200 leading-relaxed">{event.content || event.title}</p>
@@ -253,8 +253,8 @@ const QuestCard = ({ task, onComplete }: { task: any; onComplete: () => void }) 
     return (
         <motion.div
             className={`relative overflow-hidden rounded-2xl border p-4 transition-all duration-500 ${done
-                    ? "bg-emerald-500/10 border-emerald-500/30"
-                    : "bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-amber-500/25"
+                ? "bg-emerald-500/10 border-emerald-500/30"
+                : "bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-amber-500/25"
                 }`}
             animate={done ? {} : { borderColor: ["rgba(245,158,11,.25)", "rgba(245,158,11,.45)", "rgba(245,158,11,.25)"] }}
             transition={{ repeat: Infinity, duration: 2.5 }}
@@ -271,7 +271,7 @@ const QuestCard = ({ task, onComplete }: { task: any; onComplete: () => void }) 
                 <div className="flex-1">
                     <div className="flex items-center gap-1.5 mb-1">
                         <Zap className="h-3.5 w-3.5 text-amber-400" />
-                        <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">PrÃ³xima MissÃ£o</span>
+                        <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">Próxima Missão</span>
                     </div>
                     <p className={`text-base font-semibold transition-all ${done ? "text-emerald-400 line-through opacity-60" : "text-white"}`}>
                         {task.title}
@@ -462,7 +462,7 @@ export default function DealCommandCenter() {
             setShowCallModal(false);
 
             if (data?.requiresSetup) {
-                toast.warning(data?.message || "Telefonia ainda nÃ£o configurada");
+                toast.warning(data?.message || "Telefonia ainda não configurada");
                 setActiveTab("ligacoes");
                 return;
             }
@@ -535,7 +535,7 @@ export default function DealCommandCenter() {
         return (
             <div className="flex flex-col items-center justify-center h-[calc(100vh-64px)] gap-4 bg-slate-950">
                 <AlertTriangle className="h-12 w-12 text-amber-500" />
-                <p className="text-slate-400">Deal nÃ£o encontrado</p>
+                <p className="text-slate-400">Deal não encontrado</p>
                 <Button onClick={() => navigate("/crm")} variant="outline">Voltar ao Pipeline</Button>
             </div>
         );
@@ -646,7 +646,7 @@ export default function DealCommandCenter() {
 
                             {/* Quick actions */}
                             <div className="bg-slate-900 rounded-2xl p-4 border border-slate-800/60">
-                                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-3">AÃ§Ãµes RÃ¡pidas</p>
+                                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-3">Ações Rápidas</p>
                                 <TooltipProvider delayDuration={80}>
                                     <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:justify-around">
                                         <QuickBtn
@@ -749,7 +749,7 @@ export default function DealCommandCenter() {
                                 onComplete={() => {
                                     setShowConfetti(true);
                                     setTimeout(() => setShowConfetti(false), 2000);
-                                    toast.success("MissÃ£o completa! ðŸŽ‰");
+                                    toast.success("Missão completa! 🎉");
                                 }}
                             />
 
@@ -832,9 +832,9 @@ export default function DealCommandCenter() {
                                             <div className="p-4 sm:p-5 space-y-4">
                                                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                                                     <div>
-                                                        <p className="text-sm font-semibold text-white">LigaÃ§Ãµes</p>
+                                                        <p className="text-sm font-semibold text-white">Ligações</p>
                                                         <p className="text-xs text-slate-500">
-                                                            MVP: registre chamadas, salve transcriÃ§Ã£o no deal e gere insights sob demanda
+                                                            MVP: registre chamadas, salve transcrição no deal e gere insights sob demanda
                                                         </p>
                                                     </div>
                                                     <Button
@@ -892,9 +892,9 @@ export default function DealCommandCenter() {
                                                 ) : dealCalls.length === 0 ? (
                                                     <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-800/20 p-8 text-center">
                                                         <PhoneCall className="h-10 w-10 mx-auto mb-3 text-slate-600" />
-                                                        <p className="text-sm font-medium text-slate-400">Nenhuma ligaÃ§Ã£o registrada</p>
+                                                        <p className="text-sm font-medium text-slate-400">Nenhuma ligação registrada</p>
                                                         <p className="text-xs text-slate-600 mt-1 mb-4">
-                                                            Use "Nova ligaÃ§Ã£o" para testar o fluxo em modo demo e validar a experiÃªncia no deal
+                                                            Use "Nova ligação" para testar o fluxo em modo demo e validar a experiência no deal
                                                         </p>
                                                         <Button
                                                             variant="outline"
@@ -918,7 +918,7 @@ export default function DealCommandCenter() {
                                                                             </Badge>
                                                                             {call.transcript_status && (
                                                                                 <Badge variant="outline" className="border-slate-700 text-slate-400">
-                                                                                    TranscriÃ§Ã£o: {call.transcript_status}
+                                                                                    Transcrição: {call.transcript_status}
                                                                                 </Badge>
                                                                             )}
                                                                         </div>
@@ -927,7 +927,7 @@ export default function DealCommandCenter() {
                                                                         </div>
                                                                         <div className="text-xs text-slate-500 flex flex-wrap gap-x-3 gap-y-1">
                                                                             <span>{format(new Date(call.created_at), "dd/MM/yyyy 'Ã s' HH:mm", { locale: ptBR })}</span>
-                                                                            {typeof call.duration_seconds === "number" && <span>DuraÃ§Ã£o: {call.duration_seconds}s</span>}
+                                                                            {typeof call.duration_seconds === "number" && <span>Duração: {call.duration_seconds}s</span>}
                                                                         </div>
                                                                     </div>
 
@@ -949,7 +949,7 @@ export default function DealCommandCenter() {
 
                                                                 {call.transcript_preview && (
                                                                     <div className="rounded-xl border border-slate-700/60 bg-slate-900/40 p-3">
-                                                                        <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-1">Preview da transcriÃ§Ã£o</p>
+                                                                        <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-1">Preview da transcrição</p>
                                                                         <p className="text-sm text-slate-300 leading-relaxed">{call.transcript_preview}</p>
                                                                     </div>
                                                                 )}
@@ -957,7 +957,7 @@ export default function DealCommandCenter() {
                                                                 {call.transcript_text && (
                                                                     <details className="rounded-xl border border-slate-700/60 bg-slate-900/40">
                                                                         <summary className="cursor-pointer list-none px-3 py-2.5 flex items-center justify-between">
-                                                                            <span className="text-sm font-medium text-slate-200">TranscriÃ§Ã£o completa</span>
+                                                                            <span className="text-sm font-medium text-slate-200">Transcrição completa</span>
                                                                             <ChevronRight className="h-4 w-4 text-slate-500" />
                                                                         </summary>
                                                                         <div className="px-3 pb-3">
@@ -974,7 +974,7 @@ export default function DealCommandCenter() {
                                                                     <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 space-y-3">
                                                                         <div className="flex items-center gap-2">
                                                                             <Sparkles className="h-4 w-4 text-emerald-400" />
-                                                                            <p className="text-sm font-semibold text-emerald-300">Insights da ligaÃ§Ã£o</p>
+                                                                            <p className="text-sm font-semibold text-emerald-300">Insights da ligação</p>
                                                                             <Badge variant="outline" className="border-emerald-500/20 text-emerald-300">
                                                                                 {call.insight.model || "mvp"}
                                                                             </Badge>
@@ -989,7 +989,7 @@ export default function DealCommandCenter() {
 
                                                                         <div className="grid md:grid-cols-2 gap-3">
                                                                             <div>
-                                                                                <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-1">ObjeÃ§Ãµes</p>
+                                                                                <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-1">Objeções</p>
                                                                                 <div className="flex flex-wrap gap-1.5">
                                                                                     {(call.insight.objections || []).length > 0 ? (
                                                                                         (call.insight.objections || []).map((obj: string, idx: number) => (
@@ -998,12 +998,12 @@ export default function DealCommandCenter() {
                                                                                             </Badge>
                                                                                         ))
                                                                                     ) : (
-                                                                                        <span className="text-xs text-slate-500">Nenhuma objeÃ§Ã£o detectada</span>
+                                                                                        <span className="text-xs text-slate-500">Nenhuma objeção detectada</span>
                                                                                     )}
                                                                                 </div>
                                                                             </div>
                                                                             <div>
-                                                                                <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-1">PrÃ³ximos passos</p>
+                                                                                <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-1">Próximos passos</p>
                                                                                 <ul className="space-y-1">
                                                                                     {(call.insight.next_steps || []).map((step: string, idx: number) => (
                                                                                         <li key={`${call.id}-step-${idx}`} className="text-sm text-slate-300 flex items-start gap-2">
@@ -1039,7 +1039,7 @@ export default function DealCommandCenter() {
                                             <div className="flex flex-col items-center justify-center py-14 text-slate-600">
                                                 <CheckCircle2 className="h-10 w-10 mb-3 opacity-40" />
                                                 <p className="text-sm font-medium text-slate-500">Nenhuma tarefa pendente</p>
-                                                <p className="text-xs mt-1 mb-4">Tarefas criadas aparecerÃ£o aqui</p>
+                                                <p className="text-xs mt-1 mb-4">Tarefas criadas aparecerão aqui</p>
                                                 <Button variant="outline" size="sm" className="gap-2 border-slate-700 text-slate-400 hover:text-white"
                                                     onClick={() => setShowTaskModal(true)}>
                                                     <Zap className="h-4 w-4" /> Nova Tarefa
@@ -1118,7 +1118,7 @@ export default function DealCommandCenter() {
                             {/* Deal observations chip */}
                             {deal.notes && (
                                 <div className="bg-slate-900/60 rounded-2xl p-4 border border-slate-800/40">
-                                    <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-2">ObservaÃ§Ãµes do Deal</p>
+                                    <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-2">Observações do Deal</p>
                                     <p className="text-sm text-slate-300 leading-relaxed">{deal.notes}</p>
                                 </div>
                             )}
@@ -1128,14 +1128,14 @@ export default function DealCommandCenter() {
 
                 {/* â”€â”€ MODALS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
                 <Dialog open={showCallModal} onOpenChange={setShowCallModal}>
-                <DialogContent className="bg-slate-900 border-slate-800 text-white w-[calc(100vw-1rem)] max-w-lg p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
+                    <DialogContent className="bg-slate-900 border-slate-800 text-white w-[calc(100vw-1rem)] max-w-lg p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                             <DialogTitle className="flex items-center gap-2">
                                 <PhoneCall className="h-5 w-5 text-emerald-400" />
-                                Iniciar ligaÃ§Ã£o no Deal
+                                Iniciar ligação no Deal
                             </DialogTitle>
                             <DialogDescription className="text-slate-400">
-                                MVP: registre a chamada e salve a transcriÃ§Ã£o no deal. Para validaÃ§Ã£o imediata, use o modo demo.
+                                MVP: registre a chamada e salve a transcrição no deal. Para validação imediata, use o modo demo.
                             </DialogDescription>
                         </DialogHeader>
 
@@ -1162,26 +1162,24 @@ export default function DealCommandCenter() {
                                     <button
                                         type="button"
                                         onClick={() => setCallMode("demo")}
-                                        className={`rounded-xl border px-3 py-2 text-left transition-colors ${
-                                            callMode === "demo"
-                                                ? "border-emerald-500/40 bg-emerald-500/10"
-                                                : "border-slate-700 bg-slate-950"
-                                        }`}
+                                        className={`rounded-xl border px-3 py-2 text-left transition-colors ${callMode === "demo"
+                                            ? "border-emerald-500/40 bg-emerald-500/10"
+                                            : "border-slate-700 bg-slate-950"
+                                            }`}
                                     >
                                         <p className="text-sm font-medium text-white">Demo (agora)</p>
-                                        <p className="text-xs text-slate-400">Cria chamada com transcriÃ§Ã£o simulada para validar UX</p>
+                                        <p className="text-xs text-slate-400">Cria chamada com transcrição simulada para validar UX</p>
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setCallMode("twilio")}
-                                        className={`rounded-xl border px-3 py-2 text-left transition-colors ${
-                                            callMode === "twilio"
-                                                ? "border-blue-500/40 bg-blue-500/10"
-                                                : "border-slate-700 bg-slate-950"
-                                        }`}
+                                        className={`rounded-xl border px-3 py-2 text-left transition-colors ${callMode === "twilio"
+                                            ? "border-blue-500/40 bg-blue-500/10"
+                                            : "border-slate-700 bg-slate-950"
+                                            }`}
                                     >
                                         <p className="text-sm font-medium text-white">Telefonia (beta)</p>
-                                        <p className="text-xs text-slate-400">Fila para integraÃ§Ã£o Twilio/WebRTC</p>
+                                        <p className="text-xs text-slate-400">Fila para integração Twilio/WebRTC</p>
                                     </button>
                                 </div>
                             </div>
