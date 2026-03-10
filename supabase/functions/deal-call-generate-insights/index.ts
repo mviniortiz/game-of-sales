@@ -4,6 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -94,7 +95,110 @@ function extractInsights(transcript: string) {
     actionItems,
     suggestedMessage,
     suggestedStage,
+    sentiment: null,
   };
+}
+
+interface DealContext {
+  title?: string;
+  stage?: string;
+  value?: number;
+  customer_name?: string;
+}
+
+interface LLMInsights {
+  summary: string;
+  objections: string[];
+  nextSteps: string[];
+  actionItems: string[];
+  suggestedMessage: string;
+  suggestedStage: string | null;
+  sentiment: string | null;
+}
+
+async function generateLLMInsights(
+  transcript: string,
+  dealContext: DealContext,
+): Promise<LLMInsights | null> {
+  if (!OPENAI_API_KEY) return null;
+
+  const systemPrompt = `Você é um assistente de vendas especializado em analisar transcrições de ligações comerciais em português brasileiro.
+Analise a transcrição e o contexto do deal fornecidos e retorne APENAS um JSON válido (sem markdown, sem code fences) com a seguinte estrutura:
+{
+  "summary": "Resumo conciso da ligação em 2-4 frases",
+  "objections": ["lista de objeções levantadas pelo cliente"],
+  "next_steps": ["lista de próximos passos concretos"],
+  "action_items": ["lista de ações que o vendedor deve tomar"],
+  "suggested_message": "Mensagem de follow-up sugerida para enviar ao cliente",
+  "suggested_stage": "lead | qualification | proposal | negotiation | null",
+  "sentiment": "positive | neutral | negative | mixed"
+}
+
+Regras:
+- Se não houver objeções claras, retorne um array vazio para objections
+- suggested_stage deve refletir o estágio mais adequado baseado no conteúdo da conversa, ou null se não for possível determinar
+- A mensagem sugerida deve ser natural, profissional e personalizada para o contexto
+- Todos os campos são obrigatórios
+- Retorne APENAS o JSON, sem texto adicional`;
+
+  const dealInfo = [
+    dealContext.title ? `Título do deal: ${dealContext.title}` : null,
+    dealContext.stage ? `Estágio atual: ${dealContext.stage}` : null,
+    dealContext.value ? `Valor: R$ ${dealContext.value.toLocaleString("pt-BR")}` : null,
+    dealContext.customer_name ? `Cliente: ${dealContext.customer_name}` : null,
+  ].filter(Boolean).join("\n");
+
+  const userMessage = `Contexto do deal:\n${dealInfo}\n\nTranscrição da ligação:\n${transcript}`;
+
+  try {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userMessage },
+        ],
+        temperature: 0.3,
+        max_tokens: 1500,
+      }),
+    });
+
+    if (!response.ok) {
+      const errBody = await response.text();
+      console.error(`[deal-call-generate-insights] OpenAI API error (${response.status}):`, errBody);
+      return null;
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content?.trim();
+
+    if (!content) {
+      console.error("[deal-call-generate-insights] Empty response from OpenAI");
+      return null;
+    }
+
+    // Strip possible markdown code fences
+    const jsonStr = content.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+    const parsed = JSON.parse(jsonStr);
+
+    return {
+      summary: parsed.summary || "",
+      objections: Array.isArray(parsed.objections) ? parsed.objections : [],
+      nextSteps: Array.isArray(parsed.next_steps) ? parsed.next_steps : [],
+      actionItems: Array.isArray(parsed.action_items) ? parsed.action_items : [],
+      suggestedMessage: parsed.suggested_message || "",
+      suggestedStage: parsed.suggested_stage || null,
+      sentiment: parsed.sentiment || null,
+    };
+  } catch (error) {
+    console.error("[deal-call-generate-insights] LLM insights error:", error);
+    return null;
+  }
 }
 
 serve(async (req) => {
@@ -111,21 +215,32 @@ serve(async (req) => {
       });
     }
 
-    const userSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      global: { headers: { Authorization: authHeader } },
-    });
     const adminSupabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    const {
-      data: { user },
-      error: userError,
-    } = await userSupabase.auth.getUser();
+    // Support both service-role internal calls and authorized user calls
+    const isServiceRole = authHeader === `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`;
+    let userId: string | null = null;
 
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    if (isServiceRole) {
+      // Internal call from transcribe function - skip user auth and plan checks
+      // userId will be extracted from the call record
+    } else {
+      const userSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        global: { headers: { Authorization: authHeader } },
       });
+
+      const {
+        data: { user },
+        error: userError,
+      } = await userSupabase.auth.getUser();
+
+      if (userError || !user) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      userId = user.id;
     }
 
     const body = (await req.json()) as Body;
@@ -136,11 +251,26 @@ serve(async (req) => {
       });
     }
 
-    const { data: call, error: callError } = await (userSupabase as any)
-      .from("deal_calls")
-      .select("*")
-      .eq("id", body.callId)
-      .single();
+    // For service-role calls, use admin client; for user calls, use user client for RLS
+    let callQuery;
+    if (isServiceRole) {
+      callQuery = await (adminSupabase as any)
+        .from("deal_calls")
+        .select("*")
+        .eq("id", body.callId)
+        .single();
+    } else {
+      const userSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      callQuery = await (userSupabase as any)
+        .from("deal_calls")
+        .select("*")
+        .eq("id", body.callId)
+        .single();
+    }
+
+    const { data: call, error: callError } = callQuery;
 
     if (callError || !call) {
       return new Response(JSON.stringify({ error: "Call not found or forbidden" }), {
@@ -149,57 +279,65 @@ serve(async (req) => {
       });
     }
 
-    const { data: profile } = await (adminSupabase as any)
-      .from("profiles")
-      .select("is_super_admin")
-      .eq("id", user.id)
-      .single();
+    // Use call's user_id for service-role calls
+    if (!userId) {
+      userId = call.user_id;
+    }
 
-    const isSuperAdmin = profile?.is_super_admin === true;
-    if (!isSuperAdmin) {
-      const { data: company } = await (adminSupabase as any)
-        .from("companies")
-        .select("plan")
-        .eq("id", call.company_id)
+    // Skip plan/addon checks for service-role internal calls
+    if (!isServiceRole) {
+      const { data: profile } = await (adminSupabase as any)
+        .from("profiles")
+        .select("is_super_admin")
+        .eq("id", userId)
         .single();
 
-      const companyPlan = String(company?.plan || "starter").toLowerCase();
-      if (!["plus", "pro"].includes(companyPlan)) {
-        return new Response(JSON.stringify({
-          error: "Ligações disponíveis apenas nos planos Plus e Pro",
-          code: "PLAN_UPGRADE_REQUIRED",
-          required_plan: "plus",
-          current_plan: companyPlan,
-        }), {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+      const isSuperAdmin = profile?.is_super_admin === true;
+      if (!isSuperAdmin) {
+        const { data: company } = await (adminSupabase as any)
+          .from("companies")
+          .select("plan")
+          .eq("id", call.company_id)
+          .single();
 
-      const { data: addonRow, error: addonError } = await (adminSupabase as any)
-        .from("company_addons")
-        .select("calls_enabled")
-        .eq("company_id", call.company_id)
-        .maybeSingle();
+        const companyPlan = String(company?.plan || "starter").toLowerCase();
+        if (!["plus", "pro"].includes(companyPlan)) {
+          return new Response(JSON.stringify({
+            error: "Ligações disponíveis apenas nos planos Plus e Pro",
+            code: "PLAN_UPGRADE_REQUIRED",
+            required_plan: "plus",
+            current_plan: companyPlan,
+          }), {
+            status: 403,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
 
-      if (addonError && !String(addonError.message || "").toLowerCase().includes("relation")) {
-        console.error("[deal-call-generate-insights] company_addons query error:", addonError);
-        return new Response(JSON.stringify({ error: "Erro ao validar add-on de ligações" }), {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+        const { data: addonRow, error: addonError } = await (adminSupabase as any)
+          .from("company_addons")
+          .select("calls_enabled")
+          .eq("company_id", call.company_id)
+          .maybeSingle();
 
-      if (addonRow?.calls_enabled !== true) {
-        return new Response(JSON.stringify({
-          error: "Add-on de Ligações não está ativo para esta empresa",
-          code: "CALLS_ADDON_REQUIRED",
-          current_plan: companyPlan,
-          addon: "calls",
-        }), {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        if (addonError && !String(addonError.message || "").toLowerCase().includes("relation")) {
+          console.error("[deal-call-generate-insights] company_addons query error:", addonError);
+          return new Response(JSON.stringify({ error: "Erro ao validar add-on de ligações" }), {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        if (addonRow?.calls_enabled !== true) {
+          return new Response(JSON.stringify({
+            error: "Add-on de Ligações não está ativo para esta empresa",
+            code: "CALLS_ADDON_REQUIRED",
+            current_plan: companyPlan,
+            addon: "calls",
+          }), {
+            status: 403,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
       }
     }
 
@@ -212,7 +350,7 @@ serve(async (req) => {
 
     const rateLimit = await consumeRateLimit(
       adminSupabase,
-      `deal-call-insights:user:${user.id}:company:${call.company_id}`,
+      `deal-call-insights:user:${userId}:company:${call.company_id}`,
       40,
       3600,
     );
@@ -227,22 +365,63 @@ serve(async (req) => {
       });
     }
 
-    const parsed = extractInsights(call.transcript_text);
+    // Try LLM-powered insights first; fall back to heuristics
+    let modelUsed = "heuristic-v1";
+    let dealContext: DealContext = {};
+
+    // Fetch deal context for LLM
+    if (OPENAI_API_KEY) {
+      try {
+        const { data: deal } = await (adminSupabase as any)
+          .from("deals")
+          .select("title, stage, value, customer_name")
+          .eq("id", call.deal_id)
+          .single();
+
+        if (deal) {
+          dealContext = {
+            title: deal.title,
+            stage: deal.stage,
+            value: deal.value,
+            customer_name: deal.customer_name,
+          };
+        }
+      } catch (e) {
+        console.warn("[deal-call-generate-insights] deal context fetch warning:", e);
+      }
+    }
+
+    const llmResult = await generateLLMInsights(call.transcript_text, dealContext);
+    const heuristicResult = extractInsights(call.transcript_text);
+
+    let parsed: typeof heuristicResult;
+
+    if (llmResult) {
+      modelUsed = "gpt-4o-mini";
+      parsed = llmResult;
+      console.log("[deal-call-generate-insights] Using LLM insights (gpt-4o-mini)");
+    } else {
+      parsed = heuristicResult;
+      console.log("[deal-call-generate-insights] Using heuristic fallback");
+    }
 
     const payload = {
       call_id: call.id,
       deal_id: call.deal_id,
       company_id: call.company_id,
-      user_id: user.id,
+      user_id: userId,
       status: "completed",
-      model: "heuristic-mvp-v1",
+      model: modelUsed,
       summary: parsed.summary,
       objections: parsed.objections,
       next_steps: parsed.nextSteps,
       action_items: parsed.actionItems,
       suggested_message: parsed.suggestedMessage,
       suggested_stage: parsed.suggestedStage,
-      raw_output: parsed,
+      raw_output: {
+        ...parsed,
+        sentiment: parsed.sentiment ?? null,
+      },
     };
 
     const { data: insight, error: insightError } = await (adminSupabase as any)
@@ -263,16 +442,16 @@ serve(async (req) => {
       await (adminSupabase as any).from("deal_activities").insert({
         deal_id: call.deal_id,
         company_id: call.company_id,
-        user_id: user.id,
+        user_id: userId,
         activity_type: "call",
-        description: "Insights da ligação gerados",
+        description: `Insights da ligação gerados (${modelUsed})`,
         new_value: "Resumo + objeções + próximos passos",
       });
     } catch (e) {
       console.warn("[deal-call-generate-insights] deal_activities insert warning:", e);
     }
 
-    return new Response(JSON.stringify({ success: true, insight }), {
+    return new Response(JSON.stringify({ success: true, model: modelUsed, insight }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {

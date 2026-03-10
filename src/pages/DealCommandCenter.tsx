@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useRef } from "react";
+﻿import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
     Dialog,
     DialogContent,
@@ -48,10 +50,16 @@ import {
     AlertTriangle,
     X,
     ChevronRight,
+    ChevronDown,
     Loader2,
     MoreHorizontal,
     Plus,
     Lock,
+    Edit3,
+    Save,
+    Play,
+    User,
+    Trash2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -70,14 +78,14 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-// â”€â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â"€â"€â"€ Constants â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 const PIPELINE_STAGES = [
     { id: "lead", label: "Lead", shortLabel: "L", color: "bg-slate-500", ring: "ring-slate-400" },
-    { id: "qualification", label: "QualificaÃ§Ã£o", shortLabel: "Q", color: "bg-blue-500", ring: "ring-blue-400" },
+    { id: "qualification", label: "Qualificação", shortLabel: "Q", color: "bg-blue-500", ring: "ring-blue-400" },
     { id: "proposal", label: "Proposta", shortLabel: "P", color: "bg-violet-500", ring: "ring-violet-400" },
-    { id: "negotiation", label: "NegociaÃ§Ã£o", shortLabel: "N", color: "bg-amber-500", ring: "ring-amber-400" },
-    { id: "closed_won", label: "Ganho", shortLabel: "âœ“", color: "bg-emerald-500", ring: "ring-emerald-400" },
+    { id: "negotiation", label: "Negociação", shortLabel: "N", color: "bg-amber-500", ring: "ring-amber-400" },
+    { id: "closed_won", label: "Ganho", shortLabel: "✓", color: "bg-emerald-500", ring: "ring-emerald-400" },
 ];
 
 const EVENT_ICONS: Record<string, { icon: typeof StickyNote; color: string; bg: string }> = {
@@ -88,7 +96,7 @@ const EVENT_ICONS: Record<string, { icon: typeof StickyNote; color: string; bg: 
     task_completed: { icon: CheckCircle2, color: "text-emerald-400", bg: "bg-emerald-500/15" },
 };
 
-// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â"€â"€â"€ Helpers â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 const getHealthStatus = (days: number) => {
     if (days > 7) return { icon: ShieldOff, color: "text-rose-400", bg: "bg-rose-500/10", border: "border-rose-500/20", label: "Crítico", subtitle: `${days}d sem contato` };
@@ -131,7 +139,7 @@ const getCallStatusBadge = (status?: string) => {
     }
 };
 
-// â”€â”€â”€ Sub-components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â"€â"€â"€ Sub-components â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 /** Circular probability ring */
 const CircularProgress = ({ value, size = 52 }: { value: number; size?: number }) => {
@@ -220,10 +228,13 @@ const QuickBtn = ({ icon: Icon, label, color, onClick, disabled = false }: { ico
     </Tooltip>
 );
 
-/** Timeline entry */
+/** Timeline entry with expanded support for calls */
 const TimelineEntry = ({ event, isLast }: { event: any; isLast: boolean }) => {
+    const [expanded, setExpanded] = useState(false);
     const cfg = EVENT_ICONS[event.type] || EVENT_ICONS.note;
     const Icon = cfg.icon;
+    const isCall = event.type === "call";
+    const isStageChange = event.type === "stage_change";
     return (
         <div className="flex gap-3">
             <div className="flex flex-col items-center">
@@ -237,7 +248,7 @@ const TimelineEntry = ({ event, isLast }: { event: any; isLast: boolean }) => {
                     <p className="text-xs text-slate-400 mb-1">
                         <span className="text-emerald-400 font-medium">{event.user_name || "Você"}</span>
                         {" · "}
-                        {format(new Date(event.created_at), "dd/MM 'Ã s' HH:mm", { locale: ptBR })}
+                        {format(new Date(event.created_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
                     </p>
                     <p className="text-sm text-slate-200 leading-relaxed">{event.content || event.title}</p>
                 </div>
@@ -293,7 +304,7 @@ const QuestCard = ({ task, onComplete }: { task: any; onComplete: () => void }) 
     );
 };
 
-// â”€â”€â”€ Main Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â"€â"€â"€ Main Component â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 export default function DealCommandCenter() {
     const { id } = useParams<{ id: string }>();
@@ -320,7 +331,7 @@ export default function DealCommandCenter() {
         if (saved) setSellerPhone(saved);
     }, []);
 
-    // â”€â”€ Queries â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // â"€â"€ Queries â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
     const { data: deal, isLoading } = useQuery({
         queryKey: ["deal", id],
@@ -407,7 +418,7 @@ export default function DealCommandCenter() {
         enabled: !!id && canUseCalls,
     });
 
-    // â”€â”€ Mutations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // â"€â"€ Mutations â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
     const updateDeal = useMutation({
         mutationFn: async (updates: any) => {
@@ -498,7 +509,70 @@ export default function DealCommandCenter() {
         },
     });
 
-    // â”€â”€ Derived â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // -- Realtime: subscribe to deal_calls changes for live status updates --
+    const [liveCallStatus, setLiveCallStatus] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!id || !canUseCalls) return;
+
+        const channel = (supabase as any)
+            .channel(`deal-calls-realtime-${id}`)
+            .on(
+                "postgres_changes",
+                {
+                    event: "*",
+                    schema: "public",
+                    table: "deal_calls",
+                    filter: `deal_id=eq.${id}`,
+                },
+                (payload: any) => {
+                    const newRecord = payload.new;
+                    const oldRecord = payload.old;
+
+                    if (!newRecord) return;
+
+                    console.log(
+                        `[DealCommandCenter] Realtime deal_call update: ${oldRecord?.status || "?"} -> ${newRecord.status}`,
+                    );
+
+                    // Update live call status indicator
+                    if (["dialing", "queued", "in_progress", "ringing"].includes(newRecord.status)) {
+                        setLiveCallStatus(newRecord.status);
+                    } else {
+                        setLiveCallStatus(null);
+                    }
+
+                    // Refresh call list on any status change
+                    if (oldRecord?.status !== newRecord.status) {
+                        queryClient.invalidateQueries({ queryKey: ["deal-calls", id] });
+                    }
+
+                    // Auto-refresh insights when transcript completes
+                    if (
+                        newRecord.transcript_status === "completed" &&
+                        oldRecord?.transcript_status !== "completed"
+                    ) {
+                        queryClient.invalidateQueries({ queryKey: ["deal-calls", id] });
+                        toast.success("Transcrição concluída!");
+                    }
+
+                    // Notify on transcription failure
+                    if (
+                        newRecord.transcript_status === "failed" &&
+                        oldRecord?.transcript_status !== "failed"
+                    ) {
+                        toast.error("Falha na transcrição da ligação");
+                    }
+                },
+            )
+            .subscribe();
+
+        return () => {
+            (supabase as any).removeChannel(channel);
+        };
+    }, [id, canUseCalls, queryClient]);
+
+    // â"€â"€ Derived â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
     const daysSince = deal?.updated_at
         ? Math.floor((Date.now() - new Date(deal.updated_at).getTime()) / 86_400_000) : 0;
@@ -519,7 +593,7 @@ export default function DealCommandCenter() {
         { id: "propostas", label: "Produtos/Proposta", icon: FileText },
     ];
 
-    // â”€â”€ Loading / Not found â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // â"€â"€ Loading / Not found â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
     if (isLoading) {
         return (
@@ -541,14 +615,14 @@ export default function DealCommandCenter() {
         );
     }
 
-    // â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // â"€â"€ Render â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
     return (
         <>
             <div className="min-h-[calc(100vh-64px)] bg-slate-950">
                 {showConfetti && <Confetti show={showConfetti} />}
 
-                {/* â”€â”€ HEADER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+                {/* â"€â"€ HEADER â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
                 <div className="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-xl border-b border-slate-800/60">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6">
 
@@ -637,11 +711,11 @@ export default function DealCommandCenter() {
                     </div>
                 </div>
 
-                {/* â”€â”€ MAIN GRID â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+                {/* â"€â"€ MAIN GRID â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5">
                     <div className="grid grid-cols-12 gap-4 sm:gap-5">
 
-                        {/* â”€â”€ LEFT PANEL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+                        {/* â"€â"€ LEFT PANEL â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
                         <div className="col-span-12 lg:col-span-3 space-y-4">
 
                             {/* Quick actions */}
@@ -740,7 +814,7 @@ export default function DealCommandCenter() {
                             </div>
                         </div>
 
-                        {/* â”€â”€ RIGHT PANEL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+                        {/* â"€â"€ RIGHT PANEL â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
                         <div className="col-span-12 lg:col-span-9 space-y-4">
 
                             {/* Active Quest */}
@@ -783,7 +857,7 @@ export default function DealCommandCenter() {
                                         initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }}
                                     >
-                                        {/* â”€â”€ HistÃ³rico â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+                                        {/* â"€â"€ Histórico â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
                                         {activeTab === "historico" && (
                                             <>
                                                 <ScrollArea className="h-[360px]">
@@ -827,14 +901,37 @@ export default function DealCommandCenter() {
                                             </>
                                         )}
 
-                                        {/* â”€â”€ LigaÃ§Ãµes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+                                        {/* â"€â"€ LigaçÃµes â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
                                         {activeTab === "ligacoes" && (
                                             <div className="p-4 sm:p-5 space-y-4">
+                                                {/* Live call indicator */}
+                                                {liveCallStatus && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, y: -8 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 mb-3"
+                                                    >
+                                                        <span className="relative flex h-2.5 w-2.5">
+                                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                                                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+                                                        </span>
+                                                        <span className="text-sm font-medium text-emerald-300">
+                                                            {liveCallStatus === "in_progress"
+                                                                ? "Ligação em andamento..."
+                                                                : liveCallStatus === "dialing"
+                                                                    ? "Discando..."
+                                                                    : liveCallStatus === "ringing"
+                                                                        ? "Chamando..."
+                                                                        : "Na fila..."}
+                                                        </span>
+                                                    </motion.div>
+                                                )}
+
                                                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                                                     <div>
                                                         <p className="text-sm font-semibold text-white">Ligações</p>
                                                         <p className="text-xs text-slate-500">
-                                                            MVP: registre chamadas, salve transcrição no deal e gere insights sob demanda
+                                                            Registre chamadas, transcreva e gere insights com IA
                                                         </p>
                                                     </div>
                                                     <Button
@@ -917,8 +1014,22 @@ export default function DealCommandCenter() {
                                                                                 {call.provider === "demo" ? "Demo" : (call.provider || "Telefone")}
                                                                             </Badge>
                                                                             {call.transcript_status && (
-                                                                                <Badge variant="outline" className="border-slate-700 text-slate-400">
-                                                                                    Transcrição: {call.transcript_status}
+                                                                                <Badge
+                                                                                    variant="outline"
+                                                                                    className={
+                                                                                        call.transcript_status === "completed"
+                                                                                            ? "border-emerald-500/25 text-emerald-300"
+                                                                                            : call.transcript_status === "transcribing"
+                                                                                                ? "border-blue-500/25 text-blue-300"
+                                                                                                : call.transcript_status === "failed"
+                                                                                                    ? "border-rose-500/25 text-rose-300"
+                                                                                                    : "border-slate-700 text-slate-400"
+                                                                                    }
+                                                                                >
+                                                                                    {call.transcript_status === "transcribing" && (
+                                                                                        <Loader2 className="h-3 w-3 animate-spin mr-1 inline" />
+                                                                                    )}
+                                                                                    Transcrição: {call.transcript_status === "completed" ? "Pronta" : call.transcript_status === "transcribing" ? "Em andamento" : call.transcript_status === "failed" ? "Falhou" : call.transcript_status}
                                                                                 </Badge>
                                                                             )}
                                                                         </div>
@@ -926,7 +1037,7 @@ export default function DealCommandCenter() {
                                                                             <span className="text-slate-500">Cliente:</span> {formatPhone(call.customer_phone)}
                                                                         </div>
                                                                         <div className="text-xs text-slate-500 flex flex-wrap gap-x-3 gap-y-1">
-                                                                            <span>{format(new Date(call.created_at), "dd/MM/yyyy 'Ã s' HH:mm", { locale: ptBR })}</span>
+                                                                            <span>{format(new Date(call.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
                                                                             {typeof call.duration_seconds === "number" && <span>Duração: {call.duration_seconds}s</span>}
                                                                         </div>
                                                                     </div>
@@ -972,12 +1083,31 @@ export default function DealCommandCenter() {
 
                                                                 {call.insight && (
                                                                     <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 space-y-3">
-                                                                        <div className="flex items-center gap-2">
+                                                                        <div className="flex items-center gap-2 flex-wrap">
                                                                             <Sparkles className="h-4 w-4 text-emerald-400" />
                                                                             <p className="text-sm font-semibold text-emerald-300">Insights da ligação</p>
                                                                             <Badge variant="outline" className="border-emerald-500/20 text-emerald-300">
                                                                                 {call.insight.model || "mvp"}
                                                                             </Badge>
+                                                                            {call.insight.raw_output?.sentiment && (
+                                                                                <Badge
+                                                                                    variant="outline"
+                                                                                    className={
+                                                                                        call.insight.raw_output.sentiment === "positive"
+                                                                                            ? "border-emerald-500/20 text-emerald-300"
+                                                                                            : call.insight.raw_output.sentiment === "negative"
+                                                                                                ? "border-rose-500/20 text-rose-300"
+                                                                                                : call.insight.raw_output.sentiment === "mixed"
+                                                                                                    ? "border-amber-500/20 text-amber-300"
+                                                                                                    : "border-slate-700 text-slate-400"
+                                                                                    }
+                                                                                >
+                                                                                    {call.insight.raw_output.sentiment === "positive" ? "Positivo"
+                                                                                        : call.insight.raw_output.sentiment === "negative" ? "Negativo"
+                                                                                            : call.insight.raw_output.sentiment === "mixed" ? "Misto"
+                                                                                                : "Neutro"}
+                                                                                </Badge>
+                                                                            )}
                                                                         </div>
 
                                                                         {call.insight.summary && (
@@ -1034,7 +1164,7 @@ export default function DealCommandCenter() {
                                             </div>
                                         )}
 
-                                        {/* â”€â”€ Tarefas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+                                        {/* â"€â"€ Tarefas â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
                                         {activeTab === "tarefas" && (
                                             <div className="flex flex-col items-center justify-center py-14 text-slate-600">
                                                 <CheckCircle2 className="h-10 w-10 mb-3 opacity-40" />
@@ -1047,7 +1177,7 @@ export default function DealCommandCenter() {
                                             </div>
                                         )}
 
-                                        {/* â”€â”€ Arquivos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+                                        {/* â"€â"€ Arquivos â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
                                         {activeTab === "arquivos" && (
                                             <div className="p-5">
                                                 <input ref={fileInputRef} type="file" multiple
@@ -1095,7 +1225,7 @@ export default function DealCommandCenter() {
                                             </div>
                                         )}
 
-                                        {/* â”€â”€ Produtos/Proposta â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+                                        {/* â"€â"€ Produtos/Proposta â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
                                         {activeTab === "propostas" && (
                                             <div className="p-5">
                                                 {deal?.company_id ? (
@@ -1126,7 +1256,7 @@ export default function DealCommandCenter() {
                     </div>
                 </div>
 
-                {/* â”€â”€ MODALS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+                {/* â"€â"€ MODALS â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
                 <Dialog open={showCallModal} onOpenChange={setShowCallModal}>
                     <DialogContent className="bg-slate-900 border-slate-800 text-white w-[calc(100vw-1rem)] max-w-lg p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
