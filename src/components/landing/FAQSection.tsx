@@ -4,28 +4,28 @@ import { Plus, X } from "lucide-react";
 
 const FAQS = [
     {
-        q: "Quanto tempo leva para implementar?",
-        a: "Menos de 5 minutos. Basta criar sua conta, configurar os webhooks da sua plataforma e pronto. A integração com Hotmart, Kiwify, Greenn e outras é automática e sem código.",
+        q: "O que é o Game Sales?",
+        a: "Um CRM de vendas completo com pipeline Kanban, ranking gamificado, metas em tempo real, funil de calls, calendário com sync Google Calendar, hub WhatsApp com IA, e integrações automáticas com Hotmart, Kiwify e Greenn.",
+    },
+    {
+        q: "Quanto tempo leva para configurar?",
+        a: "Menos de 5 minutos. Crie sua conta, cole o webhook da sua plataforma de vendas e convide seu time. As vendas começam a aparecer automaticamente.",
     },
     {
         q: "Posso testar antes de assinar?",
-        a: "Sim! Nosso plano PRO inclui 7 dias de acesso completo para você ver o impacto real no seu time antes de continuar.",
+        a: "Sim! Todos os planos pagos incluem 7 dias grátis com acesso completo. Sem cartão de crédito para começar.",
+    },
+    {
+        q: "Quais plataformas integram?",
+        a: "Hotmart, Kiwify e Greenn com sync automático via webhook. Google Calendar para agendamentos. WhatsApp via Evolution API. Mais integrações sendo votadas pela comunidade.",
     },
     {
         q: "Tem ligação dentro da plataforma?",
-        a: "Sim. Ligações é um add-on (contratação opcional cobrada à parte) para empresas nos planos Plus e Pro. Ao ativar, você libera chamadas dentro do CRM com histórico no deal, gravação e evolução de transcrição/insights.",
-    },
-    {
-        q: "Funciona para qualquer tipo de venda?",
-        a: "O Game Sales é ideal para times que vendem infoprodutos, serviços ou produtos físicos. Se você tem vendedores, o Game Sales transforma a rotina deles em competição saudável.",
-    },
-    {
-        q: "Meus dados estão seguros?",
-        a: "100%. Usamos criptografia de ponta a ponta e nossa infraestrutura é hospedada em servidores com certificação de segurança. Conformidade total com LGPD.",
+        a: "Sim. Ligações é um add-on disponível nos planos Plus e Pro. Inclui chamadas dentro do CRM, gravação automática, transcrição e insights de cada conversa.",
     },
     {
         q: "Posso cancelar a qualquer momento?",
-        a: "Sim, sem multas ou taxas. Você cancela diretamente pelo painel, sem precisar falar com ninguém — mas acreditamos que você não vai querer sair.",
+        a: "Sim, sem multas ou taxas. Cancele direto pelo painel, sem precisar falar com ninguém.",
     },
 ];
 

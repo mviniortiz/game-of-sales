@@ -100,7 +100,7 @@ export const FinalCTA = ({ onCTAClick }: FinalCTAProps) => {
                             letterSpacing: "-0.03em",
                         }}
                     >
-                        Enquanto você lê isso,{" "}
+                        Seu time pode estar{" "}
                         <span
                             style={{
                                 background: "linear-gradient(135deg, #f59e0b, #fbbf24)",
@@ -108,9 +108,9 @@ export const FinalCTA = ({ onCTAClick }: FinalCTAProps) => {
                                 WebkitTextFillColor: "transparent",
                             }}
                         >
-                            seu concorrente
+                            vendendo mais
                         </span>{" "}
-                        já montou o ranking dele.
+                        amanhã.
                     </motion.h2>
 
                     {/* Sub-copy */}
@@ -122,7 +122,7 @@ export const FinalCTA = ({ onCTAClick }: FinalCTAProps) => {
                         className="mb-10 max-w-xl mx-auto"
                         style={{ color: "rgba(255,255,255,0.4)", fontSize: "1rem", lineHeight: 1.7 }}
                     >
-                        Configure em menos de 5 minutos. Seu time começa a competir hoje.
+                        Configure em 5 minutos. Pipeline, ranking, metas e integrações — tudo pronto para usar.
                     </motion.p>
 
                     {/* CTA buttons */}
@@ -162,7 +162,7 @@ export const FinalCTA = ({ onCTAClick }: FinalCTAProps) => {
                                 }}
                             />
                             <Zap className="relative h-4 w-4" fill="currentColor" />
-                            <span className="relative">Criar meu ranking agora</span>
+                            <span className="relative">Começar grátis por 7 dias</span>
                             <ArrowRight className="relative h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
                         </motion.button>
 

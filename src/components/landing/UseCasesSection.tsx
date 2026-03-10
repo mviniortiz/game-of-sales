@@ -315,33 +315,33 @@ const CASES = [
     {
         icon: BarChart3,
         iconColor: "text-emerald-400",
-        tag: "Gestores",
-        title: "Visibilidade total do time",
+        tag: "Gestor Comercial",
+        title: "Visibilidade total sem cobrar ninguém",
         description:
-            "Acompanhe desempenho, conversões e metas em tempo real. Tome decisões baseadas em dados — não em achismos ou relatórios desatualizados.",
-        bullets: ["Dashboard ao vivo", "Relatórios automáticos", "Metas por período"],
+            "Dashboard ao vivo com faturamento, ticket médio, taxa de conversão e show rate. Veja quem está performando, quem precisa de ajuda, e se o time vai bater a meta — tudo em tempo real.",
+        bullets: ["Dashboard com KPIs ao vivo", "Funil de calls (agendamento → show → venda)", "Metas consolidadas do time"],
         Illustration: GestoresIllustration,
         accent: "emerald" as const,
     },
     {
         icon: Trophy,
         iconColor: "text-amber-400",
-        tag: "Vendedores",
-        title: "Competição que move o time",
+        tag: "Vendedor",
+        title: "Competição que motiva sem pressão",
         description:
-            "Rankings, XP e conquistas que transformam metas em jogos. Cada venda fechada vira pontos. Seu time vende mais sem você precisar cobrar.",
-        bullets: ["Ranking ao vivo", "XP e conquistas", "Meta individual"],
+            "Ranking com níveis, pódio ao vivo e meta individual. Cada venda fechada sobe sua posição. Acompanhe seu progresso, seus deals no pipeline e suas ligações — tudo num lugar só.",
+        bullets: ["Ranking com níveis e pódio", "Pipeline pessoal de deals", "Meta individual com progresso"],
         Illustration: VendasIllustration,
         accent: "amber" as const,
     },
     {
         icon: Link2,
         iconColor: "text-emerald-400",
-        tag: "Integração",
-        title: "Conecta em minutos",
+        tag: "Dono de Infoproduto",
+        title: "Vendas automáticas, zero trabalho manual",
         description:
-            "Kiwify, Greenn, Hotmart, Cakto ou Celetus. Cole o webhook, pronto. Vendas registradas em tempo real — o dinheiro cai e o ranking já atualiza sozinho.",
-        bullets: ["Kiwify, Greenn, Hotmart, Cakto, Celetus", "Zero digitação manual", "Tempo real via webhook"],
+            "Conecte Hotmart, Kiwify ou Greenn via webhook. Cada venda aprovada entra automaticamente no dashboard, atualiza o ranking e alimenta os relatórios. Sem copiar e colar.",
+        bullets: ["Sync automático via webhook", "Dashboard de receita em tempo real", "Extensão Chrome para WhatsApp"],
         Illustration: IntegracaoIllustration,
         accent: "emerald" as const,
     },
@@ -373,7 +373,7 @@ export const UseCasesSection = () => {
                         style={{ letterSpacing: "var(--ls-widest)", fontWeight: "var(--fw-semibold)" }}
                     >
                         <Zap className="h-3 w-3" />
-                        PARA QUEM É O GAME SALES
+                        FEITO PARA QUEM VENDE
                     </span>
 
                     <h2
@@ -382,12 +382,12 @@ export const UseCasesSection = () => {
                     >
                         Funciona para o{" "}
                         <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
-                            seu contexto
+                            seu time
                         </span>
                     </h2>
 
                     <p className="text-body text-gray-400 max-w-xl mx-auto" style={{ fontSize: "1.0625rem" }}>
-                        Seja você gestor, vendedor ou responsável por integrações — o Game Sales se adapta ao seu papel.
+                        Gestores ganham visibilidade. Vendedores ganham motivação. Donos de infoproduto ganham controle.
                     </p>
                 </motion.div>
 

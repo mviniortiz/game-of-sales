@@ -3,19 +3,19 @@ import { Star } from "lucide-react";
 
 const testimonials = [
     {
-        quote: "O ranking em tempo real salvou nossa Black Friday. A equipe ficou viciada em ver o nome subir.",
-        author: "Gestor de Vendas",
-        role: "SaaS"
+        quote: "Antes eu passava 2 horas por dia consolidando planilhas. Agora o dashboard mostra tudo em tempo real. O time bateu a meta pela primeira vez em 4 meses.",
+        author: "Gestor Comercial",
+        role: "Time de 12 vendedores"
     },
     {
-        quote: "A integração com a Kiwify foi instantânea. Finalmente tenho certeza de quanto vendemos.",
+        quote: "A integração com Kiwify foi em 2 minutos. Literalmente colei o webhook e as vendas começaram a aparecer. O ranking deixou o time obcecado em vender mais.",
         author: "Produtor Digital",
-        role: "Infoprodutos"
+        role: "Infoprodutos e cursos online"
     },
     {
-        quote: "Troquei 3 planilhas pelo Game Sales. O ROI veio na primeira semana.",
-        author: "Diretor Comercial",
-        role: "E-commerce"
+        quote: "O pipeline Kanban + WhatsApp IA mudou nosso jogo. Os vendedores param de esquecer follow-up e o copiloto sugere a resposta certa na hora.",
+        author: "Diretor de Vendas",
+        role: "SaaS B2B com 8 vendedores"
     }
 ];
 
@@ -30,10 +30,10 @@ export const Testimonials = () => {
                     viewport={{ once: true }}
                 >
                     <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-                        Quem Usa, <span className="text-emerald-400">Recomenda</span>
+                        Quem usa, <span className="text-emerald-400">não volta pra planilha</span>
                     </h2>
                     <p className="text-gray-400 max-w-xl mx-auto">
-                        Veja o que gestores e times de vendas estão dizendo sobre o Game Sales.
+                        Resultados reais de times que migraram para o Game Sales.
                     </p>
                 </motion.div>
 

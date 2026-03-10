@@ -5,26 +5,26 @@ import { Clock, TrendingDown, AlertTriangle, Check, X, ChevronRight } from "luci
 const COMPARISONS = [
     {
         icon: Clock,
-        before: "Horas em planilhas",
-        beforeDesc: "Todo dia alguém atualizando Excel. E ainda erra.",
-        after: "Atualização automática",
-        afterDesc: "Cada venda já entra no ranking sozinha, em segundos.",
+        before: "Pipeline invisível",
+        beforeDesc: "Deals espalhados em planilhas, WhatsApp e cabeça do vendedor. Ninguém sabe o status real.",
+        after: "Pipeline visual Kanban",
+        afterDesc: "Drag & drop intuitivo. Todo deal visível, do lead ao fechamento, em tempo real.",
         delay: 0,
     },
     {
         icon: TrendingDown,
-        before: "Time desmotivado",
-        beforeDesc: "Sem visibilidade, ninguém sabe se está ganhando.",
-        after: "Competição saudável",
-        afterDesc: "Ranking ao vivo que move o time sem você cobrar.",
+        before: "Time sem meta clara",
+        beforeDesc: "Vendedores não sabem quanto falta pra bater a meta. Gestor cobra todo dia.",
+        after: "Metas e ranking ao vivo",
+        afterDesc: "Cada vendedor vê sua meta, seu progresso e sua posição no ranking. Motivação automática.",
         delay: 0.1,
     },
     {
         icon: AlertTriangle,
-        before: "Cobrança diária do gestor",
-        beforeDesc: "Você tem que lembrar todo mundo das metas. Todo. Dia.",
-        after: "Time se autogestiona",
-        afterDesc: "Ninguém quer ficar pra trás. O sistema motiva sozinho.",
+        before: "Vendas caem no vácuo",
+        beforeDesc: "Hotmart aprovou, mas ninguém registrou. Kiwify vendeu, mas o dashboard não sabe.",
+        after: "Sync automático de vendas",
+        afterDesc: "Webhooks com Hotmart, Kiwify e Greenn. A venda chega, o ranking atualiza, o dashboard reflete.",
         delay: 0.2,
     },
 ];
@@ -59,7 +59,7 @@ export const PainPoints = () => {
                         ISSO PARECE FAMILIAR?
                     </span>
                     <h2 className="text-heading text-3xl sm:text-4xl text-white">
-                        Gestão de vendas{" "}
+                        Seu processo de vendas{" "}
                         <span className="text-red-400">não deveria ser assim</span>
                     </h2>
                 </motion.div>
@@ -151,7 +151,7 @@ export const PainPoints = () => {
                         </span>
                     </p>
                     <p className="text-caption text-xs text-white/30 mb-8">
-                        Um sistema que resolve esses 3 problemas em menos de 5 minutos.
+                        Um CRM completo que resolve tudo isso — e se configura em 5 minutos.
                     </p>
 
                     {/* Animated gradient line */}

@@ -356,7 +356,7 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onLoginClick }: HeroSecti
                     >
                         <Badge className="mb-6 bg-emerald-500/15 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/25">
                             <Sparkles className="h-3 w-3 mr-1" />
-                            <span className="text-label text-[10px]">GAMIFICAÇÃO PARA TIMES DE VENDAS</span>
+                            <span className="text-label text-[10px]">CRM DE VENDAS GAMIFICADO</span>
                         </Badge>
 
                         <h1 className="text-heading text-4xl sm:text-5xl lg:text-6xl mb-6">
@@ -366,7 +366,7 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onLoginClick }: HeroSecti
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.6, delay: 0.1 }}
                             >
-                                Seu time vendendo
+                                O CRM que seu time
                             </motion.span>
                             <motion.span
                                 className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent block"
@@ -375,13 +375,12 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onLoginClick }: HeroSecti
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.6, delay: 0.3 }}
                             >
-                                34% mais. No automático.
+                                vai querer usar.
                             </motion.span>
                         </h1>
 
                         <p className="text-body text-lg text-white/70 mb-8 max-w-xl">
-                            Um ranking em tempo real que transforma metas em competição saudável.
-                            Seu time se motiva sozinho. Você só acompanha os resultados.
+                            Pipeline visual, ranking ao vivo, metas em tempo real e integrações automáticas com Hotmart, Kiwify e Greenn. Tudo em um só lugar.
                         </p>
 
                         {/* CTA Buttons */}
@@ -405,7 +404,7 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onLoginClick }: HeroSecti
                                     transition={{ backgroundPosition: { duration: 4, repeat: Infinity, ease: "easeInOut" } }}
                                 >
                                     <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                                    <span className="relative z-10">Criar meu ranking grátis</span>
+                                    <span className="relative z-10">Começar grátis por 7 dias</span>
                                     <ArrowRight className="relative z-10 h-5 w-5 group-hover:translate-x-1.5 transition-transform" />
                                 </motion.button>
                             </motion.div>
@@ -428,7 +427,7 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onLoginClick }: HeroSecti
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.5 }}
                         >
-                            {["7 dias grátis", "Sem cartão", "Setup em 5 min"].map(text => (
+                            {["7 dias grátis", "Sem cartão", "Cancele quando quiser"].map(text => (
                                 <span key={text} className="text-caption flex items-center gap-1.5 text-sm">
                                     <span className="w-2 h-2 rounded-full bg-emerald-400" />
                                     {text}
@@ -454,9 +453,9 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onLoginClick }: HeroSecti
                                     animate={{ opacity: 1 }}
                                     transition={{ delay: 1.2 }}
                                 >
-                                    147 times
+                                    230+ empresas
                                 </motion.span>
-                                {" "}criaram rankings esta semana
+                                {" "}já usam o Game Sales
                             </span>
                         </motion.div>
 

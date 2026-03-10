@@ -9,9 +9,9 @@ interface LandingNavProps {
 }
 
 const NAV_LINKS = [
+    { label: "Funcionalidades", anchor: "features" },
     { label: "Como funciona", anchor: "how-it-works" },
-    { label: "Casos de uso", anchor: "use-cases" },
-    { label: "Preços", anchor: "pricing" },
+    { label: "Para quem", anchor: "use-cases" },
     { label: "FAQ", anchor: "faq" },
 ];
 

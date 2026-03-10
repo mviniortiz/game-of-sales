@@ -54,19 +54,17 @@ export const ProductBentoGrid = () => {
                         ARSENAL COMPLETO
                     </span>
                     <h2 className="text-heading text-3xl sm:text-4xl text-white mb-4">
-                        Ferramentas que{" "}
+                        Tudo que seu time precisa.{" "}
                         <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
-                            vendem por você
+                            Em um só lugar.
                         </span>
                     </h2>
                     <p
                         className="text-body text-gray-400 max-w-xl mx-auto"
                         style={{ fontSize: "1.0625rem" }}
                     >
-                        Cada funcionalidade foi pensada para{" "}
-                        <span className="text-white" style={{ fontWeight: "var(--fw-medium)" }}>eliminar fricção</span>{" "}
-                        e{" "}
-                        <span className="text-white" style={{ fontWeight: "var(--fw-medium)" }}>acelerar fechamentos</span>.
+                        CRM, ranking, metas, calendário, calls e integrações.{" "}
+                        <span className="text-white" style={{ fontWeight: "var(--fw-medium)" }}>Sem trocar de aba</span>.
                     </p>
                 </motion.div>
 
@@ -146,7 +144,7 @@ export const ProductBentoGrid = () => {
                                 Ranking ao Vivo
                             </h3>
                             <p className="text-body text-gray-400 text-sm">
-                                Cada venda atualiza o ranking na hora. Seu time acompanha quem está na frente em tempo real — sem precisar perguntar.
+                                Pódio em tempo real com níveis Bronze, Prata, Ouro, Platina e Diamante. Cada venda atualiza o placar na hora. Seu time compete — e vende mais.
                             </p>
                         </div>
                     </BentoCard>
@@ -187,7 +185,7 @@ export const ProductBentoGrid = () => {
                             Vendas em Tempo Real
                         </h3>
                         <p className="text-body text-gray-400 text-sm">
-                            Sincronização via Webhook em segundos. Integrado com Kiwify, Greenn e Hotmart.
+                            Hotmart, Kiwify ou Greenn vendeu? A venda aparece no dashboard em segundos via webhook. Zero digitação manual.
                         </p>
                     </BentoCard>
 
@@ -221,7 +219,7 @@ export const ProductBentoGrid = () => {
                             Metas com Visibilidade
                         </h3>
                         <p className="text-body text-gray-400 text-sm">
-                            Cada vendedor vê sua própria meta e o quanto falta. Sem precisar perguntar pro gestor.
+                            Meta individual e consolidada do time. Cada vendedor vê quanto falta e quanto contribuiu. Gestor acompanha tudo sem perguntar.
                         </p>
                     </BentoCard>
 
@@ -234,16 +232,16 @@ export const ProductBentoGrid = () => {
                         {/* Left: text */}
                         <div className="md:w-1/2">
                             <span className="text-label text-[10px] text-emerald-400/70 border border-emerald-500/20 bg-emerald-500/5 rounded-full px-2.5 py-0.5 mb-3 inline-block">
-                                Notificações
+                                CRM + WhatsApp
                             </span>
                             <h3 className="text-white mb-2" style={{ fontWeight: "var(--fw-bold)", fontSize: "1.125rem" }}>
-                                Venda Sem Sair do Zap
+                                Pipeline + WhatsApp IA integrados
                             </h3>
                             <p className="text-body text-gray-400 text-sm mb-4">
-                                Extensão Chrome integrada. Veja ranking e registre vendas direto no navegador — sem abrir outra aba.
+                                CRM com pipeline Kanban, histórico de ligações, e hub WhatsApp com copiloto IA que sugere respostas e detecta objeções em tempo real.
                             </p>
                             <div className="flex flex-wrap gap-2">
-                                {["Chrome Extension", "Tempo Real", "1 clique"].map(tag => (
+                                {["Pipeline Kanban", "WhatsApp IA", "Ligações com gravação"].map(tag => (
                                     <span
                                         key={tag}
                                         className="text-xs text-white/40 border border-white/8 rounded-full px-2.5 py-0.5"

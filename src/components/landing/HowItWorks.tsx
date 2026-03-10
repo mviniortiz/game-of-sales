@@ -10,11 +10,11 @@ const STEPS = [
         iconColor: "text-emerald-400",
         ringColor: "border-emerald-500/40",
         glowColor: "rgba(16,185,129,0.15)",
-        badge: "Setup",
+        badge: "Conecte",
         badgeColor: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-        title: "Cole o webhook",
+        title: "Integre sua plataforma",
         description:
-            "Kiwify, Greenn ou Hotmart. Copie a URL, cole na plataforma e pronto — as vendas começam a aparecer em segundos, sozinhas.",
+            "Cole o webhook da Kiwify, Greenn ou Hotmart. As vendas começam a entrar automaticamente em segundos.",
         bullets: ["Kiwify", "Greenn", "Hotmart"],
         delay: 0,
     },
@@ -24,12 +24,12 @@ const STEPS = [
         iconColor: "text-emerald-400",
         ringColor: "border-emerald-500/40",
         glowColor: "rgba(16,185,129,0.15)",
-        badge: "Automático",
+        badge: "Configure",
         badgeColor: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-        title: "O ranking atualiza sozinho",
+        title: "Monte seu pipeline e metas",
         description:
-            "Cada venda aprovada sobe no ranking em tempo real. Sem planilha, sem atualização manual, sem gestor precisando ficar cobrando.",
-        bullets: ["Tempo real", "Sem planilha", "Zero esforço"],
+            "Crie os estágios do seu funil, defina metas individuais e do time. Convide seus vendedores — cada um com seu login.",
+        bullets: ["Pipeline customizável", "Metas individuais", "Convite por email"],
         delay: 0.15,
     },
     {
@@ -40,10 +40,10 @@ const STEPS = [
         glowColor: "rgba(245,158,11,0.15)",
         badge: "Resultado",
         badgeColor: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-        title: "Seu time compete — e vende mais",
+        title: "Acompanhe e escale",
         description:
-            "Ninguém quer ficar pra trás. A competição saudável move o time sem você precisar cobrar. Mais vendas, menos reunião.",
-        bullets: ["Motivação natural", "Meta cumprida", "Menos reunião"],
+            "Dashboard ao vivo, ranking gamificado, funil de calls e WhatsApp integrado. Tudo que você precisa para escalar vendas sem microgerenciar.",
+        bullets: ["Dashboard em tempo real", "Ranking gamificado", "WhatsApp IA"],
         delay: 0.3,
     },
 ] as const;
@@ -91,7 +91,7 @@ export const HowItWorks = () => {
                     </span>
 
                     <h2 className="text-heading text-3xl sm:text-4xl text-white mb-4">
-                        Funcionando em{" "}
+                        Do zero ao dashboard em{" "}
                         <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
                             5 minutos
                         </span>
@@ -285,7 +285,7 @@ export const HowItWorks = () => {
                         className="text-white/40 text-sm mb-3"
                         style={{ fontWeight: "var(--fw-light)" }}
                     >
-                        Pronto em menos tempo do que uma reunião de alinhamento
+                        Mais rápido que uma reunião de alinhamento
                     </p>
                     <motion.a
                         href="#pricing"
