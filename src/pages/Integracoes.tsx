@@ -15,6 +15,8 @@ import {
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { HotmartConfigModal } from "@/components/integrations/HotmartConfigModal";
+import { KiwifyConfigModal } from "@/components/integrations/KiwifyConfigModal";
+import { GreennConfigModal } from "@/components/integrations/GreennConfigModal";
 import { GoogleCalendarConfigModal } from "@/components/integrations/GoogleCalendarConfigModal";
 import { WhatsappConfigModal } from "@/components/integrations/WhatsappConfigModal";
 import { supabase } from "@/integrations/supabase/client";
@@ -111,9 +113,8 @@ const INTEGRATIONS: Integration[] = [
     description: "Importe recorrências e assinaturas automaticamente",
     logo: greennLogo,
     logoBg: "bg-white",
-    status: "roadmap",
+    status: "available",
     category: "sales",
-    votes: 12,
   },
 ];
 
@@ -258,6 +259,8 @@ const Integracoes = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<IntegrationCategory>("all");
   const [hotmartModalOpen, setHotmartModalOpen] = useState(false);
+  const [kiwifyModalOpen, setKiwifyModalOpen] = useState(false);
+  const [greennModalOpen, setGreennModalOpen] = useState(false);
   const [googleCalendarModalOpen, setGoogleCalendarModalOpen] = useState(false);
   const [whatsappModalOpen, setWhatsappModalOpen] = useState(false);
   const [activeIntegrationIds, setActiveIntegrationIds] = useState<Set<string>>(new Set());
@@ -347,6 +350,10 @@ const Integracoes = () => {
       setGoogleCalendarModalOpen(true);
     } else if (integrationId === "hotmart") {
       setHotmartModalOpen(true);
+    } else if (integrationId === "kiwify") {
+      setKiwifyModalOpen(true);
+    } else if (integrationId === "greenn") {
+      setGreennModalOpen(true);
     } else if (integrationId === "evolution-api") {
       setWhatsappModalOpen(true);
     }
@@ -485,11 +492,15 @@ const Integracoes = () => {
                     onConnect={
                       integration.id === "hotmart"
                         ? () => setHotmartModalOpen(true)
-                        : integration.id === "google-calendar"
-                          ? () => setGoogleCalendarModalOpen(true)
-                          : integration.id === "evolution-api"
-                            ? () => setWhatsappModalOpen(true)
-                            : undefined
+                        : integration.id === "kiwify"
+                          ? () => setKiwifyModalOpen(true)
+                          : integration.id === "greenn"
+                            ? () => setGreennModalOpen(true)
+                            : integration.id === "google-calendar"
+                              ? () => setGoogleCalendarModalOpen(true)
+                              : integration.id === "evolution-api"
+                                ? () => setWhatsappModalOpen(true)
+                                : undefined
                     }
                   />
                 ))}
@@ -550,6 +561,20 @@ const Integracoes = () => {
       <HotmartConfigModal
         open={hotmartModalOpen}
         onClose={() => setHotmartModalOpen(false)}
+        onSaved={handleIntegrationSaved}
+      />
+
+      {/* Kiwify Config Modal */}
+      <KiwifyConfigModal
+        open={kiwifyModalOpen}
+        onClose={() => setKiwifyModalOpen(false)}
+        onSaved={handleIntegrationSaved}
+      />
+
+      {/* Greenn Config Modal */}
+      <GreennConfigModal
+        open={greennModalOpen}
+        onClose={() => setGreennModalOpen(false)}
         onSaved={handleIntegrationSaved}
       />
 
