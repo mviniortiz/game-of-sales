@@ -7,6 +7,7 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID");
 const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
 const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER");
+const TWILIO_WEBHOOK_SECRET = Deno.env.get("TWILIO_WEBHOOK_SECRET");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -49,6 +50,44 @@ function normalizePhone(phone?: string | null) {
   }
 
   return phone.startsWith("+") ? phone : `+${digits}`;
+}
+
+function withTwilioWebhookSecret(url: string) {
+  if (!TWILIO_WEBHOOK_SECRET) return url;
+  const next = new URL(url);
+  next.searchParams.set("secret", TWILIO_WEBHOOK_SECRET);
+  return next.toString();
+}
+
+async function consumeRateLimit(
+  supabaseAdminClient: any,
+  bucket: string,
+  limit: number,
+  windowSeconds: number,
+) {
+  try {
+    const { data, error } = await supabaseAdminClient.rpc("consume_rate_limit", {
+      p_bucket: bucket,
+      p_limit: limit,
+      p_window_seconds: windowSeconds,
+    });
+    if (error) {
+      const msg = String(error.message || "").toLowerCase();
+      if (msg.includes("consume_rate_limit")) {
+        return { enabled: false, allowed: true };
+      }
+      throw error;
+    }
+    const row = Array.isArray(data) ? data[0] : data;
+    return {
+      enabled: true,
+      allowed: row?.allowed !== false,
+      resetAt: row?.reset_at ?? null,
+    };
+  } catch (error) {
+    console.warn("[deal-call-initiate] rate limit unavailable:", error);
+    return { enabled: false, allowed: true };
+  }
 }
 
 async function createTwilioCall(params: {
@@ -222,6 +261,23 @@ serve(async (req) => {
       });
     }
 
+    const rateLimit = await consumeRateLimit(
+      adminSupabase,
+      `deal-call-initiate:user:${user.id}:company:${(deal as any).company_id}:mode:${mode}`,
+      mode === "twilio" ?20 : 60,
+      600,
+    );
+    if (!rateLimit.allowed) {
+      return new Response(JSON.stringify({
+        error: "Limite de tentativas de ligacao atingido. Tente novamente em alguns minutos.",
+        code: "RATE_LIMITED",
+        reset_at: rateLimit.resetAt ?? null,
+      }), {
+        status: 429,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // MVP: fully functional demo path (persists call + transcript inside deal context)
     if (mode === "demo") {
       const transcript = buildDemoTranscript((deal as any).customer_name, (deal as any).title);
@@ -336,10 +392,10 @@ serve(async (req) => {
     const bridgeBase = `${FUNCTIONS_BASE_URL}/twilio-voice-bridge`;
     const statusBase = `${FUNCTIONS_BASE_URL}/twilio-voice-status-webhook`;
 
-    const sellerTwimlUrl = `${bridgeBase}?call_id=${encodeURIComponent(queuedCall.id)}&leg=seller&conference=${encodeURIComponent(conferenceName)}`;
-    const customerTwimlUrl = `${bridgeBase}?call_id=${encodeURIComponent(queuedCall.id)}&leg=customer&conference=${encodeURIComponent(conferenceName)}`;
-    const sellerStatusCallback = `${statusBase}?call_id=${encodeURIComponent(queuedCall.id)}&leg=seller`;
-    const customerStatusCallback = `${statusBase}?call_id=${encodeURIComponent(queuedCall.id)}&leg=customer`;
+    const sellerTwimlUrl = withTwilioWebhookSecret(`${bridgeBase}?call_id=${encodeURIComponent(queuedCall.id)}&leg=seller&conference=${encodeURIComponent(conferenceName)}`);
+    const customerTwimlUrl = withTwilioWebhookSecret(`${bridgeBase}?call_id=${encodeURIComponent(queuedCall.id)}&leg=customer&conference=${encodeURIComponent(conferenceName)}`);
+    const sellerStatusCallback = withTwilioWebhookSecret(`${statusBase}?call_id=${encodeURIComponent(queuedCall.id)}&leg=seller`);
+    const customerStatusCallback = withTwilioWebhookSecret(`${statusBase}?call_id=${encodeURIComponent(queuedCall.id)}&leg=customer`);
 
     try {
       // Start both legs. Customer may wait briefly in conference until seller joins.
@@ -402,7 +458,7 @@ serve(async (req) => {
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     } catch (twilioError) {
-      const message = twilioError instanceof Error ? twilioError.message : "Twilio error";
+      const message = twilioError instanceof Error ?twilioError.message : "Twilio error";
       await (adminSupabase as any)
         .from("deal_calls")
         .update({

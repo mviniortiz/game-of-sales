@@ -13,6 +13,31 @@ const MERCADOPAGO_ACCESS_TOKEN = Deno.env.get("MERCADOPAGO_ACCESS_TOKEN");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
+async function consumeRateLimit(
+    supabaseAdminClient: any,
+    bucket: string,
+    limit: number,
+    windowSeconds: number,
+) {
+    try {
+        const { data, error } = await supabaseAdminClient.rpc("consume_rate_limit", {
+            p_bucket: bucket,
+            p_limit: limit,
+            p_window_seconds: windowSeconds,
+        });
+        if (error) {
+            const msg = String(error.message || "").toLowerCase();
+            if (msg.includes("consume_rate_limit")) return { enabled: false, allowed: true };
+            throw error;
+        }
+        const row = Array.isArray(data) ? data[0] : data;
+        return { enabled: true, allowed: row?.allowed !== false, resetAt: row?.reset_at ?? null };
+    } catch (error) {
+        console.warn("[mercadopago-create-subscription] rate limit unavailable:", error);
+        return { enabled: false, allowed: true };
+    }
+}
+
 serve(async (req) => {
     try {
         const corsOrigin = req.headers.get('origin') || '';
@@ -55,6 +80,20 @@ serve(async (req) => {
             return new Response(JSON.stringify({ error: "Forbidden: Tenant mismatch" }), { status: 403, headers: strictCorsHeaders });
         }
 
+        const adminSupabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
+        const rateLimit = await consumeRateLimit(
+            adminSupabase,
+            `mercadopago-create-subscription:user:${user.id}:company:${companyId}`,
+            10,
+            3600,
+        );
+        if (!rateLimit.allowed) {
+            return new Response(
+                JSON.stringify({ error: "Too many subscription attempts", code: "RATE_LIMITED", reset_at: rateLimit.resetAt ?? null }),
+                { status: 429, headers: strictCorsHeaders }
+            );
+        }
+
         const mpResponse = await fetch("https://api.mercadopago.com/preapproval", {
             method: "POST",
             headers: {
@@ -94,7 +133,6 @@ serve(async (req) => {
             );
         }
 
-        const adminSupabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
         const { error: updateError } = await adminSupabase
             .from("companies")
             .update({

@@ -8,6 +8,7 @@ const corsHeaders = {
 };
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
@@ -21,26 +22,155 @@ const generatePassword = (length = 14) => {
   return pwd;
 };
 
+async function consumeRateLimit(
+  supabaseAdminClient: any,
+  bucket: string,
+  limit: number,
+  windowSeconds: number,
+) {
+  try {
+    const { data, error } = await supabaseAdminClient.rpc("consume_rate_limit", {
+      p_bucket: bucket,
+      p_limit: limit,
+      p_window_seconds: windowSeconds,
+    });
+    if (error) {
+      const msg = String(error.message || "").toLowerCase();
+      if (msg.includes("consume_rate_limit")) {
+        return { enabled: false, allowed: true };
+      }
+      throw error;
+    }
+    const row = Array.isArray(data) ? data[0] : data;
+    return {
+      enabled: true,
+      allowed: row?.allowed !== false,
+      currentCount: row?.current_count ?? null,
+      remaining: row?.remaining ?? null,
+      resetAt: row?.reset_at ?? null,
+    };
+  } catch (error) {
+    console.warn("[admin-create-seller] rate limit unavailable:", error);
+    return { enabled: false, allowed: true };
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const userSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const {
+      data: { user },
+      error: userError,
+    } = await userSupabase.auth.getUser();
+
+    if (userError || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { nome, email, sendPassword = true, companyId } = await req.json();
 
     if (!nome || !email) {
-      return new Response(JSON.stringify({ error: "Nome e e-mail são obrigatórios" }), {
+      return new Response(JSON.stringify({ error: "Nome e e-mail sao obrigatorios" }), {
         status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const normalizedEmail = String(email).trim().toLowerCase();
+    if (!normalizedEmail.includes("@")) {
+      return new Response(JSON.stringify({ error: "E-mail invalido" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { data: requesterProfile } = await (supabaseAdmin as any)
+      .from("profiles")
+      .select("id, company_id, is_super_admin")
+      .eq("id", user.id)
+      .single();
+
+    if (!requesterProfile) {
+      return new Response(JSON.stringify({ error: "Perfil nao encontrado" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { data: adminRole } = await (supabaseAdmin as any)
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+
+    const isSuperAdmin = requesterProfile.is_super_admin === true;
+    const isAdmin = !!adminRole;
+
+    if (!isSuperAdmin && !isAdmin) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (!isSuperAdmin && companyId && companyId !== requesterProfile.company_id) {
+      return new Response(JSON.stringify({ error: "Forbidden: Tenant mismatch" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const targetCompanyId = isSuperAdmin
+      ? (companyId || requesterProfile.company_id)
+      : requesterProfile.company_id;
+
+    if (!targetCompanyId) {
+      return new Response(JSON.stringify({ error: "Empresa nao definida" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const rateLimit = await consumeRateLimit(
+      supabaseAdmin,
+      `admin-create-seller:user:${user.id}:company:${targetCompanyId}`,
+      20,
+      3600,
+    );
+    if (!rateLimit.allowed) {
+      return new Response(JSON.stringify({
+        error: "Muitas tentativas para criar vendedores. Tente novamente mais tarde.",
+        code: "RATE_LIMITED",
+        reset_at: rateLimit.resetAt ?? null,
+      }), {
+        status: 429,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const password = generatePassword();
 
-    // Cria usuário de auth com serviço
     const { data: created, error: createError } = await supabaseAdmin.auth.admin.createUser({
-      email,
+      email: normalizedEmail,
       password,
       email_confirm: false,
       user_metadata: { nome, role: "vendedor" },
@@ -54,23 +184,21 @@ serve(async (req) => {
       });
     }
 
-    // Envia convite (link de acesso)
-    await supabaseAdmin.auth.admin.inviteUserByEmail(email);
+    await supabaseAdmin.auth.admin.inviteUserByEmail(normalizedEmail);
 
-    // Atualiza/inclui profile COM o company_id para associar à empresa
     if (created?.user?.id) {
-      await supabaseAdmin
+      await (supabaseAdmin as any)
         .from("profiles")
         .upsert({
           id: created.user.id,
           nome,
-          email,
-          company_id: companyId || null, // Associa à empresa do admin
+          email: normalizedEmail,
+          company_id: targetCompanyId,
           role: "vendedor",
         }, { onConflict: "id" });
     }
 
-    return new Response(JSON.stringify({ password }), {
+    return new Response(JSON.stringify({ password: sendPassword ? password : null }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -82,4 +210,3 @@ serve(async (req) => {
     });
   }
 });
-

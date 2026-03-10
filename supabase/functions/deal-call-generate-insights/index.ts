@@ -15,6 +15,33 @@ type Body = {
   callId?: string;
 };
 
+async function consumeRateLimit(
+  supabaseAdminClient: any,
+  bucket: string,
+  limit: number,
+  windowSeconds: number,
+) {
+  try {
+    const { data, error } = await supabaseAdminClient.rpc("consume_rate_limit", {
+      p_bucket: bucket,
+      p_limit: limit,
+      p_window_seconds: windowSeconds,
+    });
+    if (error) {
+      const msg = String(error.message || "").toLowerCase();
+      if (msg.includes("consume_rate_limit")) {
+        return { enabled: false, allowed: true };
+      }
+      throw error;
+    }
+    const row = Array.isArray(data) ?data[0] : data;
+    return { enabled: true, allowed: row?.allowed !== false, resetAt: row?.reset_at ?? null };
+  } catch (error) {
+    console.warn("[deal-call-generate-insights] rate limit unavailable:", error);
+    return { enabled: false, allowed: true };
+  }
+}
+
 function extractInsights(transcript: string) {
   const text = transcript || "";
   const lines = text
@@ -56,7 +83,7 @@ function extractInsights(transcript: string) {
 
   const suggestedMessage = [
     "Olá! Conforme nossa conversa, vou te enviar o material combinado.",
-    nextSteps.length > 0 ? `Próximo passo: ${nextSteps[0]}.` : "",
+    nextSteps.length > 0 ?`Próximo passo: ${nextSteps[0]}.` : "",
     "Se fizer sentido, alinhamos os detalhes para avançar ainda essa semana.",
   ].filter(Boolean).join(" ");
 
@@ -179,6 +206,23 @@ serve(async (req) => {
     if (!call.transcript_text) {
       return new Response(JSON.stringify({ error: "Call has no transcript yet" }), {
         status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const rateLimit = await consumeRateLimit(
+      adminSupabase,
+      `deal-call-insights:user:${user.id}:company:${call.company_id}`,
+      40,
+      3600,
+    );
+    if (!rateLimit.allowed) {
+      return new Response(JSON.stringify({
+        error: "Limite de geracao de insights atingido. Tente novamente mais tarde.",
+        code: "RATE_LIMITED",
+        reset_at: rateLimit.resetAt ?? null,
+      }), {
+        status: 429,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

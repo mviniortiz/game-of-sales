@@ -4,6 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const GOOGLE_CLIENT_ID = Deno.env.get("GOOGLE_CLIENT_ID")!;
 const GOOGLE_CLIENT_SECRET = Deno.env.get("GOOGLE_CLIENT_SECRET")!;
+const GOOGLE_CALENDAR_WEBHOOK_SECRET = Deno.env.get("GOOGLE_CALENDAR_WEBHOOK_SECRET");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,6 +16,9 @@ serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+  if (req.method !== "POST") {
+    return new Response("Method not allowed", { status: 405, headers: corsHeaders });
+  }
 
   try {
     const supabase = createClient(
@@ -25,10 +29,62 @@ serve(async (req) => {
     // Verificar se é uma notificação do Google
     const resourceState = req.headers.get("x-goog-resource-state");
     const channelId = req.headers.get("x-goog-channel-id");
+    const resourceId = req.headers.get("x-goog-resource-id");
+    const channelToken = req.headers.get("x-goog-channel-token");
+    const urlSecret = new URL(req.url).searchParams.get("secret");
+
+    if (GOOGLE_CALENDAR_WEBHOOK_SECRET) {
+      const isAuthorized =
+        channelToken === GOOGLE_CALENDAR_WEBHOOK_SECRET ||
+        urlSecret === GOOGLE_CALENDAR_WEBHOOK_SECRET;
+      if (!isAuthorized) {
+        console.warn("[Google Calendar Webhook] Unauthorized webhook call (secret/token mismatch)");
+        return new Response("Forbidden", { status: 403, headers: corsHeaders });
+      }
+    }
+
+    if (!resourceState) {
+      return new Response("Missing resource state", { status: 400, headers: corsHeaders });
+    }
 
     console.log(
       `[Google Calendar Webhook] Resource State: ${resourceState}, Channel: ${channelId}`
     );
+
+    if (!["sync", "exists"].includes(resourceState)) {
+      console.log("[Google Calendar Webhook] Ignoring unsupported resource state:", resourceState);
+      return new Response(JSON.stringify({ ignored: true }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (resourceState === "exists" && (!channelId || !resourceId)) {
+      return new Response("Missing required Google webhook headers", {
+        status: 400,
+        headers: corsHeaders,
+      });
+    }
+
+    try {
+      const bucket = `google-calendar-webhook:${channelId || "no-channel"}:${resourceId || "no-resource"}`;
+      const { data, error } = await (supabase as any).rpc("consume_rate_limit", {
+        p_bucket: bucket,
+        p_limit: 60,
+        p_window_seconds: 60,
+      });
+      if (!error) {
+        const row = Array.isArray(data) ? data[0] : data;
+        if (row?.allowed === false) {
+          console.warn("[Google Calendar Webhook] Rate limited:", bucket);
+          return new Response("Too Many Requests", { status: 429, headers: corsHeaders });
+        }
+      } else if (!String(error.message || "").toLowerCase().includes("consume_rate_limit")) {
+        console.warn("[Google Calendar Webhook] rate limit rpc warning:", error);
+      }
+    } catch (e) {
+      console.warn("[Google Calendar Webhook] rate limit unavailable:", e);
+    }
 
     // Se for sync, apenas confirmar o webhook
     if (resourceState === "sync") {
