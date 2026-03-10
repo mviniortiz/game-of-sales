@@ -226,14 +226,17 @@ export function AdminCompanies() {
     onError: (err: any) => toast.error(err?.message || "Erro ao atualizar empresa"),
   });
 
-  // Delete company mutation
+  // Delete company mutation (uses RPC to handle FK cascade correctly)
   const deleteCompany = useMutation({
     mutationFn: async (companyId: string) => {
-      const { error } = await supabase.from("companies").delete().eq("id", companyId);
+      const { data, error } = await supabase.rpc("delete_company_cascade", {
+        target_company_id: companyId,
+      });
       if (error) throw error;
+      return data;
     },
-    onSuccess: () => {
-      toast.success("Empresa excluída");
+    onSuccess: (data) => {
+      toast.success("Empresa excluída com sucesso");
       queryClient.invalidateQueries({ queryKey: ["admin-companies-with-counts"] });
     },
     onError: (err: any) => toast.error(err?.message || "Erro ao excluir empresa"),
