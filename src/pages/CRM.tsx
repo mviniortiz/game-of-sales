@@ -6,16 +6,20 @@ import {
   closestCorners,
   pointerWithin,
   PointerSensor,
+  TouchSensor,
+  KeyboardSensor,
   useSensor,
   useSensors,
   DragStartEvent,
   DragEndEvent,
+  DragOverEvent,
   MeasuringStrategy,
   type CollisionDetection,
 } from "@dnd-kit/core";
 import {
   SortableContext,
   verticalListSortingStrategy,
+  sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -217,12 +221,21 @@ export default function CRM() {
   // Convert configs to full stage objects
   const STAGES = useMemo(() => stageConfigs.map(configToStage), [stageConfigs]);
 
-  // Optimized sensors for fast, responsive drag
+  // Optimized sensors for fast, responsive drag (pointer + touch + keyboard)
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
         distance: 6, // Slightly higher threshold reduces accidental/jittery drags
       },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 150,
+        tolerance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
     })
   );
 
@@ -590,6 +603,26 @@ export default function CRM() {
     document.body.style.cursor = 'grabbing';
   };
 
+  // Live column transitions during drag for immediate visual feedback
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+
+    const draggedId = active.id as string;
+    const overId = over.id as string;
+
+    const target = resolveDropTarget(draggedId, overId);
+    if (!target) return;
+
+    const draggedDeal = localDeals.find((d) => d.id === draggedId);
+    if (!draggedDeal) return;
+
+    // Optimistically move card to the hovered column for live feedback
+    if (draggedDeal.stage !== target.targetStage) {
+      applyOptimisticMove(draggedId, target.targetStage, target.targetIndex);
+    }
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
@@ -610,17 +643,15 @@ export default function CRM() {
     const draggedDeal = localDeals.find((d) => d.id === draggedId);
     if (!draggedDeal) return;
 
-    // Only update if stage changed (optimistic update)
-    if (draggedDeal.stage !== targetStage) {
-      const previousDeals = applyOptimisticMove(draggedId, targetStage, targetIndex);
-      updateDealMutation.mutate({
-        id: draggedId,
-        stage: targetStage,
-        position: targetIndex,
-        deal: draggedDeal,
-        previousDeals,
-      });
-    }
+    // Apply optimistic move and persist (works for both cross-stage and within-stage reorder)
+    const previousDeals = applyOptimisticMove(draggedId, targetStage, targetIndex);
+    updateDealMutation.mutate({
+      id: draggedId,
+      stage: targetStage,
+      position: targetIndex,
+      deal: draggedDeal,
+      previousDeals,
+    });
   };
 
   const handleDragCancel = () => {
@@ -777,6 +808,7 @@ export default function CRM() {
               sensors={sensors}
               collisionDetection={collisionDetectionStrategy}
               onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
               onDragEnd={handleDragEnd}
               onDragCancel={handleDragCancel}
               measuring={{

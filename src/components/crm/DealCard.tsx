@@ -205,17 +205,17 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
       ref={setRefs}
       style={style}
       className={`
-        group relative
+        group relative touch-none
         bg-slate-800 border border-slate-700/80
         border-l-4 ${rotting.border}
         rounded-xl p-3.5
         cursor-grab active:cursor-grabbing
         transition-all duration-200 will-change-transform
         ${isBeingDragged
-          ? "scale-[1.02] rotate-[0.6deg] shadow-2xl shadow-black/45 border-emerald-500/60 z-50 !opacity-100"
+          ? "scale-[1.03] rotate-[0.5deg] shadow-[0_20px_40px_-8px_rgba(0,0,0,0.5)] border-emerald-500/60 z-50 !opacity-100 ring-1 ring-emerald-500/30"
           : "hover:border-slate-600 hover:shadow-lg hover:shadow-black/30 hover:-translate-y-0.5"
         }
-        ${isSortableDragging ? "opacity-40" : "opacity-100"}
+        ${isSortableDragging ? "opacity-30 scale-[0.98]" : "opacity-100"}
       `}
       onMouseDown={handleMouseDown}
       onClick={handleClick}

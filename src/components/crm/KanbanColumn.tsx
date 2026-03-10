@@ -74,12 +74,13 @@ export const KanbanColumn = memo(({
       <div
         className={`
           flex flex-col w-[292px] flex-shrink-0 h-full rounded-xl
-          border transition-all duration-150
+          border transition-all duration-200
           ${isOver
-            ? "ring-2 ring-emerald-500/50 ring-offset-2 ring-offset-slate-900 scale-[1.01] border-emerald-500/30 bg-emerald-500/5"
+            ? "ring-2 ring-emerald-500/50 ring-offset-2 ring-offset-slate-900 scale-[1.01] border-dashed border-emerald-400/50 bg-emerald-500/5 animate-pulse-subtle"
             : "border-slate-700/60 bg-slate-900/70"
           }
         `}
+        style={isOver ? { animation: "kanban-pulse 1.5s ease-in-out infinite" } : undefined}
       >
         {/* ── Column Header ────────────────────────────────── */}
         <div className="px-4 pt-4 pb-3 border-b border-slate-700/50">

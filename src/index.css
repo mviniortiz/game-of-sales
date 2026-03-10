@@ -310,6 +310,12 @@ All colors MUST be HSL.
   }
 }
 
+/* Kanban drop-zone pulse animation */
+@keyframes kanban-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.15); }
+  50% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.08); }
+}
+
 /* Landing-page specific font-smoothing guarantee */
 .landing-root * {
   -webkit-font-smoothing: antialiased;
