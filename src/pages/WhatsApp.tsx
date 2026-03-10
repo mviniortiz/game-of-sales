@@ -12,10 +12,12 @@ import { useEvolutionIntegration } from "@/hooks/useEvolutionAPI";
 
 import { supabase } from "@/integrations/supabase/client";
 
-// AI Sales Copilot — calls GPT-4o-mini via Edge Function
+// AI Sales Copilot — calls GPT-4o-mini via Edge Function (10 analyses/day limit)
 export const useCopilot = () => {
     const [aiThinking, setAiThinking] = useState(false);
     const [aiSuggestion, setAiSuggestion] = useState<any>(null);
+    const [remaining, setRemaining] = useState<number | null>(null);
+    const [rateLimited, setRateLimited] = useState(false);
 
     const getAiAnalysis = async (
         chatTextContext: string,
@@ -23,11 +25,12 @@ export const useCopilot = () => {
         contactName?: string,
         contactPhone?: string,
     ) => {
+        if (rateLimited) return;
+
         setAiThinking(true);
         setAiSuggestion(null);
 
         try {
-            // Build messages array from context if not provided
             const msgArray = messages || chatTextContext.split("\n").map((line) => {
                 const isMe = line.startsWith("[Vendedor]") || line.startsWith("Eu:");
                 return {
@@ -44,9 +47,23 @@ export const useCopilot = () => {
                 },
             });
 
+            // Handle rate limit
+            if (data?.code === "RATE_LIMITED" || data?.remaining === 0) {
+                setRateLimited(true);
+                setRemaining(0);
+                setAiSuggestion({
+                    sentiment: "Limite diario atingido",
+                    temperature: "morno",
+                    strategy: ["Voce usou todas as 10 analises de hoje.", "O limite reseta amanha automaticamente."],
+                    draft: "",
+                    objections: [],
+                    nextAction: "Aguardar reset do limite amanha",
+                });
+                return;
+            }
+
             if (error || !data?.analysis) {
                 console.error("[useCopilot] error:", error || data?.error);
-                // Fallback simples se a API falhar
                 setAiSuggestion({
                     sentiment: "Analise indisponivel",
                     temperature: "morno",
@@ -59,6 +76,9 @@ export const useCopilot = () => {
             }
 
             setAiSuggestion(data.analysis);
+            if (data.remaining !== undefined) {
+                setRemaining(data.remaining);
+            }
         } catch (err) {
             console.error("[useCopilot] unexpected error:", err);
             setAiSuggestion({
@@ -74,7 +94,7 @@ export const useCopilot = () => {
         }
     };
 
-    return { aiThinking, aiSuggestion, getAiAnalysis, setAiSuggestion };
+    return { aiThinking, aiSuggestion, getAiAnalysis, setAiSuggestion, remaining, rateLimited };
 };
 
 const WhatsApp = () => {
@@ -85,7 +105,7 @@ const WhatsApp = () => {
         selectedChatMessages, fetchMessages, sendMessage
     } = useEvolutionIntegration();
 
-    const { aiThinking, aiSuggestion, getAiAnalysis, setAiSuggestion } = useCopilot();
+    const { aiThinking, aiSuggestion, getAiAnalysis, setAiSuggestion, remaining, rateLimited } = useCopilot();
 
     const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
     const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
@@ -151,7 +171,7 @@ const WhatsApp = () => {
 
     // Trigger AI analysis when messages change for selected chat
     useEffect(() => {
-        if (!selectedChatId || selectedChatMessages.length === 0 || aiThinking) return;
+        if (!selectedChatId || selectedChatMessages.length === 0 || aiThinking || rateLimited) return;
         const chat = chats.find(c => c.id === selectedChatId);
         const msgs = selectedChatMessages.map(m => ({
             text: m.text,
@@ -526,12 +546,21 @@ const WhatsApp = () => {
                                     <p className="text-[11.5px] text-primary font-bold flex items-center gap-1.5 opacity-80 animate-pulse uppercase tracking-wider">
                                         <Loader2 className="w-3 h-3 animate-spin" /> Processando DDC...
                                     </p>
+                                ) : rateLimited ? (
+                                    <p className="text-[11.5px] text-orange-400 font-bold flex items-center gap-1.5 uppercase tracking-wider">
+                                        <AlertCircle className="w-3 h-3" /> Limite diario atingido
+                                    </p>
                                 ) : (
                                     <p className="text-[11.5px] text-emerald-400 font-bold flex items-center gap-1.5 uppercase tracking-wider">
                                         <Sparkles className="w-3 h-3" /> Analise Finalizada
                                     </p>
                                 )}
                             </div>
+                            {remaining !== null && (
+                                <Badge variant="outline" className={`text-[10px] shrink-0 ${remaining <= 2 ? "border-orange-500/40 text-orange-400" : "border-slate-600 text-slate-400"}`}>
+                                    {remaining}/10 restantes
+                                </Badge>
+                            )}
                         </div>
                     </div>
 
@@ -607,7 +636,7 @@ const WhatsApp = () => {
                                         <div className="flex items-center gap-2">
                                             <MessageSquareQuote className="w-4 h-4 text-primary" /> Texto Magico Gerado
                                         </div>
-                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-primary hover:bg-primary/20 hover:text-primary rounded-lg transition-colors" onClick={() => {
+                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-primary hover:bg-primary/20 hover:text-primary rounded-lg transition-colors disabled:opacity-30" disabled={rateLimited || aiThinking} onClick={() => {
                                             const chat = chats.find(c => c.id === selectedChatId);
                                             const msgs = selectedChatMessages.map(m => ({ text: m.text, sender: m.sender }));
                                             getAiAnalysis("", msgs, chat?.name || "Lead", chat?.phone || "");

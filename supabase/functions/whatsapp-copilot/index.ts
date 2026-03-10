@@ -6,7 +6,12 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+
+// Daily limit per user (resets every 24h)
+const DAILY_LIMIT_PER_USER = 10;
+const WINDOW_SECONDS = 86400; // 24 hours
 
 const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
@@ -50,6 +55,39 @@ REGRAS:
 - Adapte o tom ao contexto da conversa
 - SEMPRE retorne JSON valido, sem markdown, sem code blocks`;
 
+async function consumeRateLimit(
+    adminClient: any,
+    bucket: string,
+    limit: number,
+    windowSeconds: number,
+) {
+    try {
+        const { data, error } = await adminClient.rpc("consume_rate_limit", {
+            p_bucket: bucket,
+            p_limit: limit,
+            p_window_seconds: windowSeconds,
+        });
+        if (error) {
+            const msg = String(error.message || "").toLowerCase();
+            // If the function doesn't exist yet, allow the request
+            if (msg.includes("consume_rate_limit")) {
+                return { enabled: false, allowed: true, remaining: limit };
+            }
+            throw error;
+        }
+        const row = Array.isArray(data) ? data[0] : data;
+        return {
+            enabled: true,
+            allowed: row?.allowed !== false,
+            remaining: Math.max(0, limit - (row?.current_count || 0)),
+            resetAt: row?.reset_at ?? null,
+        };
+    } catch (error) {
+        console.warn("[whatsapp-copilot] rate limit unavailable:", error);
+        return { enabled: false, allowed: true, remaining: limit };
+    }
+}
+
 serve(async (req) => {
     if (req.method === "OPTIONS") {
         return new Response(null, { status: 204, headers: corsHeaders });
@@ -70,9 +108,27 @@ serve(async (req) => {
         const userSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
             global: { headers: { Authorization: authHeader } },
         });
+        const adminSupabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
         const { data: { user }, error: userError } = await userSupabase.auth.getUser();
         if (userError || !user) return json(401, { error: "Unauthorized" });
+
+        // Rate limit: 10 requests per user per day
+        const rateLimit = await consumeRateLimit(
+            adminSupabase,
+            `whatsapp-copilot:user:${user.id}`,
+            DAILY_LIMIT_PER_USER,
+            WINDOW_SECONDS,
+        );
+
+        if (!rateLimit.allowed) {
+            return json(429, {
+                error: `Limite diario de ${DAILY_LIMIT_PER_USER} analises atingido. Tente novamente amanha.`,
+                code: "RATE_LIMITED",
+                remaining: 0,
+                resetAt: rateLimit.resetAt,
+            });
+        }
 
         const body = await req.json();
         const { messages, contactName, contactPhone } = body;
@@ -144,6 +200,8 @@ Analise a conversa e retorne o JSON com sua analise e sugestoes.`;
             analysis,
             model: "gpt-4o-mini",
             tokens: completion.usage?.total_tokens || null,
+            remaining: rateLimit.remaining > 0 ? rateLimit.remaining - 1 : 0,
+            dailyLimit: DAILY_LIMIT_PER_USER,
         });
     } catch (error) {
         console.error("[whatsapp-copilot] error:", error);
