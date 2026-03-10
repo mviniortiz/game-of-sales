@@ -38,11 +38,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { PRODUCT_FEATURES } from "@/config/features";
 
 // Itens agrupados por categoria
 const visaoGeralItems = [
   { title: "Dashboard", url: "/dashboard", icon: Home },
-  { title: "WhatsApp", url: "/whatsapp", icon: WhatsAppIcon },
+  ...(PRODUCT_FEATURES.whatsappHub ? [{ title: "WhatsApp", url: "/whatsapp", icon: WhatsAppIcon }] : []),
   { title: "CRM Pipeline", url: "/crm", icon: Kanban },
   { title: "Performance de Calls", url: "/calls", icon: PhoneCall },
   { title: "Calendário", url: "/calendario", icon: Calendar },

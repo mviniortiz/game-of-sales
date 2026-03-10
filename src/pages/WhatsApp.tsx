@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef } from "react";
-import { MessageCircle, Search, MoreVertical, Phone, Video, Paperclip, Smile, Send, Mic, QrCode, Zap, Target, CheckCircle2, DollarSign, Clock, Sparkles, Brain, MessageSquareQuote, TrendingUp, AlertCircle, RefreshCcw, Loader2 } from "lucide-react";
+﻿import React, { useState, useEffect, useRef, useMemo } from "react";
+import { MessageCircle, Search, MoreVertical, Phone, Video, Paperclip, Smile, Send, Mic, QrCode, Zap, Target, CheckCircle2, DollarSign, Clock, Sparkles, Brain, MessageSquareQuote, TrendingUp, AlertCircle, RefreshCcw, Loader2, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { WhatsappConfigModal } from "@/components/integrations/WhatsappConfigModal";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 import { useEvolutionIntegration } from "@/hooks/useEvolutionAPI";
 
@@ -24,15 +24,15 @@ export const useCopilot = () => {
 
         if (chatTextContext.length > 50) {
             setAiSuggestion({
-                sentiment: "Objeção de Preço",
-                strategy: ["Não dê desconto imediato. Foque no ROI.", "Destaque funcionalidades exclusivas do plano Pro."],
-                draft: "Compreendo! O concorrente tem um plano inicial atrativo. Porém, o Game of Sales unifica disparos e automações no mesmo plano, o que vale muito mais a pena. Quer ver os números reais de economia?"
+                sentiment: "ObjeÃ§Ã£o de PreÃ§o",
+                strategy: ["NÃ£o dÃª desconto imediato. Foque no ROI.", "Destaque funcionalidades exclusivas do plano Pro."],
+                draft: "Compreendo! O concorrente tem um plano inicial atrativo. PorÃ©m, o Game of Sales unifica disparos e automaÃ§Ãµes no mesmo plano, o que vale muito mais a pena. Quer ver os nÃºmeros reais de economia?"
             });
         } else {
             setAiSuggestion({
                 sentiment: "Neutro / Positivo",
-                strategy: ["Mantenha reciprocidade.", "Avance o lead para o próximo estágio do funil."],
-                draft: "Perfeito! Próximo passo então seria enviarmos o contrato. Diga-me quando estiver com tudo em mãos."
+                strategy: ["Mantenha reciprocidade.", "Avance o lead para o prÃ³ximo estÃ¡gio do funil."],
+                draft: "Perfeito! PrÃ³ximo passo entÃ£o seria enviarmos o contrato. Diga-me quando estiver com tudo em mÃ£os."
             });
         }
         setAiThinking(false);
@@ -43,9 +43,9 @@ export const useCopilot = () => {
 
 const WhatsApp = () => {
     const {
-        config, updateConfig, connecting, connected,
-        qrCodeBase64, error, connect, logout,
-        chats, fetchChats,
+        config, connecting, connected,
+        qrCodeBase64, error, clearError, connect, logout,
+        chats, fetchChats, refreshConnection, isLoadingChats, isLoadingMessages,
         selectedChatMessages, fetchMessages, sendMessage
     } = useEvolutionIntegration();
 
@@ -54,13 +54,21 @@ const WhatsApp = () => {
     const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
     const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
     const [showAIAssistant, setShowAIAssistant] = useState(true);
+    const [searchTerm, setSearchTerm] = useState("");
     const [inputText, setInputText] = useState("");
-    const [apiUrl, setApiUrl] = useState(config.apiUrl);
-    const [apiKey, setApiKey] = useState(config.apiKey);
-    const [instanceName, setInstanceName] = useState(config.instanceName);
 
     const scrollRef = useRef<HTMLDivElement>(null);
     const selectedChatData = chats.find(c => c.id === selectedChatId);
+    const filteredChats = useMemo(() => {
+        const term = searchTerm.trim().toLowerCase();
+        if (!term) return chats;
+        return chats.filter((chat) =>
+            chat.name?.toLowerCase().includes(term) ||
+            chat.phone?.toLowerCase().includes(term) ||
+            chat.status?.toLowerCase().includes(term) ||
+            chat.term?.toLowerCase().includes(term)
+        );
+    }, [chats, searchTerm]);
 
     // Auto-scroll para mensagens novas
     useEffect(() => {
@@ -80,22 +88,40 @@ const WhatsApp = () => {
             }, 6000);
         }
         return () => clearInterval(interval);
-    }, [connected, selectedChatId]);
+    }, [connected, selectedChatId, fetchMessages, fetchChats]);
 
-    // Ao clicar num chat, geramos a análise da IA imediatamente (efeito UAU pro cliente)
+    useEffect(() => {
+        if (!connected || chats.length === 0) return;
+        const selectedStillExists = selectedChatId && chats.some((chat) => chat.id === selectedChatId);
+        if (selectedStillExists) return;
+
+        const firstChat = chats[0];
+        if (!firstChat) return;
+
+        clearError();
+        setSelectedChatId(firstChat.id);
+        setShowAIAssistant(true);
+        fetchMessages(firstChat.id);
+        getAiAnalysis(`${firstChat.name || firstChat.id} ${firstChat.lastMessage?.text || ""}`);
+    }, [connected, chats, selectedChatId, clearError, fetchMessages]);
+
+    // Ao clicar num chat, geramos a anÃ¡lise da IA imediatamente (efeito UAU pro cliente)
     const handleSelectChat = (id: string) => {
+        clearError();
         setSelectedChatId(id);
         setShowAIAssistant(true);
         // fetch initial immediately
         fetchMessages(id);
         // Triggers AI on an arbitrary context (simulate taking messages text)
-        getAiAnalysis(id + " context simulado");
+        const chat = chats.find(c => c.id === id);
+        getAiAnalysis(`${chat?.name || id} ${chat?.lastMessage?.text || ""}`);
     };
 
-    const handleSend = () => {
+    const handleSend = async () => {
         if (!inputText.trim() || !selectedChatId) return;
-        sendMessage(selectedChatId, inputText);
+        await sendMessage(selectedChatId, inputText);
         setInputText("");
+        fetchChats();
     };
 
     const handleUseDraft = () => {
@@ -115,10 +141,10 @@ const WhatsApp = () => {
     };
 
     return (
-        <div className="flex h-[calc(100vh-theme(spacing.16))] w-full bg-background overflow-hidden relative font-sans">
+        <div className="flex flex-col lg:flex-row h-[calc(100vh-theme(spacing.16))] w-full bg-background overflow-hidden relative font-sans">
             {/* Sidebar (Chat List) */}
-            <div className={`w-[30%] min-w-[320px] max-w-[420px] border-r border-white/5 flex flex-col bg-card/60 backdrop-blur-md z-20 shadow-xl transition-all duration-300 ${!connected ? 'opacity-90 grayscale-[20%]' : ''}`}>
-                <div className="h-[72px] flex items-center justify-between px-5 shrink-0 border-b border-white/5">
+            <div className={`w-full lg:w-[30%] lg:min-w-[320px] lg:max-w-[420px] h-[38vh] lg:h-full border-r-0 lg:border-r border-b lg:border-b-0 border-white/5 flex flex-col bg-card/60 backdrop-blur-md z-20 shadow-xl transition-all duration-300 ${!connected ? 'opacity-90 grayscale-[20%]' : ''}`}>
+                <div className="h-[72px] flex items-center justify-between px-4 lg:px-5 shrink-0 border-b border-white/5">
                     <div className="flex items-center gap-3">
                         <Avatar className="h-10 w-10 ring-2 ring-primary/20 shadow-sm">
                             <AvatarImage src="https://i.pravatar.cc/150?u=dev" />
@@ -133,7 +159,7 @@ const WhatsApp = () => {
                                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                                             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                                         </span>
-                                        Sessão Ativa: {config.instanceName}
+                                        SessÃ£o Ativa: {config.instanceName}
                                     </span>
                                     <button onClick={logout} className="text-left text-[9px] text-muted-foreground hover:text-red-400 underline decoration-white/20 hover:decoration-red-400/30 transition-colors mt-0.5">
                                         Desconectar Dispositivo
@@ -142,10 +168,29 @@ const WhatsApp = () => {
                             ) : (
                                 <span className="text-[11px] text-muted-foreground flex items-center gap-1.5 font-medium tracking-wide">
                                     <span className="relative flex h-2 w-2 rounded-full bg-muted-foreground/50"></span>
-                                    Aguardando Conexão
+                                    Aguardando ConexÃ£o
                                 </span>
                             )}
                         </div>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground"
+                            onClick={refreshConnection}
+                            disabled={connecting}
+                        >
+                            <RefreshCcw className={`h-4 w-4 ${connecting ? "animate-spin" : ""}`} />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground"
+                            onClick={() => setIsConfigModalOpen(true)}
+                        >
+                            <Settings2 className="h-4 w-4" />
+                        </Button>
                     </div>
                 </div>
 
@@ -153,16 +198,27 @@ const WhatsApp = () => {
                     <div className="bg-muted/40 rounded-xl flex items-center px-3 h-11 border border-white/5 focus-within:border-primary/50 focus-within:bg-muted/60 transition-all shadow-inner">
                         <Search className="h-[18px] w-[18px] text-muted-foreground mr-3 shrink-0" />
                         <Input
-                            placeholder="Buscar leads por nome, tag ou número..."
+                            placeholder="Buscar leads por nome, tag ou nÃºmero..."
                             className="bg-transparent border-0 focus-visible:ring-0 text-[13px] placeholder:text-muted-foreground/70 p-0 h-auto font-medium"
                             disabled={!connected}
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
                 </div>
 
                 <div className="flex-1 overflow-y-auto no-scrollbar py-2 px-3">
                     {connected ? (
-                        chats.map((chat) => (
+                        isLoadingChats ? (
+                            <div className="flex items-center justify-center py-8 text-muted-foreground text-sm">
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Carregando conversas...
+                            </div>
+                        ) : filteredChats.length === 0 ? (
+                            <div className="flex items-center justify-center py-8 text-muted-foreground text-sm text-center px-4">
+                                {searchTerm ? "Nenhuma conversa encontrada para a busca." : "Nenhuma conversa disponível nesta instância."}
+                            </div>
+                        ) : filteredChats.map((chat) => (
                             <div
                                 key={chat.id}
                                 onClick={() => handleSelectChat(chat.id)}
@@ -213,34 +269,7 @@ const WhatsApp = () => {
                         ))
                     ) : (
                         <div className="flex flex-col items-center justify-center p-6 mt-4 w-full h-full relative z-10">
-                            {(!config.apiUrl || !config.apiKey) ? (
-                                <div className="w-full max-w-sm flex flex-col items-center bg-card border border-white/10 p-6 rounded-3xl shadow-2xl relative overflow-hidden">
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-                                    <WhatsAppIcon className="h-10 w-10 text-emerald-500 mb-4 relative z-10" />
-                                    <h3 className="text-xl font-extrabold mb-1 tracking-tight text-center relative z-10">Conectar Servidor</h3>
-                                    <p className="text-[13px] text-muted-foreground mb-6 text-center leading-relaxed font-medium relative z-10">Configure as credenciais da Evolution API para iniciar o hub 1:1.</p>
-                                    <div className="w-full space-y-4 relative z-10">
-                                        <div className="space-y-1.5">
-                                            <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest pl-1">URL da API</label>
-                                            <Input placeholder="https://api.evolution.example" value={apiUrl} onChange={e => setApiUrl(e.target.value)} className="bg-background border-white/10" />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest pl-1">Global API Key</label>
-                                            <Input type="password" placeholder="D8XF..." value={apiKey} onChange={e => setApiKey(e.target.value)} className="bg-background border-white/10" />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest pl-1">Nome da Instância</label>
-                                            <Input placeholder="sales_inbox" value={instanceName} onChange={e => setInstanceName(e.target.value)} className="bg-background border-white/10" />
-                                        </div>
-                                        <Button
-                                            onClick={() => updateConfig(apiUrl, apiKey, instanceName)}
-                                            className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-xl shadow-primary/25 h-11 w-full rounded-xl transition-all w-full mt-2"
-                                        >
-                                            Salvar & Prosseguir
-                                        </Button>
-                                    </div>
-                                </div>
-                            ) : qrCodeBase64 ? (
+                            {qrCodeBase64 ? (
                                 <div className="flex flex-col items-center animate-in fade-in slide-in-from-bottom-4 duration-500">
                                     <div className="bg-white p-4 rounded-3xl shadow-2xl mb-6 relative group overflow-hidden border-8 border-white/5">
                                         <div className="absolute inset-0 bg-primary/10 blur-xl scale-150 group-hover:bg-primary/20 transition-all pointer-events-none z-0"></div>
@@ -249,7 +278,7 @@ const WhatsApp = () => {
                                     <h3 className="text-[18px] font-extrabold tracking-tight mb-2 flex items-center gap-2">
                                         <Loader2 className="h-4 w-4 animate-spin text-emerald-500" /> Aguardando Leitura
                                     </h3>
-                                    <p className="text-[14px] text-muted-foreground text-center font-medium max-w-[250px] leading-relaxed">Escaneie o código com seu WhatsApp para ativar o Motor de Vendas.</p>
+                                    <p className="text-[14px] text-muted-foreground text-center font-medium max-w-[250px] leading-relaxed">Escaneie o cÃ³digo com seu WhatsApp para ativar o Motor de Vendas.</p>
                                 </div>
                             ) : (
                                 <div className="flex flex-col items-center">
@@ -257,8 +286,13 @@ const WhatsApp = () => {
                                         <div className="absolute inset-0 bg-emerald-500/20 blur-2xl rounded-full scale-150 group-hover:bg-emerald-500/30 transition-all"></div>
                                         <WhatsAppIcon className="h-10 w-10 text-emerald-500 relative z-10" />
                                     </div>
-                                    <h3 className="text-xl font-extrabold mb-3 tracking-tight">Motor Web Desativado</h3>
-                                    <p className="text-[14px] text-muted-foreground mb-8 leading-relaxed max-w-[280px] text-center font-medium">Faça login com seu celular para sincronizar as conversas.</p>
+                                    <h3 className="text-xl font-extrabold mb-3 tracking-tight">Conectar WhatsApp</h3>
+                                    <p className="text-[14px] text-muted-foreground mb-3 leading-relaxed max-w-[320px] text-center font-medium">
+                                        Conexão gerenciada pelo servidor. Gere o QR Code para conectar o número da sua empresa.
+                                    </p>
+                                    <p className="text-[11px] text-muted-foreground/80 mb-8 text-center font-semibold uppercase tracking-wider">
+                                        Instância: {config.instanceName}
+                                    </p>
                                     {error && <p className="text-red-400 text-[12px] font-bold mb-4 bg-red-400/10 py-2 px-4 rounded-lg flex items-center gap-2 max-w-[300px] text-center"><AlertCircle className="w-4 h-4 shrink-0" /> {error}</p>}
                                     <Button
                                         onClick={connect}
@@ -277,9 +311,6 @@ const WhatsApp = () => {
                                             </>
                                         )}
                                     </Button>
-                                    <button onClick={() => updateConfig('', '', '')} className="mt-4 text-[11px] font-bold text-muted-foreground hover:text-foreground underline decoration-white/20 hover:decoration-white/60 transition-colors uppercase tracking-widest">
-                                        Reconfigurar API
-                                    </button>
                                 </div>
                             )}
                         </div>
@@ -288,7 +319,7 @@ const WhatsApp = () => {
             </div>
 
             {/* Main Chat Area */}
-            <div className={`flex-1 flex flex-col relative w-full h-full bg-background z-10 border-r border-white/5 transition-opacity duration-300 ${!connected ? 'opacity-50 pointer-events-none grayscale-[50%]' : ''}`}>
+            <div className={`flex-1 flex flex-col relative w-full h-[62vh] lg:h-full bg-background z-10 lg:border-r border-white/5 transition-opacity duration-300 ${!connected ? 'opacity-50 pointer-events-none grayscale-[50%]' : ''}`}>
                 <div className="absolute inset-0 z-0 opacity-[0.02] pointer-events-none mix-blend-screen"
                     style={{ backgroundImage: 'radial-gradient(circle at center, white 1.5px, transparent 1.5px)', backgroundSize: '32px 32px' }}>
                 </div>
@@ -305,22 +336,22 @@ const WhatsApp = () => {
                             Inbox AI
                         </h1>
                         <p className="text-muted-foreground/80 text-center max-w-sm text-[15px] leading-relaxed font-medium">
-                            Selecione um lead ao lado para iniciar. O Copilot assumirá a análise.
+                            Selecione um lead ao lado para iniciar. O Copilot assumirÃ¡ a anÃ¡lise.
                         </p>
                     </div>
                 ) : (
                     <>
-                        <div className="h-[72px] bg-card/90 backdrop-blur-xl border-b border-white/5 flex items-center px-6 z-10 justify-between shrink-0 shadow-sm">
-                            <div className="flex items-center gap-4">
+                        <div className="h-[72px] bg-card/90 backdrop-blur-xl border-b border-white/5 flex items-center px-3 sm:px-6 z-10 justify-between shrink-0 shadow-sm gap-3">
+                            <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                                 <Avatar className="h-11 w-11 ring-2 ring-white/10 shadow-md">
                                     <AvatarImage src={selectedChatData.profilePicUrl || `https://i.pravatar.cc/150?u=${selectedChatData.id}`} />
                                 </Avatar>
-                                <div className="flex flex-col">
-                                    <div className="flex items-center gap-3 mb-0.5">
-                                        <h2 className="text-[16px] font-bold text-foreground leading-tight tracking-tight">{selectedChatData.name}</h2>
-                                        <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-[18px] border-emerald-500/30 text-emerald-500 bg-emerald-500/10 font-bold uppercase tracking-widest shadow-sm">Online</Badge>
+                                <div className="flex flex-col min-w-0">
+                                    <div className="flex items-center gap-2 sm:gap-3 mb-0.5 min-w-0">
+                                        <h2 className="text-[15px] sm:text-[16px] font-bold text-foreground leading-tight tracking-tight truncate">{selectedChatData.name}</h2>
+                                        <Badge variant="outline" className="hidden sm:inline-flex text-[9px] px-1.5 py-0 h-[18px] border-emerald-500/30 text-emerald-500 bg-emerald-500/10 font-bold uppercase tracking-widest shadow-sm">Online</Badge>
                                     </div>
-                                    <p className="text-[12px] text-muted-foreground flex items-center gap-2 font-medium">
+                                    <p className="text-[11px] sm:text-[12px] text-muted-foreground flex items-center gap-2 font-medium min-w-0">
                                         <span className="flex items-center gap-1.5"><Phone className="w-3 h-3 text-muted-foreground/70" /> {selectedChatData.phone}</span>
                                         <span className="w-1 h-1 rounded-full bg-white/20"></span>
                                         <span className="flex items-center gap-1.5"><Target className="w-3.5 h-3.5 text-primary" /> Score: {selectedChatData.score}</span>
@@ -328,7 +359,7 @@ const WhatsApp = () => {
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 shrink-0">
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
@@ -336,7 +367,7 @@ const WhatsApp = () => {
                                                 variant={showAIAssistant ? "default" : "secondary"}
                                                 size="sm"
                                                 onClick={() => setShowAIAssistant(!showAIAssistant)}
-                                                className={`h-10 px-4 gap-2 rounded-xl transition-all shadow-sm ${showAIAssistant
+                                                className={`hidden xl:inline-flex h-10 px-4 gap-2 rounded-xl transition-all shadow-sm ${showAIAssistant
                                                     ? 'bg-primary/20 text-primary border border-primary/30 hover:bg-primary/30 font-bold'
                                                     : 'bg-muted/50 text-muted-foreground hover:bg-muted/80 hover:text-foreground border border-white/5 font-semibold'
                                                     }`}
@@ -351,14 +382,21 @@ const WhatsApp = () => {
                             </div>
                         </div>
 
-                        <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 z-10 flex flex-col gap-5 scroll-smooth relative">
+                        <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 sm:p-6 z-10 flex flex-col gap-4 sm:gap-5 scroll-smooth relative">
                             <div className="flex justify-center mb-4 sticky top-2 z-20">
                                 <span className="text-[10.5px] uppercase font-black tracking-[0.2em] px-5 py-2 rounded-full bg-background/80 backdrop-blur-md text-muted-foreground border border-white/10 shadow-lg">
                                     Hoje
                                 </span>
                             </div>
 
-                            {selectedChatMessages.length === 0 ? (
+                            {isLoadingMessages ? (
+                                <div className="flex-1 flex items-center justify-center opacity-70">
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        Carregando mensagens...
+                                    </div>
+                                </div>
+                            ) : selectedChatMessages.length === 0 ? (
                                 <div className="flex-1 flex flex-col items-center justify-center opacity-50 mt-10">
                                     <MessageCircle className="w-12 h-12 text-muted-foreground mb-4" />
                                     <p className="text-[14px] font-medium text-muted-foreground">Nenhuma mensagem encontrada aqui ainda.</p>
@@ -366,7 +404,7 @@ const WhatsApp = () => {
                             ) : selectedChatMessages.map((msgLine, i) => {
                                 const isMe = msgLine.sender === 'me';
                                 return (
-                                    <div key={msgLine.id || i} className={`flex max-w-[75%] ${isMe ? 'self-end' : 'group'}`}>
+                                    <div key={msgLine.id || i} className={`flex max-w-[92%] sm:max-w-[75%] ${isMe ? 'self-end' : 'group'}`}>
                                         {!isMe && (
                                             <Avatar className="h-8 w-8 ring-2 ring-white/5 mr-3 mt-auto opacity-70 group-hover:opacity-100 transition-opacity shrink-0">
                                                 <AvatarImage src={selectedChatData.profilePicUrl || `https://i.pravatar.cc/150?u=${selectedChatData.id}`} />
@@ -394,9 +432,9 @@ const WhatsApp = () => {
                         </div>
 
                         {/* Input Area */}
-                        <div className="bg-card/95 backdrop-blur-2xl border-t border-white/5 p-4 z-10 flex flex-col gap-3 shrink-0 rounded-tl-xl shadow-[0_-10px_40px_rgba(0,0,0,0.2)]">
-                            <div className="flex items-end gap-3">
-                                <div className="flex gap-1 mb-1 bg-muted/30 p-1 rounded-xl border border-white/5">
+                        <div className="bg-card/95 backdrop-blur-2xl border-t border-white/5 p-3 sm:p-4 z-10 flex flex-col gap-3 shrink-0 rounded-tl-xl shadow-[0_-10px_40px_rgba(0,0,0,0.2)]">
+                            <div className="flex items-end gap-2 sm:gap-3">
+                                <div className="hidden sm:flex gap-1 mb-1 bg-muted/30 p-1 rounded-xl border border-white/5">
                                     <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-foreground rounded-lg shrink-0">
                                         <Smile className="h-[22px] w-[22px]" />
                                     </Button>
@@ -430,7 +468,7 @@ const WhatsApp = () => {
 
             {/* AI Sales Copilot Sidebar */}
             {selectedChatData && showAIAssistant && (
-                <div className="w-[30%] min-w-[340px] max-w-[420px] border-l border-white/5 bg-[#0a0f14]/90 backdrop-blur-2xl flex flex-col z-20 shadow-[-20px_0_40px_rgba(0,0,0,0.3)] relative">
+                <div className="hidden xl:flex w-[30%] min-w-[340px] max-w-[420px] border-l border-white/5 bg-[#0a0f14]/90 backdrop-blur-2xl flex-col z-20 shadow-[-20px_0_40px_rgba(0,0,0,0.3)] relative">
                     <div className="absolute top-0 right-0 w-full h-[400px] bg-gradient-to-b from-primary/10 via-primary/5 to-transparent pointer-events-none blur-3xl opacity-60"></div>
 
                     <div className="h-[72px] flex items-center px-6 shrink-0 border-b border-white/5 relative z-10 bg-card/40">
@@ -440,14 +478,14 @@ const WhatsApp = () => {
                                 <Brain className="w-5 h-5 text-white relative z-10" />
                             </div>
                             <div className="flex-1">
-                                <h3 className="font-extrabold text-[15.5px] bg-clip-text text-transparent bg-gradient-to-r from-white to-white/80 tracking-tight leading-none mb-1">Cérebro IA</h3>
+                                <h3 className="font-extrabold text-[15.5px] bg-clip-text text-transparent bg-gradient-to-r from-white to-white/80 tracking-tight leading-none mb-1">CÃ©rebro IA</h3>
                                 {aiThinking ? (
                                     <p className="text-[11.5px] text-primary font-bold flex items-center gap-1.5 opacity-80 animate-pulse uppercase tracking-wider">
                                         <Loader2 className="w-3 h-3 animate-spin" /> Processando DDC...
                                     </p>
                                 ) : (
                                     <p className="text-[11.5px] text-emerald-400 font-bold flex items-center gap-1.5 uppercase tracking-wider">
-                                        <Sparkles className="w-3 h-3" /> Análise Finalizada
+                                        <Sparkles className="w-3 h-3" /> AnÃ¡lise Finalizada
                                     </p>
                                 )}
                             </div>
@@ -470,7 +508,7 @@ const WhatsApp = () => {
                                     <div className="bg-card/60 backdrop-blur-md border border-white/10 rounded-[24px] p-5 shadow-lg relative overflow-hidden">
                                         <div className="flex items-center justify-between mb-4 relative z-10">
                                             <span className="text-[14px] font-bold text-foreground/90">Tom Detectado</span>
-                                            <Badge variant="outline" className={`border-0 font-bold tracking-wide shadow-inner ${aiSuggestion.sentiment.includes('Objeção') ? 'bg-orange-500/20 text-orange-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
+                                            <Badge variant="outline" className={`border-0 font-bold tracking-wide shadow-inner ${aiSuggestion.sentiment.includes('ObjeÃ§Ã£o') ? 'bg-orange-500/20 text-orange-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
                                                 {aiSuggestion.sentiment}
                                             </Badge>
                                         </div>
@@ -480,7 +518,7 @@ const WhatsApp = () => {
                                 {/* Strategy Card */}
                                 <div className="space-y-3 opacity-0 animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-forwards" style={{ animationDelay: '200ms' }}>
                                     <div className="flex items-center gap-2 text-[11px] font-black text-muted-foreground uppercase tracking-widest px-1">
-                                        <AlertCircle className="w-4 h-4 text-blue-400" /> Tática de Fechamento
+                                        <AlertCircle className="w-4 h-4 text-blue-400" /> TÃ¡tica de Fechamento
                                     </div>
                                     <div className="bg-blue-500/10 border border-blue-500/20 rounded-[24px] p-5 shadow-lg">
                                         <ul className="space-y-3.5">
@@ -500,7 +538,7 @@ const WhatsApp = () => {
                                 <div className="space-y-3 opacity-0 animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-forwards" style={{ animationDelay: '300ms' }}>
                                     <div className="flex items-center justify-between text-[11px] font-black text-muted-foreground uppercase tracking-widest px-1">
                                         <div className="flex items-center gap-2">
-                                            <MessageSquareQuote className="w-4 h-4 text-primary" /> Texto Mágico Gerado
+                                            <MessageSquareQuote className="w-4 h-4 text-primary" /> Texto MÃ¡gico Gerado
                                         </div>
                                         <Button variant="ghost" size="icon" className="h-7 w-7 text-primary hover:bg-primary/20 hover:text-primary rounded-lg transition-colors" onClick={() => getAiAnalysis(selectedChatId + " update")}>
                                             <RefreshCcw className="w-3.5 h-3.5" />
@@ -527,6 +565,58 @@ const WhatsApp = () => {
                     </div>
                 </div>
             )}
+            <Dialog open={isConfigModalOpen} onOpenChange={setIsConfigModalOpen}>
+                <DialogContent className="sm:max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <WhatsAppIcon className="h-5 w-5 text-emerald-500" />
+                            Conexão WhatsApp (Gerenciada)
+                        </DialogTitle>
+                        <DialogDescription>
+                            A URL e a API Key da Evolution API ficam protegidas no servidor. Aqui o usuário só conecta o número por QR Code.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div className="rounded-xl border border-white/10 bg-card/60 p-4 space-y-3">
+                            <div className="flex items-center justify-between gap-3">
+                                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Instância</span>
+                                <Badge variant="outline" className="border-white/10 bg-white/5 text-foreground">
+                                    {config.instanceName}
+                                </Badge>
+                            </div>
+                            <div className="flex items-center justify-between gap-3">
+                                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Modo</span>
+                                <Badge className="bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/15">
+                                    Gerenciado
+                                </Badge>
+                            </div>
+                            <p className="text-xs text-muted-foreground leading-relaxed">
+                                Ao gerar o QR Code, a plataforma cria/consulta a instância da empresa e sincroniza as conversas automaticamente após a conexão.
+                            </p>
+                        </div>
+                        {error && (
+                            <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">
+                                {error}
+                            </div>
+                        )}
+                    </div>
+                    <DialogFooter className="gap-2">
+                        <Button variant="outline" onClick={() => setIsConfigModalOpen(false)}>
+                            Fechar
+                        </Button>
+                        <Button
+                            className="bg-emerald-600 hover:bg-emerald-500 text-white"
+                            onClick={async () => {
+                                clearError();
+                                await refreshConnection();
+                                setIsConfigModalOpen(false);
+                            }}
+                        >
+                            Atualizar status
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { PixelRevenueTrendChart } from "@/components/dashboard/PixelRevenueTrendChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,8 +23,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  AreaChart,
-  Area,
 } from "recharts";
 import { MetasRankingCard } from "@/components/admin/MetasRankingCard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -561,9 +560,9 @@ export const AdminVendasView = ({
       </div>
 
       {/* Row 2: Charts - 60/40 split */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Main Chart - Sales Evolution (60%) */}
-        <Card className="lg:col-span-3 relative overflow-hidden border border-slate-800 bg-slate-900 shadow-sm rounded-xl">
+        <Card className="lg:col-span-8 relative overflow-hidden border border-slate-800 bg-slate-900 shadow-sm rounded-xl">
           {/* Subtle corner accent */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl pointer-events-none" />
 
@@ -576,74 +575,17 @@ export const AdminVendasView = ({
                   </div>
                   Evolução de Vendas
                 </CardTitle>
-                <p className="text-[11px] text-muted-foreground mt-1 ml-8">Últimos 15 dias • Faturamento diário</p>
+                <p className="text-[11px] text-muted-foreground mt-1 ml-8">Últimos 15 dias • Faturamento em blocos</p>
               </div>
             </div>
           </CardHeader>
           <CardContent className="pt-0 relative">
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={vendasEvolution || []} margin={{ top: 20, right: 10, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorValorAdmin" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.5} />
-                    <stop offset="50%" stopColor="#4F46E5" stopOpacity={0.2} />
-                    <stop offset="100%" stopColor="#4F46E5" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.25)" vertical={false} />
-                <XAxis
-                  dataKey="date"
-                  stroke="rgba(100,116,139,0.6)"
-                  fontSize={10}
-                  tickLine={false}
-                  axisLine={false}
-                  dy={10}
-                />
-                <YAxis
-                  stroke="rgba(100,116,139,0.6)"
-                  fontSize={10}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(v) => formatCurrencyCompact(v)}
-                  width={55}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "rgba(15, 23, 42, 0.95)",
-                    backdropFilter: "blur(12px)",
-                    border: "1px solid rgba(51, 65, 85, 0.5)",
-                    borderRadius: "12px",
-                    boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
-                    padding: "12px 16px"
-                  }}
-                  labelStyle={{ color: "#94a3b8", fontSize: 11, marginBottom: 4 }}
-                  formatter={(value: number) => [
-                    <span className="text-emerald-400 font-semibold">{formatCurrency(value)}</span>,
-                    <span className="text-slate-400">Faturamento</span>
-                  ]}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="valor"
-                  stroke="#10b981"
-                  strokeWidth={2.5}
-                  fill="url(#colorValorAdmin)"
-                  dot={false}
-                  activeDot={{
-                    r: 6,
-                    fill: "#10b981",
-                    stroke: "#fff",
-                    strokeWidth: 2,
-                    filter: "drop-shadow(0 0 8px rgba(16, 185, 129, 0.5))"
-                  }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            <PixelRevenueTrendChart data={vendasEvolution || []} height={460} />
           </CardContent>
         </Card>
 
         {/* Secondary Chart - Top Sellers / Products (40%) */}
-        <Card className="lg:col-span-2 relative overflow-hidden border border-slate-800 bg-slate-900 shadow-sm rounded-xl">
+        <Card className="lg:col-span-4 relative overflow-hidden border border-slate-800 bg-slate-900 shadow-sm rounded-xl">
           {/* Subtle corner accent */}
           <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 blur-3xl pointer-events-none" />
 

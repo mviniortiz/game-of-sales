@@ -1,9 +1,9 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
-import axios from 'axios';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useTenant } from "@/contexts/TenantContext";
 
-// Interfaces based on Evolution API
 export interface Chat {
-    id: string; // The remote JID (e.g., 5511999999999@s.whatsapp.net)
+    id: string;
     name: string;
     unreadCount: number;
     profilePicUrl?: string;
@@ -12,7 +12,6 @@ export interface Chat {
         time: string;
         isMe: boolean;
     };
-    // Mock CRM data for now, since this comes from WhatsApp
     status?: string;
     term?: string;
     value?: string;
@@ -23,16 +22,61 @@ export interface Chat {
 export interface MessageLine {
     id: string;
     text: string;
-    sender: 'me' | 'lead';
+    sender: "me" | "lead";
     time: string;
 }
 
+const hashString = (value: string) => {
+    let hash = 0;
+    for (let i = 0; i < value.length; i++) {
+        hash = (hash << 5) - hash + value.charCodeAt(i);
+        hash |= 0;
+    }
+    return Math.abs(hash);
+};
+
+const stableMockMeta = (id: string) => {
+    const seed = hashString(id);
+    const statusOptions = ["Quente", "Morno", "Frio"] as const;
+    const termOptions = ["Prospecção", "Negociação", "Follow-up"] as const;
+    return {
+        status: statusOptions[seed % statusOptions.length],
+        term: termOptions[seed % termOptions.length],
+        score: 60 + (seed % 41),
+    };
+};
+
+const extractNumberFromJid = (jid?: string | null) => {
+    if (!jid) return "";
+    return String(jid).split("@")[0].replace(/\D/g, "");
+};
+
+const safeTime = (timestampSeconds?: number) => {
+    const dt = timestampSeconds ? new Date(timestampSeconds * 1000) : new Date();
+    return dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+};
+
+const parseTextFromMessage = (msg: any) => {
+    if (msg?.message?.conversation) return msg.message.conversation;
+    if (msg?.message?.extendedTextMessage?.text) return msg.message.extendedTextMessage.text;
+    if (msg?.message?.imageMessage?.caption) return msg.message.imageMessage.caption;
+    if (msg?.message?.videoMessage?.caption) return msg.message.videoMessage.caption;
+    if (msg?.message?.imageMessage) return "📷 Imagem";
+    if (msg?.message?.audioMessage) return "🎤 Áudio";
+    if (msg?.message?.videoMessage) return "🎥 Vídeo";
+    if (msg?.message?.documentMessage?.fileName) return `📎 ${msg.message.documentMessage.fileName}`;
+    return "Mensagem não suportada";
+};
+
+type ProxyAction = "status" | "connect" | "chats" | "messages" | "send" | "logout";
+
 export const useEvolutionIntegration = () => {
-    // Retrieve configuration from local storage or ENV
+    const { activeCompanyId } = useTenant();
     const [config, setConfig] = useState({
-        apiUrl: localStorage.getItem('evolution_api_url') || import.meta.env.VITE_EVOLUTION_API_URL || '',
-        apiKey: localStorage.getItem('evolution_api_key') || import.meta.env.VITE_EVOLUTION_API_KEY || '',
-        instanceName: localStorage.getItem('evolution_instance_name') || 'gos_sales_instance',
+        managed: true,
+        apiUrl: "",
+        apiKey: "",
+        instanceName: activeCompanyId ? `wa_${activeCompanyId.replace(/-/g, "")}` : "wa_instance",
     });
 
     const [connecting, setConnecting] = useState(false);
@@ -43,251 +87,227 @@ export const useEvolutionIntegration = () => {
     const [chats, setChats] = useState<Chat[]>([]);
     const [selectedChatMessages, setSelectedChatMessages] = useState<MessageLine[]>([]);
     const [isLoadingChats, setIsLoadingChats] = useState(false);
+    const [isLoadingMessages, setIsLoadingMessages] = useState(false);
 
     const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-    // Save config
-    const updateConfig = (apiUrl: string, apiKey: string, instanceName: string) => {
-        localStorage.setItem('evolution_api_url', apiUrl);
-        localStorage.setItem('evolution_api_key', apiKey);
-        localStorage.setItem('evolution_instance_name', instanceName);
-        setConfig({ apiUrl, apiKey, instanceName });
-    };
+    useEffect(() => {
+        setConfig((prev) => ({
+            ...prev,
+            instanceName: activeCompanyId ? `wa_${activeCompanyId.replace(/-/g, "")}` : prev.instanceName,
+        }));
+    }, [activeCompanyId]);
 
-    const getHeaders = () => ({
-        headers: {
-            apikey: config.apiKey,
-            'Content-Type': 'application/json',
-        }
-    });
-
-    const checkConnectionState = async () => {
-        if (!config.apiUrl || !config.apiKey) return;
-        try {
-            const response = await axios.get(
-                `${config.apiUrl}/instance/connectionState/${config.instanceName}`,
-                getHeaders()
-            );
-            const state = response.data?.instance?.state || response.data?.state;
-
-            if (state === 'open') {
-                setConnected(true);
-                setQrCodeBase64(null);
-                setConnecting(false);
-                fetchChats();
-                return true;
-            } else if (state === 'connecting') {
-                setConnecting(true);
-            } else {
-                setConnected(false);
-            }
-            return false;
-        } catch (err: any) {
-            // Ignore 404s (instance not found)
-            if (err.response?.status !== 404) {
-                console.error("Error checking state:", err);
-            }
-            setConnected(false);
-            return false;
+    const clearPolling = () => {
+        if (pollingIntervalRef.current) {
+            clearInterval(pollingIntervalRef.current);
+            pollingIntervalRef.current = null;
         }
     };
 
-    const connect = async () => {
-        if (!config.apiUrl || !config.apiKey) {
-            setError("Por favor, configure a URL e API Key da Evolution API.");
-            return;
-        }
+    const clearError = () => setError(null);
+
+    const updateConfig = () => {
+        // Mantido por compatibilidade com a UI; no modo gerenciado não faz nada.
         setError(null);
-        setConnecting(true);
-
-        try {
-            // Check state first
-            const isOpen = await checkConnectionState();
-            if (isOpen) return;
-
-            // Create instance (if it doesn't exist)
-            try {
-                const createRes = await axios.post(
-                    `${config.apiUrl}/instance/create`,
-                    {
-                        instanceName: config.instanceName,
-                        qrcode: true,
-                    },
-                    getHeaders()
-                );
-
-                if (createRes.data?.qrcode?.base64) {
-                    setQrCodeBase64(createRes.data.qrcode.base64);
-                } else if (createRes.data?.hash) {
-                    // Try fetch base64 using connect endpoint as fallback
-                    const connectRes = await axios.get(`${config.apiUrl}/instance/connect/${config.instanceName}`, getHeaders());
-                    if (connectRes.data?.base64) setQrCodeBase64(connectRes.data.base64);
-                }
-            } catch (createErr: any) {
-                // If instance already exists, just trigger connect
-                if (createErr.response?.data?.error?.includes('already exists') || createErr.response?.status === 400 || createErr.response?.status === 403) {
-                    const connectRes = await axios.get(`${config.apiUrl}/instance/connect/${config.instanceName}`, getHeaders());
-                    if (connectRes.data?.base64) {
-                        setQrCodeBase64(connectRes.data.base64);
-                    }
-                } else {
-                    throw createErr;
-                }
-            }
-
-            // Start polling for connection state
-            if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
-            pollingIntervalRef.current = setInterval(async () => {
-                const connectedNow = await checkConnectionState();
-                if (connectedNow) {
-                    if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
-                }
-            }, 3000);
-
-        } catch (err: any) {
-            console.error(err);
-            setError(err.response?.data?.response?.message || err.message || "Erro ao conectar. Verifique as credenciais.");
-            setConnecting(false);
-        }
     };
 
-    const logout = async () => {
-        if (!config.apiUrl || !config.apiKey) return;
-        try {
-            await axios.delete(`${config.apiUrl}/instance/logout/${config.instanceName}`, getHeaders());
-            setConnected(false);
-            setChats([]);
-            setQrCodeBase64(null);
-        } catch (err) {
-            console.error("Logout error", err);
-        }
-    };
+    const invokeProxy = useCallback(async (action: ProxyAction, payload: Record<string, any> = {}) => {
+        const response = await supabase.functions.invoke("evolution-whatsapp", {
+            body: {
+                action,
+                companyId: activeCompanyId,
+                ...payload,
+            },
+        });
+        if (response.error) throw response.error;
+        return response.data;
+    }, [activeCompanyId]);
 
-    const fetchChats = async () => {
-        if (!config.apiUrl || !config.apiKey || !connected) return;
+    const fetchChats = useCallback(async () => {
+        if (!connected) return;
         setIsLoadingChats(true);
+        setError(null);
         try {
-            const response = await axios.get(`${config.apiUrl}/chat/findChats/${config.instanceName}`, getHeaders());
-            const realChats = response.data;
-
-            // Transform Evolution API chats to our UI format
-            if (Array.isArray(realChats)) {
-                const transformedChats: Chat[] = realChats
-                    .filter(c => !c.id.includes('@g.us')) // Ignore groups for this inbox by default
-                    .map(c => {
-                        const lastMsgTime = new Date(c.timestamp ? c.timestamp * 1000 : Date.now());
-
-                        return {
-                            id: c.id,
-                            name: c.name || c.id.split('@')[0],
-                            unreadCount: c.unreadCount || 0,
-                            profilePicUrl: c.profilePictureUrl || undefined,
-                            lastMessage: {
-                                text: "Mensagem recebida", // Note: Evolution's findChats doesn't always bring the last snippet easily
-                                time: lastMsgTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                                isMe: false,
-                            },
-                            // Mock CRM data placeholders
-                            status: Math.random() > 0.5 ? "Quente" : "Morno",
-                            term: Math.random() > 0.5 ? "Negociação" : "Prospecção",
-                            score: Math.floor(Math.random() * 40) + 60,
-                            phone: `+${c.id.split('@')[0]}`,
-                        };
-                    });
-
-                setChats(transformedChats);
-            }
+            const data = await invokeProxy("chats");
+            const rawChats = Array.isArray(data?.chats)
+                ? data.chats
+                : Array.isArray(data?.chats?.records)
+                    ? data.chats.records
+                    : Array.isArray(data?.records)
+                        ? data.records
+                        : [];
+            const transformed: Chat[] = rawChats
+                .filter((c: any) => c?.id && !String(c.id).includes("@g.us"))
+                .map((c: any) => {
+                    const number = extractNumberFromJid(c.id);
+                    const meta = stableMockMeta(c.id);
+                    return {
+                        id: c.id,
+                        name: c.name || c.pushName || number || "Contato",
+                        unreadCount: Number(c.unreadCount || 0),
+                        profilePicUrl: c.profilePictureUrl || c.profilePicUrl || undefined,
+                        lastMessage: {
+                            text: c?.lastMessage?.text || c?.conversation?.text || "Mensagem recente",
+                            time: safeTime(c.timestamp || c.conversationTimestamp),
+                            isMe: false,
+                        },
+                        status: meta.status,
+                        term: meta.term,
+                        score: meta.score,
+                        phone: number ? `+${number}` : undefined,
+                    };
+                });
+            setChats(transformed);
         } catch (err) {
             console.error("Fetch chats error", err);
+            setError("Falha ao carregar conversas do WhatsApp.");
         } finally {
             setIsLoadingChats(false);
         }
-    };
+    }, [connected, invokeProxy]);
 
-    const fetchMessages = async (chatId: string) => {
-        if (!config.apiUrl || !config.apiKey || !connected) return;
+    const checkConnectionState = useCallback(async () => {
         try {
-            // Find messages for this contact. Usually POST /chat/findMessages/{instanceName}
-            const response = await axios.post(`${config.apiUrl}/chat/findMessages/${config.instanceName}`, {
-                where: {
-                    key: {
-                        remoteJid: chatId
-                    }
-                },
-                "options": {
-                    "limit": 50,
-                    "orderBy": { "messageTimestamp": "asc" }
-                }
-            }, getHeaders());
+            const data = await invokeProxy("status");
+            const isOpen = data?.connected === true;
+            setConnected(isOpen);
+            setConnecting(!isOpen && ["connecting"].includes(String(data?.state || "").toLowerCase()));
+            if (isOpen) {
+                setQrCodeBase64(null);
+                setError(null);
+            }
+            return isOpen;
+        } catch (err: any) {
+            console.error("Error checking WhatsApp state:", err);
+            setConnected(false);
+            setConnecting(false);
+            setError(err?.message || "Falha ao verificar conexão do WhatsApp.");
+            return false;
+        }
+    }, [invokeProxy]);
 
-            if (response.data && response.data.records) {
-                const sorted = response.data.records;
-                const formattedMessages: MessageLine[] = sorted.map((msg: any) => {
-                    let textMsg = "";
-                    if (msg.message?.conversation) textMsg = msg.message.conversation;
-                    else if (msg.message?.extendedTextMessage?.text) textMsg = msg.message.extendedTextMessage.text;
-                    else if (msg.message?.imageMessage) textMsg = "📷 Imagem";
-                    else if (msg.message?.audioMessage) textMsg = "🎤 Áudio";
-                    else if (msg.message?.videoMessage) textMsg = "🎥 Vídeo";
-                    else textMsg = "Mensagem não suportada";
-
-                    const msgDate = new Date(msg.messageTimestamp * 1000);
-                    return {
-                        id: msg.key.id,
-                        text: textMsg,
-                        sender: msg.key.fromMe ? 'me' : 'lead',
-                        time: msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                    };
-                });
-                setSelectedChatMessages(formattedMessages);
-            } else if (response.data && Array.isArray(response.data)) {
-                // alternative payload structure mapping
-                const formattedMessages = response.data.map(msg => ({
-                    id: msg.key?.id || Math.random().toString(),
-                    text: msg.message?.conversation || msg.message?.extendedTextMessage?.text || "Mensagem",
-                    sender: msg.key?.fromMe ? 'me' as const : 'lead' as const,
-                    time: msg.messageTimestamp ? new Date(msg.messageTimestamp * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Agora"
-                }));
-                setSelectedChatMessages(formattedMessages);
+    const connect = useCallback(async () => {
+        clearPolling();
+        setConnecting(true);
+        setError(null);
+        try {
+            const statusOpen = await checkConnectionState();
+            if (statusOpen) {
+                await fetchChats();
+                return;
             }
 
+            const data = await invokeProxy("connect");
+            if (data?.connected) {
+                setConnected(true);
+                setConnecting(false);
+                setQrCodeBase64(null);
+                await fetchChats();
+                return;
+            }
+
+            if (data?.qrCodeBase64) {
+                setQrCodeBase64(data.qrCodeBase64);
+            }
+
+            pollingIntervalRef.current = setInterval(async () => {
+                const open = await checkConnectionState();
+                if (open) {
+                    clearPolling();
+                    setConnecting(false);
+                    await fetchChats();
+                }
+            }, 3000);
+        } catch (err: any) {
+            console.error("Connect WhatsApp error", err);
+            setConnecting(false);
+            setError(err?.message || "Erro ao gerar QR Code do WhatsApp.");
+        }
+    }, [checkConnectionState, fetchChats, invokeProxy]);
+
+    const logout = useCallback(async () => {
+        clearPolling();
+        try {
+            await invokeProxy("logout");
+        } catch (err) {
+            console.error("Logout error", err);
+        } finally {
+            setConnected(false);
+            setConnecting(false);
+            setQrCodeBase64(null);
+            setChats([]);
+            setSelectedChatMessages([]);
+        }
+    }, [invokeProxy]);
+
+    const fetchMessages = useCallback(async (chatId: string) => {
+        if (!connected || !chatId) return;
+        setIsLoadingMessages(true);
+        setError(null);
+        try {
+            const data = await invokeProxy("messages", { chatId, limit: 50 });
+            const raw = Array.isArray(data?.messages)
+                ? data.messages
+                : Array.isArray(data?.messages?.records)
+                    ? data.messages.records
+                    : Array.isArray(data?.records)
+                        ? data.records
+                        : [];
+
+            const messages: MessageLine[] = raw.map((msg: any, idx: number) => {
+                const date = msg?.messageTimestamp ? new Date(msg.messageTimestamp * 1000) : new Date();
+                return {
+                    id: msg?.key?.id || `msg_${idx}_${date.getTime()}`,
+                    text: parseTextFromMessage(msg),
+                    sender: msg?.key?.fromMe ? "me" : "lead",
+                    time: date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                };
+            });
+
+            setSelectedChatMessages(messages);
         } catch (err) {
             console.error("Fetch messages error", err);
-            // Optionally set empty or mock if fails to keep the UI working
+            setError("Falha ao carregar mensagens deste contato.");
+        } finally {
+            setIsLoadingMessages(false);
         }
-    };
+    }, [connected, invokeProxy]);
 
-    const sendMessage = async (chatId: string, text: string) => {
-        if (!config.apiUrl || !config.apiKey || !connected) return;
+    const sendMessage = useCallback(async (chatId: string, text: string) => {
+        if (!connected || !chatId || !text.trim()) return;
 
-        // Optimistic UI update
-        const optimisticMsg: MessageLine = {
+        const optimistic: MessageLine = {
             id: `temp_${Date.now()}`,
-            text,
-            sender: 'me',
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            text: text.trim(),
+            sender: "me",
+            time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         };
-        setSelectedChatMessages(prev => [...prev, optimisticMsg]);
+
+        setSelectedChatMessages((prev) => [...prev, optimistic]);
+        setError(null);
 
         try {
-            await axios.post(`${config.apiUrl}/message/sendText/${config.instanceName}`, {
-                number: chatId,
-                text: text
-            }, getHeaders());
+            await invokeProxy("send", { chatId, text: text.trim() });
         } catch (err) {
-            console.error("Error sending message", err);
-            // If failed, could remove the optimistic update or mark as failed
-            setSelectedChatMessages(prev => prev.filter(m => m.id !== optimisticMsg.id));
+            console.error("Send message error", err);
+            setSelectedChatMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
             setError("Falha ao enviar mensagem.");
         }
-    };
+    }, [connected, invokeProxy]);
+
+    const refreshConnection = useCallback(async () => {
+        const open = await checkConnectionState();
+        if (open) {
+            await fetchChats();
+        }
+    }, [checkConnectionState, fetchChats]);
 
     useEffect(() => {
-        checkConnectionState();
-        return () => {
-            if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
-        };
-    }, [config.apiUrl, config.apiKey, config.instanceName]);
+        if (!activeCompanyId) return;
+        refreshConnection();
+        return () => clearPolling();
+    }, [activeCompanyId, refreshConnection]);
 
     return {
         config,
@@ -296,13 +316,17 @@ export const useEvolutionIntegration = () => {
         connected,
         qrCodeBase64,
         error,
+        clearError,
         connect,
         logout,
         chats,
         selectedChatMessages,
         isLoadingChats,
+        isLoadingMessages,
         fetchMessages,
         sendMessage,
-        fetchChats
+        fetchChats,
+        refreshConnection,
+        checkConnectionState,
     };
 };

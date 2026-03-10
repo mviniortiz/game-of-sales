@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { AdminDashboardOverview } from "@/components/dashboard/AdminDashboardOverview";
+import { PixelRevenueTrendChart } from "@/components/dashboard/PixelRevenueTrendChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   DollarSign,
@@ -16,8 +17,6 @@ import {
   Percent
 } from "lucide-react";
 import {
-  AreaChart,
-  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -26,7 +25,7 @@ import {
   BarChart,
   Bar,
 } from "recharts";
-import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
+import { format, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
   Tooltip as UITooltip,
@@ -157,6 +156,7 @@ const Dashboard = () => {
 
   const startOfMonthDate = startOfMonth(new Date()).toISOString().split("T")[0];
   const endOfMonthDate = endOfMonth(new Date()).toISOString().split("T")[0];
+  const startOfMonthObj = startOfMonth(new Date());
 
   const { data: vendas } = useQuery({
     queryKey: ["vendas", user?.id],
@@ -184,6 +184,7 @@ const Dashboard = () => {
         .select("data_venda, valor")
         .eq("user_id", user?.id)
         .gte("data_venda", startOfMonthDate)
+        .lte("data_venda", endOfMonthDate)
         .order("data_venda", { ascending: true });
 
       if (error) throw error;
@@ -195,12 +196,12 @@ const Dashboard = () => {
         return acc;
       }, {});
 
-      // Fill in missing dates
+      // Fill the current month day-by-day (up to today) for the block chart
       const result = [];
       const today = new Date();
-      for (let i = 14; i >= 0; i--) {
-        const date = subDays(today, i);
-        const dateKey = format(date, "dd/MM");
+      for (let date = new Date(startOfMonthObj); date <= today; date.setDate(date.getDate() + 1)) {
+        const day = new Date(date);
+        const dateKey = format(day, "dd/MM");
         result.push({
           date: dateKey,
           valor: grouped[dateKey] || 0,
@@ -421,68 +422,12 @@ const Dashboard = () => {
                   </div>
                   Evolução de Vendas
                 </CardTitle>
-                <p className="text-[11px] text-muted-foreground mt-1 ml-8">Últimos 15 dias • Faturamento diário</p>
+                <p className="text-[11px] text-muted-foreground mt-1 ml-8">Mês atual • Faturamento diário em blocos</p>
               </div>
             </div>
           </CardHeader>
           <CardContent className="pt-0 relative">
-            <ResponsiveContainer width="100%" height={280}>
-              <AreaChart data={vendasEvolution || []} margin={{ top: 20, right: 10, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorValor" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.5} />
-                    <stop offset="50%" stopColor="#4F46E5" stopOpacity={0.2} />
-                    <stop offset="100%" stopColor="#4F46E5" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.25)" vertical={false} />
-                <XAxis
-                  dataKey="date"
-                  stroke="rgba(100,116,139,0.6)"
-                  fontSize={10}
-                  tickLine={false}
-                  axisLine={false}
-                  dy={10}
-                />
-                <YAxis
-                  stroke="rgba(100,116,139,0.6)"
-                  fontSize={10}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(v) => formatCurrencyCompact(v)}
-                  width={50}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "var(--card)",
-                    border: "1px solid var(--border)",
-                    borderRadius: "12px",
-                    boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
-                    padding: "12px 16px",
-                  }}
-                  labelStyle={{ color: "var(--muted-foreground)", fontSize: 11, marginBottom: 4 }}
-                  formatter={(value: number) => [
-                    <span className="text-foreground font-semibold">{formatCurrency(value)}</span>,
-                    "Faturamento"
-                  ]}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="valor"
-                  stroke="#10b981"
-                  strokeWidth={2.5}
-                  fill="url(#colorValor)"
-                  dot={false}
-                  activeDot={{
-                    r: 6,
-                    fill: "#10b981",
-                    stroke: "#fff",
-                    strokeWidth: 2,
-                    filter: "drop-shadow(0 0 8px rgba(16, 185, 129, 0.5))"
-                  }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            <PixelRevenueTrendChart data={vendasEvolution || []} height={260} />
           </CardContent>
         </Card >
 

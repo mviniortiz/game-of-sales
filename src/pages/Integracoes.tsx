@@ -19,6 +19,7 @@ import { GoogleCalendarConfigModal } from "@/components/integrations/GoogleCalen
 import { WhatsappConfigModal } from "@/components/integrations/WhatsappConfigModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { PRODUCT_FEATURES } from "@/config/features";
 
 // Import logo images
 import googleCalendarLogo from "@/assets/integrations/google-calendar.png";
@@ -47,7 +48,7 @@ interface Integration {
 
 // Integration data - Using actual logo images where available
 const INTEGRATIONS: Integration[] = [
-  {
+  ...(PRODUCT_FEATURES.whatsappHub ? [{
     id: "evolution-api",
     name: "Evolution API (WhatsApp)",
     description: "Conecte seu WhatsApp via QR Code e utilize no CRM (Baseado no Baileys)",
@@ -55,8 +56,8 @@ const INTEGRATIONS: Integration[] = [
     logoText: "WA",
     logoColor: "text-white",
     status: "available",
-    category: "productivity",
-  },
+    category: "productivity" as const,
+  }] : []),
   {
     id: "google-calendar",
     name: "Google Calendar",
@@ -560,10 +561,12 @@ const Integracoes = () => {
       />
 
       {/* WhatsApp Config Modal */}
-      <WhatsappConfigModal
-        open={whatsappModalOpen}
-        onClose={() => setWhatsappModalOpen(false)}
-      />
+      {PRODUCT_FEATURES.whatsappHub && (
+        <WhatsappConfigModal
+          open={whatsappModalOpen}
+          onClose={() => setWhatsappModalOpen(false)}
+        />
+      )}
     </>
   );
 };

@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Analytics } from "@vercel/analytics/react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { TenantProvider } from "@/contexts/TenantContext";
@@ -32,6 +32,7 @@ import Onboarding from "./pages/Onboarding";
 import SalesPerformanceCenter from "./pages/SalesPerformanceCenter";
 import LogoPreview from "./pages/LogoPreview";
 import WhatsApp from "./pages/WhatsApp";
+import { PRODUCT_FEATURES } from "@/config/features";
 
 const queryClient = new QueryClient();
 
@@ -156,7 +157,7 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <AppLayout>
-                      <WhatsApp />
+                      {PRODUCT_FEATURES.whatsappHub ? <WhatsApp /> : <Navigate to="/integracoes" replace />}
                     </AppLayout>
                   </ProtectedRoute>
                 }
