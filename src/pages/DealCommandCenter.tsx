@@ -64,6 +64,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
+import InBrowserDialer from "@/components/crm/InBrowserDialer";
 import { toast } from "sonner";
 import { syncWonDealToSale } from "@/utils/salesSync";
 import { LostDealModal } from "@/components/crm/LostDealModal";
@@ -324,7 +325,9 @@ export default function DealCommandCenter() {
     const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
     const [showCallModal, setShowCallModal] = useState(false);
     const [sellerPhone, setSellerPhone] = useState("");
-    const [callMode, setCallMode] = useState<"demo" | "twilio">("demo");
+    const [callMode, setCallMode] = useState<"demo" | "twilio" | "webrtc">("demo");
+    const [webrtcCallId, setWebrtcCallId] = useState<string | null>(null);
+    const [showWebrtcDialer, setShowWebrtcDialer] = useState(false);
 
     useEffect(() => {
         const saved = localStorage.getItem("deal_call_seller_phone");
@@ -448,7 +451,7 @@ export default function DealCommandCenter() {
     });
 
     const initiateDealCall = useMutation({
-        mutationFn: async (payload: { mode: "demo" | "twilio"; sellerPhone?: string | null }) => {
+        mutationFn: async (payload: { mode: "demo" | "twilio" | "webrtc"; sellerPhone?: string | null }) => {
             if (!canUseCalls) {
                 throw new Error("Ligações exigem add-on ativo (Plus/Pro)");
             }
@@ -473,7 +476,15 @@ export default function DealCommandCenter() {
             setShowCallModal(false);
 
             if (data?.requiresSetup) {
-                toast.warning(data?.message || "Telefonia ainda não configurada");
+                toast.warning(data?.message || "Telefonia ainda nao configurada");
+                setActiveTab("ligacoes");
+                return;
+            }
+
+            // WebRTC mode: open the in-browser dialer
+            if (data?.mode === "webrtc" && data?.call?.id) {
+                setWebrtcCallId(data.call.id);
+                setShowWebrtcDialer(true);
                 setActiveTab("ligacoes");
                 return;
             }
@@ -1276,29 +1287,31 @@ export default function DealCommandCenter() {
                                 <p className="text-sm text-slate-400">{formatPhone(deal.customer_phone)}</p>
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-xs uppercase tracking-wider text-slate-500">Seu telefone (opcional no demo)</label>
-                                <Input
-                                    value={sellerPhone}
-                                    onChange={(e) => setSellerPhone(e.target.value)}
-                                    placeholder="(11) 99999-9999"
-                                    className="bg-slate-950 border-slate-700 text-white"
-                                />
-                            </div>
+                            {callMode !== "webrtc" && (
+                                <div className="space-y-2">
+                                    <label className="text-xs uppercase tracking-wider text-slate-500">Seu telefone (necessario no modo Twilio)</label>
+                                    <Input
+                                        value={sellerPhone}
+                                        onChange={(e) => setSellerPhone(e.target.value)}
+                                        placeholder="(11) 99999-9999"
+                                        className="bg-slate-950 border-slate-700 text-white"
+                                    />
+                                </div>
+                            )}
 
                             <div className="space-y-2">
-                                <label className="text-xs uppercase tracking-wider text-slate-500">Modo de teste</label>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <label className="text-xs uppercase tracking-wider text-slate-500">Modo</label>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                     <button
                                         type="button"
-                                        onClick={() => setCallMode("demo")}
-                                        className={`rounded-xl border px-3 py-2 text-left transition-colors ${callMode === "demo"
+                                        onClick={() => setCallMode("webrtc")}
+                                        className={`rounded-xl border px-3 py-2 text-left transition-colors ${callMode === "webrtc"
                                             ? "border-emerald-500/40 bg-emerald-500/10"
                                             : "border-slate-700 bg-slate-950"
                                             }`}
                                     >
-                                        <p className="text-sm font-medium text-white">Demo (agora)</p>
-                                        <p className="text-xs text-slate-400">Cria chamada com transcrição simulada para validar UX</p>
+                                        <p className="text-sm font-medium text-white">Ligar pelo browser</p>
+                                        <p className="text-xs text-slate-400">Liga direto do navegador para o cliente</p>
                                     </button>
                                     <button
                                         type="button"
@@ -1308,8 +1321,19 @@ export default function DealCommandCenter() {
                                             : "border-slate-700 bg-slate-950"
                                             }`}
                                     >
-                                        <p className="text-sm font-medium text-white">Telefonia (beta)</p>
-                                        <p className="text-xs text-slate-400">Fila para integração Twilio/WebRTC</p>
+                                        <p className="text-sm font-medium text-white">Click-to-call</p>
+                                        <p className="text-xs text-slate-400">Liga pro seu telefone e conecta ao cliente</p>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setCallMode("demo")}
+                                        className={`rounded-xl border px-3 py-2 text-left transition-colors ${callMode === "demo"
+                                            ? "border-amber-500/40 bg-amber-500/10"
+                                            : "border-slate-700 bg-slate-950"
+                                            }`}
+                                    >
+                                        <p className="text-sm font-medium text-white">Demo</p>
+                                        <p className="text-xs text-slate-400">Chamada simulada para testar o fluxo</p>
                                     </button>
                                 </div>
                             </div>
@@ -1333,9 +1357,44 @@ export default function DealCommandCenter() {
                                 ) : (
                                     <PhoneCall className="h-4 w-4" />
                                 )}
-                                {callMode === "demo" ? "Criar chamada demo" : "Enviar para fila"}
+                                {callMode === "webrtc" ? "Ligar agora" : callMode === "demo" ? "Criar chamada demo" : "Iniciar chamada"}
                             </Button>
                         </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                {/* WebRTC In-Browser Dialer */}
+                <Dialog open={showWebrtcDialer} onOpenChange={(open) => {
+                    if (!open) {
+                        setShowWebrtcDialer(false);
+                        setWebrtcCallId(null);
+                        queryClient.invalidateQueries({ queryKey: ["deal-calls", id] });
+                    }
+                }}>
+                    <DialogContent className="bg-slate-900 border-slate-800 text-white w-[calc(100vw-1rem)] max-w-md p-4 sm:p-6">
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2">
+                                <PhoneCall className="h-5 w-5 text-emerald-400" />
+                                Chamada em andamento
+                            </DialogTitle>
+                        </DialogHeader>
+                        <InBrowserDialer
+                            dealId={id!}
+                            customerPhone={deal?.customer_phone || ""}
+                            customerName={deal?.customer_name || "Cliente"}
+                            callId={webrtcCallId}
+                            onCallStarted={(newCallId) => {
+                                setWebrtcCallId(newCallId);
+                                queryClient.invalidateQueries({ queryKey: ["deal-calls", id] });
+                            }}
+                            onCallEnded={() => {
+                                queryClient.invalidateQueries({ queryKey: ["deal-calls", id] });
+                                toast.success("Chamada encerrada. Transcricao sera processada automaticamente.");
+                            }}
+                            onError={(err) => {
+                                toast.error(err);
+                            }}
+                        />
                     </DialogContent>
                 </Dialog>
 

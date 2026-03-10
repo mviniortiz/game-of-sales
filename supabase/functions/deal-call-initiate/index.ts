@@ -19,7 +19,7 @@ type InitiateBody = {
   dealId?: string;
   sellerPhone?: string | null;
   customerPhone?: string | null;
-  mode?: "demo" | "twilio";
+  mode?: "demo" | "twilio" | "webrtc";
 };
 
 const FUNCTIONS_BASE_URL = `${SUPABASE_URL}/functions/v1`;
@@ -264,7 +264,7 @@ serve(async (req) => {
     const rateLimit = await consumeRateLimit(
       adminSupabase,
       `deal-call-initiate:user:${user.id}:company:${(deal as any).company_id}:mode:${mode}`,
-      mode === "twilio" ?20 : 60,
+      mode === "twilio" || mode === "webrtc" ? 20 : 60,
       600,
     );
     if (!rateLimit.allowed) {
@@ -344,6 +344,62 @@ serve(async (req) => {
           call: callRow,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // WebRTC mode: create call record, browser SDK handles the actual call
+    if (mode === "webrtc") {
+      const conferenceName = `deal-call-${crypto.randomUUID().slice(0, 8)}`;
+      const { data: webrtcCall, error: webrtcError } = await (adminSupabase as any)
+        .from("deal_calls")
+        .insert({
+          deal_id: deal.id,
+          company_id: (deal as any).company_id,
+          user_id: user.id,
+          provider: "twilio",
+          status: "queued",
+          seller_phone: sellerPhone,
+          customer_phone: customerPhone,
+          to_number: customerPhone,
+          direction: "outbound",
+          transcript_status: "pending",
+          metadata: {
+            source: "deal-call-initiate",
+            mode: "webrtc",
+            conference_name: conferenceName,
+          },
+        })
+        .select("*")
+        .single();
+
+      if (webrtcError) {
+        return new Response(JSON.stringify({ error: webrtcError.message }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      try {
+        await (adminSupabase as any).from("deal_activities").insert({
+          deal_id: deal.id,
+          company_id: (deal as any).company_id,
+          user_id: user.id,
+          activity_type: "call",
+          description: "Ligacao iniciada via WebRTC (browser)",
+          new_value: `Cliente: ${customerPhone}`,
+        });
+      } catch (e) {
+        console.warn("[deal-call-initiate] deal_activities insert warning:", e);
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          mode: "webrtc",
+          message: "Registro criado. O browser ira conectar via WebRTC.",
+          call: webrtcCall,
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
