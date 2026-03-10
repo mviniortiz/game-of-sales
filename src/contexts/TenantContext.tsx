@@ -73,8 +73,15 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
             }
 
             if (allCompanies && allCompanies.length > 0) {
-              // Type assertion needed until migration adds trial columns
-              const typedCompanies = allCompanies as unknown as Company[];
+              // Map with safe defaults for fields that may not exist yet
+              const typedCompanies: Company[] = allCompanies.map((c: any) => ({
+                id: c.id,
+                name: c.name,
+                plan: c.plan || 'starter',
+                logo_url: c.logo_url || null,
+                trial_ends_at: c.trial_ends_at || null,
+                subscription_status: c.subscription_status || 'active',
+              }));
               setCompanies(typedCompanies);
               // Use stored company or allocated company or first one
               const targetCompany = storedCompanyId && typedCompanies.find(c => c.id === storedCompanyId)
@@ -97,7 +104,15 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
                   .single();
 
                 if (ownCompany) {
-                  setCompanies([ownCompany as unknown as Company]);
+                  const typedOwn: Company = {
+                    id: ownCompany.id,
+                    name: ownCompany.name,
+                    plan: (ownCompany as any).plan || 'starter',
+                    logo_url: ownCompany.logo_url || null,
+                    trial_ends_at: (ownCompany as any).trial_ends_at || null,
+                    subscription_status: (ownCompany as any).subscription_status || 'active',
+                  };
+                  setCompanies([typedOwn]);
                   setActiveCompanyId(profileData.company_id);
                   console.log('[TenantContext] Super admin - using own company_id:', profileData.company_id);
                 } else {
@@ -116,8 +131,15 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
               .single();
 
             if (companyData) {
-              // Type assertion needed until migration adds trial columns
-              setCompanies([companyData as unknown as Company]);
+              const typedCompany: Company = {
+                id: companyData.id,
+                name: companyData.name,
+                plan: (companyData as any).plan || 'starter',
+                logo_url: companyData.logo_url || null,
+                trial_ends_at: (companyData as any).trial_ends_at || null,
+                subscription_status: (companyData as any).subscription_status || 'active',
+              };
+              setCompanies([typedCompany]);
               setActiveCompanyId(profileData.company_id);
               if (profileData.company_id) {
                 localStorage.setItem('activeCompanyId', profileData.company_id);

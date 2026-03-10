@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
+const TWILIO_WEBHOOK_SECRET = Deno.env.get("TWILIO_WEBHOOK_SECRET");
+
 function xmlEscape(value: string) {
   return value
     .replaceAll("&", "&amp;")
@@ -9,9 +11,23 @@ function xmlEscape(value: string) {
     .replaceAll("'", "&apos;");
 }
 
+function isAuthorizedWebhook(url: URL) {
+  if (!TWILIO_WEBHOOK_SECRET) {
+    console.error("[twilio-voice-bridge] TWILIO_WEBHOOK_SECRET is not set — rejecting request for security");
+    return false;
+  }
+  return url.searchParams.get("secret") === TWILIO_WEBHOOK_SECRET;
+}
+
 serve(async (req) => {
   try {
     const url = new URL(req.url);
+    if (!isAuthorizedWebhook(url)) {
+      return new Response(
+        `<?xml version="1.0" encoding="UTF-8"?><Response><Hangup/></Response>`,
+        { status: 403, headers: { "Content-Type": "text/xml; charset=utf-8" } },
+      );
+    }
     const callId = url.searchParams.get("call_id") || "";
     const leg = (url.searchParams.get("leg") || "customer").toLowerCase();
     const conferenceRaw = url.searchParams.get("conference") || `deal-call-${callId}`;
@@ -20,7 +36,12 @@ serve(async (req) => {
     const conference = conferenceRaw.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 64) || `deal-call-${callId}`;
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const recordingWebhook = `${supabaseUrl}/functions/v1/twilio-voice-recording-webhook?call_id=${encodeURIComponent(callId)}`;
+    const recordingWebhookUrl = new URL(`${supabaseUrl}/functions/v1/twilio-voice-recording-webhook`);
+    recordingWebhookUrl.searchParams.set("call_id", callId);
+    if (TWILIO_WEBHOOK_SECRET) {
+      recordingWebhookUrl.searchParams.set("secret", TWILIO_WEBHOOK_SECRET);
+    }
+    const recordingWebhook = recordingWebhookUrl.toString();
     const shouldRecord = leg === "seller";
 
     const twiml = `<?xml version="1.0" encoding="UTF-8"?>

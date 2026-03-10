@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const TWILIO_WEBHOOK_SECRET = Deno.env.get("TWILIO_WEBHOOK_SECRET");
 
 serve(async (req) => {
   try {
@@ -11,6 +12,13 @@ serve(async (req) => {
     }
 
     const url = new URL(req.url);
+    if (!TWILIO_WEBHOOK_SECRET) {
+      console.error("[twilio-voice-recording-webhook] TWILIO_WEBHOOK_SECRET is not set — rejecting request for security");
+      return new Response("forbidden", { status: 403 });
+    }
+    if (url.searchParams.get("secret") !== TWILIO_WEBHOOK_SECRET) {
+      return new Response("forbidden", { status: 403 });
+    }
     const callId = url.searchParams.get("call_id");
     if (!callId) {
       return new Response("missing call_id", { status: 400 });
@@ -40,7 +48,7 @@ serve(async (req) => {
     const currentMeta = (existing.metadata || {}) as Record<string, any>;
     const twilioMeta = (currentMeta.twilio || {}) as Record<string, any>;
     const urlWithExt = recordingUrl && !recordingUrl.endsWith(".mp3")
-      ? `${recordingUrl}.mp3`
+      ?`${recordingUrl}.mp3`
       : recordingUrl;
 
     await (db as any)
@@ -49,7 +57,7 @@ serve(async (req) => {
         recording_url: urlWithExt,
         status: "completed",
         transcript_status: "pending",
-        duration_seconds: recordingDuration ? Number(recordingDuration) : undefined,
+        duration_seconds: recordingDuration ?Number(recordingDuration) : undefined,
         ended_at: new Date().toISOString(),
         metadata: {
           ...currentMeta,
@@ -60,7 +68,7 @@ serve(async (req) => {
               status: recordingStatus,
               url: urlWithExt,
               conference_sid: conferenceSid,
-              duration_seconds: recordingDuration ? Number(recordingDuration) : undefined,
+              duration_seconds: recordingDuration ?Number(recordingDuration) : undefined,
               updated_at: new Date().toISOString(),
             },
           },
@@ -75,7 +83,7 @@ serve(async (req) => {
         user_id: existing.user_id,
         activity_type: "call",
         description: "Gravação da ligação disponível",
-        new_value: recordingDuration ? `Duração: ${recordingDuration}s` : "Gravação pronta",
+        new_value: recordingDuration ?`Duração: ${recordingDuration}s` : "Gravação pronta",
       });
     } catch (e) {
       console.warn("[twilio-voice-recording-webhook] deal_activities insert warning:", e);

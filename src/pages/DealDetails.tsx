@@ -93,6 +93,7 @@ export default function DealDetails() {
   const { data: deal, isLoading } = useQuery({
     queryKey: ["deal", id],
     queryFn: async () => {
+      if (!id) throw new Error("Deal ID is required");
       const { data, error } = await supabase
         .from("deals")
         .select("*")
@@ -178,7 +179,7 @@ export default function DealDetails() {
     if (deal && !editedDeal) {
       setEditedDeal(deal);
     }
-  }, [deal]);
+  }, [deal, editedDeal]);
 
   // Update deal mutation
   const updateDealMutation = useMutation({
@@ -237,14 +238,20 @@ export default function DealDetails() {
     },
   });
 
-  // Handle stage change
-  const handleStageChange = (newStage: string) => {
+  // Handle stage change — re-fetch fresh deal to avoid stale data
+  const handleStageChange = async (newStage: string) => {
     if (newStage === "closed_lost") {
       setShowLostModal(true);
-    } else {
-      if (!deal) return;
-      updateDealMutation.mutate({ stage: newStage, syncDeal: deal });
+      return;
     }
+    if (!id) return;
+    const { data: freshDeal } = await supabase
+      .from("deals")
+      .select("*")
+      .eq("id", id)
+      .single();
+    if (!freshDeal) return;
+    updateDealMutation.mutate({ stage: newStage, syncDeal: freshDeal });
   };
 
   // Handle lost deal
@@ -256,10 +263,16 @@ export default function DealDetails() {
     setShowLostModal(false);
   };
 
-  // Handle won deal
-  const handleWonDeal = () => {
-    if (!deal) return;
-    updateDealMutation.mutate({ stage: "closed_won", syncDeal: deal });
+  // Handle won deal — re-fetch fresh deal to avoid stale data
+  const handleWonDeal = async () => {
+    if (!id) return;
+    const { data: freshDeal } = await supabase
+      .from("deals")
+      .select("*")
+      .eq("id", id)
+      .single();
+    if (!freshDeal) return;
+    updateDealMutation.mutate({ stage: "closed_won", syncDeal: freshDeal });
   };
 
   // Handle save
@@ -621,7 +634,7 @@ export default function DealDetails() {
                       <Label className="text-[10px] text-slate-500 uppercase tracking-wider">
                         Probabilidade
                       </Label>
-                      <span className={`text-sm font-bold ${deal.probability >= 80 ? "text-emerald-400" : "text-emerald-400"
+                      <span className={`text-sm font-bold ${deal.probability >= 80 ? "text-emerald-400" : deal.probability >= 50 ? "text-amber-400" : "text-rose-400"
                         }`}>
                         {deal.probability}%
                       </span>

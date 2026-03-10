@@ -17,8 +17,43 @@ const MERCADOPAGO_WEBHOOK_SECRET = Deno.env.get("MERCADOPAGO_WEBHOOK_SECRET");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-// Store processed event IDs for idempotency
+// Store processed event IDs for idempotency (capped to prevent memory leak)
+const MAX_PROCESSED_EVENTS = 10000;
 const processedEvents = new Set<string>();
+
+async function claimWebhookEvent(provider: string, eventKey: string, metadata: Record<string, unknown>) {
+    const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
+    try {
+        const { data, error } = await (supabase as any).rpc("claim_webhook_event", {
+            p_provider: provider,
+            p_event_key: eventKey,
+            p_metadata: metadata,
+        });
+        if (error) {
+            const msg = String(error.message || "").toLowerCase();
+            if (msg.includes("claim_webhook_event")) return { enabled: false, claimed: true };
+            throw error;
+        }
+        return { enabled: true, claimed: data === true };
+    } catch (error) {
+        console.warn("[mercadopago-webhook] persistent idempotency unavailable:", error);
+        return { enabled: false, claimed: true };
+    }
+}
+
+async function markWebhookEventStatus(provider: string, eventKey: string, status: "processed" | "failed" | "ignored", metadata: Record<string, unknown> = {}) {
+    const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
+    try {
+        await (supabase as any).rpc("mark_webhook_event_status", {
+            p_provider: provider,
+            p_event_key: eventKey,
+            p_status: status,
+            p_metadata_patch: metadata,
+        });
+    } catch (error) {
+        console.warn("[mercadopago-webhook] mark status warning:", error);
+    }
+}
 
 serve(async (req: Request) => {
     // Handle CORS preflight
@@ -37,6 +72,7 @@ serve(async (req: Request) => {
 });
 
 async function processWebhook(req: Request) {
+    let processedEventKey: string | null = null;
     try {
         const body = await req.text();
         const data = JSON.parse(body);
@@ -62,16 +98,46 @@ async function processWebhook(req: Request) {
             return;
         }
 
+        const eventKey = `${data.type || "unknown"}:${eventId}`;
+        processedEventKey = eventKey;
+        const idempotency = await claimWebhookEvent("mercadopago", eventKey, {
+            type: data.type || null,
+            action: data.action || null,
+        });
+        if (!idempotency.claimed) {
+            console.log("[mercadopago-webhook] Duplicate webhook event:", eventKey);
+            return;
+        }
+
         // Mark as processed (before processing to prevent duplicates)
+        if (processedEvents.size >= MAX_PROCESSED_EVENTS) {
+            const first = processedEvents.values().next().value;
+            if (first !== undefined) processedEvents.delete(first);
+        }
         processedEvents.add(eventId);
 
         // Handle subscription events
         if (data.type === "subscription_preapproval") {
             await handleSubscriptionEvent(data);
+            await markWebhookEventStatus("mercadopago", eventKey, "processed", {
+                handled: true,
+                kind: "subscription_preapproval",
+            });
+        } else {
+            await markWebhookEventStatus("mercadopago", eventKey, "ignored", {
+                handled: false,
+                reason: "unsupported_event_type",
+                type: data.type || null,
+            });
         }
 
     } catch (error) {
         console.error("Webhook processing error:", error);
+        if (processedEventKey) {
+            await markWebhookEventStatus("mercadopago", processedEventKey, "failed", {
+                error: error instanceof Error ? error.message : "unknown_error",
+            });
+        }
     }
 }
 

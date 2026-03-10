@@ -62,6 +62,38 @@ interface HotmartPayload {
     };
 }
 
+async function claimWebhookEvent(supabase: any, provider: string, eventKey: string, metadata: Record<string, unknown>) {
+    try {
+        const { data, error } = await supabase.rpc("claim_webhook_event", {
+            p_provider: provider,
+            p_event_key: eventKey,
+            p_metadata: metadata,
+        });
+        if (error) {
+            const msg = String(error.message || "").toLowerCase();
+            if (msg.includes("claim_webhook_event")) return { enabled: false, claimed: true };
+            throw error;
+        }
+        return { enabled: true, claimed: data === true };
+    } catch (error) {
+        console.warn("[Hotmart Webhook] persistent idempotency unavailable:", error);
+        return { enabled: false, claimed: true };
+    }
+}
+
+async function markWebhookEventStatus(supabase: any, provider: string, eventKey: string, status: string, metadata: Record<string, unknown> = {}) {
+    try {
+        await supabase.rpc("mark_webhook_event_status", {
+            p_provider: provider,
+            p_event_key: eventKey,
+            p_status: status,
+            p_metadata_patch: metadata,
+        });
+    } catch (error) {
+        console.warn("[Hotmart Webhook] mark status warning:", error);
+    }
+}
+
 serve(async (req: Request) => {
     // Handle CORS preflight
     if (req.method === "OPTIONS") {
@@ -76,12 +108,24 @@ serve(async (req: Request) => {
         });
     }
 
+    let parsedPayload: HotmartPayload | null = null;
+    let parsedEventKey: string | null = null;
+
     try {
         // Get the HOTTOK from header for validation
         const receivedHottok = req.headers.get("x-hotmart-hottok");
 
+        if (!receivedHottok) {
+            console.error("[Hotmart Webhook] Missing x-hotmart-hottok header");
+            return new Response(JSON.stringify({ error: "Unauthorized - missing hottok" }), {
+                status: 401,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+        }
+
         // Parse the webhook payload
         const payload: HotmartPayload = await req.json();
+        parsedPayload = payload;
 
         console.log(`[Hotmart Webhook] Received event: ${payload.event}`);
         console.log(`[Hotmart Webhook] Transaction: ${payload.data?.purchase?.transaction}`);
@@ -90,6 +134,9 @@ serve(async (req: Request) => {
         const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
         const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
         const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+        const eventKey = `${payload.id || payload.data?.purchase?.transaction || "unknown"}:${payload.event || "unknown"}`;
+        parsedEventKey = eventKey;
 
         // Find the company that has this HOTTOK configured
         const { data: config, error: configError } = await supabase
@@ -120,6 +167,19 @@ serve(async (req: Request) => {
 
         const companyId = config.company_id;
         let userId = config.user_id;
+
+        const idempotency = await claimWebhookEvent(supabase, "hotmart", eventKey, {
+            event: payload.event,
+            transaction: payload.data?.purchase?.transaction || null,
+            company_id: companyId,
+        });
+        if (!idempotency.claimed) {
+            console.log(`[Hotmart Webhook] Duplicate event ignored: ${eventKey}`);
+            return new Response(JSON.stringify({ success: true, duplicate: true }), {
+                status: 200,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+        }
 
         // If user_id is not set in config, get the first user from the company
         if (!userId) {
@@ -263,6 +323,11 @@ serve(async (req: Request) => {
             .order("created_at", { ascending: false })
             .limit(1);
 
+        await markWebhookEventStatus(supabase, "hotmart", eventKey, "processed", {
+            processed_deal_id: dealId,
+            event: payload.event,
+        });
+
         return new Response(
             JSON.stringify({
                 success: true,
@@ -278,10 +343,21 @@ serve(async (req: Request) => {
     } catch (error) {
         console.error("[Hotmart Webhook] Error:", error);
 
+        try {
+            const errorMessage = error instanceof Error ? error.message : "Unknown error";
+            if (parsedPayload && parsedEventKey) {
+                const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+                const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+                const supabase = createClient(supabaseUrl, supabaseServiceKey);
+                await markWebhookEventStatus(supabase, "hotmart", parsedEventKey, "failed", { error: errorMessage });
+            }
+        } catch {
+            // ignore secondary errors
+        }
+
         return new Response(
             JSON.stringify({
                 error: "Internal server error",
-                message: error.message,
             }),
             {
                 status: 500,

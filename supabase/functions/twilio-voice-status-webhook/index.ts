@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const TWILIO_WEBHOOK_SECRET = Deno.env.get("TWILIO_WEBHOOK_SECRET");
 
 function mapTwilioStatusToCallStatus(status?: string) {
   switch ((status || "").toLowerCase()) {
@@ -32,6 +33,13 @@ serve(async (req) => {
     }
 
     const url = new URL(req.url);
+    if (!TWILIO_WEBHOOK_SECRET) {
+      console.error("[twilio-voice-status-webhook] TWILIO_WEBHOOK_SECRET is not set — rejecting request for security");
+      return new Response("forbidden", { status: 403 });
+    }
+    if (url.searchParams.get("secret") !== TWILIO_WEBHOOK_SECRET) {
+      return new Response("forbidden", { status: 403 });
+    }
     const callId = url.searchParams.get("call_id");
     const leg = (url.searchParams.get("leg") || "unknown").toLowerCase();
 
