@@ -10,32 +10,68 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 
 import { useEvolutionIntegration } from "@/hooks/useEvolutionAPI";
 
-// AI Logic is kept client-side for now as requested for the MVP, 
-// using generic mock logic while we prepare the real LLM endpoint
+import { supabase } from "@/integrations/supabase/client";
+
+// AI Sales Copilot — calls GPT-4o-mini via Edge Function
 export const useCopilot = () => {
     const [aiThinking, setAiThinking] = useState(false);
     const [aiSuggestion, setAiSuggestion] = useState<any>(null);
 
-    const getAiAnalysis = async (chatTextContext: string) => {
+    const getAiAnalysis = async (
+        chatTextContext: string,
+        messages?: Array<{ text: string; sender: "me" | "lead" }>,
+        contactName?: string,
+        contactPhone?: string,
+    ) => {
         setAiThinking(true);
         setAiSuggestion(null);
-        // Simulando a ida no modelo de IA
-        await new Promise(resolve => setTimeout(resolve, 1500));
 
-        if (chatTextContext.length > 50) {
-            setAiSuggestion({
-                sentiment: "ObjeÃ§Ã£o de PreÃ§o",
-                strategy: ["NÃ£o dÃª desconto imediato. Foque no ROI.", "Destaque funcionalidades exclusivas do plano Pro."],
-                draft: "Compreendo! O concorrente tem um plano inicial atrativo. PorÃ©m, o Game of Sales unifica disparos e automaÃ§Ãµes no mesmo plano, o que vale muito mais a pena. Quer ver os nÃºmeros reais de economia?"
+        try {
+            // Build messages array from context if not provided
+            const msgArray = messages || chatTextContext.split("\n").map((line) => {
+                const isMe = line.startsWith("[Vendedor]") || line.startsWith("Eu:");
+                return {
+                    text: line.replace(/^\[(Vendedor|Lead)\]:\s*/, "").replace(/^(Eu|Lead):\s*/, ""),
+                    sender: isMe ? "me" as const : "lead" as const,
+                };
+            }).filter((m) => m.text.trim());
+
+            const { data, error } = await supabase.functions.invoke("whatsapp-copilot", {
+                body: {
+                    messages: msgArray,
+                    contactName: contactName || "Lead",
+                    contactPhone: contactPhone || null,
+                },
             });
-        } else {
+
+            if (error || !data?.analysis) {
+                console.error("[useCopilot] error:", error || data?.error);
+                // Fallback simples se a API falhar
+                setAiSuggestion({
+                    sentiment: "Analise indisponivel",
+                    temperature: "morno",
+                    strategy: ["Tente novamente em alguns segundos."],
+                    draft: "",
+                    objections: [],
+                    nextAction: "Aguardar resposta do lead",
+                });
+                return;
+            }
+
+            setAiSuggestion(data.analysis);
+        } catch (err) {
+            console.error("[useCopilot] unexpected error:", err);
             setAiSuggestion({
-                sentiment: "Neutro / Positivo",
-                strategy: ["Mantenha reciprocidade.", "Avance o lead para o prÃ³ximo estÃ¡gio do funil."],
-                draft: "Perfeito! PrÃ³ximo passo entÃ£o seria enviarmos o contrato. Diga-me quando estiver com tudo em mÃ£os."
+                sentiment: "Erro ao analisar",
+                temperature: "morno",
+                strategy: ["Servico de IA temporariamente indisponivel."],
+                draft: "",
+                objections: [],
+                nextAction: "Tentar novamente",
             });
+        } finally {
+            setAiThinking(false);
         }
-        setAiThinking(false);
     };
 
     return { aiThinking, aiSuggestion, getAiAnalysis, setAiSuggestion };
@@ -102,20 +138,27 @@ const WhatsApp = () => {
         setSelectedChatId(firstChat.id);
         setShowAIAssistant(true);
         fetchMessages(firstChat.id);
-        getAiAnalysis(`${firstChat.name || firstChat.id} ${firstChat.lastMessage?.text || ""}`);
+        // AI analysis will be triggered after messages load
     }, [connected, chats, selectedChatId, clearError, fetchMessages]);
 
-    // Ao clicar num chat, geramos a anÃ¡lise da IA imediatamente (efeito UAU pro cliente)
+    // Ao clicar num chat, carrega mensagens e dispara analise IA
     const handleSelectChat = (id: string) => {
         clearError();
         setSelectedChatId(id);
         setShowAIAssistant(true);
-        // fetch initial immediately
         fetchMessages(id);
-        // Triggers AI on an arbitrary context (simulate taking messages text)
-        const chat = chats.find(c => c.id === id);
-        getAiAnalysis(`${chat?.name || id} ${chat?.lastMessage?.text || ""}`);
     };
+
+    // Trigger AI analysis when messages change for selected chat
+    useEffect(() => {
+        if (!selectedChatId || selectedChatMessages.length === 0 || aiThinking) return;
+        const chat = chats.find(c => c.id === selectedChatId);
+        const msgs = selectedChatMessages.map(m => ({
+            text: m.text,
+            sender: m.sender,
+        }));
+        getAiAnalysis("", msgs, chat?.name || "Lead", chat?.phone || "");
+    }, [selectedChatId, selectedChatMessages.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleSend = async () => {
         if (!inputText.trim() || !selectedChatId) return;
@@ -159,7 +202,7 @@ const WhatsApp = () => {
                                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                                             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                                         </span>
-                                        SessÃ£o Ativa: {config.instanceName}
+                                        Sessao Ativa: {config.instanceName}
                                     </span>
                                     <button onClick={logout} className="text-left text-[9px] text-muted-foreground hover:text-red-400 underline decoration-white/20 hover:decoration-red-400/30 transition-colors mt-0.5">
                                         Desconectar Dispositivo
@@ -168,7 +211,7 @@ const WhatsApp = () => {
                             ) : (
                                 <span className="text-[11px] text-muted-foreground flex items-center gap-1.5 font-medium tracking-wide">
                                     <span className="relative flex h-2 w-2 rounded-full bg-muted-foreground/50"></span>
-                                    Aguardando ConexÃ£o
+                                    Aguardando Conexao
                                 </span>
                             )}
                         </div>
@@ -198,7 +241,7 @@ const WhatsApp = () => {
                     <div className="bg-muted/40 rounded-xl flex items-center px-3 h-11 border border-white/5 focus-within:border-primary/50 focus-within:bg-muted/60 transition-all shadow-inner">
                         <Search className="h-[18px] w-[18px] text-muted-foreground mr-3 shrink-0" />
                         <Input
-                            placeholder="Buscar leads por nome, tag ou nÃºmero..."
+                            placeholder="Buscar leads por nome, tag ou numero..."
                             className="bg-transparent border-0 focus-visible:ring-0 text-[13px] placeholder:text-muted-foreground/70 p-0 h-auto font-medium"
                             disabled={!connected}
                             value={searchTerm}
@@ -278,7 +321,7 @@ const WhatsApp = () => {
                                     <h3 className="text-[18px] font-extrabold tracking-tight mb-2 flex items-center gap-2">
                                         <Loader2 className="h-4 w-4 animate-spin text-emerald-500" /> Aguardando Leitura
                                     </h3>
-                                    <p className="text-[14px] text-muted-foreground text-center font-medium max-w-[250px] leading-relaxed">Escaneie o cÃ³digo com seu WhatsApp para ativar o Motor de Vendas.</p>
+                                    <p className="text-[14px] text-muted-foreground text-center font-medium max-w-[250px] leading-relaxed">Escaneie o codigo com seu WhatsApp para ativar o Motor de Vendas.</p>
                                 </div>
                             ) : (
                                 <div className="flex flex-col items-center">
@@ -336,7 +379,7 @@ const WhatsApp = () => {
                             Inbox AI
                         </h1>
                         <p className="text-muted-foreground/80 text-center max-w-sm text-[15px] leading-relaxed font-medium">
-                            Selecione um lead ao lado para iniciar. O Copilot assumirÃ¡ a anÃ¡lise.
+                            Selecione um lead ao lado para iniciar. O Copilot assumira a analise.
                         </p>
                     </div>
                 ) : (
@@ -478,14 +521,14 @@ const WhatsApp = () => {
                                 <Brain className="w-5 h-5 text-white relative z-10" />
                             </div>
                             <div className="flex-1">
-                                <h3 className="font-extrabold text-[15.5px] bg-clip-text text-transparent bg-gradient-to-r from-white to-white/80 tracking-tight leading-none mb-1">CÃ©rebro IA</h3>
+                                <h3 className="font-extrabold text-[15.5px] bg-clip-text text-transparent bg-gradient-to-r from-white to-white/80 tracking-tight leading-none mb-1">Cerebro IA</h3>
                                 {aiThinking ? (
                                     <p className="text-[11.5px] text-primary font-bold flex items-center gap-1.5 opacity-80 animate-pulse uppercase tracking-wider">
                                         <Loader2 className="w-3 h-3 animate-spin" /> Processando DDC...
                                     </p>
                                 ) : (
                                     <p className="text-[11.5px] text-emerald-400 font-bold flex items-center gap-1.5 uppercase tracking-wider">
-                                        <Sparkles className="w-3 h-3" /> AnÃ¡lise Finalizada
+                                        <Sparkles className="w-3 h-3" /> Analise Finalizada
                                     </p>
                                 )}
                             </div>
@@ -506,19 +549,43 @@ const WhatsApp = () => {
                                         <TrendingUp className="w-4 h-4 text-primary" /> Raio-X Cognitivo
                                     </div>
                                     <div className="bg-card/60 backdrop-blur-md border border-white/10 rounded-[24px] p-5 shadow-lg relative overflow-hidden">
-                                        <div className="flex items-center justify-between mb-4 relative z-10">
+                                        <div className="flex items-center justify-between mb-3 relative z-10">
                                             <span className="text-[14px] font-bold text-foreground/90">Tom Detectado</span>
-                                            <Badge variant="outline" className={`border-0 font-bold tracking-wide shadow-inner ${aiSuggestion.sentiment.includes('ObjeÃ§Ã£o') ? 'bg-orange-500/20 text-orange-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
+                                            <Badge variant="outline" className={`border-0 font-bold tracking-wide shadow-inner ${
+                                                aiSuggestion.temperature === "quente" ? "bg-emerald-500/20 text-emerald-400" :
+                                                aiSuggestion.temperature === "frio" ? "bg-blue-500/20 text-blue-400" :
+                                                "bg-amber-500/20 text-amber-400"
+                                            }`}>
                                                 {aiSuggestion.sentiment}
                                             </Badge>
                                         </div>
+                                        {aiSuggestion.stage && (
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <span className="text-[11px] text-muted-foreground">Estagio:</span>
+                                                <Badge variant="secondary" className="text-[11px]">{aiSuggestion.stage}</Badge>
+                                            </div>
+                                        )}
+                                        {aiSuggestion.objections && aiSuggestion.objections.length > 0 && (
+                                            <div className="mt-3 space-y-1.5">
+                                                <span className="text-[11px] font-semibold text-orange-400 uppercase tracking-wider">Objecoes detectadas:</span>
+                                                {aiSuggestion.objections.map((obj: string, i: number) => (
+                                                    <p key={i} className="text-[12px] text-orange-300/80 pl-2 border-l-2 border-orange-500/30">{obj}</p>
+                                                ))}
+                                            </div>
+                                        )}
+                                        {aiSuggestion.nextAction && (
+                                            <div className="mt-3 flex items-center gap-2 bg-primary/10 rounded-lg p-2">
+                                                <Target className="w-3.5 h-3.5 text-primary shrink-0" />
+                                                <span className="text-[12px] text-primary font-medium">{aiSuggestion.nextAction}</span>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
                                 {/* Strategy Card */}
                                 <div className="space-y-3 opacity-0 animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-forwards" style={{ animationDelay: '200ms' }}>
                                     <div className="flex items-center gap-2 text-[11px] font-black text-muted-foreground uppercase tracking-widest px-1">
-                                        <AlertCircle className="w-4 h-4 text-blue-400" /> TÃ¡tica de Fechamento
+                                        <AlertCircle className="w-4 h-4 text-blue-400" /> Tatica de Fechamento
                                     </div>
                                     <div className="bg-blue-500/10 border border-blue-500/20 rounded-[24px] p-5 shadow-lg">
                                         <ul className="space-y-3.5">
@@ -538,9 +605,13 @@ const WhatsApp = () => {
                                 <div className="space-y-3 opacity-0 animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-forwards" style={{ animationDelay: '300ms' }}>
                                     <div className="flex items-center justify-between text-[11px] font-black text-muted-foreground uppercase tracking-widest px-1">
                                         <div className="flex items-center gap-2">
-                                            <MessageSquareQuote className="w-4 h-4 text-primary" /> Texto MÃ¡gico Gerado
+                                            <MessageSquareQuote className="w-4 h-4 text-primary" /> Texto Magico Gerado
                                         </div>
-                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-primary hover:bg-primary/20 hover:text-primary rounded-lg transition-colors" onClick={() => getAiAnalysis(selectedChatId + " update")}>
+                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-primary hover:bg-primary/20 hover:text-primary rounded-lg transition-colors" onClick={() => {
+                                            const chat = chats.find(c => c.id === selectedChatId);
+                                            const msgs = selectedChatMessages.map(m => ({ text: m.text, sender: m.sender }));
+                                            getAiAnalysis("", msgs, chat?.name || "Lead", chat?.phone || "");
+                                        }}>
                                             <RefreshCcw className="w-3.5 h-3.5" />
                                         </Button>
                                     </div>
