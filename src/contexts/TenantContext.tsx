@@ -40,8 +40,10 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
 
+  const userId = user?.id ?? null;
+
   useEffect(() => {
-    if (!user) {
+    if (!userId) {
       setLoading(false);
       return;
     }
@@ -54,7 +56,7 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
         const { data: profileData } = await supabase
           .from('profiles')
           .select('is_super_admin, company_id')
-          .eq('id', user.id)
+          .eq('id', userId)
           .single();
 
         if (profileData) {
@@ -150,7 +152,7 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
             }
           }
         } else {
-          console.warn('[TenantContext] No profile data found for user:', user.id);
+          console.warn('[TenantContext] No profile data found for user:', userId);
         }
       } catch (error) {
         console.error('Error loading tenant data:', error);
@@ -161,7 +163,8 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
     };
 
     loadTenantData();
-  }, [user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
   const switchCompany = useCallback((companyId: string) => {
     setActiveCompanyId(companyId);
@@ -196,23 +199,23 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
   const getUserLimit = useCallback(() => planFeatures.maxUsers, [planFeatures]);
   const getProductLimit = useCallback(() => planFeatures.maxProducts, [planFeatures]);
 
+  const contextValue = useMemo(() => ({
+    activeCompanyId,
+    companies,
+    switchCompany,
+    isSuperAdmin,
+    loading,
+    refreshKey,
+    currentPlan,
+    planFeatures,
+    planInfo,
+    hasFeature,
+    getUserLimit,
+    getProductLimit,
+  }), [activeCompanyId, companies, switchCompany, isSuperAdmin, loading, refreshKey, currentPlan, planFeatures, planInfo, hasFeature, getUserLimit, getProductLimit]);
+
   return (
-    <TenantContext.Provider
-      value={{
-        activeCompanyId,
-        companies,
-        switchCompany,
-        isSuperAdmin,
-        loading,
-        refreshKey,
-        currentPlan,
-        planFeatures,
-        planInfo,
-        hasFeature,
-        getUserLimit,
-        getProductLimit,
-      }}
-    >
+    <TenantContext.Provider value={contextValue}>
       {children}
     </TenantContext.Provider>
   );

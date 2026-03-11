@@ -1,9 +1,11 @@
-import { useState } from "react";
-import { Home, Trophy, PlusCircle, Target, PhoneCall, Shield, LogOut, User, Settings, Calendar, Kanban, Lock } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Home, Trophy, PlusCircle, Target, PhoneCall, Shield, LogOut, User, Settings, Calendar, Kanban, Lock, Upload } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTenant } from "@/contexts/TenantContext";
 import { usePlan } from "@/hooks/usePlan";
+import { supabase } from "@/integrations/supabase/client";
 import brandLogo from "@/assets/logo-full.png";
 import brandLogoIcon from "@/assets/logo-icon.png";
 import { AnimatedIcon } from "@/components/ui/animated-icon";
@@ -38,12 +40,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { PRODUCT_FEATURES } from "@/config/features";
 
 // Itens agrupados por categoria
 const visaoGeralItems = [
   { title: "Dashboard", url: "/dashboard", icon: Home },
-  ...(PRODUCT_FEATURES.whatsappHub ? [{ title: "WhatsApp", url: "/whatsapp", icon: WhatsAppIcon }] : []),
+  { title: "WhatsApp", url: "/whatsapp", icon: WhatsAppIcon },
   { title: "CRM Pipeline", url: "/crm", icon: Kanban },
   { title: "Performance de Calls", url: "/calls", icon: PhoneCall },
   { title: "Calendário", url: "/calendario", icon: Calendar },
@@ -53,18 +54,53 @@ const gestaoItems = [
   { title: "Metas", url: "/metas", icon: Target },
   { title: "Ranking", url: "/ranking", icon: Trophy },
   { title: "Integrações", url: "/integracoes", icon: Settings },
+  { title: "Importar Dados", url: "/importar", icon: Upload },
 ];
 
 const adminMenuItem = { title: "Administração", url: "/admin", icon: Shield };
 
 export function AppSidebar() {
   const { state } = useSidebar();
-  const { user, isAdmin, signOut, profile } = useAuth();
+  const { user, isAdmin, isSuperAdmin, signOut, profile, companyId } = useAuth();
+  const { activeCompanyId } = useTenant();
   const { hasFeature } = usePlan();
   const location = useLocation();
   const navigate = useNavigate();
   const collapsed = state === "collapsed";
   const [isNovaVendaOpen, setIsNovaVendaOpen] = useState(false);
+  const [rottingDealsCount, setRottingDealsCount] = useState(0);
+
+  const effectiveCompanyId = isSuperAdmin ? activeCompanyId : companyId;
+
+  // Lightweight query: count deals not updated in 3+ days
+  useEffect(() => {
+    if (!effectiveCompanyId) {
+      setRottingDealsCount(0);
+      return;
+    }
+
+    const fetchRottingCount = async () => {
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+      const cutoff = threeDaysAgo.toISOString();
+
+      const { count, error } = await supabase
+        .from("deals")
+        .select("id", { count: "exact", head: true })
+        .eq("company_id", effectiveCompanyId)
+        .lt("updated_at", cutoff)
+        .not("stage", "in", "(closed_won,closed_lost)");
+
+      if (!error && count !== null) {
+        setRottingDealsCount(count);
+      }
+    };
+
+    fetchRottingCount();
+    // Re-check every 60 seconds
+    const interval = setInterval(fetchRottingCount, 60000);
+    return () => clearInterval(interval);
+  }, [effectiveCompanyId]);
 
   // Filter menu items based on plan features
   const filteredVisaoGeralItems = visaoGeralItems.filter(item => {
@@ -74,7 +110,8 @@ export function AppSidebar() {
 
   const filteredGestaoItems = gestaoItems.filter(item => {
     if (item.url === '/metas') return hasFeature('metas');
-    if (item.url === '/integracoes') return hasFeature('integrations');
+    if (item.url === '/integracoes') return isAdmin && hasFeature('integrations');
+    if (item.url === '/importar') return isAdmin;
     if (item.url === '/ranking') return hasFeature('gamification');
     return true;
   });
@@ -142,6 +179,8 @@ export function AppSidebar() {
               <SidebarMenu className="gap-1">
                 {filteredVisaoGeralItems.map((item) => {
                   const isActive = location.pathname === item.url;
+                  const isCRM = item.url === "/crm";
+                  const showBadge = isCRM && rottingDealsCount > 0;
                   return (
                     <SidebarMenuItem key={item.title}>
                       {collapsed ? (
@@ -151,15 +190,23 @@ export function AppSidebar() {
                               <NavLink
                                 to={item.url}
                                 end
-                                className="flex items-center gap-3 hover:bg-sidebar-accent transition-all group py-2.5"
+                                className="flex items-center gap-3 hover:bg-sidebar-accent transition-all group py-2.5 relative"
                                 activeClassName="bg-emerald-50 text-emerald-600 font-medium border-l-4 border-emerald-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
                               >
-                                <AnimatedIcon icon={item.icon} isActive={isActive} />
+                                <span className="relative">
+                                  <AnimatedIcon icon={item.icon} isActive={isActive} />
+                                  {showBadge && (
+                                    <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold leading-none shadow-sm shadow-rose-500/40">
+                                      {rottingDealsCount > 99 ? "99+" : rottingDealsCount}
+                                    </span>
+                                  )}
+                                </span>
                               </NavLink>
                             </SidebarMenuButton>
                           </TooltipTrigger>
                           <TooltipContent side="right" className="font-medium">
                             {item.title}
+                            {showBadge && ` (${rottingDealsCount} parados)`}
                           </TooltipContent>
                         </Tooltip>
                       ) : (
@@ -170,8 +217,20 @@ export function AppSidebar() {
                             className="flex items-center gap-3 hover:bg-sidebar-accent transition-all group py-2.5"
                             activeClassName="bg-emerald-50 text-emerald-600 font-medium border-l-4 border-emerald-500 dark:bg-sidebar-accent dark:text-sidebar-foreground"
                           >
-                            <AnimatedIcon icon={item.icon} isActive={isActive} />
+                            <span className="relative">
+                              <AnimatedIcon icon={item.icon} isActive={isActive} />
+                              {showBadge && (
+                                <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold leading-none shadow-sm shadow-rose-500/40">
+                                  {rottingDealsCount > 99 ? "99+" : rottingDealsCount}
+                                </span>
+                              )}
+                            </span>
                             <span className="flex-1">{item.title}</span>
+                            {showBadge && (
+                              <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-rose-500/15 text-rose-400 text-[10px] font-bold">
+                                {rottingDealsCount}
+                              </span>
+                            )}
                           </NavLink>
                         </SidebarMenuButton>
                       )}

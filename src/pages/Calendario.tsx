@@ -22,6 +22,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { AgendamentoForm } from "@/components/calls/AgendamentoForm";
 import { CalendarTimelineView } from "@/components/calendar/CalendarTimelineView";
 import { AgendamentoDetailsModal } from "@/components/calendar/AgendamentoDetailsModal";
+import { GoogleCalendarConfigModal } from "@/components/integrations/GoogleCalendarConfigModal";
 
 type ViewType = "day" | "week" | "month";
 type AttendanceStatus = "show" | "no_show" | "pending";
@@ -456,6 +457,8 @@ export default function Calendario() {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showNewAgendamento, setShowNewAgendamento] = useState(false);
   const [googleSynced, setGoogleSynced] = useState(false);
+  const [googleConnected, setGoogleConnected] = useState(false);
+  const [googleCalendarModalOpen, setGoogleCalendarModalOpen] = useState(false);
 
   const canSeeTeam = isAdmin || isSuperAdmin;
   const showingTeam = canSeeTeam && selectedVendedor === "all";
@@ -481,6 +484,7 @@ export default function Calendario() {
       try {
         const { data: profile } = await supabase.from("profiles").select("google_access_token").eq("id", user.id).single();
         if (profile?.google_access_token) {
+          setGoogleConnected(true);
           const res = await supabase.functions.invoke("google-calendar-sync", { body: { action: "sync_all", userId: user.id } });
           if (res.data?.inserted > 0) loadAgendamentos();
         }
@@ -638,6 +642,20 @@ export default function Calendario() {
           {/* View selector */}
           <ViewSelector view={view} onChange={setView} />
 
+          {/* Google Calendar */}
+          <Button
+            size="sm"
+            variant={googleConnected ? "outline" : "default"}
+            className={googleConnected
+              ? "h-8 px-3 text-[12px] border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800"
+              : "h-8 px-3 text-[12px] bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-md shadow-blue-500/20"
+            }
+            onClick={() => setGoogleCalendarModalOpen(true)}
+          >
+            <CalendarDays className="h-3.5 w-3.5 mr-1" />
+            {googleConnected ? "Google Calendar" : "Conectar Google"}
+          </Button>
+
           {/* New appointment */}
           <Dialog open={showNewAgendamento} onOpenChange={setShowNewAgendamento}>
             <DialogTrigger asChild>
@@ -732,6 +750,12 @@ export default function Calendario() {
         open={showDetailsModal}
         onClose={() => { setShowDetailsModal(false); setSelectedAgendamento(null); }}
         onUpdate={loadAgendamentos}
+      />
+
+      <GoogleCalendarConfigModal
+        open={googleCalendarModalOpen}
+        onClose={() => setGoogleCalendarModalOpen(false)}
+        onSaved={() => { setGoogleConnected(true); loadAgendamentos(); }}
       />
     </>
   );

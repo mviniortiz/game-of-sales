@@ -172,6 +172,11 @@ export const AdminVendedores = () => {
   const [targetCompanyId, setTargetCompanyId] = useState<string>("");
   const [transferring, setTransferring] = useState(false);
 
+  // Delete seller states
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [sellerToDelete, setSellerToDelete] = useState<{ id: string; nome: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
   // Filter states
   const [filterLevels, setFilterLevels] = useState<string[]>([]);
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
@@ -189,7 +194,8 @@ export const AdminVendedores = () => {
         .from("profiles")
         .select(`
           *,
-          vendas:vendas(id, valor, data_venda, created_at)
+          vendas:vendas(id, valor, data_venda, created_at),
+          companies:company_id(id, name)
         `)
         .eq("company_id", activeCompanyId); // CRITICAL: Filter by company!
 
@@ -217,6 +223,7 @@ export const AdminVendedores = () => {
           faturamentoMes,
           isOnline,
           trend,
+          companyName: (profile as any).companies?.name || null,
         };
       }) || [];
     },
@@ -323,8 +330,16 @@ export const AdminVendedores = () => {
         setGeneratedPassword(data.password);
       }
 
-      toast.success("Vendedor criado com sucesso!");
-      setShowAdd(false);
+      if (data?.emailSent) {
+        toast.success("Vendedor criado e e-mail enviado com sucesso!");
+        setShowAdd(false);
+      } else if (data?.password) {
+        const reason = data?.emailError || "verifique a configuração do Resend";
+        toast.warning(`Vendedor criado, mas o e-mail não foi enviado (${reason}). Copie a senha abaixo.`);
+      } else {
+        toast.success("Vendedor criado com sucesso!");
+        setShowAdd(false);
+      }
       setNome("");
       setEmail("");
       setSendPassword(true);
@@ -334,6 +349,30 @@ export const AdminVendedores = () => {
       toast.error(err?.message || "Não foi possível criar o vendedor");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleDeleteSeller = async () => {
+    if (!sellerToDelete) return;
+
+    setDeleting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-delete-seller", {
+        body: { sellerId: sellerToDelete.id },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast.success(`${sellerToDelete.nome} foi removido(a) com sucesso`);
+      queryClient.invalidateQueries({ queryKey: ["admin-vendedores"] });
+      setShowDeleteConfirm(false);
+      setSellerToDelete(null);
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err?.message || "Erro ao remover vendedor");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -569,6 +608,7 @@ export const AdminVendedores = () => {
           <TableHeader>
             <TableRow className="bg-gray-50 dark:bg-gray-900/50 hover:bg-gray-50 dark:hover:bg-gray-900/50">
               <TableHead className="text-gray-600 dark:text-gray-400 font-semibold">Vendedor</TableHead>
+              <TableHead className="text-gray-600 dark:text-gray-400 font-semibold">Empresa</TableHead>
               <TableHead className="text-gray-600 dark:text-gray-400 font-semibold">Nível</TableHead>
               <TableHead className="text-gray-600 dark:text-gray-400 font-semibold">Pontos</TableHead>
               <TableHead className="text-gray-600 dark:text-gray-400 font-semibold text-right">Vendas</TableHead>
@@ -606,6 +646,13 @@ export const AdminVendedores = () => {
                         <div className="text-xs text-gray-500 dark:text-gray-400">{vendedor.email}</div>
                       </div>
                     </div>
+                  </TableCell>
+
+                  {/* Company Column */}
+                  <TableCell>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      {vendedor.companyName || "—"}
+                    </span>
                   </TableCell>
 
                   {/* Level Column with Progress */}
@@ -711,7 +758,10 @@ export const AdminVendedores = () => {
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuItem
-                            onClick={() => toast.error("Funcionalidade em desenvolvimento")}
+                            onClick={() => {
+                              setSellerToDelete({ id: vendedor.id, nome: vendedor.nome });
+                              setShowDeleteConfirm(true);
+                            }}
                             className="cursor-pointer text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300"
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
@@ -860,6 +910,44 @@ export const AdminVendedores = () => {
               className="bg-emerald-600 hover:bg-emerald-700 text-white"
             >
               {transferring ? "Transferindo..." : "Confirmar Transferência"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-gray-900 dark:text-white flex items-center gap-2">
+              <Trash2 className="h-5 w-5 text-rose-500" />
+              Remover Vendedor
+            </DialogTitle>
+            <DialogDescription className="text-gray-500 dark:text-gray-400">
+              Tem certeza que deseja remover <span className="font-semibold text-gray-900 dark:text-white">{sellerToDelete?.nome}</span>?
+              Esta acao e irreversivel e remove a conta, perfil e dados do usuario.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="p-3 rounded-lg bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-sm text-rose-700 dark:text-rose-300">
+            Os deals e vendas do vendedor serao mantidos no sistema, mas nao terao mais dono associado.
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              variant="outline"
+              onClick={() => { setShowDeleteConfirm(false); setSellerToDelete(null); }}
+              disabled={deleting}
+              className="border-gray-200 dark:border-gray-700"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleDeleteSeller}
+              disabled={deleting}
+              className="bg-rose-600 hover:bg-rose-700 text-white"
+            >
+              {deleting ? "Removendo..." : "Sim, Remover"}
             </Button>
           </div>
         </DialogContent>

@@ -45,46 +45,28 @@ ALTER TABLE webhook_logs ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for integration_configs
 -- Users can view their company integrations
-CREATE POLICY "integration_configs_select_policy"
-  ON integration_configs FOR SELECT
-  USING (company_id IN (
-    SELECT company_id FROM profiles WHERE id = auth.uid()
-  ));
-
--- Users can manage their company integrations (is_super_admin or same company)
-CREATE POLICY "integration_configs_all_policy"
-  ON integration_configs FOR ALL
-  USING (
-    company_id IN (
-      SELECT company_id FROM profiles WHERE id = auth.uid()
-    )
-    OR
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_super_admin = true)
-  );
-
--- RLS Policies for webhook_logs
-CREATE POLICY "webhook_logs_select_policy"
-  ON webhook_logs FOR SELECT
-  USING (
-    company_id IN (
-      SELECT company_id FROM profiles WHERE id = auth.uid()
-    )
-    OR
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_super_admin = true)
-  );
-
--- Allow service role full access (for Edge Functions)
-CREATE POLICY "integration_configs_service_role"
-  ON integration_configs FOR ALL
-  TO service_role
-  USING (true)
-  WITH CHECK (true);
-
-CREATE POLICY "webhook_logs_service_role"
-  ON webhook_logs FOR ALL
-  TO service_role
-  USING (true)
-  WITH CHECK (true);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'integration_configs_select_policy') THEN
+    CREATE POLICY "integration_configs_select_policy" ON integration_configs FOR SELECT
+      USING (company_id IN (SELECT company_id FROM profiles WHERE id = auth.uid()));
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'integration_configs_all_policy') THEN
+    CREATE POLICY "integration_configs_all_policy" ON integration_configs FOR ALL
+      USING (company_id IN (SELECT company_id FROM profiles WHERE id = auth.uid())
+        OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_super_admin = true));
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'webhook_logs_select_policy') THEN
+    CREATE POLICY "webhook_logs_select_policy" ON webhook_logs FOR SELECT
+      USING (company_id IN (SELECT company_id FROM profiles WHERE id = auth.uid())
+        OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_super_admin = true));
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'integration_configs_service_role') THEN
+    CREATE POLICY "integration_configs_service_role" ON integration_configs FOR ALL TO service_role USING (true) WITH CHECK (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'webhook_logs_service_role') THEN
+    CREATE POLICY "webhook_logs_service_role" ON webhook_logs FOR ALL TO service_role USING (true) WITH CHECK (true);
+  END IF;
+END $$;
 
 -- Function to update updated_at automatically
 CREATE OR REPLACE FUNCTION update_integration_config_timestamp()

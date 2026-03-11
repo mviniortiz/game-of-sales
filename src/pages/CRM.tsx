@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   DndContext,
@@ -6,20 +6,16 @@ import {
   closestCorners,
   pointerWithin,
   PointerSensor,
-  TouchSensor,
-  KeyboardSensor,
   useSensor,
   useSensors,
   DragStartEvent,
   DragEndEvent,
-  DragOverEvent,
   MeasuringStrategy,
   type CollisionDetection,
 } from "@dnd-kit/core";
 import {
   SortableContext,
   verticalListSortingStrategy,
-  sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -45,8 +41,20 @@ import {
   Search,
   Trash2,
   User,
-  LucideIcon
+  LucideIcon,
+  Flame,
+  Clock,
+  Filter,
+  X,
+  CalendarDays,
+  ChevronDown,
+  CheckSquare,
+  ArrowRightCircle,
+  UserPlus,
+  CheckCheck,
 } from "lucide-react";
+import { differenceInDays } from "date-fns";
+import { motion, AnimatePresence } from "framer-motion";
 import { syncWonDealToSale, unsyncDealSale } from "@/utils/salesSync";
 import { KanbanColumn } from "@/components/crm/KanbanColumn";
 import { DealCard } from "@/components/crm/DealCard";
@@ -54,7 +62,7 @@ import { NewDealModal } from "@/components/crm/NewDealModal";
 import { KanbanSkeleton } from "@/components/crm/KanbanSkeleton";
 import { PipelineConfigModal, StageConfig } from "@/components/crm/PipelineConfigModal";
 import { LostDealModal } from "@/components/crm/LostDealModal";
-import { Confetti, CelebrationOverlay } from "@/components/crm/Confetti";
+import { WinCelebration } from "@/components/crm/WinCelebration";
 
 // Icon mapping
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -117,6 +125,12 @@ export interface Stage {
   borderColor: string;
 }
 
+export interface DealLastActivity {
+  type: "note" | "call" | "stage_change" | "update";
+  text: string;
+  date: string;
+}
+
 export interface Deal {
   id: string;
   title: string;
@@ -140,6 +154,7 @@ export interface Deal {
   } | null;
   is_hot?: boolean | null;
   assignee_outside_company?: boolean;
+  lastActivity?: DealLastActivity | null;
 }
 
 // LocalStorage key for pipeline config - now includes company ID
@@ -175,14 +190,108 @@ export default function CRM() {
   const [showConfig, setShowConfig] = useState(false);
   const [showLostModal, setShowLostModal] = useState(false);
   const [dealToLose, setDealToLose] = useState<Deal | null>(null);
-  const [viewMode, setViewMode] = useState<"kanban" | "list">("kanban");
+  // Mobile-first: default to list on small screens
+  const [viewMode, setViewMode] = useState<"kanban" | "list">(() =>
+    typeof window !== "undefined" && window.innerWidth < 640 ? "list" : "kanban"
+  );
+  // Mobile kanban: track visible column
+  const [activeStageIndex, setActiveStageIndex] = useState(0);
+  const kanbanScrollRef = useRef<HTMLDivElement>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showConfetti, setShowConfetti] = useState(false);
   const [celebrationMessage, setCelebrationMessage] = useState("");
+  const [celebrationValue, setCelebrationValue] = useState(0);
   const [selectedSeller, setSelectedSeller] = useState<string>("all");
   const [dealToDelete, setDealToDelete] = useState<Deal | null>(null);
 
+  // Advanced filter state
+  const [filterHotDeals, setFilterHotDeals] = useState(false);
+  const [filterRottingDeals, setFilterRottingDeals] = useState(false);
+  const [filterProbability, setFilterProbability] = useState<"all" | "high" | "medium" | "low">("all");
+  const [filterDateRange, setFilterDateRange] = useState<"all" | "this_week" | "this_month" | "overdue">("all");
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Rotting notifications state
+  const [rottingBannerDismissed, setRottingBannerDismissed] = useState(false);
+
+  // Bulk actions state
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedDeals, setSelectedDeals] = useState<Set<string>>(new Set());
+  const [showBulkMoveMenu, setShowBulkMoveMenu] = useState(false);
+  const [showBulkAssignMenu, setShowBulkAssignMenu] = useState(false);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  const bulkMoveRef = useRef<HTMLDivElement>(null);
+  const bulkAssignRef = useRef<HTMLDivElement>(null);
+
   const effectiveCompanyId = isSuperAdmin ? activeCompanyId : companyId;
+
+  // Count active advanced filters
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (filterHotDeals) count++;
+    if (filterRottingDeals) count++;
+    if (filterProbability !== "all") count++;
+    if (filterDateRange !== "all") count++;
+    return count;
+  }, [filterHotDeals, filterRottingDeals, filterProbability, filterDateRange]);
+
+  const clearAllFilters = useCallback(() => {
+    setFilterHotDeals(false);
+    setFilterRottingDeals(false);
+    setFilterProbability("all");
+    setFilterDateRange("all");
+  }, []);
+
+  // Apply advanced filters to a deals array
+  const applyAdvancedFilters = useCallback((dealsArr: Deal[]): Deal[] => {
+    let result = dealsArr;
+
+    if (filterHotDeals) {
+      result = result.filter((d) => d.is_hot === true);
+    }
+
+    if (filterRottingDeals) {
+      const threeDaysAgo = Date.now() - 3 * 24 * 60 * 60 * 1000;
+      result = result.filter((d) => {
+        const updatedAt = d.updated_at ? new Date(d.updated_at).getTime() : 0;
+        return updatedAt < threeDaysAgo;
+      });
+    }
+
+    if (filterProbability === "high") {
+      result = result.filter((d) => d.probability >= 70);
+    } else if (filterProbability === "medium") {
+      result = result.filter((d) => d.probability >= 30 && d.probability < 70);
+    } else if (filterProbability === "low") {
+      result = result.filter((d) => d.probability < 30);
+    }
+
+    if (filterDateRange !== "all") {
+      const now = new Date();
+      if (filterDateRange === "this_week") {
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - now.getDay());
+        startOfWeek.setHours(0, 0, 0, 0);
+        result = result.filter((d) => {
+          const created = new Date(d.created_at);
+          return created >= startOfWeek;
+        });
+      } else if (filterDateRange === "this_month") {
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        result = result.filter((d) => {
+          const created = new Date(d.created_at);
+          return created >= startOfMonth;
+        });
+      } else if (filterDateRange === "overdue") {
+        result = result.filter((d) => {
+          if (!d.expected_close_date) return false;
+          return new Date(d.expected_close_date) < now;
+        });
+      }
+    }
+
+    return result;
+  }, [filterHotDeals, filterRottingDeals, filterProbability, filterDateRange]);
 
   // Load stages from localStorage based on company - defaults if none found
   const [stageConfigs, setStageConfigs] = useState<StageConfig[]>(DEFAULT_STAGES);
@@ -221,21 +330,12 @@ export default function CRM() {
   // Convert configs to full stage objects
   const STAGES = useMemo(() => stageConfigs.map(configToStage), [stageConfigs]);
 
-  // Optimized sensors for fast, responsive drag (pointer + touch + keyboard)
+  // Optimized sensors for fast, responsive drag
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
         distance: 6, // Slightly higher threshold reduces accidental/jittery drags
       },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 150,
-        tolerance: 5,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
     })
   );
 
@@ -293,6 +393,58 @@ export default function CRM() {
 
       const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
 
+      // Fetch latest activities and notes for all deals (batch, avoids N+1)
+      const dealIds = (data || []).map((d: any) => d.id);
+      const activitiesMap = new Map<string, DealLastActivity>();
+
+      if (dealIds.length > 0) {
+        try {
+          const { data: activitiesData } = await (supabase as any)
+            .from("deal_activities")
+            .select("deal_id, activity_type, description, old_value, new_value, created_at")
+            .in("deal_id", dealIds)
+            .order("created_at", { ascending: false });
+
+          if (activitiesData) {
+            for (const a of activitiesData as any[]) {
+              if (!activitiesMap.has(a.deal_id)) {
+                const isStageChange = a.activity_type === "stage_change";
+                activitiesMap.set(a.deal_id, {
+                  type: isStageChange ? "stage_change" : (a.activity_type === "call" ? "call" : "note"),
+                  text: a.description || (isStageChange ? `${a.old_value || "?"} → ${a.new_value || "?"}` : "Atividade"),
+                  date: a.created_at,
+                });
+              }
+            }
+          }
+        } catch {
+          // deal_activities table may not exist yet
+        }
+
+        try {
+          const { data: notesData } = await (supabase as any)
+            .from("deal_notes")
+            .select("deal_id, content, created_at")
+            .in("deal_id", dealIds)
+            .order("created_at", { ascending: false });
+
+          if (notesData) {
+            for (const n of notesData as any[]) {
+              const existing = activitiesMap.get(n.deal_id);
+              if (!existing || new Date(n.created_at) > new Date(existing.date)) {
+                activitiesMap.set(n.deal_id, {
+                  type: "note",
+                  text: n.content || "Nota",
+                  date: n.created_at,
+                });
+              }
+            }
+          }
+        } catch {
+          // deal_notes table may not exist yet
+        }
+      }
+
       // Map to our Deal interface
       return (data || []).map((d: any) => {
         const sellerProfile = profilesMap.get(d.user_id) || null;
@@ -316,6 +468,7 @@ export default function CRM() {
         is_hot: d.is_hot || false,
         profiles: sellerProfile,
         assignee_outside_company: !!effectiveCompanyId && !!d.user_id && !sellerProfile,
+        lastActivity: activitiesMap.get(d.id) || null,
       };
       }) as Deal[];
     },
@@ -373,6 +526,132 @@ export default function CRM() {
     onError: (error: any) => {
       console.error("Error deleting deal:", error);
       toast.error(error?.message || "Erro ao excluir negociação");
+    },
+  });
+
+  // ── Selection helpers ───────────────────────────────────
+  const toggleSelectionMode = useCallback(() => {
+    setSelectionMode((prev) => {
+      if (prev) {
+        setSelectedDeals(new Set());
+        setShowBulkMoveMenu(false);
+        setShowBulkAssignMenu(false);
+        setShowBulkDeleteConfirm(false);
+      }
+      return !prev;
+    });
+  }, []);
+
+  const toggleSelectDeal = useCallback((dealId: string) => {
+    setSelectedDeals((prev) => {
+      const next = new Set(prev);
+      if (next.has(dealId)) next.delete(dealId);
+      else next.add(dealId);
+      return next;
+    });
+  }, []);
+
+  // All visible deals (after filters)
+  const allVisibleDealIds = useMemo(() => {
+    let dealsToShow = selectedSeller === "all" ? localDeals : localDeals.filter((d) => d.user_id === selectedSeller);
+    if (searchQuery.trim()) {
+      dealsToShow = dealsToShow.filter(
+        (d) =>
+          d.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          d.customer_name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    dealsToShow = applyAdvancedFilters(dealsToShow);
+    return dealsToShow.map((d) => d.id);
+  }, [localDeals, selectedSeller, searchQuery, applyAdvancedFilters]);
+
+  const selectAll = useCallback(() => {
+    setSelectedDeals(new Set(allVisibleDealIds));
+  }, [allVisibleDealIds]);
+
+  const deselectAll = useCallback(() => {
+    setSelectedDeals(new Set());
+  }, []);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    if (!showBulkMoveMenu && !showBulkAssignMenu) return;
+    const handler = (e: MouseEvent) => {
+      if (bulkMoveRef.current && !bulkMoveRef.current.contains(e.target as Node)) {
+        setShowBulkMoveMenu(false);
+      }
+      if (bulkAssignRef.current && !bulkAssignRef.current.contains(e.target as Node)) {
+        setShowBulkAssignMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showBulkMoveMenu, showBulkAssignMenu]);
+
+  // ── Bulk mutations ─────────────────────────────────────
+  const bulkMoveMutation = useMutation({
+    mutationFn: async ({ dealIds, targetStage }: { dealIds: string[]; targetStage: string }) => {
+      const { error } = await supabase
+        .from("deals")
+        .update({ stage: targetStage as any })
+        .in("id", dealIds);
+      if (error) throw error;
+      return dealIds.length;
+    },
+    onSuccess: (count, { targetStage }) => {
+      const stage = STAGES.find((s) => s.id === targetStage);
+      queryClient.invalidateQueries({ queryKey: ["deals", effectiveCompanyId] });
+      setSelectedDeals(new Set());
+      setShowBulkMoveMenu(false);
+      toast.success(`${count} negociações movidas para "${stage?.title || targetStage}"`);
+    },
+    onError: () => {
+      toast.error("Erro ao mover negociações em lote");
+    },
+  });
+
+  const bulkAssignMutation = useMutation({
+    mutationFn: async ({ dealIds, userId }: { dealIds: string[]; userId: string }) => {
+      const { error } = await supabase
+        .from("deals")
+        .update({ user_id: userId })
+        .in("id", dealIds);
+      if (error) throw error;
+      return dealIds.length;
+    },
+    onSuccess: (count, { userId }) => {
+      const vendor = vendors.find((v: any) => v.id === userId);
+      queryClient.invalidateQueries({ queryKey: ["deals", effectiveCompanyId] });
+      setSelectedDeals(new Set());
+      setShowBulkAssignMenu(false);
+      toast.success(`${count} negociações atribuídas a "${vendor?.nome || "vendedor"}"`);
+    },
+    onError: () => {
+      toast.error("Erro ao atribuir negociações em lote");
+    },
+  });
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (dealIds: string[]) => {
+      // Unsync any won deals before deleting
+      for (const dealId of dealIds) {
+        const deal = localDeals.find((d) => d.id === dealId);
+        if (deal) {
+          await unsyncDealSale(deal.id, deal.user_id, queryClient);
+        }
+      }
+      const { error } = await supabase.from("deals").delete().in("id", dealIds);
+      if (error) throw error;
+      return dealIds.length;
+    },
+    onSuccess: (count) => {
+      queryClient.invalidateQueries({ queryKey: ["deals", effectiveCompanyId] });
+      setSelectedDeals(new Set());
+      setShowBulkDeleteConfirm(false);
+      toast.success(`${count} negociações excluídas com sucesso`);
+    },
+    onError: () => {
+      toast.error("Erro ao excluir negociações em lote");
     },
   });
 
@@ -443,11 +722,12 @@ export default function CRM() {
 
       if (stage === "closed_won" && deal) {
         // Trigger celebration
-        setCelebrationMessage(`🎉 ${deal.title} Ganho!`);
+        setCelebrationMessage(deal.title);
+        setCelebrationValue(deal.value || 0);
         setShowConfetti(true);
 
         try {
-          await syncWonDealToSale(deal, queryClient);
+          await syncWonDealToSale(deal, queryClient, effectiveCompanyId);
           toast.success("Negociação ganha e venda sincronizada!");
         } catch (syncError) {
           console.error("Erro ao sincronizar venda do deal:", syncError);
@@ -502,6 +782,9 @@ export default function CRM() {
       );
     }
 
+    // Apply advanced filters
+    dealsToFilter = applyAdvancedFilters(dealsToFilter);
+
     // Group deals
     dealsToFilter.forEach((deal) => {
       if (grouped[deal.stage]) {
@@ -520,7 +803,7 @@ export default function CRM() {
     });
 
     return grouped;
-  }, [localDeals, STAGES, searchQuery, selectedSeller]);
+  }, [localDeals, STAGES, searchQuery, selectedSeller, applyAdvancedFilters]);
 
   // Calculate totals per stage (from filtered deals)
   const stageTotals = useMemo(() => {
@@ -542,6 +825,9 @@ export default function CRM() {
       );
     }
 
+    // Apply advanced filters
+    dealsToCount = applyAdvancedFilters(dealsToCount);
+
     dealsToCount.forEach((deal) => {
       if (totals[deal.stage]) {
         totals[deal.stage].count++;
@@ -550,10 +836,39 @@ export default function CRM() {
     });
 
     return totals;
-  }, [localDeals, STAGES, selectedSeller, searchQuery]);
+  }, [localDeals, STAGES, selectedSeller, searchQuery, applyAdvancedFilters]);
+
+  // Count rotting deals (3+ days without update, excluding closed stages)
+  const rottingDealsCount = useMemo(() => {
+    return localDeals.filter((deal) => {
+      if (deal.stage === "closed_won" || deal.stage === "closed_lost") return false;
+      const days = deal.updated_at ? differenceInDays(new Date(), new Date(deal.updated_at)) : 0;
+      return days > 3;
+    }).length;
+  }, [localDeals]);
 
   // Get the active deal for drag overlay
   const activeDeal = activeId ? localDeals.find((d) => d.id === activeId) : null;
+
+  // Stage neighbors map for swipe gestures (mobile)
+  const stageNeighborsMap = useMemo(() => {
+    const map: Record<string, { prev: { id: string; title: string; color: string } | null; next: { id: string; title: string; color: string } | null }> = {};
+    STAGES.forEach((stage, idx) => {
+      map[stage.id] = {
+        prev: idx > 0 ? { id: STAGES[idx - 1].id, title: STAGES[idx - 1].title, color: STAGES[idx - 1].color } : null,
+        next: idx < STAGES.length - 1 ? { id: STAGES[idx + 1].id, title: STAGES[idx + 1].title, color: STAGES[idx + 1].color } : null,
+      };
+    });
+    return map;
+  }, [STAGES]);
+
+  const handleSwipeMove = useCallback((deal: Deal, targetStageId: string) => {
+    const previousDeals = [...localDeals];
+    // Optimistic update
+    setLocalDeals((prev) => reorderDealsOptimistic(prev, deal.id, targetStageId as StageId, 0));
+    // Persist
+    updateDealMutation.mutate({ id: deal.id, stage: targetStageId as StageId, position: 0, deal, previousDeals });
+  }, [updateDealMutation, localDeals]);
 
   // Prefer the actual pointer location; fallback to geometric matching for gaps
   const collisionDetectionStrategy: CollisionDetection = useCallback((args) => {
@@ -603,26 +918,6 @@ export default function CRM() {
     document.body.style.cursor = 'grabbing';
   };
 
-  // Live column transitions during drag for immediate visual feedback
-  const handleDragOver = (event: DragOverEvent) => {
-    const { active, over } = event;
-    if (!over) return;
-
-    const draggedId = active.id as string;
-    const overId = over.id as string;
-
-    const target = resolveDropTarget(draggedId, overId);
-    if (!target) return;
-
-    const draggedDeal = localDeals.find((d) => d.id === draggedId);
-    if (!draggedDeal) return;
-
-    // Optimistically move card to the hovered column for live feedback
-    if (draggedDeal.stage !== target.targetStage) {
-      applyOptimisticMove(draggedId, target.targetStage, target.targetIndex);
-    }
-  };
-
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
@@ -643,15 +938,17 @@ export default function CRM() {
     const draggedDeal = localDeals.find((d) => d.id === draggedId);
     if (!draggedDeal) return;
 
-    // Apply optimistic move and persist (works for both cross-stage and within-stage reorder)
-    const previousDeals = applyOptimisticMove(draggedId, targetStage, targetIndex);
-    updateDealMutation.mutate({
-      id: draggedId,
-      stage: targetStage,
-      position: targetIndex,
-      deal: draggedDeal,
-      previousDeals,
-    });
+    // Only update if stage changed (optimistic update)
+    if (draggedDeal.stage !== targetStage) {
+      const previousDeals = applyOptimisticMove(draggedId, targetStage, targetIndex);
+      updateDealMutation.mutate({
+        id: draggedId,
+        stage: targetStage,
+        position: targetIndex,
+        deal: draggedDeal,
+        previousDeals,
+      });
+    }
   };
 
   const handleDragCancel = () => {
@@ -674,11 +971,17 @@ export default function CRM() {
     }).format(value);
   };
 
-  // Filter deals by selected seller
+  // Filter deals by selected seller + advanced filters
   const filteredDeals = useMemo(() => {
-    if (selectedSeller === "all") return localDeals;
-    return localDeals.filter(deal => deal.user_id === selectedSeller);
-  }, [localDeals, selectedSeller]);
+    let result = selectedSeller === "all" ? localDeals : localDeals.filter(deal => deal.user_id === selectedSeller);
+    if (searchQuery.trim()) {
+      result = result.filter(deal =>
+        deal.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        deal.customer_name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    return applyAdvancedFilters(result);
+  }, [localDeals, selectedSeller, searchQuery, applyAdvancedFilters]);
 
   // Calculate pipeline total (from filtered deals)
   const pipelineTotal = filteredDeals.reduce((acc, deal) => acc + (Number(deal.value) || 0), 0);
@@ -705,35 +1008,101 @@ export default function CRM() {
   return (
     <>
       <div className="h-[calc(100vh-64px)] flex flex-col bg-background text-foreground">
-        {/* Header - Premium Style */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-6 py-4 sm:py-5 border-b border-border bg-card backdrop-blur-sm shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="p-2 sm:p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 ring-1 ring-emerald-100 dark:ring-emerald-500/20">
-              <Target className="h-4 sm:h-5 w-4 sm:w-5 text-emerald-600 dark:text-emerald-200" />
+        {/* Header - Premium Style - 3 responsive rows */}
+        <div className="flex flex-col gap-3 px-4 sm:px-6 py-4 sm:py-5 border-b border-border bg-card backdrop-blur-sm shadow-sm">
+          {/* Row 1: Title + deal count + action buttons */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 sm:p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 ring-1 ring-emerald-100 dark:ring-emerald-500/20">
+                <Target className="h-4 sm:h-5 w-4 sm:w-5 text-emerald-600 dark:text-emerald-200" />
+              </div>
+              <div>
+                <h1 className="text-lg sm:text-xl font-bold text-foreground tracking-tight flex items-center gap-2">
+                  <span className="hidden sm:inline">Pipeline de Vendas</span>
+                  <span className="sm:hidden">Pipeline</span>
+                  <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-semibold uppercase tracking-wider ring-1 ring-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-200 dark:ring-emerald-500/20">
+                    <Sparkles className="h-3 w-3" />
+                    Live
+                  </span>
+                </h1>
+                <p className="text-xs sm:text-[13px] text-muted-foreground font-medium mt-0.5">
+                  {isLoading ? "Carregando..." : (
+                    <>{deals.length} negociações • <span className="text-emerald-600 dark:text-emerald-300">{formatCurrency(pipelineTotal)}</span></>
+                  )}
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-lg sm:text-xl font-bold text-foreground tracking-tight flex items-center gap-2">
-                <span className="hidden sm:inline">Pipeline de Vendas</span>
-                <span className="sm:hidden">Pipeline</span>
-                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-semibold uppercase tracking-wider ring-1 ring-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-200 dark:ring-emerald-500/20">
-                  <Sparkles className="h-3 w-3" />
-                  Live
-                </span>
-              </h1>
-              <p className="text-xs sm:text-[13px] text-muted-foreground font-medium mt-0.5">
-                {isLoading ? "Carregando..." : (
-                  <>{deals.length} negociações • <span className="text-emerald-600 dark:text-emerald-300">{formatCurrency(pipelineTotal)}</span></>
-                )}
-              </p>
+
+            <div className="flex items-center gap-2">
+              {/* Selection Mode Toggle */}
+              <Button
+                variant={selectionMode ? "default" : "outline"}
+                size="sm"
+                onClick={toggleSelectionMode}
+                className={`min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 h-9 ${selectionMode ? "bg-emerald-600 hover:bg-emerald-500 text-white" : "border-border hover:bg-muted text-foreground"}`}
+              >
+                <CheckSquare className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">{selectionMode ? "Selecionando" : "Selecionar"}</span>
+              </Button>
+
+              {/* Select All / Deselect All - visible only in selection mode */}
+              {selectionMode && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={selectedDeals.size === allVisibleDealIds.length ? deselectAll : selectAll}
+                  className="border-border hover:bg-muted text-foreground min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 h-9"
+                >
+                  <CheckCheck className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">
+                    {selectedDeals.size === allVisibleDealIds.length ? "Desmarcar todos" : "Selecionar todos"}
+                  </span>
+                </Button>
+              )}
+
+              {/* Config Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowConfig(true)}
+                className="border-border hover:bg-muted text-foreground min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 h-9"
+              >
+                <Settings2 className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Configurar</span>
+              </Button>
+
+              {/* New Deal Button */}
+              <Button
+                size="sm"
+                onClick={() => setShowNewDeal(true)}
+                className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all duration-200 min-h-[44px] sm:min-h-0 h-9"
+              >
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Nova Negociação</span>
+              </Button>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="hidden sm:flex items-center gap-1 bg-muted px-1 py-1 rounded-lg border border-border">
+          {/* Row 2: Search bar (full width on mobile, always visible) */}
+          <div className="relative w-full sm:max-w-xs">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500" />
+            <Input
+              type="text"
+              placeholder="Buscar negociações..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 h-11 sm:h-9 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-emerald-500"
+            />
+          </div>
+
+          {/* Row 3: Filter pills (seller, view toggle) - horizontal scroll on mobile */}
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-0.5 -mb-0.5">
+            {/* View Toggle */}
+            <div className="flex items-center gap-1 bg-muted px-1 py-1 rounded-lg border border-border flex-shrink-0">
               <Button
                 variant={viewMode === "kanban" ? "default" : "ghost"}
                 size="sm"
-                className="h-8"
+                className="min-h-[44px] sm:min-h-0 h-8 min-w-[44px] sm:min-w-0"
                 onClick={() => setViewMode("kanban")}
               >
                 Kanban
@@ -741,7 +1110,7 @@ export default function CRM() {
               <Button
                 variant={viewMode === "list" ? "default" : "ghost"}
                 size="sm"
-                className="h-8"
+                className="min-h-[44px] sm:min-h-0 h-8 min-w-[44px] sm:min-w-0"
                 onClick={() => setViewMode("list")}
               >
                 Lista
@@ -750,7 +1119,7 @@ export default function CRM() {
 
             {/* Seller Filter */}
             <Select value={selectedSeller} onValueChange={setSelectedSeller}>
-              <SelectTrigger className="w-40 h-9 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white">
+              <SelectTrigger className="w-40 flex-shrink-0 min-h-[44px] sm:min-h-0 h-9 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white">
                 <User className="h-4 w-4 mr-2 text-slate-400" />
                 <SelectValue placeholder="Vendedor" />
               </SelectTrigger>
@@ -763,41 +1132,187 @@ export default function CRM() {
                 ))}
               </SelectContent>
             </Select>
-
-            {/* Search Input */}
-            <div className="relative hidden sm:block">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500" />
-              <Input
-                type="text"
-                placeholder="Buscar negociações..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-48 pl-9 h-9 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-emerald-500"
-              />
-            </div>
-
-            {/* Config Button */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowConfig(true)}
-              className="border-border hover:bg-muted text-foreground h-9"
-            >
-              <Settings2 className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Configurar</span>
-            </Button>
-
-            {/* New Deal Button */}
-            <Button
-              size="sm"
-              onClick={() => setShowNewDeal(true)}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all duration-200 h-9"
-            >
-              <Plus className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Nova Negociação</span>
-            </Button>
           </div>
         </div>
+
+        {/* Advanced Filters Bar */}
+        <div className="px-4 sm:px-6 py-2 border-b border-border bg-card/50">
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Toggle filters button */}
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                activeFilterCount > 0
+                  ? "bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30"
+                  : "bg-muted text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Filter className="h-3 w-3" />
+              Filtros
+              {activeFilterCount > 0 && (
+                <span className="inline-flex items-center justify-center h-4 min-w-[16px] px-1 rounded-full bg-emerald-500 text-white text-[10px] font-bold">
+                  {activeFilterCount}
+                </span>
+              )}
+              <ChevronDown className={`h-3 w-3 transition-transform ${showFilters ? "rotate-180" : ""}`} />
+            </button>
+
+            {/* Inline active filter pills (always visible when active) */}
+            {!showFilters && activeFilterCount > 0 && (
+              <>
+                {filterHotDeals && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-orange-500/15 text-orange-400 ring-1 ring-orange-500/30">
+                    <Flame className="h-3 w-3" /> Hot
+                    <button onClick={() => setFilterHotDeals(false)} className="ml-0.5 hover:text-orange-200"><X className="h-2.5 w-2.5" /></button>
+                  </span>
+                )}
+                {filterRottingDeals && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-rose-500/15 text-rose-400 ring-1 ring-rose-500/30">
+                    <Clock className="h-3 w-3" /> Parados
+                    <button onClick={() => setFilterRottingDeals(false)} className="ml-0.5 hover:text-rose-200"><X className="h-2.5 w-2.5" /></button>
+                  </span>
+                )}
+                {filterProbability !== "all" && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-blue-500/15 text-blue-400 ring-1 ring-blue-500/30">
+                    {filterProbability === "high" ? "Alta 70%+" : filterProbability === "medium" ? "Média 30-69%" : "Baixa <30%"}
+                    <button onClick={() => setFilterProbability("all")} className="ml-0.5 hover:text-blue-200"><X className="h-2.5 w-2.5" /></button>
+                  </span>
+                )}
+                {filterDateRange !== "all" && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-purple-500/15 text-purple-400 ring-1 ring-purple-500/30">
+                    <CalendarDays className="h-3 w-3" />
+                    {filterDateRange === "this_week" ? "Esta semana" : filterDateRange === "this_month" ? "Este mês" : "Vencidos"}
+                    <button onClick={() => setFilterDateRange("all")} className="ml-0.5 hover:text-purple-200"><X className="h-2.5 w-2.5" /></button>
+                  </span>
+                )}
+                <button
+                  onClick={clearAllFilters}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X className="h-3 w-3" /> Limpar filtros
+                </button>
+              </>
+            )}
+
+            {/* Expanded filter options */}
+            {showFilters && (
+              <>
+                {/* Hot Deals */}
+                <button
+                  onClick={() => setFilterHotDeals(!filterHotDeals)}
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                    filterHotDeals
+                      ? "bg-orange-500/15 text-orange-400 ring-1 ring-orange-500/30"
+                      : "bg-muted text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Flame className="h-3 w-3" /> Hot Deals
+                </button>
+
+                {/* Rotting Deals */}
+                <button
+                  onClick={() => setFilterRottingDeals(!filterRottingDeals)}
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                    filterRottingDeals
+                      ? "bg-rose-500/15 text-rose-400 ring-1 ring-rose-500/30"
+                      : "bg-muted text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Clock className="h-3 w-3" /> Parados 3+ dias
+                </button>
+
+                {/* Separator */}
+                <div className="w-px h-5 bg-border" />
+
+                {/* Probability quick buttons */}
+                {(["high", "medium", "low"] as const).map((level) => {
+                  const labels = { high: "Alta (70%+)", medium: "Média (30-69%)", low: "Baixa (<30%)" };
+                  const isActive = filterProbability === level;
+                  return (
+                    <button
+                      key={level}
+                      onClick={() => setFilterProbability(isActive ? "all" : level)}
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                        isActive
+                          ? "bg-blue-500/15 text-blue-400 ring-1 ring-blue-500/30"
+                          : "bg-muted text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {labels[level]}
+                    </button>
+                  );
+                })}
+
+                {/* Separator */}
+                <div className="w-px h-5 bg-border" />
+
+                {/* Date range quick buttons */}
+                {(["this_week", "this_month", "overdue"] as const).map((range) => {
+                  const labels = { this_week: "Esta semana", this_month: "Este mês", overdue: "Vencidos" };
+                  const isActive = filterDateRange === range;
+                  return (
+                    <button
+                      key={range}
+                      onClick={() => setFilterDateRange(isActive ? "all" : range)}
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                        isActive
+                          ? "bg-purple-500/15 text-purple-400 ring-1 ring-purple-500/30"
+                          : "bg-muted text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      <CalendarDays className="h-3 w-3" /> {labels[range]}
+                    </button>
+                  );
+                })}
+
+                {/* Clear all */}
+                {activeFilterCount > 0 && (
+                  <>
+                    <div className="w-px h-5 bg-border" />
+                    <button
+                      onClick={clearAllFilters}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium text-rose-400 hover:bg-rose-500/10 transition-colors"
+                    >
+                      <X className="h-3 w-3" /> Limpar filtros
+                    </button>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Rotting Deals Banner */}
+        {rottingDealsCount > 0 && !rottingBannerDismissed && (
+          <div
+            className="flex items-center justify-between gap-3 px-4 sm:px-6 py-2.5 border-b border-amber-500/20 cursor-pointer"
+            style={{ background: "linear-gradient(90deg, rgba(245,158,11,0.12), rgba(239,68,68,0.10))" }}
+            onClick={() => setFilterRottingDeals((prev) => !prev)}
+          >
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-rose-500 flex-shrink-0" />
+              <span className="text-amber-200">
+                {rottingDealsCount} negociação{rottingDealsCount !== 1 ? "ões" : ""} sem atualização há mais de 3 dias
+              </span>
+              {filterRottingDeals && (
+                <span className="ml-2 px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold uppercase tracking-wide">
+                  Filtro ativo
+                </span>
+              )}
+            </div>
+            <button
+              className="p-1 rounded-md hover:bg-white/10 transition-colors text-amber-300/70 hover:text-amber-200"
+              onClick={(e) => {
+                e.stopPropagation();
+                setRottingBannerDismissed(true);
+                setFilterRottingDeals(false);
+              }}
+              title="Fechar"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
 
         {/* Content Area */}
         <div className="flex-1 overflow-x-auto overflow-y-auto sm:overflow-y-hidden scrollbar-thin">
@@ -808,7 +1323,6 @@ export default function CRM() {
               sensors={sensors}
               collisionDetection={collisionDetectionStrategy}
               onDragStart={handleDragStart}
-              onDragOver={handleDragOver}
               onDragEnd={handleDragEnd}
               onDragCancel={handleDragCancel}
               measuring={{
@@ -817,7 +1331,57 @@ export default function CRM() {
                 },
               }}
             >
-              <div className="flex gap-2 sm:gap-3 p-4 sm:p-6 h-full min-w-max">
+              {/* Mobile stage selector pills */}
+              <div className="flex sm:hidden gap-2 px-4 pt-3 pb-1 overflow-x-auto scrollbar-none">
+                {STAGES.map((stage, idx) => {
+                  const Icon = stage.icon;
+                  return (
+                    <button
+                      key={stage.id}
+                      onClick={() => {
+                        setActiveStageIndex(idx);
+                        const container = kanbanScrollRef.current;
+                        if (container) {
+                          const columnWidth = container.scrollWidth / STAGES.length;
+                          container.scrollTo({ left: columnWidth * idx, behavior: "smooth" });
+                        }
+                      }}
+                      className={`
+                        flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-semibold
+                        flex-shrink-0 min-h-[44px] transition-all duration-200
+                        ${activeStageIndex === idx
+                          ? `${stage.bgColor} ${stage.color} ring-1 ${stage.borderColor}`
+                          : "bg-slate-800/60 text-slate-400 hover:bg-slate-700/60"
+                        }
+                      `}
+                    >
+                      <Icon className="h-3.5 w-3.5" />
+                      {stage.title}
+                      <span className="ml-0.5 text-[10px] opacity-70">
+                        {(stageTotals[stage.id]?.count) || 0}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div
+                ref={kanbanScrollRef}
+                className="
+                  flex gap-2 sm:gap-3 p-4 sm:p-6 h-full
+                  sm:min-w-max
+                  max-sm:snap-x max-sm:snap-mandatory max-sm:overflow-x-auto max-sm:scrollbar-none
+                "
+                onScroll={(e) => {
+                  if (window.innerWidth >= 640) return;
+                  const container = e.currentTarget;
+                  const columnWidth = container.scrollWidth / STAGES.length;
+                  const newIndex = Math.round(container.scrollLeft / columnWidth);
+                  if (newIndex !== activeStageIndex && newIndex >= 0 && newIndex < STAGES.length) {
+                    setActiveStageIndex(newIndex);
+                  }
+                }}
+              >
                 {STAGES.map((stage, idx) => (
                     <KanbanColumn
                       key={stage.id}
@@ -833,11 +1397,41 @@ export default function CRM() {
                       showConversionRate={idx > 0}
                       previousStageCount={idx > 0 ? stageTotals[STAGES[idx - 1].id]?.count : undefined}
                       isLast={idx === STAGES.length - 1}
+                      selectionMode={selectionMode}
+                      selectedDeals={selectedDeals}
+                      onToggleSelect={toggleSelectDeal}
+                      stageNeighbors={stageNeighborsMap[stage.id]}
+                      onSwipeMove={handleSwipeMove}
                     />
                 ))}
               </div>
 
-              {/* Drag Overlay - Fast animation */}
+              {/* Mobile stage indicator dots */}
+              <div className="flex sm:hidden justify-center gap-1.5 pb-3 pt-1">
+                {STAGES.map((stage, idx) => (
+                  <button
+                    key={stage.id}
+                    onClick={() => {
+                      setActiveStageIndex(idx);
+                      const container = kanbanScrollRef.current;
+                      if (container) {
+                        const columnWidth = container.scrollWidth / STAGES.length;
+                        container.scrollTo({ left: columnWidth * idx, behavior: "smooth" });
+                      }
+                    }}
+                    className={`
+                      h-2 rounded-full transition-all duration-300
+                      ${activeStageIndex === idx
+                        ? `w-6 ${stage.color.replace("text-", "bg-")}`
+                        : "w-2 bg-slate-600"
+                      }
+                    `}
+                    aria-label={stage.title}
+                  />
+                ))}
+              </div>
+
+              {/* Drag Overlay - Fast animation (disabled during selection mode) */}
               <DragOverlay
                 dropAnimation={{
                   duration: 180,
@@ -845,7 +1439,7 @@ export default function CRM() {
                 }}
                 modifiers={[]}
               >
-                {activeDeal ? (
+                {activeDeal && !selectionMode ? (
                   <DealCard
                     deal={activeDeal}
                     isDragging
@@ -862,12 +1456,36 @@ export default function CRM() {
               {sortedDealsForList.map((deal) => (
                 <div
                   key={deal.id}
-                  className="bg-card border border-border rounded-xl p-4 sm:p-5 shadow-sm hover:border-emerald-500/30 hover:shadow-md transition-all"
+                  className={`bg-card border rounded-xl p-4 sm:p-5 shadow-sm hover:border-emerald-500/30 hover:shadow-md transition-all ${
+                    selectionMode && selectedDeals.has(deal.id)
+                      ? "border-emerald-500 ring-2 ring-emerald-500/40"
+                      : "border-border"
+                  } ${selectionMode ? "cursor-pointer" : ""}`}
+                  onClick={selectionMode ? () => toggleSelectDeal(deal.id) : undefined}
                 >
                   <div className="flex flex-col gap-3 sm:gap-2">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                      <div className="text-base sm:text-lg font-semibold text-foreground">
-                        {deal.title || "Sem título"}
+                      <div className="flex items-center gap-3">
+                        {selectionMode && (
+                          <div
+                            className={`
+                              w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all duration-150
+                              ${selectedDeals.has(deal.id)
+                                ? "bg-emerald-500 border-emerald-500"
+                                : "bg-slate-700/50 border-slate-500 hover:border-emerald-400"
+                              }
+                            `}
+                          >
+                            {selectedDeals.has(deal.id) && (
+                              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </div>
+                        )}
+                        <div className="text-base sm:text-lg font-semibold text-foreground">
+                          {deal.title || "Sem título"}
+                        </div>
                       </div>
                       {renderStageBadge(deal.stage)}
                     </div>
@@ -965,15 +1583,167 @@ export default function CRM() {
         dealTitle={dealToLose?.title || ""}
       />
 
-      {/* Confetti Celebration */}
-      <Confetti
+      {/* Win Celebration */}
+      <WinCelebration
         show={showConfetti}
+        dealTitle={celebrationMessage}
+        dealValue={celebrationValue}
+        formatCurrency={formatCurrency}
         onComplete={() => setShowConfetti(false)}
       />
-      <CelebrationOverlay
-        show={showConfetti}
-        message={celebrationMessage}
-      />
+
+      {/* Floating Bulk Action Bar */}
+      <AnimatePresence>
+        {selectionMode && selectedDeals.size > 0 && (
+          <motion.div
+            initial={{ y: 80, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 80, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 sm:gap-3 px-4 sm:px-5 py-3 rounded-2xl bg-slate-800 border border-slate-600 shadow-2xl shadow-black/50"
+          >
+            {/* Count */}
+            <span className="text-sm font-semibold text-white whitespace-nowrap">
+              {selectedDeals.size} selecionado{selectedDeals.size !== 1 ? "s" : ""}
+            </span>
+
+            <div className="w-px h-6 bg-slate-600" />
+
+            {/* Move to... dropdown */}
+            <div className="relative" ref={bulkMoveRef}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-slate-300 hover:text-white hover:bg-slate-700 h-8 text-xs sm:text-sm"
+                onClick={() => {
+                  setShowBulkMoveMenu((p) => !p);
+                  setShowBulkAssignMenu(false);
+                }}
+              >
+                <ArrowRightCircle className="h-4 w-4 mr-1.5" />
+                <span className="hidden sm:inline">Mover para...</span>
+                <span className="sm:hidden">Mover</span>
+              </Button>
+              {showBulkMoveMenu && (
+                <div className="absolute bottom-full mb-2 left-0 w-48 rounded-xl bg-slate-700 border border-slate-600 shadow-xl py-1 z-[110]">
+                  {STAGES.map((stage) => {
+                    const Icon = stage.icon;
+                    return (
+                      <button
+                        key={stage.id}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-slate-600 transition-colors"
+                        onClick={() => {
+                          bulkMoveMutation.mutate({
+                            dealIds: Array.from(selectedDeals),
+                            targetStage: stage.id,
+                          });
+                        }}
+                      >
+                        <Icon className={`h-4 w-4 ${stage.color}`} />
+                        {stage.title}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Assign to... dropdown */}
+            <div className="relative" ref={bulkAssignRef}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-slate-300 hover:text-white hover:bg-slate-700 h-8 text-xs sm:text-sm"
+                onClick={() => {
+                  setShowBulkAssignMenu((p) => !p);
+                  setShowBulkMoveMenu(false);
+                }}
+              >
+                <UserPlus className="h-4 w-4 mr-1.5" />
+                <span className="hidden sm:inline">Atribuir a...</span>
+                <span className="sm:hidden">Atribuir</span>
+              </Button>
+              {showBulkAssignMenu && (
+                <div className="absolute bottom-full mb-2 left-0 w-48 rounded-xl bg-slate-700 border border-slate-600 shadow-xl py-1 z-[110] max-h-60 overflow-y-auto">
+                  {vendors.map((vendor: any) => (
+                    <button
+                      key={vendor.id}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-slate-600 transition-colors"
+                      onClick={() => {
+                        bulkAssignMutation.mutate({
+                          dealIds: Array.from(selectedDeals),
+                          userId: vendor.id,
+                        });
+                      }}
+                    >
+                      <User className="h-4 w-4 text-slate-400" />
+                      {vendor.nome}
+                    </button>
+                  ))}
+                  {vendors.length === 0 && (
+                    <div className="px-3 py-2 text-sm text-slate-400">Nenhum vendedor encontrado</div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="w-px h-6 bg-slate-600" />
+
+            {/* Delete button */}
+            {!showBulkDeleteConfirm ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 h-8 text-xs sm:text-sm"
+                onClick={() => setShowBulkDeleteConfirm(true)}
+              >
+                <Trash2 className="h-4 w-4 mr-1.5" />
+                <span className="hidden sm:inline">Deletar</span>
+              </Button>
+            ) : (
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-rose-400 font-medium">Confirmar?</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-rose-400 hover:bg-rose-500/20 h-7 px-2 text-xs font-bold"
+                  onClick={() => {
+                    bulkDeleteMutation.mutate(Array.from(selectedDeals));
+                  }}
+                >
+                  Sim
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-slate-400 hover:bg-slate-700 h-7 px-2 text-xs"
+                  onClick={() => setShowBulkDeleteConfirm(false)}
+                >
+                  Não
+                </Button>
+              </div>
+            )}
+
+            <div className="w-px h-6 bg-slate-600" />
+
+            {/* Cancel */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-slate-400 hover:text-white hover:bg-slate-700 h-8 text-xs sm:text-sm"
+              onClick={() => {
+                setSelectedDeals(new Set());
+                setShowBulkDeleteConfirm(false);
+                setShowBulkMoveMenu(false);
+                setShowBulkAssignMenu(false);
+              }}
+            >
+              <X className="h-4 w-4 mr-1" />
+              Cancelar
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

@@ -51,7 +51,8 @@ export const invalidateSalesQueries = async (queryClient?: QueryClient) => {
  */
 export const syncWonDealToSale = async (
   deal: DealForSync,
-  queryClient?: QueryClient
+  queryClient?: QueryClient,
+  fallbackCompanyId?: string | null
 ) => {
   if (!deal?.id || !deal.user_id) return;
 
@@ -70,7 +71,7 @@ export const syncWonDealToSale = async (
   const hoje = new Date();
   const payload = {
     user_id: deal.user_id,
-    company_id: deal.company_id || null,
+    company_id: deal.company_id || fallbackCompanyId || null,
     cliente_nome: deal.customer_name || deal.title || "Cliente",
     produto_id: deal.product_id || null,
     produto_nome: deal.title || "Deal CRM",

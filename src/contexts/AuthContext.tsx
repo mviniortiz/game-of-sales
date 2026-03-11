@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -35,6 +35,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [profile, setProfile] = useState<AuthProfile | null>(null);
   const integrityResetInProgress = useRef(false);
+  const currentUserIdRef = useRef<string | null>(null);
   const navigate = useNavigate();
 
   const clearProfileState = () => {
@@ -164,6 +165,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           return;
         }
 
+        const newUserId = session?.user?.id ?? null;
+        const isSameUser = newUserId !== null && newUserId === currentUserIdRef.current;
+
+        // On TOKEN_REFRESHED for the same user (tab return), only update the
+        // session token silently — avoid re-rendering the entire tree.
+        if (isSameUser && event === "TOKEN_REFRESHED") {
+          setSession(prev => {
+            if (prev?.access_token === session?.access_token) return prev;
+            return session;
+          });
+          return;
+        }
+
+        // Duplicate SIGNED_IN for same user — skip heavy profile reload but
+        // still ensure loading is false so ProtectedRoute doesn't block.
+        if (isSameUser && event === "SIGNED_IN") {
+          setSession(prev => {
+            if (prev?.access_token === session?.access_token) return prev;
+            return session;
+          });
+          setLoading(false);
+          return;
+        }
+
+        currentUserIdRef.current = newUserId;
         setSession(session);
         setUser(session?.user ?? null);
 
@@ -195,6 +221,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!mounted) return;
 
+      currentUserIdRef.current = session?.user?.id ?? null;
       setSession(session);
       setUser(session?.user ?? null);
 
@@ -268,20 +295,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // Stabilize session reference — consumers never use the session object
+  // directly, so we keep a ref to avoid re-renders on token refresh.
+  const sessionRef = useRef<Session | null>(null);
+  sessionRef.current = session;
+  const stableSession = useMemo(() => session, [session?.access_token]);
+
+  const contextValue = useMemo(() => ({
+    user,
+    session: stableSession,
+    loading,
+    isAdmin,
+    isSuperAdmin,
+    companyId,
+    profile,
+    refreshProfile,
+    signUp,
+    signIn,
+    signOut
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [user, loading, isAdmin, isSuperAdmin, companyId, profile]);
+
   return (
-    <AuthContext.Provider value={{
-      user,
-      session,
-      loading,
-      isAdmin,
-      isSuperAdmin,
-      companyId,
-      profile,
-      refreshProfile,
-      signUp,
-      signIn,
-      signOut
-    }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

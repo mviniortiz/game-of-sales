@@ -2,7 +2,7 @@ import { memo, useMemo } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { DealCard } from "./DealCard";
+import { DealCard, StageNeighbors } from "./DealCard";
 import type { Deal, Stage } from "@/pages/CRM";
 import { Inbox, ArrowRight } from "lucide-react";
 
@@ -15,6 +15,11 @@ interface KanbanColumnProps {
   previousStageCount?: number; // for funnel conversion rate
   showConversionRate?: boolean;
   isLast?: boolean;
+  selectionMode?: boolean;
+  selectedDeals?: Set<string>;
+  onToggleSelect?: (dealId: string) => void;
+  stageNeighbors?: StageNeighbors;
+  onSwipeMove?: (deal: Deal, targetStageId: string) => void;
 }
 
 // Micro funnel arrow between columns
@@ -47,6 +52,11 @@ export const KanbanColumn = memo(({
   previousStageCount,
   showConversionRate = false,
   isLast = false,
+  selectionMode = false,
+  selectedDeals,
+  onToggleSelect,
+  stageNeighbors,
+  onSwipeMove,
 }: KanbanColumnProps) => {
   const { setNodeRef, isOver } = useDroppable({ id: stage.id });
   const Icon = stage.icon;
@@ -65,16 +75,18 @@ export const KanbanColumn = memo(({
 
   return (
     <div className="flex items-start gap-0">
-      {/* Funnel connector BEFORE this column (left side) */}
+      {/* Funnel connector BEFORE this column (left side) - hidden on mobile for snap-scroll */}
       {showConversionRate && conversionRate !== null && (
-        <FunnelConnector rate={conversionRate} />
+        <div className="hidden sm:flex">
+          <FunnelConnector rate={conversionRate} />
+        </div>
       )}
 
       {/* ── Main Column ─────────────────────────────────────── */}
       <div
         className={`
-          flex flex-col w-[292px] flex-shrink-0 h-full rounded-xl
-          border transition-all duration-200
+          flex flex-col w-[85vw] sm:w-[292px] flex-shrink-0 h-full rounded-xl
+          border transition-all duration-200 snap-center
           ${isOver
             ? "ring-2 ring-emerald-500/50 ring-offset-2 ring-offset-slate-900 scale-[1.01] border-dashed border-emerald-400/50 bg-emerald-500/5 animate-pulse-subtle"
             : "border-slate-700/60 bg-slate-900/70"
@@ -159,6 +171,11 @@ export const KanbanColumn = memo(({
                       deal={deal}
                       formatCurrency={formatCurrency}
                       onDelete={onDeleteDeal}
+                      selectionMode={selectionMode}
+                      isSelected={selectedDeals?.has(deal.id) ?? false}
+                      onToggleSelect={onToggleSelect}
+                      stageNeighbors={stageNeighbors}
+                      onSwipeMove={onSwipeMove}
                     />
                   ))
                 )}

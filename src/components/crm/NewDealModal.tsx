@@ -156,6 +156,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
         is_hot: data.is_hot,
         position: nextPos,
         user_id: user.id,
+        company_id: companyId,
       });
       if (error) throw error;
     },

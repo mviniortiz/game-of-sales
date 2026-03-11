@@ -2,15 +2,27 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
-  Clock, AlertTriangle, Phone, Calendar, CheckCircle2, Flame, Trash2
+  Clock, AlertTriangle, Phone, Calendar, CheckCircle2, Flame, Trash2, Copy,
+  Pencil, MessageSquare, ArrowRight, ChevronLeft, ChevronRight
 } from "lucide-react";
-import { format, differenceInDays, isPast, parseISO } from "date-fns";
+import { format, differenceInDays, isPast, parseISO, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Deal } from "@/pages/CRM";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useSwipeToMove } from "@/hooks/useSwipeToMove";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+
+export interface StageNeighbors {
+  prev: { id: string; title: string; color: string } | null;
+  next: { id: string; title: string; color: string } | null;
+}
 
 interface DealCardProps {
   deal: Deal;
@@ -18,6 +30,11 @@ interface DealCardProps {
   formatCurrency: (value: number) => string;
   onClick?: () => void;
   onDelete?: (deal: Deal) => void;
+  selectionMode?: boolean;
+  isSelected?: boolean;
+  onToggleSelect?: (dealId: string) => void;
+  stageNeighbors?: StageNeighbors;
+  onSwipeMove?: (deal: Deal, targetStageId: string) => void;
 }
 
 // Rotting status
@@ -27,20 +44,59 @@ const getRottingStatus = (days: number) => {
   return { border: "border-l-emerald-500/60", dot: "bg-emerald-500", label: "", severity: "ok" as const };
 };
 
+// CSS keyframes for pulsing rotting badge (injected once)
+if (typeof document !== "undefined" && !document.getElementById("rotting-pulse-style")) {
+  const style = document.createElement("style");
+  style.id = "rotting-pulse-style";
+  style.textContent = `
+    @keyframes rotting-pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.4); }
+      50% { opacity: 0.85; box-shadow: 0 0 8px 2px rgba(244, 63, 94, 0.25); }
+    }
+    .rotting-pulse {
+      animation: rotting-pulse 2s ease-in-out infinite;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 // XP bar color
 const getXPColor = (p: number) =>
   p >= 70 ? "from-emerald-500 to-emerald-400" :
     p >= 40 ? "from-amber-500 to-amber-400" :
       "from-slate-600 to-slate-500";
 
-export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDelete }: DealCardProps) => {
+// Format BRL as user types (same as NewDealModal)
+const formatBRL = (raw: string) => {
+  const digits = raw.replace(/\D/g, "");
+  if (!digits) return "";
+  const num = parseInt(digits, 10) / 100;
+  return num.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+};
+
+const parseBRL = (formatted: string) =>
+  parseFloat(formatted.replace(/[^\d,]/g, "").replace(",", ".")) || 0;
+
+type EditableField = "title" | "customer_name" | "value";
+
+export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDelete, selectionMode = false, isSelected = false, onToggleSelect, stageNeighbors, onSwipeMove }: DealCardProps) => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const clickStartTime = useRef<number>(0);
   const cardRef = useRef<HTMLDivElement | null>(null);
+  const swipeRef = useRef<HTMLDivElement | null>(null);
   const hideActionsTimerRef = useRef<number | null>(null);
   const [actionsVisible, setActionsVisible] = useState(false);
   const [actionsPlacement, setActionsPlacement] = useState<"above" | "below" | "inside">("above");
   const [actionsCoords, setActionsCoords] = useState<{ top: number; left: number } | null>(null);
+
+  // Inline edit state
+  const [editingField, setEditingField] = useState<EditableField | null>(null);
+  const [editValue, setEditValue] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const {
     attributes,
@@ -52,10 +108,34 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
   } = useSortable({
     id: deal.id,
     transition: { duration: 220, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
+    disabled: isMobile,
   });
+
+  // Swipe gesture (mobile only)
+  const handleSwipeComplete = useCallback((direction: "left" | "right") => {
+    if (!onSwipeMove || !stageNeighbors) return;
+    const target = direction === "left" ? stageNeighbors.prev : stageNeighbors.next;
+    if (target) onSwipeMove(deal, target.id);
+  }, [deal, stageNeighbors, onSwipeMove]);
+
+  const swipe = useSwipeToMove({
+    onSwipeComplete: handleSwipeComplete,
+    enabled: isMobile && !selectionMode && !!stageNeighbors,
+    elementRef: swipeRef,
+  });
+
+  // Clamp swipe offset: can't swipe left without prev or right without next
+  const clampedOffset = (() => {
+    if (!swipe.isSwiping) return 0;
+    let dx = swipe.offsetX;
+    if (dx < 0 && !stageNeighbors?.prev) dx = 0;
+    if (dx > 0 && !stageNeighbors?.next) dx = 0;
+    return dx;
+  })();
 
   const setRefs = useCallback((node: HTMLDivElement | null) => {
     cardRef.current = node;
+    swipeRef.current = node;
     setNodeRef(node);
   }, [setNodeRef]);
 
@@ -83,16 +163,25 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
   const isOverdue = deal.expected_close_date
     ? isPast(parseISO(deal.expected_close_date)) : false;
 
+  // Whether inline editing is allowed (disabled in selection mode)
+  const canInlineEdit = !selectionMode;
+
   const handleMouseDown = useCallback(() => { clickStartTime.current = Date.now(); }, []);
 
   const handleClick = useCallback((e: React.MouseEvent) => {
     if (isBeingDragged) return;
+    if (selectionMode) {
+      e.stopPropagation();
+      onToggleSelect?.(deal.id);
+      return;
+    }
+    if (editingField) return; // Don't navigate while editing
     const dur = Date.now() - clickStartTime.current;
     if (dur < 200) {
       e.stopPropagation();
       navigate(`/deals/${deal.id}`);
     }
-  }, [isBeingDragged, deal.id, navigate]);
+  }, [isBeingDragged, deal.id, navigate, selectionMode, onToggleSelect, editingField]);
 
   const handleQuickAction = useCallback((e: React.MouseEvent, action: string) => {
     e.stopPropagation();
@@ -110,9 +199,129 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
       case "delete":
         onDelete?.(deal);
         break;
-    }
-  }, [deal, navigate, onDelete]);
+      case "duplicate":
+        (async () => {
+          try {
+            // Get max position in same stage
+            const { data: maxPosData } = await supabase
+              .from("deals")
+              .select("position")
+              .eq("stage", deal.stage)
+              .eq("user_id", user?.id ?? "")
+              .order("position", { ascending: false })
+              .limit(1);
+            const newPosition = (maxPosData?.[0]?.position ?? 0) + 1;
 
+            const { error } = await supabase.from("deals").insert({
+              title: `Cópia - ${deal.title}`,
+              value: deal.value,
+              customer_name: deal.customer_name,
+              customer_email: deal.customer_email ?? null,
+              customer_phone: deal.customer_phone ?? null,
+              stage: deal.stage,
+              product_id: deal.product_id ?? null,
+              notes: deal.notes ?? null,
+              expected_close_date: deal.expected_close_date ?? null,
+              probability: deal.probability,
+              is_hot: deal.is_hot ?? false,
+              company_id: deal.company_id ?? null,
+              user_id: user?.id ?? "",
+              position: newPosition,
+            });
+
+            if (error) throw error;
+
+            await queryClient.invalidateQueries({ queryKey: ["deals"] });
+            toast.success("Negociação duplicada!");
+          } catch (err) {
+            console.error("Failed to duplicate deal:", err);
+            toast.error("Erro ao duplicar negociação");
+          }
+        })();
+        break;
+    }
+  }, [deal, navigate, onDelete, user, queryClient]);
+
+  // ── Inline editing logic ──────────────────────────────────
+  const startEditing = useCallback((field: EditableField, e: React.MouseEvent) => {
+    if (!canInlineEdit) return;
+    e.stopPropagation();
+    e.preventDefault();
+    if (field === "value") {
+      const cents = Math.round(deal.value * 100).toString();
+      setEditValue(formatBRL(cents));
+    } else if (field === "customer_name") {
+      setEditValue(deal.customer_name || "");
+    } else if (field === "title") {
+      setEditValue(deal.title || "");
+    }
+    setEditingField(field);
+    setTimeout(() => inputRef.current?.focus(), 0);
+  }, [deal.value, deal.customer_name, deal.title, canInlineEdit]);
+
+  const cancelEditing = useCallback(() => {
+    setEditingField(null);
+    setEditValue("");
+  }, []);
+
+  const saveField = useCallback(async () => {
+    if (!editingField || isSaving) return;
+
+    let updateData: Record<string, unknown> = {};
+    if (editingField === "value") {
+      const numVal = parseBRL(editValue);
+      if (numVal === deal.value) { cancelEditing(); return; }
+      if (numVal <= 0) { cancelEditing(); return; }
+      updateData = { value: numVal };
+    } else if (editingField === "customer_name") {
+      const trimmed = editValue.trim();
+      if (trimmed === deal.customer_name) { cancelEditing(); return; }
+      if (!trimmed) { cancelEditing(); return; }
+      updateData = { customer_name: trimmed };
+    } else if (editingField === "title") {
+      const trimmed = editValue.trim();
+      if (trimmed === deal.title) { cancelEditing(); return; }
+      if (!trimmed) { cancelEditing(); return; }
+      updateData = { title: trimmed };
+    }
+
+    setIsSaving(true);
+    const { error } = await supabase
+      .from("deals")
+      .update(updateData)
+      .eq("id", deal.id);
+
+    setIsSaving(false);
+
+    if (error) {
+      toast.error("Erro ao salvar alteração");
+      console.error("Inline edit error:", error);
+    } else {
+      toast.success("Alteração salva");
+      queryClient.invalidateQueries({ queryKey: ["deals"] });
+    }
+    cancelEditing();
+  }, [editingField, editValue, deal, isSaving, cancelEditing, queryClient]);
+
+  const handleEditKeyDown = useCallback((e: React.KeyboardEvent) => {
+    e.stopPropagation();
+    if (e.key === "Enter") {
+      e.preventDefault();
+      saveField();
+    } else if (e.key === "Escape") {
+      cancelEditing();
+    }
+  }, [saveField, cancelEditing]);
+
+  const handleValueInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditValue(formatBRL(e.target.value));
+  }, []);
+
+  const handleTextInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditValue(e.target.value);
+  }, []);
+
+  // ── Actions placement logic ───────────────────────────────
   const updateActionsPlacement = useCallback(() => {
     const node = cardRef.current;
     if (!node) return;
@@ -126,7 +335,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
     const cardRect = node.getBoundingClientRect();
     const viewportRect = viewport.getBoundingClientRect();
     const menuHeight = 40;
-    const menuWidth = onDelete ? 172 : 126;
+    const menuWidth = onDelete ? 210 : 164;
     const gap = 8;
 
     const topSpace = cardRect.top - viewportRect.top;
@@ -200,30 +409,84 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
         ? { initial: { opacity: 0, y: -6, scale: 0.92 }, animate: { opacity: 1, y: 0, scale: 1 }, exit: { opacity: 0, y: -6, scale: 0.92 } }
         : { initial: { opacity: 0, y: -4, scale: 0.95 }, animate: { opacity: 1, y: 0, scale: 1 }, exit: { opacity: 0, y: -4, scale: 0.95 } };
 
+  // Shared inline input classes
+  const inlineInputClass =
+    "w-full bg-slate-800 border border-emerald-500/60 rounded px-1.5 py-0.5 text-white outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/40 transition-colors";
+
   return (
+    <div className="relative">
+      {/* Swipe background indicators (mobile only) */}
+      {isMobile && swipe.isSwiping && clampedOffset !== 0 && (
+        <>
+          {clampedOffset > 0 && stageNeighbors?.next && (
+            <div className={`absolute inset-0 rounded-xl flex items-center justify-end pr-4 transition-colors ${swipe.pastThreshold ? "bg-emerald-500/20" : "bg-emerald-500/10"}`}>
+              <div className="flex items-center gap-1.5 text-emerald-400">
+                <span className="text-xs font-semibold">{stageNeighbors.next.title}</span>
+                <ChevronRight className="h-4 w-4" />
+              </div>
+            </div>
+          )}
+          {clampedOffset < 0 && stageNeighbors?.prev && (
+            <div className={`absolute inset-0 rounded-xl flex items-center justify-start pl-4 transition-colors ${swipe.pastThreshold ? "bg-blue-500/20" : "bg-blue-500/10"}`}>
+              <div className="flex items-center gap-1.5 text-blue-400">
+                <ChevronLeft className="h-4 w-4" />
+                <span className="text-xs font-semibold">{stageNeighbors.prev.title}</span>
+              </div>
+            </div>
+          )}
+        </>
+      )}
     <div
       ref={setRefs}
-      style={style}
+      style={{
+        ...style,
+        ...(isMobile && clampedOffset !== 0
+          ? { transform: `translateX(${clampedOffset}px)`, transition: swipe.isSwiping ? "none" : "transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)" }
+          : {}),
+      }}
       className={`
-        group relative touch-none
+        group relative
         bg-slate-800 border border-slate-700/80
         border-l-4 ${rotting.border}
         rounded-xl p-3.5
-        cursor-grab active:cursor-grabbing
+        ${selectionMode ? "cursor-pointer" : "cursor-grab active:cursor-grabbing"}
         transition-all duration-200 will-change-transform
+        ${rotting.severity === "high" ? "rotting-pulse !border-l-rose-500" : ""}
+        ${rotting.severity === "mid" ? "!border-l-amber-500" : ""}
         ${isBeingDragged
-          ? "scale-[1.03] rotate-[0.5deg] shadow-[0_20px_40px_-8px_rgba(0,0,0,0.5)] border-emerald-500/60 z-50 !opacity-100 ring-1 ring-emerald-500/30"
+          ? "scale-[1.02] rotate-[0.6deg] shadow-2xl shadow-black/45 border-emerald-500/60 z-50 !opacity-100"
           : "hover:border-slate-600 hover:shadow-lg hover:shadow-black/30 hover:-translate-y-0.5"
         }
-        ${isSortableDragging ? "opacity-30 scale-[0.98]" : "opacity-100"}
+        ${isSortableDragging ? "opacity-40" : "opacity-100"}
+        ${isSelected ? "!border-emerald-500 ring-2 ring-emerald-500/40" : ""}
       `}
       onMouseDown={handleMouseDown}
       onClick={handleClick}
       onMouseEnter={showActions}
       onMouseLeave={hideActionsSoon}
-      {...attributes}
-      {...listeners}
+      {...(selectionMode || isMobile ? {} : { ...attributes, ...listeners })}
     >
+      {/* ── Selection checkbox ─────────────────────────────── */}
+      {selectionMode && (
+        <div className="absolute top-2.5 left-2.5 z-10">
+          <div
+            className={`
+              w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-150
+              ${isSelected
+                ? "bg-emerald-500 border-emerald-500"
+                : "bg-slate-700/50 border-slate-500 hover:border-emerald-400"
+              }
+            `}
+          >
+            {isSelected && (
+              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ── Hot Deal glow strip ───────────────────────────── */}
       {deal.is_hot && (
         <div className="absolute inset-0 rounded-xl pointer-events-none overflow-hidden">
@@ -236,7 +499,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
       )}
 
       {/* ── Hover quick-action bar ────────────────────────── */}
-      {typeof document !== "undefined" && createPortal(
+      {typeof document !== "undefined" && !selectionMode && createPortal(
         <AnimatePresence>
           {actionsVisible && !isBeingDragged && actionsCoords && (
             <motion.div
@@ -277,6 +540,14 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
               >
                 <CheckCircle2 className="h-3.5 w-3.5 text-slate-400 group-hover/b:text-emerald-400" />
               </button>
+              <div className="w-px h-4 bg-slate-600" />
+              <button
+                onPointerDown={e => { e.stopPropagation(); handleQuickAction(e as any, "duplicate"); }}
+                className="p-1.5 rounded-lg hover:bg-blue-500/20 transition-colors group/b"
+                title="Duplicar negociação"
+              >
+                <Copy className="h-3.5 w-3.5 text-slate-400 group-hover/b:text-blue-400" />
+              </button>
               {onDelete && (
                 <>
                   <div className="w-px h-4 bg-slate-600" />
@@ -298,9 +569,35 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
       <div className="relative">
         {/* ── Row 1: Title + badges + avatar ─────────────── */}
         <div className="flex items-start justify-between gap-2 mb-2">
-          <h4 className="font-semibold text-white text-[13px] leading-snug line-clamp-2 flex-1">
-            {deal.title}
-          </h4>
+          {canInlineEdit && editingField === "title" ? (
+            <input
+              ref={inputRef}
+              value={editValue}
+              onChange={handleTextInputChange}
+              onKeyDown={handleEditKeyDown}
+              onBlur={saveField}
+              onClick={e => e.stopPropagation()}
+              onMouseDown={e => e.stopPropagation()}
+              onPointerDown={e => e.stopPropagation()}
+              disabled={isSaving}
+              className={`${inlineInputClass} text-[13px] font-semibold leading-snug flex-1`}
+              autoFocus
+            />
+          ) : canInlineEdit ? (
+            <h4
+              className="font-semibold text-white text-[13px] leading-snug line-clamp-2 flex-1 group/title inline-flex items-start gap-1 cursor-text rounded hover:bg-slate-700/40 transition-colors px-0.5 -mx-0.5"
+              onClick={e => startEditing("title", e)}
+              onMouseDown={e => e.stopPropagation()}
+              onPointerDown={e => e.stopPropagation()}
+            >
+              <span className="flex-1">{deal.title}</span>
+              <Pencil className="h-2.5 w-2.5 text-slate-500 opacity-0 group-hover/title:opacity-100 transition-opacity mt-0.5 flex-shrink-0" />
+            </h4>
+          ) : (
+            <h4 className="font-semibold text-white text-[13px] leading-snug line-clamp-2 flex-1">
+              {deal.title}
+            </h4>
+          )}
 
           <div className="flex items-center gap-1.5 flex-shrink-0">
             {/* Hot badge */}
@@ -313,7 +610,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
 
             {/* Rotting badge */}
             {daysSince > 7 && (
-              <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-rose-500/20">
+              <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-rose-500/20 rotting-pulse">
                 <AlertTriangle className="h-3 w-3 text-rose-400" />
                 <span className="text-[10px] font-bold text-rose-400">{daysSince}d</span>
               </div>
@@ -342,20 +639,88 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
         </div>
 
         {/* ── Customer name ────────────────────────────────── */}
-        <p className="text-[11px] text-slate-400 mb-3 truncate">
-          {deal.customer_name}
-        </p>
+        {canInlineEdit && editingField === "customer_name" ? (
+          <div className="mb-3">
+            <input
+              ref={inputRef}
+              value={editValue}
+              onChange={handleTextInputChange}
+              onKeyDown={handleEditKeyDown}
+              onBlur={saveField}
+              onClick={e => e.stopPropagation()}
+              onMouseDown={e => e.stopPropagation()}
+              onPointerDown={e => e.stopPropagation()}
+              disabled={isSaving}
+              className={`${inlineInputClass} text-[11px] text-slate-300`}
+              autoFocus
+            />
+          </div>
+        ) : canInlineEdit ? (
+          <p
+            className="text-[11px] text-slate-400 mb-3 truncate group/cname inline-flex items-center gap-1 cursor-text rounded hover:bg-slate-700/40 transition-colors px-0.5 -mx-0.5 max-w-full"
+            onClick={e => startEditing("customer_name", e)}
+            onMouseDown={e => e.stopPropagation()}
+            onPointerDown={e => e.stopPropagation()}
+          >
+            <span className="truncate">{deal.customer_name}</span>
+            <Pencil className="h-2 w-2 text-slate-500 opacity-0 group-hover/cname:opacity-100 transition-opacity flex-shrink-0" />
+          </p>
+        ) : (
+          <p className="text-[11px] text-slate-400 mb-3 truncate">
+            {deal.customer_name}
+          </p>
+        )}
         {deal.assignee_outside_company && (
           <p className="text-[10px] text-rose-300/90 mb-3 -mt-2 truncate">
             Responsável de outra organização
           </p>
         )}
 
+        {/* ── Rotting warning text ──────────────────────────── */}
+        {daysSince > 3 && (
+          <div className={`flex items-center gap-1.5 mb-2.5 -mt-1 px-2 py-1 rounded-md ${
+            daysSince > 7
+              ? "bg-rose-500/10 border border-rose-500/20"
+              : "bg-amber-500/10 border border-amber-500/20"
+          }`}>
+            <AlertTriangle className={`h-3 w-3 flex-shrink-0 ${daysSince > 7 ? "text-rose-400" : "text-amber-400"}`} />
+            <span className={`text-[10px] font-semibold ${daysSince > 7 ? "text-rose-300" : "text-amber-300"}`}>
+              {daysSince} dias sem atualização
+            </span>
+          </div>
+        )}
+
         {/* ── Value + probability badge ────────────────────── */}
         <div className="flex items-center justify-between mb-2.5">
-          <span className="text-[15px] font-bold text-emerald-400 tabular-nums">
-            {formatCurrency(deal.value)}
-          </span>
+          {canInlineEdit && editingField === "value" ? (
+            <input
+              ref={inputRef}
+              value={editValue}
+              onChange={handleValueInputChange}
+              onKeyDown={handleEditKeyDown}
+              onBlur={saveField}
+              onClick={e => e.stopPropagation()}
+              onMouseDown={e => e.stopPropagation()}
+              onPointerDown={e => e.stopPropagation()}
+              disabled={isSaving}
+              className={`${inlineInputClass} text-[15px] font-bold text-emerald-400 tabular-nums w-36`}
+              autoFocus
+            />
+          ) : canInlineEdit ? (
+            <span
+              className="text-[15px] font-bold text-emerald-400 tabular-nums group/value inline-flex items-center gap-1 cursor-text rounded hover:bg-slate-700/40 transition-colors px-0.5 -mx-0.5"
+              onClick={e => startEditing("value", e)}
+              onMouseDown={e => e.stopPropagation()}
+              onPointerDown={e => e.stopPropagation()}
+            >
+              {formatCurrency(deal.value)}
+              <Pencil className="h-2.5 w-2.5 text-slate-500 opacity-0 group-hover/value:opacity-100 transition-opacity flex-shrink-0" />
+            </span>
+          ) : (
+            <span className="text-[15px] font-bold text-emerald-400 tabular-nums">
+              {formatCurrency(deal.value)}
+            </span>
+          )}
 
           {deal.probability > 0 && (
             <span className={`
@@ -396,7 +761,36 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
             </span>
           )}
         </div>
+
+        {/* ── Activity preview ──────────────────────────────── */}
+        <div className="flex items-center gap-1.5 border-t border-slate-700/40 pt-1.5 mt-1.5">
+          {deal.lastActivity ? (
+            <>
+              {deal.lastActivity.type === "note" && <MessageSquare className="h-2.5 w-2.5 text-slate-500 flex-shrink-0" />}
+              {deal.lastActivity.type === "call" && <Phone className="h-2.5 w-2.5 text-slate-500 flex-shrink-0" />}
+              {deal.lastActivity.type === "stage_change" && <ArrowRight className="h-2.5 w-2.5 text-slate-500 flex-shrink-0" />}
+              {deal.lastActivity.type === "update" && <Clock className="h-2.5 w-2.5 text-slate-500 flex-shrink-0" />}
+              <span className="text-[11px] text-slate-500 truncate flex-1 leading-none">
+                {deal.lastActivity.text}
+              </span>
+              <span className="text-[10px] text-slate-600 flex-shrink-0 whitespace-nowrap">
+                {formatDistanceToNow(new Date(deal.lastActivity.date), { addSuffix: true, locale: ptBR })}
+              </span>
+            </>
+          ) : (
+            <>
+              <Clock className="h-2.5 w-2.5 text-slate-600 flex-shrink-0" />
+              <span className="text-[11px] text-slate-600 truncate flex-1 leading-none">
+                {deal.updated_at
+                  ? `Atualizado ${formatDistanceToNow(new Date(deal.updated_at), { addSuffix: true, locale: ptBR })}`
+                  : "Sem atividade"
+                }
+              </span>
+            </>
+          )}
+        </div>
       </div>
+    </div>
     </div>
   );
 });

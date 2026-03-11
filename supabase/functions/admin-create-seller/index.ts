@@ -7,6 +7,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -53,6 +55,139 @@ async function consumeRateLimit(
     console.warn("[admin-create-seller] rate limit unavailable:", error);
     return { enabled: false, allowed: true };
   }
+}
+
+function buildWelcomeEmailHtml(opts: {
+  nome: string;
+  normalizedEmail: string;
+  password: string;
+  companyName: string;
+  appUrl: string;
+}) {
+  const { nome, normalizedEmail, password, companyName, appUrl } = opts;
+  const firstName = nome.split(" ")[0];
+
+  return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Bem-vindo ao ${companyName}</title>
+</head>
+<body style="margin:0;padding:0;background-color:#080c14;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+  <!-- Wrapper -->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#080c14;">
+    <tr>
+      <td align="center" style="padding:40px 16px;">
+        <table role="presentation" width="520" cellpadding="0" cellspacing="0" style="max-width:520px;width:100%;">
+
+          <!-- Logo + Badge -->
+          <tr>
+            <td align="center" style="padding-bottom:32px;">
+              <div style="display:inline-block;background:linear-gradient(135deg,#059669 0%,#10b981 50%,#34d399 100%);border-radius:14px;padding:12px 24px;">
+                <span style="color:#ffffff;font-size:22px;font-weight:800;letter-spacing:-0.5px;">Game of Sales</span>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Main Card -->
+          <tr>
+            <td>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#111827;border-radius:20px;border:1px solid #1f2937;overflow:hidden;">
+
+                <!-- Green Accent Bar -->
+                <tr>
+                  <td style="height:4px;background:linear-gradient(90deg,#059669,#10b981,#34d399);"></td>
+                </tr>
+
+                <!-- Content -->
+                <tr>
+                  <td style="padding:40px 32px;">
+
+                    <!-- Greeting -->
+                    <h1 style="margin:0 0 8px;color:#ffffff;font-size:22px;font-weight:700;">
+                      Ola, ${firstName}! &#128075;
+                    </h1>
+                    <p style="margin:0 0 28px;color:#9ca3af;font-size:15px;line-height:1.6;">
+                      Voce foi convidado(a) para a equipe <strong style="color:#e5e7eb;">${companyName}</strong>. Sua conta ja esta ativa e pronta para uso.
+                    </p>
+
+                    <!-- Divider -->
+                    <div style="height:1px;background:#1f2937;margin:0 0 28px;"></div>
+
+                    <!-- Credentials Section -->
+                    <p style="margin:0 0 16px;color:#6b7280;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;">
+                      Suas credenciais de acesso
+                    </p>
+
+                    <!-- Email Field -->
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;">
+                      <tr>
+                        <td style="background:#0a0f1a;border:1px solid #1f2937;border-radius:12px;padding:16px 20px;">
+                          <span style="display:block;color:#6b7280;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">E-mail</span>
+                          <span style="display:block;color:#f3f4f6;font-size:15px;font-family:'SF Mono',Monaco,Consolas,'Courier New',monospace;">${normalizedEmail}</span>
+                        </td>
+                      </tr>
+                    </table>
+
+                    <!-- Password Field -->
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+                      <tr>
+                        <td style="background:linear-gradient(135deg,#052e16,#064e3b);border:1px solid #065f46;border-radius:12px;padding:16px 20px;">
+                          <span style="display:block;color:#6ee7b7;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Senha</span>
+                          <span style="display:block;color:#ecfdf5;font-size:17px;font-family:'SF Mono',Monaco,Consolas,'Courier New',monospace;font-weight:700;letter-spacing:0.5px;">${password}</span>
+                        </td>
+                      </tr>
+                    </table>
+
+                    <!-- CTA Button -->
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td align="center">
+                          <a href="${appUrl}/auth"
+                             target="_blank"
+                             style="display:inline-block;background:linear-gradient(135deg,#059669,#10b981);color:#ffffff;text-decoration:none;padding:16px 48px;border-radius:12px;font-size:15px;font-weight:700;letter-spacing:0.3px;box-shadow:0 4px 14px rgba(16,185,129,0.3);">
+                            Acessar Plataforma &rarr;
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
+
+                    <!-- Security Tip -->
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px;">
+                      <tr>
+                        <td style="background:#0a0f1a;border:1px solid #1f2937;border-radius:10px;padding:14px 18px;">
+                          <p style="margin:0;color:#6b7280;font-size:12px;line-height:1.5;">
+                            &#128274; <strong style="color:#9ca3af;">Dica de seguranca:</strong> Recomendamos trocar sua senha apos o primeiro acesso em Perfil &rarr; Alterar Senha.
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td align="center" style="padding:24px 0;">
+              <p style="margin:0 0 4px;color:#374151;font-size:11px;">
+                Enviado automaticamente pelo Game of Sales
+              </p>
+              <p style="margin:0;color:#1f2937;font-size:10px;">
+                Se voce nao solicitou esta conta, ignore este e-mail.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
 }
 
 serve(async (req) => {
@@ -172,7 +307,7 @@ serve(async (req) => {
     const { data: created, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email: normalizedEmail,
       password,
-      email_confirm: false,
+      email_confirm: true,
       user_metadata: { nome, role: "vendedor" },
     });
 
@@ -183,8 +318,6 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    await supabaseAdmin.auth.admin.inviteUserByEmail(normalizedEmail);
 
     if (created?.user?.id) {
       await (supabaseAdmin as any)
@@ -198,7 +331,61 @@ serve(async (req) => {
         }, { onConflict: "id" });
     }
 
-    return new Response(JSON.stringify({ password: sendPassword ? password : null }), {
+    // Get company name for the email
+    let companyName = "Game of Sales";
+    const { data: company } = await (supabaseAdmin as any)
+      .from("companies")
+      .select("name")
+      .eq("id", targetCompanyId)
+      .single();
+    if (company?.name) companyName = company.name;
+
+    // Send welcome email via Resend
+    let emailSent = false;
+    let emailError: string | null = null;
+    const appUrl = Deno.env.get("APP_URL") || "https://gameofsales.com.br";
+
+    if (RESEND_API_KEY && sendPassword) {
+      try {
+        const fromEmail = Deno.env.get("RESEND_FROM_EMAIL") || "Game of Sales <onboarding@resend.dev>";
+        console.log(`[admin-create-seller] Sending email from=${fromEmail} to=${normalizedEmail}`);
+
+        const emailRes = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${RESEND_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: fromEmail,
+            to: [normalizedEmail],
+            subject: `${nome}, sua conta no ${companyName} esta pronta!`,
+            html: buildWelcomeEmailHtml({ nome, normalizedEmail, password, companyName, appUrl }),
+          }),
+        });
+
+        if (emailRes.ok) {
+          emailSent = true;
+          console.log("[admin-create-seller] Email sent successfully");
+        } else {
+          const errBody = await emailRes.text();
+          emailError = errBody;
+          console.error("[admin-create-seller] Resend error:", emailRes.status, errBody);
+        }
+      } catch (emailErr: any) {
+        emailError = emailErr?.message || "Unknown email error";
+        console.error("[admin-create-seller] Email send failed:", emailErr);
+      }
+    } else if (!RESEND_API_KEY) {
+      emailError = "RESEND_API_KEY not configured";
+      console.warn("[admin-create-seller] RESEND_API_KEY not set, skipping email");
+    }
+
+    return new Response(JSON.stringify({
+      password: sendPassword ? password : null,
+      emailSent,
+      emailError: emailSent ? null : emailError,
+    }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

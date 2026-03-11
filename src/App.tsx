@@ -32,9 +32,26 @@ import Onboarding from "./pages/Onboarding";
 import SalesPerformanceCenter from "./pages/SalesPerformanceCenter";
 import LogoPreview from "./pages/LogoPreview";
 import WhatsApp from "./pages/WhatsApp";
+import TermosServico from "./pages/TermosServico";
+import ImportarDados from "./pages/ImportarDados";
 import { PRODUCT_FEATURES } from "@/config/features";
+import { useAuth } from "@/contexts/AuthContext";
 
-const queryClient = new QueryClient();
+// Pre-prod gate: renders children only for super admins, otherwise redirects
+const PreProdRoute = ({ children, fallback = "/dashboard" }: { children: React.ReactNode; fallback?: string }) => {
+  const { isSuperAdmin } = useAuth();
+  if (!isSuperAdmin) return <Navigate to={fallback} replace />;
+  return <>{children}</>;
+};
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -146,9 +163,11 @@ const App = () => (
                 path="/integracoes"
                 element={
                   <ProtectedRoute>
-                    <AppLayout>
-                      <Integracoes />
-                    </AppLayout>
+                    <AdminRoute>
+                      <AppLayout>
+                        <Integracoes />
+                      </AppLayout>
+                    </AdminRoute>
                   </ProtectedRoute>
                 }
               />
@@ -157,7 +176,7 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <AppLayout>
-                      {PRODUCT_FEATURES.whatsappHub ? <WhatsApp /> : <Navigate to="/integracoes" replace />}
+                      <WhatsApp />
                     </AppLayout>
                   </ProtectedRoute>
                 }
@@ -210,7 +229,20 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/importar"
+                element={
+                  <ProtectedRoute>
+                    <AdminRoute>
+                      <AppLayout>
+                        <ImportarDados />
+                      </AppLayout>
+                    </AdminRoute>
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/politica-privacidade" element={<PoliticaPrivacidade />} />
+              <Route path="/termos-de-servico" element={<TermosServico />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </TooltipProvider>

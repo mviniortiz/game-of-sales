@@ -19,14 +19,18 @@ type Action =
   | "chats"
   | "messages"
   | "send"
-  | "logout";
+  | "logout"
+  | "profilePic"
+  | "instances";
 
 type Body = {
   action?: Action;
   companyId?: string | null;
+  targetUserId?: string | null;
   chatId?: string;
   text?: string;
   limit?: number;
+  number?: string;
 };
 
 function json(status: number, body: unknown) {
@@ -41,8 +45,8 @@ function extractNumberFromJid(value?: string | null) {
   return String(value).split("@")[0].replace(/\D/g, "");
 }
 
-function getInstanceName(companyId: string) {
-  return `wa_${companyId.replace(/-/g, "")}`;
+function getInstanceName(userId: string) {
+  return `wa_${userId.replace(/-/g, "")}`;
 }
 
 function extractQrBase64(payload: any): string | null {
@@ -125,13 +129,14 @@ serve(async (req) => {
 
     const { data: profile } = await (adminSupabase as any)
       .from("profiles")
-      .select("id, company_id, is_super_admin")
+      .select("id, company_id, is_super_admin, role")
       .eq("id", user.id)
       .single();
 
     if (!profile) return json(403, { error: "Profile not found" });
 
     const isSuperAdmin = profile.is_super_admin === true;
+    const isAdmin = isSuperAdmin || profile.role === "admin";
 
     if (!isSuperAdmin && body.companyId && body.companyId !== profile.company_id) {
       return json(403, { error: "Forbidden company context" });
@@ -145,7 +150,26 @@ serve(async (req) => {
       return json(400, { error: "No company context" });
     }
 
-    const instanceName = getInstanceName(targetCompanyId);
+    // Determine which user's instance to operate on
+    let effectiveUserId = user.id;
+
+    if (body.targetUserId && isAdmin) {
+      // Verify the target user belongs to the same company (unless super admin)
+      if (!isSuperAdmin) {
+        const { data: targetProfile } = await (adminSupabase as any)
+          .from("profiles")
+          .select("id, company_id")
+          .eq("id", body.targetUserId)
+          .single();
+
+        if (!targetProfile || targetProfile.company_id !== profile.company_id) {
+          return json(403, { error: "Target user not in your company" });
+        }
+      }
+      effectiveUserId = body.targetUserId;
+    }
+
+    const instanceName = getInstanceName(effectiveUserId);
 
     if (action === "status") {
       try {
@@ -160,7 +184,9 @@ serve(async (req) => {
           connected: String(state).toLowerCase() === "open",
         });
       } catch (error: any) {
-        if ((error as any)?.status === 404) {
+        const errStatus = Number((error as any)?.status);
+        const errMsg = String((error as any)?.message || "").toLowerCase();
+        if (errStatus === 404 || errMsg.includes("not exist") || errMsg.includes("not found")) {
           return json(200, {
             success: true,
             instanceName,
@@ -173,6 +199,7 @@ serve(async (req) => {
     }
 
     if (action === "connect") {
+      // 1. Check if already connected
       try {
         const stateRes = await evolutionRequest(`/instance/connectionState/${instanceName}`, { method: "GET" });
         const state = stateRes?.instance?.state || stateRes?.state;
@@ -185,31 +212,39 @@ serve(async (req) => {
             qrCodeBase64: null,
           });
         }
-      } catch (error: any) {
-        if ((error as any)?.status !== 404) throw error;
+      } catch {
+        // Instance doesn't exist yet — that's fine, we'll create it
       }
 
       let qrCodeBase64: string | null = null;
 
+      // 2. Try to create instance
       try {
         const createRes = await evolutionRequest("/instance/create", {
           method: "POST",
           body: JSON.stringify({
             instanceName,
+            integration: "WHATSAPP-BAILEYS",
             qrcode: true,
           }),
         });
+        console.log("[connect] create response:", JSON.stringify(createRes));
         qrCodeBase64 = extractQrBase64(createRes);
-      } catch (error: any) {
-        const payload = (error as any)?.payload;
-        const msg = String(payload?.error || payload?.message || error?.message || "").toLowerCase();
-        const alreadyExists = msg.includes("already exists") || (error as any)?.status === 400 || (error as any)?.status === 403;
-        if (!alreadyExists) throw error;
+        console.log("[connect] qr from create:", qrCodeBase64 ? "found" : "null");
+      } catch (err: any) {
+        console.log("[connect] create error:", err?.message, "status:", (err as any)?.status, "payload:", JSON.stringify((err as any)?.payload));
       }
 
+      // 3. If no QR yet, try connect endpoint
       if (!qrCodeBase64) {
-        const connectRes = await evolutionRequest(`/instance/connect/${instanceName}`, { method: "GET" });
-        qrCodeBase64 = extractQrBase64(connectRes);
+        try {
+          const connectRes = await evolutionRequest(`/instance/connect/${instanceName}`, { method: "GET" });
+          console.log("[connect] connect response:", JSON.stringify(connectRes));
+          qrCodeBase64 = extractQrBase64(connectRes);
+          console.log("[connect] qr from connect:", qrCodeBase64 ? "found" : "null");
+        } catch (err: any) {
+          console.log("[connect] connect error:", err?.message, "status:", (err as any)?.status, "payload:", JSON.stringify((err as any)?.payload));
+        }
       }
 
       return json(200, {
@@ -222,40 +257,85 @@ serve(async (req) => {
     }
 
     if (action === "chats") {
-      const chats = await evolutionRequest(`/chat/findChats/${instanceName}`, { method: "GET" });
+      const chats = await evolutionRequest(`/chat/findChats/${instanceName}`, {
+        method: "POST",
+        body: JSON.stringify({}),
+      });
       return json(200, { success: true, instanceName, chats });
     }
 
     if (action === "messages") {
       if (!body.chatId) return json(400, { error: "chatId is required" });
       const limit = Math.max(1, Math.min(Number(body.limit || 50), 100));
-      const messages = await evolutionRequest(`/chat/findMessages/${instanceName}`, {
+      const rawMessages = await evolutionRequest(`/chat/findMessages/${instanceName}`, {
         method: "POST",
         body: JSON.stringify({
           where: { key: { remoteJid: body.chatId } },
-          options: {
-            limit,
-            orderBy: { messageTimestamp: "asc" },
-          },
+          limit,
         }),
       });
+
+      // Normalize: Evolution API v2.3.7 may return messages in different formats
+      let messages: any[];
+      if (Array.isArray(rawMessages)) {
+        messages = rawMessages;
+      } else if (Array.isArray(rawMessages?.messages)) {
+        messages = rawMessages.messages;
+      } else if (Array.isArray(rawMessages?.messages?.records)) {
+        messages = rawMessages.messages.records;
+      } else if (Array.isArray(rawMessages?.records)) {
+        messages = rawMessages.records;
+      } else {
+        messages = [];
+      }
+
+      console.log(`[messages] chatId=${body.chatId} rawType=${typeof rawMessages} isArray=${Array.isArray(rawMessages)} count=${messages.length}`);
+      if (messages.length > 0) {
+        console.log("[messages] sample keys:", JSON.stringify(Object.keys(messages[0])));
+      }
+
       return json(200, { success: true, instanceName, messages });
     }
 
     if (action === "send") {
       if (!body.chatId) return json(400, { error: "chatId is required" });
       if (!body.text || !String(body.text).trim()) return json(400, { error: "text is required" });
-      const number = extractNumberFromJid(body.chatId);
-      if (!number) return json(400, { error: "invalid chatId/number" });
 
-      const sendRes = await evolutionRequest(`/message/sendText/${instanceName}`, {
-        method: "POST",
-        body: JSON.stringify({
-          number,
-          text: String(body.text).trim(),
-        }),
-      });
-      return json(200, { success: true, instanceName, result: sendRes });
+      // For groups (@g.us), send using the full remoteJid.
+      // For contacts (@s.whatsapp.net), extract the number.
+      const isGroup = String(body.chatId).includes("@g.us");
+      const target = isGroup ? body.chatId : extractNumberFromJid(body.chatId);
+      if (!target) return json(400, { error: "invalid chatId/number" });
+
+      console.log(`[send] target=${target} isGroup=${isGroup} chatId=${body.chatId} instanceName=${instanceName}`);
+
+      try {
+        const sendRes = await evolutionRequest(`/message/sendText/${instanceName}`, {
+          method: "POST",
+          body: JSON.stringify({
+            number: target,
+            text: String(body.text).trim(),
+          }),
+        });
+        console.log("[send] success:", JSON.stringify(sendRes));
+        return json(200, { success: true, instanceName, result: sendRes });
+      } catch (sendErr: any) {
+        console.error("[send] error:", sendErr?.message, "status:", sendErr?.status, "payload:", JSON.stringify(sendErr?.payload));
+        throw sendErr;
+      }
+    }
+
+    if (action === "profilePic") {
+      if (!body.number) return json(400, { error: "number is required" });
+      try {
+        const data = await evolutionRequest(`/chat/fetchProfilePictureUrl/${instanceName}`, {
+          method: "POST",
+          body: JSON.stringify({ number: body.number }),
+        });
+        return json(200, { success: true, profilePicUrl: data?.profilePictureUrl || data?.url || null });
+      } catch {
+        return json(200, { success: true, profilePicUrl: null });
+      }
     }
 
     if (action === "logout") {
@@ -269,6 +349,47 @@ serve(async (req) => {
         }
       }
       return json(200, { success: true, instanceName });
+    }
+
+    if (action === "instances") {
+      if (!isAdmin) {
+        return json(403, { error: "Only admins can list instances" });
+      }
+
+      const { data: companyUsers } = await (adminSupabase as any)
+        .from("profiles")
+        .select("id, full_name, avatar_url, role")
+        .eq("company_id", targetCompanyId);
+
+      if (!companyUsers || companyUsers.length === 0) {
+        return json(200, { success: true, sellers: [] });
+      }
+
+      const sellers = await Promise.all(
+        companyUsers.map(async (u: any) => {
+          const uInstanceName = getInstanceName(u.id);
+          let connectedStatus = false;
+          try {
+            const stateRes = await evolutionRequest(
+              `/instance/connectionState/${uInstanceName}`,
+              { method: "GET" },
+            );
+            const state = stateRes?.instance?.state || stateRes?.state || "";
+            connectedStatus = String(state).toLowerCase() === "open";
+          } catch {
+            // instance doesn't exist or error — not connected
+          }
+          return {
+            userId: u.id,
+            name: u.full_name || "Sem nome",
+            avatarUrl: u.avatar_url || null,
+            role: u.role || "seller",
+            connected: connectedStatus,
+          };
+        }),
+      );
+
+      return json(200, { success: true, sellers });
     }
 
     return json(400, { error: "invalid action" });
