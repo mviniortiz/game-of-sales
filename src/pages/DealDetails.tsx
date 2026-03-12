@@ -61,6 +61,7 @@ import {
 import { LostDealModal } from "@/components/crm/LostDealModal";
 import { syncWonDealToSale } from "@/utils/salesSync";
 import { DealProducts } from "@/components/crm/DealProducts";
+import { CustomFieldsSection } from "@/components/crm/CustomFieldsSection";
 import { ProposalPDFButton } from "@/components/crm/ProposalPDFGenerator";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -968,6 +969,9 @@ export default function DealDetails() {
                   )}
                 </div>
               </div>
+
+              {/* Custom Fields */}
+              <CustomFieldsSection dealId={id!} />
 
               {/* Seller Card */}
               {sellerProfile && (

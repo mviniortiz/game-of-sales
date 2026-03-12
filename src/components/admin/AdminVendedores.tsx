@@ -39,8 +39,10 @@ import {
   DollarSign,
   Crown,
   Filter,
-  MessageCircle,
   BarChart2,
+  Target,
+  Trophy,
+  Calendar,
   TrendingUp,
   TrendingDown,
   Building2,
@@ -64,6 +66,15 @@ const LEVEL_THRESHOLDS = {
   Ouro: { current: 5000, next: 15000, nextLevel: "Platina" },
   Platina: { current: 15000, next: 50000, nextLevel: "Diamante" },
   Diamante: { current: 50000, next: 100000, nextLevel: "Lenda" },
+};
+
+const PIPELINE_STAGE_LABELS: Record<string, string> = {
+  lead: "Lead",
+  qualification: "Qualificação",
+  proposal: "Proposta",
+  negotiation: "Negociação",
+  closed_won: "Ganho",
+  closed_lost: "Perdido",
 };
 
 // KPI Card Component
@@ -181,6 +192,9 @@ export const AdminVendedores = () => {
   const [filterLevels, setFilterLevels] = useState<string[]>([]);
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
 
+  // Stats modal
+  const [statsVendedor, setStatsVendedor] = useState<any | null>(null);
+
   const { data: vendedores, isLoading } = useQuery({
     queryKey: ["admin-vendedores", activeCompanyId],
     queryFn: async () => {
@@ -244,6 +258,82 @@ export const AdminVendedores = () => {
 
     return { total, vendasMes, faturamentoMes, topPerformer };
   }, [vendedores]);
+
+  // Seller stats data
+  const { data: sellerStats } = useQuery({
+    queryKey: ["seller-stats", statsVendedor?.id],
+    queryFn: async () => {
+      if (!statsVendedor?.id) return null;
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+      // Fetch deals for this seller
+      const { data: deals } = await supabase
+        .from("deals")
+        .select("id, title, value, stage, probability, created_at, is_hot")
+        .eq("user_id", statsVendedor.id)
+        .eq("company_id", activeCompanyId!);
+
+      // Fetch all sales (not just this month) for history
+      const allVendas = statsVendedor.vendas || [];
+
+      // Group sales by month (last 6 months)
+      const monthlyData: { month: string; vendas: number; faturamento: number }[] = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
+        const monthSales = allVendas.filter((v: any) => {
+          const dt = new Date(v.data_venda || v.created_at);
+          return dt >= d && dt <= end;
+        });
+        monthlyData.push({
+          month: d.toLocaleDateString("pt-BR", { month: "short" }).replace(".", ""),
+          vendas: monthSales.length,
+          faturamento: monthSales.reduce((a: number, v: any) => a + Number(v.valor), 0),
+        });
+      }
+
+      const totalDeals = deals?.length || 0;
+      const activeDeals = deals?.filter(d => !["closed_won", "closed_lost"].includes(d.stage)) || [];
+      const wonDeals = deals?.filter(d => d.stage === "closed_won") || [];
+      const lostDeals = deals?.filter(d => d.stage === "closed_lost") || [];
+      const pipelineValue = activeDeals.reduce((a, d) => a + (d.value || 0), 0);
+      const conversionRate = totalDeals > 0 ? Math.round((wonDeals.length / totalDeals) * 100) : 0;
+
+      const vendasMes = allVendas.filter((v: any) => new Date(v.data_venda || v.created_at) >= startOfMonth);
+      const faturamentoMes = vendasMes.reduce((a: number, v: any) => a + Number(v.valor), 0);
+
+      // Previous month for comparison
+      const prevStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const prevEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+      const vendasPrev = allVendas.filter((v: any) => {
+        const dt = new Date(v.data_venda || v.created_at);
+        return dt >= prevStart && dt <= prevEnd;
+      });
+      const faturamentoPrev = vendasPrev.reduce((a: number, v: any) => a + Number(v.valor), 0);
+      const growthRate = faturamentoPrev > 0 ? Math.round(((faturamentoMes - faturamentoPrev) / faturamentoPrev) * 100) : 0;
+
+      return {
+        vendasMes: vendasMes.length,
+        faturamentoMes,
+        vendasTotal: allVendas.length,
+        faturamentoTotal: allVendas.reduce((a: number, v: any) => a + Number(v.valor), 0),
+        totalDeals,
+        activeDeals: activeDeals.length,
+        wonDeals: wonDeals.length,
+        lostDeals: lostDeals.length,
+        pipelineValue,
+        conversionRate,
+        growthRate,
+        monthlyData,
+        topDeals: (deals || [])
+          .filter(d => !["closed_lost"].includes(d.stage))
+          .sort((a, b) => (b.value || 0) - (a.value || 0))
+          .slice(0, 5),
+      };
+    },
+    enabled: !!statsVendedor?.id && !!activeCompanyId,
+  });
 
   // Filter vendedores
   const filteredVendedores = useMemo(() => {
@@ -613,6 +703,7 @@ export const AdminVendedores = () => {
               <TableHead className="text-gray-600 dark:text-gray-400 font-semibold">Pontos</TableHead>
               <TableHead className="text-gray-600 dark:text-gray-400 font-semibold text-right">Vendas</TableHead>
               <TableHead className="text-gray-600 dark:text-gray-400 font-semibold text-right">Faturamento</TableHead>
+              <TableHead className="text-gray-600 dark:text-gray-400 font-semibold">Último Login</TableHead>
               <TableHead className="text-gray-600 dark:text-gray-400 font-semibold text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -706,6 +797,32 @@ export const AdminVendedores = () => {
                     </div>
                   </TableCell>
 
+                  {/* Last Login */}
+                  <TableCell>
+                    {vendedor.last_sign_in_at ? (
+                      <div className="space-y-0.5">
+                        <div className="text-sm text-gray-700 dark:text-gray-300">
+                          {new Date(vendedor.last_sign_in_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
+                        </div>
+                        <div className="text-[10px] text-gray-400 dark:text-gray-500">
+                          {new Date(vendedor.last_sign_in_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                          {" · "}
+                          {(() => {
+                            const diff = Date.now() - new Date(vendedor.last_sign_in_at).getTime();
+                            const mins = Math.floor(diff / 60000);
+                            if (mins < 60) return `${mins}min atrás`;
+                            const hours = Math.floor(mins / 60);
+                            if (hours < 24) return `${hours}h atrás`;
+                            const days = Math.floor(hours / 24);
+                            return `${days}d atrás`;
+                          })()}
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-gray-400 dark:text-gray-500">Nunca</span>
+                    )}
+                  </TableCell>
+
                   {/* Actions */}
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
@@ -719,17 +836,8 @@ export const AdminVendedores = () => {
                           variant="ghost"
                           size="sm"
                           className="h-8 w-8 p-0 text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400"
-                          aria-label="Mensagem"
-                          onClick={() => toast.info("Chat em desenvolvimento")}
-                        >
-                          <MessageCircle className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400"
                           aria-label="Estatísticas"
-                          onClick={() => toast.info("Estatísticas em desenvolvimento")}
+                          onClick={() => setStatsVendedor(vendedor)}
                         >
                           <BarChart2 className="h-4 w-4" />
                         </Button>
@@ -952,6 +1060,187 @@ export const AdminVendedores = () => {
               {deleting ? "Removendo..." : "Sim, Remover"}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ─── Seller Stats Modal ─── */}
+      <Dialog open={!!statsVendedor} onOpenChange={(open) => { if (!open) setStatsVendedor(null); }}>
+        <DialogContent className="sm:max-w-[600px] bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 p-0 overflow-hidden">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-100 dark:border-gray-800">
+            <div className="flex items-center gap-3">
+              <Avatar className="h-12 w-12 ring-2 ring-gray-100 dark:ring-gray-800">
+                <AvatarImage src={statsVendedor?.avatar_url || ""} />
+                <AvatarFallback className="bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200 font-semibold">
+                  {getInitials(statsVendedor?.nome || "")}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <DialogTitle className="text-lg font-bold text-gray-900 dark:text-white">
+                  {statsVendedor?.nome}
+                </DialogTitle>
+                <DialogDescription className="text-sm text-gray-500 dark:text-gray-400">
+                  {statsVendedor?.email}
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          {sellerStats ? (
+            <div className="px-6 py-4 space-y-5 max-h-[70vh] overflow-y-auto">
+              {/* KPI Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 p-3">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <DollarSign className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase">Faturamento</span>
+                  </div>
+                  <p className="text-lg font-extrabold text-emerald-700 dark:text-emerald-300">
+                    {formatCurrency(sellerStats.faturamentoMes)}
+                  </p>
+                  <p className="text-[10px] text-emerald-600/60 dark:text-emerald-400/60 mt-0.5">este mês</p>
+                </div>
+
+                <div className="rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 p-3">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <ShoppingBag className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                    <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 uppercase">Vendas</span>
+                  </div>
+                  <p className="text-lg font-extrabold text-blue-700 dark:text-blue-300">
+                    {sellerStats.vendasMes}
+                  </p>
+                  <p className="text-[10px] text-blue-600/60 dark:text-blue-400/60 mt-0.5">
+                    {sellerStats.vendasTotal} total
+                  </p>
+                </div>
+
+                <div className="rounded-xl bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/20 p-3">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Target className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400" />
+                    <span className="text-[10px] font-semibold text-violet-600 dark:text-violet-400 uppercase">Pipeline</span>
+                  </div>
+                  <p className="text-lg font-extrabold text-violet-700 dark:text-violet-300">
+                    {sellerStats.activeDeals}
+                  </p>
+                  <p className="text-[10px] text-violet-600/60 dark:text-violet-400/60 mt-0.5">
+                    {formatCurrency(sellerStats.pipelineValue)}
+                  </p>
+                </div>
+
+                <div className="rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 p-3">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Trophy className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                    <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 uppercase">Conversão</span>
+                  </div>
+                  <p className="text-lg font-extrabold text-amber-700 dark:text-amber-300">
+                    {sellerStats.conversionRate}%
+                  </p>
+                  <p className="text-[10px] text-amber-600/60 dark:text-amber-400/60 mt-0.5">
+                    {sellerStats.wonDeals}W / {sellerStats.lostDeals}L
+                  </p>
+                </div>
+              </div>
+
+              {/* Growth indicator */}
+              {sellerStats.growthRate !== 0 && (
+                <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ${
+                  sellerStats.growthRate > 0
+                    ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                    : "bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400"
+                }`}>
+                  {sellerStats.growthRate > 0 ? (
+                    <TrendingUp className="w-4 h-4" />
+                  ) : (
+                    <TrendingDown className="w-4 h-4" />
+                  )}
+                  {sellerStats.growthRate > 0 ? "+" : ""}{sellerStats.growthRate}% vs mês anterior
+                </div>
+              )}
+
+              {/* Monthly Chart (simple bar chart) */}
+              <div className="space-y-2">
+                <h4 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5" /> Faturamento Mensal
+                </h4>
+                <div className="flex items-end gap-1.5 h-28 px-1">
+                  {sellerStats.monthlyData.map((m: any, i: number) => {
+                    const max = Math.max(...sellerStats.monthlyData.map((d: any) => d.faturamento), 1);
+                    const height = Math.max((m.faturamento / max) * 100, 4);
+                    const isCurrentMonth = i === sellerStats.monthlyData.length - 1;
+                    return (
+                      <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                        <span className="text-[9px] font-bold text-gray-500 dark:text-gray-400 tabular-nums">
+                          {m.vendas > 0 ? m.vendas : ""}
+                        </span>
+                        <div
+                          className={`w-full rounded-t-md transition-all ${
+                            isCurrentMonth
+                              ? "bg-emerald-500 dark:bg-emerald-400"
+                              : "bg-gray-200 dark:bg-gray-700"
+                          }`}
+                          style={{ height: `${height}%` }}
+                          title={`${m.month}: ${formatCurrency(m.faturamento)} (${m.vendas} vendas)`}
+                        />
+                        <span className={`text-[9px] font-medium ${
+                          isCurrentMonth
+                            ? "text-emerald-600 dark:text-emerald-400 font-bold"
+                            : "text-gray-400 dark:text-gray-500"
+                        }`}>
+                          {m.month}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Top Deals */}
+              {sellerStats.topDeals.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Target className="w-3.5 h-3.5" /> Top Deals no Pipeline
+                  </h4>
+                  <div className="space-y-1.5">
+                    {sellerStats.topDeals.map((deal: any) => {
+                      const stage = PIPELINE_STAGE_LABELS[deal.stage] || deal.stage;
+                      return (
+                        <div
+                          key={deal.id}
+                          className="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800"
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            {deal.is_hot && <span className="text-orange-400 shrink-0">🔥</span>}
+                            <span className="text-sm text-gray-700 dark:text-gray-300 truncate font-medium">{deal.title}</span>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Badge variant="outline" className="text-[9px] h-5 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
+                              {stage}
+                            </Badge>
+                            <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
+                              {formatCurrency(deal.value || 0)}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Summary row */}
+              <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800">
+                <span className="text-xs text-gray-400 dark:text-gray-500">
+                  Total: {sellerStats.totalDeals} deals · {sellerStats.vendasTotal} vendas · {formatCurrency(sellerStats.faturamentoTotal)} faturado
+                </span>
+                <Badge variant="outline" className={getNivelBadgeClass(statsVendedor?.nivel || "Bronze")}>
+                  {statsVendedor?.nivel}
+                </Badge>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500" />
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

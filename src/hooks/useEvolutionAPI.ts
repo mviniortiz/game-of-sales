@@ -26,6 +26,8 @@ export interface Chat {
     isGroup: boolean;
 }
 
+export type MediaType = "image" | "video" | "audio" | "sticker" | "document" | null;
+
 export interface MessageLine {
     id: string;
     text: string;
@@ -33,12 +35,54 @@ export interface MessageLine {
     time: string;
     timestamp: number;
     senderName?: string;
+    /** For audio messages: base64 data URI or remote URL */
+    audioUrl?: string;
+    /** Audio duration in seconds (from audioMessage.seconds) */
+    audioDuration?: number;
+    /** Type of media attachment */
+    mediaType?: MediaType;
+    /** Caption for image/video messages */
+    mediaCaption?: string;
+    /** Mimetype of the media */
+    mediaMimetype?: string;
 }
 
 
 const extractNumberFromJid = (jid?: string | null) => {
     if (!jid) return "";
     return String(jid).split("@")[0].replace(/\D/g, "");
+};
+
+/**
+ * Detects WhatsApp LID (Linked ID) JIDs that aren't real phone numbers.
+ * LIDs can appear as "lid:NUMBER", "NUMBER@lid", or as fake phone-format
+ * JIDs with numbers that don't match valid E.164 patterns.
+ *
+ * WhatsApp LIDs are internal identifiers that sometimes leak through as
+ * regular-looking JIDs (e.g. 38049769644279@s.whatsapp.net).
+ */
+const isLidJid = (jid: string): boolean => {
+    if (jid.startsWith("lid:")) return true;
+    if (jid.includes("@lid")) return true;
+
+    const digits = jid.split("@")[0].replace(/\D/g, "");
+    if (!digits) return false;
+
+    // E.164 phone numbers are max 15 digits, but real-world max is ~13
+    if (digits.length > 15) return true;
+    // Numbers starting with 0 aren't valid international phone numbers
+    if (digits.startsWith("0") && digits.length > 1) return true;
+
+    // Validate against known country code + number length patterns
+    // Brazil (55): 12-13 digits total (55 + 2 DDD + 8-9 number)
+    if (digits.startsWith("55")) return digits.length < 12 || digits.length > 13;
+    // USA/Canada (1): 11 digits
+    if (digits.startsWith("1")) return digits.length !== 11;
+    // For other country codes: if > 13 digits, very likely a LID
+    // (most real international numbers are 7-13 digits)
+    if (digits.length > 13) return true;
+
+    return false;
 };
 
 const safeTime = (timestampSeconds?: number) => {
@@ -80,7 +124,46 @@ const parseTextFromMessage = (msg: any): string | null => {
     return null; // return null instead of "unsupported" so we can filter
 };
 
-type ProxyAction = "status" | "connect" | "chats" | "messages" | "send" | "logout" | "profilePic" | "instances";
+/** Extract audio metadata from a raw Evolution API message */
+const extractAudioInfo = (msg: any): { url?: string; duration?: number } | null => {
+    const audio = msg?.message?.audioMessage;
+    if (!audio) return null;
+    const url = audio.url || audio.mediaUrl || msg?.mediaUrl || undefined;
+    const duration = Number(audio.seconds || audio.duration || 0) || undefined;
+    return { url, duration };
+};
+
+/** Extract media type, caption and mimetype from a raw Evolution API message */
+const extractMediaInfo = (msg: any): { type: MediaType; caption?: string; mimetype?: string } => {
+    const m = msg?.message;
+    if (!m) return { type: null };
+    if (m.imageMessage) return {
+        type: "image",
+        caption: m.imageMessage.caption || undefined,
+        mimetype: m.imageMessage.mimetype || "image/jpeg",
+    };
+    if (m.videoMessage) return {
+        type: "video",
+        caption: m.videoMessage.caption || undefined,
+        mimetype: m.videoMessage.mimetype || "video/mp4",
+    };
+    if (m.audioMessage) return {
+        type: "audio",
+        mimetype: m.audioMessage.mimetype || "audio/ogg",
+    };
+    if (m.stickerMessage) return {
+        type: "sticker",
+        mimetype: m.stickerMessage.mimetype || "image/webp",
+    };
+    if (m.documentMessage) return {
+        type: "document",
+        caption: m.documentMessage.fileName || undefined,
+        mimetype: m.documentMessage.mimetype || "application/octet-stream",
+    };
+    return { type: null };
+};
+
+type ProxyAction = "status" | "connect" | "chats" | "messages" | "send" | "sendMedia" | "sendAudio" | "logout" | "profilePic" | "instances" | "getMedia";
 
 export interface SellerInstance {
     userId: string;
@@ -147,7 +230,23 @@ export const useEvolutionIntegration = () => {
                 ...payload,
             },
         });
-        if (response.error) throw response.error;
+        if (response.error) {
+            // Try to read error body from FunctionsHttpError context
+            let detail = response.error.message;
+            try {
+                const ctx = (response.error as any).context;
+                if (ctx && typeof ctx.json === "function") {
+                    const body = await ctx.json();
+                    detail = body?.error || body?.message || JSON.stringify(body);
+                    console.error(`[invokeProxy] ${action} failed:`, detail, body);
+                } else {
+                    console.error(`[invokeProxy] ${action} failed:`, detail, response.data);
+                }
+            } catch {
+                console.error(`[invokeProxy] ${action} failed (no body):`, detail);
+            }
+            throw new Error(detail);
+        }
         return response.data;
     }, [activeCompanyId, targetUserId]);
 
@@ -169,7 +268,16 @@ export const useEvolutionIntegration = () => {
                     : Array.isArray(data?.records)
                         ? data.records
                         : [];
+            // Debug: log raw JIDs to identify LID patterns
+            if (rawChats.length > 0) {
+                console.log("[WhatsApp] Raw chat JIDs:", rawChats.slice(0, 30).map((c: any) => ({
+                    jid: c?.remoteJid || c?.id,
+                    name: c?.pushName || c?.name,
+                    lid: c?.lid || c?.lidJid || undefined,
+                })));
+            }
             const seenPhones = new Set<string>();
+            const seenNames = new Set<string>();
             const transformed: Chat[] = rawChats
                 .filter((c: any) => {
                     const jid = String(c?.remoteJid || c?.id || "");
@@ -177,14 +285,24 @@ export const useEvolutionIntegration = () => {
                     // Filter out system/internal chats
                     if (jid.includes("@broadcast")) return false;    // status updates
                     if (jid.includes("@newsletter")) return false;   // channels
-                    if (jid.startsWith("lid:")) return false;        // internal WhatsApp IDs
                     if (jid === "0@s.whatsapp.net") return false;    // system
+                    if (isLidJid(jid)) return false;                 // WhatsApp LID (not real phone)
+                    // Also check raw chat properties for LID indicators
+                    if (c?.lid || c?.lidJid) return false;
                     // Deduplicate by phone number (same contact can appear with different JIDs)
                     const isGroup = jid.includes("@g.us");
                     if (!isGroup) {
                         const phone = extractNumberFromJid(jid);
                         if (phone && seenPhones.has(phone)) return false;
                         if (phone) seenPhones.add(phone);
+                        // Also deduplicate by pushName for LIDs that slip through
+                        // (same contact may appear under both phone JID and LID JID)
+                        const name = String(c?.pushName || "").trim().toLowerCase();
+                        if (name && name !== "contato" && seenNames.has(name)) {
+                            console.warn(`[WhatsApp] Duplicate contact filtered: jid=${jid} name=${name}`);
+                            return false;
+                        }
+                        if (name) seenNames.add(name);
                     }
                     return true;
                 })
@@ -340,65 +458,99 @@ export const useEvolutionIntegration = () => {
     // Track last message IDs to avoid unnecessary re-renders on polling
     const lastMsgSignatureRef = useRef<string>("");
 
+    // Map phone JID → LID JID (discovered from message remoteJidAlt)
+    const lidMapRef = useRef<Map<string, string>>(new Map());
+
+    const extractRawMessages = (data: any): any[] => {
+        if (Array.isArray(data?.messages)) return data.messages;
+        if (Array.isArray(data?.messages?.records)) return data.messages.records;
+        if (Array.isArray(data?.records)) return data.records;
+        if (Array.isArray(data)) return data;
+        return [];
+    };
+
+    const parseRawToMessages = (raw: any[]): MessageLine[] => {
+        const seen = new Set<string>();
+        return raw
+            .map((msg: any) => {
+                const text = parseTextFromMessage(msg);
+                if (!text) return null;
+
+                const ts = Number(msg?.messageTimestamp || msg?.timestamp || 0);
+                const date = ts ? new Date(ts * 1000) : new Date();
+                const fromMe = msg?.key?.fromMe ?? msg?.fromMe ?? false;
+
+                const id = msg?.key?.id || msg?.id || `msg_${ts}_${fromMe ? "me" : "lead"}_${text.slice(0, 32)}`;
+                if (seen.has(id)) return null;
+                seen.add(id);
+
+                const audioInfo = extractAudioInfo(msg);
+                const mediaInfo = extractMediaInfo(msg);
+
+                return {
+                    id,
+                    text,
+                    sender: (fromMe ? "me" : "lead") as "me" | "lead",
+                    time: date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                    timestamp: ts || date.getTime() / 1000,
+                    senderName: msg?.pushName || msg?.participant || undefined,
+                    audioUrl: audioInfo?.url,
+                    audioDuration: audioInfo?.duration,
+                    mediaType: mediaInfo.type,
+                    mediaCaption: mediaInfo.caption,
+                    mediaMimetype: mediaInfo.mimetype,
+                };
+            })
+            .filter((m): m is MessageLine => m !== null);
+    };
+
     const fetchMessages = useCallback(async (chatId: string, isPolling = false) => {
         if (!connected || !chatId) return;
-        // Only show loading spinner on first load, not on background polling
         if (!isPolling) {
             setIsLoadingMessages(true);
             setError(null);
         }
         try {
+            // 1. Fetch messages for the primary JID (phone number)
             const data = await invokeProxy("messages", { chatId, limit: 50 });
+            const raw = extractRawMessages(data);
 
-            const raw = Array.isArray(data?.messages)
-                ? data.messages
-                : Array.isArray(data?.messages?.records)
-                    ? data.messages.records
-                    : Array.isArray(data?.records)
-                        ? data.records
-                        : Array.isArray(data)
-                            ? data
-                            : [];
+            // 2. Discover LID alt JID from message keys (e.g. remoteJidAlt: "123@lid")
+            if (!chatId.includes("@g.us") && !chatId.includes("@lid")) {
+                for (const msg of raw) {
+                    const altJid = msg?.key?.remoteJidAlt;
+                    if (altJid && String(altJid).includes("@lid")) {
+                        lidMapRef.current.set(chatId, altJid);
+                        break;
+                    }
+                }
+            }
 
-            const seen = new Set<string>();
-            const messages: MessageLine[] = raw
-                .map((msg: any) => {
-                    const text = parseTextFromMessage(msg);
-                    if (!text) return null;
+            // 3. If there's a known LID for this chat, also fetch messages from it
+            //    Messages received FROM the contact often live under the LID JID
+            const lidJid = lidMapRef.current.get(chatId);
+            let lidRaw: any[] = [];
+            if (lidJid) {
+                try {
+                    const lidData = await invokeProxy("messages", { chatId: lidJid, limit: 50 });
+                    lidRaw = extractRawMessages(lidData);
+                } catch {
+                    // LID fetch failed — not critical, continue with phone JID messages only
+                }
+            }
 
-                    const ts = Number(msg?.messageTimestamp || msg?.timestamp || 0);
-                    const date = ts ? new Date(ts * 1000) : new Date();
-                    const fromMe = msg?.key?.fromMe ?? msg?.fromMe ?? false;
-
-                    // Build a stable ID: prefer API key, fall back to content-based hash
-                    const id = msg?.key?.id || msg?.id || `msg_${ts}_${fromMe ? "me" : "lead"}_${text.slice(0, 32)}`;
-
-                    // Deduplicate by message ID
-                    if (seen.has(id)) return null;
-                    seen.add(id);
-
-                    return {
-                        id,
-                        text,
-                        sender: (fromMe ? "me" : "lead") as "me" | "lead",
-                        time: date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-                        timestamp: ts || date.getTime() / 1000,
-                        senderName: msg?.pushName || msg?.participant || undefined,
-                    };
-                })
-                .filter((m): m is MessageLine => m !== null)
+            // 4. Merge both sets and deduplicate
+            const allRaw = [...raw, ...lidRaw];
+            const messages = parseRawToMessages(allRaw)
                 .sort((a, b) => a.timestamp - b.timestamp);
 
-            // Only update state if messages actually changed (prevents unnecessary re-renders)
+            // Only update state if messages actually changed
             const signature = messages.map(m => m.id).join(",");
             if (signature !== lastMsgSignatureRef.current) {
                 lastMsgSignatureRef.current = signature;
-                // Replace API messages and remove any optimistic temp_ messages
-                // that now have a real counterpart from the server
                 setSelectedChatMessages(prev => {
                     const tempMessages = prev.filter(m => m.id.startsWith("temp_"));
                     if (tempMessages.length === 0) return messages;
-                    // Keep temp messages only if no real "me" message with similar timestamp exists
                     const kept = tempMessages.filter(tm => {
                         return !messages.some(rm =>
                             rm.sender === "me" &&
@@ -448,10 +600,112 @@ export const useEvolutionIntegration = () => {
         }
     }, [connected, invokeProxy]);
 
+    const sendMediaMessage = useCallback(async (
+        chatId: string,
+        base64: string,
+        mimetype: string,
+        opts?: { caption?: string; fileName?: string }
+    ) => {
+        if (!connected || !chatId || !base64) return;
+
+        const isImage = mimetype.startsWith("image/");
+        const isVideo = mimetype.startsWith("video/");
+        const label = isImage ? "📷 Imagem" : isVideo ? "🎥 Vídeo" : `📎 ${opts?.fileName || "Documento"}`;
+
+        const optimistic: MessageLine = {
+            id: `temp_${Date.now()}`,
+            text: opts?.caption || label,
+            sender: "me",
+            time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+            timestamp: Date.now() / 1000,
+            mediaType: isImage ? "image" : isVideo ? "video" : "document",
+        };
+
+        setSelectedChatMessages((prev) => [...prev, optimistic]);
+        setError(null);
+
+        try {
+            console.log("[sendMedia] calling proxy:", { chatId, mimetype, base64Length: base64.length, fileName: opts?.fileName });
+            const result = await invokeProxy("sendMedia", {
+                chatId,
+                mediaBase64: base64,
+                mimetype,
+                caption: opts?.caption || undefined,
+                fileName: opts?.fileName || undefined,
+            });
+            console.log("[sendMedia] success:", result);
+        } catch (err: any) {
+            console.error("[sendMedia] error:", err?.message || err, err);
+            setSelectedChatMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
+            setError(err?.message || "Falha ao enviar mídia.");
+        }
+    }, [connected, invokeProxy]);
+
+    const sendAudioMessage = useCallback(async (chatId: string, base64: string) => {
+        if (!connected || !chatId || !base64) return;
+
+        const optimistic: MessageLine = {
+            id: `temp_${Date.now()}`,
+            text: "🎤 Áudio",
+            sender: "me",
+            time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+            timestamp: Date.now() / 1000,
+            mediaType: "audio",
+        };
+
+        setSelectedChatMessages((prev) => [...prev, optimistic]);
+        setError(null);
+
+        try {
+            console.log("[sendAudio] calling proxy:", { chatId, base64Length: base64.length });
+            const result = await invokeProxy("sendAudio", { chatId, mediaBase64: base64, mimetype: "audio/webm" });
+            console.log("[sendAudio] success:", result);
+        } catch (err: any) {
+            console.error("[sendAudio] error:", err?.message || err, err);
+            setSelectedChatMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
+            setError(err?.message || "Falha ao enviar áudio.");
+        }
+    }, [connected, invokeProxy]);
+
+    // Audio media cache: messageId → data URI
+    const audioCache = useRef<Map<string, string>>(new Map());
+
+    const getAudioMedia = useCallback(async (messageId: string): Promise<string | null> => {
+        // Return cached if available
+        if (audioCache.current.has(messageId)) {
+            return audioCache.current.get(messageId)!;
+        }
+        try {
+            const data = await invokeProxy("getMedia", { messageId });
+            console.log("[getAudioMedia] response:", {
+                hasBase64: !!data?.base64,
+                base64Length: data?.base64?.length,
+                base64Start: data?.base64?.slice(0, 40),
+                mimetype: data?.mimetype,
+                keys: data ? Object.keys(data) : [],
+            });
+            if (data?.base64) {
+                const rawMime = data.mimetype || "audio/ogg";
+                // Normalize mimetype for browser compatibility
+                // WhatsApp audio is typically opus in ogg container
+                const mimetype = rawMime.includes("opus") || rawMime.includes("ogg")
+                    ? "audio/ogg; codecs=opus"
+                    : rawMime;
+                const dataUri = `data:${mimetype};base64,${data.base64}`;
+                audioCache.current.set(messageId, dataUri);
+                return dataUri;
+            }
+        } catch (err) {
+            console.error("[getAudioMedia] error:", err);
+        }
+        return null;
+    }, [invokeProxy]);
+
     // Stable callbacks that never change identity — prevents useEffect re-triggers
     const stableCheckConnection = useStableCallback(checkConnectionState);
     const stableFetchChats = useStableCallback(fetchChats);
     const stableFetchMessages = useStableCallback(fetchMessages);
+    const stableGetAudioMedia = useStableCallback(getAudioMedia);
 
     const refreshConnection = useCallback(async () => {
         const open = await stableCheckConnection();
@@ -515,5 +769,8 @@ export const useEvolutionIntegration = () => {
         targetUserId,
         setTargetUser,
         fetchInstances,
+        getAudioMedia: stableGetAudioMedia,
+        sendMediaMessage,
+        sendAudioMessage,
     };
 };

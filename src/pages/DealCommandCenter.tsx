@@ -72,6 +72,7 @@ import { LostDealModal } from "@/components/crm/LostDealModal";
 import { Confetti } from "@/components/crm/Confetti";
 import { NovaTarefaModal } from "@/components/crm/NovaTarefaModal";
 import { DealProducts } from "@/components/crm/DealProducts";
+import { CustomFieldsSection } from "@/components/crm/CustomFieldsSection";
 import { usePlan } from "@/hooks/usePlan";
 import {
     Tooltip,
@@ -816,6 +817,9 @@ export default function DealCommandCenter() {
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Custom Fields */}
+                            <CustomFieldsSection dealId={id!} compact />
 
                             {/* Mobile Value / Probability */}
                             <div className="sm:hidden bg-slate-900 rounded-2xl p-4 border border-slate-800/60 flex items-center justify-between">

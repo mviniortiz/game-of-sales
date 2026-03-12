@@ -19,9 +19,12 @@ type Action =
   | "chats"
   | "messages"
   | "send"
+  | "sendMedia"
+  | "sendAudio"
   | "logout"
   | "profilePic"
-  | "instances";
+  | "instances"
+  | "getMedia";
 
 type Body = {
   action?: Action;
@@ -31,6 +34,15 @@ type Body = {
   text?: string;
   limit?: number;
   number?: string;
+  messageId?: string;
+  /** Base64-encoded media data (without data URI prefix) */
+  mediaBase64?: string;
+  /** MIME type of the media */
+  mimetype?: string;
+  /** Filename for documents */
+  fileName?: string;
+  /** Caption for images/videos */
+  caption?: string;
 };
 
 function json(status: number, body: unknown) {
@@ -335,6 +347,99 @@ serve(async (req) => {
         return json(200, { success: true, profilePicUrl: data?.profilePictureUrl || data?.url || null });
       } catch {
         return json(200, { success: true, profilePicUrl: null });
+      }
+    }
+
+    if (action === "sendMedia") {
+      if (!body.chatId) return json(400, { error: "chatId is required" });
+      if (!body.mediaBase64) return json(400, { error: "mediaBase64 is required" });
+      if (!body.mimetype) return json(400, { error: "mimetype is required" });
+
+      const isGroup = String(body.chatId).includes("@g.us");
+      const target = isGroup ? body.chatId : extractNumberFromJid(body.chatId);
+      if (!target) return json(400, { error: "invalid chatId/number" });
+
+      const mime = String(body.mimetype).toLowerCase();
+      const isImage = mime.startsWith("image/");
+      const isVideo = mime.startsWith("video/");
+
+      const payload: any = {
+        number: target,
+        mediatype: isImage ? "image" : isVideo ? "video" : "document",
+        mimetype: body.mimetype,
+        media: body.mediaBase64,
+      };
+
+      if (body.caption) payload.caption = body.caption;
+      if (body.fileName) payload.fileName = body.fileName;
+
+      console.log(`[sendMedia] target=${target} type=${payload.mediatype} mime=${body.mimetype} base64Length=${body.mediaBase64.length}`);
+
+      try {
+        const sendRes = await evolutionRequest(`/message/sendMedia/${instanceName}`, {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
+        console.log("[sendMedia] success:", JSON.stringify(sendRes));
+        return json(200, { success: true, instanceName, result: sendRes });
+      } catch (sendErr: any) {
+        console.error("[sendMedia] error:", sendErr?.message, "status:", sendErr?.status, "payload:", JSON.stringify(sendErr?.payload));
+        return json(sendErr?.status || 502, { error: sendErr?.message || "Evolution API error", details: sendErr?.payload });
+      }
+    }
+
+    if (action === "sendAudio") {
+      if (!body.chatId) return json(400, { error: "chatId is required" });
+      if (!body.mediaBase64) return json(400, { error: "mediaBase64 is required" });
+
+      const isGroup = String(body.chatId).includes("@g.us");
+      const target = isGroup ? body.chatId : extractNumberFromJid(body.chatId);
+      if (!target) return json(400, { error: "invalid chatId/number" });
+
+      // Accept mimetype from client, default to audio/mp4 (widely supported by WhatsApp)
+      const audioMime = body.mimetype || "audio/mp4";
+      console.log(`[sendAudio] target=${target} mime=${audioMime} base64Length=${body.mediaBase64.length}`);
+
+      try {
+        const sendRes = await evolutionRequest(`/message/sendWhatsAppAudio/${instanceName}`, {
+          method: "POST",
+          body: JSON.stringify({
+            number: target,
+            audio: body.mediaBase64,
+          }),
+        });
+        console.log("[sendAudio] success:", JSON.stringify(sendRes));
+        return json(200, { success: true, instanceName, result: sendRes });
+      } catch (sendErr: any) {
+        console.error("[sendAudio] error:", sendErr?.message, "status:", sendErr?.status, "payload:", JSON.stringify(sendErr?.payload));
+        return json(sendErr?.status || 502, { error: sendErr?.message || "Evolution API error", details: sendErr?.payload });
+      }
+    }
+
+    if (action === "getMedia") {
+      if (!body.messageId) return json(400, { error: "messageId is required" });
+      try {
+        // Evolution API v2: convert message to base64
+        const data = await evolutionRequest(`/chat/getBase64FromMediaMessage/${instanceName}`, {
+          method: "POST",
+          body: JSON.stringify({
+            message: { key: { id: body.messageId } },
+            convertToMp4: false,
+          }),
+        });
+        const base64 = data?.base64 || data?.mediaBase64 || data?.data || null;
+        const mimetype = data?.mimetype || data?.mediaType || "audio/ogg";
+        if (!base64) {
+          return json(404, { error: "Media not found or expired" });
+        }
+        return json(200, {
+          success: true,
+          base64,
+          mimetype,
+        });
+      } catch (err: any) {
+        console.error("[getMedia] error:", err?.message);
+        return json(500, { error: err?.message || "Failed to fetch media" });
       }
     }
 

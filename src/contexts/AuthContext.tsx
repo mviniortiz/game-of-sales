@@ -206,6 +206,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               if (profileStatus === "missing" || profileStatus === "invalid") {
                 await forceSignOutForInvalidAccount(profileStatus);
               }
+
+              // Update last_sign_in_at on profiles for admin visibility
+              supabase.from("profiles")
+                .update({ last_sign_in_at: new Date().toISOString() })
+                .eq("id", session.user.id)
+                .then(() => {}); // fire and forget
             }).finally(() => {
               if (mounted && !integrityResetInProgress.current) setLoading(false);
             });
