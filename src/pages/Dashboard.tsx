@@ -27,6 +27,7 @@ import {
   BarChart,
   Bar,
 } from "recharts";
+
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
@@ -477,7 +478,7 @@ const Dashboard = () => {
                   </div>
                   Evolução de Vendas
                 </CardTitle>
-                <p className="text-[11px] text-muted-foreground mt-1 ml-8">Mês atual • Faturamento diário em blocos</p>
+                <p className="text-[11px] text-muted-foreground mt-1 ml-8">Mês atual • Faturamento diário</p>
               </div>
             </div>
           </CardHeader>

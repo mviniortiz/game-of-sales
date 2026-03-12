@@ -23,8 +23,9 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       });
     }
 
-    // Redirect to onboarding if the user hasn't completed it yet
-    if (!loading && user && profile && profile.onboarding_completed === false && location.pathname !== "/onboarding") {
+    // Redirect to onboarding if the user hasn't completed it yet (checked via localStorage)
+    const hasCompletedOnboarding = localStorage.getItem("onboarding_completed");
+    if (!loading && user && profile && !hasCompletedOnboarding && location.pathname !== "/onboarding") {
       navigate("/onboarding", { replace: true });
     }
   }, [user, loading, profile, companyId, isSuperAdmin, navigate, signOut, location.pathname]);

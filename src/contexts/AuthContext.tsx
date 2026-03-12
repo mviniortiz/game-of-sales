@@ -8,7 +8,6 @@ type AuthProfile = {
   avatar_url: string | null;
   is_super_admin: boolean;
   company_id: string | null;
-  onboarding_completed: boolean;
 };
 
 interface AuthContextType {
@@ -49,7 +48,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("nome, avatar_url, is_super_admin, company_id, onboarding_completed")
+        .select("nome, avatar_url, is_super_admin, company_id")
         .eq("id", userId)
         .maybeSingle();
 
