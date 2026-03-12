@@ -1040,6 +1040,7 @@ export default function CRM() {
                 variant={selectionMode ? "default" : "outline"}
                 size="sm"
                 onClick={toggleSelectionMode}
+                aria-label={selectionMode ? "Selecionando" : "Selecionar"}
                 className={`min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 h-9 ${selectionMode ? "bg-emerald-600 hover:bg-emerald-500 text-white" : "border-border hover:bg-muted text-foreground"}`}
               >
                 <CheckSquare className="h-4 w-4 sm:mr-2" />
@@ -1052,6 +1053,7 @@ export default function CRM() {
                   variant="outline"
                   size="sm"
                   onClick={selectedDeals.size === allVisibleDealIds.length ? deselectAll : selectAll}
+                  aria-label={selectedDeals.size === allVisibleDealIds.length ? "Desmarcar todos" : "Selecionar todos"}
                   className="border-border hover:bg-muted text-foreground min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 h-9"
                 >
                   <CheckCheck className="h-4 w-4 sm:mr-2" />
@@ -1066,6 +1068,7 @@ export default function CRM() {
                 variant="outline"
                 size="sm"
                 onClick={() => setShowConfig(true)}
+                aria-label="Configurações"
                 className="border-border hover:bg-muted text-foreground min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 h-9"
               >
                 <Settings2 className="h-4 w-4 sm:mr-2" />
@@ -1076,6 +1079,7 @@ export default function CRM() {
               <Button
                 size="sm"
                 onClick={() => setShowNewDeal(true)}
+                aria-label="Adicionar"
                 className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all duration-200 min-h-[44px] sm:min-h-0 h-9"
               >
                 <Plus className="h-4 w-4 sm:mr-2" />
@@ -1513,6 +1517,7 @@ export default function CRM() {
                         variant="ghost"
                         size="sm"
                         className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10"
+                        aria-label="Excluir"
                         onClick={() => {
                           if (confirm(`Tem certeza que deseja excluir a negociação "${deal.title}"?`)) {
                             deleteDealMutation.mutate(deal.id);

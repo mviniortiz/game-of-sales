@@ -1,6 +1,8 @@
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { Skeleton } from "@/components/ui/skeleton";
 import { AdminDashboardOverview } from "@/components/dashboard/AdminDashboardOverview";
 import { PixelRevenueTrendChart } from "@/components/dashboard/PixelRevenueTrendChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -350,23 +352,29 @@ const Dashboard = () => {
     enabled: !!user?.id,
   });
 
-  const totalVendas = vendas?.reduce((acc, v) => acc + Number(v.valor), 0) || 0;
-  const ticketMedio = vendas?.length ? totalVendas / vendas.length : 0;
-  const totalTransacoes = vendas?.length || 0;
-  const metaValor = Number(metaData?.valor_meta) || 0;
-  const metaProgress = metaValor > 0 ? (totalVendas / metaValor) * 100 : 0;
+  const { totalVendas, ticketMedio, totalTransacoes, metaValor, metaProgress,
+    trendFaturamento, trendTicket, trendTransacoes } = useMemo(() => {
+    const total = vendas?.reduce((acc, v) => acc + Number(v.valor), 0) || 0;
+    const ticket = vendas?.length ? total / vendas.length : 0;
+    const transacoes = vendas?.length || 0;
+    const meta = Number(metaData?.valor_meta) || 0;
+    const progress = meta > 0 ? (total / meta) * 100 : 0;
 
-  // Trends vs previous month
-  const prevTotalVendas = vendasPrevMonth?.reduce((acc, v) => acc + Number(v.valor), 0) || 0;
-  const prevTicketMedio = vendasPrevMonth?.length ? prevTotalVendas / vendasPrevMonth.length : 0;
-  const prevTotalTransacoes = vendasPrevMonth?.length || 0;
+    const prevTotal = vendasPrevMonth?.reduce((acc, v) => acc + Number(v.valor), 0) || 0;
+    const prevTicket = vendasPrevMonth?.length ? prevTotal / vendasPrevMonth.length : 0;
+    const prevTransacoes = vendasPrevMonth?.length || 0;
 
-  const calcTrend = (current: number, previous: number) =>
-    previous > 0 ? ((current - previous) / previous) * 100 : current > 0 ? 100 : 0;
+    const trend = (current: number, previous: number) =>
+      previous > 0 ? ((current - previous) / previous) * 100 : current > 0 ? 100 : 0;
 
-  const trendFaturamento = calcTrend(totalVendas, prevTotalVendas);
-  const trendTicket = calcTrend(ticketMedio, prevTicketMedio);
-  const trendTransacoes = calcTrend(totalTransacoes, prevTotalTransacoes);
+    return {
+      totalVendas: total, ticketMedio: ticket, totalTransacoes: transacoes,
+      metaValor: meta, metaProgress: progress,
+      trendFaturamento: trend(total, prevTotal),
+      trendTicket: trend(ticket, prevTicket),
+      trendTransacoes: trend(transacoes, prevTransacoes),
+    };
+  }, [vendas, vendasPrevMonth, metaData]);
 
   return (
     <div className="space-y-6 p-1">
@@ -444,6 +452,17 @@ const Dashboard = () => {
           accentColor="#f43f5e"
         />
       </div>
+
+      {/* Empty state when no sales */}
+      {totalTransacoes === 0 && (
+        <Card className="border-dashed border-2 border-muted-foreground/20">
+          <CardContent className="py-12 text-center">
+            <ShoppingCart className="h-12 w-12 text-muted-foreground/40 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-foreground mb-1">Nenhuma venda este mês</h3>
+            <p className="text-sm text-muted-foreground mb-4">Registre sua primeira venda para ver seus indicadores aqui.</p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Row 2: Charts - 60/40 split */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">

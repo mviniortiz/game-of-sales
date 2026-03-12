@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,33 +11,41 @@ import { TenantProvider } from "@/contexts/TenantContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminRoute } from "@/components/AdminRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { Loader2 } from "lucide-react";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import Ranking from "./pages/Ranking";
 import NovaVenda from "./pages/NovaVenda";
 import Calls from "./pages/Calls";
 import Metas from "./pages/Metas";
-import Admin from "./pages/Admin";
-import AdminCompaniesPage from "./pages/AdminCompaniesPage";
-import AdminCompanyDetail from "./pages/AdminCompanyDetail";
-import Integracoes from "./pages/Integracoes";
-import Calendario from "./pages/Calendario";
-import CRM from "./pages/CRM";
-import DealCommandCenter from "./pages/DealCommandCenter";
 import RecuperarSenha from "./pages/RecuperarSenha";
 import Profile from "./pages/Profile";
-import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
 import NotFound from "./pages/NotFound";
 import LandingPage from "./pages/LandingPage";
 import Register from "./pages/Register";
-import Onboarding from "./pages/Onboarding";
-import SalesPerformanceCenter from "./pages/SalesPerformanceCenter";
-import LogoPreview from "./pages/LogoPreview";
-import WhatsApp from "./pages/WhatsApp";
-import TermosServico from "./pages/TermosServico";
-import ImportarDados from "./pages/ImportarDados";
-import { PRODUCT_FEATURES } from "@/config/features";
 import { useAuth } from "@/contexts/AuthContext";
+
+// Lazy-loaded routes (admin, heavy pages, rarely visited)
+const Admin = lazy(() => import("./pages/Admin"));
+const AdminCompaniesPage = lazy(() => import("./pages/AdminCompaniesPage"));
+const AdminCompanyDetail = lazy(() => import("./pages/AdminCompanyDetail"));
+const Integracoes = lazy(() => import("./pages/Integracoes"));
+const Calendario = lazy(() => import("./pages/Calendario"));
+const CRM = lazy(() => import("./pages/CRM"));
+const DealCommandCenter = lazy(() => import("./pages/DealCommandCenter"));
+const WhatsApp = lazy(() => import("./pages/WhatsApp"));
+const Onboarding = lazy(() => import("./pages/Onboarding"));
+const SalesPerformanceCenter = lazy(() => import("./pages/SalesPerformanceCenter"));
+const ImportarDados = lazy(() => import("./pages/ImportarDados"));
+const PoliticaPrivacidade = lazy(() => import("./pages/PoliticaPrivacidade"));
+const TermosServico = lazy(() => import("./pages/TermosServico"));
+const LogoPreview = lazy(() => import("./pages/LogoPreview"));
+
+const LazyFallback = () => (
+  <div className="flex items-center justify-center min-h-[50vh]">
+    <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
+  </div>
+);
 
 // Pre-prod gate: renders children only for super admins, otherwise redirects
 const PreProdRoute = ({ children, fallback = "/dashboard" }: { children: React.ReactNode; fallback?: string }) => {
@@ -66,6 +75,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <Analytics />
+            <Suspense fallback={<LazyFallback />}>
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<LandingPage />} />
@@ -249,6 +259,7 @@ const App = () => (
               <Route path="/termos-de-servico" element={<TermosServico />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </Suspense>
           </TooltipProvider>
         </TenantProvider>
       </AuthProvider>

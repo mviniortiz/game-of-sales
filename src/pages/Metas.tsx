@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -222,26 +222,24 @@ const Metas = () => {
     enabled: !!metaConsolidadaSelecionada && !!activeCompanyId,
   });
 
-  // Calculate consolidated values from actual sales
-  const valorConsolidadoAtingido = vendasMesAtual.reduce((acc: number, v: any) => acc + Number(v.valor), 0);
-  const metaConsolidadaTotal = Number(metaConsolidadaSelecionada?.valor_meta) || 0;
-  const percentualConsolidado = metaConsolidadaTotal > 0
-    ? (valorConsolidadoAtingido / metaConsolidadaTotal) * 100
-    : 0;
+  // Calculate consolidated values from actual sales (memoized)
+  const { valorConsolidadoAtingido, metaConsolidadaTotal, percentualConsolidado, diasRestantes } = useMemo(() => {
+    const atingido = vendasMesAtual.reduce((acc: number, v: any) => acc + Number(v.valor), 0);
+    const total = Number(metaConsolidadaSelecionada?.valor_meta) || 0;
+    const percentual = total > 0 ? (atingido / total) * 100 : 0;
 
-  // Calcular dias restantes
-  const calcularDiasRestantes = () => {
-    if (!metaConsolidadaSelecionada) return 0;
-    const mesRef = metaConsolidadaSelecionada.mes_referencia;
-    const [year, month] = mesRef.split('-');
-    const hoje = new Date();
-    const ultimoDiaMes = endOfMonth(new Date(parseInt(year), parseInt(month) - 1));
-    const diffTime = ultimoDiaMes.getTime() - hoje.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return Math.max(0, diffDays);
-  };
+    let dias = 0;
+    if (metaConsolidadaSelecionada) {
+      const mesRef = metaConsolidadaSelecionada.mes_referencia;
+      const [year, month] = mesRef.split('-');
+      const hoje = new Date();
+      const ultimoDiaMes = endOfMonth(new Date(parseInt(year), parseInt(month) - 1));
+      const diffTime = ultimoDiaMes.getTime() - hoje.getTime();
+      dias = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+    }
 
-  const diasRestantes = calcularDiasRestantes();
+    return { valorConsolidadoAtingido: atingido, metaConsolidadaTotal: total, percentualConsolidado: percentual, diasRestantes: dias };
+  }, [vendasMesAtual, metaConsolidadaSelecionada]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {

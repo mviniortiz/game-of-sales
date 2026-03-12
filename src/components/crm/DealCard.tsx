@@ -521,6 +521,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
                 onPointerDown={e => { e.stopPropagation(); handleQuickAction(e as any, "phone"); }}
                 className="p-1.5 rounded-lg hover:bg-emerald-500/20 transition-colors group/b"
                 title="Ligar"
+                aria-label="Ligar"
               >
                 <Phone className="h-3.5 w-3.5 text-slate-400 group-hover/b:text-emerald-400" />
               </button>
@@ -529,6 +530,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
                 onPointerDown={e => { e.stopPropagation(); handleQuickAction(e as any, "calendar"); }}
                 className="p-1.5 rounded-lg hover:bg-emerald-500/20 transition-colors group/b"
                 title="Agendar"
+                aria-label="Agendar"
               >
                 <Calendar className="h-3.5 w-3.5 text-slate-400 group-hover/b:text-emerald-400" />
               </button>
@@ -537,6 +539,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
                 onPointerDown={e => { e.stopPropagation(); handleQuickAction(e as any, "check"); }}
                 className="p-1.5 rounded-lg hover:bg-emerald-500/20 transition-colors group/b"
                 title="Marcar como Ganho"
+                aria-label="Marcar como Ganho"
               >
                 <CheckCircle2 className="h-3.5 w-3.5 text-slate-400 group-hover/b:text-emerald-400" />
               </button>
@@ -545,6 +548,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
                 onPointerDown={e => { e.stopPropagation(); handleQuickAction(e as any, "duplicate"); }}
                 className="p-1.5 rounded-lg hover:bg-blue-500/20 transition-colors group/b"
                 title="Duplicar negociação"
+                aria-label="Copiar"
               >
                 <Copy className="h-3.5 w-3.5 text-slate-400 group-hover/b:text-blue-400" />
               </button>
@@ -555,6 +559,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
                     onPointerDown={e => { e.stopPropagation(); handleQuickAction(e as any, "delete"); }}
                     className="p-1.5 rounded-lg hover:bg-rose-500/20 transition-colors group/b"
                     title="Excluir negociação"
+                    aria-label="Excluir"
                   >
                     <Trash2 className="h-3.5 w-3.5 text-slate-400 group-hover/b:text-rose-400" />
                   </button>

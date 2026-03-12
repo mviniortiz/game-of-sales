@@ -719,6 +719,7 @@ export const AdminVendedores = () => {
                           variant="ghost"
                           size="sm"
                           className="h-8 w-8 p-0 text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400"
+                          aria-label="Mensagem"
                           onClick={() => toast.info("Chat em desenvolvimento")}
                         >
                           <MessageCircle className="h-4 w-4" />
@@ -727,6 +728,7 @@ export const AdminVendedores = () => {
                           variant="ghost"
                           size="sm"
                           className="h-8 w-8 p-0 text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400"
+                          aria-label="Estatísticas"
                           onClick={() => toast.info("Estatísticas em desenvolvimento")}
                         >
                           <BarChart2 className="h-4 w-4" />
@@ -736,7 +738,7 @@ export const AdminVendedores = () => {
                       {/* Dropdown Menu */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" aria-label="Mais opções">
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>

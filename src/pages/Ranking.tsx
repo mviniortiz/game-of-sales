@@ -285,10 +285,10 @@ const Ranking = () => {
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             {format(hoje, "MMMM 'de' yyyy", { locale: ptBR })}
-            <span className="hidden sm:inline"> • Atualização automática a cada 5s</span>
+            <span className="hidden sm:inline"> • Atualização automática a cada 30s</span>
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={handleRefresh} className="gap-2 self-start sm:self-auto">
+        <Button variant="outline" size="sm" onClick={handleRefresh} aria-label="Atualizar" className="gap-2 self-start sm:self-auto">
           <RefreshCw className="h-4 w-4" />
           <span className="hidden sm:inline">Atualizar</span>
         </Button>
