@@ -1471,7 +1471,7 @@ const WhatsApp = () => {
                                 </div>
                                 <h3 className="text-2xl font-extrabold mb-3 tracking-tight">Conectar WhatsApp</h3>
                                 <p className="text-[15px] text-muted-foreground mb-8 leading-relaxed max-w-[380px] text-center font-medium">
-                                    Gere o QR Code para conectar seu WhatsApp ao Game of Sales.
+                                    Gere o QR Code para conectar seu WhatsApp ao Game Sales.
                                 </p>
                                 {error && (
                                     <p className="text-red-400 text-[12px] font-bold mb-6 bg-red-400/10 py-2.5 px-5 rounded-xl flex items-center gap-2 max-w-[360px] text-center border border-red-500/20">

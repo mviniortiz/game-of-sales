@@ -1063,9 +1063,12 @@ const LandingPage = () => {
                             <button onClick={() => scrollToSection("pricing")} className="hover:text-white transition-colors">
                                 Preços
                             </button>
-                            <button onClick={() => navigate("/politica-privacidade")} className="hover:text-white transition-colors">
+                            <a href="/politica-privacidade" className="hover:text-white transition-colors">
                                 Privacidade
-                            </button>
+                            </a>
+                            <a href="/termos-de-servico" className="hover:text-white transition-colors">
+                                Termos de Servico
+                            </a>
                             <button onClick={() => navigate("/auth")} className="hover:text-white transition-colors">
                                 Login
                             </button>

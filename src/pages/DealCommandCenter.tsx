@@ -468,6 +468,7 @@ export default function DealCommandCenter() {
             return response.data;
         },
         onSuccess: (data) => {
+            console.log("[initiateDealCall] response data:", JSON.stringify(data, null, 2));
             queryClient.invalidateQueries({ queryKey: ["deal-calls", id] });
             queryClient.invalidateQueries({ queryKey: ["deal-timeline", id] });
             if (sellerPhone.trim()) {

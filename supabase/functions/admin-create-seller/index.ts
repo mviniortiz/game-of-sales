@@ -66,118 +66,234 @@ function buildWelcomeEmailHtml(opts: {
 }) {
   const { nome, normalizedEmail, password, companyName, appUrl } = opts;
   const firstName = nome.split(" ")[0];
+  const year = new Date().getFullYear();
 
   return `<!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" xmlns:v="urn:schemas-microsoft-com:vml">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <meta name="supported-color-schemes" content="dark">
   <title>Bem-vindo ao ${companyName}</title>
+  <!--[if mso]><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml><![endif]-->
 </head>
-<body style="margin:0;padding:0;background-color:#080c14;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;">
-  <!-- Wrapper -->
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#080c14;">
+<body style="margin:0;padding:0;background-color:#050810;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;">
+
+  <!-- Preheader (hidden preview text) -->
+  <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">
+    ${firstName}, sua conta na equipe ${companyName} esta pronta! Acesse agora.
+  </div>
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#050810;">
     <tr>
-      <td align="center" style="padding:40px 16px;">
-        <table role="presentation" width="520" cellpadding="0" cellspacing="0" style="max-width:520px;width:100%;">
+      <td align="center" style="padding:48px 16px 32px;">
+        <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
 
-          <!-- Logo + Badge -->
+          <!-- Logo -->
           <tr>
-            <td align="center" style="padding-bottom:32px;">
-              <div style="display:inline-block;background:linear-gradient(135deg,#059669 0%,#10b981 50%,#34d399 100%);border-radius:14px;padding:12px 24px;">
-                <span style="color:#ffffff;font-size:22px;font-weight:800;letter-spacing:-0.5px;">Game of Sales</span>
-              </div>
-            </td>
-          </tr>
-
-          <!-- Main Card -->
-          <tr>
-            <td>
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#111827;border-radius:20px;border:1px solid #1f2937;overflow:hidden;">
-
-                <!-- Green Accent Bar -->
+            <td align="center" style="padding-bottom:40px;">
+              <table role="presentation" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td style="height:4px;background:linear-gradient(90deg,#059669,#10b981,#34d399);"></td>
-                </tr>
-
-                <!-- Content -->
-                <tr>
-                  <td style="padding:40px 32px;">
-
-                    <!-- Greeting -->
-                    <h1 style="margin:0 0 8px;color:#ffffff;font-size:22px;font-weight:700;">
-                      Ola, ${firstName}! &#128075;
-                    </h1>
-                    <p style="margin:0 0 28px;color:#9ca3af;font-size:15px;line-height:1.6;">
-                      Voce foi convidado(a) para a equipe <strong style="color:#e5e7eb;">${companyName}</strong>. Sua conta ja esta ativa e pronta para uso.
-                    </p>
-
-                    <!-- Divider -->
-                    <div style="height:1px;background:#1f2937;margin:0 0 28px;"></div>
-
-                    <!-- Credentials Section -->
-                    <p style="margin:0 0 16px;color:#6b7280;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;">
-                      Suas credenciais de acesso
-                    </p>
-
-                    <!-- Email Field -->
-                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;">
-                      <tr>
-                        <td style="background:#0a0f1a;border:1px solid #1f2937;border-radius:12px;padding:16px 20px;">
-                          <span style="display:block;color:#6b7280;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">E-mail</span>
-                          <span style="display:block;color:#f3f4f6;font-size:15px;font-family:'SF Mono',Monaco,Consolas,'Courier New',monospace;">${normalizedEmail}</span>
-                        </td>
-                      </tr>
-                    </table>
-
-                    <!-- Password Field -->
-                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
-                      <tr>
-                        <td style="background:linear-gradient(135deg,#052e16,#064e3b);border:1px solid #065f46;border-radius:12px;padding:16px 20px;">
-                          <span style="display:block;color:#6ee7b7;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Senha</span>
-                          <span style="display:block;color:#ecfdf5;font-size:17px;font-family:'SF Mono',Monaco,Consolas,'Courier New',monospace;font-weight:700;letter-spacing:0.5px;">${password}</span>
-                        </td>
-                      </tr>
-                    </table>
-
-                    <!-- CTA Button -->
-                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                      <tr>
-                        <td align="center">
-                          <a href="${appUrl}/auth"
-                             target="_blank"
-                             style="display:inline-block;background:linear-gradient(135deg,#059669,#10b981);color:#ffffff;text-decoration:none;padding:16px 48px;border-radius:12px;font-size:15px;font-weight:700;letter-spacing:0.3px;box-shadow:0 4px 14px rgba(16,185,129,0.3);">
-                            Acessar Plataforma &rarr;
-                          </a>
-                        </td>
-                      </tr>
-                    </table>
-
-                    <!-- Security Tip -->
-                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px;">
-                      <tr>
-                        <td style="background:#0a0f1a;border:1px solid #1f2937;border-radius:10px;padding:14px 18px;">
-                          <p style="margin:0;color:#6b7280;font-size:12px;line-height:1.5;">
-                            &#128274; <strong style="color:#9ca3af;">Dica de seguranca:</strong> Recomendamos trocar sua senha apos o primeiro acesso em Perfil &rarr; Alterar Senha.
-                          </p>
-                        </td>
-                      </tr>
-                    </table>
-
+                  <td style="background:linear-gradient(135deg,#059669 0%,#10b981 50%,#06b6d4 100%);border-radius:16px;padding:14px 28px;box-shadow:0 8px 32px rgba(16,185,129,0.25);">
+                    <span style="color:#ffffff;font-size:24px;font-weight:800;letter-spacing:-0.5px;text-shadow:0 1px 2px rgba(0,0,0,0.2);">Game Sales</span>
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
 
+          <!-- Main Card -->
+          <tr>
+            <td>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#0f1629;border-radius:24px;border:1px solid rgba(255,255,255,0.06);overflow:hidden;box-shadow:0 24px 48px rgba(0,0,0,0.4),0 0 0 1px rgba(255,255,255,0.03);">
+
+                <!-- Gradient Accent -->
+                <tr>
+                  <td style="height:3px;background:linear-gradient(90deg,#059669 0%,#10b981 30%,#06b6d4 70%,#8b5cf6 100%);"></td>
+                </tr>
+
+                <!-- Hero Section -->
+                <tr>
+                  <td style="padding:48px 40px 0;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td>
+                          <!-- Welcome badge -->
+                          <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+                            <tr>
+                              <td style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:20px;padding:6px 14px;">
+                                <span style="color:#34d399;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;">&#9889; Novo membro</span>
+                              </td>
+                            </tr>
+                          </table>
+
+                          <h1 style="margin:0 0 12px;color:#ffffff;font-size:26px;font-weight:700;line-height:1.3;">
+                            Bem-vindo(a), ${firstName}!
+                          </h1>
+                          <p style="margin:0;color:#94a3b8;font-size:15px;line-height:1.7;">
+                            Voce foi convidado(a) para fazer parte da equipe
+                            <strong style="color:#e2e8f0;">${companyName}</strong>.
+                            Sua conta esta ativa e pronta para voce comecar a vender.
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- Credentials Section -->
+                <tr>
+                  <td style="padding:32px 40px 0;">
+                    <!-- Section label -->
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
+                      <tr>
+                        <td>
+                          <span style="color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;">&#128272; Credenciais de acesso</span>
+                        </td>
+                      </tr>
+                    </table>
+
+                    <!-- Credentials Card -->
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0a0e1a;border:1px solid rgba(255,255,255,0.06);border-radius:16px;overflow:hidden;">
+                      <!-- Email row -->
+                      <tr>
+                        <td style="padding:20px 24px;border-bottom:1px solid rgba(255,255,255,0.04);">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                              <td width="80" valign="top">
+                                <span style="color:#64748b;font-size:11px;font-weight:600;">E-mail</span>
+                              </td>
+                              <td valign="top">
+                                <span style="color:#e2e8f0;font-size:14px;font-family:'SF Mono',Monaco,Consolas,'Courier New',monospace;word-break:break-all;">${normalizedEmail}</span>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      <!-- Password row -->
+                      <tr>
+                        <td style="padding:20px 24px;background:linear-gradient(135deg,rgba(5,46,22,0.4),rgba(6,78,59,0.3));">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                              <td width="80" valign="top">
+                                <span style="color:#6ee7b7;font-size:11px;font-weight:600;">Senha</span>
+                              </td>
+                              <td valign="top">
+                                <span style="color:#ecfdf5;font-size:18px;font-family:'SF Mono',Monaco,Consolas,'Courier New',monospace;font-weight:700;letter-spacing:1px;">${password}</span>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- CTA Button -->
+                <tr>
+                  <td style="padding:32px 40px 0;" align="center">
+                    <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+                      <tr>
+                        <td align="center" style="border-radius:14px;background:linear-gradient(135deg,#059669 0%,#10b981 50%,#06b6d4 100%);box-shadow:0 8px 24px rgba(16,185,129,0.3),0 2px 8px rgba(16,185,129,0.2);">
+                          <a href="${appUrl}/auth"
+                             target="_blank"
+                             style="display:block;color:#ffffff;text-decoration:none;padding:18px 32px;font-size:15px;font-weight:700;letter-spacing:0.3px;text-align:center;">
+                            Acessar Plataforma &rarr;
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- Quick Start Tips -->
+                <tr>
+                  <td style="padding:32px 40px 0;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:8px;">
+                      <tr>
+                        <td>
+                          <span style="color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;">&#128640; Primeiros passos</span>
+                        </td>
+                      </tr>
+                    </table>
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="padding:10px 0;">
+                          <table role="presentation" cellpadding="0" cellspacing="0">
+                            <tr>
+                              <td valign="top" width="28">
+                                <span style="display:inline-block;background:rgba(16,185,129,0.15);color:#34d399;width:20px;height:20px;border-radius:6px;text-align:center;font-size:11px;line-height:20px;font-weight:700;">1</span>
+                              </td>
+                              <td style="color:#94a3b8;font-size:13px;line-height:1.5;">
+                                Faca login com suas credenciais acima
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding:10px 0;">
+                          <table role="presentation" cellpadding="0" cellspacing="0">
+                            <tr>
+                              <td valign="top" width="28">
+                                <span style="display:inline-block;background:rgba(6,182,212,0.15);color:#22d3ee;width:20px;height:20px;border-radius:6px;text-align:center;font-size:11px;line-height:20px;font-weight:700;">2</span>
+                              </td>
+                              <td style="color:#94a3b8;font-size:13px;line-height:1.5;">
+                                Troque sua senha em <strong style="color:#cbd5e1;">Perfil &rarr; Alterar Senha</strong>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding:10px 0;">
+                          <table role="presentation" cellpadding="0" cellspacing="0">
+                            <tr>
+                              <td valign="top" width="28">
+                                <span style="display:inline-block;background:rgba(139,92,246,0.15);color:#a78bfa;width:20px;height:20px;border-radius:6px;text-align:center;font-size:11px;line-height:20px;font-weight:700;">3</span>
+                              </td>
+                              <td style="color:#94a3b8;font-size:13px;line-height:1.5;">
+                                Comece a registrar vendas e acompanhar seus resultados
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- Security Note -->
+                <tr>
+                  <td style="padding:28px 40px 40px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:rgba(234,179,8,0.05);border:1px solid rgba(234,179,8,0.12);border-radius:12px;">
+                      <tr>
+                        <td style="padding:14px 18px;">
+                          <p style="margin:0;color:#a3865a;font-size:12px;line-height:1.6;">
+                            &#128274; Este e-mail contem suas credenciais. Nao compartilhe com terceiros.
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+              </table>
+            </td>
+          </tr>
+
           <!-- Footer -->
           <tr>
-            <td align="center" style="padding:24px 0;">
-              <p style="margin:0 0 4px;color:#374151;font-size:11px;">
-                Enviado automaticamente pelo Game of Sales
+            <td align="center" style="padding:32px 0 16px;">
+              <p style="margin:0 0 8px;color:#334155;font-size:12px;">
+                Enviado por <strong style="color:#475569;">Game Sales</strong>
               </p>
-              <p style="margin:0;color:#1f2937;font-size:10px;">
+              <p style="margin:0;color:#1e293b;font-size:11px;line-height:1.6;">
                 Se voce nao solicitou esta conta, ignore este e-mail.
+              </p>
+              <p style="margin:12px 0 0;color:#1e293b;font-size:10px;">
+                &copy; ${year} Game Sales. Todos os direitos reservados.
               </p>
             </td>
           </tr>
@@ -332,7 +448,7 @@ serve(async (req) => {
     }
 
     // Get company name for the email
-    let companyName = "Game of Sales";
+    let companyName = "Game Sales";
     const { data: company } = await (supabaseAdmin as any)
       .from("companies")
       .select("name")
@@ -347,7 +463,7 @@ serve(async (req) => {
 
     if (RESEND_API_KEY && sendPassword) {
       try {
-        const fromEmail = Deno.env.get("RESEND_FROM_EMAIL") || "Game of Sales <onboarding@resend.dev>";
+        const fromEmail = Deno.env.get("RESEND_FROM_EMAIL") || "Game Sales <onboarding@resend.dev>";
         console.log(`[admin-create-seller] Sending email from=${fromEmail} to=${normalizedEmail}`);
 
         const emailRes = await fetch("https://api.resend.com/emails", {

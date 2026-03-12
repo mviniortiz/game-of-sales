@@ -537,8 +537,10 @@ serve(async (req) => {
       );
     }
   } catch (error) {
-    console.error("[deal-call-initiate] error:", error);
-    return new Response(JSON.stringify({ error: "Internal server error" }), {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    const errStack = error instanceof Error ? error.stack : undefined;
+    console.error("[deal-call-initiate] error:", errMsg, errStack);
+    return new Response(JSON.stringify({ error: "Internal server error", detail: errMsg }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

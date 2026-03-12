@@ -85,7 +85,7 @@ export const WhatsappConfigModal = ({ open, onClose }: WhatsappConfigModalProps)
                         Conectar WhatsApp
                     </DialogTitle>
                     <DialogDescription className="text-slate-400 mt-2">
-                        Escaneie o QR Code com seu WhatsApp para conectar sua conta ao Game of Sales.
+                        Escaneie o QR Code com seu WhatsApp para conectar sua conta ao Game Sales.
                     </DialogDescription>
                 </DialogHeader>
 

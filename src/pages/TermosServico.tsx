@@ -36,10 +36,10 @@ const TermosServico = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <p>
-                Ao acessar ou utilizar o Game of Sales ("Plataforma"), voce concorda em cumprir e estar vinculado a estes Termos de Servico. Se voce nao concordar com algum destes termos, nao utilize a Plataforma.
+                Ao acessar ou utilizar o Game Sales ("Plataforma"), voce concorda em cumprir e estar vinculado a estes Termos de Servico. Se voce nao concordar com algum destes termos, nao utilize a Plataforma.
               </p>
               <p>
-                Estes termos constituem um acordo legal entre voce ("Usuario") e o Game of Sales ("Nos", "Nosso"). O uso continuado da Plataforma apos quaisquer alteracoes nestes termos constitui aceitacao dessas alteracoes.
+                Estes termos constituem um acordo legal entre voce ("Usuario") e o Game Sales ("Nos", "Nosso"). O uso continuado da Plataforma apos quaisquer alteracoes nestes termos constitui aceitacao dessas alteracoes.
               </p>
             </CardContent>
           </Card>
@@ -53,7 +53,7 @@ const TermosServico = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <p>
-                O Game of Sales e uma plataforma de gestao de vendas que oferece:
+                O Game Sales e uma plataforma de gestao de vendas que oferece:
               </p>
               <ul className="space-y-2">
                 <li className="flex items-start gap-2">
@@ -190,7 +190,7 @@ const TermosServico = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <p>
-                Todo o conteudo da Plataforma, incluindo mas nao limitado a textos, graficos, logotipos, icones, imagens, software e codigo-fonte, e de propriedade do Game of Sales ou de seus licenciadores e e protegido por leis de direitos autorais.
+                Todo o conteudo da Plataforma, incluindo mas nao limitado a textos, graficos, logotipos, icones, imagens, software e codigo-fonte, e de propriedade do Game Sales ou de seus licenciadores e e protegido por leis de direitos autorais.
               </p>
               <p>
                 Os dados que voce insere na Plataforma (vendas, contatos, negociacoes) permanecem de sua propriedade. Nos concedemos a voce uma licenca limitada, nao exclusiva e revogavel para usar a Plataforma de acordo com estes Termos.
@@ -255,7 +255,7 @@ const TermosServico = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <p>
-                Na extensao maxima permitida por lei, o Game of Sales nao sera responsavel por:
+                Na extensao maxima permitida por lei, o Game Sales nao sera responsavel por:
               </p>
               <ul className="space-y-2 text-muted-foreground">
                 <li className="flex items-start gap-2">

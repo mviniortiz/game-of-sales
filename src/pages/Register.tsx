@@ -28,6 +28,13 @@ import {
 } from "lucide-react";
 import { PLANS, formatPrice } from "@/config/plans";
 
+// MercadoPago checkout URLs per plan
+const CHECKOUT_URLS: Record<string, string> = {
+    starter: "",
+    plus: "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=7c2c9ac396684c229987a7501cf4f88c",
+    pro: "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=7f7561d2b1174aacb31ab92dce72ded4",
+};
+
 // Validation schema
 const registerSchema = z.object({
     nome: z.string().min(3, "Nome deve ter no mínimo 3 caracteres").max(100, "Nome muito longo"),
@@ -125,11 +132,11 @@ const Register = () => {
                 throw new Error(`Erro ao criar conta: ${signUpError.message}`);
             }
 
-            // For paid plans, redirect to checkout (placeholder)
-            if (plan !== "starter") {
+            if (plan !== "starter" && CHECKOUT_URLS[plan]) {
                 toast.success("Conta criada! Redirecionando para pagamento...");
-                // TODO: Redirect to Stripe/Hotmart checkout
-                setTimeout(() => navigate("/auth"), 2000);
+                setTimeout(() => {
+                    window.location.href = CHECKOUT_URLS[plan];
+                }, 1500);
             } else {
                 toast.success("Conta criada com sucesso! Verifique seu email para confirmar.");
                 navigate("/auth");
