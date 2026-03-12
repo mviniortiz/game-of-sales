@@ -18,6 +18,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useTagsForDeal } from "@/hooks/useDealTags";
+import { DealTagBadge } from "./DealTagBadge";
 
 export interface StageNeighbors {
   prev: { id: string; title: string; color: string } | null;
@@ -84,6 +86,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
   const isMobile = useIsMobile();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { data: dealTags = [] } = useTagsForDeal(deal.id);
   const clickStartTime = useRef<number>(0);
   const cardRef = useRef<HTMLDivElement | null>(null);
   const swipeRef = useRef<HTMLDivElement | null>(null);
@@ -679,6 +682,20 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
           <p className="text-[10px] text-rose-300/90 mb-3 -mt-2 truncate">
             Responsável de outra organização
           </p>
+        )}
+
+        {/* ── Tags ─────────────────────────────────────────── */}
+        {dealTags.length > 0 && (
+          <div className="flex items-center gap-1 flex-wrap mb-2 -mt-1">
+            {dealTags.slice(0, 3).map((tag) => (
+              <DealTagBadge key={tag.id} tag={tag} />
+            ))}
+            {dealTags.length > 3 && (
+              <span className="text-[9px] text-slate-500 font-medium">
+                +{dealTags.length - 3}
+              </span>
+            )}
+          </div>
         )}
 
         {/* ── Rotting warning text ──────────────────────────── */}

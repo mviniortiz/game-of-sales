@@ -199,6 +199,7 @@ export const useEvolutionIntegration = () => {
     const [isLoadingMessages, setIsLoadingMessages] = useState(false);
 
     const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    const pollingInProgress = useRef(false);
 
     useEffect(() => {
         const newName = effectiveUserId ? `wa_${effectiveUserId.replace(/-/g, "")}` : null;
@@ -424,11 +425,17 @@ export const useEvolutionIntegration = () => {
             }
 
             pollingIntervalRef.current = setInterval(async () => {
-                const open = await checkConnectionState();
-                if (open) {
-                    clearPolling();
-                    setConnecting(false);
-                    await fetchChats(true);
+                if (pollingInProgress.current) return;
+                pollingInProgress.current = true;
+                try {
+                    const open = await checkConnectionState();
+                    if (open) {
+                        clearPolling();
+                        setConnecting(false);
+                        await fetchChats(true);
+                    }
+                } finally {
+                    pollingInProgress.current = false;
                 }
             }, 3000);
         } catch (err: any) {

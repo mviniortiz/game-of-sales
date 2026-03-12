@@ -64,6 +64,7 @@ import { KanbanSkeleton } from "@/components/crm/KanbanSkeleton";
 import { PipelineConfigModal, StageConfig } from "@/components/crm/PipelineConfigModal";
 import { LostDealModal } from "@/components/crm/LostDealModal";
 import { WinCelebration } from "@/components/crm/WinCelebration";
+import { useDealTags } from "@/hooks/useDealTags";
 
 // Icon mapping
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -210,6 +211,7 @@ export default function CRM() {
   const [filterRottingDeals, setFilterRottingDeals] = useState(false);
   const [filterProbability, setFilterProbability] = useState<"all" | "high" | "medium" | "low">("all");
   const [filterDateRange, setFilterDateRange] = useState<"all" | "this_week" | "this_month" | "overdue">("all");
+  const [filterTagIds, setFilterTagIds] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
 
   // Rotting notifications state
@@ -226,6 +228,9 @@ export default function CRM() {
 
   const effectiveCompanyId = isSuperAdmin ? activeCompanyId : companyId;
 
+  // Tags for filtering
+  const { data: companyTags = [] } = useDealTags(effectiveCompanyId);
+
   // Count active advanced filters
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -233,14 +238,16 @@ export default function CRM() {
     if (filterRottingDeals) count++;
     if (filterProbability !== "all") count++;
     if (filterDateRange !== "all") count++;
+    if (filterTagIds.length > 0) count++;
     return count;
-  }, [filterHotDeals, filterRottingDeals, filterProbability, filterDateRange]);
+  }, [filterHotDeals, filterRottingDeals, filterProbability, filterDateRange, filterTagIds]);
 
   const clearAllFilters = useCallback(() => {
     setFilterHotDeals(false);
     setFilterRottingDeals(false);
     setFilterProbability("all");
     setFilterDateRange("all");
+    setFilterTagIds([]);
   }, []);
 
   // Apply advanced filters to a deals array
@@ -291,8 +298,17 @@ export default function CRM() {
       }
     }
 
+    // Tag filter
+    if (filterTagIds.length > 0) {
+      result = result.filter((d) => {
+        const tags = dealTagMap.get(d.id);
+        if (!tags) return false;
+        return filterTagIds.every((tid) => tags.has(tid));
+      });
+    }
+
     return result;
-  }, [filterHotDeals, filterRottingDeals, filterProbability, filterDateRange]);
+  }, [filterHotDeals, filterRottingDeals, filterProbability, filterDateRange, filterTagIds, dealTagMap]);
 
   // Load stages from localStorage based on company - defaults if none found
   const [stageConfigs, setStageConfigs] = useState<StageConfig[]>(DEFAULT_STAGES);
@@ -473,14 +489,38 @@ export default function CRM() {
       };
       }) as Deal[];
     },
-    refetchInterval: 15000,
-    staleTime: 0,
+    refetchInterval: 30000,
+    staleTime: 15000,
   });
 
   useEffect(() => {
     setLocalDeals(deals);
     queryClient.setQueryData(["deals", effectiveCompanyId], deals);
   }, [deals, queryClient, effectiveCompanyId]);
+
+  // Fetch deal-tag assignments for filtering
+  const { data: dealTagAssignments = [] } = useQuery({
+    queryKey: ["deal-tag-assignments", effectiveCompanyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("deal_tag_assignments")
+        .select("deal_id, tag_id");
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!effectiveCompanyId || isSuperAdmin,
+    staleTime: 30000,
+  });
+
+  // Build a fast lookup: dealId → Set<tagId>
+  const dealTagMap = useMemo(() => {
+    const m = new Map<string, Set<string>>();
+    for (const a of dealTagAssignments) {
+      if (!m.has(a.deal_id)) m.set(a.deal_id, new Set());
+      m.get(a.deal_id)!.add(a.tag_id);
+    }
+    return m;
+  }, [dealTagAssignments]);
 
   // Fetch vendors for filter
   const { data: vendors = [] } = useQuery({
@@ -1190,6 +1230,16 @@ export default function CRM() {
                     <button onClick={() => setFilterDateRange("all")} className="ml-0.5 hover:text-purple-200"><X className="h-2.5 w-2.5" /></button>
                   </span>
                 )}
+                {filterTagIds.length > 0 && filterTagIds.map((tid) => {
+                  const tag = companyTags.find((t: any) => t.id === tid);
+                  if (!tag) return null;
+                  return (
+                    <span key={tid} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium ring-1" style={{ backgroundColor: `${tag.color}22`, color: tag.color, borderColor: `${tag.color}55` }}>
+                      {tag.name}
+                      <button onClick={() => setFilterTagIds((prev) => prev.filter((id) => id !== tid))} className="ml-0.5 hover:opacity-70"><X className="h-2.5 w-2.5" /></button>
+                    </span>
+                  );
+                })}
                 <button
                   onClick={clearAllFilters}
                   className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
@@ -1269,6 +1319,35 @@ export default function CRM() {
                     </button>
                   );
                 })}
+
+                {/* Tags */}
+                {companyTags.length > 0 && (
+                  <>
+                    <div className="w-px h-5 bg-border" />
+                    {companyTags.map((tag: any) => {
+                      const isActive = filterTagIds.includes(tag.id);
+                      return (
+                        <button
+                          key={tag.id}
+                          onClick={() =>
+                            setFilterTagIds((prev) =>
+                              isActive ? prev.filter((id) => id !== tag.id) : [...prev, tag.id]
+                            )
+                          }
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-colors"
+                          style={
+                            isActive
+                              ? { backgroundColor: `${tag.color}22`, color: tag.color, boxShadow: `inset 0 0 0 1px ${tag.color}55` }
+                              : undefined
+                          }
+                        >
+                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: tag.color }} />
+                          {tag.name}
+                        </button>
+                      );
+                    })}
+                  </>
+                )}
 
                 {/* Clear all */}
                 {activeFilterCount > 0 && (

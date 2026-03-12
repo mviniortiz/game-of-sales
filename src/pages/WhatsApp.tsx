@@ -15,6 +15,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEvolutionIntegration } from "@/hooks/useEvolutionAPI";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
+import { TemplatePicker } from "@/components/whatsapp/TemplatePicker";
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -32,6 +33,10 @@ function AudioRecorder({
     const [recording, setRecording] = useState(false);
     const [elapsed, setElapsed] = useState(0);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const analyserRef = useRef<AnalyserNode | null>(null);
+    const audioCtxRef = useRef<AudioContext | null>(null);
+    const rafRef = useRef<number>(0);
+    const [bars, setBars] = useState<number[]>(new Array(24).fill(4));
 
     const startRecording = useCallback(async () => {
         try {
@@ -47,6 +52,33 @@ function AudioRecorder({
             };
             mediaRecorder.start(100);
             mediaRecorderRef.current = mediaRecorder;
+
+            // Web Audio API for real waveform
+            const audioCtx = new AudioContext();
+            const source = audioCtx.createMediaStreamSource(stream);
+            const analyser = audioCtx.createAnalyser();
+            analyser.fftSize = 64;
+            analyser.smoothingTimeConstant = 0.7;
+            source.connect(analyser);
+            analyserRef.current = analyser;
+            audioCtxRef.current = audioCtx;
+
+            // Animate bars from real frequency data
+            const dataArray = new Uint8Array(analyser.frequencyBinCount);
+            const updateBars = () => {
+                analyser.getByteFrequencyData(dataArray);
+                const newBars: number[] = [];
+                const binCount = 24;
+                const step = Math.floor(dataArray.length / binCount);
+                for (let i = 0; i < binCount; i++) {
+                    const val = dataArray[i * step] || 0;
+                    newBars.push(Math.max(3, (val / 255) * 22));
+                }
+                setBars(newBars);
+                rafRef.current = requestAnimationFrame(updateBars);
+            };
+            rafRef.current = requestAnimationFrame(updateBars);
+
             setRecording(true);
             setElapsed(0);
             timerRef.current = setInterval(() => setElapsed((p) => p + 1), 1000);
@@ -55,6 +87,12 @@ function AudioRecorder({
             onCancel();
         }
     }, [onCancel]);
+
+    const cleanup = useCallback(() => {
+        if (rafRef.current) cancelAnimationFrame(rafRef.current);
+        if (audioCtxRef.current) audioCtxRef.current.close().catch(() => {});
+        if (timerRef.current) clearInterval(timerRef.current);
+    }, []);
 
     const stopAndSend = useCallback(() => {
         const mr = mediaRecorderRef.current;
@@ -71,9 +109,9 @@ function AudioRecorder({
             reader.readAsDataURL(blob);
         };
         mr.stop();
+        cleanup();
         setRecording(false);
-        if (timerRef.current) clearInterval(timerRef.current);
-    }, [onSend]);
+    }, [onSend, cleanup]);
 
     const cancel = useCallback(() => {
         const mr = mediaRecorderRef.current;
@@ -81,13 +119,12 @@ function AudioRecorder({
             mr.onstop = () => mr.stream.getTracks().forEach((t) => t.stop());
             mr.stop();
         }
+        cleanup();
         setRecording(false);
-        if (timerRef.current) clearInterval(timerRef.current);
         onCancel();
-    }, [onCancel]);
+    }, [onCancel, cleanup]);
 
-    // Auto-start recording on mount
-    useEffect(() => { startRecording(); }, [startRecording]);
+    useEffect(() => { startRecording(); return cleanup; }, [startRecording, cleanup]);
 
     const formatTime = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
@@ -105,15 +142,12 @@ function AudioRecorder({
                     <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500"></span>
                 </span>
                 <span className="text-[13px] text-red-400 font-semibold tabular-nums">{formatTime(elapsed)}</span>
-                <div className="flex-1 flex items-center justify-center gap-0.5">
-                    {[...Array(20)].map((_, i) => (
+                <div className="flex-1 flex items-center justify-center gap-[2px]">
+                    {bars.map((h, i) => (
                         <div
                             key={i}
-                            className="w-0.5 rounded-full bg-red-400/40 transition-all"
-                            style={{
-                                height: recording ? `${4 + Math.random() * 14}px` : "4px",
-                                animationDuration: `${0.3 + Math.random() * 0.4}s`,
-                            }}
+                            className="w-[3px] rounded-full bg-red-400/60"
+                            style={{ height: `${h}px`, transition: "height 80ms ease-out" }}
                         />
                     ))}
                 </div>
@@ -475,15 +509,7 @@ const PIPELINE_STAGES = [
 
 const getStageInfo = (stageId: string) => PIPELINE_STAGES.find(s => s.id === stageId) || PIPELINE_STAGES[0];
 
-// ─── Quick Responses for sales ──────────────────────────────────────────────
-const QUICK_RESPONSES = [
-    { label: "Saudacao", text: "Ola! Tudo bem? Como posso te ajudar hoje? \u{1F60A}" },
-    { label: "Agradecimento", text: "Obrigado pelo seu contato! Fico a disposicao." },
-    { label: "Follow-up", text: "Oi! Tudo bem? Estou passando para saber se conseguiu analisar nossa proposta." },
-    { label: "Agendar Call", text: "Que tal agendarmos uma call rapida para eu te explicar melhor? Tenho horarios disponiveis amanha." },
-    { label: "Enviar Proposta", text: "Vou preparar uma proposta personalizada para voce. Me confirma o melhor email para envio?" },
-    { label: "Encerramento", text: "Foi um prazer conversar com voce! Qualquer duvida, estou a disposicao. Tenha um otimo dia! \u{1F64F}" },
-];
+// ─── Quick Responses: now powered by WhatsApp Templates (see TemplatePicker) ─
 
 // ─── AI Sales Copilot — calls GPT-4o-mini via Edge Function (10 analyses/day limit)
 export const useCopilot = () => {
@@ -1530,6 +1556,8 @@ const WhatsApp = () => {
     } = useEvolutionIntegration();
 
     const { user, isAdmin, isSuperAdmin } = useAuth();
+    const { activeCompanyId, companies } = useTenant();
+    const activeCompanyName = companies.find(c => c.id === activeCompanyId)?.name;
     const canViewOthers = isAdmin || isSuperAdmin;
 
     // Seller instances list for admin selector
@@ -1694,7 +1722,7 @@ const WhatsApp = () => {
         }
     };
 
-    const handleQuickReply = (text: string) => {
+    const handleTemplateSelect = (text: string) => {
         setInputText(text);
         setShowQuickReplies(false);
     };
@@ -2287,27 +2315,18 @@ const WhatsApp = () => {
                         <div className="bg-card/80 backdrop-blur-xl border-t border-white/[0.06] px-3 sm:px-4 py-2.5 z-10 shrink-0">
                             {/* Quick Replies Dropdown (above input) */}
                             {showQuickReplies && (
-                                <div ref={quickRepliesRef} className="mb-2 bg-card/95 backdrop-blur-xl border border-white/[0.08] rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200">
-                                    <div className="px-3 py-2 border-b border-white/[0.05] flex items-center justify-between">
-                                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                                            <Zap className="w-3 h-3 text-amber-400" /> Respostas Rápidas
-                                        </span>
-                                        <button onClick={() => setShowQuickReplies(false)} className="text-muted-foreground/50 hover:text-muted-foreground">
-                                            <X className="w-3.5 h-3.5" />
-                                        </button>
-                                    </div>
-                                    <div className="max-h-52 overflow-y-auto">
-                                        {QUICK_RESPONSES.map((qr, idx) => (
-                                            <button
-                                                key={idx}
-                                                onClick={() => handleQuickReply(qr.text)}
-                                                className="w-full text-left px-3 py-2 hover:bg-white/[0.04] transition-colors border-b border-white/[0.02] last:border-b-0 group"
-                                            >
-                                                <span className="text-[10px] font-bold text-primary/80 group-hover:text-primary block mb-0.5">{qr.label}</span>
-                                                <span className="text-[11px] text-muted-foreground/60 line-clamp-1 leading-snug">{qr.text}</span>
-                                            </button>
-                                        ))}
-                                    </div>
+                                <div ref={quickRepliesRef}>
+                                    <TemplatePicker
+                                        companyId={activeCompanyId}
+                                        userId={user?.id}
+                                        onSelect={handleTemplateSelect}
+                                        onClose={() => setShowQuickReplies(false)}
+                                        contactName={selectedChatData?.name}
+                                        contactPhone={selectedChatData?.phone}
+                                        dealValue={headerDeal?.value ?? undefined}
+                                        dealStage={headerDeal?.stage}
+                                        companyName={activeCompanyName}
+                                    />
                                 </div>
                             )}
 

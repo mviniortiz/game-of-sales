@@ -79,14 +79,29 @@ async function evolutionRequest(
     throw new Error("Evolution API não configurada no servidor");
   }
 
-  const response = await fetch(`${EVOLUTION_API_URL}${path}`, {
-    ...init,
-    headers: {
-      apikey: EVOLUTION_API_KEY,
-      "Content-Type": "application/json",
-      ...(init.headers || {}),
-    },
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+  let response: Response;
+  try {
+    response = await fetch(`${EVOLUTION_API_URL}${path}`, {
+      ...init,
+      signal: controller.signal,
+      headers: {
+        apikey: EVOLUTION_API_KEY,
+        "Content-Type": "application/json",
+        ...(init.headers || {}),
+      },
+    });
+  } catch (err: any) {
+    clearTimeout(timeoutId);
+    if (err.name === "AbortError") {
+      throw new Error(`Evolution API timeout after 8s: ${path}`);
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   const text = await response.text();
   let parsed: any = null;
@@ -405,7 +420,7 @@ serve(async (req) => {
           method: "POST",
           body: JSON.stringify({
             number: target,
-            audio: body.mediaBase64,
+            audio: `data:${audioMime};base64,${body.mediaBase64}`,
           }),
         });
         console.log("[sendAudio] success:", JSON.stringify(sendRes));
@@ -470,29 +485,40 @@ serve(async (req) => {
         return json(200, { success: true, sellers: [] });
       }
 
-      const sellers = await Promise.all(
-        companyUsers.map(async (u: any) => {
-          const uInstanceName = getInstanceName(u.id);
-          let connectedStatus = false;
-          try {
-            const stateRes = await evolutionRequest(
-              `/instance/connectionState/${uInstanceName}`,
-              { method: "GET" },
-            );
-            const state = stateRes?.instance?.state || stateRes?.state || "";
-            connectedStatus = String(state).toLowerCase() === "open";
-          } catch {
-            // instance doesn't exist or error — not connected
-          }
-          return {
-            userId: u.id,
-            name: u.full_name || "Sem nome",
-            avatarUrl: u.avatar_url || null,
-            role: u.role || "seller",
-            connected: connectedStatus,
-          };
-        }),
-      );
+      // Process sellers in batches of 5 to avoid overwhelming the API
+      const BATCH_SIZE = 5;
+      const sellers: any[] = [];
+      for (let i = 0; i < companyUsers.length; i += BATCH_SIZE) {
+        const batch = companyUsers.slice(i, i + BATCH_SIZE);
+        const batchResults = await Promise.all(
+          batch.map(async (u: any) => {
+            const uInstanceName = getInstanceName(u.id);
+            let connectedStatus = false;
+            try {
+              const stateRes = await evolutionRequest(
+                `/instance/connectionState/${uInstanceName}`,
+                { method: "GET" },
+              );
+              const state = stateRes?.instance?.state || stateRes?.state || "";
+              connectedStatus = String(state).toLowerCase() === "open";
+            } catch {
+              // instance doesn't exist or error — not connected
+            }
+            return {
+              userId: u.id,
+              name: u.full_name || "Sem nome",
+              avatarUrl: u.avatar_url || null,
+              role: u.role || "seller",
+              connected: connectedStatus,
+            };
+          }),
+        );
+        sellers.push(...batchResults);
+        // Small delay between batches to avoid rate limiting
+        if (i + BATCH_SIZE < companyUsers.length) {
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+      }
 
       return json(200, { success: true, sellers });
     }

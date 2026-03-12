@@ -167,14 +167,23 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
   }, [userId]);
 
   const switchCompany = useCallback((companyId: string) => {
+    // Validate that the company exists in the user's companies list
+    if (!companies.find(c => c.id === companyId)) return;
     setActiveCompanyId(companyId);
     // Store in localStorage for persistence
     localStorage.setItem('activeCompanyId', companyId);
     // Increment refresh key to trigger data refetch
     setRefreshKey(prev => prev + 1);
-    // Invalidate all queries to refetch with new company context
-    queryClient.invalidateQueries();
-  }, [queryClient]);
+    // Invalidate company-scoped queries instead of all queries
+    queryClient.invalidateQueries({ queryKey: ['deals'] });
+    queryClient.invalidateQueries({ queryKey: ['profiles'] });
+    queryClient.invalidateQueries({ queryKey: ['vendas'] });
+    queryClient.invalidateQueries({ queryKey: ['products'] });
+    queryClient.invalidateQueries({ queryKey: ['companies'] });
+    queryClient.invalidateQueries({ queryKey: ['pipelines'] });
+    queryClient.invalidateQueries({ queryKey: ['deal-activities'] });
+    queryClient.invalidateQueries({ queryKey: ['custom-fields'] });
+  }, [queryClient, companies]);
 
   // Compute plan-related values
   const activeCompany = useMemo(() =>

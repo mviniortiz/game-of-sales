@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Home, Trophy, PlusCircle, Target, PhoneCall, Shield, LogOut, User, Settings, Calendar, Kanban, Lock, Upload } from "lucide-react";
+import { Home, Trophy, PlusCircle, Target, PhoneCall, Shield, LogOut, User, Settings, Calendar, Kanban, Lock, Upload, Bell } from "lucide-react";
+import { ReminderBell } from "@/components/crm/ReminderBell";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -166,6 +167,11 @@ export function AppSidebar() {
                 <span>Registrar Venda</span>
               </Button>
             )}
+          </div>
+
+          {/* Reminder Bell */}
+          <div className="px-4 pb-2 flex items-center justify-center">
+            <ReminderBell />
           </div>
 
           {/* Visão Geral Section */}

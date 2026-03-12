@@ -59,10 +59,14 @@ import {
   Star,
 } from "lucide-react";
 import { LostDealModal } from "@/components/crm/LostDealModal";
+import { AddReminderForm } from "@/components/crm/AddReminderForm";
+import { DealTagPicker } from "@/components/crm/DealTagPicker";
 import { syncWonDealToSale } from "@/utils/salesSync";
 import { DealProducts } from "@/components/crm/DealProducts";
 import { CustomFieldsSection } from "@/components/crm/CustomFieldsSection";
 import { ProposalPDFButton } from "@/components/crm/ProposalPDFGenerator";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { BellRing } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Pipeline stages configuration
@@ -521,6 +525,11 @@ export default function DealDetails() {
                       </>
                     )}
                   </div>
+                  {deal?.company_id && (
+                    <div className="mt-1.5">
+                      <DealTagPicker dealId={deal.id} companyId={deal.company_id} />
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -542,6 +551,22 @@ export default function DealDetails() {
 
                 {!isClosed && (
                   <>
+                    <Popover>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <PopoverTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:text-primary">
+                              <BellRing className="h-4 w-4" />
+                            </Button>
+                          </PopoverTrigger>
+                        </TooltipTrigger>
+                        <TooltipContent>Agendar Lembrete</TooltipContent>
+                      </Tooltip>
+                      <PopoverContent align="end" className="w-80">
+                        <AddReminderForm dealId={id!} dealTitle={deal.title} />
+                      </PopoverContent>
+                    </Popover>
+
                     <Button
                       variant="outline"
                       size="sm"
