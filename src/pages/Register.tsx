@@ -134,8 +134,15 @@ const Register = () => {
             });
 
             if (signUpError) {
-                // Rollback: delete the company if user creation fails
-                await supabase.from("companies").delete().eq("id", companyId);
+                // Rollback: delete the orphaned company if user creation fails
+                try {
+                    const { error: rollbackError } = await supabase.from("companies").delete().eq("id", companyId);
+                    if (rollbackError) {
+                        console.error("[Register] Failed to rollback company:", rollbackError);
+                    }
+                } catch (rbErr) {
+                    console.error("[Register] Rollback exception:", rbErr);
+                }
                 throw new Error(`Erro ao criar conta: ${signUpError.message}`);
             }
 

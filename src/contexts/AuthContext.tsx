@@ -8,6 +8,7 @@ type AuthProfile = {
   avatar_url: string | null;
   is_super_admin: boolean;
   company_id: string | null;
+  onboarding_completed: boolean;
 };
 
 interface AuthContextType {
@@ -48,7 +49,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("nome, avatar_url, is_super_admin, company_id")
+        .select("nome, avatar_url, is_super_admin, company_id, onboarding_completed")
         .eq("id", userId)
         .maybeSingle();
 
@@ -247,9 +248,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (mounted) setLoading(false);
     });
 
+    // Cross-tab logout sync: detect when another tab signs out by
+    // listening for the Supabase auth token being removed from storage.
+    const handleStorageChange = (e: StorageEvent) => {
+      // Supabase stores its session under a key matching this pattern
+      if (e.key && e.key.includes("auth-token") && e.newValue === null) {
+        clearAuthState();
+        navigate("/auth");
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+
     return () => {
       mounted = false;
       subscription.unsubscribe();
+      window.removeEventListener("storage", handleStorageChange);
     };
   }, []);
 
