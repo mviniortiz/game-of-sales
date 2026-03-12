@@ -1,11 +1,10 @@
 import { useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading, profile, companyId, isSuperAdmin, signOut } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const invalidSessionCleanupInProgress = useRef(false);
 
   useEffect(() => {
@@ -22,13 +21,7 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
         invalidSessionCleanupInProgress.current = false;
       });
     }
-
-    // Redirect to onboarding if the user hasn't completed it yet (checked via localStorage)
-    const hasCompletedOnboarding = localStorage.getItem("onboarding_completed");
-    if (!loading && user && profile && !hasCompletedOnboarding && location.pathname !== "/onboarding") {
-      navigate("/onboarding", { replace: true });
-    }
-  }, [user, loading, profile, companyId, isSuperAdmin, navigate, signOut, location.pathname]);
+  }, [user, loading, profile, companyId, isSuperAdmin, navigate, signOut]);
 
   if (loading) {
     return (
