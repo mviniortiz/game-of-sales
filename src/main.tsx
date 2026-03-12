@@ -1,7 +1,10 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { initSentry } from "./lib/sentry";
 import App from "./App.tsx";
 import "./index.css";
+
+initSentry();
 
 const THEME_STORAGE_KEY = "gamesales-theme";
 const LEGACY_THEME_KEYS = ["vyzon-theme"];
