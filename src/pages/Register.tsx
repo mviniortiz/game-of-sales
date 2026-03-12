@@ -27,6 +27,7 @@ import {
     Quote,
 } from "lucide-react";
 import { PLANS, formatPrice } from "@/config/plans";
+import { RATE_LIMITS } from "@/lib/rateLimiter";
 
 // MercadoPago checkout URLs per plan
 const CHECKOUT_URLS: Record<string, string> = {
@@ -89,6 +90,12 @@ const Register = () => {
         if (!validationResult.success) {
             const errors = validationResult.error.errors.map(e => e.message).join(", ");
             toast.error(errors);
+            return;
+        }
+
+        const { allowed, retryAfterMs } = RATE_LIMITS.auth('register');
+        if (!allowed) {
+            toast.error(`Muitas tentativas. Tente novamente em ${Math.ceil(retryAfterMs / 1000)}s.`);
             return;
         }
 
