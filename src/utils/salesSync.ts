@@ -30,6 +30,10 @@ const SALES_QUERY_KEYS = [
   "vendedores-ranking",
   "meta-consolidada-atual",
   "contribuicao-vendedores",
+  "meta-mensal",
+  "show-rate",
+  "conversion-rate",
+  "vendas-prev-month",
 ];
 
 const formatDate = (date: Date) => {
@@ -46,6 +50,27 @@ export const invalidateSalesQueries = async (queryClient?: QueryClient) => {
 };
 
 /**
+ * Resolve the product name from the produtos table when a product_id is available.
+ * Falls back to deal title or a default string.
+ */
+async function resolveProductName(
+  productId: string | null | undefined,
+  fallback: string
+): Promise<{ nome: string; validProductId: string | null }> {
+  if (!productId) return { nome: fallback, validProductId: null };
+
+  const { data } = await supabase
+    .from("produtos")
+    .select("id, nome")
+    .eq("id", productId)
+    .maybeSingle();
+
+  if (data) return { nome: data.nome, validProductId: data.id };
+  // Product doesn't exist (maybe deleted) — don't send invalid FK
+  return { nome: fallback, validProductId: null };
+}
+
+/**
  * Cria uma venda aprovada a partir de um deal ganho, se ainda não existir.
  * Usa o campo observacoes como chave de idempotência (deal id).
  */
@@ -54,10 +79,14 @@ export const syncWonDealToSale = async (
   queryClient?: QueryClient,
   fallbackCompanyId?: string | null
 ) => {
-  if (!deal?.id || !deal.user_id) return;
+  if (!deal?.id || !deal.user_id) {
+    console.warn("[salesSync] Deal inválido para sync:", deal);
+    return;
+  }
 
   const observacoes = `Sincronizado automaticamente do CRM (deal ${deal.id})`;
 
+  // Idempotency check
   const { data: existing, error: existingError } = await supabase
     .from("vendas")
     .select("id")
@@ -65,26 +94,38 @@ export const syncWonDealToSale = async (
     .eq("user_id", deal.user_id)
     .limit(1);
 
-  if (existingError) throw existingError;
+  if (existingError) {
+    console.error("[salesSync] Erro ao verificar venda existente:", existingError);
+    throw existingError;
+  }
   if (existing && existing.length > 0) return;
+
+  // Resolve product name and validate FK
+  const { nome: produtoNome, validProductId } = await resolveProductName(
+    deal.product_id,
+    deal.customer_name || deal.title || "Deal CRM"
+  );
 
   const hoje = new Date();
   const payload = {
     user_id: deal.user_id,
     company_id: deal.company_id || fallbackCompanyId || null,
     cliente_nome: deal.customer_name || deal.title || "Cliente",
-    produto_id: deal.product_id || null,
-    produto_nome: deal.title || "Deal CRM",
+    produto_id: validProductId,
+    produto_nome: produtoNome,
     valor: Number(deal.value) || 0,
-    plataforma: "Pix/Boleto",
-    forma_pagamento: "PIX" as any,
+    plataforma: "CRM",
+    forma_pagamento: "CRM" as any,
     status: "Aprovado" as any,
     observacoes,
     data_venda: formatDate(hoje),
   };
 
   const { error: insertError } = await supabase.from("vendas").insert(payload);
-  if (insertError) throw insertError;
+  if (insertError) {
+    console.error("[salesSync] Erro ao inserir venda:", insertError, "Payload:", payload);
+    throw insertError;
+  }
 
   playSaleChime();
   await invalidateSalesQueries(queryClient);
@@ -109,8 +150,10 @@ export const unsyncDealSale = async (
     .eq("observacoes", observacoes)
     .eq("user_id", userId);
 
-  if (error) throw error;
+  if (error) {
+    console.error("[salesSync] Erro ao remover venda sincronizada:", error);
+    throw error;
+  }
 
   await invalidateSalesQueries(queryClient);
 };
-

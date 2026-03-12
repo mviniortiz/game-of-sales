@@ -29,13 +29,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Calendar as CalendarWidget } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { format, parse } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import {
   Loader2, Target, User, DollarSign, Phone, Mail,
-  Calendar, Flame, CheckCircle2, ChevronDown
+  Calendar, Flame, CheckCircle2, ChevronDown, CalendarIcon
 } from "lucide-react";
 import type { Stage } from "@/pages/CRM";
 
@@ -422,24 +426,49 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
               <FormField
                 control={form.control}
                 name="expected_close_date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-slate-300 text-[13px] font-medium flex items-center gap-1.5">
-                      <Calendar className="h-3.5 w-3.5 text-slate-500" />
-                      Previsão
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="date"
-                        className="h-10 bg-slate-800 border-slate-600 text-white
-                          focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20
-                          [color-scheme:dark]"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                render={({ field }) => {
+                  const selectedDate = field.value
+                    ? parse(field.value, "yyyy-MM-dd", new Date())
+                    : undefined;
+
+                  return (
+                    <FormItem>
+                      <FormLabel className="text-slate-300 text-[13px] font-medium flex items-center gap-1.5">
+                        <Calendar className="h-3.5 w-3.5 text-slate-500" />
+                        Previsão
+                      </FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              className={`h-10 w-full justify-start text-left font-normal bg-slate-800 border-slate-600 hover:bg-slate-700 hover:text-white
+                                focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20
+                                ${field.value ? "text-white" : "text-slate-400"}`}
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4 text-slate-400" />
+                              {field.value
+                                ? format(selectedDate!, "dd 'de' MMM, yyyy", { locale: ptBR })
+                                : "Selecione uma data"}
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 bg-slate-900 border-slate-700" align="start">
+                          <CalendarWidget
+                            mode="single"
+                            selected={selectedDate}
+                            onSelect={(date) =>
+                              field.onChange(date ? format(date, "yyyy-MM-dd") : "")
+                            }
+                            locale={ptBR}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
             </div>
 
