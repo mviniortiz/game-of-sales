@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { logger } from "@/utils/logger";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   DndContext,
@@ -363,7 +364,7 @@ export default function CRM() {
 
       const { data, error } = await query;
       if (error) {
-        console.error("Error fetching deals:", error);
+        logger.error("Error fetching deals:", error);
         throw error;
       }
 
@@ -385,7 +386,7 @@ export default function CRM() {
 
         const { data: scopedProfiles, error: profilesError } = await profilesQuery;
         if (profilesError) {
-          console.error("Error fetching deal profiles:", profilesError);
+          logger.error("Error fetching deal profiles:", profilesError);
         } else {
           profiles = scopedProfiles || [];
         }
@@ -524,7 +525,7 @@ export default function CRM() {
       setDealToDelete(null);
     },
     onError: (error: any) => {
-      console.error("Error deleting deal:", error);
+      logger.error("Error deleting deal:", error);
       toast.error(error?.message || "Erro ao excluir negociação");
     },
   });
@@ -730,7 +731,7 @@ export default function CRM() {
           await syncWonDealToSale(deal, queryClient, effectiveCompanyId);
           toast.success("Negociação ganha e venda sincronizada!");
         } catch (syncError) {
-          console.error("Erro ao sincronizar venda do deal:", syncError);
+          logger.error("Erro ao sincronizar venda do deal:", syncError);
           toast.error("Negociação ganha, mas a venda não foi sincronizada.");
         }
       }
@@ -740,7 +741,7 @@ export default function CRM() {
           await unsyncDealSale(deal.id, deal.user_id, queryClient);
           toast.success("Negociação removida das vendas sincronizadas.");
         } catch (unsyncError) {
-          console.error("Erro ao remover venda sincronizada do deal:", unsyncError);
+          logger.error("Erro ao remover venda sincronizada do deal:", unsyncError);
           toast.error("Negociação movida, mas não foi possível remover a venda sincronizada.");
         }
       }
@@ -1572,7 +1573,7 @@ export default function CRM() {
             try {
               await unsyncDealSale(dealToLose.id, dealToLose.user_id, queryClient);
             } catch (unsyncError) {
-              console.error("Erro ao remover venda sincronizada do deal perdido:", unsyncError);
+              logger.error("Erro ao remover venda sincronizada do deal perdido:", unsyncError);
             }
           }
           queryClient.invalidateQueries({ queryKey: ["deals"] });

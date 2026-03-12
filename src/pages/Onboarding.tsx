@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { logger } from "@/utils/logger";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -231,7 +232,7 @@ export default function Onboarding() {
                 .from("company-assets")
                 .upload(path, logoFile, { upsert: true });
             if (error) {
-                console.warn("Logo upload failed:", error);
+                logger.warn("Logo upload failed:", error);
                 return null;
             }
             const { data: urlData } = supabase.storage

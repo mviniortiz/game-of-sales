@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { logger } from "@/utils/logger";
 import { MessageCircle, Search, Phone, Send, QrCode, Target, CheckCircle2, Sparkles, Brain, TrendingUp, AlertCircle, RefreshCcw, Loader2, Settings2, Users, ChevronDown, Flame, Snowflake, ThermometerSun, Zap, Copy, ArrowRight, User, StickyNote, PanelRightOpen, PanelRightClose, Plus, ChevronRight, Bot, Paperclip, Mic, Reply, DollarSign, FileText, ClipboardList, X, Clock, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -90,7 +91,7 @@ export const useCopilot = () => {
             }
 
             if (error || !data?.analysis) {
-                console.error("[useCopilot] error:", error || data?.error);
+                logger.error("[useCopilot] error:", error || data?.error);
                 setAiSuggestion({
                     sentiment: "Analise indisponivel",
                     temperature: "morno",
@@ -107,7 +108,7 @@ export const useCopilot = () => {
                 setRemaining(data.remaining);
             }
         } catch (err) {
-            console.error("[useCopilot] unexpected error:", err);
+            logger.error("[useCopilot] unexpected error:", err);
             setAiSuggestion({
                 sentiment: "Erro ao analisar",
                 temperature: "morno",
@@ -176,13 +177,13 @@ const useCrmLookup = (phone: string | undefined | null) => {
                 .limit(1);
 
             if (error) {
-                console.error("[CRM lookup]", error);
+                logger.error("[CRM lookup]", error);
                 setDeal(null);
             } else {
                 setDeal(data && data.length > 0 ? data[0] as CrmDeal : null);
             }
         } catch (err) {
-            console.error("[CRM lookup] unexpected:", err);
+            logger.error("[CRM lookup] unexpected:", err);
             setDeal(null);
         } finally {
             setLoading(false);
@@ -308,7 +309,7 @@ const RegisterSaleForm = ({ phone, companyId, onClose, onSuccess }: {
             onSuccess();
             onClose();
         } catch (err: any) {
-            console.error("[RegisterSale]", err);
+            logger.error("[RegisterSale]", err);
             toast.error("Erro ao registrar venda");
         } finally {
             setSaving(false);

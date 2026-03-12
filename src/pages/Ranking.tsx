@@ -94,8 +94,8 @@ const Ranking = () => {
       return data;
     },
     enabled: !!effectiveCompanyId,
-    staleTime: 5000,
-    refetchInterval: 5000, // Auto-refresh every 5 seconds
+    staleTime: 15_000,
+    refetchInterval: 30_000, // Auto-refresh every 5 seconds
   });
 
   // Fetch sellers with their sales - respecting permission hierarchy
@@ -218,8 +218,8 @@ const Ranking = () => {
       // 7. Sort by valor_vendido descending
       return ranking.sort((a, b) => b.valor_vendido - a.valor_vendido);
     },
-    staleTime: 5000,
-    refetchInterval: 5000, // Auto-refresh every 5 seconds
+    staleTime: 15_000,
+    refetchInterval: 30_000, // Auto-refresh every 5 seconds
   });
 
   const isLoading = loadingMeta || loadingVendedores;

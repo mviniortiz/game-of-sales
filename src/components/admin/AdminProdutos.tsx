@@ -24,6 +24,11 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Plus, Package, Loader2, Pencil, Trash2 } from "lucide-react";
+import {
+    AlertDialog, AlertDialogAction, AlertDialogCancel,
+    AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+    AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface Produto {
     id: string;
@@ -334,22 +339,34 @@ export const AdminProdutos = () => {
                                             >
                                                 <Pencil className="h-4 w-4" />
                                             </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10"
-                                                onClick={() => {
-                                                    if (
-                                                        confirm(
-                                                            `Tem certeza que deseja excluir "${produto.nome}"?`
-                                                        )
-                                                    ) {
-                                                        deleteMutation.mutate(produto.id);
-                                                    }
-                                                }}
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
+                                            <AlertDialog>
+                                                <AlertDialogTrigger asChild>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </AlertDialogTrigger>
+                                                <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                        <AlertDialogTitle>Excluir produto</AlertDialogTitle>
+                                                        <AlertDialogDescription>
+                                                            Tem certeza que deseja excluir "{produto.nome}"? Esta ação não pode ser desfeita.
+                                                        </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                                        <AlertDialogAction
+                                                            className="bg-rose-600 hover:bg-rose-700"
+                                                            onClick={() => deleteMutation.mutate(produto.id)}
+                                                        >
+                                                            Excluir
+                                                        </AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                            </AlertDialog>
                                         </div>
                                     </TableCell>
                                 </TableRow>

@@ -154,9 +154,15 @@ const Dashboard = () => {
     return <AdminDashboardOverview />;
   }
 
-  const startOfMonthDate = startOfMonth(new Date()).toISOString().split("T")[0];
-  const endOfMonthDate = endOfMonth(new Date()).toISOString().split("T")[0];
-  const startOfMonthObj = startOfMonth(new Date());
+  const now = new Date();
+  const startOfMonthDate = startOfMonth(now).toISOString().split("T")[0];
+  const endOfMonthDate = endOfMonth(now).toISOString().split("T")[0];
+  const startOfMonthObj = startOfMonth(now);
+
+  // Previous month boundaries for trend calculation
+  const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const startOfPrevMonth = startOfMonth(prevMonth).toISOString().split("T")[0];
+  const endOfPrevMonth = endOfMonth(prevMonth).toISOString().split("T")[0];
 
   const { data: vendas } = useQuery({
     queryKey: ["vendas", user?.id],
@@ -308,6 +314,24 @@ const Dashboard = () => {
     enabled: !!user?.id,
   });
 
+  // Previous month sales for trend calculation
+  const { data: vendasPrevMonth } = useQuery({
+    queryKey: ["vendas-prev-month", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("vendas")
+        .select("valor")
+        .eq("user_id", user?.id)
+        .eq("status", "Aprovado")
+        .gte("data_venda", startOfPrevMonth)
+        .lte("data_venda", endOfPrevMonth);
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
   // Meta do mês
   const { data: metaData } = useQuery({
     queryKey: ["meta-mensal", user?.id],
@@ -331,6 +355,18 @@ const Dashboard = () => {
   const totalTransacoes = vendas?.length || 0;
   const metaValor = Number(metaData?.valor_meta) || 0;
   const metaProgress = metaValor > 0 ? (totalVendas / metaValor) * 100 : 0;
+
+  // Trends vs previous month
+  const prevTotalVendas = vendasPrevMonth?.reduce((acc, v) => acc + Number(v.valor), 0) || 0;
+  const prevTicketMedio = vendasPrevMonth?.length ? prevTotalVendas / vendasPrevMonth.length : 0;
+  const prevTotalTransacoes = vendasPrevMonth?.length || 0;
+
+  const calcTrend = (current: number, previous: number) =>
+    previous > 0 ? ((current - previous) / previous) * 100 : current > 0 ? 100 : 0;
+
+  const trendFaturamento = calcTrend(totalVendas, prevTotalVendas);
+  const trendTicket = calcTrend(ticketMedio, prevTicketMedio);
+  const trendTransacoes = calcTrend(totalTransacoes, prevTotalTransacoes);
 
   return (
     <div className="space-y-6 p-1">
@@ -357,7 +393,7 @@ const Dashboard = () => {
           value={formatCurrencyCompact(totalVendas)}
           fullValue={formatCurrency(totalVendas)}
           icon={DollarSign}
-          trend={18.4}
+          trend={trendFaturamento}
           trendLabel="vs mês anterior"
           iconColor="text-emerald-400"
           iconBg="bg-emerald-500/10"
@@ -368,7 +404,7 @@ const Dashboard = () => {
           value={formatCurrencyCompact(ticketMedio)}
           fullValue={formatCurrency(ticketMedio)}
           icon={TrendingUp}
-          trend={5.2}
+          trend={trendTicket}
           trendLabel="vs mês anterior"
           iconColor="text-sky-400"
           iconBg="bg-sky-500/10"
@@ -379,7 +415,7 @@ const Dashboard = () => {
           value={totalTransacoes.toString()}
           subtitle={`${totalTransacoes} vendas fechadas`}
           icon={ShoppingCart}
-          trend={12.3}
+          trend={trendTransacoes}
           trendLabel="vs mês anterior"
           iconColor="text-violet-400"
           iconBg="bg-violet-500/10"

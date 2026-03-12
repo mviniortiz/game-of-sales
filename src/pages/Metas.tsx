@@ -81,7 +81,7 @@ const Metas = () => {
       return data || [];
     },
     enabled: !!activeCompanyId,
-    refetchInterval: 10000, // Auto-refetch every 10 seconds
+    refetchInterval: 30_000,
   });
 
   useEffect(() => {
@@ -127,7 +127,7 @@ const Metas = () => {
       return data || [];
     },
     enabled: !!metaConsolidadaSelecionada,
-    refetchInterval: 10000,
+    refetchInterval: 30_000,
   });
 
   // Buscar metas individuais com cálculo real baseado em vendas

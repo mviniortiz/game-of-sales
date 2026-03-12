@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { logger } from "@/utils/logger";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -152,7 +153,7 @@ export default function DealDetails() {
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.error("Error fetching activities:", error);
+        logger.error("Error fetching activities:", error);
         return [];
       }
 
@@ -185,7 +186,7 @@ export default function DealDetails() {
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.error("Error fetching notes:", error);
+        logger.error("Error fetching notes:", error);
         return [];
       }
 
@@ -276,7 +277,7 @@ export default function DealDetails() {
         try {
           await syncWonDealToSale(syncDeal, queryClient);
         } catch (syncError) {
-          console.error("Erro ao sincronizar venda do deal:", syncError);
+          logger.error("Erro ao sincronizar venda do deal:", syncError);
           toast.error("Deal ganho, mas a venda não foi sincronizada.");
         }
       }

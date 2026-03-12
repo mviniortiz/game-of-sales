@@ -1,4 +1,5 @@
 ﻿import { useEffect, useState, useRef, useCallback } from "react";
+import { logger } from "@/utils/logger";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -468,7 +469,7 @@ export default function DealCommandCenter() {
             return response.data;
         },
         onSuccess: (data) => {
-            console.log("[initiateDealCall] response data:", JSON.stringify(data, null, 2));
+            logger.log("[initiateDealCall] response data:", JSON.stringify(data, null, 2));
             queryClient.invalidateQueries({ queryKey: ["deal-calls", id] });
             queryClient.invalidateQueries({ queryKey: ["deal-timeline", id] });
             if (sellerPhone.trim()) {
@@ -494,7 +495,7 @@ export default function DealCommandCenter() {
             setActiveTab("ligacoes");
         },
         onError: (error: any) => {
-            console.error("Erro ao iniciar chamada:", error);
+            logger.error("Erro ao iniciar chamada:", error);
             toast.error(error?.message || "Erro ao iniciar chamada");
         },
     });
@@ -516,7 +517,7 @@ export default function DealCommandCenter() {
             toast.success("Insights gerados com sucesso");
         },
         onError: (error: any) => {
-            console.error("Erro ao gerar insights:", error);
+            logger.error("Erro ao gerar insights:", error);
             toast.error(error?.message || "Erro ao gerar insights");
         },
     });
@@ -543,7 +544,7 @@ export default function DealCommandCenter() {
 
                     if (!newRecord) return;
 
-                    console.log(
+                    logger.log(
                         `[DealCommandCenter] Realtime deal_call update: ${oldRecord?.status || "?"} -> ${newRecord.status}`,
                     );
 
