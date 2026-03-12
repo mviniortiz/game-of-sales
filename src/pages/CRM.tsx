@@ -250,6 +250,30 @@ export default function CRM() {
     setFilterTagIds([]);
   }, []);
 
+  // Fetch deal-tag assignments for filtering
+  const { data: dealTagAssignments = [] } = useQuery({
+    queryKey: ["deal-tag-assignments", effectiveCompanyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("deal_tag_assignments")
+        .select("deal_id, tag_id");
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!effectiveCompanyId || isSuperAdmin,
+    staleTime: 30000,
+  });
+
+  // Build a fast lookup: dealId → Set<tagId>
+  const dealTagMap = useMemo(() => {
+    const m = new Map<string, Set<string>>();
+    for (const a of dealTagAssignments) {
+      if (!m.has(a.deal_id)) m.set(a.deal_id, new Set());
+      m.get(a.deal_id)!.add(a.tag_id);
+    }
+    return m;
+  }, [dealTagAssignments]);
+
   // Apply advanced filters to a deals array
   const applyAdvancedFilters = useCallback((dealsArr: Deal[]): Deal[] => {
     let result = dealsArr;
@@ -497,30 +521,6 @@ export default function CRM() {
     setLocalDeals(deals);
     queryClient.setQueryData(["deals", effectiveCompanyId], deals);
   }, [deals, queryClient, effectiveCompanyId]);
-
-  // Fetch deal-tag assignments for filtering
-  const { data: dealTagAssignments = [] } = useQuery({
-    queryKey: ["deal-tag-assignments", effectiveCompanyId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("deal_tag_assignments")
-        .select("deal_id, tag_id");
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!effectiveCompanyId || isSuperAdmin,
-    staleTime: 30000,
-  });
-
-  // Build a fast lookup: dealId → Set<tagId>
-  const dealTagMap = useMemo(() => {
-    const m = new Map<string, Set<string>>();
-    for (const a of dealTagAssignments) {
-      if (!m.has(a.deal_id)) m.set(a.deal_id, new Set());
-      m.get(a.deal_id)!.add(a.tag_id);
-    }
-    return m;
-  }, [dealTagAssignments]);
 
   // Fetch vendors for filter
   const { data: vendors = [] } = useQuery({

@@ -69,21 +69,23 @@ export function useUpcomingReminders(userId: string | undefined, companyId: stri
 }
 
 // ── Fetch reminders for a specific deal ─────────────────────
-export function useDealReminders(dealId: string | undefined) {
+export function useDealReminders(dealId: string | undefined, userId: string | undefined, companyId: string | null) {
   return useQuery<Reminder[]>({
-    queryKey: ["reminders-deal", dealId],
+    queryKey: ["reminders-deal", dealId, userId],
     queryFn: async () => {
-      if (!dealId) return [];
+      if (!dealId || !userId || !companyId) return [];
       const { data, error } = await (supabase as any)
         .from(TABLE)
         .select("*")
         .eq("deal_id", dealId)
+        .eq("user_id", userId)
+        .eq("company_id", companyId)
         .eq("completed", false)
         .order("remind_at", { ascending: true });
       if (error) throw error;
       return data ?? [];
     },
-    enabled: !!dealId,
+    enabled: !!dealId && !!userId && !!companyId,
   });
 }
 

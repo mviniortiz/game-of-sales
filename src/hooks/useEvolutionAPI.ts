@@ -632,7 +632,6 @@ export const useEvolutionIntegration = () => {
         setError(null);
 
         try {
-            console.log("[sendMedia] calling proxy:", { chatId, mimetype, base64Length: base64.length, fileName: opts?.fileName });
             const result = await invokeProxy("sendMedia", {
                 chatId,
                 mediaBase64: base64,
@@ -640,7 +639,6 @@ export const useEvolutionIntegration = () => {
                 caption: opts?.caption || undefined,
                 fileName: opts?.fileName || undefined,
             });
-            console.log("[sendMedia] success:", result);
         } catch (err: any) {
             console.error("[sendMedia] error:", err?.message || err, err);
             setSelectedChatMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
@@ -664,9 +662,7 @@ export const useEvolutionIntegration = () => {
         setError(null);
 
         try {
-            console.log("[sendAudio] calling proxy:", { chatId, base64Length: base64.length });
-            const result = await invokeProxy("sendAudio", { chatId, mediaBase64: base64, mimetype: "audio/webm" });
-            console.log("[sendAudio] success:", result);
+            await invokeProxy("sendAudio", { chatId, mediaBase64: base64, mimetype: "audio/webm" });
         } catch (err: any) {
             console.error("[sendAudio] error:", err?.message || err, err);
             setSelectedChatMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
@@ -684,13 +680,6 @@ export const useEvolutionIntegration = () => {
         }
         try {
             const data = await invokeProxy("getMedia", { messageId });
-            console.log("[getAudioMedia] response:", {
-                hasBase64: !!data?.base64,
-                base64Length: data?.base64?.length,
-                base64Start: data?.base64?.slice(0, 40),
-                mimetype: data?.mimetype,
-                keys: data ? Object.keys(data) : [],
-            });
             if (data?.base64) {
                 const rawMime = data.mimetype || "audio/ogg";
                 // Normalize mimetype for browser compatibility
