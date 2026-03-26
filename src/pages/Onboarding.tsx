@@ -396,7 +396,7 @@ export default function Onboarding() {
                 .update({ plan: selectedPlan })
                 .eq("id", effectiveCompanyId);
 
-            toast({ title: "Assinatura criada!", description: "Seu trial de 7 dias comecou. Aproveite!" });
+            toast({ title: "Assinatura criada!", description: "Seu trial de 14 dias começou. Aproveite!" });
             advanceStep();
         } catch (error: any) {
             const msg = error.message || "Erro ao processar pagamento";
@@ -1229,7 +1229,7 @@ export default function Onboarding() {
                             Escolha seu Plano
                         </h2>
                         <p className="text-slate-400 mb-6 text-sm text-center">
-                            7 dias gratis para testar. Cancele quando quiser.
+                            14 dias grátis para testar. Cancele quando quiser.
                         </p>
 
                         {/* Billing toggle */}
@@ -1316,7 +1316,7 @@ export default function Onboarding() {
                         <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/20 mb-6">
                             <Shield className="h-4 w-4 text-amber-400 shrink-0" />
                             <p className="text-xs text-amber-300">
-                                <strong>7 dias gratis.</strong> Voce so sera cobrado apos o periodo de teste. Cancele a qualquer momento.
+                                <strong>14 dias grátis.</strong> Você só será cobrado após o período de teste. Cancele a qualquer momento.
                             </p>
                         </div>
 
@@ -1424,7 +1424,7 @@ export default function Onboarding() {
                                 ) : (
                                     <span className="flex items-center justify-center gap-2">
                                         <Shield className="h-5 w-5" />
-                                        Iniciar trial gratis
+                                        Iniciar trial grátis
                                     </span>
                                 )}
                             </Button>

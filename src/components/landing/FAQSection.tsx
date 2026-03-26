@@ -13,7 +13,7 @@ const FAQS = [
     },
     {
         q: "Posso testar antes de assinar?",
-        a: "Sim! Todos os planos pagos incluem 7 dias grátis com acesso completo. Sem cartão de crédito para começar.",
+        a: "Sim! Todos os planos pagos incluem 14 dias grátis com acesso completo. Você só é cobrado após o período de teste.",
     },
     {
         q: "Quais plataformas integram?",

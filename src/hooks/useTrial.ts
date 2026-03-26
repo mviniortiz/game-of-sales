@@ -1,4 +1,4 @@
-// Trial status hook for managing 7-day reverse trial
+// Trial status hook for managing 14-day reverse trial
 import { useMemo } from 'react';
 import { useTenant } from '@/contexts/TenantContext';
 import { differenceInDays, parseISO } from 'date-fns';

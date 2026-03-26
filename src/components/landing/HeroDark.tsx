@@ -204,11 +204,11 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                         >
                             <span className="flex items-center gap-1.5">
                                 <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                                7 dias grátis
+                                14 dias grátis
                             </span>
                             <span className="flex items-center gap-1.5">
                                 <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                                Sem cartão
+                                Só cobra após o trial
                             </span>
                             <span className="flex items-center gap-1.5">
                                 <span className="w-2 h-2 rounded-full bg-emerald-400" />

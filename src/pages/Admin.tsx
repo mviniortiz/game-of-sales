@@ -11,6 +11,7 @@ import { AdminRelatorios } from "@/components/admin/AdminRelatorios";
 import { AdminMetas } from "@/components/admin/AdminMetas";
 import { AdminManagement } from "@/components/profile/AdminManagement";
 import { AdminCompanies } from "@/components/admin/AdminCompanies";
+import { EvolutionMonitor } from "@/components/admin/EvolutionMonitor";
 import { AdminProdutos } from "@/components/admin/AdminProdutos";
 import { AdminFormasPagamento } from "@/components/admin/AdminFormasPagamento";
 import { Button } from "@/components/ui/button";
@@ -57,7 +58,7 @@ const Admin = () => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="vendedores" className="w-full">
-            <TabsList className={`grid w-full ${isSuperAdmin ? 'grid-cols-8' : 'grid-cols-7'}`}>
+            <TabsList className={`grid w-full ${isSuperAdmin ? 'grid-cols-9' : 'grid-cols-7'}`}>
               <TabsTrigger value="vendedores">Vendedores</TabsTrigger>
               <TabsTrigger value="vendas">Vendas</TabsTrigger>
               <TabsTrigger value="produtos">Produtos</TabsTrigger>
@@ -65,6 +66,7 @@ const Admin = () => {
               <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
               <TabsTrigger value="metas">Metas</TabsTrigger>
               {isSuperAdmin && <TabsTrigger value="empresas">Empresas</TabsTrigger>}
+              {isSuperAdmin && <TabsTrigger value="monitor">Monitor</TabsTrigger>}
               <TabsTrigger value="usuarios">Usuários</TabsTrigger>
             </TabsList>
 
@@ -95,6 +97,12 @@ const Admin = () => {
             {isSuperAdmin && (
               <TabsContent value="empresas" className="mt-6">
                 <AdminCompanies />
+              </TabsContent>
+            )}
+
+            {isSuperAdmin && (
+              <TabsContent value="monitor" className="mt-6">
+                <EvolutionMonitor />
               </TabsContent>
             )}
 

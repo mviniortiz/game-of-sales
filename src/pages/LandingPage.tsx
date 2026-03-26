@@ -1015,7 +1015,7 @@ const LandingPage = () => {
                             },
                             {
                                 q: "Posso testar antes de assinar?",
-                                a: "Com certeza! Oferecemos 7 dias grátis do plano PRO. Teste tudo à vontade e cancele quando quiser."
+                                a: "Com certeza! Oferecemos 14 dias grátis do plano PRO. Teste tudo à vontade e cancele quando quiser."
                             },
                             {
                                 q: "Funciona para qualquer tipo de venda?",

@@ -404,7 +404,7 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onLoginClick }: HeroSecti
                                     transition={{ backgroundPosition: { duration: 4, repeat: Infinity, ease: "easeInOut" } }}
                                 >
                                     <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                                    <span className="relative z-10">Começar grátis por 7 dias</span>
+                                    <span className="relative z-10">Começar grátis por 14 dias</span>
                                     <ArrowRight className="relative z-10 h-5 w-5 group-hover:translate-x-1.5 transition-transform" />
                                 </motion.button>
                             </motion.div>
@@ -427,7 +427,7 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onLoginClick }: HeroSecti
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.5 }}
                         >
-                            {["7 dias grátis", "Sem cartão", "Cancele quando quiser"].map(text => (
+                            {["14 dias grátis", "Cobrança só após o trial", "Cancele quando quiser"].map(text => (
                                 <span key={text} className="text-caption flex items-center gap-1.5 text-sm">
                                     <span className="w-2 h-2 rounded-full bg-emerald-400" />
                                     {text}

@@ -24,7 +24,9 @@ type Action =
   | "logout"
   | "profilePic"
   | "instances"
-  | "getMedia";
+  | "getMedia"
+  | "monitor"
+  | "deleteInstance";
 
 type Body = {
   action?: Action;
@@ -43,6 +45,8 @@ type Body = {
   fileName?: string;
   /** Caption for images/videos */
   caption?: string;
+  /** Instance name for deleteInstance action */
+  targetInstanceName?: string;
 };
 
 function json(status: number, body: unknown) {
@@ -521,6 +525,150 @@ serve(async (req) => {
       }
 
       return json(200, { success: true, sellers });
+    }
+
+    // ── DELETE INSTANCE: Super admin can remove any Evolution instance ──
+    if (action === "deleteInstance") {
+      if (!isSuperAdmin) {
+        return json(403, { error: "Only super admins can delete instances" });
+      }
+
+      const targetName = body.targetInstanceName;
+      if (!targetName) {
+        return json(400, { error: "targetInstanceName is required" });
+      }
+
+      // Try logout first, then delete
+      try {
+        await evolutionRequest(`/instance/logout/${targetName}`, { method: "DELETE" });
+      } catch {
+        // may not be connected, ignore
+      }
+
+      try {
+        await evolutionRequest(`/instance/delete/${targetName}`, { method: "DELETE" });
+      } catch (err: any) {
+        // Some Evolution versions use different endpoint
+        try {
+          await evolutionRequest(`/instance/delete/${targetName}`, { method: "POST", body: JSON.stringify({}) });
+        } catch {
+          // best effort
+        }
+      }
+
+      return json(200, { success: true, deleted: targetName });
+    }
+
+    // ── MONITOR: Super admin overview of ALL Evolution instances ──
+    if (action === "monitor") {
+      if (!isSuperAdmin) {
+        return json(403, { error: "Only super admins can access monitor" });
+      }
+
+      // 1. Fetch all instances from Evolution API
+      let allInstances: any[] = [];
+      try {
+        const res = await evolutionRequest("/instance/fetchInstances", { method: "GET" });
+        allInstances = Array.isArray(res) ? res : [];
+      } catch (err: any) {
+        return json(200, {
+          success: true,
+          evolutionOnline: false,
+          error: err?.message || "Could not reach Evolution API",
+          instances: [],
+          summary: { total: 0, connected: 0, disconnected: 0, estimatedRamMb: 0 },
+        });
+      }
+
+      // 2. Map instance names back to users
+      const instanceNames = allInstances.map((i: any) => i.instance?.instanceName || i.instanceName || "");
+      const userIds = instanceNames
+        .filter((n: string) => n.startsWith("wa_"))
+        .map((n: string) => {
+          const hex = n.slice(3);
+          if (hex.length === 32) {
+            return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
+          }
+          return null;
+        })
+        .filter(Boolean);
+
+      // 3. Fetch profiles for those users
+      let profileMap: Record<string, any> = {};
+      if (userIds.length > 0) {
+        const { data: profiles } = await (adminSupabase as any)
+          .from("profiles")
+          .select("id, full_name, avatar_url, company_id")
+          .in("id", userIds);
+        if (profiles) {
+          for (const p of profiles) {
+            profileMap[p.id] = p;
+          }
+        }
+      }
+
+      // 4. Fetch company names
+      const companyIds = [...new Set(Object.values(profileMap).map((p: any) => p.company_id).filter(Boolean))];
+      let companyMap: Record<string, string> = {};
+      if (companyIds.length > 0) {
+        const { data: companies } = await (adminSupabase as any)
+          .from("companies")
+          .select("id, name")
+          .in("id", companyIds);
+        if (companies) {
+          for (const c of companies) {
+            companyMap[c.id] = c.name;
+          }
+        }
+      }
+
+      // 5. Build instance details
+      const RAM_PER_INSTANCE_MB = 150;
+      let connectedCount = 0;
+
+      const instances = allInstances.map((inst: any) => {
+        const name = inst.instance?.instanceName || inst.instanceName || "";
+        const state = String(
+          inst.instance?.state || inst.instance?.connectionStatus || inst.state || "unknown"
+        ).toLowerCase();
+        const isConnected = state === "open";
+        if (isConnected) connectedCount++;
+
+        // Reverse map to user
+        const hex = name.startsWith("wa_") ? name.slice(3) : "";
+        let userId: string | null = null;
+        if (hex.length === 32) {
+          userId = `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
+        }
+        const profile = userId ? profileMap[userId] : null;
+        const companyName = profile?.company_id ? companyMap[profile.company_id] : null;
+
+        return {
+          instanceName: name,
+          state,
+          connected: isConnected,
+          userId,
+          userName: profile?.full_name || null,
+          avatarUrl: profile?.avatar_url || null,
+          companyId: profile?.company_id || null,
+          companyName,
+        };
+      });
+
+      const total = instances.length;
+      const disconnected = total - connectedCount;
+
+      return json(200, {
+        success: true,
+        evolutionOnline: true,
+        instances,
+        summary: {
+          total,
+          connected: connectedCount,
+          disconnected,
+          estimatedRamMb: total * RAM_PER_INSTANCE_MB,
+        },
+      });
     }
 
     return json(400, { error: "invalid action" });

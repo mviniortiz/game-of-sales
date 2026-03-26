@@ -162,7 +162,7 @@ export const FinalCTA = ({ onCTAClick }: FinalCTAProps) => {
                                 }}
                             />
                             <Zap className="relative h-4 w-4" fill="currentColor" />
-                            <span className="relative">Começar grátis por 7 dias</span>
+                            <span className="relative">Começar grátis por 14 dias</span>
                             <ArrowRight className="relative h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
                         </motion.button>
 

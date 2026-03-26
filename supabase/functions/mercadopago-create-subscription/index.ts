@@ -117,7 +117,7 @@ serve(async (req) => {
                 transaction_amount: billingConfig.transactionAmount,
                 currency_id: "BRL",
                 free_trial: {
-                    frequency: 7,
+                    frequency: 14,
                     frequency_type: "days",
                 },
             };
@@ -132,7 +132,7 @@ serve(async (req) => {
                 transaction_amount: null,
                 currency_id: "BRL",
                 free_trial: {
-                    frequency: 7,
+                    frequency: 14,
                     frequency_type: "days",
                 },
             };
@@ -161,7 +161,7 @@ serve(async (req) => {
             mp_subscription_id: mpData.id,
             mp_customer_id: mpData.payer_id?.toString() || null,
             subscription_status: "trialing",
-            trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+            trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
         };
 
         const { error: updateError } = await adminSupabase
