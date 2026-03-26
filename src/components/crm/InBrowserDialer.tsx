@@ -37,13 +37,13 @@ const STATUS_LABELS: Record<DialerStatus, string> = {
 };
 
 const STATUS_COLORS: Record<DialerStatus, string> = {
-    idle: "text-slate-400",
-    "fetching-token": "text-slate-400",
+    idle: "text-muted-foreground",
+    "fetching-token": "text-muted-foreground",
     ready: "text-emerald-400",
     connecting: "text-amber-400",
     ringing: "text-amber-400",
     connected: "text-emerald-400",
-    disconnected: "text-slate-400",
+    disconnected: "text-muted-foreground",
     error: "text-red-400",
 };
 
@@ -271,7 +271,7 @@ export default function InBrowserDialer({
     const showTimer = status === "connected" || (status === "disconnected" && duration > 0);
 
     return (
-        <div className="rounded-xl border border-slate-700 bg-slate-800/60 p-4 space-y-4">
+        <div className="rounded-xl border border-border bg-card/60 p-4 space-y-4">
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -279,21 +279,21 @@ export default function InBrowserDialer({
                         status === "connected" ? "bg-emerald-400 animate-pulse" :
                         status === "ringing" || status === "connecting" ? "bg-amber-400 animate-pulse" :
                         status === "error" ? "bg-red-400" :
-                        "bg-slate-500"
+                        "bg-muted-foreground"
                     }`} />
                     <span className={`text-sm font-medium ${STATUS_COLORS[status]}`}>
                         {STATUS_LABELS[status]}
                     </span>
                 </div>
                 {showTimer && (
-                    <span className="text-sm font-mono text-slate-300">{formatDuration(duration)}</span>
+                    <span className="text-sm font-mono text-foreground">{formatDuration(duration)}</span>
                 )}
             </div>
 
             {/* Contact info */}
-            <div className="bg-slate-900/50 rounded-lg p-3">
-                <p className="text-sm text-white font-medium">{customerName}</p>
-                <p className="text-xs text-slate-400">{customerPhone}</p>
+            <div className="bg-muted/50 rounded-lg p-3">
+                <p className="text-sm text-foreground font-medium">{customerName}</p>
+                <p className="text-xs text-muted-foreground">{customerPhone}</p>
             </div>
 
             {/* Error message */}
@@ -322,8 +322,8 @@ export default function InBrowserDialer({
                         <Button
                             onClick={handleToggleMute}
                             variant="outline"
-                            className={`rounded-full h-12 w-12 p-0 border-slate-600 ${
-                                isMuted ? "bg-red-500/20 border-red-500/40 text-red-400" : "text-slate-300 hover:text-white"
+                            className={`rounded-full h-12 w-12 p-0 border-border ${
+                                isMuted ? "bg-red-500/20 border-red-500/40 text-red-400" : "text-foreground hover:text-foreground"
                             }`}
                         >
                             {isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
@@ -347,7 +347,7 @@ export default function InBrowserDialer({
                                 setDuration(0);
                             }}
                             variant="outline"
-                            className="border-slate-600 text-slate-300 hover:text-white"
+                            className="border-border text-foreground hover:text-foreground"
                         >
                             <Phone className="h-4 w-4 mr-2" />
                             Ligar novamente

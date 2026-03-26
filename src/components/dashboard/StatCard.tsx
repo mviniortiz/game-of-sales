@@ -25,7 +25,7 @@ export const StatCard = ({
   const TrendIcon = isPositive ? ArrowUpRight : ArrowDownRight;
   
   return (
-    <Card className="border-white/5 bg-slate-900/50 backdrop-blur-sm hover:bg-slate-900/70 transition-all duration-300 group">
+    <Card className="border-border bg-card/50 backdrop-blur-sm hover:bg-card/70 transition-all duration-300 group">
       <CardContent className="p-4">
         <div className="flex items-center gap-4">
           {/* Icon with glow */}
@@ -45,10 +45,10 @@ export const StatCard = ({
           
           {/* Content */}
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
               {title}
             </p>
-            <p className="text-2xl font-bold text-white tabular-nums tracking-tight break-words">
+            <p className="text-2xl font-bold text-foreground tabular-nums tracking-tight break-words">
               {value}
             </p>
             
@@ -64,12 +64,12 @@ export const StatCard = ({
                 </span>
               )}
               {subtitle && (
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-muted-foreground">
                   {subtitle}
                 </span>
               )}
               {change !== undefined && !subtitle && (
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-muted-foreground">
                   vs mês anterior
                 </span>
               )}

@@ -83,7 +83,7 @@ const KPICard = ({
     const TrendIcon = isPositive ? ArrowUpRight : ArrowDownRight;
 
     const cardContent = (
-        <Card className="relative overflow-hidden border border-slate-800 bg-slate-900 shadow-sm hover:shadow-lg transition-all duration-300 group cursor-default rounded-xl">
+        <Card className="relative overflow-hidden border border-border bg-card shadow-sm hover:shadow-lg transition-all duration-300 group cursor-default rounded-xl">
             <CardContent className="relative p-5">
                 <div className="flex items-start justify-between gap-4">
                     {/* Left: Icon */}
@@ -156,7 +156,7 @@ const KPICard = ({
                 <TooltipTrigger asChild>
                     {cardContent}
                 </TooltipTrigger>
-                <TooltipContent side="bottom" className="bg-slate-900 border-slate-700 text-white font-mono">
+                <TooltipContent side="bottom" className="bg-card border-border text-foreground font-mono">
                     {fullValue}
                 </TooltipContent>
             </UITooltip>
@@ -353,7 +353,7 @@ const SalesPerformanceCenter = () => {
                                         "h-8 text-xs",
                                         isActive
                                             ? "bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700"
-                                            : "bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white"
+                                            : "bg-muted/50 border-border text-muted-foreground hover:bg-secondary hover:text-foreground"
                                     )}
                                     onClick={handleClick}
                                 >
@@ -408,7 +408,7 @@ const SalesPerformanceCenter = () => {
                 </div>
 
                 {/* Right: Main Chart */}
-                <Card className="lg:col-span-3 relative overflow-hidden border border-slate-800 bg-slate-900 shadow-sm rounded-xl">
+                <Card className="lg:col-span-3 relative overflow-hidden border border-border bg-card shadow-sm rounded-xl">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl pointer-events-none" />
 
                     <CardHeader className="pb-2 relative">
@@ -464,7 +464,7 @@ const SalesPerformanceCenter = () => {
                                     labelStyle={{ color: "#94a3b8", fontSize: 11, marginBottom: 4 }}
                                     formatter={(value: number) => [
                                         <span className="text-emerald-400 font-semibold">{formatCurrency(value)}</span>,
-                                        <span className="text-slate-400">Faturamento</span>
+                                        <span className="text-muted-foreground">Faturamento</span>
                                     ]}
                                 />
                                 <Area

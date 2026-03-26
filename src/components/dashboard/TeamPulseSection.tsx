@@ -127,7 +127,7 @@ export const TeamPulseSection = () => {
     const totalWeekSales = topSellers?.reduce((acc, s) => acc + s.total, 0) || 0;
 
     return (
-        <Card className="relative overflow-hidden border border-slate-800 bg-slate-900/95 backdrop-blur-sm shadow-xl rounded-2xl">
+        <Card className="relative overflow-hidden border border-border bg-card/95 backdrop-blur-sm shadow-xl rounded-2xl">
             {/* Background effects */}
             <div className="absolute bottom-0 right-0 w-64 h-64 bg-gradient-to-tl from-emerald-500/10 to-transparent blur-3xl pointer-events-none" />
             <div className="absolute top-0 left-1/2 w-48 h-48 bg-gradient-to-b from-emerald-500/5 to-transparent blur-3xl pointer-events-none" />
@@ -174,7 +174,7 @@ export const TeamPulseSection = () => {
                         {loadingTopSellers ? (
                             <div className="space-y-2">
                                 {[...Array(3)].map((_, i) => (
-                                    <Skeleton key={i} className="h-14 w-full bg-slate-800/50 rounded-xl" />
+                                    <Skeleton key={i} className="h-14 w-full bg-muted/50 rounded-xl" />
                                 ))}
                             </div>
                         ) : (topSellers?.length || 0) > 0 ? (
@@ -193,7 +193,7 @@ export const TeamPulseSection = () => {
                                             style={{ animationDelay: `${index * 100}ms` }}
                                         >
                                             <div className="relative">
-                                                <Avatar className="h-10 w-10 ring-2 ring-offset-2 ring-offset-slate-900 ring-slate-700">
+                                                <Avatar className="h-10 w-10 ring-2 ring-offset-2 ring-offset-background ring-border">
                                                     <AvatarImage src={seller.avatar_url || undefined} />
                                                     <AvatarFallback className="bg-emerald-500/20 text-emerald-300 text-xs font-semibold">
                                                         {getInitials(seller.nome)}
@@ -216,10 +216,10 @@ export const TeamPulseSection = () => {
                                 })}
                             </div>
                         ) : (
-                            <div className="flex flex-col items-center justify-center py-8 text-center bg-slate-800/30 rounded-xl">
-                                <Trophy className="h-8 w-8 text-slate-700 mb-2" />
+                            <div className="flex flex-col items-center justify-center py-8 text-center bg-muted/30 rounded-xl">
+                                <Trophy className="h-8 w-8 text-muted-foreground mb-2" />
                                 <p className="text-xs text-muted-foreground">Nenhuma venda esta semana</p>
-                                <p className="text-[10px] text-slate-600 mt-1">Seja o primeiro!</p>
+                                <p className="text-[10px] text-muted-foreground mt-1">Seja o primeiro!</p>
                             </div>
                         )}
                     </div>
@@ -236,7 +236,7 @@ export const TeamPulseSection = () => {
                         {loadingHotDeals ? (
                             <div className="space-y-2">
                                 {[...Array(3)].map((_, i) => (
-                                    <Skeleton key={i} className="h-16 w-full bg-slate-800/50 rounded-xl" />
+                                    <Skeleton key={i} className="h-16 w-full bg-muted/50 rounded-xl" />
                                 ))}
                             </div>
                         ) : (hotDeals?.length || 0) > 0 ? (
@@ -263,16 +263,16 @@ export const TeamPulseSection = () => {
                                                     {STAGE_LABELS[deal.stage] || deal.stage}
                                                 </span>
                                             </div>
-                                            <ArrowRight className="h-3.5 w-3.5 text-slate-600 group-hover:text-orange-400 group-hover:translate-x-1 transition-all" />
+                                            <ArrowRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-orange-400 group-hover:translate-x-1 transition-all" />
                                         </div>
                                     </div>
                                 ))}
                             </div>
                         ) : (
-                            <div className="flex flex-col items-center justify-center py-8 text-center bg-slate-800/30 rounded-xl">
-                                <Flame className="h-8 w-8 text-slate-700 mb-2" />
+                            <div className="flex flex-col items-center justify-center py-8 text-center bg-muted/30 rounded-xl">
+                                <Flame className="h-8 w-8 text-muted-foreground mb-2" />
                                 <p className="text-xs text-muted-foreground">Nenhum deal em negociação</p>
-                                <p className="text-[10px] text-slate-600 mt-1">Mova deals para o pipeline</p>
+                                <p className="text-[10px] text-muted-foreground mt-1">Mova deals para o pipeline</p>
                             </div>
                         )}
                     </div>
@@ -294,7 +294,7 @@ export const TeamPulseSection = () => {
                         {loadingStaleDeals ? (
                             <div className="space-y-2">
                                 {[...Array(3)].map((_, i) => (
-                                    <Skeleton key={i} className="h-16 w-full bg-slate-800/50 rounded-xl" />
+                                    <Skeleton key={i} className="h-16 w-full bg-muted/50 rounded-xl" />
                                 ))}
                             </div>
                         ) : (staleDeals?.length || 0) > 0 ? (

@@ -18,7 +18,7 @@ const DAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const HOURS = Array.from({ length: 12 }, (_, i) => i + 8); // 8h to 19h
 
 const getIntensityStyles = (value: number, max: number): { bg: string; glow: string } => {
-    if (value === 0) return { bg: "bg-slate-800/30", glow: "" };
+    if (value === 0) return { bg: "bg-muted/30", glow: "" };
     const intensity = value / max;
     if (intensity < 0.25) return {
         bg: "bg-gradient-to-br from-amber-900/40 to-amber-950/40 ring-1 ring-amber-800/20",
@@ -39,7 +39,7 @@ const getIntensityStyles = (value: number, max: number): { bg: string; glow: str
 };
 
 const getTextColor = (value: number, max: number) => {
-    if (value === 0) return "text-slate-700";
+    if (value === 0) return "text-muted-foreground";
     const intensity = value / max;
     if (intensity < 0.5) return "text-amber-300/90";
     return "text-white font-bold";
@@ -134,7 +134,7 @@ export const GoldenHoursHeatmap = ({ dateRange }: GoldenHoursHeatmapProps) => {
     const totalActivities = heatmapData?.flat().reduce((a, b) => a + b, 0) || 0;
 
     return (
-        <Card className="relative overflow-hidden border border-slate-800 bg-slate-900/95 backdrop-blur-sm shadow-xl rounded-2xl">
+        <Card className="relative overflow-hidden border border-border bg-card/95 backdrop-blur-sm shadow-xl rounded-2xl">
             {/* Background effects */}
             <div className="absolute top-0 left-0 w-40 h-40 bg-gradient-to-br from-orange-500/10 to-amber-500/5 blur-3xl pointer-events-none" />
             <div className="absolute bottom-0 right-0 w-32 h-32 bg-gradient-to-tl from-amber-500/5 to-transparent blur-2xl pointer-events-none" />
@@ -159,12 +159,12 @@ export const GoldenHoursHeatmap = ({ dateRange }: GoldenHoursHeatmapProps) => {
 
                     {/* Quick Stats */}
                     {bestTime && (
-                        <div className="flex items-center gap-3 bg-slate-800/50 px-3 py-2 rounded-xl ring-1 ring-slate-700/50">
+                        <div className="flex items-center gap-3 bg-muted/50 px-3 py-2 rounded-xl ring-1 ring-border/50">
                             <div className="text-right">
                                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Melhor Horário</p>
                                 <p className="text-sm font-bold text-orange-400">{bestTime.day} {bestTime.hour}h</p>
                             </div>
-                            <div className="h-8 w-px bg-slate-700" />
+                            <div className="h-8 w-px bg-border" />
                             <div className="text-right">
                                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Atividades</p>
                                 <p className="text-sm font-bold text-foreground">{totalActivities}</p>
@@ -178,7 +178,7 @@ export const GoldenHoursHeatmap = ({ dateRange }: GoldenHoursHeatmapProps) => {
                 {isLoading ? (
                     <div className="space-y-2">
                         {[...Array(7)].map((_, i) => (
-                            <Skeleton key={i} className="h-8 w-full bg-slate-800/50" />
+                            <Skeleton key={i} className="h-8 w-full bg-muted/50" />
                         ))}
                     </div>
                 ) : (
@@ -227,7 +227,7 @@ export const GoldenHoursHeatmap = ({ dateRange }: GoldenHoursHeatmapProps) => {
                                                 </TooltipTrigger>
                                                 <TooltipContent
                                                     side="top"
-                                                    className="bg-slate-900/95 backdrop-blur-sm border-slate-700 text-white shadow-xl"
+                                                    className="bg-card/95 backdrop-blur-sm border-border text-foreground shadow-xl"
                                                 >
                                                     <div className="text-xs">
                                                         <p className="font-semibold flex items-center gap-1">
@@ -252,7 +252,7 @@ export const GoldenHoursHeatmap = ({ dateRange }: GoldenHoursHeatmapProps) => {
                         </div>
 
                         {/* Legend */}
-                        <div className="flex items-center justify-between mt-5 pt-4 border-t border-slate-800">
+                        <div className="flex items-center justify-between mt-5 pt-4 border-t border-border">
                             <div className="flex items-center gap-2">
                                 <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
                                 <span className="text-[10px] text-muted-foreground">Intensidade de atividade</span>
@@ -260,7 +260,7 @@ export const GoldenHoursHeatmap = ({ dateRange }: GoldenHoursHeatmapProps) => {
                             <div className="flex items-center gap-2">
                                 <span className="text-[10px] text-muted-foreground">Baixa</span>
                                 <div className="flex gap-1">
-                                    <div className="w-5 h-5 rounded bg-slate-800/30 ring-1 ring-slate-700/30" />
+                                    <div className="w-5 h-5 rounded bg-muted/30 ring-1 ring-border/30" />
                                     <div className="w-5 h-5 rounded bg-gradient-to-br from-amber-900/40 to-amber-950/40 ring-1 ring-amber-800/20" />
                                     <div className="w-5 h-5 rounded bg-gradient-to-br from-amber-700/50 to-amber-800/50 ring-1 ring-amber-600/30" />
                                     <div className="w-5 h-5 rounded bg-gradient-to-br from-orange-500/60 to-amber-600/60 ring-1 ring-orange-400/40" />

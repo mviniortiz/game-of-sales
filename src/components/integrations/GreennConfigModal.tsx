@@ -174,9 +174,9 @@ export const GreennConfigModal = ({ open, onClose, onSaved }: GreennConfigModalP
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[500px] bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+            <DialogContent className="sm:max-w-[500px] bg-card border-border">
                 <DialogHeader>
-                    <DialogTitle className="flex items-center gap-3 text-slate-900 dark:text-white">
+                    <DialogTitle className="flex items-center gap-3 text-foreground">
                         <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-500/20">
                             <img
                                 src="/src/assets/integrations/greenn.png"
@@ -186,7 +186,7 @@ export const GreennConfigModal = ({ open, onClose, onSaved }: GreennConfigModalP
                         </div>
                         Conectar Greenn
                     </DialogTitle>
-                    <DialogDescription className="text-slate-500 dark:text-slate-400">
+                    <DialogDescription className="text-muted-foreground">
                         Receba vendas da Greenn automaticamente no seu CRM
                     </DialogDescription>
                 </DialogHeader>
@@ -198,9 +198,9 @@ export const GreennConfigModal = ({ open, onClose, onSaved }: GreennConfigModalP
                 ) : (
                     <div className="space-y-6 py-4">
                         {/* Status Badge */}
-                        <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-800">
+                        <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
                             <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                <span className="text-sm font-medium text-foreground">
                                     Status da Integracao
                                 </span>
                             </div>
@@ -223,7 +223,7 @@ export const GreennConfigModal = ({ open, onClose, onSaved }: GreennConfigModalP
                         {/* API Token Input */}
                         <div className="space-y-2">
                             <div className="flex items-center gap-2">
-                                <Label className="text-slate-700 dark:text-slate-300">
+                                <Label className="text-foreground">
                                     Token da API (x-greenn-token)
                                 </Label>
                                 <a
@@ -241,23 +241,23 @@ export const GreennConfigModal = ({ open, onClose, onSaved }: GreennConfigModalP
                                 value={apiToken}
                                 onChange={(e) => setApiToken(e.target.value)}
                                 placeholder="Cole seu token da API aqui"
-                                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+                                className="bg-card border-border"
                             />
-                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                            <p className="text-xs text-muted-foreground">
                                 Encontre o token em: Greenn &rarr; Integracoes &rarr; Webhooks
                             </p>
                         </div>
 
                         {/* Webhook URL */}
                         <div className="space-y-2">
-                            <Label className="text-slate-700 dark:text-slate-300">
+                            <Label className="text-foreground">
                                 URL do Webhook (copie para a Greenn)
                             </Label>
                             <div className="flex gap-2">
                                 <Input
                                     value={WEBHOOK_URL}
                                     readOnly
-                                    className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-xs font-mono"
+                                    className="bg-muted border-border text-xs font-mono"
                                 />
                                 <Button
                                     variant="outline"
@@ -304,7 +304,7 @@ export const GreennConfigModal = ({ open, onClose, onSaved }: GreennConfigModalP
                 )}
 
                 {/* Footer */}
-                <div className="flex justify-between pt-4 border-t border-slate-200 dark:border-slate-800">
+                <div className="flex justify-between pt-4 border-t border-border">
                     <div>
                         {configId && isActive && (
                             <Button

@@ -12,13 +12,13 @@ export const VendasChart = ({ data }: VendasChartProps) => {
   const yAxisMax = Math.ceil(maxValue * 1.2); // 20% de padding no topo
 
   return (
-    <Card className="border-white/5 bg-slate-900/50 backdrop-blur-sm">
+    <Card className="border-border bg-card backdrop-blur-sm">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold text-white flex items-center gap-2">
+        <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
           <TrendingUp className="h-4 w-4 text-emerald-400" />
           Evolução de Vendas
         </CardTitle>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-muted-foreground">
           Quantidade de vendas ao longo do tempo
         </p>
       </CardHeader>

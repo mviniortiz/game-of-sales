@@ -54,13 +54,13 @@ export const VendasPorPlataformaChart = ({ data }: VendasPorPlataformaChartProps
   };
 
   return (
-    <Card className="border-white/5 bg-slate-900/50 backdrop-blur-sm">
+    <Card className="border-border bg-card/50 backdrop-blur-sm">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold text-white flex items-center gap-2">
+        <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
           <Globe className="h-4 w-4 text-cyan-400" />
           Vendas por Plataforma
         </CardTitle>
-        <p className="text-xs text-slate-500">Distribuição por canal</p>
+        <p className="text-xs text-muted-foreground">Distribuição por canal</p>
       </CardHeader>
       <CardContent className="pt-0">
         <div className="flex items-center">
@@ -110,8 +110,8 @@ export const VendasPorPlataformaChart = ({ data }: VendasPorPlataformaChartProps
                   style={{ backgroundColor: COLORS[index % COLORS.length] }}
                 />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-white truncate">{item.name}</p>
-                  <p className="text-xs text-slate-500">{item.value} vendas</p>
+                  <p className="text-xs text-foreground truncate">{item.name}</p>
+                  <p className="text-xs text-muted-foreground">{item.value} vendas</p>
                 </div>
               </div>
             ))}

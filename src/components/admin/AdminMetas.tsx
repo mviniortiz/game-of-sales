@@ -1270,7 +1270,7 @@ export const AdminMetas = () => {
                                         </AvatarFallback>
                                       </Avatar>
                                     </TooltipTrigger>
-                                    <TooltipContent className="bg-gray-900 text-white text-xs">
+                                    <TooltipContent className="bg-card text-foreground text-xs border border-border">
                                       <p>{contributor.nome}</p>
                                       <p className="text-emerald-400">{formatCurrencyCompact(contributor.total)}</p>
                                     </TooltipContent>

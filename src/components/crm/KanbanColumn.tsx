@@ -26,10 +26,10 @@ interface KanbanColumnProps {
 const FunnelConnector = ({ rate }: { rate: number }) => {
   const color =
     rate >= 50 ? "text-emerald-400" :
-      rate >= 25 ? "text-amber-400" : "text-slate-500";
+      rate >= 25 ? "text-amber-400" : "text-muted-foreground";
   const bg =
     rate >= 50 ? "bg-emerald-500/10 ring-emerald-500/20" :
-      rate >= 25 ? "bg-amber-500/10 ring-amber-500/20" : "bg-slate-700/60 ring-slate-600/20";
+      rate >= 25 ? "bg-amber-500/10 ring-amber-500/20" : "bg-muted/60 ring-border";
 
   return (
     <div className="flex flex-col items-center justify-start pt-[52px] flex-shrink-0 w-5 z-10">
@@ -88,21 +88,21 @@ export const KanbanColumn = memo(({
           flex flex-col w-[85vw] sm:w-[292px] flex-shrink-0 h-full rounded-xl
           border transition-all duration-200 snap-center
           ${isOver
-            ? "ring-2 ring-emerald-500/50 ring-offset-2 ring-offset-slate-900 scale-[1.01] border-dashed border-emerald-400/50 bg-emerald-500/5 animate-pulse-subtle"
-            : "border-slate-700/60 bg-slate-900/70"
+            ? "ring-2 ring-emerald-500/50 ring-offset-2 ring-offset-background scale-[1.01] border-dashed border-emerald-400/50 bg-emerald-500/5 animate-pulse-subtle"
+            : "border-border bg-card/70"
           }
         `}
         style={isOver ? { animation: "kanban-pulse 1.5s ease-in-out infinite" } : undefined}
       >
         {/* ── Column Header ────────────────────────────────── */}
-        <div className="px-4 pt-4 pb-3 border-b border-slate-700/50">
+        <div className="px-4 pt-4 pb-3 border-b border-border">
           {/* Row 1: Icon + title + count badge */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2.5">
               <div className={`p-1.5 rounded-lg ${stage.bgColor}`}>
                 <Icon className={`h-3.5 w-3.5 ${stage.color}`} />
               </div>
-              <span className="font-semibold text-white text-sm tracking-tight">
+              <span className="font-semibold text-foreground text-sm tracking-tight">
                 {stage.title}
               </span>
             </div>
@@ -117,7 +117,7 @@ export const KanbanColumn = memo(({
           </div>
 
           {/* Funnel bar — visual fill proportional to count */}
-          <div className="h-[3px] w-full rounded-full bg-slate-800 mb-3 overflow-hidden">
+          <div className="h-[3px] w-full rounded-full bg-muted mb-3 overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-500 ${stage.color.replace("text-", "bg-").replace("-400", "-500")}`}
               style={{ width: `${fillPct}%`, opacity: total.count > 0 ? 1 : 0.2 }}
@@ -126,7 +126,7 @@ export const KanbanColumn = memo(({
 
           {/* Row 2: Value total */}
           <div className="flex items-center justify-between">
-            <span className="text-[11px] text-slate-500 uppercase tracking-wider font-medium">
+            <span className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">
               Total em pipeline
             </span>
             <span className="text-sm font-bold text-emerald-400 tabular-nums">
@@ -156,11 +156,11 @@ export const KanbanColumn = memo(({
                   `}>
                     <div className={`
                       p-2.5 rounded-xl mb-2
-                      ${isOver ? "bg-emerald-500/20" : "bg-slate-800"}
+                      ${isOver ? "bg-emerald-500/20" : "bg-muted"}
                     `}>
-                      <Inbox className={`h-5 w-5 ${isOver ? "text-emerald-400" : "text-slate-600"}`} />
+                      <Inbox className={`h-5 w-5 ${isOver ? "text-emerald-400" : "text-muted-foreground"}`} />
                     </div>
-                    <p className={`text-[11px] font-medium ${isOver ? "text-emerald-400" : "text-slate-600"}`}>
+                    <p className={`text-[11px] font-medium ${isOver ? "text-emerald-400" : "text-muted-foreground"}`}>
                       {isOver ? "Solte aqui" : "Sem deals"}
                     </p>
                   </div>

@@ -274,21 +274,21 @@ const NovaVenda = () => {
 
                 {/* Pontuação */}
                 <div className="flex-1">
-                  <div className="text-xs text-gray-300 uppercase tracking-wide mb-1">
+                  <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
                     Pontuação Prevista
                   </div>
                   <div className="text-3xl font-bold text-yellow-400 animate-pulse">
                     +{pontosPrevistos}
                   </div>
-                  <div className="text-xs text-gray-400">pontos</div>
+                  <div className="text-xs text-muted-foreground">pontos</div>
                 </div>
               </div>
 
               {pontosPrevistos > 0 ? (
                 <div className="mt-3 pt-3 border-t border-yellow-500/20">
-                  <div className="flex items-center gap-2 text-xs text-gray-300">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <TrendingUp className="h-3 w-3 text-green-400 flex-shrink-0" />
-                    <span className="text-gray-300">
+                    <span className="text-muted-foreground">
                       R$ {parseFloat(valor || "0").toFixed(2)}
                     </span>
                   </div>
@@ -318,7 +318,7 @@ const NovaVenda = () => {
                       placeholder="Ex: João Silva"
                       value={clienteNome}
                       onChange={(e) => setClienteNome(e.target.value)}
-                      className="h-11 bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:border-emerald-500"
+                      className="h-11 bg-card border border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:border-emerald-500"
                       required
                     />
                   </div>
@@ -329,7 +329,7 @@ const NovaVenda = () => {
                       Plataforma
                     </Label>
                     <Select value={plataforma} onValueChange={setPlataforma} required>
-                      <SelectTrigger className="h-11 bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:border-emerald-500">
+                      <SelectTrigger className="h-11 bg-card border border-border text-foreground focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:border-emerald-500">
                         <SelectValue placeholder="Selecione a plataforma" />
                       </SelectTrigger>
                       <SelectContent>
@@ -347,7 +347,7 @@ const NovaVenda = () => {
                       Forma de Pagamento
                     </Label>
                     <Select value={formaPagamento} onValueChange={setFormaPagamento} required>
-                      <SelectTrigger className="h-11 bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:border-emerald-500">
+                      <SelectTrigger className="h-11 bg-card border border-border text-foreground focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:border-emerald-500">
                         <SelectValue placeholder="Selecione a forma de pagamento" />
                       </SelectTrigger>
                       <SelectContent>
@@ -369,7 +369,7 @@ const NovaVenda = () => {
                       Produto
                     </Label>
                     <Select value={produtoId} onValueChange={setProdutoId} required>
-                      <SelectTrigger className="h-11 bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:border-emerald-500">
+                      <SelectTrigger className="h-11 bg-card border border-border text-foreground focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:border-emerald-500">
                         <SelectValue placeholder="Selecione um produto" />
                       </SelectTrigger>
                       <SelectContent>
@@ -394,7 +394,7 @@ const NovaVenda = () => {
                       placeholder="R$ 0,00"
                       value={valorFormatado}
                       onChange={(e) => formatarMoeda(e.target.value)}
-                      className="h-11 text-base font-medium bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:border-emerald-500"
+                      className="h-11 text-base font-medium bg-card border border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:border-emerald-500"
                       required
                     />
                   </div>
@@ -409,7 +409,7 @@ const NovaVenda = () => {
                         <Button
                           variant="outline"
                           className={cn(
-                            "w-full justify-start text-left font-normal h-11 bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white hover:bg-muted dark:hover:bg-slate-800 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:border-emerald-500",
+                            "w-full justify-start text-left font-normal h-11 bg-card border border-border text-foreground hover:bg-muted focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:border-emerald-500",
                             !dataVenda && "text-muted-foreground"
                           )}
                         >
@@ -439,7 +439,7 @@ const NovaVenda = () => {
                     Status
                   </Label>
                   <Select value={status} onValueChange={setStatus} required>
-                    <SelectTrigger className="h-11 bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:border-emerald-500">
+                    <SelectTrigger className="h-11 bg-card border border-border text-foreground focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:border-emerald-500">
                       <SelectValue placeholder="Selecione o status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -458,7 +458,7 @@ const NovaVenda = () => {
                       Vendedor
                     </Label>
                     <Select value={vendedorId} onValueChange={setVendedorId} required>
-                      <SelectTrigger className="h-11 bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:border-emerald-500">
+                      <SelectTrigger className="h-11 bg-card border border-border text-foreground focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:border-emerald-500">
                         <SelectValue placeholder="Selecione o vendedor" />
                       </SelectTrigger>
                       <SelectContent>
@@ -484,7 +484,7 @@ const NovaVenda = () => {
                   value={observacoes}
                   onChange={(e) => setObservacoes(e.target.value)}
                   rows={3}
-                  className="resize-none bg-white dark:bg-slate-900/60 border border-gray-300 dark:border-white/10 text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:border-emerald-500"
+                  className="resize-none bg-card border border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:border-emerald-500"
                 />
               </div>
 
@@ -498,7 +498,7 @@ const NovaVenda = () => {
 
                   <div className="grid md:grid-cols-2 gap-4">
                     {clienteNome && (
-                      <div className="flex items-start gap-3 p-3 bg-muted/60 dark:bg-slate-900/40 rounded-md border border-border">
+                      <div className="flex items-start gap-3 p-3 bg-muted/60 rounded-md border border-border">
                         <User className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Cliente</p>
@@ -508,7 +508,7 @@ const NovaVenda = () => {
                     )}
 
                     {produtoId && produtos && (
-                      <div className="flex items-start gap-3 p-3 bg-muted/60 dark:bg-slate-900/40 rounded-md border border-border">
+                      <div className="flex items-start gap-3 p-3 bg-muted/60 rounded-md border border-border">
                         <Package className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Produto</p>
@@ -520,7 +520,7 @@ const NovaVenda = () => {
                     )}
 
                     {valor && (
-                      <div className="flex items-start gap-3 p-3 bg-muted/60 dark:bg-slate-900/40 rounded-md border border-border">
+                      <div className="flex items-start gap-3 p-3 bg-muted/60 rounded-md border border-border">
                         <DollarSign className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Valor</p>
@@ -530,7 +530,7 @@ const NovaVenda = () => {
                     )}
 
                     {plataforma && (
-                      <div className="flex items-start gap-3 p-3 bg-muted/60 dark:bg-slate-900/40 rounded-md border border-border">
+                      <div className="flex items-start gap-3 p-3 bg-muted/60 rounded-md border border-border">
                         <Store className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Plataforma</p>
@@ -540,7 +540,7 @@ const NovaVenda = () => {
                     )}
 
                     {formaPagamento && (
-                      <div className="flex items-start gap-3 p-3 bg-muted/60 dark:bg-slate-900/40 rounded-md border border-border">
+                      <div className="flex items-start gap-3 p-3 bg-muted/60 rounded-md border border-border">
                         <CreditCard className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Pagamento</p>
@@ -550,7 +550,7 @@ const NovaVenda = () => {
                     )}
 
                     {status && (
-                      <div className="flex items-start gap-3 p-3 bg-muted/60 dark:bg-slate-900/40 rounded-md border border-border">
+                      <div className="flex items-start gap-3 p-3 bg-muted/60 rounded-md border border-border">
                         <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Status</p>
@@ -560,7 +560,7 @@ const NovaVenda = () => {
                     )}
 
                     {dataVenda && (
-                      <div className="flex items-start gap-3 p-3 bg-muted/60 dark:bg-slate-900/40 rounded-md border border-border">
+                      <div className="flex items-start gap-3 p-3 bg-muted/60 rounded-md border border-border">
                         <CalendarIcon className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Data</p>
@@ -570,7 +570,7 @@ const NovaVenda = () => {
                     )}
 
                     {isAdmin && vendedorId && vendedores && (
-                      <div className="flex items-start gap-3 p-3 bg-muted/60 dark:bg-slate-900/40 rounded-md border border-border">
+                      <div className="flex items-start gap-3 p-3 bg-muted/60 rounded-md border border-border">
                         <User className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Vendedor</p>
@@ -583,7 +583,7 @@ const NovaVenda = () => {
                   </div>
 
                   {observacoes && (
-                    <div className="mt-4 p-3 bg-muted/60 dark:bg-slate-900/40 rounded-md border border-border">
+                    <div className="mt-4 p-3 bg-muted/60 rounded-md border border-border">
                       <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Observações</p>
                       <p className="text-sm text-foreground/80 whitespace-pre-wrap">{observacoes}</p>
                     </div>

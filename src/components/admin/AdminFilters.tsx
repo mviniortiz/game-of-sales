@@ -157,7 +157,7 @@ export const AdminFilters = ({
   };
 
   return (
-    <Card className="border border-slate-800 bg-slate-900 shadow-sm rounded-xl overflow-hidden">
+    <Card className="border border-border bg-card shadow-sm rounded-xl overflow-hidden">
       <CardContent className="p-4 space-y-4">
         {/* Header with quick actions - Always visible */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
@@ -166,7 +166,7 @@ export const AdminFilters = ({
               <Filter className="h-4 w-4 text-emerald-400" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
                 Filtros
                 {activeCount > 0 && (
                   <span className="text-xs font-medium text-emerald-300 bg-emerald-500/15 px-2 py-1 rounded-full ring-1 ring-emerald-500/20">
@@ -192,7 +192,7 @@ export const AdminFilters = ({
                   "h-8 text-xs",
                   isQuickRangeActive(range.id)
                     ? "bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700"
-                    : "bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white"
+                    : "bg-muted border-border text-muted-foreground hover:bg-muted/80 hover:text-foreground"
                 )}
                 onClick={() => setQuickRange(range.id)}
               >
@@ -222,7 +222,7 @@ export const AdminFilters = ({
                 className="inline-flex items-center h-7 rounded-full px-3 text-xs bg-emerald-500/10 border border-emerald-500/20 text-emerald-200"
               >
                 <span className="font-medium text-emerald-300">{f.label}:</span>
-                <span className="ml-1 text-slate-300">{f.value}</span>
+                <span className="ml-1 text-foreground">{f.value}</span>
                 <button
                   type="button"
                   onClick={() => handleRemoveFilter(f.key)}
@@ -241,7 +241,7 @@ export const AdminFilters = ({
             <Button
               variant="ghost"
               size="sm"
-              className="w-full h-9 justify-between text-slate-400 hover:text-white hover:bg-slate-800/50 border border-slate-800 rounded-lg"
+              className="w-full h-9 justify-between text-muted-foreground hover:text-foreground hover:bg-muted border border-border rounded-lg"
             >
               <div className="flex items-center gap-2">
                 <SlidersHorizontal className="h-4 w-4" />
@@ -255,10 +255,10 @@ export const AdminFilters = ({
           </CollapsibleTrigger>
 
           <CollapsibleContent className="pt-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-slate-800/30 border border-slate-800 rounded-xl">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-muted/30 border border-border rounded-xl">
               {/* Período Customizado */}
               <div className="space-y-2">
-                <Label className="flex items-center gap-2 text-sm text-slate-300">
+                <Label className="flex items-center gap-2 text-sm text-muted-foreground">
                   <CalendarIcon className="h-4 w-4 text-emerald-400" />
                   Período
                 </Label>
@@ -268,15 +268,15 @@ export const AdminFilters = ({
                       variant="outline"
                       size="sm"
                       className={cn(
-                        "w-full justify-start text-left font-normal h-10 bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white",
-                        !dateRange.from && "text-slate-500"
+                        "w-full justify-start text-left font-normal h-10 bg-muted border-border text-muted-foreground hover:bg-muted/80 hover:text-foreground",
+                        !dateRange.from && "text-muted-foreground"
                       )}
                     >
-                      <CalendarIcon className="mr-2 h-4 w-4 text-slate-500" />
-                      {formatRangeLabel() || <span className="text-slate-500">Selecione</span>}
+                      <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                      {formatRangeLabel() || <span className="text-muted-foreground">Selecione</span>}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 z-50 bg-slate-900 border border-slate-700 shadow-xl" align="start">
+                  <PopoverContent className="w-auto p-0 z-50 bg-card border border-border shadow-xl" align="start">
                     <Calendar
                       mode="range"
                       selected={{ from: dateRange.from, to: dateRange.to }}
@@ -291,15 +291,15 @@ export const AdminFilters = ({
 
               {/* Vendedor */}
               <div className="space-y-2">
-                <Label className="flex items-center gap-2 text-sm text-slate-300">
+                <Label className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Users className="h-4 w-4 text-emerald-400" />
                   Vendedor
                 </Label>
                 <Select value={selectedVendedor} onValueChange={setSelectedVendedor}>
-                  <SelectTrigger className="w-full h-10 bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-700">
+                  <SelectTrigger className="w-full h-10 bg-muted border-border text-foreground hover:bg-muted/80">
                     <SelectValue placeholder="Todos" />
                   </SelectTrigger>
-                  <SelectContent className="z-50 bg-slate-900 border border-slate-700 shadow-xl">
+                  <SelectContent className="z-50 bg-card border border-border shadow-xl">
                     <SelectItem value="todos">Todos</SelectItem>
                     {vendedores.map((v) => (
                       <SelectItem key={v.id} value={v.id}>
@@ -313,15 +313,15 @@ export const AdminFilters = ({
               {/* Forma de Pagamento */}
               {setSelectedFormaPagamento && (
                 <div className="space-y-2">
-                  <Label className="flex items-center gap-2 text-sm text-slate-300">
+                  <Label className="flex items-center gap-2 text-sm text-muted-foreground">
                     <CreditCard className="h-4 w-4 text-emerald-400" />
                     Pagamento
                   </Label>
                   <Select value={selectedFormaPagamento} onValueChange={setSelectedFormaPagamento}>
-                    <SelectTrigger className="w-full h-10 bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-700">
+                    <SelectTrigger className="w-full h-10 bg-muted border-border text-foreground hover:bg-muted/80">
                       <SelectValue placeholder="Todas" />
                     </SelectTrigger>
-                    <SelectContent className="z-50 bg-slate-900 border border-slate-700 shadow-xl">
+                    <SelectContent className="z-50 bg-card border border-border shadow-xl">
                       <SelectItem value="todas">Todas</SelectItem>
                       {formasPagamento.map((forma) => (
                         <SelectItem key={forma} value={forma}>
@@ -336,15 +336,15 @@ export const AdminFilters = ({
               {/* Produto */}
               {setSelectedProduto && (
                 <div className="space-y-2">
-                  <Label className="flex items-center gap-2 text-sm text-slate-300">
+                  <Label className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Package className="h-4 w-4 text-emerald-400" />
                     Produto
                   </Label>
                   <Select value={selectedProduto} onValueChange={setSelectedProduto}>
-                    <SelectTrigger className="w-full h-10 bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-700">
+                    <SelectTrigger className="w-full h-10 bg-muted border-border text-foreground hover:bg-muted/80">
                       <SelectValue placeholder="Todos" />
                     </SelectTrigger>
-                    <SelectContent className="z-50 bg-slate-900 border border-slate-700 shadow-xl">
+                    <SelectContent className="z-50 bg-card border border-border shadow-xl">
                       <SelectItem value="todos">Todos</SelectItem>
                       {produtos
                         .filter((produto) => !activeCompanyId || produto.company_id === activeCompanyId)

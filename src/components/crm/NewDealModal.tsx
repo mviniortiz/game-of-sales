@@ -117,7 +117,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
   const probColor =
     probability >= 70 ? { bar: "bg-emerald-500", text: "text-emerald-400" } :
       probability >= 30 ? { bar: "bg-amber-500", text: "text-amber-400" } :
-        { bar: "bg-slate-500", text: "text-slate-400" };
+        { bar: "bg-muted-foreground", text: "text-muted-foreground" };
 
   const selectedStage = stages.find(s => s.id === watchedStage);
 
@@ -187,17 +187,17 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) { form.reset(); setDisplayValue(""); onClose(); } }}>
-      <DialogContent className="sm:max-w-[520px] max-h-[92vh] overflow-y-auto bg-slate-900 border border-slate-700/80 shadow-2xl p-0">
+      <DialogContent className="sm:max-w-[520px] max-h-[92vh] overflow-y-auto bg-card border border-border shadow-2xl p-0">
 
         {/* ── Header ─────────────────────────────────────── */}
-        <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-700/60 sticky top-0 bg-slate-900 z-10">
-          <DialogTitle className="flex items-center gap-3 text-white">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b border-border sticky top-0 bg-card z-10">
+          <DialogTitle className="flex items-center gap-3 text-foreground">
             <div className="p-2 rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/20">
               <Target className="h-5 w-5 text-emerald-400" />
             </div>
             <div>
               <p className="text-[17px] font-bold">Nova Negociação</p>
-              <p className="text-[12px] text-slate-500 font-normal mt-0.5">
+              <p className="text-[12px] text-muted-foreground font-normal mt-0.5">
                 Adicione uma nova oportunidade ao pipeline
               </p>
             </div>
@@ -213,7 +213,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-slate-300 text-[13px] font-medium">
+                  <FormLabel className="text-foreground text-[13px] font-medium">
                     Título da Negociação
                   </FormLabel>
                   <FormControl>
@@ -221,7 +221,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
                       {...field}
                       autoFocus
                       placeholder="Ex: Implementação CRM"
-                      className="h-10 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500
+                      className="h-10 bg-muted border-border text-foreground placeholder:text-muted-foreground
                         focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
                     />
                   </FormControl>
@@ -238,7 +238,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
                 name="value"
                 render={() => (
                   <FormItem>
-                    <FormLabel className="text-slate-300 text-[13px] font-medium flex items-center gap-1.5">
+                    <FormLabel className="text-foreground text-[13px] font-medium flex items-center gap-1.5">
                       <DollarSign className="h-3.5 w-3.5 text-emerald-400" />
                       Valor
                     </FormLabel>
@@ -265,10 +265,10 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
                 name="stage"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-slate-300 text-[13px] font-medium">Estágio</FormLabel>
+                    <FormLabel className="text-foreground text-[13px] font-medium">Estágio</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="h-12 bg-slate-800 border-slate-600 text-white">
+                        <SelectTrigger className="h-12 bg-muted border-border text-foreground">
                           <div className="flex items-center gap-2 flex-1 min-w-0">
                             {selectedStage && (
                               <div className={`p-1 rounded-md ${selectedStage.bgColor} flex-shrink-0`}>
@@ -277,15 +277,15 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
                             )}
                             <SelectValue placeholder="Selecione..." />
                           </div>
-                          <ChevronDown className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                          <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="bg-slate-800 border-slate-700">
+                      <SelectContent className="bg-muted border-border">
                         {stages.map((stage) => (
                           <SelectItem
                             key={stage.id}
                             value={stage.id}
-                            className="text-white focus:bg-slate-700"
+                            className="text-foreground focus:bg-secondary"
                           >
                             <div className="flex items-center gap-2">
                               <div className={`p-1 rounded-md ${stage.bgColor}`}>
@@ -304,16 +304,16 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
             </div>
 
             {/* ── Auto probability bar ──────────────────── */}
-            <div className="p-3 rounded-xl bg-slate-800/60 border border-slate-700/50">
+            <div className="p-3 rounded-xl bg-muted/60 border border-border">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] text-slate-500 uppercase tracking-wider font-medium">
+                <span className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">
                   Probabilidade (automática)
                 </span>
                 <span className={`text-sm font-bold tabular-nums ${probColor.text}`}>
                   {probability}%
                 </span>
               </div>
-              <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+              <div className="h-2 bg-secondary rounded-full overflow-hidden">
                 <motion.div
                   className={`h-full ${probColor.bar} rounded-full`}
                   animate={{ width: `${probability}%` }}
@@ -323,8 +323,8 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
             </div>
 
             {/* ── Contact group ─────────────────────────── */}
-            <div className="space-y-3 p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
-              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+            <div className="space-y-3 p-4 rounded-xl bg-muted/50 border border-border">
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                 <User className="h-3 w-3" />
                 Contato
               </p>
@@ -338,7 +338,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
                       <Input
                         {...field}
                         placeholder="Nome do cliente"
-                        className="h-10 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500
+                        className="h-10 bg-muted border-border text-foreground placeholder:text-muted-foreground
                           focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
                       />
                     </FormControl>
@@ -355,12 +355,12 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
                     <FormItem>
                       <FormControl>
                         <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500" />
+                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                           <Input
                             {...field}
                             type="email"
                             placeholder="Email"
-                            className="h-10 pl-9 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500
+                            className="h-10 pl-9 bg-muted border-border text-foreground placeholder:text-muted-foreground
                               focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
                           />
                         </div>
@@ -376,11 +376,11 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
                     <FormItem>
                       <FormControl>
                         <div className="relative">
-                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500" />
+                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                           <Input
                             {...field}
                             placeholder="Telefone"
-                            className="h-10 pl-9 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500
+                            className="h-10 pl-9 bg-muted border-border text-foreground placeholder:text-muted-foreground
                               focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
                           />
                         </div>
@@ -399,19 +399,19 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
                 name="product_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-slate-300 text-[13px] font-medium">Produto</FormLabel>
+                    <FormLabel className="text-foreground text-[13px] font-medium">Produto</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-white">
+                        <SelectTrigger className="h-10 bg-muted border-border text-foreground">
                           <SelectValue placeholder="Selecione..." />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="bg-slate-800 border-slate-700">
+                      <SelectContent className="bg-muted border-border">
                         {produtos.length === 0 ? (
-                          <div className="px-3 py-2 text-xs text-slate-500">Nenhum produto</div>
+                          <div className="px-3 py-2 text-xs text-muted-foreground">Nenhum produto</div>
                         ) : (
                           produtos.map((p: any) => (
-                            <SelectItem key={p.id} value={p.id} className="text-white focus:bg-slate-700">
+                            <SelectItem key={p.id} value={p.id} className="text-foreground focus:bg-secondary">
                               {p.nome}
                             </SelectItem>
                           ))
@@ -433,8 +433,8 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
 
                   return (
                     <FormItem>
-                      <FormLabel className="text-slate-300 text-[13px] font-medium flex items-center gap-1.5">
-                        <Calendar className="h-3.5 w-3.5 text-slate-500" />
+                      <FormLabel className="text-foreground text-[13px] font-medium flex items-center gap-1.5">
+                        <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
                         Previsão
                       </FormLabel>
                       <Popover>
@@ -442,18 +442,18 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
                           <FormControl>
                             <Button
                               variant="outline"
-                              className={`h-10 w-full justify-start text-left font-normal bg-slate-800 border-slate-600 hover:bg-slate-700 hover:text-white
+                              className={`h-10 w-full justify-start text-left font-normal bg-muted border-border hover:bg-secondary hover:text-foreground
                                 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20
-                                ${field.value ? "text-white" : "text-slate-400"}`}
+                                ${field.value ? "text-foreground" : "text-muted-foreground"}`}
                             >
-                              <CalendarIcon className="mr-2 h-4 w-4 text-slate-400" />
+                              <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
                               {field.value
                                 ? format(selectedDate!, "dd 'de' MMM, yyyy", { locale: ptBR })
                                 : "Selecione uma data"}
                             </Button>
                           </FormControl>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 bg-slate-900 border-slate-700" align="start">
+                        <PopoverContent className="w-auto p-0 bg-card border-border" align="start">
                           <CalendarWidget
                             mode="single"
                             selected={selectedDate}
@@ -480,7 +480,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
                 <FormItem>
                   <div className={`flex items-center justify-between p-3.5 rounded-xl border transition-all duration-200 ${field.value
                       ? "bg-orange-500/10 border-orange-500/30"
-                      : "bg-slate-800/50 border-slate-700/50"
+                      : "bg-muted/50 border-border"
                     }`}>
                     <Label htmlFor="hot-deal" className="flex items-center gap-2.5 cursor-pointer">
                       <AnimatePresence mode="wait">
@@ -491,14 +491,14 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
                           exit={{ scale: 0.8 }}
                           transition={{ duration: 0.15 }}
                         >
-                          <Flame className={`h-4.5 w-4.5 ${field.value ? "text-orange-400" : "text-slate-500"}`} />
+                          <Flame className={`h-4.5 w-4.5 ${field.value ? "text-orange-400" : "text-muted-foreground"}`} />
                         </motion.div>
                       </AnimatePresence>
                       <div>
-                        <span className={`text-sm font-semibold ${field.value ? "text-orange-300" : "text-slate-300"}`}>
+                        <span className={`text-sm font-semibold ${field.value ? "text-orange-300" : "text-foreground"}`}>
                           Hot Deal
                         </span>
-                        <p className="text-[11px] text-slate-500 font-normal">Prioridade alta — aparecerá em destaque</p>
+                        <p className="text-[11px] text-muted-foreground font-normal">Prioridade alta — aparecerá em destaque</p>
                       </div>
                     </Label>
                     <FormControl>
@@ -520,13 +520,13 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-slate-300 text-[13px] font-medium">Observações</FormLabel>
+                  <FormLabel className="text-foreground text-[13px] font-medium">Observações</FormLabel>
                   <FormControl>
                     <Textarea
                       {...field}
                       placeholder="Informações adicionais sobre a negociação..."
                       rows={2}
-                      className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-500
+                      className="bg-muted border-border text-foreground placeholder:text-muted-foreground
                         focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 resize-none text-sm"
                     />
                   </FormControl>
@@ -536,12 +536,12 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
             />
 
             {/* ── Actions ──────────────────────────────── */}
-            <div className="flex justify-end gap-3 pt-2 border-t border-slate-700/50">
+            <div className="flex justify-end gap-3 pt-2 border-t border-border">
               <Button
                 type="button"
                 variant="outline"
                 onClick={onClose}
-                className="border-slate-700 hover:bg-slate-800 text-slate-300"
+                className="border-border hover:bg-muted text-foreground"
               >
                 Cancelar
               </Button>

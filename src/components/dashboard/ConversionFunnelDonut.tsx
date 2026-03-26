@@ -132,24 +132,24 @@ export const ConversionFunnelDonut = ({ dateRange }: ConversionFunnelDonutProps)
             const data = payload[0].payload;
             const percentage = totalDeals > 0 ? ((data.value / totalDeals) * 100).toFixed(1) : "0";
             return (
-                <div className="bg-slate-900/95 backdrop-blur-sm border border-slate-700 rounded-xl px-4 py-3 shadow-2xl">
+                <div className="bg-card/95 backdrop-blur-sm border border-border rounded-xl px-4 py-3 shadow-2xl">
                     <div className="flex items-center gap-2 mb-2">
                         <div
                             className="w-3 h-3 rounded-full"
                             style={{ backgroundColor: data.color }}
                         />
-                        <p className="font-semibold text-white">{data.name}</p>
+                        <p className="font-semibold text-foreground">{data.name}</p>
                     </div>
                     <div className="space-y-1.5">
                         <div className="flex items-center justify-between gap-6">
                             <span className="text-xs text-muted-foreground">Quantidade</span>
-                            <span className="text-sm font-semibold text-white">{data.value} deals</span>
+                            <span className="text-sm font-semibold text-foreground">{data.value} deals</span>
                         </div>
                         <div className="flex items-center justify-between gap-6">
                             <span className="text-xs text-muted-foreground">Percentual</span>
                             <span className="text-sm font-semibold text-emerald-400">{percentage}%</span>
                         </div>
-                        <div className="flex items-center justify-between gap-6 pt-1 border-t border-slate-700">
+                        <div className="flex items-center justify-between gap-6 pt-1 border-t border-border">
                             <span className="text-xs text-muted-foreground">Valor Total</span>
                             <span className="text-sm font-bold text-emerald-400">{formatCurrencyFull(data.totalValue)}</span>
                         </div>
@@ -161,7 +161,7 @@ export const ConversionFunnelDonut = ({ dateRange }: ConversionFunnelDonutProps)
     };
 
     return (
-        <Card className="relative overflow-hidden border border-slate-800 bg-slate-900/95 backdrop-blur-sm shadow-xl rounded-2xl">
+        <Card className="relative overflow-hidden border border-border bg-card/95 backdrop-blur-sm shadow-xl rounded-2xl">
             {/* Background effects */}
             <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-emerald-500/10 to-transparent blur-3xl pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-emerald-500/5 to-transparent blur-2xl pointer-events-none" />
@@ -181,7 +181,7 @@ export const ConversionFunnelDonut = ({ dateRange }: ConversionFunnelDonutProps)
                     </div>
 
                     {/* Pipeline Value */}
-                    <div className="text-right bg-slate-800/50 px-3 py-2 rounded-xl ring-1 ring-slate-700/50">
+                    <div className="text-right bg-muted/50 px-3 py-2 rounded-xl ring-1 ring-border/50">
                         <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Pipeline Ativo</p>
                         <p className="text-lg font-bold text-foreground">{formatCurrency(pipelineValue)}</p>
                     </div>
@@ -191,20 +191,20 @@ export const ConversionFunnelDonut = ({ dateRange }: ConversionFunnelDonutProps)
             <CardContent className="pt-2 relative">
                 {isLoading ? (
                     <div className="flex items-center gap-6">
-                        <Skeleton className="w-44 h-44 rounded-full bg-slate-800/50" />
+                        <Skeleton className="w-44 h-44 rounded-full bg-muted/50" />
                         <div className="flex-1 space-y-3">
                             {[...Array(5)].map((_, i) => (
-                                <Skeleton key={i} className="h-8 w-full bg-slate-800/50" />
+                                <Skeleton key={i} className="h-8 w-full bg-muted/50" />
                             ))}
                         </div>
                     </div>
                 ) : totalDeals === 0 ? (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
-                        <div className="p-4 rounded-full bg-slate-800/50 mb-4">
-                            <Target className="h-8 w-8 text-slate-600" />
+                        <div className="p-4 rounded-full bg-muted/50 mb-4">
+                            <Target className="h-8 w-8 text-muted-foreground" />
                         </div>
                         <p className="text-sm text-muted-foreground">Nenhum deal cadastrado</p>
-                        <p className="text-xs text-slate-600 mt-1">Comece adicionando seus primeiros deals</p>
+                        <p className="text-xs text-muted-foreground mt-1">Comece adicionando seus primeiros deals</p>
                     </div>
                 ) : (
                     <div className="flex items-center gap-4">
@@ -264,11 +264,11 @@ export const ConversionFunnelDonut = ({ dateRange }: ConversionFunnelDonutProps)
                                 return (
                                     <div
                                         key={item.stage}
-                                        className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800/50 transition-colors group cursor-default"
+                                        className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors group cursor-default"
                                         style={{ animationDelay: `${index * 100}ms` }}
                                     >
                                         <div
-                                            className={`w-3 h-3 rounded-full ring-2 ring-offset-1 ring-offset-slate-900`}
+                                            className={`w-3 h-3 rounded-full ring-2 ring-offset-1 ring-offset-background`}
                                             style={{ backgroundColor: item.color, ringColor: item.color }}
                                         />
                                         <div className="flex-1 min-w-0">
@@ -283,7 +283,7 @@ export const ConversionFunnelDonut = ({ dateRange }: ConversionFunnelDonutProps)
                                                 )}
                                             </div>
                                             {/* Mini progress bar */}
-                                            <div className="mt-1 h-1 w-full bg-slate-800 rounded-full overflow-hidden">
+                                            <div className="mt-1 h-1 w-full bg-muted rounded-full overflow-hidden">
                                                 <div
                                                     className="h-full rounded-full transition-all duration-500"
                                                     style={{
@@ -297,7 +297,7 @@ export const ConversionFunnelDonut = ({ dateRange }: ConversionFunnelDonutProps)
                                             <p className="text-xs font-semibold text-foreground">{item.value}</p>
                                             <p className="text-[10px] text-muted-foreground">{percentage}%</p>
                                         </div>
-                                        <ChevronRight className="h-3.5 w-3.5 text-slate-600 group-hover:text-slate-400 transition-colors" />
+                                        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
                                     </div>
                                 );
                             })}
@@ -307,13 +307,13 @@ export const ConversionFunnelDonut = ({ dateRange }: ConversionFunnelDonutProps)
 
                 {/* Footer stats */}
                 {totalDeals > 0 && (
-                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-800">
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
                         <div className="flex items-center gap-4">
                             <div>
                                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Total Deals</p>
                                 <p className="text-sm font-bold text-foreground">{totalDeals}</p>
                             </div>
-                            <div className="h-6 w-px bg-slate-800" />
+                            <div className="h-6 w-px bg-border" />
                             <div>
                                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Valor Total</p>
                                 <p className="text-sm font-bold text-emerald-400">{formatCurrency(totalValue)}</p>

@@ -130,7 +130,7 @@ const EventBlock = ({
                     {agendamento.cliente_nome}
                 </span>
                 {agendamento.observacoes && height > 44 && (
-                    <span className="text-[10px] text-slate-500 leading-tight truncate mt-0.5">
+                    <span className="text-[10px] text-muted-foreground leading-tight truncate mt-0.5">
                         {agendamento.observacoes}
                     </span>
                 )}
@@ -207,7 +207,7 @@ const DayColumn = ({
             {HOURS.map((h, i) => (
                 <div
                     key={h}
-                    className="absolute w-full border-t border-slate-800/60 pointer-events-none"
+                    className="absolute w-full border-t border-border/60 pointer-events-none"
                     style={{ top: i * HOUR_HEIGHT }}
                 />
             ))}
@@ -216,7 +216,7 @@ const DayColumn = ({
             {HOURS.slice(0, -1).map((_, i) => (
                 <div
                     key={`h${i}`}
-                    className="absolute w-full border-t border-slate-800/30 pointer-events-none"
+                    className="absolute w-full border-t border-border/30 pointer-events-none"
                     style={{ top: i * HOUR_HEIGHT + HOUR_HEIGHT / 2 }}
                 />
             ))}
@@ -301,7 +301,7 @@ export function CalendarTimelineView({
     return (
         <div className="flex h-full flex-col overflow-hidden">
             {/* ── DAY HEADERS ─────────────────────────────────────── */}
-            <div className="flex flex-shrink-0 border-b border-slate-800 bg-slate-900/60">
+            <div className="flex flex-shrink-0 border-b border-border bg-card/60">
                 {/* Gutter spacer */}
                 <div className="w-14 flex-shrink-0" />
                 {days.map((day, i) => {
@@ -310,16 +310,16 @@ export function CalendarTimelineView({
                         <div
                             key={i}
                             className={`
-                flex-1 py-2.5 text-center border-l border-slate-800/60
+                flex-1 py-2.5 text-center border-l border-border/60
                 ${isNow ? "bg-emerald-500/5" : ""}
               `}
                         >
-                            <p className={`text-[10px] font-semibold uppercase tracking-wider mb-0.5 ${isNow ? "text-emerald-400" : "text-slate-600"}`}>
+                            <p className={`text-[10px] font-semibold uppercase tracking-wider mb-0.5 ${isNow ? "text-emerald-400" : "text-muted-foreground"}`}>
                                 {weekDayLabels[day.getDay()]}
                             </p>
                             <div className={`
                 w-8 h-8 mx-auto flex items-center justify-center rounded-full text-[15px] font-bold
-                ${isNow ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/40" : "text-slate-400"}
+                ${isNow ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/40" : "text-muted-foreground"}
               `}>
                                 {format(day, "d")}
                             </div>
@@ -332,7 +332,7 @@ export function CalendarTimelineView({
             <div ref={scrollRef} className="flex overflow-y-auto overflow-x-hidden flex-1 custom-scrollbar">
                 {/* ── HOUR GUTTER ─────────────────────────────────────── */}
                 <div
-                    className="w-14 flex-shrink-0 relative bg-slate-900/30"
+                    className="w-14 flex-shrink-0 relative bg-card/30"
                     style={{ height: TOTAL_HOURS * HOUR_HEIGHT }}
                 >
                     {HOURS.map((h, i) => (
@@ -342,7 +342,7 @@ export function CalendarTimelineView({
                             style={{ top: i * HOUR_HEIGHT - 8 }}
                         >
                             {i > 0 && (
-                                <span className="text-[10px] text-slate-600 tabular-nums">
+                                <span className="text-[10px] text-muted-foreground tabular-nums">
                                     {h.toString().padStart(2, "0")}h
                                 </span>
                             )}
@@ -358,7 +358,7 @@ export function CalendarTimelineView({
                     {days.map((day, i) => (
                         <div
                             key={i}
-                            className="flex-1 min-w-0 border-l border-slate-800/60 relative"
+                            className="flex-1 min-w-0 border-l border-border/60 relative"
                             style={{ height: TOTAL_HOURS * HOUR_HEIGHT }}
                         >
                             <DayColumn

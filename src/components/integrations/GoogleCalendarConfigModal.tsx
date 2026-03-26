@@ -150,15 +150,15 @@ export const GoogleCalendarConfigModal = ({ open, onClose, onSaved }: GoogleCale
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[500px] bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+            <DialogContent className="sm:max-w-[500px] bg-card border-border">
                 <DialogHeader>
-                    <DialogTitle className="flex items-center gap-3 text-slate-900 dark:text-white">
+                    <DialogTitle className="flex items-center gap-3 text-foreground">
                         <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-500/20">
                             <CalendarDays className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                         </div>
                         Gerenciar Google Calendar
                     </DialogTitle>
-                    <DialogDescription className="text-slate-500 dark:text-slate-400">
+                    <DialogDescription className="text-muted-foreground">
                         Configure a integração com o Google Calendar
                     </DialogDescription>
                 </DialogHeader>
@@ -170,7 +170,7 @@ export const GoogleCalendarConfigModal = ({ open, onClose, onSaved }: GoogleCale
                 ) : (
                     <div className="space-y-6 py-4">
                         {/* Connection Status */}
-                        <div className="flex items-center justify-between p-4 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                        <div className="flex items-center justify-between p-4 rounded-lg bg-muted border border-border">
                             <div className="flex items-center gap-3">
                                 {isConnected ? (
                                     <div className="p-2 rounded-full bg-emerald-100 dark:bg-emerald-500/20">
@@ -181,15 +181,15 @@ export const GoogleCalendarConfigModal = ({ open, onClose, onSaved }: GoogleCale
                                         <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                                     </div>
                                 ) : (
-                                    <div className="p-2 rounded-full bg-slate-200 dark:bg-slate-700">
-                                        <X className="w-4 h-4 text-slate-500" />
+                                    <div className="p-2 rounded-full bg-muted">
+                                        <X className="w-4 h-4 text-muted-foreground" />
                                     </div>
                                 )}
                                 <div>
-                                    <p className="font-medium text-slate-900 dark:text-white">
+                                    <p className="font-medium text-foreground">
                                         {isConnected ? "Conectado" : tokenExpired ? "Token Expirado" : "Não Conectado"}
                                     </p>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                                    <p className="text-xs text-muted-foreground">
                                         {isConnected
                                             ? "Sincronização automática a cada 15 minutos"
                                             : tokenExpired
@@ -279,7 +279,7 @@ export const GoogleCalendarConfigModal = ({ open, onClose, onSaved }: GoogleCale
                 )}
 
                 {/* Footer */}
-                <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-end">
+                <div className="pt-4 border-t border-border flex justify-end">
                     <Button variant="outline" onClick={onClose}>
                         Fechar
                     </Button>

@@ -94,8 +94,8 @@ const KPICard = ({
   const cardContent = (
     <Card className={`
       relative overflow-hidden
-      border border-slate-800 
-      bg-slate-900
+      border border-border
+      bg-card
       shadow-sm
       hover:shadow-lg hover:${glowColor}
       transition-all duration-300 ease-out
@@ -562,7 +562,7 @@ export const AdminVendasView = ({
       {/* Row 2: Charts - 60/40 split */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Main Chart - Sales Evolution (60%) */}
-        <Card className="lg:col-span-8 relative overflow-hidden border border-slate-800 bg-slate-900 shadow-sm rounded-xl">
+        <Card className="lg:col-span-8 relative overflow-hidden border border-border bg-card shadow-sm rounded-xl">
           {/* Subtle corner accent */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl pointer-events-none" />
 
@@ -585,7 +585,7 @@ export const AdminVendasView = ({
         </Card>
 
         {/* Secondary Chart - Top Sellers / Products (40%) */}
-        <Card className="lg:col-span-4 relative overflow-hidden border border-slate-800 bg-slate-900 shadow-sm rounded-xl">
+        <Card className="lg:col-span-4 relative overflow-hidden border border-border bg-card shadow-sm rounded-xl">
           {/* Subtle corner accent */}
           <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 blur-3xl pointer-events-none" />
 
@@ -664,7 +664,7 @@ export const AdminVendasView = ({
                   }}
                   formatter={(value: number) => [
                     <span className="text-emerald-400 font-semibold">{formatCurrency(value)}</span>,
-                    <span className="text-slate-400">Faturamento</span>
+                    <span className="text-muted-foreground">Faturamento</span>
                   ]}
                 />
                 <Bar

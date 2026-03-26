@@ -189,7 +189,7 @@ const Auth = () => {
 
         {/* Footer Note - Fixed at Bottom */}
         <div className="absolute bottom-8 left-0 right-0 text-center px-8 animate-fade-in" style={{ animationDelay: '0.8s', animationFillMode: 'both' }}>
-          <p className="text-xs text-gray-600">
+          <p className="text-xs text-muted-foreground">
             Sistema de uso restrito. Acesso apenas para colaboradores autorizados.
           </p>
         </div>

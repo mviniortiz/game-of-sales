@@ -31,21 +31,21 @@ export function CustomFieldsSection({ dealId, compact }: Props) {
   if (fields.length === 0 && compact) {
     return (
       <>
-        <div className="bg-slate-900 rounded-2xl p-4 border border-slate-800/60">
+        <div className="bg-card rounded-2xl p-4 border border-border">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
               Campos Personalizados
             </p>
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6 text-slate-500 hover:text-white"
+              className="h-6 w-6 text-muted-foreground hover:text-foreground"
               onClick={() => setManagerOpen(true)}
             >
               <Settings2 className="h-3.5 w-3.5" />
             </Button>
           </div>
-          <p className="text-xs text-slate-500 italic">Nenhum campo configurado</p>
+          <p className="text-xs text-muted-foreground italic">Nenhum campo configurado</p>
         </div>
         <CustomFieldsManager companyId={companyId} open={managerOpen} onOpenChange={setManagerOpen} />
       </>
@@ -83,15 +83,15 @@ export function CustomFieldsSection({ dealId, compact }: Props) {
   if (compact) {
     return (
       <>
-        <div className="bg-slate-900 rounded-2xl p-4 border border-slate-800/60 space-y-3">
+        <div className="bg-card rounded-2xl p-4 border border-border space-y-3">
           <div className="flex items-center justify-between">
-            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
               Campos Personalizados
             </p>
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6 text-slate-500 hover:text-white"
+              className="h-6 w-6 text-muted-foreground hover:text-foreground"
               onClick={() => setManagerOpen(true)}
             >
               <Settings2 className="h-3.5 w-3.5" />

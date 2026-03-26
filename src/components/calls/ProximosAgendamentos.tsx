@@ -46,7 +46,7 @@ export const ProximosAgendamentos = ({
               return (
                 <div
                   key={agendamento.id}
-                  className="p-3 border border-border rounded-lg hover:border-emerald-500/30 bg-muted/60 dark:bg-slate-800/30 transition-all group"
+                  className="p-3 border border-border rounded-lg hover:border-emerald-500/30 bg-muted/60 transition-all group"
                 >
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3 flex-1 min-w-0">

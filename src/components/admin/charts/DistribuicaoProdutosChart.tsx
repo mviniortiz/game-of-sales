@@ -68,17 +68,17 @@ export const DistribuicaoProdutosChart = ({ data }: DistribuicaoProdutosChartPro
   };
 
   return (
-    <Card className="border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
+    <Card className="border border-border bg-card shadow-sm">
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
           <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-500/20">
             <Package className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
-            <CardTitle className="text-base font-semibold text-gray-900 dark:text-white">
+            <CardTitle className="text-base font-semibold text-foreground">
               Faturamento por Produto
             </CardTitle>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-xs text-muted-foreground">
               Top {Math.min(5, data.length)} produtos do mês
             </p>
           </div>
@@ -131,8 +131,8 @@ export const DistribuicaoProdutosChart = ({ data }: DistribuicaoProdutosChartPro
                 const percent = ((value / maxValue) * 100).toFixed(1);
                 return [
                   <div key="tooltip" className="space-y-1">
-                    <div className="font-bold text-gray-900">{formatCurrencyFull(value)}</div>
-                    <div className="text-xs text-gray-500">{props.payload.vendas} vendas • {percent}% do top</div>
+                    <div className="font-bold text-foreground">{formatCurrencyFull(value)}</div>
+                    <div className="text-xs text-muted-foreground">{props.payload.vendas} vendas • {percent}% do top</div>
                   </div>,
                   ""
                 ];
@@ -156,7 +156,7 @@ export const DistribuicaoProdutosChart = ({ data }: DistribuicaoProdutosChartPro
         </ResponsiveContainer>
 
         {/* Legend with percentages */}
-        <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+        <div className="mt-4 pt-4 border-t border-border">
           <div className="grid grid-cols-2 gap-2">
             {chartData.slice(0, 4).map((item, index) => (
               <div key={index} className="flex items-center gap-2 text-xs">
@@ -164,7 +164,7 @@ export const DistribuicaoProdutosChart = ({ data }: DistribuicaoProdutosChartPro
                   className="w-2.5 h-2.5 rounded-sm flex-shrink-0"
                   style={{ backgroundColor: item.color }}
                 />
-                <span className="text-gray-600 dark:text-gray-400 truncate">
+                <span className="text-muted-foreground truncate">
                   {item.vendas} vendas
                 </span>
               </div>

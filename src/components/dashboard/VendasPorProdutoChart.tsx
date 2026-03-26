@@ -29,13 +29,13 @@ export const VendasPorProdutoChart = ({ data }: VendasPorProdutoChartProps) => {
   };
 
   return (
-    <Card className="border-white/5 bg-slate-900/50 backdrop-blur-sm">
+    <Card className="border-border bg-card/50 backdrop-blur-sm">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold text-white flex items-center gap-2">
+        <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
           <Package className="h-4 w-4 text-blue-400" />
           Vendas por Produto
         </CardTitle>
-        <p className="text-xs text-slate-500">Faturamento por categoria</p>
+        <p className="text-xs text-muted-foreground">Faturamento por categoria</p>
       </CardHeader>
       <CardContent className="pt-0">
         <ResponsiveContainer width="100%" height={280}>

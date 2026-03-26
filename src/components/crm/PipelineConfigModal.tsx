@@ -118,10 +118,10 @@ const StageRow = ({
       }}
     >
       <div className="flex items-center gap-3 px-3 py-3 h-16
-        bg-white dark:bg-slate-800 
-        border border-slate-200 dark:border-slate-700 
+        bg-card
+        border border-border
         rounded-xl
-        hover:border-emerald-300 dark:hover:border-emerald-600
+        hover:border-emerald-500
         transition-colors duration-150
         group
       ">
@@ -129,9 +129,9 @@ const StageRow = ({
         <button
           onPointerDown={(e) => dragControls.start(e)}
           className="p-1 rounded cursor-grab active:cursor-grabbing touch-none
-            text-slate-400 dark:text-slate-500 
-            hover:text-slate-600 dark:hover:text-slate-300
-            hover:bg-slate-100 dark:hover:bg-slate-700
+            text-muted-foreground
+            hover:text-foreground
+            hover:bg-muted
             transition-colors"
         >
           <GripVertical className="h-5 w-5" />
@@ -140,15 +140,15 @@ const StageRow = ({
         {/* Stage Number - Connected by line */}
         <div className="relative flex-shrink-0">
           <div className="w-7 h-7 rounded-full flex items-center justify-center
-            bg-slate-100 dark:bg-slate-700
-            text-slate-600 dark:text-slate-300
+            bg-muted
+            text-foreground
             text-xs font-bold
           ">
             {index + 1}
           </div>
           {/* Connecting line (hidden on last item via CSS) */}
           <div className="absolute top-full left-1/2 -translate-x-1/2 w-0.5 h-4 
-            bg-slate-200 dark:bg-slate-600 
+            bg-border
             group-last:hidden"
           />
         </div>
@@ -162,8 +162,8 @@ const StageRow = ({
               onChange={(e) => onUpdate("title", e.target.value)}
               onBlur={() => setIsEditing(false)}
               onKeyDown={(e) => e.key === "Enter" && setIsEditing(false)}
-              className="h-8 bg-transparent border-0 border-b-2 border-emerald-500 rounded-none 
-                text-slate-800 dark:text-white font-medium
+              className="h-8 bg-transparent border-0 border-b-2 border-emerald-500 rounded-none
+                text-foreground font-medium
                 focus:ring-0 focus:border-emerald-500
                 px-0"
             />
@@ -171,8 +171,8 @@ const StageRow = ({
             <button
               onClick={() => setIsEditing(true)}
               className="text-left w-full px-2 py-1 -ml-2 rounded-md
-                text-slate-800 dark:text-white font-medium
-                hover:bg-slate-100 dark:hover:bg-slate-700
+                text-foreground font-medium
+                hover:bg-muted
                 transition-colors truncate"
             >
               {stage.title || "Sem nome"}
@@ -186,13 +186,13 @@ const StageRow = ({
             <button
               className={`p-2 rounded-lg transition-colors
                 ${colorConfig.textColor}
-                bg-slate-100 dark:bg-slate-700
-                hover:bg-slate-200 dark:hover:bg-slate-600`}
+                bg-muted
+                hover:bg-secondary`}
             >
               <IconComponent className="h-4 w-4" />
             </button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-2 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700" align="center">
+          <PopoverContent className="w-auto p-2 bg-card border-border" align="center">
             <div className="grid grid-cols-5 gap-1">
               {AVAILABLE_ICONS.map((iconOption) => {
                 const Icon = iconOption.icon;
@@ -205,14 +205,14 @@ const StageRow = ({
                     }}
                     className={`p-2 rounded-lg transition-all
                       ${stage.iconId === iconOption.id
-                        ? "bg-emerald-100 dark:bg-emerald-500/20 ring-2 ring-emerald-500"
-                        : "hover:bg-slate-100 dark:hover:bg-slate-700"
+                        ? "bg-emerald-500/20 ring-2 ring-emerald-500"
+                        : "hover:bg-muted"
                       }`}
                     title={iconOption.label}
                   >
                     <Icon className={`h-4 w-4 ${stage.iconId === iconOption.id
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : "text-slate-500 dark:text-slate-400"}`}
+                      ? "text-emerald-500"
+                      : "text-muted-foreground"}`}
                     />
                   </button>
                 );
@@ -226,13 +226,13 @@ const StageRow = ({
           <PopoverTrigger asChild>
             <button
               className="p-2 rounded-lg transition-colors
-                bg-slate-100 dark:bg-slate-700
-                hover:bg-slate-200 dark:hover:bg-slate-600"
+                bg-muted
+                hover:bg-secondary"
             >
-              <div className={`w-4 h-4 rounded-full ${colorConfig.dotColor} ring-2 ring-white dark:ring-slate-600`} />
+              <div className={`w-4 h-4 rounded-full ${colorConfig.dotColor} ring-2 ring-background`} />
             </button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-2 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700" align="center">
+          <PopoverContent className="w-auto p-2 bg-card border-border" align="center">
             <div className="grid grid-cols-4 gap-2">
               {AVAILABLE_COLORS.map((colorOption) => (
                 <button
@@ -243,8 +243,8 @@ const StageRow = ({
                   }}
                   className={`p-1.5 rounded-lg transition-all
                     ${stage.colorId === colorOption.id
-                      ? "bg-slate-100 dark:bg-slate-700 ring-2 ring-emerald-500"
-                      : "hover:bg-slate-100 dark:hover:bg-slate-700"
+                      ? "bg-muted ring-2 ring-emerald-500"
+                      : "hover:bg-muted"
                     }`}
                   title={colorOption.label}
                 >
@@ -261,8 +261,8 @@ const StageRow = ({
           disabled={!canDelete}
           className={`p-2 rounded-lg transition-all
             ${canDelete
-              ? "text-slate-400 dark:text-slate-500 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10"
-              : "text-slate-200 dark:text-slate-700 cursor-not-allowed"
+              ? "text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10"
+              : "text-muted cursor-not-allowed"
             }`}
           title={canDelete ? "Remover estágio" : "Mínimo de 2 estágios"}
         >
@@ -331,19 +331,19 @@ export const PipelineEditor = ({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[520px] p-0 gap-0
-        bg-slate-50 dark:bg-slate-900 
-        border-slate-200 dark:border-slate-800 
+        bg-background
+        border-border
         shadow-2xl max-h-[85vh] overflow-hidden flex flex-col">
 
         {/* Header */}
-        <DialogHeader className="p-5 pb-4 border-b border-slate-200 dark:border-slate-800">
-          <DialogTitle className="flex items-center gap-3 text-slate-900 dark:text-white">
-            <div className="p-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-500/10 ring-1 ring-emerald-200 dark:ring-emerald-500/20">
-              <Settings2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+        <DialogHeader className="p-5 pb-4 border-b border-border">
+          <DialogTitle className="flex items-center gap-3 text-foreground">
+            <div className="p-2.5 rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/20">
+              <Settings2 className="h-5 w-5 text-emerald-500" />
             </div>
             <div>
               <span className="text-lg font-semibold">Editar Pipeline</span>
-              <p className="text-[12px] text-slate-500 dark:text-slate-400 font-normal mt-0.5">
+              <p className="text-[12px] text-muted-foreground font-normal mt-0.5">
                 Arraste para reordenar, clique para editar
               </p>
             </div>
@@ -356,7 +356,7 @@ export const PipelineEditor = ({
         {/* Stage List with Journey Line */}
         <div className="flex-1 overflow-y-auto p-5 space-y-2 scrollbar-thin relative">
           {/* Vertical Journey Line */}
-          <div className="absolute left-[72px] top-8 bottom-8 w-0.5 bg-gradient-to-b from-slate-200 via-slate-300 to-slate-200 dark:from-slate-700 dark:via-slate-600 dark:to-slate-700 rounded-full" />
+          <div className="absolute left-[72px] top-8 bottom-8 w-0.5 bg-border rounded-full" />
 
           <Reorder.Group
             axis="y"
@@ -382,11 +382,11 @@ export const PipelineEditor = ({
           <motion.button
             onClick={handleAddStage}
             className="w-full mt-3 py-3 px-4 rounded-xl border-2 border-dashed 
-              border-slate-300 dark:border-slate-700
-              text-slate-500 dark:text-slate-400
-              hover:border-emerald-400 dark:hover:border-emerald-500
-              hover:text-emerald-600 dark:hover:text-emerald-400
-              hover:bg-emerald-50 dark:hover:bg-emerald-500/5
+              border-border
+              text-muted-foreground
+              hover:border-emerald-500
+              hover:text-emerald-500
+              hover:bg-emerald-500/5
               transition-all flex items-center justify-center gap-2 font-medium"
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
@@ -397,8 +397,8 @@ export const PipelineEditor = ({
         </div>
 
         {/* Footer */}
-        <div className="p-5 pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-800/50">
-          <p className="text-[12px] text-slate-500 dark:text-slate-400">
+        <div className="p-5 pt-4 border-t border-border flex justify-between items-center bg-card">
+          <p className="text-[12px] text-muted-foreground">
             {stages.length} estágios
           </p>
           <div className="flex gap-3">
@@ -406,9 +406,9 @@ export const PipelineEditor = ({
               type="button"
               variant="outline"
               onClick={onClose}
-              className="border-slate-300 dark:border-slate-700 
-                hover:bg-slate-100 dark:hover:bg-slate-800 
-                text-slate-700 dark:text-slate-300"
+              className="border-border
+                hover:bg-muted
+                text-foreground"
             >
               Cancelar
             </Button>

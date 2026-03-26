@@ -289,7 +289,7 @@ export const CallForm = ({ onSuccess }: CallFormProps) => {
                 value={formData.agendamento_id}
                 onValueChange={handleAgendamentoChange}
               >
-                <SelectTrigger className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-emerald-500">
+                <SelectTrigger className="h-10 bg-card border-border text-foreground focus:ring-emerald-500">
                   <SelectValue placeholder="Selecionar agendamento..." />
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border">
@@ -315,7 +315,7 @@ export const CallForm = ({ onSuccess }: CallFormProps) => {
                   setFormData({ ...formData, cliente_nome: e.target.value })
                 }
                 placeholder="Nome completo"
-                className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground placeholder:text-muted-foreground focus:ring-emerald-500"
+                className="h-10 bg-card border-border text-foreground placeholder:text-muted-foreground focus:ring-emerald-500"
               />
             </div>
 
@@ -329,7 +329,7 @@ export const CallForm = ({ onSuccess }: CallFormProps) => {
                   className={`p-3 rounded-lg border transition-all flex items-center justify-center gap-2 ${
                     formData.attendance_status === "show"
                       ? "border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10"
-                      : "border-border bg-muted hover:bg-muted/80 dark:border-white/10 dark:bg-slate-800/30"
+                      : "border-border bg-muted hover:bg-muted/80"
                   }`}
                 >
                   <UserCheck className={`h-4 w-4 ${
@@ -352,7 +352,7 @@ export const CallForm = ({ onSuccess }: CallFormProps) => {
                   className={`p-3 rounded-lg border transition-all flex items-center justify-center gap-2 ${
                     formData.attendance_status === "no_show"
                       ? "border-rose-500 bg-rose-50 text-rose-700 dark:bg-rose-500/10"
-                      : "border-border bg-muted hover:bg-muted/80 dark:border-white/10 dark:bg-slate-800/30"
+                      : "border-border bg-muted hover:bg-muted/80"
                   }`}
                 >
                   <UserX className={`h-4 w-4 ${
@@ -382,7 +382,7 @@ export const CallForm = ({ onSuccess }: CallFormProps) => {
                 <div className={`flex items-center space-x-2 p-2.5 rounded-lg border transition-all ${
                   formData.resultado === "venda" 
                     ? "border-emerald-500/60 bg-emerald-50 dark:bg-emerald-500/10" 
-                    : "border-border bg-muted dark:border-white/10 dark:bg-slate-800/30"
+                    : "border-border bg-muted"
                 }`}>
                   <RadioGroupItem value="venda" id="venda" className="border-emerald-500" />
                   <Label htmlFor="venda" className="cursor-pointer flex items-center gap-2 flex-1 text-sm">
@@ -394,7 +394,7 @@ export const CallForm = ({ onSuccess }: CallFormProps) => {
                 <div className={`flex items-center space-x-2 p-2.5 rounded-lg border transition-all ${
                   formData.resultado === "sem_interesse" 
                     ? "border-rose-500/60 bg-rose-50 dark:bg-rose-500/10" 
-                    : "border-border bg-muted dark:border-white/10 dark:bg-slate-800/30"
+                    : "border-border bg-muted"
                 }`}>
                   <RadioGroupItem value="sem_interesse" id="sem_interesse" className="border-red-500" />
                   <Label htmlFor="sem_interesse" className="cursor-pointer flex items-center gap-2 flex-1 text-sm">
@@ -406,7 +406,7 @@ export const CallForm = ({ onSuccess }: CallFormProps) => {
                 <div className={`flex items-center space-x-2 p-2.5 rounded-lg border transition-all ${
                   formData.resultado === "reagendar" 
                     ? "border-blue-500/60 bg-blue-50 dark:bg-blue-500/10" 
-                    : "border-border bg-muted dark:border-white/10 dark:bg-slate-800/30"
+                    : "border-border bg-muted"
                 }`}>
                   <RadioGroupItem value="reagendar" id="reagendar" className="border-blue-500" />
                   <Label htmlFor="reagendar" className="cursor-pointer flex items-center gap-2 flex-1 text-sm">
@@ -432,7 +432,7 @@ export const CallForm = ({ onSuccess }: CallFormProps) => {
                   onChange={(e) =>
                     setFormData({ ...formData, reagendar_data: e.target.value })
                   }
-                  className="h-10 bg-white dark:bg-secondary border-blue-200 dark:border-blue-500/40 text-foreground focus:ring-blue-500"
+                  className="h-10 bg-card border-blue-200 dark:border-blue-500/40 text-foreground focus:ring-blue-500"
                 />
               </div>
             )}
@@ -448,7 +448,7 @@ export const CallForm = ({ onSuccess }: CallFormProps) => {
                 }
                 placeholder="Informações adicionais..."
                 rows={2}
-                className="bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground placeholder:text-muted-foreground resize-none focus:ring-emerald-500"
+                className="bg-card border-border text-foreground placeholder:text-muted-foreground resize-none focus:ring-emerald-500"
               />
             </div>
 
@@ -492,7 +492,7 @@ export const CallForm = ({ onSuccess }: CallFormProps) => {
                   });
                 }}
               >
-                <SelectTrigger className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-emerald-500">
+                <SelectTrigger className="h-10 bg-card border-border text-foreground focus:ring-emerald-500">
                   <SelectValue placeholder="Selecionar produto..." />
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border">
@@ -514,7 +514,7 @@ export const CallForm = ({ onSuccess }: CallFormProps) => {
                 value={valorFormatado}
                 onChange={(e) => formatarMoeda(e.target.value)}
                 placeholder="R$ 0,00"
-                className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-emerald-500"
+                className="h-10 bg-card border-border text-foreground focus:ring-emerald-500"
               />
             </div>
 
@@ -527,7 +527,7 @@ export const CallForm = ({ onSuccess }: CallFormProps) => {
                   setFormData({ ...formData, plataforma: e.target.value })
                 }
                 placeholder="Ex: WhatsApp, Instagram..."
-                className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-emerald-500"
+                className="h-10 bg-card border-border text-foreground focus:ring-emerald-500"
               />
             </div>
 
@@ -539,7 +539,7 @@ export const CallForm = ({ onSuccess }: CallFormProps) => {
                   setFormData({ ...formData, forma_pagamento: value })
                 }
               >
-                <SelectTrigger className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-emerald-500">
+                <SelectTrigger className="h-10 bg-card border-border text-foreground focus:ring-emerald-500">
                   <SelectValue placeholder="Selecionar..." />
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border">
@@ -597,7 +597,7 @@ export const CallForm = ({ onSuccess }: CallFormProps) => {
                 value={formData.loss_reason}
                 onValueChange={(value) => setFormData({ ...formData, loss_reason: value })}
               >
-                <SelectTrigger className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-emerald-500">
+                <SelectTrigger className="h-10 bg-card border-border text-foreground focus:ring-emerald-500">
                   <SelectValue placeholder="Selecionar motivo..." />
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border">
@@ -620,7 +620,7 @@ export const CallForm = ({ onSuccess }: CallFormProps) => {
                   onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
                   placeholder="Descreva o motivo..."
                   rows={2}
-                  className="bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground resize-none focus:ring-emerald-500"
+                  className="bg-card border-border text-foreground resize-none focus:ring-emerald-500"
                 />
               </div>
             )}

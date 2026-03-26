@@ -414,7 +414,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
 
   // Shared inline input classes
   const inlineInputClass =
-    "w-full bg-slate-800 border border-emerald-500/60 rounded px-1.5 py-0.5 text-white outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/40 transition-colors";
+    "w-full bg-muted border border-emerald-500/60 rounded px-1.5 py-0.5 text-foreground outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/40 transition-colors";
 
   return (
     <div className="relative">
@@ -449,7 +449,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
       }}
       className={`
         group relative
-        bg-slate-800 border border-slate-700/80
+        bg-card border border-border
         border-l-4 ${rotting.border}
         rounded-xl p-3.5
         ${selectionMode ? "cursor-pointer" : "cursor-grab active:cursor-grabbing"}
@@ -458,7 +458,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
         ${rotting.severity === "mid" ? "!border-l-amber-500" : ""}
         ${isBeingDragged
           ? "scale-[1.02] rotate-[0.6deg] shadow-2xl shadow-black/45 border-emerald-500/60 z-50 !opacity-100"
-          : "hover:border-slate-600 hover:shadow-lg hover:shadow-black/30 hover:-translate-y-0.5"
+          : "hover:border-border hover:shadow-lg hover:shadow-black/30 hover:-translate-y-0.5"
         }
         ${isSortableDragging ? "opacity-40" : "opacity-100"}
         ${isSelected ? "!border-emerald-500 ring-2 ring-emerald-500/40" : ""}
@@ -477,7 +477,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
               w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-150
               ${isSelected
                 ? "bg-emerald-500 border-emerald-500"
-                : "bg-slate-700/50 border-slate-500 hover:border-emerald-400"
+                : "bg-muted/50 border-muted-foreground hover:border-emerald-400"
               }
             `}
           >
@@ -515,7 +515,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
                 top: actionsCoords.top,
                 left: actionsCoords.left,
               }}
-              className="flex items-center gap-0.5 px-2 py-1.5 rounded-xl bg-slate-700 shadow-xl shadow-black/40 ring-1 ring-slate-600 z-[9999] whitespace-nowrap"
+              className="flex items-center gap-0.5 px-2 py-1.5 rounded-xl bg-secondary shadow-xl shadow-black/40 ring-1 ring-border z-[9999] whitespace-nowrap"
               onMouseEnter={showActions}
               onMouseLeave={hideActionsSoon}
               onClick={e => e.stopPropagation()}
@@ -526,45 +526,45 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
                 title="Ligar"
                 aria-label="Ligar"
               >
-                <Phone className="h-3.5 w-3.5 text-slate-400 group-hover/b:text-emerald-400" />
+                <Phone className="h-3.5 w-3.5 text-muted-foreground group-hover/b:text-emerald-400" />
               </button>
-              <div className="w-px h-4 bg-slate-600" />
+              <div className="w-px h-4 bg-border" />
               <button
                 onPointerDown={e => { e.stopPropagation(); handleQuickAction(e as any, "calendar"); }}
                 className="p-1.5 rounded-lg hover:bg-emerald-500/20 transition-colors group/b"
                 title="Agendar"
                 aria-label="Agendar"
               >
-                <Calendar className="h-3.5 w-3.5 text-slate-400 group-hover/b:text-emerald-400" />
+                <Calendar className="h-3.5 w-3.5 text-muted-foreground group-hover/b:text-emerald-400" />
               </button>
-              <div className="w-px h-4 bg-slate-600" />
+              <div className="w-px h-4 bg-border" />
               <button
                 onPointerDown={e => { e.stopPropagation(); handleQuickAction(e as any, "check"); }}
                 className="p-1.5 rounded-lg hover:bg-emerald-500/20 transition-colors group/b"
                 title="Marcar como Ganho"
                 aria-label="Marcar como Ganho"
               >
-                <CheckCircle2 className="h-3.5 w-3.5 text-slate-400 group-hover/b:text-emerald-400" />
+                <CheckCircle2 className="h-3.5 w-3.5 text-muted-foreground group-hover/b:text-emerald-400" />
               </button>
-              <div className="w-px h-4 bg-slate-600" />
+              <div className="w-px h-4 bg-border" />
               <button
                 onPointerDown={e => { e.stopPropagation(); handleQuickAction(e as any, "duplicate"); }}
                 className="p-1.5 rounded-lg hover:bg-blue-500/20 transition-colors group/b"
                 title="Duplicar negociação"
                 aria-label="Copiar"
               >
-                <Copy className="h-3.5 w-3.5 text-slate-400 group-hover/b:text-blue-400" />
+                <Copy className="h-3.5 w-3.5 text-muted-foreground group-hover/b:text-blue-400" />
               </button>
               {onDelete && (
                 <>
-                  <div className="w-px h-4 bg-slate-600" />
+                  <div className="w-px h-4 bg-border" />
                   <button
                     onPointerDown={e => { e.stopPropagation(); handleQuickAction(e as any, "delete"); }}
                     className="p-1.5 rounded-lg hover:bg-rose-500/20 transition-colors group/b"
                     title="Excluir negociação"
                     aria-label="Excluir"
                   >
-                    <Trash2 className="h-3.5 w-3.5 text-slate-400 group-hover/b:text-rose-400" />
+                    <Trash2 className="h-3.5 w-3.5 text-muted-foreground group-hover/b:text-rose-400" />
                   </button>
                 </>
               )}
@@ -593,16 +593,16 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
             />
           ) : canInlineEdit ? (
             <h4
-              className="font-semibold text-white text-[13px] leading-snug line-clamp-2 flex-1 group/title inline-flex items-start gap-1 cursor-text rounded hover:bg-slate-700/40 transition-colors px-0.5 -mx-0.5"
+              className="font-semibold text-foreground text-[13px] leading-snug line-clamp-2 flex-1 group/title inline-flex items-start gap-1 cursor-text rounded hover:bg-muted/40 transition-colors px-0.5 -mx-0.5"
               onClick={e => startEditing("title", e)}
               onMouseDown={e => e.stopPropagation()}
               onPointerDown={e => e.stopPropagation()}
             >
               <span className="flex-1">{deal.title}</span>
-              <Pencil className="h-2.5 w-2.5 text-slate-500 opacity-0 group-hover/title:opacity-100 transition-opacity mt-0.5 flex-shrink-0" />
+              <Pencil className="h-2.5 w-2.5 text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity mt-0.5 flex-shrink-0" />
             </h4>
           ) : (
-            <h4 className="font-semibold text-white text-[13px] leading-snug line-clamp-2 flex-1">
+            <h4 className="font-semibold text-foreground text-[13px] leading-snug line-clamp-2 flex-1">
               {deal.title}
             </h4>
           )}
@@ -639,7 +639,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
             {/* Avatar */}
             <Avatar className={`h-6 w-6 ring-1 ${deal.assignee_outside_company ? "ring-rose-500/40" : "ring-emerald-500/30"}`}>
               <AvatarImage src={deal.profiles?.avatar_url || undefined} />
-              <AvatarFallback className={`text-[9px] font-bold ${deal.assignee_outside_company ? "bg-rose-500/10 text-rose-300" : "bg-slate-700 text-slate-300"}`}>
+              <AvatarFallback className={`text-[9px] font-bold ${deal.assignee_outside_company ? "bg-rose-500/10 text-rose-300" : "bg-muted text-foreground"}`}>
                 {deal.assignee_outside_company ? "!" : getInitials(deal.profiles?.nome || "")}
               </AvatarFallback>
             </Avatar>
@@ -665,16 +665,16 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
           </div>
         ) : canInlineEdit ? (
           <p
-            className="text-[11px] text-slate-400 mb-3 truncate group/cname inline-flex items-center gap-1 cursor-text rounded hover:bg-slate-700/40 transition-colors px-0.5 -mx-0.5 max-w-full"
+            className="text-[11px] text-muted-foreground mb-3 truncate group/cname inline-flex items-center gap-1 cursor-text rounded hover:bg-muted/40 transition-colors px-0.5 -mx-0.5 max-w-full"
             onClick={e => startEditing("customer_name", e)}
             onMouseDown={e => e.stopPropagation()}
             onPointerDown={e => e.stopPropagation()}
           >
             <span className="truncate">{deal.customer_name}</span>
-            <Pencil className="h-2 w-2 text-slate-500 opacity-0 group-hover/cname:opacity-100 transition-opacity flex-shrink-0" />
+            <Pencil className="h-2 w-2 text-muted-foreground opacity-0 group-hover/cname:opacity-100 transition-opacity flex-shrink-0" />
           </p>
         ) : (
-          <p className="text-[11px] text-slate-400 mb-3 truncate">
+          <p className="text-[11px] text-muted-foreground mb-3 truncate">
             {deal.customer_name}
           </p>
         )}
@@ -691,7 +691,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
               <DealTagBadge key={tag.id} tag={tag} />
             ))}
             {dealTags.length > 3 && (
-              <span className="text-[9px] text-slate-500 font-medium">
+              <span className="text-[9px] text-muted-foreground font-medium">
                 +{dealTags.length - 3}
               </span>
             )}
@@ -730,13 +730,13 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
             />
           ) : canInlineEdit ? (
             <span
-              className="text-[15px] font-bold text-emerald-400 tabular-nums group/value inline-flex items-center gap-1 cursor-text rounded hover:bg-slate-700/40 transition-colors px-0.5 -mx-0.5"
+              className="text-[15px] font-bold text-emerald-400 tabular-nums group/value inline-flex items-center gap-1 cursor-text rounded hover:bg-muted/40 transition-colors px-0.5 -mx-0.5"
               onClick={e => startEditing("value", e)}
               onMouseDown={e => e.stopPropagation()}
               onPointerDown={e => e.stopPropagation()}
             >
               {formatCurrency(deal.value)}
-              <Pencil className="h-2.5 w-2.5 text-slate-500 opacity-0 group-hover/value:opacity-100 transition-opacity flex-shrink-0" />
+              <Pencil className="h-2.5 w-2.5 text-muted-foreground opacity-0 group-hover/value:opacity-100 transition-opacity flex-shrink-0" />
             </span>
           ) : (
             <span className="text-[15px] font-bold text-emerald-400 tabular-nums">
@@ -751,7 +751,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
                 ? "bg-emerald-500/15 text-emerald-300"
                 : deal.probability >= 40
                   ? "bg-amber-500/15 text-amber-300"
-                  : "bg-slate-700 text-slate-400"
+                  : "bg-muted text-muted-foreground"
               }
             `}>
               {deal.probability}%
@@ -760,7 +760,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
         </div>
 
         {/* ── XP / probability bar ─────────────────────────── */}
-        <div className="relative h-1 w-full bg-slate-700 rounded-full overflow-hidden mb-3">
+        <div className="relative h-1 w-full bg-muted rounded-full overflow-hidden mb-3">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${deal.probability}%` }}
@@ -770,13 +770,13 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
         </div>
 
         {/* ── Footer: created date + close date ────────────── */}
-        <div className="flex items-center justify-between border-t border-slate-700/60 pt-2">
-          <span className="text-[10px] text-slate-500 font-medium">
+        <div className="flex items-center justify-between border-t border-border pt-2">
+          <span className="text-[10px] text-muted-foreground font-medium">
             {format(new Date(deal.created_at), "dd MMM", { locale: ptBR })}
           </span>
 
           {deal.expected_close_date && (
-            <span className={`flex items-center gap-1 text-[10px] font-medium ${isOverdue ? "text-rose-400" : "text-slate-500"}`}>
+            <span className={`flex items-center gap-1 text-[10px] font-medium ${isOverdue ? "text-rose-400" : "text-muted-foreground"}`}>
               <Clock className="h-2.5 w-2.5" />
               {format(parseISO(deal.expected_close_date), "dd/MM", { locale: ptBR })}
               {isOverdue && <span className="font-bold"> !</span>}
@@ -785,24 +785,24 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
         </div>
 
         {/* ── Activity preview ──────────────────────────────── */}
-        <div className="flex items-center gap-1.5 border-t border-slate-700/40 pt-1.5 mt-1.5">
+        <div className="flex items-center gap-1.5 border-t border-border pt-1.5 mt-1.5">
           {deal.lastActivity ? (
             <>
-              {deal.lastActivity.type === "note" && <MessageSquare className="h-2.5 w-2.5 text-slate-500 flex-shrink-0" />}
-              {deal.lastActivity.type === "call" && <Phone className="h-2.5 w-2.5 text-slate-500 flex-shrink-0" />}
-              {deal.lastActivity.type === "stage_change" && <ArrowRight className="h-2.5 w-2.5 text-slate-500 flex-shrink-0" />}
-              {deal.lastActivity.type === "update" && <Clock className="h-2.5 w-2.5 text-slate-500 flex-shrink-0" />}
-              <span className="text-[11px] text-slate-500 truncate flex-1 leading-none">
+              {deal.lastActivity.type === "note" && <MessageSquare className="h-2.5 w-2.5 text-muted-foreground flex-shrink-0" />}
+              {deal.lastActivity.type === "call" && <Phone className="h-2.5 w-2.5 text-muted-foreground flex-shrink-0" />}
+              {deal.lastActivity.type === "stage_change" && <ArrowRight className="h-2.5 w-2.5 text-muted-foreground flex-shrink-0" />}
+              {deal.lastActivity.type === "update" && <Clock className="h-2.5 w-2.5 text-muted-foreground flex-shrink-0" />}
+              <span className="text-[11px] text-muted-foreground truncate flex-1 leading-none">
                 {deal.lastActivity.text}
               </span>
-              <span className="text-[10px] text-slate-600 flex-shrink-0 whitespace-nowrap">
+              <span className="text-[10px] text-muted-foreground flex-shrink-0 whitespace-nowrap">
                 {formatDistanceToNow(new Date(deal.lastActivity.date), { addSuffix: true, locale: ptBR })}
               </span>
             </>
           ) : (
             <>
-              <Clock className="h-2.5 w-2.5 text-slate-600 flex-shrink-0" />
-              <span className="text-[11px] text-slate-600 truncate flex-1 leading-none">
+              <Clock className="h-2.5 w-2.5 text-muted-foreground flex-shrink-0" />
+              <span className="text-[11px] text-muted-foreground truncate flex-1 leading-none">
                 {deal.updated_at
                   ? `Atualizado ${formatDistanceToNow(new Date(deal.updated_at), { addSuffix: true, locale: ptBR })}`
                   : "Sem atividade"

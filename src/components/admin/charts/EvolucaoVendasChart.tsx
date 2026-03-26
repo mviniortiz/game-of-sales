@@ -18,7 +18,7 @@ export const EvolucaoVendasChart = ({ data }: EvolucaoVendasChartProps) => {
   };
 
   return (
-    <Card className="border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
+    <Card className="border border-border bg-card shadow-sm">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -26,10 +26,10 @@ export const EvolucaoVendasChart = ({ data }: EvolucaoVendasChartProps) => {
               <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
-              <CardTitle className="text-base font-semibold text-gray-900 dark:text-white">
+              <CardTitle className="text-base font-semibold text-foreground">
                 Evolução de Vendas
               </CardTitle>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Últimos 6 meses</p>
+              <p className="text-xs text-muted-foreground">Últimos 6 meses</p>
             </div>
           </div>
         </div>
@@ -102,7 +102,7 @@ export const EvolucaoVendasChart = ({ data }: EvolucaoVendasChartProps) => {
             <Legend
               wrapperStyle={{ paddingTop: "16px" }}
               formatter={(value) => (
-                <span className="text-gray-600 dark:text-gray-400 text-sm">
+                <span className="text-muted-foreground text-sm">
                   {value === "vendas" ? "Quantidade de Vendas" : "Faturamento (R$)"}
                 </span>
               )}
