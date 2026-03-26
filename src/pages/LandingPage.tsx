@@ -85,9 +85,9 @@ const LandingPage = () => {
         setSelectedPlan(planId || 'plus');
         setIsNavigating(true);
 
-        // Animate then navigate to onboarding (trial flow)
+        // Animate then navigate to onboarding with plan pre-selected
         setTimeout(() => {
-            navigate('/onboarding');
+            navigate(`/onboarding?plan=${planId || 'plus'}`);
         }, 3000);
     };
 
@@ -923,8 +923,9 @@ const LandingPage = () => {
 
                                             {/* CTA */}
                                             {isPopular ? (
-                                                <a href={plan.checkoutUrl} target="_blank" rel="noopener noreferrer"
-                                                    className="relative w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm text-white overflow-hidden"
+                                                <button
+                                                    onClick={() => goToRegister(plan.name.toLowerCase())}
+                                                    className="relative w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm text-white overflow-hidden cursor-pointer"
                                                     style={{
                                                         background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
                                                         boxShadow: "0 4px 20px rgba(16,185,129,0.28), 0 1px 4px rgba(0,0,0,0.25)",
@@ -937,10 +938,11 @@ const LandingPage = () => {
                                                         transition={{ duration: 2.4, repeat: Infinity, repeatDelay: 1.8, ease: "easeInOut" }} />
                                                     <span className="relative">Começar agora</span>
                                                     <ArrowRight className="relative h-4 w-4" />
-                                                </a>
+                                                </button>
                                             ) : (
-                                                <a href={plan.checkoutUrl} target="_blank" rel="noopener noreferrer"
-                                                    className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm transition-all duration-200"
+                                                <button
+                                                    onClick={() => goToRegister(plan.name.toLowerCase())}
+                                                    className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm transition-all duration-200 cursor-pointer"
                                                     style={{
                                                         background: "rgba(255,255,255,0.04)",
                                                         border: "1px solid rgba(255,255,255,0.07)",
@@ -949,7 +951,7 @@ const LandingPage = () => {
                                                     }}>
                                                     Escolher {plan.name}
                                                     <ArrowRight className="h-4 w-4" />
-                                                </a>
+                                                </button>
                                             )}
                                         </div>
                                     </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { logger } from "@/utils/logger";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -29,6 +29,10 @@ import {
     Wrench,
     Palette,
     Image,
+    CreditCard,
+    Crown,
+    Zap,
+    Shield,
     type LucideIcon
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,6 +40,16 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import gameSalesLogo from "@/assets/logo-full.png";
 import { Confetti } from "@/components/crm/Confetti";
+import { PLANS, formatPrice, getAnnualMonthlyEquivalent, getAnnualPrice, getBillingConfig, type BillingCycle } from "@/config/plans";
+import { initMercadoPago, CardNumber, SecurityCode, ExpirationDate, createCardToken } from "@mercadopago/sdk-react";
+import { RATE_LIMITS, resetRateLimit } from "@/lib/rateLimiter";
+import { z } from "zod";
+
+// Initialize MercadoPago SDK
+const mpPublicKey = import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY;
+if (mpPublicKey) {
+    initMercadoPago(mpPublicKey, { locale: "pt-BR" });
+}
 
 // ── Pipeline stage config type (matches CRM.tsx StageConfig) ──
 interface StageConfig {
@@ -113,7 +127,20 @@ const SEGMENT_OPTIONS = [
 
 const PIPELINE_CONFIG_KEY_PREFIX = "gamesales_pipeline_config_v3_";
 
-const TOTAL_STEPS = 5;
+const PLAN_ICONS: Record<string, LucideIcon> = {
+    starter: Zap,
+    plus: Crown,
+    pro: Rocket,
+};
+
+const registerSchema = z.object({
+    nome: z.string().min(3, "Nome deve ter no minimo 3 caracteres"),
+    email: z.string().email("Email invalido"),
+    password: z.string().min(8, "Senha deve ter no minimo 8 caracteres"),
+    companyName: z.string().min(2, "Nome da empresa deve ter no minimo 2 caracteres"),
+});
+
+const TOTAL_STEPS = 7;
 
 export default function Onboarding() {
     const navigate = useNavigate();
@@ -121,32 +148,78 @@ export default function Onboarding() {
     const { toast } = useToast();
     const { user, refreshProfile, companyId: authCompanyId, profile } = useAuth();
 
-    // Step tracking
-    const [currentStep, setCurrentStep] = useState(1);
+    // If user is already logged in, skip registration step (step 1)
+    const isLoggedIn = !!user;
+
+    // Step tracking - start at step 2 if already logged in
+    const [currentStep, setCurrentStep] = useState(isLoggedIn ? 2 : 1);
     const [direction, setDirection] = useState(1);
     const [showConfetti, setShowConfetti] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
 
-    // Step 1: Company data
+    // Step 1: Registration (only if not logged in)
+    const [regName, setRegName] = useState("");
+    const [regEmail, setRegEmail] = useState("");
+    const [regPassword, setRegPassword] = useState("");
+    const [regCompanyName, setRegCompanyName] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+    const [fieldTouched, setFieldTouched] = useState<Record<string, boolean>>({});
+
+    // Step 2: Company data
     const [companyName, setCompanyName] = useState("");
     const [segment, setSegment] = useState("");
     const [logoFile, setLogoFile] = useState<File | null>(null);
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Step 2: User profile
+    // Step 3: User profile
     const [userName, setUserName] = useState("");
     const [userPhone, setUserPhone] = useState("");
     const [userRole, setUserRole] = useState("");
 
-    // Step 3: Pipeline template
+    // Step 4: Pipeline template
     const [selectedTemplate, setSelectedTemplate] = useState("");
 
-    // Step 4: Invite team
+    // Step 5: Plan + Payment
+    const [selectedPlan, setSelectedPlan] = useState(searchParams.get("plan") || "plus");
+    const [billingCycle, setBillingCycle] = useState<BillingCycle>("annual");
+    const [cardToken, setCardToken] = useState<string | null>(null);
+    const [paymentLoading, setPaymentLoading] = useState(false);
+    const [paymentError, setPaymentError] = useState<string | null>(null);
+    const [cardFormReady, setCardFormReady] = useState({ number: false, security: false, expiration: false });
+    const cardFormRef = useRef<any>(null);
+
+    // Step 6: Invite team
     const [teamEmails, setTeamEmails] = useState<string[]>([""]);
     const [inviteLoading, setInviteLoading] = useState(false);
     const [invitedCount, setInvitedCount] = useState(0);
+
+    // Inline validation for registration fields
+    const validateField = useCallback((field: string, value: string) => {
+        let error = "";
+        switch (field) {
+            case "regName":
+                if (value.length > 0 && value.trim().length < 3) error = "Minimo 3 caracteres";
+                break;
+            case "regEmail":
+                if (value.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) error = "Formato invalido (ex: nome@empresa.com)";
+                break;
+            case "regPassword":
+                if (value.length > 0 && value.length < 8) error = `Faltam ${8 - value.length} caractere(s)`;
+                break;
+            case "regCompanyName":
+                if (value.length > 0 && value.trim().length < 2) error = "Minimo 2 caracteres";
+                break;
+        }
+        setFieldErrors(prev => ({ ...prev, [field]: error }));
+    }, []);
+
+    const handleFieldBlur = useCallback((field: string, value: string) => {
+        setFieldTouched(prev => ({ ...prev, [field]: true }));
+        validateField(field, value);
+    }, [validateField]);
 
     // Determine effective company ID
     const [effectiveCompanyId, setEffectiveCompanyId] = useState<string | null>(null);
@@ -156,12 +229,8 @@ export default function Onboarding() {
         const compId = authCompanyId || searchParams.get("company_id");
         setEffectiveCompanyId(compId);
 
-        // Pre-fill name from profile if available
         if (profile?.nome) {
             setUserName(profile.nome);
-        }
-        if (user?.email) {
-            // We use email internally but don't show it as editable in onboarding
         }
     }, [authCompanyId, searchParams, profile, user]);
 
@@ -171,11 +240,14 @@ export default function Onboarding() {
         const loadCompany = async () => {
             const { data } = await supabase
                 .from("companies")
-                .select("name")
+                .select("name, plan")
                 .eq("id", effectiveCompanyId)
                 .single();
             if (data?.name) {
                 setCompanyName(data.name);
+            }
+            if (data?.plan) {
+                setSelectedPlan(data.plan);
             }
         };
         loadCompany();
@@ -213,11 +285,13 @@ export default function Onboarding() {
     // Validation per step
     const canProceed = () => {
         switch (currentStep) {
-            case 1: return companyName.trim().length >= 2;
-            case 2: return userName.trim().length >= 2;
-            case 3: return true; // Pipeline has a default, skip is allowed
-            case 4: return true; // Always can proceed (skip or invite)
-            case 5: return true; // Final step
+            case 1: return regName.trim().length >= 3 && regEmail.includes("@") && regPassword.length >= 8 && regCompanyName.trim().length >= 2;
+            case 2: return companyName.trim().length >= 2;
+            case 3: return userName.trim().length >= 2;
+            case 4: return true;
+            case 5: return !!selectedPlan;
+            case 6: return true;
+            case 7: return true;
             default: return false;
         }
     };
@@ -254,16 +328,181 @@ export default function Onboarding() {
         }
     };
 
+    // Handle payment submission for step 5
+    const handlePayment = async () => {
+        if (!effectiveCompanyId || !user?.email) {
+            toast({ title: "Erro", description: "Dados da empresa nao encontrados", variant: "destructive" });
+            return;
+        }
+
+        const cardholderName = (document.getElementById("cardholder-name") as HTMLInputElement)?.value;
+        const docNumber = (document.getElementById("doc-number") as HTMLInputElement)?.value;
+
+        if (!cardholderName || !docNumber) {
+            toast({ title: "Campos obrigatorios", description: "Preencha o nome e CPF do titular do cartao", variant: "destructive" });
+            return;
+        }
+
+        if (docNumber.replace(/\D/g, "").length < 11) {
+            toast({ title: "CPF invalido", description: "O CPF deve ter 11 digitos", variant: "destructive" });
+            return;
+        }
+
+        setPaymentLoading(true);
+        setPaymentError(null);
+
+        try {
+            // Create card token using the SDK's exported function
+            const tokenResponse = await createCardToken({
+                cardholderName,
+                identificationType: "CPF",
+                identificationNumber: docNumber.replace(/\D/g, ""),
+            });
+
+            if (!tokenResponse?.id) {
+                throw new Error("Nao foi possivel processar o cartao. Verifique os dados e tente novamente.");
+            }
+
+            // Get billing config
+            const billing = getBillingConfig(selectedPlan, billingCycle);
+            if (!billing) throw new Error("Plano invalido");
+
+            // Call edge function to create subscription
+            const response = await supabase.functions.invoke("mercadopago-create-subscription", {
+                body: {
+                    token: tokenResponse.id,
+                    email: user.email,
+                    companyId: effectiveCompanyId,
+                    billingConfig: {
+                        frequency: billing.frequency,
+                        frequencyType: billing.frequencyType,
+                        transactionAmount: billing.transactionAmount,
+                    },
+                },
+            });
+
+            if (response.error) {
+                throw new Error(response.error.message || "Erro ao criar assinatura");
+            }
+
+            const result = response.data;
+            if (!result?.success) {
+                throw new Error(result?.error || "Erro ao processar pagamento");
+            }
+
+            // Update company plan locally
+            await supabase
+                .from("companies")
+                .update({ plan: selectedPlan })
+                .eq("id", effectiveCompanyId);
+
+            toast({ title: "Assinatura criada!", description: "Seu trial de 7 dias comecou. Aproveite!" });
+            advanceStep();
+        } catch (error: any) {
+            const msg = error.message || "Erro ao processar pagamento";
+            setPaymentError(msg);
+            toast({ title: "Erro no pagamento", description: msg, variant: "destructive" });
+        } finally {
+            setPaymentLoading(false);
+        }
+    };
+
     // Main save handler for step transitions
     const handleNext = async () => {
         if (!canProceed()) return;
 
-        // Step 1 -> 2: Save company data
+        // Step 1: Create account (registration)
         if (currentStep === 1) {
+            const validation = registerSchema.safeParse({
+                nome: regName,
+                email: regEmail,
+                password: regPassword,
+                companyName: regCompanyName,
+            });
+            if (!validation.success) {
+                const errors = validation.error.errors.map(e => e.message).join(", ");
+                toast({ title: "Dados invalidos", description: errors, variant: "destructive" });
+                return;
+            }
+
+
+
+            setIsLoading(true);
+            try {
+                // Generate company ID client-side to avoid SELECT after INSERT (anon RLS issue)
+                const newCompanyId = "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c: any) =>
+                    (+c ^ (globalThis.crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (+c / 4)))).toString(16)
+                );
+
+                // Create company with explicit ID (no .select() needed)
+                const { error: companyError } = await supabase
+                    .from("companies")
+                    .insert({ id: newCompanyId, name: regCompanyName, plan: selectedPlan } as any);
+                if (companyError) throw new Error(`Erro ao criar empresa: ${companyError.message}`);
+
+                setEffectiveCompanyId(newCompanyId);
+                setCompanyName(regCompanyName);
+                setUserName(regName);
+
+                // Create user with company association
+                const { error: signUpError } = await supabase.auth.signUp({
+                    email: regEmail,
+                    password: regPassword,
+                    options: {
+                        emailRedirectTo: `${window.location.origin}/`,
+                        data: {
+                            nome: regName,
+                            company_id: newCompanyId,
+                        },
+                    },
+                });
+
+                if (signUpError) {
+                    const msg = signUpError.message.toLowerCase();
+
+                    // Rate limit on email sending — account may still be created, check before rollback
+                    if (msg.includes("rate limit") || msg.includes("too many")) {
+                        // Check if user was actually created despite rate limit on confirmation email
+                        const { data: signInData } = await supabase.auth.signInWithPassword({
+                            email: regEmail,
+                            password: regPassword,
+                        });
+                        if (signInData?.user) {
+                            // Account exists, just email confirmation was rate-limited. Continue.
+                            toast({ title: "Conta criada!", description: "Vamos configurar sua empresa." });
+                            advanceStep();
+                            return;
+                        }
+                        // Rollback and show error
+                        await supabase.from("companies").delete().eq("id", newCompanyId);
+                        throw new Error("Muitas tentativas de cadastro. Aguarde alguns minutos e tente novamente.");
+                    }
+
+                    if (msg.includes("already registered") || msg.includes("already been registered")) {
+                        await supabase.from("companies").delete().eq("id", newCompanyId);
+                        throw new Error("Este e-mail ja esta cadastrado. Tente fazer login.");
+                    }
+
+                    // Rollback company for other errors
+                    await supabase.from("companies").delete().eq("id", newCompanyId);
+                    throw new Error(`Erro ao criar conta: ${signUpError.message}`);
+                }
+
+                toast({ title: "Conta criada!", description: "Vamos configurar sua empresa." });
+                advanceStep();
+            } catch (error: any) {
+                toast({ title: "Erro ao criar conta", description: error.message || "Tente novamente", variant: "destructive" });
+            } finally {
+                setIsLoading(false);
+            }
+            return;
+        }
+
+        // Step 2: Save company data
+        if (currentStep === 2) {
             setIsLoading(true);
             try {
                 if (effectiveCompanyId) {
-                    // Update existing company
                     const logoUrl = await uploadLogo(effectiveCompanyId);
                     const updatePayload: Record<string, any> = { name: companyName };
                     if (segment) updatePayload.segment = segment;
@@ -275,7 +514,6 @@ export default function Onboarding() {
                         .eq("id", effectiveCompanyId);
                     if (error) throw error;
                 } else {
-                    // Create new company
                     const { data: newCompany, error: createError } = await supabase
                         .from("companies")
                         .insert({
@@ -289,7 +527,6 @@ export default function Onboarding() {
                     const newId = newCompany.id;
                     setEffectiveCompanyId(newId);
 
-                    // Upload logo for new company
                     const logoUrl = await uploadLogo(newId);
                     if (logoUrl || segment) {
                         const updatePayload: Record<string, any> = {};
@@ -298,7 +535,6 @@ export default function Onboarding() {
                         await supabase.from("companies").update(updatePayload).eq("id", newId);
                     }
 
-                    // Link user to company
                     if (user) {
                         await supabase
                             .from("profiles")
@@ -319,8 +555,8 @@ export default function Onboarding() {
             return;
         }
 
-        // Step 2 -> 3: Save profile
-        if (currentStep === 2) {
+        // Step 3: Save profile
+        if (currentStep === 3) {
             setIsLoading(true);
             try {
                 if (user) {
@@ -347,8 +583,8 @@ export default function Onboarding() {
             return;
         }
 
-        // Step 3 -> 4: Save pipeline config
-        if (currentStep === 3) {
+        // Step 4: Save pipeline config
+        if (currentStep === 4) {
             if (effectiveCompanyId) {
                 savePipelineConfig(effectiveCompanyId);
             }
@@ -356,14 +592,19 @@ export default function Onboarding() {
             return;
         }
 
-        // Step 4 -> 5: Invite team (or skip)
-        if (currentStep === 4) {
+        // Step 5: Payment handled by handlePayment()
+        if (currentStep === 5) {
+            return;
+        }
+
+        // Step 6: Invite team (or skip)
+        if (currentStep === 6) {
             advanceStep();
             return;
         }
 
-        // Step 5: Complete
-        if (currentStep === 5) {
+        // Step 7: Complete
+        if (currentStep === 7) {
             handleComplete("dashboard");
             return;
         }
@@ -375,7 +616,8 @@ export default function Onboarding() {
     };
 
     const handleBack = () => {
-        if (currentStep > 1) {
+        const minStep = isLoggedIn ? 2 : 1;
+        if (currentStep > minStep) {
             setDirection(-1);
             setCurrentStep((prev) => prev - 1);
         }
@@ -449,7 +691,6 @@ export default function Onboarding() {
     const handleComplete = async (destination: string) => {
         setIsLoading(true);
         try {
-            // Mark onboarding as complete on profile
             if (user) {
                 await supabase
                     .from("profiles")
@@ -487,33 +728,39 @@ export default function Onboarding() {
     };
 
     // ── Step indicator icons ──
-    const stepMeta = [
+    const allStepMeta = [
+        { icon: Mail, label: "Conta" },
         { icon: Building2, label: "Empresa" },
         { icon: User, label: "Perfil" },
         { icon: LayoutDashboard, label: "Pipeline" },
+        { icon: CreditCard, label: "Plano" },
         { icon: Users, label: "Equipe" },
         { icon: Rocket, label: "Pronto!" },
     ];
+    // If logged in, skip step 1 visually
+    const stepMeta = isLoggedIn ? allStepMeta.slice(1) : allStepMeta;
+    const displayStep = isLoggedIn ? currentStep - 1 : currentStep;
+    const displayTotalSteps = isLoggedIn ? TOTAL_STEPS - 1 : TOTAL_STEPS;
 
     // ── Stepper ──
     const Stepper = () => (
         <div className="mb-10">
             <div className="flex items-center justify-between mb-3">
                 <span className="text-slate-400 text-sm font-medium">
-                    Passo {currentStep} de {TOTAL_STEPS}
+                    Passo {displayStep} de {displayTotalSteps}
                 </span>
-                <span className="text-slate-500 text-sm">{stepMeta[currentStep - 1]?.label}</span>
+                <span className="text-slate-500 text-sm">{stepMeta[displayStep - 1]?.label}</span>
             </div>
 
             {/* Progress bar */}
             <div className="flex items-center gap-2 mb-6">
-                {Array.from({ length: TOTAL_STEPS }).map((_, index) => (
+                {Array.from({ length: displayTotalSteps }).map((_, index) => (
                     <div
                         key={index}
                         className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${
-                            index + 1 < currentStep
+                            index + 1 < displayStep
                                 ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]"
-                                : index + 1 === currentStep
+                                : index + 1 === displayStep
                                 ? "bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.4)]"
                                 : "bg-slate-800"
                         }`}
@@ -525,8 +772,8 @@ export default function Onboarding() {
             <div className="flex items-center justify-between">
                 {stepMeta.map((step, index) => {
                     const StepIcon = step.icon;
-                    const isComplete = index + 1 < currentStep;
-                    const isCurrent = index + 1 === currentStep;
+                    const isComplete = index + 1 < displayStep;
+                    const isCurrent = index + 1 === displayStep;
                     return (
                         <div key={index} className="flex flex-col items-center gap-1.5">
                             <div
@@ -569,11 +816,153 @@ export default function Onboarding() {
     const inputClasses =
         "bg-slate-900/50 backdrop-blur-sm border-slate-800 text-white placeholder:text-slate-500 focus-visible:bg-slate-900 focus-visible:ring-1 focus-visible:ring-emerald-500 focus-visible:border-emerald-500 focus-visible:shadow-[0_0_20px_-5px_rgba(16,185,129,0.3)] hover:border-slate-700 h-12 text-base rounded-xl transition-all duration-300";
 
+    // MP Card field styles
+    const mpFieldStyle = {
+        style: {
+            "font-size": "16px",
+            "font-family": "inherit",
+            color: "#e2e8f0",
+            "placeholder-color": "#64748b",
+        },
+    };
+
     // ── Step renderers ──
     const renderStep = () => {
         switch (currentStep) {
-            // ────────────── Step 1: Company Data ──────────────
+            // ────────────── Step 1: Create Account ──────────────
             case 1:
+                return (
+                    <div>
+                        <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                            className="w-16 h-16 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 border border-emerald-500/30 flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_-3px_rgba(16,185,129,0.2)]"
+                        >
+                            <Rocket className="h-8 w-8 text-emerald-500" />
+                        </motion.div>
+                        <h2 className="text-2xl font-bold text-white tracking-tight mb-2 text-center">
+                            Crie sua conta
+                        </h2>
+                        <p className="text-slate-400 mb-8 text-sm text-center">
+                            Comece sua jornada de alta performance em vendas
+                        </p>
+
+                        <div className="space-y-4">
+                            {/* Nome */}
+                            <div className="space-y-1.5">
+                                <Label className="text-slate-300 text-sm font-medium">
+                                    Seu nome completo <span className="text-rose-400">*</span>
+                                </Label>
+                                <div className="relative">
+                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                                    <Input
+                                        ref={inputRef}
+                                        placeholder="Joao Silva"
+                                        value={regName}
+                                        onChange={(e) => { setRegName(e.target.value); validateField("regName", e.target.value); }}
+                                        onBlur={() => handleFieldBlur("regName", regName)}
+                                        className={`${inputClasses} pl-10 ${fieldTouched.regName && fieldErrors.regName ? "!border-rose-500/50 !ring-rose-500/20" : ""}`}
+                                        autoFocus
+                                    />
+                                </div>
+                                {fieldTouched.regName && fieldErrors.regName && (
+                                    <p className="text-xs text-rose-400 pl-1">{fieldErrors.regName}</p>
+                                )}
+                            </div>
+
+                            {/* Email */}
+                            <div className="space-y-1.5">
+                                <Label className="text-slate-300 text-sm font-medium">
+                                    E-mail <span className="text-rose-400">*</span>
+                                </Label>
+                                <div className="relative">
+                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                                    <Input
+                                        placeholder="voce@empresa.com"
+                                        value={regEmail}
+                                        onChange={(e) => { setRegEmail(e.target.value); if (fieldErrors.regEmail) setFieldErrors(prev => ({ ...prev, regEmail: "" })); }}
+                                        onBlur={() => handleFieldBlur("regEmail", regEmail)}
+                                        className={`${inputClasses} pl-10 ${fieldTouched.regEmail && fieldErrors.regEmail ? "!border-rose-500/50 !ring-rose-500/20" : ""}`}
+                                        type="email"
+                                        autoComplete="email"
+                                    />
+                                </div>
+                                {fieldTouched.regEmail && fieldErrors.regEmail && (
+                                    <p className="text-xs text-rose-400 pl-1">{fieldErrors.regEmail}</p>
+                                )}
+                            </div>
+
+                            {/* Empresa */}
+                            <div className="space-y-1.5">
+                                <Label className="text-slate-300 text-sm font-medium">
+                                    Nome da empresa <span className="text-rose-400">*</span>
+                                </Label>
+                                <div className="relative">
+                                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                                    <Input
+                                        placeholder="Sua Empresa Ltda"
+                                        value={regCompanyName}
+                                        onChange={(e) => { setRegCompanyName(e.target.value); validateField("regCompanyName", e.target.value); }}
+                                        onBlur={() => handleFieldBlur("regCompanyName", regCompanyName)}
+                                        className={`${inputClasses} pl-10 ${fieldTouched.regCompanyName && fieldErrors.regCompanyName ? "!border-rose-500/50 !ring-rose-500/20" : ""}`}
+                                    />
+                                </div>
+                                {fieldTouched.regCompanyName && fieldErrors.regCompanyName && (
+                                    <p className="text-xs text-rose-400 pl-1">{fieldErrors.regCompanyName}</p>
+                                )}
+                            </div>
+
+                            {/* Senha */}
+                            <div className="space-y-1.5">
+                                <Label className="text-slate-300 text-sm font-medium">
+                                    Senha <span className="text-rose-400">*</span>
+                                </Label>
+                                <div className="relative">
+                                    <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                                    <Input
+                                        placeholder="Minimo 8 caracteres"
+                                        value={regPassword}
+                                        onChange={(e) => { setRegPassword(e.target.value); validateField("regPassword", e.target.value); }}
+                                        onBlur={() => handleFieldBlur("regPassword", regPassword)}
+                                        className={`${inputClasses} pl-10 pr-10 ${fieldTouched.regPassword && fieldErrors.regPassword ? "!border-rose-500/50 !ring-rose-500/20" : ""}`}
+                                        type={showPassword ? "text" : "password"}
+                                        autoComplete="new-password"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                                    >
+                                        {showPassword ? <X className="h-4 w-4" /> : <Check className="h-4 w-4" />}
+                                    </button>
+                                </div>
+                                {fieldTouched.regPassword && fieldErrors.regPassword ? (
+                                    <p className="text-xs text-rose-400 pl-1">{fieldErrors.regPassword}</p>
+                                ) : regPassword.length > 0 && regPassword.length < 8 ? (
+                                    <p className="text-xs text-amber-400/70 pl-1">Minimo 8 caracteres ({regPassword.length}/8)</p>
+                                ) : regPassword.length >= 8 ? (
+                                    <p className="text-xs text-emerald-400/70 pl-1 flex items-center gap-1"><Check className="h-3 w-3" /> Senha valida</p>
+                                ) : null}
+                            </div>
+                        </div>
+
+                        <p className="text-[11px] text-slate-500 mt-5 text-center">
+                            Ao criar sua conta, voce concorda com nossos{" "}
+                            <a
+                                href="/termos-de-servico"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2 transition-colors"
+                            >
+                                Termos de Uso
+                            </a>.
+                        </p>
+                    </div>
+                );
+
+            // ────────────── Step 2: Company Data ──────────────
+            case 2:
                 return (
                     <div>
                         <motion.div
@@ -592,7 +981,6 @@ export default function Onboarding() {
                         </p>
 
                         <div className="space-y-5">
-                            {/* Company name */}
                             <div className="space-y-2">
                                 <Label className="text-slate-300 text-sm font-medium">
                                     Nome da empresa <span className="text-rose-400">*</span>
@@ -607,7 +995,6 @@ export default function Onboarding() {
                                 />
                             </div>
 
-                            {/* Segment */}
                             <div className="space-y-2">
                                 <Label className="text-slate-300 text-sm font-medium">
                                     Segmento
@@ -630,7 +1017,6 @@ export default function Onboarding() {
                                 </div>
                             </div>
 
-                            {/* Logo upload */}
                             <div className="space-y-2">
                                 <Label className="text-slate-300 text-sm font-medium">
                                     Logo (opcional)
@@ -671,8 +1057,8 @@ export default function Onboarding() {
                     </div>
                 );
 
-            // ────────────── Step 2: User Profile ──────────────
-            case 2:
+            // ────────────── Step 3: User Profile ──────────────
+            case 3:
                 return (
                     <div>
                         <motion.div
@@ -691,7 +1077,6 @@ export default function Onboarding() {
                         </p>
 
                         <div className="space-y-5">
-                            {/* Name */}
                             <div className="space-y-2">
                                 <Label className="text-slate-300 text-sm font-medium">
                                     Seu nome <span className="text-rose-400">*</span>
@@ -709,7 +1094,6 @@ export default function Onboarding() {
                                 </div>
                             </div>
 
-                            {/* Phone */}
                             <div className="space-y-2">
                                 <Label className="text-slate-300 text-sm font-medium">
                                     Telefone / WhatsApp
@@ -725,7 +1109,6 @@ export default function Onboarding() {
                                 </div>
                             </div>
 
-                            {/* Role */}
                             <div className="space-y-2">
                                 <Label className="text-slate-300 text-sm font-medium">
                                     Cargo
@@ -744,8 +1127,8 @@ export default function Onboarding() {
                     </div>
                 );
 
-            // ────────────── Step 3: Pipeline Template ──────────────
-            case 3:
+            // ────────────── Step 4: Pipeline Template ──────────────
+            case 4:
                 return (
                     <div>
                         <motion.div
@@ -801,7 +1184,6 @@ export default function Onboarding() {
                                             <p className="text-xs text-slate-500 mt-0.5">
                                                 {template.description}
                                             </p>
-                                            {/* Stage preview */}
                                             <div className="flex flex-wrap gap-1.5 mt-2">
                                                 {template.stages.map((s) => (
                                                     <span
@@ -831,8 +1213,227 @@ export default function Onboarding() {
                     </div>
                 );
 
-            // ────────────── Step 4: Invite Team ──────────────
-            case 4:
+            // ────────────── Step 5: Plan + Payment ──────────────
+            case 5:
+                return (
+                    <div>
+                        <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                            className="w-16 h-16 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 border border-emerald-500/30 flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_-3px_rgba(16,185,129,0.2)]"
+                        >
+                            <CreditCard className="h-8 w-8 text-emerald-500" />
+                        </motion.div>
+                        <h2 className="text-2xl font-bold text-white tracking-tight mb-2 text-center">
+                            Escolha seu Plano
+                        </h2>
+                        <p className="text-slate-400 mb-6 text-sm text-center">
+                            7 dias gratis para testar. Cancele quando quiser.
+                        </p>
+
+                        {/* Billing toggle */}
+                        <div className="flex items-center justify-center gap-3 mb-6">
+                            <button
+                                onClick={() => setBillingCycle("monthly")}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                                    billingCycle === "monthly"
+                                        ? "bg-slate-700 text-white"
+                                        : "text-slate-500 hover:text-slate-300"
+                                }`}
+                            >
+                                Mensal
+                            </button>
+                            <button
+                                onClick={() => setBillingCycle("annual")}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
+                                    billingCycle === "annual"
+                                        ? "bg-emerald-600/20 text-emerald-400 border border-emerald-500/30"
+                                        : "text-slate-500 hover:text-slate-300"
+                                }`}
+                            >
+                                Anual
+                                <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-bold">
+                                    -10%
+                                </span>
+                            </button>
+                        </div>
+
+                        {/* Plan cards */}
+                        <div className="grid gap-2.5 mb-6">
+                            {["starter", "plus", "pro"].map((planId) => {
+                                const plan = PLANS[planId];
+                                const PlanIcon = PLAN_ICONS[planId];
+                                const isSelected = selectedPlan === planId;
+                                const monthlyDisplay = billingCycle === "annual"
+                                    ? Math.round(getAnnualMonthlyEquivalent(plan))
+                                    : plan.monthlyPrice;
+
+                                return (
+                                    <motion.button
+                                        key={planId}
+                                        type="button"
+                                        onClick={() => setSelectedPlan(planId)}
+                                        className={`relative flex items-center gap-4 px-4 py-3.5 rounded-xl border transition-all duration-200 text-left ${
+                                            isSelected
+                                                ? "bg-emerald-500/10 border-emerald-500/50 shadow-[0_0_15px_-5px_rgba(16,185,129,0.3)]"
+                                                : "bg-slate-900/40 border-slate-800 hover:border-slate-700"
+                                        }`}
+                                    >
+                                        <div className={`p-2 rounded-lg ${isSelected ? "bg-emerald-500/20" : "bg-slate-800"}`}>
+                                            <PlanIcon className={`h-4 w-4 ${isSelected ? "text-emerald-400" : "text-slate-400"}`} />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2">
+                                                <p className={`font-bold text-sm ${isSelected ? "text-emerald-400" : "text-white"}`}>
+                                                    {plan.name}
+                                                </p>
+                                                {plan.highlight && (
+                                                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold uppercase">
+                                                        Popular
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="text-xs text-slate-500 mt-0.5">{plan.description}</p>
+                                        </div>
+                                        <div className="text-right shrink-0">
+                                            <p className={`font-bold text-lg ${isSelected ? "text-emerald-400" : "text-white"}`}>
+                                                R$ {monthlyDisplay}
+                                            </p>
+                                            <p className="text-[10px] text-slate-500">/mes</p>
+                                        </div>
+                                        {isSelected && (
+                                            <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center shrink-0">
+                                                <Check className="w-3 h-3 text-white" />
+                                            </div>
+                                        )}
+                                    </motion.button>
+                                );
+                            })}
+                        </div>
+
+                        {/* Trial info */}
+                        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/20 mb-6">
+                            <Shield className="h-4 w-4 text-amber-400 shrink-0" />
+                            <p className="text-xs text-amber-300">
+                                <strong>7 dias gratis.</strong> Voce so sera cobrado apos o periodo de teste. Cancele a qualquer momento.
+                            </p>
+                        </div>
+
+                        {/* Card form */}
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label className="text-slate-300 text-sm font-medium">
+                                    Nome no cartao <span className="text-rose-400">*</span>
+                                </Label>
+                                <Input
+                                    id="cardholder-name"
+                                    placeholder="Nome como esta no cartao"
+                                    className={inputClasses}
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="text-slate-300 text-sm font-medium">
+                                    CPF do titular <span className="text-rose-400">*</span>
+                                </Label>
+                                <Input
+                                    id="doc-number"
+                                    placeholder="000.000.000-00"
+                                    className={inputClasses}
+                                    maxLength={14}
+                                    onChange={(e) => {
+                                        const digits = e.target.value.replace(/\D/g, "").slice(0, 11);
+                                        let formatted = digits;
+                                        if (digits.length > 9) formatted = `${digits.slice(0,3)}.${digits.slice(3,6)}.${digits.slice(6,9)}-${digits.slice(9)}`;
+                                        else if (digits.length > 6) formatted = `${digits.slice(0,3)}.${digits.slice(3,6)}.${digits.slice(6)}`;
+                                        else if (digits.length > 3) formatted = `${digits.slice(0,3)}.${digits.slice(3)}`;
+                                        e.target.value = formatted;
+                                    }}
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="text-slate-300 text-sm font-medium">
+                                    Numero do cartao <span className="text-rose-400">*</span>
+                                </Label>
+                                <div className="h-12 rounded-xl border border-slate-800 bg-slate-900/50 px-3 flex items-center hover:border-slate-700 transition-colors [&_iframe]:!h-full" data-mp-field="cardNumber">
+                                    <CardNumber
+                                        placeholder="0000 0000 0000 0000"
+                                        style={mpFieldStyle.style}
+                                        onReady={() => setCardFormReady(prev => ({ ...prev, number: true }))}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-2">
+                                    <Label className="text-slate-300 text-sm font-medium">
+                                        Validade <span className="text-rose-400">*</span>
+                                    </Label>
+                                    <div className="h-12 rounded-xl border border-slate-800 bg-slate-900/50 px-3 flex items-center hover:border-slate-700 transition-colors [&_iframe]:!h-full">
+                                        <ExpirationDate
+                                            placeholder="MM/AA"
+                                            style={mpFieldStyle.style}
+                                            onReady={() => setCardFormReady(prev => ({ ...prev, expiration: true }))}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-slate-300 text-sm font-medium">
+                                        CVV <span className="text-rose-400">*</span>
+                                    </Label>
+                                    <div className="h-12 rounded-xl border border-slate-800 bg-slate-900/50 px-3 flex items-center hover:border-slate-700 transition-colors [&_iframe]:!h-full">
+                                        <SecurityCode
+                                            placeholder="123"
+                                            style={mpFieldStyle.style}
+                                            onReady={() => setCardFormReady(prev => ({ ...prev, security: true }))}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Payment error */}
+                        {paymentError && (
+                            <div className="mt-4 px-4 py-3 rounded-xl bg-rose-500/10 border border-rose-500/20">
+                                <p className="text-xs text-rose-400">{paymentError}</p>
+                            </div>
+                        )}
+
+                        {/* Payment CTA */}
+                        <div className="mt-6 flex items-center gap-4">
+                            <Button
+                                variant="outline"
+                                onClick={handleBack}
+                                disabled={paymentLoading}
+                                className="h-12 w-12 shrink-0 p-0 border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl transition-colors disabled:opacity-50"
+                            >
+                                <ArrowLeft className="h-5 w-5" />
+                            </Button>
+                            <Button
+                                onClick={handlePayment}
+                                disabled={paymentLoading || !selectedPlan}
+                                className="flex-1 h-12 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-base rounded-xl shadow-lg shadow-emerald-500/20 border-none transition-all hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:hover:translate-y-0"
+                            >
+                                {paymentLoading ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                        Processando...
+                                    </>
+                                ) : (
+                                    <span className="flex items-center justify-center gap-2">
+                                        <Shield className="h-5 w-5" />
+                                        Iniciar trial gratis
+                                    </span>
+                                )}
+                            </Button>
+                        </div>
+                    </div>
+                );
+
+            // ────────────── Step 6: Invite Team ──────────────
+            case 6:
                 return (
                     <div>
                         <motion.div
@@ -893,7 +1494,6 @@ export default function Onboarding() {
                             )}
                         </div>
 
-                        {/* Invite action */}
                         <div className="mt-6 flex flex-col gap-3">
                             <Button
                                 onClick={handleInviteTeam}
@@ -916,8 +1516,8 @@ export default function Onboarding() {
                     </div>
                 );
 
-            // ────────────── Step 5: Success / Ready ──────────────
-            case 5:
+            // ────────────── Step 7: Success / Ready ──────────────
+            case 7:
                 return (
                     <div className="text-center">
                         <motion.div
@@ -949,7 +1549,6 @@ export default function Onboarding() {
                                 `${invitedCount} vendedor(es) ja receberam convite por e-mail.`}
                         </p>
 
-                        {/* Quick-start actions */}
                         <div className="grid gap-3">
                             <motion.button
                                 initial={{ opacity: 0, y: 10 }}
@@ -1130,10 +1729,10 @@ export default function Onboarding() {
                             </motion.div>
                         </AnimatePresence>
 
-                        {/* Navigation buttons (hidden on step 4 which has its own CTA, and step 5 which has quick-start) */}
-                        {currentStep !== 4 && currentStep !== 5 && (
+                        {/* Navigation buttons (hidden on steps with their own CTA) */}
+                        {currentStep !== 5 && currentStep !== 6 && currentStep !== 7 && (
                             <div className="flex items-center gap-4 mt-10">
-                                {currentStep > 1 && (
+                                {currentStep > (isLoggedIn ? 2 : 1) && (
                                     <Button
                                         variant="outline"
                                         onClick={handleBack}
@@ -1164,8 +1763,8 @@ export default function Onboarding() {
                             </div>
                         )}
 
-                        {/* Skip option for steps 3 and 4 */}
-                        {(currentStep === 3) && (
+                        {/* Skip option for step 4 (pipeline) */}
+                        {currentStep === 4 && (
                             <div className="mt-4 text-center">
                                 <button
                                     type="button"
@@ -1177,8 +1776,8 @@ export default function Onboarding() {
                             </div>
                         )}
 
-                        {/* Step 4 has skip as separate button below its own CTA */}
-                        {currentStep === 4 && (
+                        {/* Step 6 has skip as separate button below its own CTA */}
+                        {currentStep === 6 && (
                             <div className="mt-4 flex items-center gap-4">
                                 <Button
                                     variant="outline"

@@ -155,6 +155,39 @@ export const canAccessFeature = (plan: string, feature: string): boolean => {
     return planFeatures.includes(feature);
 };
 
+// Billing cycle configuration for Mercado Pago subscriptions
+export type BillingCycle = "monthly" | "annual";
+
+export interface BillingConfig {
+    frequency: number;
+    frequencyType: "months";
+    transactionAmount: number;
+    label: string;
+}
+
+export const getBillingConfig = (planId: string, cycle: BillingCycle): BillingConfig | null => {
+    const plan = PLANS[planId];
+    if (!plan) return null;
+
+    if (cycle === "monthly") {
+        return {
+            frequency: 1,
+            frequencyType: "months",
+            transactionAmount: plan.monthlyPrice,
+            label: "Mensal",
+        };
+    }
+
+    // Annual: 10% discount, charged once per year
+    const annualTotal = getAnnualPrice(plan);
+    return {
+        frequency: 12,
+        frequencyType: "months",
+        transactionAmount: annualTotal,
+        label: "Anual",
+    };
+};
+
 // Plan order for comparisons
 export const PLAN_ORDER = ["starter", "plus", "pro"];
 

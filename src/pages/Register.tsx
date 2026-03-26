@@ -29,13 +29,6 @@ import {
 import { PLANS, formatPrice } from "@/config/plans";
 import { RATE_LIMITS } from "@/lib/rateLimiter";
 
-// MercadoPago checkout URLs per plan
-const CHECKOUT_URLS: Record<string, string> = {
-    starter: "",
-    plus: "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=7c2c9ac396684c229987a7501cf4f88c",
-    pro: "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=7f7561d2b1174aacb31ab92dce72ded4",
-};
-
 // Validation schema
 const registerSchema = z.object({
     nome: z.string().min(3, "Nome deve ter no mínimo 3 caracteres").max(100, "Nome muito longo"),
@@ -146,15 +139,10 @@ const Register = () => {
                 throw new Error(`Erro ao criar conta: ${signUpError.message}`);
             }
 
-            if (plan !== "starter" && CHECKOUT_URLS[plan]) {
-                toast.success("Conta criada! Redirecionando para pagamento...");
-                setTimeout(() => {
-                    window.location.href = CHECKOUT_URLS[plan];
-                }, 1500);
-            } else {
-                toast.success("Conta criada com sucesso! Verifique seu email para confirmar.");
-                navigate("/auth");
-            }
+            toast.success("Conta criada! Redirecionando para configuração...");
+            setTimeout(() => {
+                navigate(`/onboarding?plan=${plan}`);
+            }, 1500);
 
         } catch (error: any) {
             toast.error(error.message || "Erro ao criar conta");

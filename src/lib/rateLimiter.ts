@@ -62,5 +62,5 @@ export const RATE_LIMITS = {
   /** File uploads / imports */
   upload: (key: string) => checkRateLimit(`upload:${key}`, 3, 60_000),
   /** Auth actions (login, register) */
-  auth: (key: string) => checkRateLimit(`auth:${key}`, 5, 300_000),
+  auth: (key: string) => checkRateLimit(`auth:${key}`, 15, 300_000),
 } as const;

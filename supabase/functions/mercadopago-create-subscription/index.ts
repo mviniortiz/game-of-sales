@@ -68,10 +68,15 @@ serve(async (req) => {
             return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: strictCorsHeaders });
         }
 
-        const { token, email, planId, companyId, payerInfo } = await req.json();
+        const { token, email, planId, companyId, payerInfo, billingConfig } = await req.json();
 
-        if (!token || !email || !planId || !companyId) {
+        if (!token || !email || !companyId) {
             return new Response(JSON.stringify({ error: "Missing required fields" }), { status: 400, headers: strictCorsHeaders });
+        }
+
+        // billingConfig: { frequency, frequencyType, transactionAmount }
+        if (!billingConfig && !planId) {
+            return new Response(JSON.stringify({ error: "Missing billingConfig or planId" }), { status: 400, headers: strictCorsHeaders });
         }
 
         // P0: Validar ownership do tenant
@@ -94,33 +99,52 @@ serve(async (req) => {
             );
         }
 
+        // Build MP subscription body
+        const subscriptionBody: Record<string, any> = {
+            reason: "Assinatura Game Sales",
+            external_reference: companyId,
+            payer_email: email,
+            card_token_id: token,
+            back_url: "https://gamesales.com.br/dashboard",
+            status: "authorized",
+        };
+
+        if (billingConfig) {
+            // Transparent checkout: send amount/frequency directly (no preapproval_plan_id)
+            subscriptionBody.auto_recurring = {
+                frequency: billingConfig.frequency,
+                frequency_type: billingConfig.frequencyType || "months",
+                transaction_amount: billingConfig.transactionAmount,
+                currency_id: "BRL",
+                free_trial: {
+                    frequency: 7,
+                    frequency_type: "days",
+                },
+            };
+        } else {
+            // Legacy: use pre-created MP plan
+            subscriptionBody.preapproval_plan_id = planId;
+            subscriptionBody.auto_recurring = {
+                frequency: 1,
+                frequency_type: "months",
+                start_date: new Date().toISOString(),
+                end_date: null,
+                transaction_amount: null,
+                currency_id: "BRL",
+                free_trial: {
+                    frequency: 7,
+                    frequency_type: "days",
+                },
+            };
+        }
+
         const mpResponse = await fetch("https://api.mercadopago.com/preapproval", {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${MERCADOPAGO_ACCESS_TOKEN}`,
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                preapproval_plan_id: planId,
-                reason: "Assinatura Game Sales",
-                external_reference: companyId,
-                payer_email: email,
-                card_token_id: token,
-                auto_recurring: {
-                    frequency: 1,
-                    frequency_type: "months",
-                    start_date: new Date().toISOString(),
-                    end_date: null,
-                    transaction_amount: null,
-                    currency_id: "BRL",
-                    free_trial: {
-                        frequency: 7,
-                        frequency_type: "days"
-                    }
-                },
-                back_url: "https://gamesales.app/admin", // P1 Corrigido: /admin em vez de /admin/dashboard
-                status: "authorized"
-            })
+            body: JSON.stringify(subscriptionBody)
         });
 
         const mpData = await mpResponse.json();
@@ -133,13 +157,16 @@ serve(async (req) => {
             );
         }
 
+        const companyUpdate: Record<string, any> = {
+            mp_subscription_id: mpData.id,
+            mp_customer_id: mpData.payer_id?.toString() || null,
+            subscription_status: "trialing",
+            trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        };
+
         const { error: updateError } = await adminSupabase
             .from("companies")
-            .update({
-                mp_subscription_id: mpData.id,
-                mp_customer_id: mpData.payer_id,
-                subscription_status: "trialing"
-            })
+            .update(companyUpdate)
             .eq("id", companyId);
 
         if (updateError) {
