@@ -49,7 +49,7 @@ const mapStatus = (status?: string): AttendanceStatus => {
 export const STATUS_COLORS: Record<AttendanceStatus, { bg: string; border: string; text: string; dot: string }> = {
   show: { bg: "bg-emerald-500/15", border: "border-emerald-500", text: "text-emerald-300", dot: "bg-emerald-500" },
   no_show: { bg: "bg-rose-500/15", border: "border-rose-500", text: "text-rose-300", dot: "bg-rose-500" },
-  pending: { bg: "bg-slate-500/15", border: "border-slate-500", text: "text-slate-400", dot: "bg-slate-500" },
+  pending: { bg: "bg-muted", border: "border-muted-foreground", text: "text-muted-foreground", dot: "bg-muted-foreground" },
 };
 
 // ── Mini Month Calendar ──────────────────────────────────────────────────────
@@ -83,16 +83,16 @@ const MiniCalendar = ({
       <div className="flex items-center justify-between mb-2 px-1">
         <button
           onClick={() => setMiniDate(subMonths(miniDate, 1))}
-          className="p-1 rounded-md hover:bg-slate-700/60 text-slate-400 hover:text-white transition-colors"
+          className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
         >
           <ChevronLeft className="h-3.5 w-3.5" />
         </button>
-        <span className="text-[11px] font-semibold text-slate-300 capitalize">
+        <span className="text-[11px] font-semibold text-foreground capitalize">
           {format(miniDate, "MMMM yyyy", { locale: ptBR })}
         </span>
         <button
           onClick={() => setMiniDate(addMonths(miniDate, 1))}
-          className="p-1 rounded-md hover:bg-slate-700/60 text-slate-400 hover:text-white transition-colors"
+          className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
         >
           <ChevronRight className="h-3.5 w-3.5" />
         </button>
@@ -101,7 +101,7 @@ const MiniCalendar = ({
       {/* Week labels */}
       <div className="grid grid-cols-7 mb-1">
         {weekLabels.map((l, i) => (
-          <div key={i} className="text-center text-[10px] font-medium text-slate-600">{l}</div>
+          <div key={i} className="text-center text-[10px] font-medium text-muted-foreground">{l}</div>
         ))}
       </div>
 
@@ -120,7 +120,7 @@ const MiniCalendar = ({
               className={`
                 relative h-7 w-7 mx-auto flex items-center justify-center rounded-full
                 text-[11px] font-medium transition-all duration-100
-                ${!inMonth ? "text-slate-700" : "text-slate-400 hover:text-white hover:bg-slate-700/60"}
+                ${!inMonth ? "text-muted-foreground/40" : "text-muted-foreground hover:text-foreground hover:bg-muted"}
                 ${isSelected ? "!bg-emerald-500 !text-white shadow-md shadow-emerald-500/30" : ""}
                 ${isNow && !isSelected ? "!text-emerald-400 font-bold" : ""}
               `}
@@ -154,8 +154,8 @@ const UpcomingEvents = ({
   if (upcoming.length === 0) {
     return (
       <div className="text-center py-6">
-        <CalendarDays className="h-8 w-8 text-slate-700 mx-auto mb-2" />
-        <p className="text-xs text-slate-600">Sem próximos eventos</p>
+        <CalendarDays className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+        <p className="text-xs text-muted-foreground">Sem próximos eventos</p>
       </div>
     );
   }
@@ -177,24 +177,24 @@ const UpcomingEvents = ({
         return (
           <div key={ag.id}>
             {showLabel && (
-              <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider pt-3 pb-1 px-1">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider pt-3 pb-1 px-1">
                 {dateLabel}
               </p>
             )}
             <button
               onClick={() => onEventClick(ag)}
-              className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-800 transition-colors text-left group"
+              className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-muted transition-colors text-left group"
             >
               <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${colors.dot}`} />
               <div className="flex-1 min-w-0">
-                <p className="text-[12px] font-medium text-slate-300 truncate group-hover:text-white">
+                <p className="text-[12px] font-medium text-foreground truncate group-hover:text-foreground">
                   {ag.cliente_nome}
                 </p>
                 {ag.seller_name && (
-                  <p className="text-[10px] text-slate-600 truncate">{ag.seller_name}</p>
+                  <p className="text-[10px] text-muted-foreground truncate">{ag.seller_name}</p>
                 )}
               </div>
-              <span className="text-[10px] text-slate-600 flex-shrink-0 tabular-nums">
+              <span className="text-[10px] text-muted-foreground flex-shrink-0 tabular-nums">
                 {format(agDate, "HH:mm")}
               </span>
             </button>
@@ -253,23 +253,23 @@ const MiniGoalWidget = ({ userId, companyId }: { userId?: string; companyId?: st
   const { pct, realizado, meta } = metaData;
   const color = pct >= 100 ? "from-emerald-500 to-emerald-400" :
     pct >= 50 ? "from-cyan-500 to-cyan-400" :
-      "from-slate-600 to-slate-500";
+      "from-muted-foreground to-muted-foreground";
   const textColor = pct >= 100 ? "text-emerald-400" :
-    pct >= 50 ? "text-cyan-400" : "text-slate-400";
+    pct >= 50 ? "text-cyan-400" : "text-muted-foreground";
 
   const fmt = (v: number) =>
     v >= 1000 ? `R$ ${(v / 1000).toFixed(1).replace(".", ",")}k` :
       `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 0 })}`;
 
   return (
-    <div className="mt-4 p-3 rounded-xl bg-slate-800/60 border border-slate-700/50">
+    <div className="mt-4 p-3 rounded-xl bg-muted border border-border">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1.5">
           {pct >= 100
             ? <Trophy className="h-3.5 w-3.5 text-emerald-400" />
-            : <Target className="h-3.5 w-3.5 text-slate-500" />
+            : <Target className="h-3.5 w-3.5 text-muted-foreground" />
           }
-          <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
             Minha Meta
           </span>
         </div>
@@ -279,7 +279,7 @@ const MiniGoalWidget = ({ userId, companyId }: { userId?: string; companyId?: st
       </div>
 
       {/* Progress bar */}
-      <div className="h-1.5 w-full bg-slate-700 rounded-full overflow-hidden mb-1.5">
+      <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden mb-1.5">
         <motion.div
           className={`h-full bg-gradient-to-r ${color} rounded-full`}
           initial={{ width: 0 }}
@@ -288,7 +288,7 @@ const MiniGoalWidget = ({ userId, companyId }: { userId?: string; companyId?: st
         />
       </div>
 
-      <div className="flex justify-between text-[10px] text-slate-600">
+      <div className="flex justify-between text-[10px] text-muted-foreground">
         <span className={textColor}>{fmt(realizado)}</span>
         <span>{fmt(meta)}</span>
       </div>
@@ -331,16 +331,16 @@ const MonthGridView = ({
   return (
     <div className="flex flex-col flex-1 h-full">
       {/* Day headers */}
-      <div className="grid grid-cols-7 border-b border-slate-700/50">
+      <div className="grid grid-cols-7 border-b border-border">
         {headerDays.map(d => (
-          <div key={d} className="py-2.5 text-center text-[11px] font-semibold text-slate-600 uppercase tracking-wider">
+          <div key={d} className="py-2.5 text-center text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
             {d}
           </div>
         ))}
       </div>
 
       {/* Grid cells */}
-      <div className="grid grid-cols-7 flex-1 divide-x divide-slate-700/30">
+      <div className="grid grid-cols-7 flex-1 divide-x divide-border/30">
         {days.map((day, i) => {
           const inMonth = isSameMonth(day, date);
           const isNow = dateFnsIsToday(day);
@@ -353,9 +353,9 @@ const MonthGridView = ({
               key={i}
               onClick={() => onDayClick(day)}
               className={`
-                group relative min-h-[110px] p-2 cursor-pointer border-b border-slate-700/30
-                transition-colors hover:bg-slate-800/60
-                ${!inMonth ? "bg-slate-950/40" : ""}
+                group relative min-h-[110px] p-2 cursor-pointer border-b border-border/30
+                transition-colors hover:bg-muted/60
+                ${!inMonth ? "bg-background/40" : ""}
                 ${isNow ? "bg-emerald-500/5" : ""}
               `}
             >
@@ -364,7 +364,7 @@ const MonthGridView = ({
                 <span className={`
                   text-[13px] font-semibold w-7 h-7 flex items-center justify-center rounded-full
                   ${isNow ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/40" : ""}
-                  ${!inMonth ? "text-slate-700" : !isNow ? "text-slate-400" : ""}
+                  ${!inMonth ? "text-muted-foreground/40" : !isNow ? "text-muted-foreground" : ""}
                 `}>
                   {format(day, "d")}
                 </span>
@@ -400,14 +400,14 @@ const MonthGridView = ({
                   );
                 })}
                 {overflow > 0 && (
-                  <p className="text-[10px] text-slate-600 pl-1.5 font-medium">+{overflow} mais</p>
+                  <p className="text-[10px] text-muted-foreground pl-1.5 font-medium">+{overflow} mais</p>
                 )}
               </div>
 
               {/* Hover + button for empty days */}
               {dayAgs.length === 0 && (
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                  <Plus className="h-6 w-6 text-slate-700" />
+                  <Plus className="h-6 w-6 text-muted-foreground" />
                 </div>
               )}
             </div>
@@ -426,14 +426,14 @@ const ViewSelector = ({ view, onChange }: { view: ViewType; onChange: (v: ViewTy
     { id: "month", label: "Mês" },
   ];
   return (
-    <div className="flex items-center bg-slate-800 rounded-lg p-0.5 border border-slate-700/60">
+    <div className="flex items-center bg-muted rounded-lg p-0.5 border border-border">
       {views.map(v => (
         <button
           key={v.id}
           onClick={() => onChange(v.id)}
           className={`px-3 py-1.5 text-[12px] font-semibold rounded-md transition-all duration-150 ${view === v.id
-              ? "bg-slate-700 text-white shadow-sm"
-              : "text-slate-500 hover:text-slate-300"
+              ? "bg-card text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
             }`}
         >
           {v.label}
@@ -578,48 +578,48 @@ export default function Calendario() {
 
   return (
     <>
-      <div className="flex flex-col h-[calc(100vh-64px)] bg-slate-950 text-white overflow-hidden">
+      <div className="flex flex-col h-[calc(100vh-64px)] bg-background text-foreground overflow-hidden">
 
         {/* ── TOP BAR ────────────────────────────────────────────────── */}
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-800 bg-slate-900/80 backdrop-blur flex-shrink-0">
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card/80 backdrop-blur flex-shrink-0">
           {/* Nav */}
           <div className="flex items-center gap-1">
             <button
               onClick={() => navigate("prev")}
-              className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+              className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
             <button
               onClick={() => navigate("today")}
-              className="px-3 py-1.5 text-[12px] font-semibold rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+              className="px-3 py-1.5 text-[12px] font-semibold rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
             >
               Hoje
             </button>
             <button
               onClick={() => navigate("next")}
-              className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+              className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>
 
           {/* Title */}
-          <h1 className="text-[15px] font-bold text-white capitalize flex-1 truncate">
+          <h1 className="text-[15px] font-bold text-foreground capitalize flex-1 truncate">
             {getTitle()}
           </h1>
 
           {/* Team filter (admins only) */}
           {canSeeTeam && (
             <Select value={selectedVendedor} onValueChange={setSelectedVendedor}>
-              <SelectTrigger className="w-[160px] h-8 bg-slate-800 border-slate-700 text-slate-300 text-[12px]">
-                <Users className="h-3.5 w-3.5 mr-1.5 text-slate-500" />
+              <SelectTrigger className="w-[160px] h-8 bg-muted border-border text-foreground text-[12px]">
+                <Users className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
                 <SelectValue placeholder="Todos" />
               </SelectTrigger>
-              <SelectContent className="bg-slate-800 border-slate-700">
-                <SelectItem value="all" className="text-white focus:bg-slate-700 text-[12px]">Todos vendedores</SelectItem>
+              <SelectContent className="bg-card border-border">
+                <SelectItem value="all" className="text-foreground focus:bg-muted text-[12px]">Todos vendedores</SelectItem>
                 {sellers.map((s: any) => (
-                  <SelectItem key={s.id} value={s.id} className="text-white focus:bg-slate-700 text-[12px]">{s.nome}</SelectItem>
+                  <SelectItem key={s.id} value={s.id} className="text-foreground focus:bg-muted text-[12px]">{s.nome}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -627,15 +627,15 @@ export default function Calendario() {
 
           {/* Status filter */}
           <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-            <SelectTrigger className="w-[140px] h-8 bg-slate-800 border-slate-700 text-slate-300 text-[12px]">
+            <SelectTrigger className="w-[140px] h-8 bg-muted border-border text-foreground text-[12px]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
-            <SelectContent className="bg-slate-800 border-slate-700">
-              <SelectItem value="all" className="text-white focus:bg-slate-700 text-[12px]">Todos</SelectItem>
-              <SelectItem value="agendado" className="text-white focus:bg-slate-700 text-[12px]">Pendentes</SelectItem>
-              <SelectItem value="realizado" className="text-white focus:bg-slate-700 text-[12px]">Compareceu</SelectItem>
-              <SelectItem value="nao_compareceu" className="text-white focus:bg-slate-700 text-[12px]">Não compareceu</SelectItem>
-              <SelectItem value="cancelado" className="text-white focus:bg-slate-700 text-[12px]">Cancelados</SelectItem>
+            <SelectContent className="bg-card border-border">
+              <SelectItem value="all" className="text-foreground focus:bg-muted text-[12px]">Todos</SelectItem>
+              <SelectItem value="agendado" className="text-foreground focus:bg-muted text-[12px]">Pendentes</SelectItem>
+              <SelectItem value="realizado" className="text-foreground focus:bg-muted text-[12px]">Compareceu</SelectItem>
+              <SelectItem value="nao_compareceu" className="text-foreground focus:bg-muted text-[12px]">Não compareceu</SelectItem>
+              <SelectItem value="cancelado" className="text-foreground focus:bg-muted text-[12px]">Cancelados</SelectItem>
             </SelectContent>
           </Select>
 
@@ -647,7 +647,7 @@ export default function Calendario() {
             size="sm"
             variant={googleConnected ? "outline" : "default"}
             className={googleConnected
-              ? "h-8 px-3 text-[12px] border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800"
+              ? "h-8 px-3 text-[12px] border-border text-muted-foreground hover:text-foreground hover:bg-muted"
               : "h-8 px-3 text-[12px] bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-md shadow-blue-500/20"
             }
             onClick={() => setGoogleCalendarModalOpen(true)}
@@ -667,9 +667,9 @@ export default function Calendario() {
                 Novo
               </Button>
             </DialogTrigger>
-            <DialogContent className="bg-slate-900 border-slate-700">
+            <DialogContent className="bg-card border-border">
               <DialogHeader>
-                <DialogTitle className="text-white">Novo Agendamento</DialogTitle>
+                <DialogTitle className="text-foreground">Novo Agendamento</DialogTitle>
               </DialogHeader>
               <AgendamentoForm onSuccess={() => { setShowNewAgendamento(false); loadAgendamentos(); }} />
             </DialogContent>
@@ -680,7 +680,7 @@ export default function Calendario() {
         <div className="flex flex-1 overflow-hidden">
 
           {/* ── SIDEBAR ─────────────────────────────────────────────── */}
-          <aside className="w-[240px] flex-shrink-0 border-r border-slate-800 bg-slate-900/50 flex flex-col overflow-y-auto p-3">
+          <aside className="w-[240px] flex-shrink-0 border-r border-border bg-card/50 flex flex-col overflow-y-auto p-3">
             {/* Mini calendar */}
             <MiniCalendar
               date={currentDate}
@@ -689,10 +689,10 @@ export default function Calendario() {
             />
 
             {/* Divider */}
-            <div className="my-3 border-t border-slate-800" />
+            <div className="my-3 border-t border-border" />
 
             {/* Upcoming */}
-            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1 px-1">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1 px-1">
               Próximos eventos
             </p>
             <UpcomingEvents agendamentos={agendamentos} onEventClick={handleEventClick} />
@@ -705,9 +705,9 @@ export default function Calendario() {
           </aside>
 
           {/* ── MAIN CALENDAR AREA ──────────────────────────────────── */}
-          <main className="flex-1 overflow-hidden bg-slate-950 relative">
+          <main className="flex-1 overflow-hidden bg-background relative">
             {loading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-slate-950/60 z-20">
+              <div className="absolute inset-0 flex items-center justify-center bg-background/60 z-20">
                 <RefreshCw className="h-5 w-5 text-emerald-400 animate-spin" />
               </div>
             )}

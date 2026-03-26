@@ -660,7 +660,7 @@ export const AdminMetas = () => {
                     <div className="space-y-2">
                       <Label className="text-muted-foreground text-sm">Vendedor</Label>
                       <Select value={userId} onValueChange={setUserId}>
-                        <SelectTrigger className="bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-emerald-500">
+                        <SelectTrigger className="bg-card border-border text-foreground focus:ring-emerald-500">
                           <SelectValue placeholder="Selecione um vendedor" />
                         </SelectTrigger>
                         <SelectContent className="bg-card border-border">
@@ -719,7 +719,7 @@ export const AdminMetas = () => {
                           <Button
                             type="button"
                             variant="outline"
-                            className="w-full justify-between bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground"
+                            className="w-full justify-between bg-card border-border text-foreground"
                           >
                             <div className="flex items-center gap-2">
                               <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -759,7 +759,7 @@ export const AdminMetas = () => {
                           value={valorMetaFormatado}
                           onChange={(e) => formatarMoeda(e.target.value, setValorMeta, setValorMetaFormatado)}
                           placeholder="R$ 0,00"
-                          className="pl-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-emerald-500"
+                          className="pl-10 bg-card border-border text-foreground focus:ring-emerald-500"
                           required
                         />
                       </div>
@@ -794,7 +794,7 @@ export const AdminMetas = () => {
           {/* RIGHT COLUMN - The Context */}
           <div className="col-span-12 lg:col-span-8">
             <div className="flex items-center gap-3 mb-4 flex-wrap">
-              <div className="p-2 rounded-lg bg-amber-50 text-amber-700 dark:bg-slate-800 dark:text-amber-200">
+              <div className="p-2 rounded-lg bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-200">
                 <Trophy className="h-4 w-4" />
               </div>
               <h3 className="font-semibold text-foreground">Metas Ativas</h3>
@@ -805,27 +805,27 @@ export const AdminMetas = () => {
 
             {/* Team Health Summary */}
             {metas && metas.length > 0 && (
-              <Card className="mb-6 border border-gray-200 dark:border-gray-800 bg-gradient-to-r from-emerald-50 to-emerald-50 dark:from-emerald-900/20 dark:to-emerald-900/20">
+              <Card className="mb-6 border border-border bg-gradient-to-r from-emerald-50 to-emerald-50 dark:from-emerald-900/20 dark:to-emerald-900/20">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-500/20">
                       <Users className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                     </div>
                     <div>
-                      <h4 className="font-semibold text-gray-900 dark:text-white text-sm">Saúde do Time</h4>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Performance consolidada</p>
+                      <h4 className="font-semibold text-foreground text-sm">Saúde do Time</h4>
+                      <p className="text-xs text-muted-foreground">Performance consolidada</p>
                     </div>
                   </div>
 
                   {/* Team Progress Bar */}
                   <div className="space-y-2 mb-4">
                     <div className="flex justify-between text-xs">
-                      <span className="text-gray-600 dark:text-gray-400">Progresso do Time</span>
+                      <span className="text-muted-foreground">Progresso do Time</span>
                       <span className={`font-bold ${teamHealthStats.teamProgress >= 100 ? 'text-emerald-600 dark:text-emerald-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
                         {teamHealthStats.teamProgress.toFixed(1)}%
                       </span>
                     </div>
-                    <div className="relative h-3 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
+                    <div className="relative h-3 bg-muted rounded-full overflow-hidden">
                       <div
                         className={`h-full ${getProgressColor(teamHealthStats.teamProgress)} rounded-full transition-all duration-700`}
                         style={{ width: `${Math.min(teamHealthStats.teamProgress, 100)}%` }}
@@ -835,19 +835,19 @@ export const AdminMetas = () => {
 
                   {/* Stats Row */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <div className="text-center p-2 rounded-lg bg-white/50 dark:bg-gray-800/50">
-                      <p className="text-lg font-bold text-gray-900 dark:text-white">
+                    <div className="text-center p-2 rounded-lg bg-muted/50">
+                      <p className="text-lg font-bold text-foreground">
                         {teamHealthStats.sellersOnTarget}/{teamHealthStats.totalSellers}
                       </p>
-                      <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
                         Na Meta
                       </p>
                     </div>
-                    <div className="text-center p-2 rounded-lg bg-white/50 dark:bg-gray-800/50">
+                    <div className="text-center p-2 rounded-lg bg-muted/50">
                       <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
                         {formatCurrencyCompact(teamHealthStats.totalRealized)}
                       </p>
-                      <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
                         Realizado
                       </p>
                     </div>
@@ -880,7 +880,7 @@ export const AdminMetas = () => {
                   return (
                     <Card
                       key={meta.id}
-                      className={`relative overflow-hidden border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition-all group ${getCardBorderClass(exactProgress)}`}
+                      className={`relative overflow-hidden border border-border bg-card shadow-sm hover:shadow-md transition-all group ${getCardBorderClass(exactProgress)}`}
                     >
                       {/* Delete Button */}
                       <AlertDialog>
@@ -938,7 +938,7 @@ export const AdminMetas = () => {
 
                         {/* Body: Huge Value + Status */}
                         <div className="py-2">
-                          <p className="text-3xl font-bold text-gray-900 dark:text-white tabular-nums">
+                          <p className="text-3xl font-bold text-foreground tabular-nums">
                             {formatCurrencyCompact(valorMeta)}
                           </p>
                           <div className="flex items-center gap-2 mt-2">
@@ -948,7 +948,7 @@ export const AdminMetas = () => {
                               {status.text}
                             </span>
                           </div>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          <p className="text-xs text-muted-foreground mt-1">
                             Realizado: <span className="text-emerald-600 dark:text-emerald-400 font-medium">{formatCurrency(realizado)}</span>
                           </p>
                         </div>
@@ -956,7 +956,7 @@ export const AdminMetas = () => {
                         {/* Footer: Progress Bar - Thicker with exact % */}
                         <div className="space-y-2">
                           <div className="flex justify-between items-center text-xs">
-                            <span className="text-gray-500 dark:text-gray-400">Progresso</span>
+                            <span className="text-muted-foreground">Progresso</span>
                             <div className="flex items-center gap-1">
                               {exactProgress >= 150 && <Crown className="h-3 w-3 text-amber-500" />}
                               <span className={`font-bold text-sm ${exactProgress >= 150 ? "text-amber-500" :
@@ -967,7 +967,7 @@ export const AdminMetas = () => {
                               </span>
                             </div>
                           </div>
-                          <div className="relative h-4 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
+                          <div className="relative h-4 bg-muted rounded-full overflow-hidden">
                             <div
                               className={`h-full ${getProgressColor(exactProgress)} rounded-full transition-all duration-500`}
                               style={{ width: `${visualProgress}%` }}
@@ -1016,7 +1016,7 @@ export const AdminMetas = () => {
                           <Button
                             type="button"
                             variant="outline"
-                            className="w-full justify-between bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground"
+                            className="w-full justify-between bg-card border-border text-foreground"
                           >
                             <div className="flex items-center gap-2">
                               <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -1056,7 +1056,7 @@ export const AdminMetas = () => {
                           value={valorMetaConsolidadaFormatado}
                           onChange={(e) => formatarMoeda(e.target.value, setValorMetaConsolidada, setValorMetaConsolidadaFormatado)}
                           placeholder="R$ 0,00"
-                          className="pl-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-emerald-500"
+                          className="pl-10 bg-card border-border text-foreground focus:ring-emerald-500"
                           required
                         />
                       </div>
@@ -1076,7 +1076,7 @@ export const AdminMetas = () => {
                         value={descricaoConsolidada}
                         onChange={(e) => setDescricaoConsolidada(e.target.value)}
                         placeholder="Ex: Meta Black Friday..."
-                        className="bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-emerald-500 min-h-[80px]"
+                        className="bg-card border-border text-foreground focus:ring-emerald-500 min-h-[80px]"
                       />
                     </div>
 
@@ -1087,7 +1087,7 @@ export const AdminMetas = () => {
                         value={produtoAlvo}
                         onChange={(e) => setProdutoAlvo(e.target.value)}
                         placeholder="Ex: Plano Premium..."
-                        className="bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground focus:ring-emerald-500"
+                        className="bg-card border-border text-foreground focus:ring-emerald-500"
                       />
                     </div>
 
@@ -1120,7 +1120,7 @@ export const AdminMetas = () => {
           {/* RIGHT COLUMN - The Context */}
           <div className="col-span-12 lg:col-span-8">
             <div className="flex items-center gap-3 mb-4 flex-wrap">
-              <div className="p-2 rounded-lg bg-cyan-50 text-cyan-700 dark:bg-slate-800 dark:text-cyan-200">
+              <div className="p-2 rounded-lg bg-cyan-50 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-200">
                 <TrendingUp className="h-4 w-4" />
               </div>
               <h3 className="font-semibold text-foreground">Campanhas Ativas</h3>
@@ -1130,16 +1130,16 @@ export const AdminMetas = () => {
             </div>
 
             {metasConsolidadas?.length === 0 ? (
-              <Card className="border-dashed border-gray-300 dark:border-gray-700 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+              <Card className="border-dashed border-border bg-muted/50">
                 <CardContent className="py-16 text-center space-y-3">
                   <div className="relative inline-block">
                     <Rocket className="h-16 w-16 mx-auto text-emerald-400 dark:text-emerald-500" />
                     <Star className="h-6 w-6 absolute -top-1 -right-1 text-amber-400 animate-pulse" />
                   </div>
-                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <h4 className="text-lg font-semibold text-foreground">
                     Nenhuma missão definida
                   </h4>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs mx-auto">
+                  <p className="text-sm text-muted-foreground max-w-xs mx-auto">
                     O time ainda não tem uma meta consolidada para este mês. Crie uma campanha para motivar a equipe!
                   </p>
                 </CardContent>
@@ -1199,7 +1199,7 @@ export const AdminMetas = () => {
                   return (
                     <Card
                       key={meta.id}
-                      className={`relative overflow-hidden border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition-all group ${cardBorderClass}`}
+                      className={`relative overflow-hidden border border-border bg-card shadow-sm hover:shadow-md transition-all group ${cardBorderClass}`}
                     >
 
                       {/* Delete Button - Always visible */}
@@ -1257,13 +1257,13 @@ export const AdminMetas = () => {
                         {/* Top 3 Contributors */}
                         {topContributors.length > 0 && (
                           <div className="mt-3 flex items-center gap-2">
-                            <span className="text-xs text-gray-500 dark:text-gray-400">Top:</span>
+                            <span className="text-xs text-muted-foreground">Top:</span>
                             <TooltipProvider>
                               <div className="flex -space-x-2">
                                 {topContributors.map((contributor, idx) => (
                                   <Tooltip key={idx}>
                                     <TooltipTrigger asChild>
-                                      <Avatar className={`h-7 w-7 border-2 border-white dark:border-gray-900 ${idx === 0 ? 'ring-2 ring-amber-400' : ''}`}>
+                                      <Avatar className={`h-7 w-7 border-2 border-card ${idx === 0 ? 'ring-2 ring-amber-400' : ''}`}>
                                         <AvatarImage src={contributor.avatarUrl || ''} />
                                         <AvatarFallback className="bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200 text-[10px] font-semibold">
                                           {contributor.nome.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
@@ -1283,7 +1283,7 @@ export const AdminMetas = () => {
 
                         {/* Body: Huge Value + Status */}
                         <div className="py-2">
-                          <p className="text-4xl font-bold text-gray-900 dark:text-white tabular-nums">
+                          <p className="text-4xl font-bold text-foreground tabular-nums">
                             {formatCurrencyCompact(valorMeta)}
                           </p>
                           <div className="flex items-center gap-2 mt-2">
@@ -1294,7 +1294,7 @@ export const AdminMetas = () => {
                               {isGodMode ? '🔥 SUPER META!' : isCompleted ? '✅ Meta Batida!' : `Falta ${formatCurrencyCompact(falta)}`}
                             </span>
                           </div>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          <p className="text-xs text-muted-foreground mt-1">
                             Realizado: <span className="text-emerald-600 dark:text-emerald-400 font-medium">{formatCurrency(realizado)}</span>
                           </p>
                         </div>
@@ -1302,7 +1302,7 @@ export const AdminMetas = () => {
                         {/* Footer: Progress Bar - Thicker with exact % */}
                         <div className="space-y-2">
                           <div className="flex justify-between items-center text-xs">
-                            <span className="text-gray-500 dark:text-gray-400">Progresso da Equipe</span>
+                            <span className="text-muted-foreground">Progresso da Equipe</span>
                             <div className="flex items-center gap-1">
                               {isGodMode && <Crown className="h-3 w-3 text-amber-500" />}
                               <span className={`font-bold text-sm ${isGodMode ? 'text-amber-500' : isCompleted ? 'text-emerald-600 dark:text-emerald-400' : 'text-cyan-600 dark:text-cyan-400'
@@ -1311,7 +1311,7 @@ export const AdminMetas = () => {
                               </span>
                             </div>
                           </div>
-                          <div className="relative h-4 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
+                          <div className="relative h-4 bg-muted rounded-full overflow-hidden">
                             <div
                               className={`h-full ${progressBarColor} rounded-full transition-all duration-500`}
                               style={{ width: `${visualProgress}%` }}

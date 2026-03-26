@@ -138,7 +138,7 @@ const getCallStatusBadge = (status?: string) => {
         case "failed":
             return <Badge className="bg-rose-500/15 text-rose-300 border-rose-500/25">Falhou</Badge>;
         default:
-            return <Badge variant="outline" className="border-slate-700 text-slate-400">{status || "Desconhecido"}</Badge>;
+            return <Badge variant="outline" className="border-border text-muted-foreground">{status || "Desconhecido"}</Badge>;
     }
 };
 
@@ -154,7 +154,7 @@ const CircularProgress = ({ value, size = 52 }: { value: number; size?: number }
     return (
         <div className="relative" style={{ width: size, height: size }}>
             <svg width={size} height={size} className="-rotate-90">
-                <circle cx={size / 2} cy={size / 2} r={r} strokeWidth={sw} className="stroke-slate-700 fill-none" />
+                <circle cx={size / 2} cy={size / 2} r={r} strokeWidth={sw} className="stroke-border fill-none" />
                 <motion.circle cx={size / 2} cy={size / 2} r={r} strokeWidth={sw}
                     className={`${stroke} fill-none`} strokeLinecap="round"
                     initial={{ strokeDashoffset: c }} animate={{ strokeDashoffset: offset }}
@@ -162,7 +162,7 @@ const CircularProgress = ({ value, size = 52 }: { value: number; size?: number }
                 />
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-xs font-bold text-white tabular-nums">{value}%</span>
+                <span className="text-xs font-bold text-foreground tabular-nums">{value}%</span>
             </div>
         </div>
     );
@@ -187,7 +187,7 @@ const PipelineStepper = ({ currentStage, onStageChange }: { currentStage: string
                                 ${i === PIPELINE_STAGES.length - 1 ? "rounded-r-full" : ""}
                                 ${active ? `${stage.color} text-white shadow-md` : ""}
                                 ${done ? "bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30" : ""}
-                                ${pending ? "bg-slate-800 text-slate-500 hover:bg-slate-700 hover:text-slate-300" : ""}
+                                ${pending ? "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground" : ""}
                             `}
                         >
                             <span className="flex items-center gap-1">
@@ -204,7 +204,7 @@ const PipelineStepper = ({ currentStage, onStageChange }: { currentStage: string
                             )}
                         </button>
                         {i < PIPELINE_STAGES.length - 1 && (
-                            <ChevronRight className={`h-4 w-4 flex-shrink-0 -mx-0.5 z-10 ${i < idx ? "text-emerald-400" : "text-slate-600"}`} />
+                            <ChevronRight className={`h-4 w-4 flex-shrink-0 -mx-0.5 z-10 ${i < idx ? "text-emerald-400" : "text-muted-foreground"}`} />
                         )}
                     </div>
                 );
@@ -222,12 +222,12 @@ const QuickBtn = ({ icon: Icon, label, color, onClick, disabled = false }: { ico
                 whileTap={disabled ? {} : { scale: 0.93 }}
                 onClick={disabled ? undefined : onClick}
                 disabled={disabled}
-                className={`flex flex-col items-center gap-1.5 p-3 rounded-2xl ${disabled ? "bg-slate-700/50 cursor-not-allowed opacity-60" : color} transition-all duration-200 group`}
+                className={`flex flex-col items-center gap-1.5 p-3 rounded-2xl ${disabled ? "bg-muted cursor-not-allowed opacity-60" : color} transition-all duration-200 group`}
             >
                 <Icon className="h-5 w-5 text-white/90 group-hover:text-white" />
             </motion.button>
         </TooltipTrigger>
-        <TooltipContent side="bottom" className="bg-slate-800 text-white text-xs">{label}</TooltipContent>
+        <TooltipContent side="bottom" className="bg-card text-foreground text-xs border border-border">{label}</TooltipContent>
     </Tooltip>
 );
 
@@ -244,16 +244,16 @@ const TimelineEntry = ({ event, isLast }: { event: any; isLast: boolean }) => {
                 <div className={`w-8 h-8 rounded-xl ${cfg.bg} flex items-center justify-center flex-shrink-0 ring-1 ring-white/5`}>
                     <Icon className={`h-3.5 w-3.5 ${cfg.color}`} />
                 </div>
-                {!isLast && <div className="w-0.5 flex-1 bg-slate-800 my-1 min-h-[16px]" />}
+                {!isLast && <div className="w-0.5 flex-1 bg-border my-1 min-h-[16px]" />}
             </div>
             <div className={`flex-1 ${isLast ? "pb-0" : "pb-4"}`}>
-                <div className="bg-slate-800/50 rounded-xl p-3 border border-slate-700/40 hover:border-slate-600/40 transition-colors">
-                    <p className="text-xs text-slate-400 mb-1">
+                <div className="bg-muted/50 rounded-xl p-3 border border-border hover:border-border/80 transition-colors">
+                    <p className="text-xs text-muted-foreground mb-1">
                         <span className="text-emerald-400 font-medium">{event.user_name || "Você"}</span>
                         {" · "}
                         {format(new Date(event.created_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
                     </p>
-                    <p className="text-sm text-slate-200 leading-relaxed">{event.content || event.title}</p>
+                    <p className="text-sm text-foreground leading-relaxed">{event.content || event.title}</p>
                 </div>
             </div>
         </div>
@@ -279,7 +279,7 @@ const QuestCard = ({ task, onComplete }: { task: any; onComplete: () => void }) 
             )}
             <div className="flex items-start gap-3 relative">
                 <motion.button whileTap={{ scale: 0.88 }} onClick={handle}
-                    className={`mt-0.5 p-1.5 rounded-lg flex-shrink-0 transition-all ${done ? "bg-emerald-500 text-white" : "bg-slate-700 text-slate-400 hover:bg-amber-500 hover:text-white"}`}>
+                    className={`mt-0.5 p-1.5 rounded-lg flex-shrink-0 transition-all ${done ? "bg-emerald-500 text-white" : "bg-muted text-muted-foreground hover:bg-amber-500 hover:text-white"}`}>
                     {done ? <CheckCircle2 className="h-4 w-4" /> : <Circle className="h-4 w-4" />}
                 </motion.button>
                 <div className="flex-1">
@@ -287,11 +287,11 @@ const QuestCard = ({ task, onComplete }: { task: any; onComplete: () => void }) 
                         <Zap className="h-3.5 w-3.5 text-amber-400" />
                         <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">Próxima Missão</span>
                     </div>
-                    <p className={`text-base font-semibold transition-all ${done ? "text-emerald-400 line-through opacity-60" : "text-white"}`}>
+                    <p className={`text-base font-semibold transition-all ${done ? "text-emerald-400 line-through opacity-60" : "text-foreground"}`}>
                         {task.title}
                     </p>
                     {task.due_date && (
-                        <div className="flex items-center gap-1.5 mt-1.5 text-slate-400">
+                        <div className="flex items-center gap-1.5 mt-1.5 text-muted-foreground">
                             <Clock className="h-3 w-3" />
                             <span className="text-xs">{format(new Date(task.due_date), "dd MMM, HH:mm", { locale: ptBR })}</span>
                         </div>
@@ -611,7 +611,7 @@ export default function DealCommandCenter() {
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center h-[calc(100vh-64px)] bg-slate-950">
+            <div className="flex items-center justify-center h-[calc(100vh-64px)] bg-background">
                 <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}>
                     <Target className="h-8 w-8 text-emerald-500" />
                 </motion.div>
@@ -621,9 +621,9 @@ export default function DealCommandCenter() {
 
     if (!deal) {
         return (
-            <div className="flex flex-col items-center justify-center h-[calc(100vh-64px)] gap-4 bg-slate-950">
+            <div className="flex flex-col items-center justify-center h-[calc(100vh-64px)] gap-4 bg-background">
                 <AlertTriangle className="h-12 w-12 text-amber-500" />
-                <p className="text-slate-400">Deal não encontrado</p>
+                <p className="text-muted-foreground">Deal não encontrado</p>
                 <Button onClick={() => navigate("/crm")} variant="outline">Voltar ao Pipeline</Button>
             </div>
         );
@@ -633,18 +633,18 @@ export default function DealCommandCenter() {
 
     return (
         <>
-            <div className="min-h-[calc(100vh-64px)] bg-slate-950">
+            <div className="min-h-[calc(100vh-64px)] bg-background">
                 {showConfetti && <Confetti show={showConfetti} />}
 
                 {/* â"€â"€ HEADER â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
-                <div className="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-xl border-b border-slate-800/60">
+                <div className="sticky top-0 z-40 bg-background/90 backdrop-blur-xl border-b border-border">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6">
 
                         {/* Row 1: Back + Title + Actions */}
                         <div className="flex items-center justify-between gap-4 py-3">
                             <div className="flex items-center gap-3 min-w-0">
                                 <Button variant="ghost" size="sm" onClick={() => navigate("/crm")}
-                                    className="text-slate-400 hover:text-white hover:bg-slate-800 h-8 w-8 p-0 rounded-lg flex-shrink-0">
+                                    className="text-muted-foreground hover:text-foreground hover:bg-muted h-8 w-8 p-0 rounded-lg flex-shrink-0">
                                     <ArrowLeft className="h-4 w-4" />
                                 </Button>
 
@@ -653,15 +653,15 @@ export default function DealCommandCenter() {
                                 </div>
 
                                 <div className="min-w-0">
-                                    <h1 className="text-sm sm:text-base font-bold text-white truncate leading-tight">{deal.title}</h1>
-                                    <p className="text-xs text-slate-500 truncate">{deal.customer_name}</p>
+                                    <h1 className="text-sm sm:text-base font-bold text-foreground truncate leading-tight">{deal.title}</h1>
+                                    <p className="text-xs text-muted-foreground truncate">{deal.customer_name}</p>
                                 </div>
                             </div>
 
                             <div className="flex items-center gap-3 flex-shrink-0">
                                 {/* Value */}
                                 <div className="text-right hidden sm:block">
-                                    <p className="text-[10px] text-slate-500 uppercase tracking-wider">Valor</p>
+                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Valor</p>
                                     <p className="text-lg font-bold text-emerald-400 tabular-nums leading-tight">
                                         {formatCurrency(deal.value || 0)}
                                     </p>
@@ -733,8 +733,8 @@ export default function DealCommandCenter() {
                         <div className="col-span-12 lg:col-span-3 space-y-4">
 
                             {/* Quick actions */}
-                            <div className="bg-slate-900 rounded-2xl p-4 border border-slate-800/60">
-                                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-3">Ações Rápidas</p>
+                            <div className="bg-card rounded-2xl p-4 border border-border">
+                                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-3">Ações Rápidas</p>
                                 <TooltipProvider delayDuration={80}>
                                     <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:justify-around">
                                         <QuickBtn
@@ -762,52 +762,52 @@ export default function DealCommandCenter() {
                                     </div>
                                     <div>
                                         <p className={`text-sm font-semibold ${health.color}`}>{health.label}</p>
-                                        <p className="text-xs text-slate-500">{health.subtitle}</p>
+                                        <p className="text-xs text-muted-foreground">{health.subtitle}</p>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Contact card */}
-                            <div className="bg-slate-900 rounded-2xl p-4 border border-slate-800/60 space-y-3">
-                                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Contato</p>
+                            <div className="bg-card rounded-2xl p-4 border border-border space-y-3">
+                                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Contato</p>
                                 <div className="flex items-center gap-3">
-                                    <Avatar className="h-11 w-11 ring-2 ring-slate-700">
+                                    <Avatar className="h-11 w-11 ring-2 ring-border">
                                         <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-cyan-500 text-white font-bold text-sm">
                                             {deal.customer_name?.substring(0, 2).toUpperCase() || "?"}
                                         </AvatarFallback>
                                     </Avatar>
                                     <div className="min-w-0">
-                                        <p className="font-semibold text-white text-sm truncate">{deal.customer_name}</p>
-                                        <p className="text-xs text-slate-400 truncate">{deal.customer_email || "Sem email"}</p>
+                                        <p className="font-semibold text-foreground text-sm truncate">{deal.customer_name}</p>
+                                        <p className="text-xs text-muted-foreground truncate">{deal.customer_email || "Sem email"}</p>
                                     </div>
                                 </div>
                                 {deal.customer_phone && (
-                                    <div className="flex items-center gap-2 bg-slate-800/50 rounded-xl px-3 py-2">
-                                        <Phone className="h-3.5 w-3.5 text-slate-500 flex-shrink-0" />
-                                        <span className="text-sm text-slate-300">{deal.customer_phone}</span>
+                                    <div className="flex items-center gap-2 bg-muted/50 rounded-xl px-3 py-2">
+                                        <Phone className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                                        <span className="text-sm text-foreground">{deal.customer_phone}</span>
                                     </div>
                                 )}
                             </div>
 
                             {/* Details widget */}
-                            <div className="bg-slate-900 rounded-2xl p-4 border border-slate-800/60 space-y-3">
-                                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Detalhes</p>
+                            <div className="bg-card rounded-2xl p-4 border border-border space-y-3">
+                                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Detalhes</p>
                                 {[
                                     { icon: Target, label: "Fonte", value: (deal as any).source || "Manual" },
                                     { icon: Calendar, label: "Criado", value: format(new Date(deal.created_at), "dd MMM yyyy", { locale: ptBR }) },
                                     { icon: TrendingUp, label: "Probabilidade", value: `${deal.probability}%` },
                                 ].map(({ icon: Icon, label, value }) => (
                                     <div key={label} className="flex items-center justify-between">
-                                        <span className="text-xs text-slate-500 flex items-center gap-1.5">
+                                        <span className="text-xs text-muted-foreground flex items-center gap-1.5">
                                             <Icon className="h-3.5 w-3.5" />{label}
                                         </span>
-                                        <span className="text-sm text-white font-medium">{value}</span>
+                                        <span className="text-sm text-foreground font-medium">{value}</span>
                                     </div>
                                 ))}
 
                                 {/* Probability bar */}
                                 <div className="pt-1">
-                                    <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                    <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                                         <motion.div
                                             className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-cyan-400"
                                             initial={{ width: 0 }}
@@ -822,9 +822,9 @@ export default function DealCommandCenter() {
                             <CustomFieldsSection dealId={id!} compact />
 
                             {/* Mobile Value / Probability */}
-                            <div className="sm:hidden bg-slate-900 rounded-2xl p-4 border border-slate-800/60 flex items-center justify-between">
+                            <div className="sm:hidden bg-card rounded-2xl p-4 border border-border flex items-center justify-between">
                                 <div>
-                                    <p className="text-[10px] text-slate-500 uppercase tracking-wider">Valor</p>
+                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Valor</p>
                                     <p className="text-xl font-bold text-emerald-400">{formatCurrency(deal.value || 0)}</p>
                                 </div>
                                 <CircularProgress value={deal.probability || 50} />
@@ -845,10 +845,10 @@ export default function DealCommandCenter() {
                             />
 
                             {/* Main panel */}
-                            <div className="bg-slate-900 rounded-2xl border border-slate-800/60 overflow-hidden">
+                            <div className="bg-card rounded-2xl border border-border overflow-hidden">
 
                                 {/* Tab bar */}
-                                <div className="flex gap-0 border-b border-slate-800/60 px-2 pt-2 overflow-x-auto scrollbar-none">
+                                <div className="flex gap-0 border-b border-border px-2 pt-2 overflow-x-auto scrollbar-none">
                                     {TABS.map((tab) => {
                                         const TabIcon = tab.icon;
                                         const active = activeTab === tab.id;
@@ -857,8 +857,8 @@ export default function DealCommandCenter() {
                                                 className={`
                                                     flex items-center gap-1.5 px-3 sm:px-4 py-2.5 text-xs font-medium rounded-t-xl transition-all duration-150 whitespace-nowrap shrink-0
                                                     ${active
-                                                        ? "bg-slate-800 text-emerald-400 border-b-2 border-emerald-500 -mb-px"
-                                                        : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/50"}
+                                                        ? "bg-muted text-emerald-400 border-b-2 border-emerald-500 -mb-px"
+                                                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"}
                                                 `}
                                             >
                                                 <TabIcon className="h-3.5 w-3.5" />
@@ -880,9 +880,9 @@ export default function DealCommandCenter() {
                                                 <ScrollArea className="h-[360px]">
                                                     <div className="p-4 space-y-1">
                                                         {timeline.length === 0 ? (
-                                                            <div className="flex flex-col items-center justify-center py-14 text-slate-600">
+                                                            <div className="flex flex-col items-center justify-center py-14 text-muted-foreground">
                                                                 <StickyNote className="h-9 w-9 mb-3 opacity-40" />
-                                                                <p className="text-sm font-medium text-slate-500">Nenhuma atividade ainda</p>
+                                                                <p className="text-sm font-medium text-muted-foreground">Nenhuma atividade ainda</p>
                                                                 <p className="text-xs mt-1">Adicione a primeira nota abaixo</p>
                                                             </div>
                                                         ) : (
@@ -894,16 +894,16 @@ export default function DealCommandCenter() {
                                                 </ScrollArea>
 
                                                 {/* Note input */}
-                                                <div className="p-3 border-t border-slate-800/60 bg-slate-900/80">
-                                                    <div className="flex items-center gap-2 bg-slate-800/60 rounded-xl px-3 py-2 ring-1 ring-slate-700/50 focus-within:ring-emerald-500/40 transition-all">
+                                                <div className="p-3 border-t border-border bg-card/80">
+                                                    <div className="flex items-center gap-2 bg-muted/60 rounded-xl px-3 py-2 ring-1 ring-border focus-within:ring-emerald-500/40 transition-all">
                                                         <Input
                                                             value={newNote}
                                                             onChange={(e) => setNewNote(e.target.value)}
                                                             placeholder="Digite uma nota ou comando..."
-                                                            className="flex-1 bg-transparent border-0 text-sm text-slate-200 placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0 h-8 p-0"
+                                                            className="flex-1 bg-transparent border-0 text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 h-8 p-0"
                                                             onKeyDown={(e) => { if (e.key === "Enter" && newNote.trim()) addNote.mutate(newNote.trim()); }}
                                                         />
-                                                        <Button variant="ghost" size="sm" className="text-slate-500 hover:text-slate-300 h-7 w-7 p-0">
+                                                        <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground h-7 w-7 p-0">
                                                             <Smile className="h-4 w-4" />
                                                         </Button>
                                                         <Button size="sm"
@@ -946,8 +946,8 @@ export default function DealCommandCenter() {
 
                                                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                                                     <div>
-                                                        <p className="text-sm font-semibold text-white">Ligações</p>
-                                                        <p className="text-xs text-slate-500">
+                                                        <p className="text-sm font-semibold text-foreground">Ligações</p>
+                                                        <p className="text-xs text-muted-foreground">
                                                             Registre chamadas, transcreva e gere insights com IA
                                                         </p>
                                                     </div>
@@ -969,10 +969,10 @@ export default function DealCommandCenter() {
                                                                 <Lock className="h-4 w-4 text-amber-300" />
                                                             </div>
                                                             <div className="min-w-0">
-                                                                <p className="text-sm font-semibold text-white">
+                                                                <p className="text-sm font-semibold text-foreground">
                                                                     {hasCallsPlanAccess ? "Ative o add-on Ligações" : "Ligações disponível no Plus e Pro"}
                                                                 </p>
-                                                                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                                                                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                                                                     {hasCallsPlanAccess ? (
                                                                         <>
                                                                             Seu plano atual é <span className="text-amber-300 font-medium capitalize">{currentPlan}</span> e já é elegível.
@@ -999,21 +999,21 @@ export default function DealCommandCenter() {
                                                         </div>
                                                     </div>
                                                 ) : loadingCalls ? (
-                                                    <div className="flex items-center justify-center py-10 text-slate-500">
+                                                    <div className="flex items-center justify-center py-10 text-muted-foreground">
                                                         <Loader2 className="h-5 w-5 animate-spin mr-2" />
                                                         Carregando chamadas...
                                                     </div>
                                                 ) : dealCalls.length === 0 ? (
-                                                    <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-800/20 p-8 text-center">
-                                                        <PhoneCall className="h-10 w-10 mx-auto mb-3 text-slate-600" />
-                                                        <p className="text-sm font-medium text-slate-400">Nenhuma ligação registrada</p>
-                                                        <p className="text-xs text-slate-600 mt-1 mb-4">
+                                                    <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-8 text-center">
+                                                        <PhoneCall className="h-10 w-10 mx-auto mb-3 text-muted-foreground/50" />
+                                                        <p className="text-sm font-medium text-muted-foreground">Nenhuma ligação registrada</p>
+                                                        <p className="text-xs text-muted-foreground/60 mt-1 mb-4">
                                                             Use "Nova ligação" para testar o fluxo em modo demo e validar a experiência no deal
                                                         </p>
                                                         <Button
                                                             variant="outline"
                                                             size="sm"
-                                                            className="border-slate-700 text-slate-300 hover:text-white"
+                                                            className="border-border text-muted-foreground hover:text-foreground"
                                                             onClick={() => setShowCallModal(true)}
                                                         >
                                                             Criar chamada demo
@@ -1022,12 +1022,12 @@ export default function DealCommandCenter() {
                                                 ) : (
                                                     <div className="space-y-3">
                                                         {dealCalls.map((call: any) => (
-                                                            <div key={call.id} className="rounded-2xl border border-slate-800/70 bg-slate-800/30 p-4 space-y-4">
+                                                            <div key={call.id} className="rounded-2xl border border-border bg-muted/30 p-4 space-y-4">
                                                                 <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
                                                                     <div className="space-y-2">
                                                                         <div className="flex items-center gap-2 flex-wrap">
                                                                             {getCallStatusBadge(call.status)}
-                                                                            <Badge variant="outline" className="border-slate-700 text-slate-400">
+                                                                            <Badge variant="outline" className="border-border text-muted-foreground">
                                                                                 {call.provider === "demo" ? "Demo" : (call.provider || "Telefone")}
                                                                             </Badge>
                                                                             {call.transcript_status && (
@@ -1040,7 +1040,7 @@ export default function DealCommandCenter() {
                                                                                                 ? "border-blue-500/25 text-blue-300"
                                                                                                 : call.transcript_status === "failed"
                                                                                                     ? "border-rose-500/25 text-rose-300"
-                                                                                                    : "border-slate-700 text-slate-400"
+                                                                                                    : "border-border text-muted-foreground"
                                                                                     }
                                                                                 >
                                                                                     {call.transcript_status === "transcribing" && (
@@ -1050,10 +1050,10 @@ export default function DealCommandCenter() {
                                                                                 </Badge>
                                                                             )}
                                                                         </div>
-                                                                        <div className="text-sm text-slate-300">
-                                                                            <span className="text-slate-500">Cliente:</span> {formatPhone(call.customer_phone)}
+                                                                        <div className="text-sm text-foreground">
+                                                                            <span className="text-muted-foreground">Cliente:</span> {formatPhone(call.customer_phone)}
                                                                         </div>
-                                                                        <div className="text-xs text-slate-500 flex flex-wrap gap-x-3 gap-y-1">
+                                                                        <div className="text-xs text-muted-foreground flex flex-wrap gap-x-3 gap-y-1">
                                                                             <span>{format(new Date(call.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
                                                                             {typeof call.duration_seconds === "number" && <span>Duração: {call.duration_seconds}s</span>}
                                                                         </div>
@@ -1063,7 +1063,7 @@ export default function DealCommandCenter() {
                                                                         <Button
                                                                             size="sm"
                                                                             variant="outline"
-                                                                            className="border-slate-700 text-slate-300 hover:text-white w-full sm:w-auto"
+                                                                            className="border-border text-muted-foreground hover:text-foreground w-full sm:w-auto"
                                                                             disabled={!call.transcript_text || generateCallInsights.isPending}
                                                                             onClick={() => generateCallInsights.mutate(call.id)}
                                                                         >
@@ -1076,23 +1076,23 @@ export default function DealCommandCenter() {
                                                                 </div>
 
                                                                 {call.transcript_preview && (
-                                                                    <div className="rounded-xl border border-slate-700/60 bg-slate-900/40 p-3">
-                                                                        <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-1">Preview da transcrição</p>
-                                                                        <p className="text-sm text-slate-300 leading-relaxed">{call.transcript_preview}</p>
+                                                                    <div className="rounded-xl border border-border bg-muted/40 p-3">
+                                                                        <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Preview da transcrição</p>
+                                                                        <p className="text-sm text-foreground leading-relaxed">{call.transcript_preview}</p>
                                                                     </div>
                                                                 )}
 
                                                                 {call.transcript_text && (
-                                                                    <details className="rounded-xl border border-slate-700/60 bg-slate-900/40">
+                                                                    <details className="rounded-xl border border-border bg-muted/40">
                                                                         <summary className="cursor-pointer list-none px-3 py-2.5 flex items-center justify-between">
-                                                                            <span className="text-sm font-medium text-slate-200">Transcrição completa</span>
-                                                                            <ChevronRight className="h-4 w-4 text-slate-500" />
+                                                                            <span className="text-sm font-medium text-foreground">Transcrição completa</span>
+                                                                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
                                                                         </summary>
                                                                         <div className="px-3 pb-3">
                                                                             <Textarea
                                                                                 readOnly
                                                                                 value={call.transcript_text}
-                                                                                className="min-h-[180px] bg-slate-950 border-slate-700 text-slate-200 text-sm leading-relaxed"
+                                                                                className="min-h-[180px] bg-background border-border text-foreground text-sm leading-relaxed"
                                                                             />
                                                                         </div>
                                                                     </details>
@@ -1116,7 +1116,7 @@ export default function DealCommandCenter() {
                                                                                                 ? "border-rose-500/20 text-rose-300"
                                                                                                 : call.insight.raw_output.sentiment === "mixed"
                                                                                                     ? "border-amber-500/20 text-amber-300"
-                                                                                                    : "border-slate-700 text-slate-400"
+                                                                                                    : "border-border text-muted-foreground"
                                                                                     }
                                                                                 >
                                                                                     {call.insight.raw_output.sentiment === "positive" ? "Positivo"
@@ -1130,13 +1130,13 @@ export default function DealCommandCenter() {
                                                                         {call.insight.summary && (
                                                                             <div>
                                                                                 <p className="text-[11px] uppercase tracking-wider text-emerald-300/70 mb-1">Resumo</p>
-                                                                                <p className="text-sm text-slate-200 leading-relaxed">{call.insight.summary}</p>
+                                                                                <p className="text-sm text-foreground leading-relaxed">{call.insight.summary}</p>
                                                                             </div>
                                                                         )}
 
                                                                         <div className="grid md:grid-cols-2 gap-3">
                                                                             <div>
-                                                                                <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-1">Objeções</p>
+                                                                                <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Objeções</p>
                                                                                 <div className="flex flex-wrap gap-1.5">
                                                                                     {(call.insight.objections || []).length > 0 ? (
                                                                                         (call.insight.objections || []).map((obj: string, idx: number) => (
@@ -1145,15 +1145,15 @@ export default function DealCommandCenter() {
                                                                                             </Badge>
                                                                                         ))
                                                                                     ) : (
-                                                                                        <span className="text-xs text-slate-500">Nenhuma objeção detectada</span>
+                                                                                        <span className="text-xs text-muted-foreground">Nenhuma objeção detectada</span>
                                                                                     )}
                                                                                 </div>
                                                                             </div>
                                                                             <div>
-                                                                                <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-1">Próximos passos</p>
+                                                                                <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Próximos passos</p>
                                                                                 <ul className="space-y-1">
                                                                                     {(call.insight.next_steps || []).map((step: string, idx: number) => (
-                                                                                        <li key={`${call.id}-step-${idx}`} className="text-sm text-slate-300 flex items-start gap-2">
+                                                                                        <li key={`${call.id}-step-${idx}`} className="text-sm text-foreground flex items-start gap-2">
                                                                                             <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 text-emerald-400 flex-shrink-0" />
                                                                                             <span>{step}</span>
                                                                                         </li>
@@ -1164,11 +1164,11 @@ export default function DealCommandCenter() {
 
                                                                         {call.insight.suggested_message && (
                                                                             <div>
-                                                                                <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-1">Mensagem sugerida</p>
+                                                                                <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Mensagem sugerida</p>
                                                                                 <Textarea
                                                                                     readOnly
                                                                                     value={call.insight.suggested_message}
-                                                                                    className="min-h-[88px] bg-slate-950 border-slate-700 text-slate-200 text-sm"
+                                                                                    className="min-h-[88px] bg-background border-border text-foreground text-sm"
                                                                                 />
                                                                             </div>
                                                                         )}
@@ -1183,11 +1183,11 @@ export default function DealCommandCenter() {
 
                                         {/* â"€â"€ Tarefas â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
                                         {activeTab === "tarefas" && (
-                                            <div className="flex flex-col items-center justify-center py-14 text-slate-600">
+                                            <div className="flex flex-col items-center justify-center py-14 text-muted-foreground">
                                                 <CheckCircle2 className="h-10 w-10 mb-3 opacity-40" />
-                                                <p className="text-sm font-medium text-slate-500">Nenhuma tarefa pendente</p>
+                                                <p className="text-sm font-medium text-muted-foreground">Nenhuma tarefa pendente</p>
                                                 <p className="text-xs mt-1 mb-4">Tarefas criadas aparecerão aqui</p>
-                                                <Button variant="outline" size="sm" className="gap-2 border-slate-700 text-slate-400 hover:text-white"
+                                                <Button variant="outline" size="sm" className="gap-2 border-border text-muted-foreground hover:text-foreground"
                                                     onClick={() => setShowTaskModal(true)}>
                                                     <Zap className="h-4 w-4" /> Nova Tarefa
                                                 </Button>
@@ -1207,33 +1207,33 @@ export default function DealCommandCenter() {
                                                 />
                                                 {uploadedFiles.length === 0 ? (
                                                     <div
-                                                        className="flex flex-col items-center justify-center py-14 border-2 border-dashed border-slate-700 rounded-2xl cursor-pointer hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all"
+                                                        className="flex flex-col items-center justify-center py-14 border-2 border-dashed border-border rounded-2xl cursor-pointer hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all"
                                                         onClick={() => fileInputRef.current?.click()}
                                                     >
-                                                        <Paperclip className="h-9 w-9 mb-3 text-slate-600" />
-                                                        <p className="text-sm font-medium text-slate-400">Nenhum arquivo anexado</p>
-                                                        <p className="text-xs text-slate-600 mt-1">Arraste ou clique para anexar</p>
+                                                        <Paperclip className="h-9 w-9 mb-3 text-muted-foreground/50" />
+                                                        <p className="text-sm font-medium text-muted-foreground">Nenhum arquivo anexado</p>
+                                                        <p className="text-xs text-muted-foreground/60 mt-1">Arraste ou clique para anexar</p>
                                                     </div>
                                                 ) : (
                                                     <div className="space-y-2">
                                                         {uploadedFiles.map((file, i) => (
-                                                            <div key={i} className="flex items-center gap-3 p-3 bg-slate-800/60 rounded-xl border border-slate-700/40">
-                                                                <div className="w-9 h-9 rounded-lg bg-slate-700 flex items-center justify-center flex-shrink-0">
+                                                            <div key={i} className="flex items-center gap-3 p-3 bg-muted/60 rounded-xl border border-border">
+                                                                <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
                                                                     {file.type.startsWith("image/")
                                                                         ? <img src={URL.createObjectURL(file)} alt="" className="w-full h-full object-cover rounded-lg" />
-                                                                        : <FileText className="h-4 w-4 text-slate-400" />}
+                                                                        : <FileText className="h-4 w-4 text-muted-foreground" />}
                                                                 </div>
                                                                 <div className="flex-1 min-w-0">
-                                                                    <p className="text-sm font-medium text-white truncate">{file.name}</p>
-                                                                    <p className="text-xs text-slate-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                                                                    <p className="text-sm font-medium text-foreground truncate">{file.name}</p>
+                                                                    <p className="text-xs text-muted-foreground">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                                                                 </div>
                                                                 <Button variant="ghost" size="sm" onClick={() => setUploadedFiles(p => p.filter((_, j) => j !== i))}
-                                                                    className="text-slate-500 hover:text-rose-400 h-7 w-7 p-0">
+                                                                    className="text-muted-foreground hover:text-rose-400 h-7 w-7 p-0">
                                                                     <X className="h-3.5 w-3.5" />
                                                                 </Button>
                                                             </div>
                                                         ))}
-                                                        <Button variant="outline" size="sm" className="w-full gap-2 border-slate-700 text-slate-400 hover:text-white mt-2"
+                                                        <Button variant="outline" size="sm" className="w-full gap-2 border-border text-muted-foreground hover:text-foreground mt-2"
                                                             onClick={() => fileInputRef.current?.click()}>
                                                             <Paperclip className="h-4 w-4" /> Anexar Mais
                                                         </Button>
@@ -1252,7 +1252,7 @@ export default function DealCommandCenter() {
                                                         deal={{ id: deal.id, title: deal.title, customer_name: deal.customer_name, customer_email: deal.customer_email, customer_phone: deal.customer_phone }}
                                                     />
                                                 ) : (
-                                                    <div className="flex items-center justify-center py-12 text-slate-500">
+                                                    <div className="flex items-center justify-center py-12 text-muted-foreground">
                                                         <Loader2 className="h-6 w-6 animate-spin" />
                                                     </div>
                                                 )}
@@ -1264,9 +1264,9 @@ export default function DealCommandCenter() {
 
                             {/* Deal observations chip */}
                             {deal.notes && (
-                                <div className="bg-slate-900/60 rounded-2xl p-4 border border-slate-800/40">
-                                    <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-2">Observações do Deal</p>
-                                    <p className="text-sm text-slate-300 leading-relaxed">{deal.notes}</p>
+                                <div className="bg-card/60 rounded-2xl p-4 border border-border">
+                                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-2">Observações do Deal</p>
+                                    <p className="text-sm text-foreground leading-relaxed">{deal.notes}</p>
                                 </div>
                             )}
                         </div>
@@ -1275,71 +1275,71 @@ export default function DealCommandCenter() {
 
                 {/* â"€â"€ MODALS â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
                 <Dialog open={showCallModal} onOpenChange={setShowCallModal}>
-                    <DialogContent className="bg-slate-900 border-slate-800 text-white w-[calc(100vw-1rem)] max-w-lg p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
+                    <DialogContent className="bg-card border-border text-foreground w-[calc(100vw-1rem)] max-w-lg p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                             <DialogTitle className="flex items-center gap-2">
                                 <PhoneCall className="h-5 w-5 text-emerald-400" />
                                 Iniciar ligação no Deal
                             </DialogTitle>
-                            <DialogDescription className="text-slate-400">
+                            <DialogDescription className="text-muted-foreground">
                                 MVP: registre a chamada e salve a transcrição no deal. Para validação imediata, use o modo demo.
                             </DialogDescription>
                         </DialogHeader>
 
                         <div className="space-y-4">
-                            <div className="rounded-xl border border-slate-800 bg-slate-800/40 p-3 space-y-2">
-                                <p className="text-xs uppercase tracking-wider text-slate-500">Contato do deal</p>
-                                <p className="text-sm text-slate-200">{deal.customer_name}</p>
-                                <p className="text-sm text-slate-400">{formatPhone(deal.customer_phone)}</p>
+                            <div className="rounded-xl border border-border bg-muted/40 p-3 space-y-2">
+                                <p className="text-xs uppercase tracking-wider text-muted-foreground">Contato do deal</p>
+                                <p className="text-sm text-foreground">{deal.customer_name}</p>
+                                <p className="text-sm text-muted-foreground">{formatPhone(deal.customer_phone)}</p>
                             </div>
 
                             {callMode !== "webrtc" && (
                                 <div className="space-y-2">
-                                    <label className="text-xs uppercase tracking-wider text-slate-500">Seu telefone (necessario no modo Twilio)</label>
+                                    <label className="text-xs uppercase tracking-wider text-muted-foreground">Seu telefone (necessario no modo Twilio)</label>
                                     <Input
                                         value={sellerPhone}
                                         onChange={(e) => setSellerPhone(e.target.value)}
                                         placeholder="(11) 99999-9999"
-                                        className="bg-slate-950 border-slate-700 text-white"
+                                        className="bg-background border-border text-foreground"
                                     />
                                 </div>
                             )}
 
                             <div className="space-y-2">
-                                <label className="text-xs uppercase tracking-wider text-slate-500">Modo</label>
+                                <label className="text-xs uppercase tracking-wider text-muted-foreground">Modo</label>
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                     <button
                                         type="button"
                                         onClick={() => setCallMode("webrtc")}
                                         className={`rounded-xl border px-3 py-2 text-left transition-colors ${callMode === "webrtc"
                                             ? "border-emerald-500/40 bg-emerald-500/10"
-                                            : "border-slate-700 bg-slate-950"
+                                            : "border-border bg-background"
                                             }`}
                                     >
-                                        <p className="text-sm font-medium text-white">Ligar pelo browser</p>
-                                        <p className="text-xs text-slate-400">Liga direto do navegador para o cliente</p>
+                                        <p className="text-sm font-medium text-foreground">Ligar pelo browser</p>
+                                        <p className="text-xs text-muted-foreground">Liga direto do navegador para o cliente</p>
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setCallMode("twilio")}
                                         className={`rounded-xl border px-3 py-2 text-left transition-colors ${callMode === "twilio"
                                             ? "border-blue-500/40 bg-blue-500/10"
-                                            : "border-slate-700 bg-slate-950"
+                                            : "border-border bg-background"
                                             }`}
                                     >
-                                        <p className="text-sm font-medium text-white">Click-to-call</p>
-                                        <p className="text-xs text-slate-400">Liga pro seu telefone e conecta ao cliente</p>
+                                        <p className="text-sm font-medium text-foreground">Click-to-call</p>
+                                        <p className="text-xs text-muted-foreground">Liga pro seu telefone e conecta ao cliente</p>
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setCallMode("demo")}
                                         className={`rounded-xl border px-3 py-2 text-left transition-colors ${callMode === "demo"
                                             ? "border-amber-500/40 bg-amber-500/10"
-                                            : "border-slate-700 bg-slate-950"
+                                            : "border-border bg-background"
                                             }`}
                                     >
-                                        <p className="text-sm font-medium text-white">Demo</p>
-                                        <p className="text-xs text-slate-400">Chamada simulada para testar o fluxo</p>
+                                        <p className="text-sm font-medium text-foreground">Demo</p>
+                                        <p className="text-xs text-muted-foreground">Chamada simulada para testar o fluxo</p>
                                     </button>
                                 </div>
                             </div>
@@ -1348,7 +1348,6 @@ export default function DealCommandCenter() {
                         <DialogFooter className="gap-2 sm:gap-0">
                             <Button
                                 variant="outline"
-                                className="border-slate-700 text-slate-300 hover:text-white"
                                 onClick={() => setShowCallModal(false)}
                             >
                                 Cancelar
@@ -1377,7 +1376,7 @@ export default function DealCommandCenter() {
                         queryClient.invalidateQueries({ queryKey: ["deal-calls", id] });
                     }
                 }}>
-                    <DialogContent className="bg-slate-900 border-slate-800 text-white w-[calc(100vw-1rem)] max-w-md p-4 sm:p-6">
+                    <DialogContent className="bg-card border-border text-foreground w-[calc(100vw-1rem)] max-w-md p-4 sm:p-6">
                         <DialogHeader>
                             <DialogTitle className="flex items-center gap-2">
                                 <PhoneCall className="h-5 w-5 text-emerald-400" />

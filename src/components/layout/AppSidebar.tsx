@@ -390,7 +390,7 @@ export function AppSidebar() {
           ) : (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="mx-auto hover:bg-gray-100">
+                <Button variant="ghost" size="icon" className="mx-auto hover:bg-sidebar-accent">
                   <Avatar className="h-10 w-10 ring-2 ring-emerald-500/20">
                     {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt="Avatar" />}
                     <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">

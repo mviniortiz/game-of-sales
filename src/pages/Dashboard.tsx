@@ -138,7 +138,7 @@ const KPICard = ({
         </TooltipTrigger>
         <TooltipContent
           side="bottom"
-          className="bg-slate-900/95 border-white/10 text-white font-mono"
+          className="bg-popover border-border text-popover-foreground font-mono"
         >
           {fullValue}
         </TooltipContent>

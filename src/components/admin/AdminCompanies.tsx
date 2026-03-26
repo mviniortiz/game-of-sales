@@ -82,7 +82,7 @@ const getPlanBadge = (plan: string) => {
       );
     default:
       return (
-        <Badge variant="secondary" className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
+        <Badge variant="secondary" className="bg-muted text-muted-foreground">
           Starter
         </Badge>
       );
@@ -282,11 +282,11 @@ export function AdminCompanies() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <Building2 className="h-6 w-6 text-emerald-600" />
             Empresas Clientes
           </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Gerencie todas as empresas (tenants) do sistema
           </p>
         </div>
@@ -298,27 +298,27 @@ export function AdminCompanies() {
               Nova Empresa Manual
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-800">
+          <DialogContent className="bg-card border-border">
             <DialogHeader>
-              <DialogTitle className="text-gray-900 dark:text-white">Criar Nova Empresa</DialogTitle>
-              <DialogDescription className="text-gray-500">
+              <DialogTitle className="text-foreground">Criar Nova Empresa</DialogTitle>
+              <DialogDescription className="text-muted-foreground">
                 Adicione uma nova empresa manualmente ao sistema.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label className="text-gray-700 dark:text-gray-300">Nome da Empresa *</Label>
+                <Label className="text-muted-foreground">Nome da Empresa *</Label>
                 <Input
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
                   placeholder="Ex: Rota de Negócios"
-                  className="bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-700"
+                  className="bg-card border-border"
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-gray-700 dark:text-gray-300">Plano</Label>
+                <Label className="text-muted-foreground">Plano</Label>
                 <Select value={plan} onValueChange={setPlan}>
-                  <SelectTrigger className="bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-700">
+                  <SelectTrigger className="bg-card border-border">
                     <SelectValue placeholder="Selecione um plano" />
                   </SelectTrigger>
                   <SelectContent>
@@ -329,12 +329,12 @@ export function AdminCompanies() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label className="text-gray-700 dark:text-gray-300">Logo (opcional)</Label>
+                <Label className="text-muted-foreground">Logo (opcional)</Label>
                 <Input
                   type="file"
                   accept="image/*"
                   onChange={(e) => setLogoFile(e.target.files?.[0] || null)}
-                  className="bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-700"
+                  className="bg-card border-border"
                 />
               </div>
             </div>
@@ -357,57 +357,57 @@ export function AdminCompanies() {
       {/* Search Bar */}
       <div className="flex items-center gap-4">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Buscar empresa..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-700"
+            className="pl-10 bg-card border-border"
           />
         </div>
-        <Badge variant="outline" className="text-gray-500 dark:text-gray-400 border-gray-300 dark:border-slate-700">
+        <Badge variant="outline" className="text-muted-foreground border-border">
           {filteredCompanies.length} empresas
         </Badge>
       </div>
 
       {/* Data Table */}
-      <Card className="border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+      <Card className="border border-border bg-card shadow-sm overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="bg-gray-50 dark:bg-slate-800/50 border-b border-gray-200 dark:border-slate-800">
-              <TableHead className="text-gray-600 dark:text-gray-300 font-semibold">Empresa</TableHead>
-              <TableHead className="text-gray-600 dark:text-gray-300 font-semibold">Plano</TableHead>
-              <TableHead className="text-gray-600 dark:text-gray-300 font-semibold text-center">Vendedores</TableHead>
-              <TableHead className="text-gray-600 dark:text-gray-300 font-semibold text-center">Produtos</TableHead>
-              <TableHead className="text-gray-600 dark:text-gray-300 font-semibold">Data de Criação</TableHead>
-              <TableHead className="text-gray-600 dark:text-gray-300 font-semibold">Status</TableHead>
-              <TableHead className="text-gray-600 dark:text-gray-300 font-semibold text-right">Ações</TableHead>
+            <TableRow className="bg-muted/50 border-b border-border">
+              <TableHead className="text-muted-foreground font-semibold">Empresa</TableHead>
+              <TableHead className="text-muted-foreground font-semibold">Plano</TableHead>
+              <TableHead className="text-muted-foreground font-semibold text-center">Vendedores</TableHead>
+              <TableHead className="text-muted-foreground font-semibold text-center">Produtos</TableHead>
+              <TableHead className="text-muted-foreground font-semibold">Data de Criação</TableHead>
+              <TableHead className="text-muted-foreground font-semibold">Status</TableHead>
+              <TableHead className="text-muted-foreground font-semibold text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-12 text-gray-500">
+                <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
                   Carregando empresas...
                 </TableCell>
               </TableRow>
             ) : filteredCompanies.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-12">
-                  <Building2 className="h-12 w-12 mx-auto text-gray-300 dark:text-gray-700 mb-3" />
-                  <p className="text-gray-500 dark:text-gray-400">Nenhuma empresa encontrada</p>
+                  <Building2 className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
+                  <p className="text-muted-foreground">Nenhuma empresa encontrada</p>
                 </TableCell>
               </TableRow>
             ) : (
               filteredCompanies.map((company) => (
                 <TableRow
                   key={company.id}
-                  className="border-b border-gray-100 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-colors group"
+                  className="border-b border-border hover:bg-muted/50 transition-colors group"
                 >
                   {/* Empresa */}
                   <TableCell className="py-4">
                     <div className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10 border border-gray-200 dark:border-slate-700">
+                      <Avatar className="h-10 w-10 border border-border">
                         {company.logo_url ? (
                           <AvatarImage src={company.logo_url} alt={company.name || "Empresa"} />
                         ) : null}
@@ -416,10 +416,10 @@ export function AdminCompanies() {
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-semibold text-gray-900 dark:text-white">
-                          {company.name || <span className="text-gray-400 italic">Sem nome</span>}
+                        <p className="font-semibold text-foreground">
+                          {company.name || <span className="text-muted-foreground italic">Sem nome</span>}
                         </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                        <p className="text-xs text-muted-foreground">
                           @{(company.name || "empresa").toLowerCase().replace(/\s+/g, "")}.com
                         </p>
                       </div>
@@ -433,24 +433,24 @@ export function AdminCompanies() {
 
                   {/* Usuários */}
                   <TableCell className="text-center">
-                    <div className="flex items-center justify-center gap-1.5 text-gray-600 dark:text-gray-300">
-                      <Users className="h-4 w-4 text-gray-400" />
+                    <div className="flex items-center justify-center gap-1.5 text-muted-foreground">
+                      <Users className="h-4 w-4 text-muted-foreground" />
                       <span className="font-medium">{company.user_count}</span>
-                      <span className="text-xs text-gray-400">users</span>
+                      <span className="text-xs text-muted-foreground">users</span>
                     </div>
                   </TableCell>
 
                   {/* Produtos */}
                   <TableCell className="text-center">
-                    <div className="flex items-center justify-center gap-1.5 text-gray-600 dark:text-gray-300">
-                      <Package className="h-4 w-4 text-gray-400" />
+                    <div className="flex items-center justify-center gap-1.5 text-muted-foreground">
+                      <Package className="h-4 w-4 text-muted-foreground" />
                       <span className="font-medium">{company.product_count}</span>
                     </div>
                   </TableCell>
 
                   {/* Data de Criação */}
                   <TableCell>
-                    <span className="text-sm text-gray-600 dark:text-gray-300">
+                    <span className="text-sm text-muted-foreground">
                       {new Date(company.created_at).toLocaleDateString('pt-BR')}
                     </span>
                   </TableCell>
@@ -478,7 +478,7 @@ export function AdminCompanies() {
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-800">
+                        <DropdownMenuContent align="end" className="bg-card border-border">
                           <DropdownMenuItem onClick={() => handleEdit(company)} className="cursor-pointer">
                             <Pencil className="h-4 w-4 mr-2" />
                             Editar
@@ -504,30 +504,30 @@ export function AdminCompanies() {
 
       {/* Edit Modal */}
       <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-        <DialogContent className="bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-800">
+        <DialogContent className="bg-card border-border">
           <DialogHeader>
-            <DialogTitle className="text-gray-900 dark:text-white">Editar Empresa</DialogTitle>
-            <DialogDescription className="text-gray-500">
+            <DialogTitle className="text-foreground">Editar Empresa</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               Atualize as informações da empresa.
             </DialogDescription>
           </DialogHeader>
           {editingCompany && (
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label className="text-gray-700 dark:text-gray-300">Nome da Empresa</Label>
+                <Label className="text-muted-foreground">Nome da Empresa</Label>
                 <Input
                   defaultValue={editingCompany.name}
                   onChange={(e) => setEditingCompany({ ...editingCompany, name: e.target.value })}
-                  className="bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-700"
+                  className="bg-card border-border"
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-gray-700 dark:text-gray-300">Plano</Label>
+                <Label className="text-muted-foreground">Plano</Label>
                 <Select
                   defaultValue={editingCompany.plan || "free"}
                   onValueChange={(value) => setEditingCompany({ ...editingCompany, plan: value })}
                 >
-                  <SelectTrigger className="bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-700">
+                  <SelectTrigger className="bg-card border-border">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

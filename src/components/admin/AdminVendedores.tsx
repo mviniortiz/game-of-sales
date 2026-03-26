@@ -99,11 +99,11 @@ const KPICard = ({ title, value, icon: Icon, iconColor, iconBg, subtitle }: KPIC
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
             {title}
           </p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white tabular-nums tracking-tight">
+          <p className="text-2xl font-bold text-foreground tabular-nums tracking-tight">
             {value}
           </p>
           {subtitle && (
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>
+            <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
           )}
         </div>
       </div>
@@ -153,7 +153,7 @@ const TopPerformerCard = ({ vendedor }: TopPerformerCardProps) => {
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
               Top Performer
             </p>
-            <p className="text-sm font-bold text-gray-900 dark:text-white truncate">
+            <p className="text-sm font-bold text-foreground truncate">
               {vendedor ? `Líder: ${vendedor.nome.split(" ")[0]}` : "Sem dados"}
             </p>
             <p className="text-xs text-amber-600 dark:text-amber-400 font-medium mt-0.5">
@@ -543,10 +543,10 @@ export const AdminVendedores = () => {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+        <h3 className="text-xl font-bold text-foreground">
           Gestão de Vendedores
         </h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-sm text-muted-foreground mt-1">
           Command Center • {vendedores?.length || 0} vendedores ativos
         </p>
       </div>
@@ -585,12 +585,12 @@ export const AdminVendedores = () => {
         <div className="flex items-center gap-3 w-full sm:w-auto">
           {/* Search */}
           <div className="relative flex-1 sm:w-[300px]">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Buscar por nome..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+              className="pl-10 bg-card border-border text-foreground placeholder:text-muted-foreground"
             />
           </div>
 
@@ -599,7 +599,7 @@ export const AdminVendedores = () => {
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className={`gap-2 ${hasActiveFilters ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300'}`}
+                className={`gap-2 ${hasActiveFilters ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'border-border text-muted-foreground'}`}
               >
                 <Filter className="h-4 w-4" />
                 Filtrar
@@ -610,11 +610,11 @@ export const AdminVendedores = () => {
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-64 p-4 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
+            <PopoverContent className="w-64 p-4 bg-card border-border">
               <div className="space-y-4">
                 {/* Level Filters */}
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Nível</h4>
+                  <h4 className="text-sm font-semibold text-foreground mb-2">Nível</h4>
                   <div className="space-y-2">
                     {["Bronze", "Prata", "Ouro", "Platina", "Diamante"].map((level) => (
                       <div key={level} className="flex items-center space-x-2">
@@ -625,7 +625,7 @@ export const AdminVendedores = () => {
                         />
                         <Label
                           htmlFor={`level-${level}`}
-                          className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer"
+                          className="text-sm text-muted-foreground cursor-pointer"
                         >
                           {level}
                         </Label>
@@ -635,8 +635,8 @@ export const AdminVendedores = () => {
                 </div>
 
                 {/* Status Filters */}
-                <div className="pt-2 border-t border-gray-100 dark:border-gray-800">
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Status</h4>
+                <div className="pt-2 border-t border-border">
+                  <h4 className="text-sm font-semibold text-foreground mb-2">Status</h4>
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2">
                       <Checkbox
@@ -644,7 +644,7 @@ export const AdminVendedores = () => {
                         checked={filterStatus.includes("online")}
                         onCheckedChange={() => toggleStatusFilter("online")}
                       />
-                      <Label htmlFor="status-online" className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer flex items-center gap-2">
+                      <Label htmlFor="status-online" className="text-sm text-muted-foreground cursor-pointer flex items-center gap-2">
                         <span className="w-2 h-2 bg-emerald-500 rounded-full" />
                         Online
                       </Label>
@@ -655,7 +655,7 @@ export const AdminVendedores = () => {
                         checked={filterStatus.includes("offline")}
                         onCheckedChange={() => toggleStatusFilter("offline")}
                       />
-                      <Label htmlFor="status-offline" className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer flex items-center gap-2">
+                      <Label htmlFor="status-offline" className="text-sm text-muted-foreground cursor-pointer flex items-center gap-2">
                         <span className="w-2 h-2 bg-gray-400 rounded-full" />
                         Offline
                       </Label>
@@ -668,7 +668,7 @@ export const AdminVendedores = () => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="w-full text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    className="w-full text-muted-foreground hover:text-foreground"
                     onClick={() => {
                       setFilterLevels([]);
                       setFilterStatus([]);
@@ -693,18 +693,18 @@ export const AdminVendedores = () => {
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden bg-white dark:bg-gray-900">
+      <div className="rounded-xl border border-border overflow-hidden bg-card">
         <Table>
           <TableHeader>
-            <TableRow className="bg-gray-50 dark:bg-gray-900/50 hover:bg-gray-50 dark:hover:bg-gray-900/50">
-              <TableHead className="text-gray-600 dark:text-gray-400 font-semibold">Vendedor</TableHead>
-              <TableHead className="text-gray-600 dark:text-gray-400 font-semibold">Empresa</TableHead>
-              <TableHead className="text-gray-600 dark:text-gray-400 font-semibold">Nível</TableHead>
-              <TableHead className="text-gray-600 dark:text-gray-400 font-semibold">Pontos</TableHead>
-              <TableHead className="text-gray-600 dark:text-gray-400 font-semibold text-right">Vendas</TableHead>
-              <TableHead className="text-gray-600 dark:text-gray-400 font-semibold text-right">Faturamento</TableHead>
-              <TableHead className="text-gray-600 dark:text-gray-400 font-semibold">Último Login</TableHead>
-              <TableHead className="text-gray-600 dark:text-gray-400 font-semibold text-right">Ações</TableHead>
+            <TableRow className="bg-muted/50 hover:bg-muted/50">
+              <TableHead className="text-muted-foreground font-semibold">Vendedor</TableHead>
+              <TableHead className="text-muted-foreground font-semibold">Empresa</TableHead>
+              <TableHead className="text-muted-foreground font-semibold">Nível</TableHead>
+              <TableHead className="text-muted-foreground font-semibold">Pontos</TableHead>
+              <TableHead className="text-muted-foreground font-semibold text-right">Vendas</TableHead>
+              <TableHead className="text-muted-foreground font-semibold text-right">Faturamento</TableHead>
+              <TableHead className="text-muted-foreground font-semibold">Último Login</TableHead>
+              <TableHead className="text-muted-foreground font-semibold text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -714,13 +714,13 @@ export const AdminVendedores = () => {
               return (
                 <TableRow
                   key={vendedor.id}
-                  className="group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors border-gray-100 dark:border-gray-800"
+                  className="group hover:bg-muted/50 transition-colors border-border"
                 >
                   {/* User Column */}
                   <TableCell className="py-4">
                     <div className="flex items-center gap-3">
                       <div className="relative">
-                        <Avatar className="h-10 w-10 ring-2 ring-gray-100 dark:ring-gray-800">
+                        <Avatar className="h-10 w-10 ring-2 ring-border">
                           <AvatarImage src={vendedor.avatar_url || ""} />
                           <AvatarFallback className="bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200 font-semibold">
                             {getInitials(vendedor.nome)}
@@ -728,20 +728,20 @@ export const AdminVendedores = () => {
                         </Avatar>
                         {/* Online/Offline Status Dot */}
                         <span
-                          className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-gray-900 ${vendedor.isOnline ? 'bg-emerald-500' : 'bg-gray-400'
+                          className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-card ${vendedor.isOnline ? 'bg-emerald-500' : 'bg-muted-foreground/50'
                             }`}
                         />
                       </div>
                       <div>
-                        <div className="font-semibold text-gray-900 dark:text-white">{vendedor.nome}</div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">{vendedor.email}</div>
+                        <div className="font-semibold text-foreground">{vendedor.nome}</div>
+                        <div className="text-xs text-muted-foreground">{vendedor.email}</div>
                       </div>
                     </div>
                   </TableCell>
 
                   {/* Company Column */}
                   <TableCell>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="text-sm text-muted-foreground">
                       {vendedor.companyName || "—"}
                     </span>
                   </TableCell>
@@ -754,7 +754,7 @@ export const AdminVendedores = () => {
                       </Badge>
                       <div className="space-y-1">
                         <Progress value={progress} className="h-1.5 w-20" />
-                        <p className="text-[10px] text-gray-400 dark:text-gray-500">
+                        <p className="text-[10px] text-muted-foreground">
                           {progress.toFixed(0)}% → {nextLevel}
                         </p>
                       </div>
@@ -763,14 +763,14 @@ export const AdminVendedores = () => {
 
                   {/* Points */}
                   <TableCell>
-                    <span className="font-medium text-gray-900 dark:text-white tabular-nums">
+                    <span className="font-medium text-foreground tabular-nums">
                       {vendedor.pontos.toLocaleString("pt-BR")}
                     </span>
                   </TableCell>
 
                   {/* Sales - Right Aligned */}
                   <TableCell className="text-right">
-                    <span className="font-semibold text-gray-900 dark:text-white tabular-nums">
+                    <span className="font-semibold text-foreground tabular-nums">
                       {vendedor.totalVendasMes}
                     </span>
                   </TableCell>
@@ -778,7 +778,7 @@ export const AdminVendedores = () => {
                   {/* Revenue - Right Aligned with Trend */}
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <span className="font-semibold text-gray-900 dark:text-white tabular-nums">
+                      <span className="font-semibold text-foreground tabular-nums">
                         {formatCurrency(vendedor.faturamentoMes)}
                       </span>
                       {vendedor.trend !== 0 && (
@@ -801,10 +801,10 @@ export const AdminVendedores = () => {
                   <TableCell>
                     {vendedor.last_sign_in_at ? (
                       <div className="space-y-0.5">
-                        <div className="text-sm text-gray-700 dark:text-gray-300">
+                        <div className="text-sm text-foreground">
                           {new Date(vendedor.last_sign_in_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
                         </div>
-                        <div className="text-[10px] text-gray-400 dark:text-gray-500">
+                        <div className="text-[10px] text-muted-foreground">
                           {new Date(vendedor.last_sign_in_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                           {" · "}
                           {(() => {
@@ -819,7 +819,7 @@ export const AdminVendedores = () => {
                         </div>
                       </div>
                     ) : (
-                      <span className="text-xs text-gray-400 dark:text-gray-500">Nunca</span>
+                      <span className="text-xs text-muted-foreground">Nunca</span>
                     )}
                   </TableCell>
 
@@ -835,7 +835,7 @@ export const AdminVendedores = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0 text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400"
+                          className="h-8 w-8 p-0 text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400"
                           aria-label="Estatísticas"
                           onClick={() => setStatsVendedor(vendedor)}
                         >
@@ -846,14 +846,14 @@ export const AdminVendedores = () => {
                       {/* Dropdown Menu */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" aria-label="Mais opções">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground" aria-label="Mais opções">
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
+                        <DropdownMenuContent align="end" className="bg-card border-border">
                           <DropdownMenuItem
                             onClick={() => toast.info("Funcionalidade em desenvolvimento")}
-                            className="cursor-pointer text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                            className="cursor-pointer text-muted-foreground hover:text-foreground"
                           >
                             <Edit className="h-4 w-4 mr-2" />
                             Editar
@@ -888,7 +888,7 @@ export const AdminVendedores = () => {
         </Table>
 
         {filteredVendedores?.length === 0 && (
-          <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+          <div className="text-center py-12 text-muted-foreground">
             Nenhum vendedor encontrado.
           </div>
         )}
@@ -896,33 +896,33 @@ export const AdminVendedores = () => {
 
       {/* Add Seller Dialog */}
       <Dialog open={showAdd} onOpenChange={setShowAdd}>
-        <DialogContent className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
+        <DialogContent className="bg-card border-border">
           <DialogHeader>
-            <DialogTitle className="text-gray-900 dark:text-white">Adicionar Vendedor</DialogTitle>
-            <DialogDescription className="text-gray-500 dark:text-gray-400">
+            <DialogTitle className="text-foreground">Adicionar Vendedor</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               Crie um acesso para um novo vendedor.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label className="text-gray-700 dark:text-gray-300">Nome</Label>
+              <Label className="text-muted-foreground">Nome</Label>
               <Input
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
                 placeholder="Nome completo"
-                className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white"
+                className="bg-card border-border text-foreground"
               />
             </div>
 
             <div className="space-y-2">
-              <Label className="text-gray-700 dark:text-gray-300">E-mail</Label>
+              <Label className="text-muted-foreground">E-mail</Label>
               <Input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="email@empresa.com"
-                className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white"
+                className="bg-card border-border text-foreground"
               />
             </div>
 
@@ -932,15 +932,15 @@ export const AdminVendedores = () => {
                 checked={sendPassword}
                 onCheckedChange={(v) => setSendPassword(Boolean(v))}
               />
-              <Label htmlFor="send-password" className="text-gray-700 dark:text-gray-300">
+              <Label htmlFor="send-password" className="text-muted-foreground">
                 Enviar senha aleatória por e-mail
               </Label>
             </div>
 
             {generatedPassword && (
-              <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 text-sm">
-                <p className="text-gray-500 dark:text-gray-400 mb-1">Senha gerada:</p>
-                <p className="font-mono text-base text-gray-900 dark:text-white">{generatedPassword}</p>
+              <div className="bg-muted border border-border rounded-lg p-3 text-sm">
+                <p className="text-muted-foreground mb-1">Senha gerada:</p>
+                <p className="font-mono text-base text-foreground">{generatedPassword}</p>
               </div>
             )}
 
@@ -949,7 +949,7 @@ export const AdminVendedores = () => {
                 variant="outline"
                 onClick={() => setShowAdd(false)}
                 disabled={submitting}
-                className="border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300"
+                className="border-border text-muted-foreground"
               >
                 Cancelar
               </Button>
@@ -967,25 +967,25 @@ export const AdminVendedores = () => {
 
       {/* Transfer Company Modal (Super-Admin Only) */}
       <Dialog open={showTransferModal} onOpenChange={setShowTransferModal}>
-        <DialogContent className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 sm:max-w-md">
+        <DialogContent className="bg-card border-border sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-gray-900 dark:text-white flex items-center gap-2">
+            <DialogTitle className="text-foreground flex items-center gap-2">
               <Building2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
               Transferir Empresa
             </DialogTitle>
-            <DialogDescription className="text-gray-500 dark:text-gray-400">
-              Mover <span className="font-semibold text-gray-900 dark:text-white">{selectedUser?.nome}</span> para outra empresa.
+            <DialogDescription className="text-muted-foreground">
+              Mover <span className="font-semibold text-foreground">{selectedUser?.nome}</span> para outra empresa.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label className="text-gray-700 dark:text-gray-300">Empresa de Destino</Label>
+              <Label className="text-muted-foreground">Empresa de Destino</Label>
               <Select value={targetCompanyId} onValueChange={setTargetCompanyId}>
-                <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                <SelectTrigger className="bg-card border-border">
                   <SelectValue placeholder="Selecione a empresa..." />
                 </SelectTrigger>
-                <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                <SelectContent className="bg-card border-border">
                   {companies
                     .filter(c => c.id !== selectedUser?.company_id)
                     .map(company => (
@@ -999,7 +999,7 @@ export const AdminVendedores = () => {
             </div>
 
             {selectedUser?.company_id && (
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-muted-foreground">
                 Empresa atual: <span className="font-medium">{companies.find(c => c.id === selectedUser.company_id)?.name || 'Desconhecida'}</span>
               </p>
             )}
@@ -1010,7 +1010,7 @@ export const AdminVendedores = () => {
               variant="outline"
               onClick={() => setShowTransferModal(false)}
               disabled={transferring}
-              className="border-gray-200 dark:border-gray-700"
+              className="border-border"
             >
               Cancelar
             </Button>
@@ -1027,14 +1027,14 @@ export const AdminVendedores = () => {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <DialogContent className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 sm:max-w-md">
+        <DialogContent className="bg-card border-border sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-gray-900 dark:text-white flex items-center gap-2">
+            <DialogTitle className="text-foreground flex items-center gap-2">
               <Trash2 className="h-5 w-5 text-rose-500" />
               Remover Vendedor
             </DialogTitle>
-            <DialogDescription className="text-gray-500 dark:text-gray-400">
-              Tem certeza que deseja remover <span className="font-semibold text-gray-900 dark:text-white">{sellerToDelete?.nome}</span>?
+            <DialogDescription className="text-muted-foreground">
+              Tem certeza que deseja remover <span className="font-semibold text-foreground">{sellerToDelete?.nome}</span>?
               Esta acao e irreversivel e remove a conta, perfil e dados do usuario.
             </DialogDescription>
           </DialogHeader>
@@ -1048,7 +1048,7 @@ export const AdminVendedores = () => {
               variant="outline"
               onClick={() => { setShowDeleteConfirm(false); setSellerToDelete(null); }}
               disabled={deleting}
-              className="border-gray-200 dark:border-gray-700"
+              className="border-border"
             >
               Cancelar
             </Button>
@@ -1065,20 +1065,20 @@ export const AdminVendedores = () => {
 
       {/* ─── Seller Stats Modal ─── */}
       <Dialog open={!!statsVendedor} onOpenChange={(open) => { if (!open) setStatsVendedor(null); }}>
-        <DialogContent className="sm:max-w-[600px] bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 p-0 overflow-hidden">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-100 dark:border-gray-800">
+        <DialogContent className="sm:max-w-[600px] bg-card border-border p-0 overflow-hidden">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
             <div className="flex items-center gap-3">
-              <Avatar className="h-12 w-12 ring-2 ring-gray-100 dark:ring-gray-800">
+              <Avatar className="h-12 w-12 ring-2 ring-border">
                 <AvatarImage src={statsVendedor?.avatar_url || ""} />
                 <AvatarFallback className="bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200 font-semibold">
                   {getInitials(statsVendedor?.nome || "")}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <DialogTitle className="text-lg font-bold text-gray-900 dark:text-white">
+                <DialogTitle className="text-lg font-bold text-foreground">
                   {statsVendedor?.nome}
                 </DialogTitle>
-                <DialogDescription className="text-sm text-gray-500 dark:text-gray-400">
+                <DialogDescription className="text-sm text-muted-foreground">
                   {statsVendedor?.email}
                 </DialogDescription>
               </div>
@@ -1158,7 +1158,7 @@ export const AdminVendedores = () => {
 
               {/* Monthly Chart (simple bar chart) */}
               <div className="space-y-2">
-                <h4 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5" /> Faturamento Mensal
                 </h4>
                 <div className="flex items-end gap-1.5 h-28 px-1">
@@ -1168,14 +1168,14 @@ export const AdminVendedores = () => {
                     const isCurrentMonth = i === sellerStats.monthlyData.length - 1;
                     return (
                       <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                        <span className="text-[9px] font-bold text-gray-500 dark:text-gray-400 tabular-nums">
+                        <span className="text-[9px] font-bold text-muted-foreground tabular-nums">
                           {m.vendas > 0 ? m.vendas : ""}
                         </span>
                         <div
                           className={`w-full rounded-t-md transition-all ${
                             isCurrentMonth
                               ? "bg-emerald-500 dark:bg-emerald-400"
-                              : "bg-gray-200 dark:bg-gray-700"
+                              : "bg-muted"
                           }`}
                           style={{ height: `${height}%` }}
                           title={`${m.month}: ${formatCurrency(m.faturamento)} (${m.vendas} vendas)`}
@@ -1183,7 +1183,7 @@ export const AdminVendedores = () => {
                         <span className={`text-[9px] font-medium ${
                           isCurrentMonth
                             ? "text-emerald-600 dark:text-emerald-400 font-bold"
-                            : "text-gray-400 dark:text-gray-500"
+                            : "text-muted-foreground"
                         }`}>
                           {m.month}
                         </span>
@@ -1196,7 +1196,7 @@ export const AdminVendedores = () => {
               {/* Top Deals */}
               {sellerStats.topDeals.length > 0 && (
                 <div className="space-y-2">
-                  <h4 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                     <Target className="w-3.5 h-3.5" /> Top Deals no Pipeline
                   </h4>
                   <div className="space-y-1.5">
@@ -1205,14 +1205,14 @@ export const AdminVendedores = () => {
                       return (
                         <div
                           key={deal.id}
-                          className="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800"
+                          className="flex items-center justify-between px-3 py-2 rounded-lg bg-muted/50 border border-border"
                         >
                           <div className="flex items-center gap-2 min-w-0">
                             {deal.is_hot && <span className="text-orange-400 shrink-0">🔥</span>}
-                            <span className="text-sm text-gray-700 dark:text-gray-300 truncate font-medium">{deal.title}</span>
+                            <span className="text-sm text-muted-foreground truncate font-medium">{deal.title}</span>
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
-                            <Badge variant="outline" className="text-[9px] h-5 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
+                            <Badge variant="outline" className="text-[9px] h-5 border-border text-muted-foreground">
                               {stage}
                             </Badge>
                             <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
@@ -1227,8 +1227,8 @@ export const AdminVendedores = () => {
               )}
 
               {/* Summary row */}
-              <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800">
-                <span className="text-xs text-gray-400 dark:text-gray-500">
+              <div className="flex items-center justify-between pt-2 border-t border-border">
+                <span className="text-xs text-muted-foreground">
                   Total: {sellerStats.totalDeals} deals · {sellerStats.vendasTotal} vendas · {formatCurrency(sellerStats.faturamentoTotal)} faturado
                 </span>
                 <Badge variant="outline" className={getNivelBadgeClass(statsVendedor?.nivel || "Bronze")}>

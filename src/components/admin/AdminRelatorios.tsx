@@ -96,17 +96,17 @@ const KPICard = ({
   const TrendIcon = isPositive ? TrendingUp : TrendingDown;
 
   return (
-    <Card className="relative overflow-hidden border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition-all group">
+    <Card className="relative overflow-hidden border border-border bg-card shadow-sm hover:shadow-md transition-all group">
       {sparklineData && sparklineData.length > 0 && (
         <Sparkline data={sparklineData} color={sparklineColor} />
       )}
       <CardContent className="p-5 relative z-10">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
               {title}
             </p>
-            <p className="text-3xl font-bold text-gray-900 dark:text-white tabular-nums tracking-tight">
+            <p className="text-3xl font-bold text-foreground tabular-nums tracking-tight">
               {value}
             </p>
             <div className="flex items-center gap-2 mt-2">
@@ -119,7 +119,7 @@ const KPICard = ({
                   {Math.abs(trend).toFixed(1)}%
                 </span>
               )}
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="text-xs text-muted-foreground">
                 {subtitle}
               </span>
             </div>
@@ -166,12 +166,12 @@ const TopItem = ({ rank, name, subtitle, value, maxValue, currentValue, avatarUr
       case 1: return "bg-amber-100 dark:bg-amber-500/20 ring-2 ring-amber-300 dark:ring-amber-500/30";
       case 2: return "bg-gray-100 dark:bg-gray-500/20 ring-2 ring-gray-300 dark:ring-gray-500/30";
       case 3: return "bg-orange-100 dark:bg-orange-500/20 ring-2 ring-orange-300 dark:ring-orange-500/30";
-      default: return "bg-gray-50 dark:bg-gray-800";
+      default: return "bg-muted";
     }
   };
 
   return (
-    <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+    <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors">
       {/* Rank Badge or Avatar */}
       {showAvatar ? (
         <div className="relative">
@@ -182,7 +182,7 @@ const TopItem = ({ rank, name, subtitle, value, maxValue, currentValue, avatarUr
             </AvatarFallback>
           </Avatar>
           {rank <= 3 && (
-            <div className="absolute -top-1 -right-1 bg-white dark:bg-gray-900 rounded-full p-0.5 shadow-sm">
+            <div className="absolute -top-1 -right-1 bg-card rounded-full p-0.5 shadow-sm">
               {getRankIcon(rank)}
             </div>
           )}
@@ -196,14 +196,14 @@ const TopItem = ({ rank, name, subtitle, value, maxValue, currentValue, avatarUr
       {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-1">
-          <p className="font-semibold text-gray-900 dark:text-white truncate pr-2">{name}</p>
-          <p className="font-bold text-gray-900 dark:text-white text-sm tabular-nums whitespace-nowrap">
+          <p className="font-semibold text-foreground truncate pr-2">{name}</p>
+          <p className="font-bold text-foreground text-sm tabular-nums whitespace-nowrap">
             {value}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Progress value={progress} className="h-1.5 flex-1" />
-          <span className="text-[10px] text-gray-400 dark:text-gray-500 whitespace-nowrap">
+          <span className="text-[10px] text-muted-foreground whitespace-nowrap">
             {subtitle}
           </span>
         </div>
@@ -467,10 +467,10 @@ export const AdminRelatorios = () => {
       {/* Header with Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+          <h3 className="text-xl font-bold text-foreground">
             Relatórios Gerais
           </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Analytics & Performance • {format(dateRange.from, "MMMM yyyy", { locale: ptBR })}
           </p>
         </div>
@@ -481,13 +481,13 @@ export const AdminRelatorios = () => {
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className="gap-2 border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-900"
+                className="gap-2 border-border text-muted-foreground bg-card"
               >
                 <CalendarIcon className="h-4 w-4" />
                 {format(dateRange.from, "dd MMM", { locale: ptBR })} - {format(dateRange.to, "dd MMM", { locale: ptBR })}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 bg-white dark:bg-gray-900" align="end">
+            <PopoverContent className="w-auto p-0 bg-card" align="end">
               <Calendar
                 mode="range"
                 selected={{ from: dateRange.from, to: dateRange.to }}
@@ -507,7 +507,7 @@ export const AdminRelatorios = () => {
           {/* Export Button */}
           <Button
             variant="outline"
-            className="gap-2 border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-900"
+            className="gap-2 border-border text-muted-foreground bg-card"
             onClick={handleExport}
           >
             <Download className="h-4 w-4" />
@@ -581,17 +581,17 @@ export const AdminRelatorios = () => {
       {/* Top Lists */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Top 3 Vendedores */}
-        <Card className="border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
+        <Card className="border border-border bg-card shadow-sm">
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2">
               <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-500/20">
                 <Trophy className="h-4 w-4 text-amber-600 dark:text-amber-400" />
               </div>
               <div>
-                <CardTitle className="text-base font-semibold text-gray-900 dark:text-white">
+                <CardTitle className="text-base font-semibold text-foreground">
                   Top 3 Vendedores
                 </CardTitle>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Ranking por faturamento</p>
+                <p className="text-xs text-muted-foreground">Ranking por faturamento</p>
               </div>
             </div>
           </CardHeader>
@@ -611,7 +611,7 @@ export const AdminRelatorios = () => {
                 />
               ))}
               {(!stats?.topVendedores || stats.topVendedores.length === 0) && (
-                <p className="text-center text-gray-500 dark:text-gray-400 py-8">
+                <p className="text-center text-muted-foreground py-8">
                   Nenhum vendedor encontrado
                 </p>
               )}
@@ -620,17 +620,17 @@ export const AdminRelatorios = () => {
         </Card>
 
         {/* Top 3 Produtos */}
-        <Card className="border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
+        <Card className="border border-border bg-card shadow-sm">
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2">
               <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-500/20">
                 <Package className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               </div>
               <div>
-                <CardTitle className="text-base font-semibold text-gray-900 dark:text-white">
+                <CardTitle className="text-base font-semibold text-foreground">
                   Top 3 Produtos
                 </CardTitle>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Ranking por faturamento</p>
+                <p className="text-xs text-muted-foreground">Ranking por faturamento</p>
               </div>
             </div>
           </CardHeader>
@@ -649,7 +649,7 @@ export const AdminRelatorios = () => {
                 />
               ))}
               {(!stats?.topProdutos || stats.topProdutos.length === 0) && (
-                <p className="text-center text-gray-500 dark:text-gray-400 py-8">
+                <p className="text-center text-muted-foreground py-8">
                   Nenhum produto encontrado
                 </p>
               )}

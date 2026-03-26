@@ -536,7 +536,7 @@ const Metas = () => {
                           <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${posicao === 1
                             ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300"
                             : posicao === 2
-                              ? "bg-slate-200 text-slate-600 dark:bg-slate-400/20 dark:text-slate-300"
+                              ? "bg-secondary text-muted-foreground"
                               : posicao === 3
                                 ? "bg-amber-200 text-amber-700 dark:bg-amber-700/20 dark:text-amber-400"
                                 : "bg-muted text-muted-foreground"

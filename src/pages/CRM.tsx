@@ -1130,13 +1130,13 @@ export default function CRM() {
 
           {/* Row 2: Search bar (full width on mobile, always visible) */}
           <div className="relative w-full sm:max-w-xs">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="text"
               placeholder="Buscar negociações..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 h-11 sm:h-9 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-emerald-500"
+              className="w-full pl-9 h-11 sm:h-9 bg-card border-border text-foreground placeholder:text-muted-foreground focus:ring-emerald-500"
             />
           </div>
 
@@ -1164,11 +1164,11 @@ export default function CRM() {
 
             {/* Seller Filter */}
             <Select value={selectedSeller} onValueChange={setSelectedSeller}>
-              <SelectTrigger className="w-40 flex-shrink-0 min-h-[44px] sm:min-h-0 h-9 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white">
-                <User className="h-4 w-4 mr-2 text-slate-400" />
+              <SelectTrigger className="w-40 flex-shrink-0 min-h-[44px] sm:min-h-0 h-9 bg-card border-border text-foreground">
+                <User className="h-4 w-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder="Vendedor" />
               </SelectTrigger>
-              <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+              <SelectContent className="bg-card border-border">
                 <SelectItem value="all">Vendedores</SelectItem>
                 {vendors.map((vendor: any) => (
                   <SelectItem key={vendor.id} value={vendor.id}>
@@ -1435,7 +1435,7 @@ export default function CRM() {
                         flex-shrink-0 min-h-[44px] transition-all duration-200
                         ${activeStageIndex === idx
                           ? `${stage.bgColor} ${stage.color} ring-1 ${stage.borderColor}`
-                          : "bg-slate-800/60 text-slate-400 hover:bg-slate-700/60"
+                          : "bg-muted/60 text-muted-foreground hover:bg-muted"
                         }
                       `}
                     >
@@ -1507,7 +1507,7 @@ export default function CRM() {
                       h-2 rounded-full transition-all duration-300
                       ${activeStageIndex === idx
                         ? `w-6 ${stage.color.replace("text-", "bg-")}`
-                        : "w-2 bg-slate-600"
+                        : "w-2 bg-muted-foreground/30"
                       }
                     `}
                     aria-label={stage.title}
@@ -1556,7 +1556,7 @@ export default function CRM() {
                               w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all duration-150
                               ${selectedDeals.has(deal.id)
                                 ? "bg-emerald-500 border-emerald-500"
-                                : "bg-slate-700/50 border-slate-500 hover:border-emerald-400"
+                                : "bg-muted border-border hover:border-emerald-400"
                               }
                             `}
                           >
@@ -1685,21 +1685,21 @@ export default function CRM() {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 80, opacity: 0 }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 sm:gap-3 px-4 sm:px-5 py-3 rounded-2xl bg-slate-800 border border-slate-600 shadow-2xl shadow-black/50"
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 sm:gap-3 px-4 sm:px-5 py-3 rounded-2xl bg-card border border-border shadow-2xl shadow-black/20"
           >
             {/* Count */}
-            <span className="text-sm font-semibold text-white whitespace-nowrap">
+            <span className="text-sm font-semibold text-foreground whitespace-nowrap">
               {selectedDeals.size} selecionado{selectedDeals.size !== 1 ? "s" : ""}
             </span>
 
-            <div className="w-px h-6 bg-slate-600" />
+            <div className="w-px h-6 bg-border" />
 
             {/* Move to... dropdown */}
             <div className="relative" ref={bulkMoveRef}>
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-slate-300 hover:text-white hover:bg-slate-700 h-8 text-xs sm:text-sm"
+                className="text-muted-foreground hover:text-foreground hover:bg-muted h-8 text-xs sm:text-sm"
                 onClick={() => {
                   setShowBulkMoveMenu((p) => !p);
                   setShowBulkAssignMenu(false);
@@ -1710,13 +1710,13 @@ export default function CRM() {
                 <span className="sm:hidden">Mover</span>
               </Button>
               {showBulkMoveMenu && (
-                <div className="absolute bottom-full mb-2 left-0 w-48 rounded-xl bg-slate-700 border border-slate-600 shadow-xl py-1 z-[110]">
+                <div className="absolute bottom-full mb-2 left-0 w-48 rounded-xl bg-card border border-border shadow-xl py-1 z-[110]">
                   {STAGES.map((stage) => {
                     const Icon = stage.icon;
                     return (
                       <button
                         key={stage.id}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-slate-600 transition-colors"
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
                         onClick={() => {
                           bulkMoveMutation.mutate({
                             dealIds: Array.from(selectedDeals),
@@ -1738,7 +1738,7 @@ export default function CRM() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-slate-300 hover:text-white hover:bg-slate-700 h-8 text-xs sm:text-sm"
+                className="text-muted-foreground hover:text-foreground hover:bg-muted h-8 text-xs sm:text-sm"
                 onClick={() => {
                   setShowBulkAssignMenu((p) => !p);
                   setShowBulkMoveMenu(false);
@@ -1749,11 +1749,11 @@ export default function CRM() {
                 <span className="sm:hidden">Atribuir</span>
               </Button>
               {showBulkAssignMenu && (
-                <div className="absolute bottom-full mb-2 left-0 w-48 rounded-xl bg-slate-700 border border-slate-600 shadow-xl py-1 z-[110] max-h-60 overflow-y-auto">
+                <div className="absolute bottom-full mb-2 left-0 w-48 rounded-xl bg-card border border-border shadow-xl py-1 z-[110] max-h-60 overflow-y-auto">
                   {vendors.map((vendor: any) => (
                     <button
                       key={vendor.id}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-slate-600 transition-colors"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
                       onClick={() => {
                         bulkAssignMutation.mutate({
                           dealIds: Array.from(selectedDeals),
@@ -1761,18 +1761,18 @@ export default function CRM() {
                         });
                       }}
                     >
-                      <User className="h-4 w-4 text-slate-400" />
+                      <User className="h-4 w-4 text-muted-foreground" />
                       {vendor.nome}
                     </button>
                   ))}
                   {vendors.length === 0 && (
-                    <div className="px-3 py-2 text-sm text-slate-400">Nenhum vendedor encontrado</div>
+                    <div className="px-3 py-2 text-sm text-muted-foreground">Nenhum vendedor encontrado</div>
                   )}
                 </div>
               )}
             </div>
 
-            <div className="w-px h-6 bg-slate-600" />
+            <div className="w-px h-6 bg-border" />
 
             {/* Delete button */}
             {!showBulkDeleteConfirm ? (
@@ -1787,7 +1787,7 @@ export default function CRM() {
               </Button>
             ) : (
               <div className="flex items-center gap-1.5">
-                <span className="text-xs text-rose-400 font-medium">Confirmar?</span>
+                <span className="text-xs text-destructive font-medium">Confirmar?</span>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -1801,7 +1801,7 @@ export default function CRM() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-slate-400 hover:bg-slate-700 h-7 px-2 text-xs"
+                  className="text-muted-foreground hover:bg-muted h-7 px-2 text-xs"
                   onClick={() => setShowBulkDeleteConfirm(false)}
                 >
                   Não
@@ -1809,13 +1809,13 @@ export default function CRM() {
               </div>
             )}
 
-            <div className="w-px h-6 bg-slate-600" />
+            <div className="w-px h-6 bg-border" />
 
             {/* Cancel */}
             <Button
               variant="ghost"
               size="sm"
-              className="text-slate-400 hover:text-white hover:bg-slate-700 h-8 text-xs sm:text-sm"
+              className="text-muted-foreground hover:text-foreground hover:bg-muted h-8 text-xs sm:text-sm"
               onClick={() => {
                 setSelectedDeals(new Set());
                 setShowBulkDeleteConfirm(false);
