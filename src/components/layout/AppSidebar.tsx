@@ -113,7 +113,7 @@ export function AppSidebar() {
     if (item.url === '/metas') return hasFeature('metas');
     if (item.url === '/integracoes') return isAdmin && hasFeature('integrations');
     if (item.url === '/importar') return isAdmin;
-    if (item.url === '/ranking') return hasFeature('gamification');
+    if (item.url === '/ranking') return hasFeature('ranking');
     return true;
   });
 

@@ -110,42 +110,29 @@ export const formatPrice = (value: number): string => {
 };
 
 // Features allowed per plan (for access control)
+// All features available — differentiation is seller limits per plan
+const ALL_FEATURES = [
+    "dashboard",
+    "metas",
+    "vendas",
+    "nova-venda",
+    "calls",
+    "profile",
+    "ranking",
+    "gamification",
+    "relatorios",
+    "pipeline",
+    "calendario",
+    "crm",
+    "integrations",
+    "integracoes",
+    "admin",
+];
+
 export const PLAN_FEATURES = {
-    starter: [
-        "dashboard",
-        "metas",
-        "vendas",
-        "nova-venda",
-        "calls",
-        "profile",
-    ],
-    plus: [
-        "dashboard",
-        "metas",
-        "vendas",
-        "nova-venda",
-        "calls",
-        "profile",
-        "ranking",
-        "relatorios",
-        "pipeline", // basic pipeline
-        "calendario",
-    ],
-    pro: [
-        "dashboard",
-        "metas",
-        "vendas",
-        "nova-venda",
-        "calls",
-        "profile",
-        "ranking",
-        "relatorios",
-        "pipeline",
-        "calendario",
-        "crm",
-        "integracoes",
-        "admin",
-    ],
+    starter: ALL_FEATURES,
+    plus: ALL_FEATURES,
+    pro: ALL_FEATURES,
 };
 
 // Check if a feature is available for a plan

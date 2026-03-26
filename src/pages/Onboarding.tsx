@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, memo } from "react";
 import { logger } from "@/utils/logger";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -50,6 +50,70 @@ const mpPublicKey = import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY;
 if (mpPublicKey) {
     initMercadoPago(mpPublicKey, { locale: "pt-BR" });
 }
+
+// MP field styles — stable reference (outside component to avoid re-creation)
+const MP_FIELD_STYLE = {
+    style: {
+        "font-size": "16px",
+        "font-family": "inherit",
+        color: "#e2e8f0",
+        "placeholder-color": "#64748b",
+    },
+};
+
+const mpContainerClass =
+    "h-12 rounded-xl border border-slate-800 bg-slate-900/50 px-3 flex items-center hover:border-slate-700 transition-colors [&_iframe]:!h-full [&_iframe]:!w-full [&_div]:!w-full [&_div]:!h-full";
+
+// Memoized MP card fields — prevents iframe destruction on parent re-renders
+const MpCardFields = memo(({ onReady }: { onReady: (field: "number" | "expiration" | "security") => void }) => {
+    return (
+        <>
+            <div className="space-y-2">
+                <label className="text-slate-300 text-sm font-medium">
+                    Número do cartão <span className="text-rose-400">*</span>
+                </label>
+                <div className={mpContainerClass}>
+                    <CardNumber
+                        placeholder="0000 0000 0000 0000"
+                        style={MP_FIELD_STYLE.style}
+                        onReady={() => onReady("number")}
+                        onError={(err: any) => console.error("[MP CardNumber]", err)}
+                    />
+                </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                    <label className="text-slate-300 text-sm font-medium">
+                        Validade <span className="text-rose-400">*</span>
+                    </label>
+                    <div className={mpContainerClass}>
+                        <ExpirationDate
+                            placeholder="MM/AA"
+                            style={MP_FIELD_STYLE.style}
+                            onReady={() => onReady("expiration")}
+                            onError={(err: any) => console.error("[MP ExpirationDate]", err)}
+                        />
+                    </div>
+                </div>
+                <div className="space-y-2">
+                    <label className="text-slate-300 text-sm font-medium">
+                        CVV <span className="text-rose-400">*</span>
+                    </label>
+                    <div className={mpContainerClass}>
+                        <SecurityCode
+                            placeholder="123"
+                            style={MP_FIELD_STYLE.style}
+                            onReady={() => onReady("security")}
+                            onError={(err: any) => console.error("[MP SecurityCode]", err)}
+                        />
+                    </div>
+                </div>
+            </div>
+        </>
+    );
+});
+MpCardFields.displayName = "MpCardFields";
 
 // ── Pipeline stage config type (matches CRM.tsx StageConfig) ──
 interface StageConfig {
@@ -191,6 +255,11 @@ export default function Onboarding() {
     const [cardFormReady, setCardFormReady] = useState({ number: false, security: false, expiration: false });
     const cardFormRef = useRef<any>(null);
 
+    // Stable callback for MpCardFields — prevents re-renders from propagating
+    const handleMpFieldReady = useCallback((field: "number" | "expiration" | "security") => {
+        setCardFormReady(prev => ({ ...prev, [field]: true }));
+    }, []);
+
     // Step 6: Invite team
     const [teamEmails, setTeamEmails] = useState<string[]>([""]);
     const [inviteLoading, setInviteLoading] = useState(false);
@@ -246,7 +315,7 @@ export default function Onboarding() {
             if (data?.name) {
                 setCompanyName(data.name);
             }
-            if (data?.plan) {
+            if (data?.plan && !searchParams.get("plan")) {
                 setSelectedPlan(data.plan);
             }
         };
@@ -339,7 +408,7 @@ export default function Onboarding() {
         const docNumber = (document.getElementById("doc-number") as HTMLInputElement)?.value;
 
         if (!cardholderName || !docNumber) {
-            toast({ title: "Campos obrigatorios", description: "Preencha o nome e CPF do titular do cartao", variant: "destructive" });
+            toast({ title: "Campos obrigatorios", description: "Preencha o nome e CPF do titular do cartão", variant: "destructive" });
             return;
         }
 
@@ -353,14 +422,18 @@ export default function Onboarding() {
 
         try {
             // Create card token using the SDK's exported function
+            console.log("[handlePayment] Creating card token...", { cardholderName, docNumber: docNumber.replace(/\D/g, ""), cardFormReady });
+
             const tokenResponse = await createCardToken({
                 cardholderName,
                 identificationType: "CPF",
                 identificationNumber: docNumber.replace(/\D/g, ""),
             });
 
+            console.log("[handlePayment] Token response:", JSON.stringify(tokenResponse, null, 2));
+
             if (!tokenResponse?.id) {
-                throw new Error("Nao foi possivel processar o cartao. Verifique os dados e tente novamente.");
+                throw new Error("Não foi possível processar o cartão. Verifique os dados e tente novamente.");
             }
 
             // Get billing config
@@ -382,20 +455,43 @@ export default function Onboarding() {
             });
 
             if (response.error) {
-                throw new Error(response.error.message || "Erro ao criar assinatura");
+                // Try to extract detailed error from edge function response
+                let detail = response.error.message;
+                try {
+                    const ctx = (response.error as any).context;
+                    if (ctx && typeof ctx.json === "function") {
+                        const body = await ctx.json();
+                        detail = body?.error || body?.message || detail;
+                        console.error("[handlePayment] Edge function error:", body);
+                    }
+                } catch {
+                    // fallback to generic message
+                }
+                throw new Error(detail || "Erro ao criar assinatura");
             }
 
-            const result = response.data;
+            let result = response.data;
+            console.log("[handlePayment] Edge function response:", result, typeof result);
+            // Supabase sometimes returns stringified JSON
+            if (typeof result === "string") {
+                try { result = JSON.parse(result); } catch { /* keep as-is */ }
+            }
             if (!result?.success) {
-                throw new Error(result?.error || "Erro ao processar pagamento");
+                throw new Error(result?.error || result?.message || "Erro ao processar pagamento");
             }
 
-            // Update company plan locally
-            await supabase
-                .from("companies")
-                .update({ plan: selectedPlan })
-                .eq("id", effectiveCompanyId);
+            // Update company plan locally (best effort — edge function already set trial)
+            try {
+                const { error: planErr } = await supabase
+                    .from("companies")
+                    .update({ plan: selectedPlan })
+                    .eq("id", effectiveCompanyId);
+                if (planErr) console.warn("[handlePayment] Plan update error (non-critical):", planErr);
+            } catch (planErr) {
+                console.warn("[handlePayment] Plan update exception (non-critical):", planErr);
+            }
 
+            console.log("[handlePayment] SUCCESS! Advancing to next step...");
             toast({ title: "Assinatura criada!", description: "Seu trial de 14 dias começou. Aproveite!" });
             advanceStep();
         } catch (error: any) {
@@ -536,10 +632,18 @@ export default function Onboarding() {
                     }
 
                     if (user) {
-                        await supabase
-                            .from("profiles")
-                            .update({ company_id: newId, role: "admin" })
-                            .eq("id", user.id);
+                        // Use SECURITY DEFINER RPC to bypass RLS chicken-and-egg issue
+                        const { error: rpcErr } = await supabase.rpc("onboarding_assign_company", {
+                            target_company_id: newId,
+                        });
+                        if (rpcErr) {
+                            console.error("[Onboarding] RPC assign company error:", rpcErr);
+                            // Fallback to direct update
+                            await supabase
+                                .from("profiles")
+                                .update({ company_id: newId, role: "admin" })
+                                .eq("id", user.id);
+                        }
                     }
                 }
                 advanceStep();
@@ -816,15 +920,7 @@ export default function Onboarding() {
     const inputClasses =
         "bg-slate-900/50 backdrop-blur-sm border-slate-800 text-white placeholder:text-slate-500 focus-visible:bg-slate-900 focus-visible:ring-1 focus-visible:ring-emerald-500 focus-visible:border-emerald-500 focus-visible:shadow-[0_0_20px_-5px_rgba(16,185,129,0.3)] hover:border-slate-700 h-12 text-base rounded-xl transition-all duration-300";
 
-    // MP Card field styles
-    const mpFieldStyle = {
-        style: {
-            "font-size": "16px",
-            "font-family": "inherit",
-            color: "#e2e8f0",
-            "placeholder-color": "#64748b",
-        },
-    };
+    // MP Card field styles moved to top-level MpCardFields component
 
     // ── Step renderers ──
     const renderStep = () => {
@@ -1320,15 +1416,23 @@ export default function Onboarding() {
                             </p>
                         </div>
 
+                        {/* Card form loading state */}
+                        {!cardFormReady.number && !cardFormReady.security && !cardFormReady.expiration && (
+                            <div className="flex items-center gap-2 text-sm text-slate-400">
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Carregando campos de pagamento...
+                            </div>
+                        )}
+
                         {/* Card form */}
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <Label className="text-slate-300 text-sm font-medium">
-                                    Nome no cartao <span className="text-rose-400">*</span>
+                                    Nome no cartão <span className="text-rose-400">*</span>
                                 </Label>
                                 <Input
                                     id="cardholder-name"
-                                    placeholder="Nome como esta no cartao"
+                                    placeholder="Nome como está no cartão"
                                     className={inputClasses}
                                 />
                             </div>
@@ -1353,45 +1457,7 @@ export default function Onboarding() {
                                 />
                             </div>
 
-                            <div className="space-y-2">
-                                <Label className="text-slate-300 text-sm font-medium">
-                                    Numero do cartao <span className="text-rose-400">*</span>
-                                </Label>
-                                <div className="h-12 rounded-xl border border-slate-800 bg-slate-900/50 px-3 flex items-center hover:border-slate-700 transition-colors [&_iframe]:!h-full" data-mp-field="cardNumber">
-                                    <CardNumber
-                                        placeholder="0000 0000 0000 0000"
-                                        style={mpFieldStyle.style}
-                                        onReady={() => setCardFormReady(prev => ({ ...prev, number: true }))}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-2">
-                                    <Label className="text-slate-300 text-sm font-medium">
-                                        Validade <span className="text-rose-400">*</span>
-                                    </Label>
-                                    <div className="h-12 rounded-xl border border-slate-800 bg-slate-900/50 px-3 flex items-center hover:border-slate-700 transition-colors [&_iframe]:!h-full">
-                                        <ExpirationDate
-                                            placeholder="MM/AA"
-                                            style={mpFieldStyle.style}
-                                            onReady={() => setCardFormReady(prev => ({ ...prev, expiration: true }))}
-                                        />
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label className="text-slate-300 text-sm font-medium">
-                                        CVV <span className="text-rose-400">*</span>
-                                    </Label>
-                                    <div className="h-12 rounded-xl border border-slate-800 bg-slate-900/50 px-3 flex items-center hover:border-slate-700 transition-colors [&_iframe]:!h-full">
-                                        <SecurityCode
-                                            placeholder="123"
-                                            style={mpFieldStyle.style}
-                                            onReady={() => setCardFormReady(prev => ({ ...prev, security: true }))}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
+                            <MpCardFields onReady={handleMpFieldReady} />
                         </div>
 
                         {/* Payment error */}

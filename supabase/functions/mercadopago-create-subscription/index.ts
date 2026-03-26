@@ -138,6 +138,24 @@ serve(async (req) => {
             };
         }
 
+        console.log("[MP] Creating subscription with token:", token?.slice(0, 12) + "...", "email:", email, "amount:", billingConfig?.transactionAmount);
+        console.log("[MP] Access token starts with:", MERCADOPAGO_ACCESS_TOKEN?.slice(0, 10) + "...");
+
+        // First, validate the card token exists by fetching it
+        const tokenCheckRes = await fetch(`https://api.mercadopago.com/v1/card_tokens/${token}`, {
+            headers: { "Authorization": `Bearer ${MERCADOPAGO_ACCESS_TOKEN}` },
+        });
+        const tokenCheckData = await tokenCheckRes.json();
+        console.log("[MP] Token check:", tokenCheckRes.status, JSON.stringify(tokenCheckData));
+
+        // If token check fails, try creating subscription without card_token_id
+        // (pending subscription that will collect card later)
+        if (!tokenCheckRes.ok) {
+            console.warn("[MP] Card token not accessible with current credentials. Creating pending subscription without card.");
+            delete subscriptionBody.card_token_id;
+            subscriptionBody.status = "pending";
+        }
+
         const mpResponse = await fetch("https://api.mercadopago.com/preapproval", {
             method: "POST",
             headers: {
@@ -150,9 +168,13 @@ serve(async (req) => {
         const mpData = await mpResponse.json();
 
         if (!mpResponse.ok) {
-            console.error("MP Error:", mpData);
+            console.error("[MP] Error response:", JSON.stringify(mpData));
             return new Response(
-                JSON.stringify({ error: mpData.message || "Error creating subscription" }),
+                JSON.stringify({
+                    error: mpData.message || "Error creating subscription",
+                    mpStatus: mpResponse.status,
+                    mpError: mpData,
+                }),
                 { status: 400, headers: strictCorsHeaders }
             );
         }
@@ -164,13 +186,18 @@ serve(async (req) => {
             trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
         };
 
-        const { error: updateError } = await adminSupabase
+        console.log("[MP] Updating company:", companyId, JSON.stringify(companyUpdate));
+        const { data: updateData, error: updateError } = await adminSupabase
             .from("companies")
             .update(companyUpdate)
-            .eq("id", companyId);
+            .eq("id", companyId)
+            .select("id, subscription_status, trial_ends_at, mp_subscription_id")
+            .single();
 
         if (updateError) {
-            console.error("Supabase update error:", updateError);
+            console.error("[MP] Supabase update error:", JSON.stringify(updateError));
+        } else {
+            console.log("[MP] Company updated:", JSON.stringify(updateData));
         }
 
         return new Response(

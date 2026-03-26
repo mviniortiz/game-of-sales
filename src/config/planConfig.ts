@@ -14,22 +14,22 @@ export type PlanFeatures = {
 
 export const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
     starter: {
-        metas: false,
-        gamification: false,
-        calls: false,
-        reports: false,
-        integrations: false,
+        metas: true,
+        gamification: true,
+        calls: true,
+        reports: true,
+        integrations: true,
         maxUsers: 2,
-        maxProducts: 3
+        maxProducts: 10
     },
     plus: {
         metas: true,
-        gamification: false,
+        gamification: true,
         calls: true,
-        reports: false,
-        integrations: false,
+        reports: true,
+        integrations: true,
         maxUsers: 10,
-        maxProducts: 10
+        maxProducts: 50
     },
     pro: {
         metas: true,
