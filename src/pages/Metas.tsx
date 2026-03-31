@@ -508,7 +508,7 @@ const Metas = () => {
               </Card>
             ) : (
               /* Grid of Seller Cards */
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
                 {metasIndividuais.map((vendedor: any, index: number) => {
                   const posicao = index + 1;
                   const isWinner = vendedor.percentual >= 100;

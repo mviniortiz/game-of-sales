@@ -145,7 +145,7 @@ export const NovaTarefaModal = ({ open, onClose, dealId, dealTitle, onSuccess }:
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[500px] bg-card border border-border">
+            <DialogContent className="max-w-[95vw] sm:max-w-[500px] bg-card border border-border">
                 <DialogHeader className="pb-4 border-b border-border">
                     <DialogTitle className="flex items-center gap-3 text-foreground">
                         <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 ring-1 ring-emerald-100 dark:ring-emerald-500/20">
@@ -251,7 +251,7 @@ export const NovaTarefaModal = ({ open, onClose, dealId, dealTitle, onSuccess }:
                     </div>
 
                     {/* Data e Horário em uma linha */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {/* Data */}
                         <div className="space-y-2">
                             <Label className="text-xs font-medium flex items-center gap-1">

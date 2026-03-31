@@ -174,7 +174,7 @@ export const KiwifyConfigModal = ({ open, onClose, onSaved }: KiwifyConfigModalP
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[500px] bg-card border-border">
+            <DialogContent className="max-w-[95vw] sm:max-w-[500px] bg-card border-border">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-3 text-foreground">
                         <div className="p-2 rounded-lg bg-green-100 dark:bg-green-500/20">

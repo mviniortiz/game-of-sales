@@ -84,81 +84,64 @@ const KPICard = ({
   icon: Icon,
   trend,
   trendLabel,
-  iconColor = "text-emerald-400",
-  iconBg = "bg-emerald-500/10",
-  glowColor = "shadow-emerald-500/20"
+  iconColor = "text-emerald-600 dark:text-emerald-400",
+  iconBg = "bg-emerald-50 dark:bg-emerald-500/10",
 }: KPICardProps) => {
   const isPositive = trend && trend > 0;
   const TrendIcon = isPositive ? ArrowUpRight : ArrowDownRight;
 
   const cardContent = (
-    <Card className={`
-      relative overflow-hidden
-      border border-border
-      bg-card
-      shadow-sm
-      hover:shadow-lg hover:${glowColor}
-      transition-all duration-300 ease-out
-      group cursor-default
-      rounded-xl
-    `}>
-      <CardContent className="relative p-5">
-        <div className="flex items-start justify-between gap-4">
-          {/* Left: Icon */}
-          <div className={`
-            relative p-3 rounded-2xl ${iconBg} 
-            group-hover:scale-105
-            transition-all duration-200 ease-out
-          `}>
-            <Icon className={`h-6 w-6 ${iconColor}`} />
-          </div>
-
-          {/* Right: Content */}
-          <div className="flex-1 text-right">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.1em] mb-2">
-              {title}
-            </p>
-            <p className="text-3xl font-bold text-foreground tabular-nums tracking-tight leading-none">
-              {value}
-            </p>
-
-            {/* Trend or Subtitle */}
-            <div className="flex items-center justify-end gap-2 mt-2">
-              {trend !== undefined && (
-                <span className={`
-                  inline-flex items-center gap-0.5 
-                  px-2 py-0.5 rounded-full text-[11px] font-semibold
-                  ${isPositive
-                    ? 'bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-200 dark:ring-emerald-500/20'
-                    : 'bg-rose-50 text-rose-600 ring-1 ring-rose-100 dark:bg-rose-500/10 dark:text-rose-200 dark:ring-rose-500/20'
-                  }
-                `}>
-                  <TrendIcon className="h-3 w-3" />
-                  {Math.abs(trend).toFixed(1)}%
-                </span>
-              )}
-              {(trendLabel || subtitle) && (
-                <span className="text-[11px] text-muted-foreground font-medium">
-                  {trendLabel || subtitle}
-                </span>
-              )}
-            </div>
+    <div
+      className="relative overflow-hidden rounded-xl border border-border bg-card hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group cursor-default"
+      style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
+    >
+      <div className="p-3 sm:p-4">
+        {/* Top row: title + icon */}
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.1em]">
+            {title}
+          </p>
+          <div className={`p-1.5 rounded-lg ${iconBg} group-hover:scale-110 transition-transform duration-200`}>
+            <Icon className={`h-3.5 w-3.5 ${iconColor}`} />
           </div>
         </div>
-      </CardContent>
-    </Card>
+
+        {/* Value */}
+        <p className="text-xl sm:text-2xl font-bold text-foreground tabular-nums tracking-tight leading-none mb-2">
+          {value}
+        </p>
+
+        {/* Trend chip + label */}
+        <div className="flex items-center gap-1.5">
+          {trend !== undefined && (
+            <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold ${
+              isPositive
+                ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
+                : "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400"
+            }`}>
+              <TrendIcon className="h-3 w-3" />
+              {Math.abs(trend).toFixed(1)}%
+            </span>
+          )}
+          {(trendLabel || subtitle) && (
+            <span className="text-[10px] text-muted-foreground truncate">
+              {trendLabel || subtitle}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
   );
 
-  // Wrap with tooltip if fullValue is provided
   if (fullValue) {
     return (
       <UITooltip>
         <TooltipTrigger asChild>
-          {cardContent}
+          <div>{cardContent}</div>
         </TooltipTrigger>
         <TooltipContent
           side="bottom"
-          className="bg-card border border-border text-foreground font-mono shadow-md"
+          className="bg-popover border-border text-popover-foreground font-mono"
         >
           {fullValue}
         </TooltipContent>
@@ -513,53 +496,193 @@ export const AdminVendasView = ({
 
   return (
     <div className="space-y-6">
-      {/* Row 1: KPI Cards - 4 columns */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-        <KPICard
-          title="Faturamento Total"
-          value={formatCurrencyCompact(stats?.totalVendas || 0)}
-          fullValue={formatCurrency(stats?.totalVendas || 0)}
-          icon={DollarSign}
-          trend={18.4}
-          trendLabel="vs período anterior"
-          iconColor="text-emerald-400"
-          iconBg="bg-emerald-500/10"
-          glowColor="shadow-emerald-500/20"
-        />
-        <KPICard
-          title="Ticket Médio"
-          value={formatCurrencyCompact(stats?.ticketMedio || 0)}
-          fullValue={formatCurrency(stats?.ticketMedio || 0)}
-          icon={TrendingUp}
-          trend={5.2}
-          trendLabel="vs período anterior"
-          iconColor="text-emerald-400"
-          iconBg="bg-emerald-500/10"
-          glowColor="shadow-emerald-500/20"
-        />
-        <KPICard
-          title="Vendedores Ativos"
-          value={(stats?.totalVendedores || 0).toString()}
-          subtitle={`${stats?.totalTransacoes || 0} vendas no período`}
-          icon={Users}
-          iconColor="text-emerald-400"
-          iconBg="bg-emerald-500/10"
-          glowColor="shadow-emerald-500/20"
-        />
-        <KPICard
-          title="Taxa de Show"
-          value={`${(stats?.showRate || 0).toFixed(0)}%`}
-          subtitle={`${stats?.showCalls || 0}/${stats?.totalCalls || 0} calls`}
-          icon={UserCheck}
-          trend={(stats?.showRate || 0) - 75}
-          trendLabel="vs média"
-          iconColor="text-amber-400"
-          iconBg="bg-amber-500/10"
-          glowColor="shadow-amber-500/20"
-        />
+      {/* Row 1: KPI Cards with mini charts */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Faturamento com sparkline */}
+        <div className="rounded-xl border border-border bg-card p-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.1em]">Faturamento</p>
+            <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/10">
+              <TrendingUp className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+            </div>
+          </div>
+          <p className="text-2xl font-bold text-foreground tabular-nums tracking-tight">{formatCurrencyCompact(stats?.totalVendas || 0)}</p>
+          <div className="flex items-center gap-1.5 mt-1 mb-2">
+            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
+              <ArrowUpRight className="h-3 w-3" />vs anterior
+            </span>
+          </div>
+          {/* Sparkline from evolution data */}
+          <svg className="w-full h-10" viewBox="0 0 120 30" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="sparkFillAdmin" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#10b981" stopOpacity="0.2" />
+                <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            {(() => {
+              const d = (vendasEvolution || []).slice(-12);
+              if (d.length < 2) return null;
+              const max = Math.max(...d.map(v => v.valor), 1);
+              const points = d.map((v, i) => `${(i / (d.length - 1)) * 120},${30 - (v.valor / max) * 25}`).join(" L");
+              return (
+                <>
+                  <path d={`M${points} L120,30 L0,30 Z`} fill="url(#sparkFillAdmin)" />
+                  <path d={`M${points}`} fill="none" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round" />
+                </>
+              );
+            })()}
+          </svg>
+        </div>
+
+        {/* Vendas com mini barras azuis */}
+        <div className="rounded-xl border border-border bg-card p-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.1em]">Vendas</p>
+            <div className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-500/10">
+              <BarChart3 className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+            </div>
+          </div>
+          <p className="text-2xl font-bold text-foreground tabular-nums tracking-tight">{stats?.totalTransacoes || 0}</p>
+          <div className="flex items-center gap-1.5 mt-1 mb-2">
+            <span className="text-[10px] text-muted-foreground">{stats?.totalVendedores || 0} vendedores ativos</span>
+          </div>
+          {/* Mini bar chart */}
+          <div className="flex items-end gap-[3px] h-10">
+            {(() => {
+              const d = (vendasEvolution || []).slice(-14);
+              const max = Math.max(...d.map(v => v.valor), 1);
+              return d.map((v, i) => (
+                <div
+                  key={i}
+                  className="flex-1 rounded-t-sm bg-blue-400/70 dark:bg-blue-400/50 min-h-[2px]"
+                  style={{ height: `${Math.max((v.valor / max) * 100, 5)}%` }}
+                />
+              ));
+            })()}
+          </div>
+        </div>
+
+        {/* Meta com anel de progresso */}
+        <div className="rounded-xl border border-border bg-card p-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.1em]">Meta</p>
+            <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/10">
+              <Target className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            {/* Ring */}
+            <div className="relative w-16 h-16 shrink-0">
+              <svg className="w-16 h-16 -rotate-90" viewBox="0 0 36 36">
+                <circle cx="18" cy="18" r="14" fill="none" className="stroke-muted" strokeWidth="3" />
+                <circle
+                  cx="18" cy="18" r="14" fill="none"
+                  className={percentualConsolidado >= 70 ? "stroke-emerald-500" : "stroke-amber-500"}
+                  strokeWidth="3" strokeLinecap="round"
+                  strokeDasharray="88"
+                  strokeDashoffset={88 - (88 * Math.min(percentualConsolidado, 100)) / 100}
+                  style={{ transition: "stroke-dashoffset 1.5s ease-out" }}
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className={`text-sm font-bold ${percentualConsolidado >= 70 ? "text-emerald-600 dark:text-emerald-400" : "text-amber-500"}`}>
+                  {percentualConsolidado.toFixed(0)}%
+                </span>
+              </div>
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground">{formatCurrencyCompact(valorConsolidadoAtingido)}</p>
+              <p className="text-[10px] text-muted-foreground">de {formatCurrencyCompact(metaTotalConsolidada)}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Row 2: Charts - 60/40 split */}
+      {/* Row 2: Pipeline + Top Performers side by side */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        {/* Pipeline de Vendas */}
+        <div className="md:col-span-3 rounded-xl border border-border bg-card p-4" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-sm font-semibold text-foreground">Performance Semanal</p>
+            <div className="flex items-center gap-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[9px] text-muted-foreground">Live</span>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            {[
+              { stage: "Vendas", count: stats?.totalTransacoes || 0, color: "from-emerald-500 to-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-500/10", text: "text-emerald-700 dark:text-emerald-400" },
+              { stage: "Vendedores", count: stats?.totalVendedores || 0, color: "from-blue-500 to-blue-400", bg: "bg-blue-50 dark:bg-blue-500/10", text: "text-blue-700 dark:text-blue-400" },
+              { stage: "Ticket Médio", count: formatCurrencyCompact(stats?.ticketMedio || 0), color: "from-violet-500 to-violet-400", bg: "bg-violet-50 dark:bg-violet-500/10", text: "text-violet-700 dark:text-violet-400" },
+              { stage: "Show Rate", count: `${(stats?.showRate || 0).toFixed(0)}%`, color: "from-amber-500 to-amber-400", bg: "bg-amber-50 dark:bg-amber-500/10", text: "text-amber-700 dark:text-amber-400" },
+            ].map((s, i) => (
+              <div key={i} className="flex-1">
+                <div className={`${s.bg} rounded-lg p-3 text-center border border-transparent hover:border-border transition-colors`}>
+                  <div className={`w-8 h-1 mx-auto rounded-full bg-gradient-to-r ${s.color} mb-2`} />
+                  <p className={`text-lg font-bold ${s.text}`}>{s.count}</p>
+                  <p className="text-[9px] text-muted-foreground mt-0.5">{s.stage}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Top Performers - Ranking Live */}
+        <div className="md:col-span-2 rounded-xl border border-border bg-card p-4" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-sm font-semibold text-foreground">🏆 Top Performers</p>
+            <div className="flex items-center gap-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[9px] text-muted-foreground">Live</span>
+            </div>
+          </div>
+          <div className="space-y-2">
+            {(vendedoresMetas || []).slice(0, 5).map((seller, i) => {
+              const medals = ["🥇", "🥈", "🥉"];
+              const avatarColors = [
+                "bg-gradient-to-br from-rose-400 to-pink-500",
+                "bg-gradient-to-br from-blue-400 to-indigo-500",
+                "bg-gradient-to-br from-amber-400 to-orange-500",
+                "bg-gradient-to-br from-violet-400 to-purple-500",
+                "bg-gradient-to-br from-teal-400 to-cyan-500",
+              ];
+              return (
+                <div key={i} className="flex items-center gap-2">
+                  <span className="text-sm w-5 text-center">{medals[i] || `${i + 1}º`}</span>
+                  {seller.avatar_url ? (
+                    <Avatar className="h-7 w-7">
+                      <AvatarImage src={seller.avatar_url} />
+                      <AvatarFallback className="text-[9px]">{getInitials(seller.nome)}</AvatarFallback>
+                    </Avatar>
+                  ) : (
+                    <div className={`w-7 h-7 rounded-full ${avatarColors[i % avatarColors.length]} flex items-center justify-center shrink-0`}>
+                      <span className="text-[9px] font-bold text-white">{getInitials(seller.nome)}</span>
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-semibold text-foreground truncate">{seller.nome}</p>
+                    <div className="w-full bg-muted rounded-full h-1.5 mt-0.5">
+                      <div
+                        className="h-1.5 bg-emerald-500 rounded-full transition-all duration-700"
+                        style={{ width: `${Math.min(seller.percentual, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 shrink-0">
+                    {formatCurrencyCompact(seller.valorRealizado)}
+                  </span>
+                </div>
+              );
+            })}
+            {(!vendedoresMetas || vendedoresMetas.length === 0) && (
+              <p className="text-xs text-muted-foreground text-center py-4">Nenhuma meta definida</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Row 3: Charts - 60/40 split */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Main Chart - Sales Evolution (60%) */}
         <Card className="lg:col-span-8 relative overflow-hidden border border-border bg-card shadow-sm rounded-xl">

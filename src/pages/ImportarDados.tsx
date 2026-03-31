@@ -532,7 +532,7 @@ const ImportarDados = () => {
                     </div>
                     <ArrowRight className="w-4 h-4 text-muted-foreground/40 shrink-0" />
                     <Select value={m.dbField} onValueChange={(val) => updateMapping(m.csvColumn, val)}>
-                      <SelectTrigger className="w-[240px]">
+                      <SelectTrigger className="w-full sm:w-[240px]">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>

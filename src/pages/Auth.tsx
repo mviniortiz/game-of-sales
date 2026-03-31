@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { z } from "zod";
-import brandLogo from "@/assets/logo-full.png";
+import { ThemeLogo } from "@/components/ui/ThemeLogo";
 import { Mail, Lock, ArrowRight, ArrowLeft } from "lucide-react";
 import DataFlowBackground from "@/components/auth/DataFlowBackground";
 
@@ -88,7 +88,7 @@ const Auth = () => {
 
           {/* Logo */}
           <div className="flex items-center animate-fade-in" style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>
-            <img src={brandLogo} alt="Vyzon" className="h-28 w-auto object-contain" />
+            <ThemeLogo className="h-28 w-auto object-contain" />
           </div>
 
           {/* Header */}

@@ -167,7 +167,7 @@ export const ConversionFunnelDonut = ({ dateRange }: ConversionFunnelDonutProps)
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-emerald-500/5 to-transparent blur-2xl pointer-events-none" />
 
             <CardHeader className="pb-2 relative">
-                <div className="flex items-start justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                     <div>
                         <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2.5">
                             <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/10 ring-1 ring-emerald-500/20">
@@ -181,7 +181,7 @@ export const ConversionFunnelDonut = ({ dateRange }: ConversionFunnelDonutProps)
                     </div>
 
                     {/* Pipeline Value */}
-                    <div className="text-right bg-muted/50 px-3 py-2 rounded-xl ring-1 ring-border/50">
+                    <div className="text-right bg-muted/50 px-3 py-2 rounded-xl ring-1 ring-border/50 self-end sm:self-auto">
                         <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Pipeline Ativo</p>
                         <p className="text-lg font-bold text-foreground">{formatCurrency(pipelineValue)}</p>
                     </div>
@@ -207,9 +207,9 @@ export const ConversionFunnelDonut = ({ dateRange }: ConversionFunnelDonutProps)
                         <p className="text-xs text-muted-foreground mt-1">Comece adicionando seus primeiros deals</p>
                     </div>
                 ) : (
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-col sm:flex-row items-center gap-4">
                         {/* Chart with center stats */}
-                        <div className="relative flex-shrink-0" style={{ width: 180, height: 180 }}>
+                        <div className="relative flex-shrink-0 w-[160px] h-[160px] sm:w-[180px] sm:h-[180px]">
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie
@@ -307,7 +307,7 @@ export const ConversionFunnelDonut = ({ dateRange }: ConversionFunnelDonutProps)
 
                 {/* Footer stats */}
                 {totalDeals > 0 && (
-                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-4 pt-4 border-t border-border gap-3">
                         <div className="flex items-center gap-4">
                             <div>
                                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Total Deals</p>

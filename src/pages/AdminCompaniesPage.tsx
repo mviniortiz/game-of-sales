@@ -102,13 +102,13 @@ export const AdminCompaniesPage = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-200">
             <Building2 className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Empresas</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Empresas</h1>
             <p className="text-sm text-muted-foreground">Selecione uma empresa para gerenciar detalhes.</p>
           </div>
         </div>
@@ -160,9 +160,9 @@ export const AdminCompaniesPage = () => {
             Lista de Empresas
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0 sm:p-6">
           <div className="overflow-x-auto">
-            <Table>
+            <Table className="min-w-[600px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Logo</TableHead>

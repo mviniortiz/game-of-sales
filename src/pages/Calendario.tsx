@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronLeft, ChevronRight, Plus, Users, Target, Trophy,
-  TrendingUp, RefreshCw, CalendarDays
+  TrendingUp, RefreshCw, CalendarDays, Menu, X, ChevronDown
 } from "lucide-react";
 import {
   format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth,
@@ -303,19 +304,23 @@ const MonthGridView = ({
   onEventClick,
   onDayClick,
   showTeam,
+  isMobile = false,
 }: {
   date: Date;
   agendamentos: Agendamento[];
   onEventClick: (ag: Agendamento) => void;
   onDayClick: (d: Date) => void;
   showTeam: boolean;
+  isMobile?: boolean;
 }) => {
   const monthStart = startOfMonth(date);
   const monthEnd = endOfMonth(date);
   const calStart = startOfWeek(monthStart, { locale: ptBR });
   const calEnd = endOfWeek(monthEnd, { locale: ptBR });
   const days = eachDayOfInterval({ start: calStart, end: calEnd });
-  const headerDays = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+  const headerDaysDesktop = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+  const headerDaysMobile = ["D", "S", "T", "Q", "Q", "S", "S"];
+  const headerDays = isMobile ? headerDaysMobile : headerDaysDesktop;
 
   const getAgForDay = (d: Date) =>
     agendamentos
@@ -328,6 +333,111 @@ const MonthGridView = ({
     return p.length === 1 ? p[0].substring(0, 2).toUpperCase() : (p[0][0] + p[p.length - 1][0]).toUpperCase();
   };
 
+  // Mobile: compact month grid with dot indicators, tap to drill into day
+  if (isMobile) {
+    return (
+      <div className="flex flex-col flex-1 h-full overflow-y-auto">
+        {/* Compact day headers */}
+        <div className="grid grid-cols-7 border-b border-border sticky top-0 bg-background z-10">
+          {headerDays.map((d, i) => (
+            <div key={i} className="py-2 text-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+              {d}
+            </div>
+          ))}
+        </div>
+
+        {/* Compact grid cells */}
+        <div className="grid grid-cols-7">
+          {days.map((day, i) => {
+            const inMonth = isSameMonth(day, date);
+            const isNow = dateFnsIsToday(day);
+            const dayAgs = getAgForDay(day);
+
+            return (
+              <button
+                key={i}
+                onClick={() => onDayClick(day)}
+                className={`
+                  relative flex flex-col items-center py-2 min-h-[48px] border-b border-r border-border/30
+                  transition-colors active:bg-muted/60
+                  ${!inMonth ? "bg-background/40" : ""}
+                  ${isNow ? "bg-emerald-500/5" : ""}
+                `}
+              >
+                <span className={`
+                  text-[12px] font-semibold w-6 h-6 flex items-center justify-center rounded-full
+                  ${isNow ? "bg-emerald-500 text-white shadow-sm" : ""}
+                  ${!inMonth ? "text-muted-foreground/40" : !isNow ? "text-muted-foreground" : ""}
+                `}>
+                  {format(day, "d")}
+                </span>
+                {dayAgs.length > 0 && inMonth && (
+                  <div className="flex gap-0.5 mt-1">
+                    {dayAgs.slice(0, 3).map((ag, j) => {
+                      const st = mapStatus(ag.status);
+                      const c = STATUS_COLORS[st];
+                      return <span key={j} className={`w-1.5 h-1.5 rounded-full ${c.dot}`} />;
+                    })}
+                    {dayAgs.length > 3 && (
+                      <span className="text-[8px] text-muted-foreground leading-none">+</span>
+                    )}
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Events list below the grid */}
+        <div className="px-3 py-2 space-y-1">
+          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1 pt-2 pb-1">
+            Eventos do mes
+          </p>
+          {days
+            .filter(d => isSameMonth(d, date) && getAgForDay(d).length > 0)
+            .map((day, i) => {
+              const dayAgs = getAgForDay(day);
+              return (
+                <div key={i}>
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1 pt-2 pb-1">
+                    {format(day, "EEE, d 'de' MMM", { locale: ptBR })}
+                  </p>
+                  {dayAgs.map(ag => {
+                    const st = mapStatus(ag.status);
+                    const c = STATUS_COLORS[st];
+                    return (
+                      <button
+                        key={ag.id}
+                        onClick={() => onEventClick(ag)}
+                        className={`
+                          w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left
+                          ${c.bg} border-l-2 ${c.border} mb-0.5
+                          active:brightness-125 transition-all
+                        `}
+                      >
+                        <span className={`text-[11px] font-semibold tabular-nums ${c.text} flex-shrink-0`}>
+                          {format(parseISO(ag.data_agendamento), "HH:mm")}
+                        </span>
+                        {showTeam && ag.seller_name && (
+                          <span className="text-[9px] font-bold text-emerald-400 bg-emerald-500/20 px-1 rounded flex-shrink-0">
+                            {getInitials(ag.seller_name)}
+                          </span>
+                        )}
+                        <span className={`text-[11px] font-medium truncate ${c.text}`}>
+                          {ag.cliente_nome}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })}
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop: original grid layout
   return (
     <div className="flex flex-col flex-1 h-full">
       {/* Day headers */}
@@ -426,12 +536,12 @@ const ViewSelector = ({ view, onChange }: { view: ViewType; onChange: (v: ViewTy
     { id: "month", label: "Mês" },
   ];
   return (
-    <div className="flex items-center bg-muted rounded-lg p-0.5 border border-border">
+    <div className="flex items-center bg-muted rounded-lg p-0.5 border border-border flex-shrink-0">
       {views.map(v => (
         <button
           key={v.id}
           onClick={() => onChange(v.id)}
-          className={`px-3 py-1.5 text-[12px] font-semibold rounded-md transition-all duration-150 ${view === v.id
+          className={`px-2 md:px-3 py-1 md:py-1.5 text-[11px] md:text-[12px] font-semibold rounded-md transition-all duration-150 ${view === v.id
               ? "bg-card text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground"
             }`}
@@ -447,6 +557,7 @@ const ViewSelector = ({ view, onChange }: { view: ViewType; onChange: (v: ViewTy
 export default function Calendario() {
   const { user, isAdmin, isSuperAdmin, companyId } = useAuth();
   const { activeCompanyId } = useTenant();
+  const isMobile = useIsMobile();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [loading, setLoading] = useState(true);
@@ -459,6 +570,8 @@ export default function Calendario() {
   const [googleSynced, setGoogleSynced] = useState(false);
   const [googleConnected, setGoogleConnected] = useState(false);
   const [googleCalendarModalOpen, setGoogleCalendarModalOpen] = useState(false);
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   const canSeeTeam = isAdmin || isSuperAdmin;
   const showingTeam = canSeeTeam && selectedVendedor === "all";
@@ -581,9 +694,19 @@ export default function Calendario() {
       <div className="flex flex-col h-[calc(100vh-64px)] bg-background text-foreground overflow-hidden">
 
         {/* ── TOP BAR ────────────────────────────────────────────────── */}
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card/80 backdrop-blur flex-shrink-0">
+        <div className="flex items-center gap-2 md:gap-3 px-2 md:px-4 py-2 md:py-3 border-b border-border bg-card/80 backdrop-blur flex-shrink-0">
+          {/* Mobile sidebar toggle */}
+          {isMobile && (
+            <button
+              onClick={() => setShowMobileSidebar(!showMobileSidebar)}
+              className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+            >
+              {showMobileSidebar ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            </button>
+          )}
+
           {/* Nav */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5 md:gap-1 flex-shrink-0">
             <button
               onClick={() => navigate("prev")}
               className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
@@ -592,7 +715,7 @@ export default function Calendario() {
             </button>
             <button
               onClick={() => navigate("today")}
-              className="px-3 py-1.5 text-[12px] font-semibold rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              className="px-2 md:px-3 py-1.5 text-[11px] md:text-[12px] font-semibold rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
             >
               Hoje
             </button>
@@ -605,69 +728,90 @@ export default function Calendario() {
           </div>
 
           {/* Title */}
-          <h1 className="text-[15px] font-bold text-foreground capitalize flex-1 truncate">
+          <h1 className="text-[13px] md:text-[15px] font-bold text-foreground capitalize flex-1 truncate min-w-0">
             {getTitle()}
           </h1>
 
-          {/* Team filter (admins only) */}
-          {canSeeTeam && (
-            <Select value={selectedVendedor} onValueChange={setSelectedVendedor}>
-              <SelectTrigger className="w-[160px] h-8 bg-muted border-border text-foreground text-[12px]">
-                <Users className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
-                <SelectValue placeholder="Todos" />
-              </SelectTrigger>
-              <SelectContent className="bg-card border-border">
-                <SelectItem value="all" className="text-foreground focus:bg-muted text-[12px]">Todos vendedores</SelectItem>
-                {sellers.map((s: any) => (
-                  <SelectItem key={s.id} value={s.id} className="text-foreground focus:bg-muted text-[12px]">{s.nome}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {/* Desktop-only controls */}
+          {!isMobile && (
+            <>
+              {/* Team filter (admins only) */}
+              {canSeeTeam && (
+                <Select value={selectedVendedor} onValueChange={setSelectedVendedor}>
+                  <SelectTrigger className="w-full sm:w-[160px] h-8 bg-muted border-border text-foreground text-[12px]">
+                    <Users className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card border-border">
+                    <SelectItem value="all" className="text-foreground focus:bg-muted text-[12px]">Todos vendedores</SelectItem>
+                    {sellers.map((s: any) => (
+                      <SelectItem key={s.id} value={s.id} className="text-foreground focus:bg-muted text-[12px]">{s.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+
+              {/* Status filter */}
+              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                <SelectTrigger className="w-full sm:w-[140px] h-8 bg-muted border-border text-foreground text-[12px]">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border">
+                  <SelectItem value="all" className="text-foreground focus:bg-muted text-[12px]">Todos</SelectItem>
+                  <SelectItem value="agendado" className="text-foreground focus:bg-muted text-[12px]">Pendentes</SelectItem>
+                  <SelectItem value="realizado" className="text-foreground focus:bg-muted text-[12px]">Compareceu</SelectItem>
+                  <SelectItem value="nao_compareceu" className="text-foreground focus:bg-muted text-[12px]">Não compareceu</SelectItem>
+                  <SelectItem value="cancelado" className="text-foreground focus:bg-muted text-[12px]">Cancelados</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* View selector */}
+              <ViewSelector view={view} onChange={setView} />
+
+              {/* Google Calendar */}
+              <Button
+                size="sm"
+                variant={googleConnected ? "outline" : "default"}
+                className={googleConnected
+                  ? "h-8 px-3 text-[12px] border-border text-muted-foreground hover:text-foreground hover:bg-muted"
+                  : "h-8 px-3 text-[12px] bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-md shadow-blue-500/20"
+                }
+                onClick={() => setGoogleCalendarModalOpen(true)}
+              >
+                <CalendarDays className="h-3.5 w-3.5 mr-1" />
+                {googleConnected ? "Google Calendar" : "Conectar Google"}
+              </Button>
+            </>
           )}
 
-          {/* Status filter */}
-          <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-            <SelectTrigger className="w-[140px] h-8 bg-muted border-border text-foreground text-[12px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent className="bg-card border-border">
-              <SelectItem value="all" className="text-foreground focus:bg-muted text-[12px]">Todos</SelectItem>
-              <SelectItem value="agendado" className="text-foreground focus:bg-muted text-[12px]">Pendentes</SelectItem>
-              <SelectItem value="realizado" className="text-foreground focus:bg-muted text-[12px]">Compareceu</SelectItem>
-              <SelectItem value="nao_compareceu" className="text-foreground focus:bg-muted text-[12px]">Não compareceu</SelectItem>
-              <SelectItem value="cancelado" className="text-foreground focus:bg-muted text-[12px]">Cancelados</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {/* View selector */}
-          <ViewSelector view={view} onChange={setView} />
-
-          {/* Google Calendar */}
-          <Button
-            size="sm"
-            variant={googleConnected ? "outline" : "default"}
-            className={googleConnected
-              ? "h-8 px-3 text-[12px] border-border text-muted-foreground hover:text-foreground hover:bg-muted"
-              : "h-8 px-3 text-[12px] bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-md shadow-blue-500/20"
-            }
-            onClick={() => setGoogleCalendarModalOpen(true)}
-          >
-            <CalendarDays className="h-3.5 w-3.5 mr-1" />
-            {googleConnected ? "Google Calendar" : "Conectar Google"}
-          </Button>
+          {/* Mobile: filter toggle + view selector */}
+          {isMobile && (
+            <>
+              <ViewSelector view={view} onChange={setView} />
+              <button
+                onClick={() => setShowMobileFilters(!showMobileFilters)}
+                className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors flex-shrink-0 relative"
+              >
+                <ChevronDown className={`h-4 w-4 transition-transform ${showMobileFilters ? "rotate-180" : ""}`} />
+                {(selectedVendedor !== "all" || selectedStatus !== "all") && (
+                  <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                )}
+              </button>
+            </>
+          )}
 
           {/* New appointment */}
           <Dialog open={showNewAgendamento} onOpenChange={setShowNewAgendamento}>
             <DialogTrigger asChild>
               <Button
                 size="sm"
-                className="bg-emerald-600 hover:bg-emerald-500 text-white h-8 px-3 text-[12px] font-semibold shadow-md shadow-emerald-500/20"
+                className="bg-emerald-600 hover:bg-emerald-500 text-white h-8 px-2 md:px-3 text-[12px] font-semibold shadow-md shadow-emerald-500/20 flex-shrink-0"
               >
-                <Plus className="h-3.5 w-3.5 mr-1" />
-                Novo
+                <Plus className="h-3.5 w-3.5 md:mr-1" />
+                <span className="hidden md:inline">Novo</span>
               </Button>
             </DialogTrigger>
-            <DialogContent className="bg-card border-border">
+            <DialogContent className="bg-card border-border max-w-[95vw] md:max-w-lg">
               <DialogHeader>
                 <DialogTitle className="text-foreground">Novo Agendamento</DialogTitle>
               </DialogHeader>
@@ -676,33 +820,110 @@ export default function Calendario() {
           </Dialog>
         </div>
 
+        {/* ── MOBILE FILTERS DROPDOWN ──────────────────────────────── */}
+        {isMobile && showMobileFilters && (
+          <div className="flex flex-wrap items-center gap-2 px-3 py-2 border-b border-border bg-card/60 backdrop-blur">
+            {canSeeTeam && (
+              <Select value={selectedVendedor} onValueChange={setSelectedVendedor}>
+                <SelectTrigger className="flex-1 min-w-[120px] h-8 bg-muted border-border text-foreground text-[12px]">
+                  <Users className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                  <SelectValue placeholder="Todos" />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border">
+                  <SelectItem value="all" className="text-foreground focus:bg-muted text-[12px]">Todos vendedores</SelectItem>
+                  {sellers.map((s: any) => (
+                    <SelectItem key={s.id} value={s.id} className="text-foreground focus:bg-muted text-[12px]">{s.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+              <SelectTrigger className="flex-1 min-w-[120px] h-8 bg-muted border-border text-foreground text-[12px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border">
+                <SelectItem value="all" className="text-foreground focus:bg-muted text-[12px]">Todos</SelectItem>
+                <SelectItem value="agendado" className="text-foreground focus:bg-muted text-[12px]">Pendentes</SelectItem>
+                <SelectItem value="realizado" className="text-foreground focus:bg-muted text-[12px]">Compareceu</SelectItem>
+                <SelectItem value="nao_compareceu" className="text-foreground focus:bg-muted text-[12px]">Não compareceu</SelectItem>
+                <SelectItem value="cancelado" className="text-foreground focus:bg-muted text-[12px]">Cancelados</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              size="sm"
+              variant={googleConnected ? "outline" : "default"}
+              className={googleConnected
+                ? "h-8 px-2 text-[11px] border-border text-muted-foreground"
+                : "h-8 px-2 text-[11px] bg-blue-600 text-white font-semibold"
+              }
+              onClick={() => setGoogleCalendarModalOpen(true)}
+            >
+              <CalendarDays className="h-3.5 w-3.5 mr-1" />
+              {googleConnected ? "Google" : "Google"}
+            </Button>
+          </div>
+        )}
+
         {/* ── BODY: SIDEBAR + MAIN ───────────────────────────────────── */}
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-col md:flex-row flex-1 overflow-hidden relative">
 
-          {/* ── SIDEBAR ─────────────────────────────────────────────── */}
-          <aside className="w-[240px] flex-shrink-0 border-r border-border bg-card/50 flex flex-col overflow-y-auto p-3">
-            {/* Mini calendar */}
-            <MiniCalendar
-              date={currentDate}
-              onDateSelect={(d) => { setCurrentDate(d); setView("day"); }}
-              agendamentos={agendamentos}
-            />
+          {/* ── MOBILE SIDEBAR (collapsible panel at top) ─────────── */}
+          {isMobile && showMobileSidebar && (
+            <div className="absolute inset-0 z-30 flex flex-col">
+              {/* Backdrop */}
+              <div
+                className="absolute inset-0 bg-black/40"
+                onClick={() => setShowMobileSidebar(false)}
+              />
+              {/* Panel */}
+              <motion.aside
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -20, opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="relative z-10 bg-card border-b border-border overflow-y-auto p-3 max-h-[80vh] shadow-xl"
+              >
+                <MiniCalendar
+                  date={currentDate}
+                  onDateSelect={(d) => { setCurrentDate(d); setView("day"); setShowMobileSidebar(false); }}
+                  agendamentos={agendamentos}
+                />
+                <div className="my-3 border-t border-border" />
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1 px-1">
+                  Proximos eventos
+                </p>
+                <UpcomingEvents agendamentos={agendamentos} onEventClick={(ag) => { handleEventClick(ag); setShowMobileSidebar(false); }} />
+                <MiniGoalWidget userId={user?.id} companyId={effectiveCompanyId || undefined} />
+              </motion.aside>
+            </div>
+          )}
 
-            {/* Divider */}
-            <div className="my-3 border-t border-border" />
+          {/* ── DESKTOP SIDEBAR ────────────────────────────────────── */}
+          {!isMobile && (
+            <aside className="w-[240px] flex-shrink-0 border-r border-border bg-card/50 flex flex-col overflow-y-auto p-3">
+              {/* Mini calendar */}
+              <MiniCalendar
+                date={currentDate}
+                onDateSelect={(d) => { setCurrentDate(d); setView("day"); }}
+                agendamentos={agendamentos}
+              />
 
-            {/* Upcoming */}
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1 px-1">
-              Próximos eventos
-            </p>
-            <UpcomingEvents agendamentos={agendamentos} onEventClick={handleEventClick} />
+              {/* Divider */}
+              <div className="my-3 border-t border-border" />
 
-            {/* Divider */}
-            <div className="flex-1" />
+              {/* Upcoming */}
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1 px-1">
+                Próximos eventos
+              </p>
+              <UpcomingEvents agendamentos={agendamentos} onEventClick={handleEventClick} />
 
-            {/* Mini goal widget */}
-            <MiniGoalWidget userId={user?.id} companyId={effectiveCompanyId || undefined} />
-          </aside>
+              {/* Divider */}
+              <div className="flex-1" />
+
+              {/* Mini goal widget */}
+              <MiniGoalWidget userId={user?.id} companyId={effectiveCompanyId || undefined} />
+            </aside>
+          )}
 
           {/* ── MAIN CALENDAR AREA ──────────────────────────────────── */}
           <main className="flex-1 overflow-hidden bg-background relative">
@@ -728,15 +949,17 @@ export default function Calendario() {
                     onEventClick={handleEventClick}
                     onDayClick={(d) => { setCurrentDate(d); setView("day"); }}
                     showTeam={showingTeam}
+                    isMobile={isMobile}
                   />
                 ) : (
                   <CalendarTimelineView
                     date={currentDate}
-                    view={view}
+                    view={isMobile && view === "week" ? "day" : view}
                     agendamentos={agendamentos}
                     onEventClick={handleEventClick}
                     onAgendamentoUpdate={handleAgendamentoUpdate}
                     showSellerName={showingTeam}
+                    isMobile={isMobile}
                   />
                 )}
               </motion.div>

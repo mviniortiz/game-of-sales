@@ -230,7 +230,7 @@ export const CallsFilters = ({
                   selected={{ from: dateRange.from, to: dateRange.to }}
                   onSelect={(range) => setDateRange({ from: range?.from, to: range?.to })}
                   locale={ptBR}
-                  numberOfMonths={2}
+                  numberOfMonths={1}
                   className="pointer-events-auto"
                 />
               </PopoverContent>

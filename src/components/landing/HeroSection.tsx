@@ -1,18 +1,9 @@
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import { useRef, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Sparkles, Play, TrendingUp, Users, Target, Trophy, Star, Zap } from "lucide-react";
 
 // Hoisted animation objects
-const gradientPulseAnimation = { opacity: [0.3, 0.6, 0.3] };
-const gradientPulseTransition = { duration: 4, repeat: Infinity, ease: "easeInOut" as const };
-
-const orbScaleAnimation = { scale: [1, 1.3, 1], opacity: [0.3, 0.5, 0.3] };
-const orbScaleTransition = { duration: 6, repeat: Infinity, ease: "easeInOut" as const };
-
-const orbAltAnimation = { scale: [1.2, 1, 1.2], opacity: [0.2, 0.4, 0.2] };
-const orbAltTransition = { duration: 5, repeat: Infinity, ease: "easeInOut" as const };
-
 const fadeInAnimation = { opacity: 0, y: 30 };
 const fadeInTransition = { duration: 0.6 };
 
@@ -25,180 +16,321 @@ const barData = [
     { name: "João", targetH: 95, targetY: 255, delay: 0, score: "2.1k" },
 ];
 
-const PARTICLES = [
-    { x: 60, dur: 5.2, del: 0.3 },
-    { x: 135, dur: 4.5, del: 1.1 },
-    { x: 205, dur: 6.0, del: 0.0 },
-    { x: 270, dur: 5.7, del: 1.8 },
-    { x: 340, dur: 4.2, del: 0.7 },
-    { x: 405, dur: 5.5, del: 1.5 },
-    { x: 450, dur: 4.8, del: 0.2 },
-    { x: 100, dur: 6.1, del: 2.0 },
+
+// ─── Dashboard Mockup ────────────────────────────────────────────────────────
+const SIDEBAR_ITEMS = [
+    { icon: "⬡", active: true },
+    { icon: "▦" },
+    { icon: "◎" },
+    { icon: "⚡" },
+    { icon: "☰" },
 ];
 
-// ─── Animated Leaderboard SVG ────────────────────────────────────────────────
-const LeaderboardSVG = () => {
-    const barsRef = useRef<(SVGRectElement | null)[]>([]);
+const SPARKLINE = [30, 45, 35, 55, 48, 65, 58, 72, 68, 85, 78, 92];
+
+const DashboardMockup = () => {
+    const barsRef = useRef<(HTMLDivElement | null)[]>([]);
+    const progressRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
         barData.forEach((bar, i) => {
             const el = barsRef.current[i];
             if (!el) return;
             setTimeout(() => {
-                const start = performance.now();
-                const duration = 1500;
-                const animate = (ts: number) => {
-                    const progress = Math.min((ts - start) / duration, 1);
-                    const ease = 1 - Math.pow(1 - progress, 3);
-                    const h = Math.floor(ease * bar.targetH);
-                    const y = 350 - h;
-                    el.setAttribute("height", String(h));
-                    el.setAttribute("y", String(y));
-                    if (progress < 1) requestAnimationFrame(animate);
-                };
-                requestAnimationFrame(animate);
-            }, bar.delay);
+                el.style.height = `${(bar.targetH / 255) * 100}%`;
+                el.style.opacity = "1";
+            }, 400 + bar.delay);
         });
+        // Animate meta progress ring
+        if (progressRef.current) {
+            setTimeout(() => {
+                progressRef.current!.style.strokeDashoffset = "18.5";
+            }, 600);
+        }
     }, []);
 
     return (
-        <div
-            className="relative w-full max-w-[500px] mx-auto"
-            style={{ filter: "drop-shadow(0 0 30px rgba(16,185,129,0.2))" }}
-        >
-            <svg
-                viewBox="0 0 500 400"
-                className="w-full h-full rounded-2xl border border-white/10"
-                style={{ background: "rgba(15,23,42,0.9)", backdropFilter: "blur(16px)" }}
+        <div className="relative w-full max-w-[540px] mx-auto">
+            {/* Browser frame */}
+            <div
+                className="rounded-2xl border border-gray-200/60 bg-white overflow-hidden"
+                style={{ boxShadow: "0 30px 70px -20px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.02)" }}
             >
-                <defs>
-                    {/* Emerald gradient for regular bars */}
-                    <linearGradient id="barGradHero" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#10b981" stopOpacity="0.9" />
-                        <stop offset="100%" stopColor="#10b981" stopOpacity="0.1" />
-                    </linearGradient>
-                    {/* Brighter gradient for winner */}
-                    <linearGradient id="winnerGradHero" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#34d399" stopOpacity="1" />
-                        <stop offset="100%" stopColor="#10b981" stopOpacity="0.3" />
-                    </linearGradient>
-                    {/* Glow filter for winner bar */}
-                    <filter id="glowHero" x="-30%" y="-30%" width="160%" height="160%">
-                        <feGaussianBlur stdDeviation="6" result="blur" />
-                        <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-                    </filter>
-                    {/* Scanline gradient */}
-                    <linearGradient id="scanGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#10b981" stopOpacity="0" />
-                        <stop offset="50%" stopColor="#10b981" stopOpacity="0.1" />
-                        <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
-                    </linearGradient>
-                    {/* Grid pattern */}
-                    <pattern id="gridHero" width="40" height="40" patternUnits="userSpaceOnUse">
-                        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
-                    </pattern>
-                </defs>
+                {/* Title bar */}
+                <div className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-b from-gray-50 to-gray-100/80 border-b border-gray-200/60">
+                    <div className="flex gap-1.5">
+                        <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f57]" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-[#febc2e]" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-[#28c840]" />
+                    </div>
+                    <div className="flex-1 flex justify-center">
+                        <div className="flex items-center gap-1.5 px-3 py-1 bg-white rounded-lg border border-gray-200/80 text-[10px] text-gray-400">
+                            <svg className="w-2.5 h-2.5 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                            <span className="font-mono">vyzon.com.br/dashboard</span>
+                        </div>
+                    </div>
+                </div>
 
-                {/* Grid background */}
-                <rect width="500" height="400" fill="url(#gridHero)" />
-
-                {/* Floating particles */}
-                {PARTICLES.map((p, i) => (
-                    <circle
-                        key={i}
-                        cx={p.x}
-                        cy="400"
-                        r="2"
-                        fill="#10b981"
-                        style={{
-                            animation: `heroParticle ${p.dur}s linear ${p.del}s infinite`,
-                            opacity: 0,
-                        }}
-                    />
-                ))}
-
-                {/* Scanline sweep */}
-                <rect width="500" height="60" fill="url(#scanGrad)"
-                    style={{ animation: "heroScanline 4s linear infinite" }} />
-
-                {/* Baseline */}
-                <line x1="40" y1="350" x2="460" y2="350" stroke="rgba(255,255,255,0.08)" strokeWidth="2" />
-
-                {/* HUD header */}
-                <text x="20" y="32" fill="#10b981" fontSize="10" fontFamily="monospace" opacity="0.6">
-                    LIVE RANKING • SEMANA ATUAL
-                </text>
-                <circle cx="470" cy="26" r="5" fill="#10b981">
-                    <animate attributeName="opacity" values="1;0.2;1" dur="1.5s" repeatCount="indefinite" />
-                </circle>
-
-                {/* Bars */}
-                {barData.map((bar, i) => {
-                    const xPos = 65 + i * 80;
-                    return (
-                        <g key={i}>
-                            {/* Ghost track */}
-                            <rect x={xPos} y="60" width="40" height="290"
-                                fill="rgba(255,255,255,0.03)" rx="4" />
-
-                            {/* Animated bar */}
-                            <rect
-                                ref={el => barsRef.current[i] = el}
-                                x={xPos} y="350" width="40" height="0" rx="4"
-                                fill={bar.isWinner ? "url(#winnerGradHero)" : "url(#barGradHero)"}
-                                filter={bar.isWinner ? "url(#glowHero)" : undefined}
-                            />
-
-                            {/* Score label */}
-                            <text
-                                x={xPos + 20} y={bar.targetY - 14}
-                                fill="white" fontSize="13" fontWeight="bold"
-                                fontFamily="'Space Grotesk', sans-serif"
-                                textAnchor="middle"
-                                style={{
-                                    opacity: 0,
-                                    animation: `heroFadeIn 0.4s ease-out ${(bar.delay + 1200) / 1000}s forwards`,
-                                }}
+                {/* App layout with sidebar */}
+                <div className="flex">
+                    {/* Mini sidebar */}
+                    <div className="w-11 bg-white border-r border-gray-100 flex flex-col items-center py-3 gap-2.5 shrink-0">
+                        <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center mb-1">
+                            <span className="text-[8px] font-black text-white">V</span>
+                        </div>
+                        {SIDEBAR_ITEMS.map((item, i) => (
+                            <div
+                                key={i}
+                                className={`w-7 h-7 rounded-lg flex items-center justify-center text-[10px] transition-colors ${
+                                    item.active
+                                        ? "bg-emerald-50 text-emerald-600"
+                                        : "text-gray-300 hover:text-gray-400"
+                                }`}
                             >
-                                {bar.score}
-                            </text>
+                                {item.icon}
+                            </div>
+                        ))}
+                    </div>
 
-                            {/* Name label */}
-                            <text
-                                x={xPos + 20} y="375"
-                                fill="rgba(255,255,255,0.4)" fontSize="11"
-                                fontFamily="'Inter', sans-serif"
-                                textAnchor="middle"
+                    {/* Dashboard content */}
+                    <div className="flex-1 p-3 space-y-3 bg-[#f8fafb] min-h-[320px]">
+                        {/* Header */}
+                        <motion.div
+                            className="flex items-center justify-between"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.2, duration: 0.4 }}
+                        >
+                            <div>
+                                <p className="text-[10px] text-gray-400">Bom dia, Ana</p>
+                                <p className="text-xs font-bold text-gray-800">Dashboard</p>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <div className="relative">
+                                    <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-[8px]">🔔</div>
+                                    <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-rose-500 rounded-full border border-white" />
+                                </div>
+                                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-[7px] font-bold text-white">A</div>
+                            </div>
+                        </motion.div>
+
+                        {/* KPI Row */}
+                        <div className="grid grid-cols-3 gap-2">
+                            {/* Revenue KPI with sparkline */}
+                            <motion.div
+                                className="bg-white rounded-xl p-2.5 border border-gray-100 col-span-1"
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.3, duration: 0.5 }}
+                                style={{ boxShadow: "0 1px 2px rgba(0,0,0,0.03)" }}
                             >
-                                {bar.name}
-                            </text>
-
-                            {/* Crown for winner */}
-                            {bar.isWinner && (
-                                <g
-                                    transform={`translate(${xPos + 6}, ${bar.targetY - 46})`}
-                                    style={{
-                                        opacity: 0,
-                                        animation: `heroFadeIn 0.4s ease-out ${(bar.delay + 1500) / 1000}s forwards,
-                                                    heroCrown 2s ease-in-out ${(bar.delay + 1500) / 1000}s infinite`,
-                                        transformOrigin: "center bottom",
-                                    }}
-                                >
+                                <div className="flex items-center justify-between">
+                                    <p className="text-[8px] text-gray-400 uppercase tracking-wider">Receita</p>
+                                    <TrendingUp className="w-2.5 h-2.5 text-emerald-500" />
+                                </div>
+                                <p className="text-sm font-bold text-gray-900 mt-0.5">R$ 247k</p>
+                                <div className="flex items-center gap-1 mt-1">
+                                    <span className="text-[8px] font-semibold text-emerald-600 bg-emerald-50 px-1 rounded">+23%</span>
+                                </div>
+                                {/* Mini sparkline */}
+                                <svg className="w-full h-6 mt-1" viewBox="0 0 120 30" preserveAspectRatio="none">
+                                    <defs>
+                                        <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stopColor="#10b981" stopOpacity="0.2" />
+                                            <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+                                        </linearGradient>
+                                    </defs>
                                     <path
-                                        d="M3 12L7 2L15 12L23 2L27 12V18H3V12Z"
-                                        fill="#f59e0b"
-                                        style={{ filter: "drop-shadow(0 2px 6px rgba(245,158,11,0.5))" }}
+                                        d={`M0,${30 - SPARKLINE[0] * 0.3} ${SPARKLINE.map((v, i) => `L${(i / (SPARKLINE.length - 1)) * 120},${30 - v * 0.3}`).join(" ")} L120,30 L0,30 Z`}
+                                        fill="url(#sparkFill)"
                                     />
-                                </g>
-                            )}
-                        </g>
-                    );
-                })}
-            </svg>
+                                    <path
+                                        d={`M0,${30 - SPARKLINE[0] * 0.3} ${SPARKLINE.map((v, i) => `L${(i / (SPARKLINE.length - 1)) * 120},${30 - v * 0.3}`).join(" ")}`}
+                                        fill="none" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round"
+                                    />
+                                </svg>
+                            </motion.div>
+
+                            {/* Vendas KPI */}
+                            <motion.div
+                                className="bg-white rounded-xl p-2.5 border border-gray-100"
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.4, duration: 0.5 }}
+                                style={{ boxShadow: "0 1px 2px rgba(0,0,0,0.03)" }}
+                            >
+                                <div className="flex items-center justify-between">
+                                    <p className="text-[8px] text-gray-400 uppercase tracking-wider">Vendas</p>
+                                    <Users className="w-2.5 h-2.5 text-blue-500" />
+                                </div>
+                                <p className="text-sm font-bold text-gray-900 mt-0.5">142</p>
+                                <div className="flex items-center gap-1 mt-1">
+                                    <span className="text-[8px] font-semibold text-emerald-600 bg-emerald-50 px-1 rounded">+18%</span>
+                                </div>
+                                <div className="flex gap-0.5 mt-1.5">
+                                    {[65, 45, 80, 55, 90, 70, 85].map((h, i) => (
+                                        <div key={i} className="flex-1 bg-blue-100 rounded-sm" style={{ height: `${h * 0.2}px` }}>
+                                            <div className="w-full bg-blue-400 rounded-sm" style={{ height: `${h}%` }} />
+                                        </div>
+                                    ))}
+                                </div>
+                            </motion.div>
+
+                            {/* Meta KPI with ring */}
+                            <motion.div
+                                className="bg-white rounded-xl p-2.5 border border-gray-100"
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.5, duration: 0.5 }}
+                                style={{ boxShadow: "0 1px 2px rgba(0,0,0,0.03)" }}
+                            >
+                                <div className="flex items-center justify-between">
+                                    <p className="text-[8px] text-gray-400 uppercase tracking-wider">Meta</p>
+                                    <Target className="w-2.5 h-2.5 text-emerald-500" />
+                                </div>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <div className="relative w-10 h-10">
+                                        <svg className="w-10 h-10 -rotate-90" viewBox="0 0 36 36">
+                                            <circle cx="18" cy="18" r="14" fill="none" stroke="#e5e7eb" strokeWidth="3" />
+                                            <circle
+                                                ref={progressRef}
+                                                cx="18" cy="18" r="14" fill="none" stroke="#10b981" strokeWidth="3"
+                                                strokeLinecap="round"
+                                                strokeDasharray="88"
+                                                strokeDashoffset="88"
+                                                style={{ transition: "stroke-dashoffset 1.5s ease-out" }}
+                                            />
+                                        </svg>
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                            <span className="text-[9px] font-bold text-gray-900">87%</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p className="text-[8px] text-gray-500">R$ 215k</p>
+                                        <p className="text-[8px] text-gray-400">de R$ 250k</p>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        </div>
+
+                        {/* Chart + Ranking row */}
+                        <div className="grid grid-cols-5 gap-2">
+                            {/* Chart */}
+                            <motion.div
+                                className="col-span-3 bg-white rounded-xl p-2.5 border border-gray-100"
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.6, duration: 0.5 }}
+                                style={{ boxShadow: "0 1px 2px rgba(0,0,0,0.03)" }}
+                            >
+                                <div className="flex items-center justify-between mb-2">
+                                    <p className="text-[10px] font-semibold text-gray-700">Performance Semanal</p>
+                                    <div className="flex items-center gap-1">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                        <span className="text-[8px] text-gray-400">Live</span>
+                                    </div>
+                                </div>
+                                <div className="flex items-end gap-1 h-20">
+                                    {barData.map((bar, i) => (
+                                        <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
+                                            <div className="w-full relative h-16 flex items-end">
+                                                <div
+                                                    ref={el => barsRef.current[i] = el}
+                                                    className={`w-full rounded-t transition-all duration-[1200ms] ease-out ${
+                                                        bar.isWinner
+                                                            ? "bg-gradient-to-t from-emerald-600 to-emerald-400 shadow-sm shadow-emerald-500/30"
+                                                            : "bg-gradient-to-t from-emerald-300 to-emerald-200"
+                                                    }`}
+                                                    style={{ height: "0%", opacity: 0 }}
+                                                />
+                                            </div>
+                                            <span className="text-[7px] text-gray-400 truncate w-full text-center">{bar.name.slice(0, 3)}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </motion.div>
+
+                            {/* Ranking */}
+                            <motion.div
+                                className="col-span-2 bg-white rounded-xl p-2.5 border border-gray-100"
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.7, duration: 0.5 }}
+                                style={{ boxShadow: "0 1px 2px rgba(0,0,0,0.03)" }}
+                            >
+                                <p className="text-[10px] font-semibold text-gray-700 mb-1.5">🏆 Ranking</p>
+                                <div className="space-y-1.5">
+                                    {[
+                                        { name: "Ana Silva", xp: "8.9k XP", avatar: "bg-gradient-to-br from-rose-400 to-pink-500", initial: "A", medal: "🥇", bar: "w-[92%]" },
+                                        { name: "Lucas M.", xp: "6.1k XP", avatar: "bg-gradient-to-br from-blue-400 to-indigo-500", initial: "L", medal: "🥈", bar: "w-[68%]" },
+                                        { name: "Sofia R.", xp: "4.5k XP", avatar: "bg-gradient-to-br from-amber-400 to-orange-500", initial: "S", medal: "🥉", bar: "w-[50%]" },
+                                    ].map((seller, i) => (
+                                        <motion.div
+                                            key={i}
+                                            className="flex items-center gap-1.5"
+                                            initial={{ opacity: 0, x: 8 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: 1.1 + i * 0.12, duration: 0.4 }}
+                                        >
+                                            <span className="text-[10px]">{seller.medal}</span>
+                                            <div className={`w-5 h-5 rounded-full ${seller.avatar} flex items-center justify-center shrink-0`}>
+                                                <span className="text-[7px] font-bold text-white">{seller.initial}</span>
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-[8px] font-semibold text-gray-700 truncate">{seller.name}</p>
+                                                <div className="w-full bg-gray-100 rounded-full h-1 mt-0.5">
+                                                    <div className={`${seller.bar} h-1 bg-emerald-400 rounded-full`} />
+                                                </div>
+                                            </div>
+                                            <span className="text-[7px] font-bold text-emerald-600 shrink-0">{seller.xp}</span>
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        </div>
+
+                        {/* Pipeline */}
+                        <motion.div
+                            className="bg-white rounded-xl p-2.5 border border-gray-100"
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.9, duration: 0.5 }}
+                            style={{ boxShadow: "0 1px 2px rgba(0,0,0,0.03)" }}
+                        >
+                            <div className="flex items-center justify-between mb-2">
+                                <p className="text-[10px] font-semibold text-gray-700">Pipeline de Vendas</p>
+                                <span className="text-[8px] text-gray-400">28 deals ativos</span>
+                            </div>
+                            <div className="flex gap-1.5">
+                                {[
+                                    { stage: "Novo", count: 12, color: "from-blue-500 to-blue-400", bg: "bg-blue-50", text: "text-blue-700" },
+                                    { stage: "Qualificação", count: 8, color: "from-amber-500 to-amber-400", bg: "bg-amber-50", text: "text-amber-700" },
+                                    { stage: "Proposta", count: 5, color: "from-purple-500 to-purple-400", bg: "bg-purple-50", text: "text-purple-700" },
+                                    { stage: "Fechado", count: 3, color: "from-emerald-500 to-emerald-400", bg: "bg-emerald-50", text: "text-emerald-700" },
+                                ].map((s, i) => (
+                                    <motion.div
+                                        key={i}
+                                        className="flex-1"
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ delay: 1.3 + i * 0.08, duration: 0.3 }}
+                                    >
+                                        <div className={`${s.bg} rounded-lg p-1.5 text-center border border-transparent hover:border-gray-200 transition-colors`}>
+                                            <div className={`w-5 h-1 mx-auto rounded-full bg-gradient-to-r ${s.color} mb-1`} />
+                                            <p className={`text-sm font-bold ${s.text}`}>{s.count}</p>
+                                            <p className="text-[7px] text-gray-400 mt-0.5">{s.stage}</p>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </motion.div>
+                    </div>
+                </div>
+            </div>
 
             {/* Floating badge: #1 */}
             <motion.div
-                className="absolute -left-10 top-16 bg-slate-900/95 backdrop-blur-sm rounded-xl p-3 border border-amber-500/30 shadow-xl"
+                className="absolute -left-8 top-24 bg-white rounded-xl p-2.5 border border-amber-200/60 hidden lg:block"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0, y: [0, -6, 0] }}
                 transition={{
@@ -206,22 +338,22 @@ const LeaderboardSVG = () => {
                     x: { delay: 2.2, duration: 0.5 },
                     y: { delay: 2.7, duration: 3.5, repeat: Infinity, ease: "easeInOut" },
                 }}
-                style={{ boxShadow: "0 10px 30px -8px rgba(245,158,11,0.25)" }}
+                style={{ boxShadow: "0 8px 25px -6px rgba(245,158,11,0.2)" }}
             >
                 <div className="flex items-center gap-2">
-                    <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg">
-                        <Trophy className="h-5 w-5 text-white" />
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md">
+                        <Trophy className="h-4 w-4 text-white" />
                     </div>
                     <div>
-                        <p className="text-[10px] text-white/50 uppercase tracking-wider">Ranking</p>
-                        <p className="text-lg font-bold text-white leading-none">#1</p>
+                        <p className="text-[8px] text-gray-400 uppercase tracking-wider">Top Seller</p>
+                        <p className="text-base font-bold text-gray-900 leading-none">#1</p>
                     </div>
                 </div>
             </motion.div>
 
             {/* Floating badge: nova venda */}
             <motion.div
-                className="absolute -right-10 bottom-24 bg-slate-900/95 backdrop-blur-sm rounded-xl p-3 border border-emerald-500/30 shadow-xl"
+                className="absolute -right-6 bottom-32 bg-white rounded-xl p-2.5 border border-emerald-200/60 hidden lg:block"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0, y: [0, 8, 0] }}
                 transition={{
@@ -229,43 +361,40 @@ const LeaderboardSVG = () => {
                     x: { delay: 2.5, duration: 0.5 },
                     y: { delay: 3, duration: 4, repeat: Infinity, ease: "easeInOut" },
                 }}
-                style={{ boxShadow: "0 10px 30px -8px rgba(16,185,129,0.25)" }}
+                style={{ boxShadow: "0 8px 25px -6px rgba(16,185,129,0.2)" }}
             >
                 <div className="flex items-center gap-2">
-                    <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg">
-                        <Zap className="h-5 w-5 text-white" />
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-md">
+                        <Zap className="h-4 w-4 text-white" />
                     </div>
                     <div>
-                        <p className="text-[10px] text-white/50 uppercase tracking-wider">Nova Venda</p>
-                        <p className="text-sm font-bold text-emerald-400 leading-none">+R$ 3.200</p>
+                        <p className="text-[8px] text-gray-500 uppercase tracking-wider">Nova Venda</p>
+                        <p className="text-sm font-bold text-emerald-600 leading-none">+R$ 3.200</p>
                     </div>
+                </div>
+            </motion.div>
+
+            {/* Floating badge: meta batida */}
+            <motion.div
+                className="absolute -right-4 top-16 bg-white rounded-xl p-2.5 border border-emerald-200/60 hidden lg:block"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1, y: [0, -5, 0] }}
+                transition={{
+                    opacity: { delay: 2.8, duration: 0.5 },
+                    scale: { delay: 2.8, duration: 0.4 },
+                    y: { delay: 3.3, duration: 5, repeat: Infinity, ease: "easeInOut" },
+                }}
+                style={{ boxShadow: "0 8px 25px -6px rgba(16,185,129,0.15)" }}
+            >
+                <div className="flex items-center gap-1.5">
+                    <span className="text-sm">🎯</span>
+                    <p className="text-[9px] font-semibold text-gray-700">Meta batida!</p>
                 </div>
             </motion.div>
         </div>
     );
 };
 
-// ─── Keyframe injection ───────────────────────────────────────────────────────
-const SVG_STYLES = `
-@keyframes heroScanline {
-    0%   { transform: translateY(-60px); }
-    100% { transform: translateY(460px); }
-}
-@keyframes heroParticle {
-    0%   { opacity: 0; transform: translateY(0); }
-    10%  { opacity: 0.5; }
-    90%  { opacity: 0.5; }
-    100% { opacity: 0; transform: translateY(-420px); }
-}
-@keyframes heroFadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes heroCrown {
-    0%, 100% { transform: translateY(0); }
-    50%       { transform: translateY(-5px); }
-}
-`;
 
 // ─── HeroSection ────────────────────────────────────────────────────────────
 interface HeroSectionProps {
@@ -276,72 +405,82 @@ interface HeroSectionProps {
 
 export const HeroSection = ({ onCTAClick, onDemoClick, onLoginClick }: HeroSectionProps) => {
     const sectionRef = useRef<HTMLElement>(null);
-    const { scrollYProgress } = useScroll({
-        target: sectionRef,
-        offset: ["start start", "end start"],
-    });
-    const orbY1 = useTransform(scrollYProgress, [0, 1], [0, -120]);
-    const orbY2 = useTransform(scrollYProgress, [0, 1], [0, -80]);
-
-    // Inject SVG keyframe styles once
-    useEffect(() => {
-        const id = "hero-svg-styles";
-        if (document.getElementById(id)) return;
-        const tag = document.createElement("style");
-        tag.id = id;
-        tag.innerHTML = SVG_STYLES;
-        document.head.appendChild(tag);
-    }, []);
 
     return (
         <section
             ref={sectionRef}
-            className="relative min-h-[90vh] overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-900/30 via-slate-950 to-slate-950"
+            className="relative min-h-[90vh] overflow-hidden bg-white"
         >
-            {/* Animated Grid Background */}
+            {/* Animated gradient blobs */}
             <div className="absolute inset-0 overflow-hidden">
+                {/* Base gradient */}
                 <div
-                    className="absolute inset-0 opacity-20"
+                    className="absolute inset-0"
+                    style={{ background: "linear-gradient(160deg, #ecfdf5 0%, #f0fdfa 30%, #ffffff 60%, #ecfdf5 100%)" }}
+                />
+
+                {/* Blob 1 — top right, large emerald */}
+                <motion.div
+                    className="absolute -top-[10%] -right-[5%] w-[70%] h-[70%] rounded-full"
+                    style={{
+                        background: "radial-gradient(circle, #6ee7b7 0%, #a7f3d0 30%, transparent 65%)",
+                        filter: "blur(60px)",
+                        opacity: 0.55,
+                    }}
+                    animate={{ x: [0, 40, -30, 0], y: [0, -30, 20, 0], scale: [1, 1.08, 0.95, 1] }}
+                    transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+                />
+
+                {/* Blob 2 — bottom left, teal */}
+                <motion.div
+                    className="absolute -bottom-[5%] -left-[10%] w-[65%] h-[60%] rounded-full"
+                    style={{
+                        background: "radial-gradient(circle, #99f6e4 0%, #5eead4 25%, transparent 65%)",
+                        filter: "blur(60px)",
+                        opacity: 0.45,
+                    }}
+                    animate={{ x: [0, -25, 35, 0], y: [0, 25, -20, 0], scale: [1, 0.93, 1.1, 1] }}
+                    transition={{ duration: 24, repeat: Infinity, ease: "easeInOut" }}
+                />
+
+                {/* Blob 3 — center-left, deep emerald accent */}
+                <motion.div
+                    className="absolute top-[15%] left-[20%] w-[45%] h-[45%] rounded-full"
+                    style={{
+                        background: "radial-gradient(circle, #34d399 0%, transparent 60%)",
+                        filter: "blur(70px)",
+                        opacity: 0.3,
+                    }}
+                    animate={{ x: [0, 50, -40, 0], y: [0, -35, 25, 0], scale: [1, 1.12, 0.88, 1] }}
+                    transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
+                />
+
+                {/* Blob 4 — top left, soft mint glow */}
+                <motion.div
+                    className="absolute -top-[5%] left-[10%] w-[40%] h-[35%] rounded-full"
+                    style={{
+                        background: "radial-gradient(circle, #a7f3d0 0%, transparent 65%)",
+                        filter: "blur(50px)",
+                        opacity: 0.4,
+                    }}
+                    animate={{ x: [0, 20, -15, 0], y: [0, 15, -10, 0] }}
+                    transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
+                />
+
+                {/* Fine grid overlay for texture */}
+                <div
+                    className="absolute inset-0 opacity-[0.04]"
                     style={{
                         backgroundImage: `
-                            linear-gradient(rgba(16, 185, 129, 0.2) 1px, transparent 1px),
-                            linear-gradient(90deg, rgba(16, 185, 129, 0.2) 1px, transparent 1px)
+                            linear-gradient(rgba(0,0,0,0.15) 1px, transparent 1px),
+                            linear-gradient(90deg, rgba(0,0,0,0.15) 1px, transparent 1px)
                         `,
-                        backgroundSize: "60px 60px",
+                        backgroundSize: "50px 50px",
                     }}
-                />
-                <motion.div
-                    className="absolute inset-0"
-                    style={{
-                        background: "radial-gradient(ellipse 80% 50% at 50% -20%, rgba(16, 185, 129, 0.25), transparent)",
-                    }}
-                    animate={gradientPulseAnimation}
-                    transition={gradientPulseTransition}
                 />
             </div>
 
             {/* Floating orbs */}
-            <motion.div
-                className="absolute top-1/4 right-1/4 w-72 h-72 rounded-full"
-                style={{
-                    background: "radial-gradient(circle, rgba(16, 185, 129, 0.2) 0%, transparent 70%)",
-                    filter: "blur(60px)",
-                    y: orbY1,
-                }}
-                animate={orbScaleAnimation}
-                transition={orbScaleTransition}
-            />
-            <motion.div
-                className="absolute bottom-1/3 left-1/5 w-56 h-56 rounded-full"
-                style={{
-                    background: "radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%)",
-                    filter: "blur(50px)",
-                    y: orbY2,
-                }}
-                animate={orbAltAnimation}
-                transition={orbAltTransition}
-            />
-
 
             {/* Hero Content — pt-24 clears the 64px sticky LandingNav */}
             {/* Hero Content */}
@@ -354,32 +493,33 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onLoginClick }: HeroSecti
                         animate={{ opacity: 1, y: 0 }}
                         transition={fadeInTransition}
                     >
-                        <Badge className="mb-6 bg-emerald-500/15 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/25">
+                        <Badge className="mb-6 bg-emerald-50 text-emerald-600 border-emerald-300 hover:bg-emerald-100">
                             <Sparkles className="h-3 w-3 mr-1" />
                             <span className="text-label text-[10px]">CRM DE VENDAS GAMIFICADO</span>
                         </Badge>
 
-                        <h1 className="text-heading text-4xl sm:text-5xl lg:text-6xl mb-6">
+                        <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl mb-6 tracking-tight">
                             <motion.span
-                                className="bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent block"
+                                className="text-gray-900 block"
+                                style={{ fontWeight: 700 }}
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.6, delay: 0.1 }}
                             >
-                                O CRM que seu time
+                                Seu time batendo
                             </motion.span>
                             <motion.span
-                                className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent block"
-                                style={{ fontWeight: 'var(--fw-black)' }}
+                                className="bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent block"
+                                style={{ fontWeight: 900 }}
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.6, delay: 0.3 }}
                             >
-                                vai querer usar.
+                                meta todo mês.
                             </motion.span>
                         </h1>
 
-                        <p className="text-body text-lg text-white/70 mb-8 max-w-xl">
+                        <p className="text-body text-lg text-gray-600 mb-8 max-w-xl">
                             Pipeline visual, ranking ao vivo, metas em tempo real e integrações automáticas com Hotmart, Kiwify e Greenn. Tudo em um só lugar.
                         </p>
 
@@ -411,7 +551,7 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onLoginClick }: HeroSecti
 
                             <motion.button
                                 onClick={onDemoClick}
-                                className="text-gray-300 hover:text-white flex items-center gap-2 border border-white/15 hover:border-white/30 hover:bg-white/5 px-5 py-3 rounded-xl transition-all duration-200"
+                                className="text-gray-700 hover:text-emerald-700 flex items-center gap-2 border border-gray-300 bg-white/80 backdrop-blur-sm hover:border-emerald-300 hover:bg-emerald-50 px-5 py-3 rounded-xl transition-all duration-200 shadow-sm"
                                 whileHover={{ scale: 1.03 }}
                                 whileTap={{ scale: 0.97 }}
                             >
@@ -422,14 +562,16 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onLoginClick }: HeroSecti
 
                         {/* Trust indicators */}
                         <motion.div
-                            className="flex items-center gap-6 mt-8 text-white/50 text-sm"
+                            className="flex items-center gap-6 mt-8 text-gray-500 text-sm"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.5 }}
                         >
                             {["14 dias grátis", "Cobrança só após o trial", "Cancele quando quiser"].map(text => (
-                                <span key={text} className="text-caption flex items-center gap-1.5 text-sm">
-                                    <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                                <span key={text} className="flex items-center gap-1.5 text-sm text-gray-600">
+                                    <span className="w-4 h-4 rounded-full bg-emerald-100 flex items-center justify-center">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                    </span>
                                     {text}
                                 </span>
                             ))}
@@ -437,7 +579,7 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onLoginClick }: HeroSecti
 
                         {/* Live Counter */}
                         <motion.div
-                            className="mt-6 inline-flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-4 py-2"
+                            className="mt-6 inline-flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-full px-4 py-2"
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.8 }}
@@ -446,7 +588,7 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onLoginClick }: HeroSecti
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
                             </span>
-                            <span className="text-body-strong text-emerald-400 text-sm">
+                            <span className="text-body-strong text-emerald-600 text-sm">
                                 <motion.span
                                     style={{ fontWeight: 'var(--fw-bold)' }}
                                     initial={{ opacity: 0 }}
@@ -461,7 +603,7 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onLoginClick }: HeroSecti
 
                         {/* Integration logos */}
                         <motion.div
-                            className="mt-10 pt-8 border-t border-white/10"
+                            className="mt-10 pt-8 border-t border-gray-200"
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.7 }}
@@ -469,9 +611,9 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onLoginClick }: HeroSecti
                             <p className="text-caption text-xs text-gray-500 uppercase tracking-widest mb-4">
                                 Integração Nativa com:
                             </p>
-                            <div className="flex items-center gap-8">
+                            <div className="flex items-center gap-6">
                                 {["Kiwify", "Greenn", "Hotmart"].map(name => (
-                                    <span key={name} className="text-gray-500 font-semibold text-sm hover:text-gray-400 transition-colors">
+                                    <span key={name} className="text-gray-800 font-bold text-sm px-3 py-1 bg-gray-100 rounded-lg border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 transition-colors">
                                         {name}
                                     </span>
                                 ))}
@@ -495,7 +637,7 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onLoginClick }: HeroSecti
                                 transform: "scale(1.4)",
                             }}
                         />
-                        <LeaderboardSVG />
+                        <DashboardMockup />
                     </motion.div>
 
                 </div>

@@ -7,11 +7,11 @@ const STEPS = [
     {
         number: "01",
         icon: Link2,
-        iconColor: "text-emerald-400",
+        iconColor: "text-emerald-600",
         ringColor: "border-emerald-500/40",
         glowColor: "rgba(16,185,129,0.15)",
         badge: "Conecte",
-        badgeColor: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+        badgeColor: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
         title: "Integre sua plataforma",
         description:
             "Cole o webhook da Kiwify, Greenn ou Hotmart. As vendas começam a entrar automaticamente em segundos.",
@@ -21,11 +21,11 @@ const STEPS = [
     {
         number: "02",
         icon: BarChart3,
-        iconColor: "text-emerald-400",
+        iconColor: "text-emerald-600",
         ringColor: "border-emerald-500/40",
         glowColor: "rgba(16,185,129,0.15)",
         badge: "Configure",
-        badgeColor: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+        badgeColor: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
         title: "Monte seu pipeline e metas",
         description:
             "Crie os estágios do seu funil, defina metas individuais e do time. Convide seus vendedores — cada um com seu login.",
@@ -35,11 +35,11 @@ const STEPS = [
     {
         number: "03",
         icon: Trophy,
-        iconColor: "text-amber-400",
+        iconColor: "text-amber-600",
         ringColor: "border-amber-500/40",
         glowColor: "rgba(245,158,11,0.15)",
         badge: "Resultado",
-        badgeColor: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+        badgeColor: "bg-amber-500/10 text-amber-600 border-amber-500/20",
         title: "Acompanhe e escale",
         description:
             "Dashboard ao vivo, ranking gamificado, funil de calls e WhatsApp integrado. Tudo que você precisa para escalar vendas sem microgerenciar.",
@@ -61,7 +61,7 @@ export const HowItWorks = () => {
         <section
             ref={sectionRef}
             id="how-it-works"
-            className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-slate-950 to-slate-900 relative overflow-hidden"
+            className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-gray-50 relative overflow-hidden"
         >
             {/* Background glow */}
             <div
@@ -84,15 +84,15 @@ export const HowItWorks = () => {
                     transition={{ duration: 0.5 }}
                 >
                     <span
-                        className="inline-block text-label text-xs text-emerald-400 border border-emerald-500/25 bg-emerald-500/8 rounded-full px-4 py-1.5 mb-5"
+                        className="inline-block text-label text-xs text-emerald-600 border border-emerald-200 bg-emerald-50 rounded-full px-4 py-1.5 mb-5"
                         style={{ letterSpacing: "var(--ls-widest)" }}
                     >
                         COMO FUNCIONA
                     </span>
 
-                    <h2 className="text-heading text-3xl sm:text-4xl text-white mb-4">
+                    <h2 className="font-heading text-3xl sm:text-4xl text-gray-900 mb-4 tracking-tight font-bold">
                         Do zero ao dashboard em{" "}
-                        <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
+                        <span className="bg-gradient-to-r from-emerald-600 to-emerald-500 bg-clip-text text-transparent">
                             5 minutos
                         </span>
                     </h2>
@@ -110,7 +110,7 @@ export const HowItWorks = () => {
 
                     {/* Vertical connecting line — scroll-driven */}
                     <div className="absolute left-8 md:left-1/2 md:-translate-x-px top-8 bottom-8 w-px overflow-hidden">
-                        <div className="absolute inset-0 bg-white/5" />
+                        <div className="absolute inset-0 bg-gray-100" />
                         <motion.div
                             className="absolute top-0 left-0 right-0 origin-top"
                             style={{
@@ -149,7 +149,7 @@ export const HowItWorks = () => {
                                 >
                                     {/* Card */}
                                     <motion.div
-                                        className="relative p-6 rounded-2xl border border-white/6 bg-slate-900/60 backdrop-blur-sm"
+                                        className="relative p-6 rounded-2xl border border-gray-200 bg-white/80 backdrop-blur-sm"
                                         style={{
                                             boxShadow: `0 0 0 1px rgba(255,255,255,0.04), 0 20px 40px -20px rgba(0,0,0,0.4)`,
                                         }}
@@ -163,7 +163,7 @@ export const HowItWorks = () => {
                                         <div
                                             className="absolute top-0 left-6 right-6 h-px rounded-full"
                                             style={{
-                                                background: `linear-gradient(90deg, transparent, ${step.iconColor === "text-amber-400"
+                                                background: `linear-gradient(90deg, transparent, ${step.iconColor === "text-amber-600"
                                                         ? "rgba(245,158,11,0.4)"
                                                         : "rgba(16,185,129,0.4)"
                                                     }, transparent)`,
@@ -179,7 +179,7 @@ export const HowItWorks = () => {
 
                                         {/* Title */}
                                         <h3
-                                            className="text-white mb-2"
+                                            className="text-gray-900 mb-2"
                                             style={{
                                                 fontWeight: "var(--fw-bold)",
                                                 fontSize: "1.125rem",
@@ -201,11 +201,11 @@ export const HowItWorks = () => {
                                             {step.bullets.map((b) => (
                                                 <li
                                                     key={b}
-                                                    className="flex items-center gap-1.5 text-xs text-white/50"
+                                                    className="flex items-center gap-1.5 text-xs text-gray-500"
                                                     style={{ fontWeight: "var(--fw-medium)" }}
                                                 >
                                                     <span
-                                                        className={`w-1 h-1 rounded-full flex-shrink-0 ${step.iconColor === "text-amber-400"
+                                                        className={`w-1 h-1 rounded-full flex-shrink-0 ${step.iconColor === "text-amber-600"
                                                                 ? "bg-amber-400"
                                                                 : "bg-emerald-400"
                                                             }`}
@@ -221,7 +221,7 @@ export const HowItWorks = () => {
                                 <div className="relative z-10 order-1 md:order-2 flex-shrink-0">
                                     {/* Outer ring */}
                                     <motion.div
-                                        className={`w-16 h-16 rounded-full border-2 ${step.ringColor} bg-slate-900 flex flex-col items-center justify-center shadow-xl`}
+                                        className={`w-16 h-16 rounded-full border-2 ${step.ringColor} bg-white flex flex-col items-center justify-center shadow-xl`}
                                         whileInView={{
                                             boxShadow: [
                                                 `0 0 0 0 ${step.glowColor}`,
@@ -282,14 +282,14 @@ export const HowItWorks = () => {
                     transition={{ duration: 0.4, delay: 0.5 }}
                 >
                     <p
-                        className="text-white/40 text-sm mb-3"
+                        className="text-gray-400 text-sm mb-3"
                         style={{ fontWeight: "var(--fw-light)" }}
                     >
                         Mais rápido que uma reunião de alinhamento
                     </p>
                     <motion.a
                         href="#pricing"
-                        className="inline-flex items-center gap-2 text-emerald-400 text-sm hover:text-emerald-300 transition-colors"
+                        className="inline-flex items-center gap-2 text-emerald-600 text-sm hover:text-emerald-500 transition-colors"
                         style={{ fontWeight: "var(--fw-semibold)" }}
                         whileHover={{ x: 4 }}
                         transition={{ duration: 0.2 }}

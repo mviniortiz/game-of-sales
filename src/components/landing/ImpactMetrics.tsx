@@ -6,7 +6,7 @@ import { AnimatedCounter } from "./AnimatedCounter";
 const METRICS = [
     {
         icon: TrendingUp,
-        iconColor: "text-emerald-400",
+        iconColor: "text-emerald-600",
         iconBg: "bg-emerald-400/10",
         prefix: "<",
         value: 5,
@@ -17,7 +17,7 @@ const METRICS = [
     },
     {
         icon: Users,
-        iconColor: "text-emerald-400",
+        iconColor: "text-emerald-600",
         iconBg: "bg-emerald-400/10",
         prefix: "",
         value: 230,
@@ -28,7 +28,7 @@ const METRICS = [
     },
     {
         icon: Clock,
-        iconColor: "text-amber-400",
+        iconColor: "text-amber-600",
         iconBg: "bg-amber-400/10",
         prefix: "",
         value: 24,
@@ -39,7 +39,7 @@ const METRICS = [
     },
     {
         icon: Trophy,
-        iconColor: "text-amber-400",
+        iconColor: "text-amber-600",
         iconBg: "bg-amber-400/10",
         prefix: "",
         value: 8,
@@ -50,7 +50,7 @@ const METRICS = [
     },
     {
         icon: LayoutGrid,
-        iconColor: "text-emerald-400",
+        iconColor: "text-emerald-600",
         iconBg: "bg-emerald-400/10",
         prefix: "",
         value: 0,
@@ -91,7 +91,7 @@ export const ImpactMetrics = () => {
             />
 
             <div className="max-w-6xl mx-auto">
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-0 divide-x divide-white/5">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-0 divide-x divide-gray-200">
                     {METRICS.map(({ icon: Icon, iconColor, iconBg, prefix, value, suffix, label, sublabel, delay, ...rest }) => {
                         const isZero = "isZero" in rest && rest.isZero;
                         return (
@@ -112,7 +112,7 @@ export const ImpactMetrics = () => {
 
                                 {/* Number row */}
                                 <div
-                                    className="flex items-baseline justify-center gap-0.5 mb-1 tabular-nums text-white"
+                                    className="flex items-baseline justify-center gap-0.5 mb-1 tabular-nums text-gray-900"
                                     style={{
                                         fontWeight: "var(--fw-bold)",
                                         letterSpacing: "var(--ls-snug)",
@@ -122,7 +122,7 @@ export const ImpactMetrics = () => {
                                 >
                                     {prefix && (
                                         <span
-                                            className="text-white/40"
+                                            className="text-gray-400"
                                             style={{ fontWeight: "var(--fw-light)", fontSize: "0.65em" }}
                                         >
                                             {prefix}
@@ -130,7 +130,7 @@ export const ImpactMetrics = () => {
                                     )}
 
                                     {isZero ? (
-                                        <span className="text-white/70" style={{ fontWeight: "var(--fw-bold)" }}>
+                                        <span className="text-gray-600" style={{ fontWeight: "var(--fw-bold)" }}>
                                             ZERO
                                         </span>
                                     ) : (
@@ -157,7 +157,7 @@ export const ImpactMetrics = () => {
 
                                 {/* Label */}
                                 <p
-                                    className="text-white/80 mb-0.5 text-sm"
+                                    className="text-gray-700 mb-0.5 text-sm"
                                     style={{ fontWeight: "var(--fw-semibold)" }}
                                 >
                                     {label}
@@ -165,7 +165,7 @@ export const ImpactMetrics = () => {
 
                                 {/* Sublabel */}
                                 <p
-                                    className="text-white/35 text-xs"
+                                    className="text-gray-400 text-xs"
                                     style={{ fontWeight: "var(--fw-light)" }}
                                 >
                                     {sublabel}

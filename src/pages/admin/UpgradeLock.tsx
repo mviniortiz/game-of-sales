@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Lock, AlertTriangle, Check, Sparkles, Crown, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import vyzonLogo from '@/assets/logo-full.png';
+import { ThemeLogo } from '@/components/ui/ThemeLogo';
 
 const plans = [
     {
@@ -71,7 +71,7 @@ export default function UpgradeLock() {
             {/* Content */}
             <div className="relative z-10 flex-1 flex flex-col items-center justify-center p-4 sm:p-8">
                 {/* Logo */}
-                <img src={vyzonLogo} alt="Vyzon" className="h-10 mb-8" />
+                <ThemeLogo className="h-10 mb-8" />
 
                 {/* Lock Icon */}
                 <motion.div

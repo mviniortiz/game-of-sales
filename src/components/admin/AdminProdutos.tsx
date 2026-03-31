@@ -216,7 +216,7 @@ export const AdminProdutos = () => {
                             Novo Produto
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-[425px]">
+                    <DialogContent className="max-w-[95vw] sm:max-w-[425px]">
                         <DialogHeader>
                             <DialogTitle>
                                 {editingProduct ? "Editar Produto" : "Novo Produto"}

@@ -76,44 +76,40 @@ const KPICard = ({
   icon: Icon,
   trend,
   trendLabel,
-  iconColor = "text-emerald-400",
-  iconBg = "bg-emerald-500/10",
+  iconColor = "text-emerald-600 dark:text-emerald-400",
+  iconBg = "bg-emerald-50 dark:bg-emerald-500/10",
   accentColor = "#10b981",
 }: KPICardProps) => {
   const isPositive = trend !== undefined && trend >= 0;
   const TrendIcon = isPositive ? ArrowUpRight : ArrowDownRight;
 
   const cardContent = (
-    <div className="relative overflow-hidden rounded-xl border border-border bg-card shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group cursor-default">
-      {/* Left accent bar */}
-      <div
-        className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-xl"
-        style={{ background: accentColor, opacity: 0.7 }}
-      />
-
-      <div className="p-5">
+    <div className="relative overflow-hidden rounded-xl border border-border bg-card hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group cursor-default"
+      style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
+    >
+      <div className="p-3 sm:p-4">
         {/* Top row: icon + title */}
-        <div className="flex items-center gap-3 mb-3">
-          <div className={`p-2 rounded-lg ${iconBg} group-hover:scale-105 transition-transform duration-200`}>
-            <Icon className={`h-4 w-4 ${iconColor}`} />
-          </div>
-          <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.12em]">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.1em]">
             {title}
           </p>
+          <div className={`p-1.5 rounded-lg ${iconBg} group-hover:scale-110 transition-transform duration-200`}>
+            <Icon className={`h-3.5 w-3.5 ${iconColor}`} />
+          </div>
         </div>
 
         {/* Value */}
-        <p className="text-2xl font-bold text-foreground tabular-nums tracking-tight leading-none mb-3">
+        <p className="text-xl sm:text-2xl font-bold text-foreground tabular-nums tracking-tight leading-none mb-2">
           {value}
         </p>
 
         {/* Trend chip + label */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           {trend !== undefined && (
             <span
-              className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${isPositive
-                ? "bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20"
-                : "bg-rose-500/10 text-rose-400 ring-1 ring-rose-500/20"
+              className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold ${isPositive
+                ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
+                : "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400"
                 }`}
             >
               <TrendIcon className="h-3 w-3" />
@@ -121,7 +117,7 @@ const KPICard = ({
             </span>
           )}
           {(trendLabel || subtitle) && (
-            <span className="text-[11px] text-muted-foreground font-medium">
+            <span className="text-[10px] text-muted-foreground truncate">
               {trendLabel || subtitle}
             </span>
           )}
@@ -378,12 +374,12 @@ const Dashboard = () => {
   }, [vendas, vendasPrevMonth, metaData]);
 
   return (
-    <div className="space-y-6 p-1">
+    <div className="space-y-4 sm:space-y-6 p-1">
       {/* Header - Premium Style */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <h1 className="text-2xl font-bold text-foreground tracking-tight">Dashboard</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Dashboard</h1>
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-200 text-[10px] font-semibold uppercase tracking-wider ring-1 ring-emerald-200/70 dark:ring-emerald-500/20">
               <Sparkles className="h-3 w-3" />
               Live
@@ -396,7 +392,7 @@ const Dashboard = () => {
       </div>
 
       {/* Row 1: KPI Cards - 5 columns */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-5">
         <KPICard
           title="Faturamento"
           value={formatCurrencyCompact(totalVendas)}
@@ -466,9 +462,9 @@ const Dashboard = () => {
       )}
 
       {/* Row 2: Charts - 60/40 split */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6">
         {/* Main Chart - Sales Evolution (60%) */}
-        <Card className="lg:col-span-3 relative overflow-hidden bg-card border-border shadow-sm">
+        <Card className="lg:col-span-3 relative overflow-hidden bg-card border-border" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
           <CardHeader className="pb-2 relative">
             <div className="flex items-center justify-between">
               <div>
@@ -488,7 +484,7 @@ const Dashboard = () => {
         </Card >
 
         {/* Secondary Chart - Top Products (40%) */}
-        < Card className="lg:col-span-2 relative overflow-hidden bg-card border-border shadow-sm" >
+        < Card className="lg:col-span-2 relative overflow-hidden bg-card border-border" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }} >
           <CardHeader className="pb-2 relative">
             <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
               <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/10">
@@ -555,15 +551,29 @@ const Dashboard = () => {
         </Card >
       </div >
 
-      {/* Row 3: Meta Progress - Premium Card */}
+      {/* Row 3: Meta Progress - Premium Card with Ring */}
       {
         metaValor > 0 && (
-          <Card className="relative overflow-hidden bg-card border-border shadow-sm">
-            <CardContent className="relative p-5">
-              <div className="flex items-center justify-between mb-4">
+          <Card className="relative overflow-hidden bg-card border-border" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+            <CardContent className="relative p-4 sm:p-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
                 <div className="flex items-center gap-4">
-                  <div className="relative p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 group-hover:scale-105 transition-transform">
-                    <Target className="h-6 w-6 text-emerald-600 dark:text-emerald-200 relative z-10" />
+                  {/* Progress Ring */}
+                  <div className="relative w-14 h-14 shrink-0">
+                    <svg className="w-14 h-14 -rotate-90" viewBox="0 0 36 36">
+                      <circle cx="18" cy="18" r="14" fill="none" className="stroke-muted" strokeWidth="3" />
+                      <circle
+                        cx="18" cy="18" r="14" fill="none"
+                        className={metaProgress >= 100 ? "stroke-emerald-500" : metaProgress >= 70 ? "stroke-emerald-500" : "stroke-amber-500"}
+                        strokeWidth="3" strokeLinecap="round"
+                        strokeDasharray="88"
+                        strokeDashoffset={88 - (88 * Math.min(metaProgress, 100)) / 100}
+                        style={{ transition: "stroke-dashoffset 1.5s ease-out" }}
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Target className={`h-5 w-5 ${metaProgress >= 70 ? "text-emerald-600 dark:text-emerald-400" : "text-amber-500"}`} />
+                    </div>
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-foreground">Meta do Mês</p>
@@ -574,14 +584,14 @@ const Dashboard = () => {
                     </p>
                   </div>
                 </div>
-                <div className="text-right">
+                <div className="text-left sm:text-right">
                   <p className={`text-3xl font-bold tabular-nums ${metaProgress >= 100 ? 'text-emerald-600 dark:text-emerald-300' :
                     metaProgress >= 70 ? 'text-emerald-600 dark:text-emerald-200' :
                       'text-amber-500 dark:text-amber-300'
                     }`}>
                     {metaProgress.toFixed(1)}%
                   </p>
-                  <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">alcançado</p>
+                  <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">alcançado</p>
                 </div>
               </div>
 

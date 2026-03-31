@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Sparkles, Play, TrendingUp, Users, Target, Trophy, Star, Flame, Crown, Zap } from "lucide-react";
-import brandLogoWhite from "@/assets/logo-only.png";
+import brandLogoLight from "@/assets/logo-light.svg";
 
 interface HeroDarkProps {
     onCTAClick: () => void;
@@ -79,7 +79,7 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
                     {/* Logo */}
                     <motion.img
-                        src={brandLogoWhite}
+                        src={brandLogoLight}
                         alt="Vyzon"
                         className="h-9 w-auto"
                         initial={{ opacity: 0, x: -20 }}
@@ -88,16 +88,16 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
 
                     {/* Menu */}
                     <div className="hidden md:flex items-center gap-8">
-                        <button className="text-sm font-medium text-white/70 hover:text-white transition-colors">
+                        <button className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
                             Produto
                         </button>
-                        <button className="text-sm font-medium text-white/70 hover:text-white transition-colors">
+                        <button className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
                             Soluções
                         </button>
-                        <button className="text-sm font-medium text-white/70 hover:text-white transition-colors">
+                        <button className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
                             Preços
                         </button>
-                        <button className="text-sm font-medium text-white/70 hover:text-white transition-colors">
+                        <button className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
                             Sobre Nós
                         </button>
                     </div>
@@ -107,7 +107,7 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                         <Button
                             variant="ghost"
                             onClick={onLoginClick}
-                            className="text-white/80 hover:text-white hover:bg-white/10"
+                            className="text-gray-700 hover:text-gray-900 hover:bg-gray-100"
                         >
                             Entrar
                         </Button>
@@ -130,12 +130,12 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6 }}
                     >
-                        <Badge className="mb-6 bg-emerald-500/20 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/30">
+                        <Badge className="mb-6 bg-emerald-50 text-emerald-600 border-emerald-300 hover:bg-emerald-100">
                             <Sparkles className="h-3 w-3 mr-1" />
                             TECNOLOGIA GAME SALES + GAMIFICAÇÃO
                         </Badge>
 
-                        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+                        <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight tracking-tight">
                             Transforme seu{" "}
                             <span className="bg-gradient-to-r from-emerald-400 via-pink-400 to-emerald-400 bg-clip-text text-transparent">
                                 Time de Vendas
@@ -143,7 +143,7 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                             em Campeões
                         </h1>
 
-                        <p className="text-lg text-white/60 mb-8 leading-relaxed max-w-xl">
+                        <p className="text-lg text-gray-500 mb-8 leading-relaxed max-w-xl">
                             Potencialize cada interação com o seu cliente e aumente a performance do seu time de vendas usando gamificação.
                         </p>
 
@@ -188,7 +188,7 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                                 size="lg"
                                 variant="ghost"
                                 onClick={onDemoClick}
-                                className="text-white/80 hover:text-white hover:bg-white/10 h-14 px-6 rounded-xl"
+                                className="text-gray-700 hover:text-gray-900 hover:bg-gray-100 h-14 px-6 rounded-xl"
                             >
                                 <Play className="h-4 w-4 mr-2" fill="currentColor" />
                                 Ver demonstração
@@ -197,7 +197,7 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
 
                         {/* Trust indicators */}
                         <motion.div
-                            className="flex items-center gap-6 mt-8 text-white/50 text-sm"
+                            className="flex items-center gap-6 mt-8 text-gray-400 text-sm"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.5 }}
@@ -237,25 +237,25 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                         {/* Main Dashboard Card */}
                         <div className="relative">
                             <motion.div
-                                className="bg-slate-900/90 backdrop-blur-xl rounded-2xl border border-white/10 p-6 shadow-2xl"
+                                className="bg-white/95 backdrop-blur-sm rounded-2xl border border-gray-200 p-6 shadow-lg"
                                 style={{ boxShadow: "0 25px 80px -15px rgba(0, 0, 0, 0.6), 0 0 40px rgba(139, 92, 246, 0.1)" }}
                             >
                                 {/* Browser chrome */}
-                                <div className="flex items-center gap-3 mb-5 pb-4 border-b border-white/10">
+                                <div className="flex items-center gap-3 mb-5 pb-4 border-b border-gray-200">
                                     <div className="flex gap-1.5">
                                         <div className="w-3 h-3 rounded-full bg-rose-500" />
                                         <div className="w-3 h-3 rounded-full bg-amber-500" />
                                         <div className="w-3 h-3 rounded-full bg-emerald-500" />
                                     </div>
                                     <div className="flex-1">
-                                        <div className="w-52 h-7 bg-white/5 rounded-lg flex items-center justify-center gap-2 border border-white/5">
+                                        <div className="w-52 h-7 bg-gray-100 rounded-lg flex items-center justify-center gap-2 border border-gray-200">
                                             <div className="w-3 h-3 rounded-full bg-emerald-500/50" />
-                                            <span className="text-xs text-white/40">app.vyzon.com.br</span>
+                                            <span className="text-xs text-gray-400">app.vyzon.com.br</span>
                                         </div>
                                     </div>
                                     <div className="flex gap-2">
-                                        <div className="w-6 h-6 rounded bg-white/5 flex items-center justify-center">
-                                            <Star className="w-3 h-3 text-white/30" />
+                                        <div className="w-6 h-6 rounded bg-gray-100 flex items-center justify-center">
+                                            <Star className="w-3 h-3 text-gray-300" />
                                         </div>
                                     </div>
                                 </div>
@@ -268,16 +268,16 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                                     transition={{ delay: 0.4 }}
                                 >
                                     <div>
-                                        <p className="text-white/50 text-xs mb-1">👋 Bem-vindo de volta,</p>
-                                        <h3 className="text-white font-semibold text-lg">Gestor</h3>
+                                        <p className="text-gray-400 text-xs mb-1">👋 Bem-vindo de volta,</p>
+                                        <h3 className="text-gray-900 font-semibold text-lg">Gestor</h3>
                                     </div>
                                     <motion.div
-                                        className="flex items-center gap-2 bg-gradient-to-r from-amber-500/20 to-orange-500/20 px-3 py-1.5 rounded-full border border-amber-500/30"
+                                        className="flex items-center gap-2 bg-gradient-to-r from-amber-500/20 to-orange-500/20 px-3 py-1.5 rounded-full border border-amber-300"
                                         animate={{ scale: [1, 1.05, 1] }}
                                         transition={{ duration: 2, repeat: Infinity }}
                                     >
-                                        <Flame className="w-4 h-4 text-amber-400" />
-                                        <span className="text-xs font-semibold text-amber-400">7 dias streak!</span>
+                                        <Flame className="w-4 h-4 text-amber-600" />
+                                        <span className="text-xs font-semibold text-amber-600">7 dias streak!</span>
                                     </motion.div>
                                 </motion.div>
 
@@ -291,13 +291,13 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                                     >
                                         <div className="flex items-center gap-2 mb-1.5">
                                             <div className="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                                                <TrendingUp className="h-3 w-3 text-emerald-400" />
+                                                <TrendingUp className="h-3 w-3 text-emerald-600" />
                                             </div>
-                                            <span className="text-[10px] text-white/50 uppercase">Vendas</span>
+                                            <span className="text-[10px] text-gray-400 uppercase">Vendas</span>
                                         </div>
-                                        <p className="text-xl font-bold text-emerald-400">R$ 48.2k</p>
+                                        <p className="text-xl font-bold text-emerald-600">R$ 48.2k</p>
                                         <div className="flex items-center gap-1 mt-1">
-                                            <span className="text-[10px] text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded">↑ 24%</span>
+                                            <span className="text-[10px] text-emerald-600 bg-emerald-400/10 px-1.5 py-0.5 rounded">↑ 24%</span>
                                         </div>
                                     </motion.div>
 
@@ -309,11 +309,11 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                                     >
                                         <div className="flex items-center gap-2 mb-1.5">
                                             <div className="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                                                <Target className="h-3 w-3 text-emerald-400" />
+                                                <Target className="h-3 w-3 text-emerald-600" />
                                             </div>
-                                            <span className="text-[10px] text-white/50 uppercase">Meta</span>
+                                            <span className="text-[10px] text-gray-400 uppercase">Meta</span>
                                         </div>
-                                        <p className="text-xl font-bold text-emerald-400">127%</p>
+                                        <p className="text-xl font-bold text-emerald-600">127%</p>
                                         <div className="w-full bg-emerald-900/50 rounded-full h-1.5 mt-2">
                                             <motion.div
                                                 className="bg-gradient-to-r from-emerald-400 to-pink-400 h-full rounded-full"
@@ -334,7 +334,7 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                                             <div className="w-6 h-6 rounded-lg bg-pink-500/20 flex items-center justify-center">
                                                 <Users className="h-3 w-3 text-pink-400" />
                                             </div>
-                                            <span className="text-[10px] text-white/50 uppercase">Leads</span>
+                                            <span className="text-[10px] text-gray-400 uppercase">Leads</span>
                                         </div>
                                         <p className="text-xl font-bold text-pink-400">312</p>
                                         <div className="flex items-center gap-1 mt-1">
@@ -345,17 +345,17 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
 
                                 {/* Mini Leaderboard */}
                                 <motion.div
-                                    className="bg-white/5 rounded-xl p-4 border border-white/5 mb-4"
+                                    className="bg-gray-100 rounded-xl p-4 border border-gray-200 mb-4"
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: 0.8 }}
                                 >
                                     <div className="flex items-center justify-between mb-3">
                                         <div className="flex items-center gap-2">
-                                            <Trophy className="w-4 h-4 text-amber-400" />
-                                            <span className="text-sm font-medium text-white/80">Ranking do Mês</span>
+                                            <Trophy className="w-4 h-4 text-amber-600" />
+                                            <span className="text-sm font-medium text-gray-700">Ranking do Mês</span>
                                         </div>
-                                        <span className="text-[10px] text-white/40 bg-white/5 px-2 py-0.5 rounded">AO VIVO</span>
+                                        <span className="text-[10px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded">AO VIVO</span>
                                     </div>
 
                                     <div className="space-y-2">
@@ -366,26 +366,26 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                                         ].map((player, i) => (
                                             <motion.div
                                                 key={player.pos}
-                                                className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors"
+                                                className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-100 transition-colors"
                                                 initial={{ opacity: 0, x: -20 }}
                                                 animate={{ opacity: 1, x: 0 }}
                                                 transition={{ delay: 0.9 + i * 0.1 }}
                                             >
                                                 <div className="flex items-center justify-center w-6">
                                                     {player.pos === 1 ? (
-                                                        <Crown className="w-4 h-4 text-amber-400" />
+                                                        <Crown className="w-4 h-4 text-amber-600" />
                                                     ) : (
-                                                        <span className="text-xs font-bold text-white/40">#{player.pos}</span>
+                                                        <span className="text-xs font-bold text-gray-400">#{player.pos}</span>
                                                     )}
                                                 </div>
                                                 <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${player.color} flex items-center justify-center text-white text-xs font-bold shadow-lg`}>
                                                     {player.avatar}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-medium text-white truncate">{player.name}</p>
-                                                    <p className="text-[10px] text-white/40">{player.xp} XP</p>
+                                                    <p className="text-sm font-medium text-gray-900 truncate">{player.name}</p>
+                                                    <p className="text-[10px] text-gray-400">{player.xp} XP</p>
                                                 </div>
-                                                <span className="text-sm font-semibold text-emerald-400">{player.value}</span>
+                                                <span className="text-sm font-semibold text-emerald-600">{player.value}</span>
                                             </motion.div>
                                         ))}
                                     </div>
@@ -411,10 +411,10 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                                         </div>
                                     </motion.div>
                                     <div className="flex-1">
-                                        <p className="text-sm font-medium text-white">Nova venda registrada!</p>
-                                        <p className="text-xs text-white/40">Lucas acabou de fechar • R$ 3.200</p>
+                                        <p className="text-sm font-medium text-gray-900">Nova venda registrada!</p>
+                                        <p className="text-xs text-gray-400">Lucas acabou de fechar • R$ 3.200</p>
                                     </div>
-                                    <Badge className="bg-emerald-500/20 text-emerald-400 border-0">
+                                    <Badge className="bg-emerald-500/20 text-emerald-600 border-0">
                                         +150 XP
                                     </Badge>
                                 </motion.div>
@@ -422,7 +422,7 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
 
                             {/* Floating Cards - Ranking */}
                             <motion.div
-                                className="absolute -left-16 top-20 bg-slate-900/90 backdrop-blur-xl rounded-xl p-3 border border-amber-500/30 shadow-2xl"
+                                className="absolute -left-16 top-20 bg-white/95 backdrop-blur-sm rounded-xl p-3 border border-amber-300 shadow-lg"
                                 animate={{ y: [0, -8, 0] }}
                                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                                 style={{ boxShadow: "0 20px 40px -10px rgba(245, 158, 11, 0.2)" }}
@@ -432,10 +432,10 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                                         <Trophy className="h-6 w-6 text-white" />
                                     </div>
                                     <div>
-                                        <p className="text-[10px] text-white/50 uppercase tracking-wider">Seu Ranking</p>
+                                        <p className="text-[10px] text-gray-400 uppercase tracking-wider">Seu Ranking</p>
                                         <div className="flex items-center gap-1">
-                                            <p className="text-2xl font-bold text-white">#1</p>
-                                            <Crown className="w-4 h-4 text-amber-400" />
+                                            <p className="text-2xl font-bold text-gray-900">#1</p>
+                                            <Crown className="w-4 h-4 text-amber-600" />
                                         </div>
                                     </div>
                                 </div>
@@ -443,7 +443,7 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
 
                             {/* Floating Cards - Meta */}
                             <motion.div
-                                className="absolute -right-12 bottom-40 bg-slate-900/90 backdrop-blur-xl rounded-xl p-3 border border-emerald-500/30 shadow-2xl"
+                                className="absolute -right-12 bottom-40 bg-white/95 backdrop-blur-sm rounded-xl p-3 border border-emerald-300 shadow-lg"
                                 animate={{ y: [0, 8, 0] }}
                                 transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
                                 style={{ boxShadow: "0 20px 40px -10px rgba(16, 185, 129, 0.2)" }}
@@ -453,15 +453,15 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                                         <Target className="h-6 w-6 text-white" />
                                     </div>
                                     <div>
-                                        <p className="text-[10px] text-white/50 uppercase tracking-wider">Meta Batida</p>
-                                        <p className="text-2xl font-bold text-emerald-400">127%</p>
+                                        <p className="text-[10px] text-gray-400 uppercase tracking-wider">Meta Batida</p>
+                                        <p className="text-2xl font-bold text-emerald-600">127%</p>
                                     </div>
                                 </div>
                             </motion.div>
 
                             {/* Achievement Badge */}
                             <motion.div
-                                className="absolute -right-8 top-16 bg-slate-900/90 backdrop-blur-xl rounded-full p-2 border border-emerald-500/30 shadow-2xl"
+                                className="absolute -right-8 top-16 bg-white/95 backdrop-blur-sm rounded-full p-2 border border-emerald-300 shadow-lg"
                                 animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
                                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                             >

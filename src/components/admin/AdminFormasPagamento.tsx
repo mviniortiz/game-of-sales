@@ -217,7 +217,7 @@ export const AdminFormasPagamento = () => {
                             Nova Forma
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-[425px]">
+                    <DialogContent className="max-w-[95vw] sm:max-w-[425px]">
                         <DialogHeader>
                             <DialogTitle>
                                 {editingItem ? "Editar Forma de Pagamento" : "Nova Forma de Pagamento"}

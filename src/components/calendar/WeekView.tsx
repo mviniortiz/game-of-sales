@@ -176,11 +176,11 @@ export function WeekView({ date, agendamentos, onAgendamentoUpdate, onEventClick
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-lg md:text-2xl font-bold truncate">
           {format(weekStart, "d", { locale: ptBR })} - {format(weekEnd, "d 'de' MMMM", { locale: ptBR })}
         </h2>
-        <Badge variant="outline" className="text-sm">
+        <Badge variant="outline" className="text-xs md:text-sm flex-shrink-0">
           {agendamentos.length} agendamentos
         </Badge>
       </div>
@@ -190,7 +190,7 @@ export function WeekView({ date, agendamentos, onAgendamentoUpdate, onEventClick
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="grid grid-cols-7 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 md:gap-4">
           {weekDays.map((day, index) => {
             const dayAgendamentos = getAgendamentosForDay(day);
             const isToday = isSameDay(day, new Date());
@@ -199,16 +199,16 @@ export function WeekView({ date, agendamentos, onAgendamentoUpdate, onEventClick
               <div
                 key={index}
                 id={`day-${index}`}
-                className={`min-h-[300px] border rounded-lg p-3 ${
+                className={`min-h-[120px] md:min-h-[300px] border rounded-lg p-2 md:p-3 ${
                   isToday ? "bg-primary/5 border-primary" : "bg-card"
                 }`}
               >
-                <div className="mb-3">
+                <div className="mb-2 md:mb-3 flex items-baseline gap-2 md:block">
                   <p className="text-xs text-muted-foreground uppercase">
                     {format(day, "EEE", { locale: ptBR })}
                   </p>
                   <p
-                    className={`text-2xl font-bold ${
+                    className={`text-xl md:text-2xl font-bold ${
                       isToday ? "text-primary" : ""
                     }`}
                   >
@@ -218,9 +218,9 @@ export function WeekView({ date, agendamentos, onAgendamentoUpdate, onEventClick
 
                 <div>
                   {dayAgendamentos.map((agendamento) => (
-                    <SortableAgendamento 
-                      key={agendamento.id} 
-                      agendamento={agendamento} 
+                    <SortableAgendamento
+                      key={agendamento.id}
+                      agendamento={agendamento}
                       onEventClick={onEventClick}
                       showSellerName={showSellerName}
                     />

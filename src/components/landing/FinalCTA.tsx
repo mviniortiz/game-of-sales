@@ -7,7 +7,7 @@ interface FinalCTAProps {
 
 export const FinalCTA = ({ onCTAClick }: FinalCTAProps) => {
     return (
-        <section className="py-24 px-4 sm:px-6 lg:px-8 bg-slate-950 relative overflow-hidden">
+        <section className="py-24 px-4 sm:px-6 lg:px-8 bg-white relative overflow-hidden">
             {/* Deep ambient glow behind the card */}
             <div
                 className="absolute inset-0 pointer-events-none"
@@ -25,10 +25,10 @@ export const FinalCTA = ({ onCTAClick }: FinalCTAProps) => {
                 transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                 style={{
                     background:
-                        "linear-gradient(145deg, #0a1628 0%, #0d1f1a 40%, #071a14 100%)",
-                    border: "1px solid rgba(16,185,129,0.18)",
+                        "linear-gradient(145deg, #f0fdf4 0%, #ecfdf5 40%, #f0fdf4 100%)",
+                    border: "1px solid rgba(16,185,129,0.22)",
                     boxShadow:
-                        "0 0 0 1px rgba(16,185,129,0.06), 0 40px 100px rgba(0,0,0,0.5), 0 0 80px rgba(16,185,129,0.06) inset",
+                        "0 0 0 1px rgba(16,185,129,0.06), 0 40px 100px rgba(0,0,0,0.06), 0 0 80px rgba(16,185,129,0.04) inset",
                 }}
             >
                 {/* Decorative top-edge gradient line */}
@@ -79,7 +79,7 @@ export const FinalCTA = ({ onCTAClick }: FinalCTAProps) => {
                             className="w-1.5 h-1.5 rounded-full bg-emerald-400"
                         />
                         <span
-                            className="text-xs text-emerald-400"
+                            className="text-xs text-emerald-600"
                             style={{ fontWeight: 600, letterSpacing: "0.12em" }}
                         >
                             COMECE AGORA
@@ -92,12 +92,11 @@ export const FinalCTA = ({ onCTAClick }: FinalCTAProps) => {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ delay: 0.18, duration: 0.5 }}
-                        className="text-white mb-6 max-w-3xl mx-auto"
+                        className="font-heading text-gray-900 mb-6 max-w-3xl mx-auto tracking-tight"
                         style={{
                             fontWeight: 800,
                             fontSize: "clamp(1.6rem, 5vw, 3rem)",
                             lineHeight: 1.15,
-                            letterSpacing: "-0.03em",
                         }}
                     >
                         Seu time pode estar{" "}
@@ -120,7 +119,7 @@ export const FinalCTA = ({ onCTAClick }: FinalCTAProps) => {
                         viewport={{ once: true }}
                         transition={{ delay: 0.28 }}
                         className="mb-10 max-w-xl mx-auto"
-                        style={{ color: "rgba(255,255,255,0.4)", fontSize: "1rem", lineHeight: 1.7 }}
+                        style={{ color: "rgba(107,114,128,0.9)", fontSize: "1rem", lineHeight: 1.7 }}
                     >
                         Configure em 5 minutos. Pipeline, ranking, metas e integrações — tudo pronto para usar.
                     </motion.p>
@@ -171,18 +170,18 @@ export const FinalCTA = ({ onCTAClick }: FinalCTAProps) => {
                             href="#pricing"
                             className="flex items-center gap-2 px-6 py-4 rounded-xl text-sm transition-all duration-200 w-full sm:w-auto justify-center"
                             style={{
-                                color: "rgba(255,255,255,0.4)",
-                                border: "1px solid rgba(255,255,255,0.07)",
-                                background: "rgba(255,255,255,0.03)",
+                                color: "rgba(75,85,99,0.9)",
+                                border: "1px solid rgba(229,231,235,1)",
+                                background: "rgba(255,255,255,0.8)",
                                 fontWeight: 600,
                             }}
                             onMouseEnter={(e) => {
-                                (e.currentTarget as HTMLAnchorElement).style.color = "rgba(255,255,255,0.7)";
-                                (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(255,255,255,0.14)";
+                                (e.currentTarget as HTMLAnchorElement).style.color = "rgba(17,24,39,0.9)";
+                                (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(209,213,219,1)";
                             }}
                             onMouseLeave={(e) => {
-                                (e.currentTarget as HTMLAnchorElement).style.color = "rgba(255,255,255,0.4)";
-                                (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(255,255,255,0.07)";
+                                (e.currentTarget as HTMLAnchorElement).style.color = "rgba(75,85,99,0.9)";
+                                (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(229,231,235,1)";
                             }}
                         >
                             Ver planos e preços
@@ -205,7 +204,7 @@ export const FinalCTA = ({ onCTAClick }: FinalCTAProps) => {
                             <div
                                 key={t}
                                 className="flex items-center gap-1.5"
-                                style={{ color: "rgba(255,255,255,0.22)", fontSize: "0.75rem", fontWeight: 500 }}
+                                style={{ color: "rgba(107,114,128,0.7)", fontSize: "0.75rem", fontWeight: 500 }}
                             >
                                 <Check className="h-3 w-3 text-emerald-500/50" strokeWidth={2.5} />
                                 {t}

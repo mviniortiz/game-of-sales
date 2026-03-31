@@ -101,7 +101,7 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
+      <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-lg">Gerenciar Templates WhatsApp</DialogTitle>
           <DialogDescription className="text-xs text-muted-foreground">
@@ -195,7 +195,7 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
         {/* Create / Edit form */}
         {showForm ? (
           <div className="border-t border-white/[0.06] pt-3 space-y-3">
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Input
                 placeholder="Nome do template"
                 className="text-[13px]"
@@ -206,7 +206,7 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
                 value={form.category}
                 onValueChange={(v) => setForm((f) => ({ ...f, category: v as TemplateCategory }))}
               >
-                <SelectTrigger className="w-[150px] text-[13px]">
+                <SelectTrigger className="w-full sm:w-[150px] text-[13px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

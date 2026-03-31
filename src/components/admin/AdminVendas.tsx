@@ -289,8 +289,8 @@ export const AdminVendas = () => {
         <div className="text-center py-8 text-muted-foreground">Carregando vendas...</div>
       ) : (
         <>
-          <div className="rounded-md border border-border">
-            <Table>
+          <div className="rounded-md border border-border overflow-x-auto">
+            <Table className="min-w-[700px]">
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
                   <TableHead>Data</TableHead>

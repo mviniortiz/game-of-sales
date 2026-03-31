@@ -10,7 +10,7 @@ import {
 import kiwifyLogo from "@/assets/integrations/kiwify-logo-png_seeklogo-537186.png";
 import greennLogo from "@/assets/integrations/greenn.png";
 import hotmartLogo from "@/assets/integrations/hotmart-logo-png_seeklogo-485917.png";
-import vyzonLogo from "@/assets/logo-only.png";
+import vyzonLogo from "@/assets/logo-light.svg";
 
 interface ItemCardProps {
     item: {
@@ -27,7 +27,7 @@ const ItemCard = ({ item, delay }: ItemCardProps) => {
     const Icon = item.icon;
     return (
         <motion.div
-            className="px-3 sm:px-4 py-2.5 bg-white/5 rounded-lg border border-white/10 flex items-center justify-center sm:justify-start gap-2 hover:bg-white/10 transition-all cursor-pointer whitespace-nowrap"
+            className="px-3 sm:px-4 py-2.5 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center sm:justify-start gap-2 hover:bg-gray-200 transition-all cursor-pointer whitespace-nowrap"
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
@@ -63,7 +63,7 @@ export const IntegrationHub = () => {
     ];
 
     return (
-        <section className="py-20 sm:py-28 px-4 relative overflow-hidden bg-slate-950">
+        <section className="py-20 sm:py-28 px-4 relative overflow-hidden bg-gray-50">
             <div className="max-w-4xl mx-auto">
                 {/* Header */}
                 <motion.div
@@ -72,9 +72,9 @@ export const IntegrationHub = () => {
                     viewport={{ once: true }}
                     className="text-center mb-16"
                 >
-                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white font-serif">
+                    <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 tracking-tight">
                         A solução que{" "}
-                        <span className="text-emerald-400">
+                        <span className="text-emerald-600">
                             unifica tudo
                         </span>
                     </h2>
@@ -82,16 +82,16 @@ export const IntegrationHub = () => {
 
                 {/* Mobile layout */}
                 <div className="md:hidden space-y-5">
-                    <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+                    <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
                         <div className="flex items-center justify-center gap-3 mb-3">
                             <div
-                                className="w-12 h-12 rounded-full flex items-center justify-center bg-slate-900 border border-white/10"
+                                className="w-12 h-12 rounded-full flex items-center justify-center bg-white border border-gray-200"
                                 style={{ boxShadow: "0 0 20px rgba(16, 185, 129, 0.18)" }}
                             >
                                 <img src={vyzonLogo} alt="Vyzon" className="w-7 h-7 object-contain" />
                             </div>
                             <div className="text-left">
-                                <p className="text-white text-sm font-semibold">Vyzon</p>
+                                <p className="text-gray-900 text-sm font-semibold">Vyzon</p>
                                 <p className="text-xs text-gray-400">Centraliza vendas, pagamentos e operação</p>
                             </div>
                         </div>
@@ -99,7 +99,7 @@ export const IntegrationHub = () => {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3">
-                            <p className="text-xs font-semibold text-emerald-400 mb-2">Vendas</p>
+                            <p className="text-xs font-semibold text-emerald-600 mb-2">Vendas</p>
                             <div className="space-y-2">
                                 {leftItems.map((item, i) => (
                                     <ItemCard key={item.name} item={item} delay={0.1 + i * 0.05} />
@@ -206,7 +206,7 @@ export const IntegrationHub = () => {
                             />
                             <div className="absolute inset-[-28px] rounded-full border border-emerald-500/20" />
                             <div
-                                className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center bg-slate-900 border border-white/10"
+                                className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center bg-white border border-gray-200"
                                 style={{ boxShadow: "0 0 30px rgba(16, 185, 129, 0.25)" }}
                             >
                                 <img src={vyzonLogo} alt="Vyzon" className="w-12 h-12 sm:w-14 sm:h-14 object-contain" />

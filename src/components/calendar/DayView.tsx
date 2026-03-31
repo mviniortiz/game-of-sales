@@ -98,14 +98,14 @@ function SortableAgendamento({
         className={`p-4 backdrop-blur-sm bg-card/60 hover:bg-card/80 hover:shadow-lg hover:scale-[1.01] transition-all cursor-pointer ${getStatusColor(agendamento.status).bg}`}
         onClick={() => onEventClick?.(agendamento)}
       >
-        <div className="flex items-start gap-3">
-          <div {...listeners} className="mt-1 cursor-grab active:cursor-grabbing" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-start gap-2 md:gap-3">
+          <div {...listeners} className="mt-1 cursor-grab active:cursor-grabbing hidden md:block" onClick={(e) => e.stopPropagation()}>
             <GripVertical className="h-5 w-5 text-muted-foreground" />
           </div>
-          <div className="flex-1 space-y-2">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-2">
-                <h3 className={`font-semibold text-lg ${getStatusColor(agendamento.status).text}`}>
+          <div className="flex-1 min-w-0 space-y-2">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <h3 className={`font-semibold text-base md:text-lg truncate ${getStatusColor(agendamento.status).text}`}>
                   {showSellerName && agendamento.seller_name && (
                     <span className="text-emerald-400">[{agendamento.seller_name}] </span>
                   )}
@@ -174,11 +174,11 @@ export function DayView({ date, agendamentos, onAgendamentoUpdate, onEventClick,
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-lg md:text-2xl font-bold truncate">
           {format(date, "EEEE, d 'de' MMMM", { locale: ptBR })}
         </h2>
-        <Badge variant="outline" className="text-sm">
+        <Badge variant="outline" className="text-xs md:text-sm flex-shrink-0">
           {sortedAgendamentos.length} agendamentos
         </Badge>
       </div>

@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -27,8 +27,7 @@ import {
     VolumeX,
     Maximize
 } from "lucide-react";
-import brandLogo from "@/assets/logo-full.png";
-import brandLogoWhite from "@/assets/logo-only.png";
+import brandLogoDark from "@/assets/logo-dark.png";
 import demoVideo from "/videos/sales-video.mp4";
 import StripeGradient from "@/components/ui/StripeGradient";
 import { HeroSection } from "@/components/landing/HeroSection";
@@ -62,6 +61,16 @@ const staggerContainer = {
 const LandingPage = () => {
     const navigate = useNavigate();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+    // Force light mode on landing page, restore user preference on unmount
+    useEffect(() => {
+        const html = document.documentElement;
+        const wasDark = html.classList.contains("dark");
+        html.classList.remove("dark");
+        return () => {
+            if (wasDark) html.classList.add("dark");
+        };
+    }, []);
     const [isAnnual, setIsAnnual] = useState(true); // Default to annual for 10% discount
     const [isNavigating, setIsNavigating] = useState(false);
     const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
@@ -178,7 +187,7 @@ const LandingPage = () => {
     ];
 
     return (
-        <div className="min-h-screen w-full bg-slate-950 text-slate-50 selection:bg-emerald-500/30">
+        <div className="min-h-screen w-full bg-white text-gray-900 selection:bg-emerald-500/30">
             {/* Loading Overlay - Immersive Experience */}
             {isNavigating && (
                 <motion.div
@@ -217,11 +226,11 @@ const LandingPage = () => {
                         <div className="max-w-2xl w-full">
                             {/* Logo */}
                             <motion.img
-                                src={brandLogo}
+                                src={brandLogoDark}
                                 alt="Vyzon"
                                 initial={{ y: -20, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
-                                className="h-12 mx-auto mb-12 brightness-0 invert"
+                                className="h-12 mx-auto mb-12"
                             />
 
                             {/* Progress Bar */}
@@ -329,7 +338,7 @@ const LandingPage = () => {
 
 
             {/* Demo Section */}
-            <section id="demo" className="py-24 px-4 sm:px-6 lg:px-8 bg-slate-950 relative overflow-hidden">
+            <section id="demo" className="py-24 px-4 sm:px-6 lg:px-8 bg-white relative overflow-hidden">
                 {/* Background glow */}
                 <div
                     className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] rounded-full pointer-events-none"
@@ -349,11 +358,11 @@ const LandingPage = () => {
                         </span>
 
                         <h2
-                            className="text-white mb-4"
-                            style={{ fontWeight: "var(--fw-extrabold)", fontSize: "clamp(1.75rem, 4vw, 2.5rem)", lineHeight: "var(--lh-tight)", letterSpacing: "var(--ls-snug)" }}
+                            className="font-heading text-gray-900 mb-4 tracking-tight"
+                            style={{ fontWeight: "var(--fw-extrabold)", fontSize: "clamp(1.75rem, 4vw, 2.5rem)", lineHeight: "var(--lh-tight)" }}
                         >
                             Veja o Vyzon em{" "}
-                            <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
+                            <span className="bg-gradient-to-r from-emerald-600 to-emerald-500 bg-clip-text text-transparent">
                                 ação
                             </span>
                         </h2>
@@ -506,7 +515,7 @@ const LandingPage = () => {
                             ].map(({ icon: Icon, color, bg, title, desc }) => (
                                 <motion.div
                                     key={title}
-                                    className="flex items-center gap-3 rounded-xl p-4 border border-white/6 bg-slate-900/40 backdrop-blur-sm"
+                                    className="flex items-center gap-3 rounded-xl p-4 border border-gray-200 bg-gray-50/80 backdrop-blur-sm"
                                     whileHover={{ y: -3, borderColor: "rgba(16,185,129,0.2)" }}
                                     transition={{ duration: 0.2 }}
                                 >
@@ -514,8 +523,8 @@ const LandingPage = () => {
                                         <Icon className={`h-4 w-4 ${color}`} strokeWidth={2} />
                                     </div>
                                     <div>
-                                        <p className="text-white text-sm" style={{ fontWeight: "var(--fw-semibold)" }}>{title}</p>
-                                        <p className="text-white/40 text-xs" style={{ fontWeight: "var(--fw-light)" }}>{desc}</p>
+                                        <p className="text-gray-900 text-sm" style={{ fontWeight: "var(--fw-semibold)" }}>{title}</p>
+                                        <p className="text-gray-400 text-xs" style={{ fontWeight: "var(--fw-light)" }}>{desc}</p>
                                     </div>
                                 </motion.div>
                             ))}
@@ -553,44 +562,43 @@ const LandingPage = () => {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.45 }}
-                        className="rounded-3xl border border-white/10 bg-slate-900/65 backdrop-blur-xl p-6 sm:p-8 lg:p-10"
+                        className="rounded-3xl border border-gray-200 bg-white/80 backdrop-blur-sm p-6 sm:p-8 lg:p-10"
                     >
                         <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-8 lg:gap-10 items-start">
                             <div>
                                 <div className="flex flex-wrap items-center gap-3 mb-5">
-                                    <Badge className="border-emerald-400/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/15">
+                                    <Badge className="border-emerald-300 bg-emerald-50 text-emerald-600 hover:bg-emerald-500/15">
                                         <PhoneCall className="h-3.5 w-3.5 mr-1.5" />
                                         NOVO: LIGACOES NO CRM
                                     </Badge>
-                                    <Badge variant="secondary" className="bg-white/5 text-white/80 border border-white/10">
+                                    <Badge variant="secondary" className="bg-gray-100 text-gray-700 border border-gray-200">
                                         Add-on para Plus e Pro
                                     </Badge>
                                 </div>
 
                                 <h2
-                                    className="text-white mb-4"
+                                    className="font-heading text-gray-900 mb-4 tracking-tight"
                                     style={{
                                         fontWeight: "var(--fw-extrabold)",
                                         fontSize: "clamp(1.7rem, 3.8vw, 2.35rem)",
                                         lineHeight: "var(--lh-tight)",
-                                        letterSpacing: "var(--ls-snug)"
                                     }}
                                 >
                                     Ligue sem sair do deal.
-                                    <span className="block bg-gradient-to-r from-emerald-300 via-emerald-400 to-teal-300 bg-clip-text text-transparent">
+                                    <span className="block bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 bg-clip-text text-transparent">
                                         Registre tudo. Venda melhor.
                                     </span>
                                 </h2>
 
-                                <p className="text-slate-300/90 max-w-xl mb-6" style={{ fontSize: "1.05rem" }}>
+                                <p className="text-gray-600 max-w-xl mb-6" style={{ fontSize: "1.05rem" }}>
                                     O vendedor liga dentro da plataforma e o histórico fica no próprio CRM. Gravação, contexto da conversa e transcrição no deal para ninguém depender de memória ou anotações soltas.
                                 </p>
 
-                                <div className="mb-6 rounded-2xl border border-white/10 bg-white/[0.02] p-4 max-w-xl">
-                                    <p className="text-[11px] uppercase tracking-wider text-emerald-300 mb-1" style={{ fontWeight: "var(--fw-semibold)" }}>
+                                <div className="mb-6 rounded-2xl border border-gray-200 bg-gray-50 p-4 max-w-xl">
+                                    <p className="text-[11px] uppercase tracking-wider text-emerald-600 mb-1" style={{ fontWeight: "var(--fw-semibold)" }}>
                                         Como funciona o add-on
                                     </p>
-                                    <p className="text-xs sm:text-sm text-white/65 leading-relaxed">
+                                    <p className="text-xs sm:text-sm text-gray-500 leading-relaxed">
                                         Ligações é uma contratação opcional (cobrada à parte) para empresas nos planos Plus e Pro.
                                         Você ativa por empresa e adiciona minutos conforme a operação.
                                     </p>
@@ -619,14 +627,14 @@ const LandingPage = () => {
                                             desc: "Opcional por botão, sem travar o fluxo do vendedor."
                                         }
                                     ].map(({ icon: Icon, title, desc }) => (
-                                        <div key={title} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+                                        <div key={title} className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
                                             <div className="flex items-start gap-3">
                                                 <div className="mt-0.5 w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-400/20 flex items-center justify-center shrink-0">
-                                                    <Icon className="h-4 w-4 text-emerald-300" />
+                                                    <Icon className="h-4 w-4 text-emerald-600" />
                                                 </div>
                                                 <div>
-                                                    <p className="text-white text-sm mb-1" style={{ fontWeight: "var(--fw-semibold)" }}>{title}</p>
-                                                    <p className="text-white/55 text-xs leading-relaxed">{desc}</p>
+                                                    <p className="text-gray-900 text-sm mb-1" style={{ fontWeight: "var(--fw-semibold)" }}>{title}</p>
+                                                    <p className="text-gray-500 text-xs leading-relaxed">{desc}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -644,7 +652,7 @@ const LandingPage = () => {
                                     <Button
                                         onClick={() => goToRegister("plus")}
                                         variant="outline"
-                                        className="h-11 px-5 border-white/15 bg-white/0 hover:bg-white/5 text-white"
+                                        className="h-11 px-5 border-gray-300 bg-transparent hover:bg-gray-100 text-gray-900"
                                     >
                                         Testar no plano Plus
                                     </Button>
@@ -660,31 +668,31 @@ const LandingPage = () => {
                             >
                                 <div className="absolute -inset-4 rounded-3xl bg-emerald-500/10 blur-2xl opacity-60 pointer-events-none" />
 
-                                <div className="relative rounded-3xl border border-emerald-400/15 bg-slate-950/85 p-4 sm:p-5 shadow-[0_20px_70px_-30px_rgba(16,185,129,0.35)]">
+                                <div className="relative rounded-3xl border border-emerald-200 bg-white p-4 sm:p-5 shadow-[0_20px_70px_-30px_rgba(16,185,129,0.35)]">
                                     <div className="flex items-center justify-between mb-4">
                                         <div>
-                                            <p className="text-white text-sm" style={{ fontWeight: "var(--fw-semibold)" }}>Ligações no Deal</p>
-                                            <p className="text-white/45 text-xs">Tudo no mesmo contexto da negociação</p>
+                                            <p className="text-gray-900 text-sm" style={{ fontWeight: "var(--fw-semibold)" }}>Ligações no Deal</p>
+                                            <p className="text-gray-400 text-xs">Tudo no mesmo contexto da negociação</p>
                                         </div>
                                         <div className="flex items-center gap-1.5">
                                             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                                            <span className="text-emerald-300 text-xs">Ao vivo</span>
+                                            <span className="text-emerald-600 text-xs">Ao vivo</span>
                                         </div>
                                     </div>
 
                                     <div className="space-y-3">
-                                        <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+                                        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
                                             <div className="flex items-center justify-between mb-2 gap-2">
-                                                <p className="text-white text-sm" style={{ fontWeight: "var(--fw-semibold)" }}>Lead: Clínica Horizonte</p>
-                                                <Badge className="bg-cyan-500/10 text-cyan-300 border-cyan-400/20">Deal #A12</Badge>
+                                                <p className="text-gray-900 text-sm" style={{ fontWeight: "var(--fw-semibold)" }}>Lead: Clínica Horizonte</p>
+                                                <Badge className="bg-cyan-500/10 text-cyan-600 border-cyan-400/20">Deal #A12</Badge>
                                             </div>
-                                            <p className="text-white/55 text-xs mb-3">Etapa: Proposta enviada • Último contato: ontem, 17:42</p>
+                                            <p className="text-gray-500 text-xs mb-3">Etapa: Proposta enviada • Último contato: ontem, 17:42</p>
                                             <div className="flex flex-wrap gap-2">
                                                 <div className="h-9 px-3 rounded-xl bg-emerald-500 text-white text-xs font-semibold inline-flex items-center">
                                                     <PhoneCall className="h-3.5 w-3.5 mr-1.5" />
                                                     Ligar agora
                                                 </div>
-                                                <div className="h-9 px-3 rounded-xl border border-white/10 bg-white/[0.03] text-white/75 text-xs font-semibold inline-flex items-center">
+                                                <div className="h-9 px-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-600 text-xs font-semibold inline-flex items-center">
                                                     <MessageCircle className="h-3.5 w-3.5 mr-1.5" />
                                                     Ver histórico
                                                 </div>
@@ -693,18 +701,18 @@ const LandingPage = () => {
 
                                         <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/5 p-4">
                                             <div className="flex items-center justify-between mb-2">
-                                                <p className="text-white text-sm" style={{ fontWeight: "var(--fw-semibold)" }}>Chamada concluída • 08:31</p>
-                                                <span className="text-emerald-300 text-xs">Gravação salva</span>
+                                                <p className="text-gray-900 text-sm" style={{ fontWeight: "var(--fw-semibold)" }}>Chamada concluída • 08:31</p>
+                                                <span className="text-emerald-600 text-xs">Gravação salva</span>
                                             </div>
-                                            <p className="text-white/65 text-xs leading-relaxed">
+                                            <p className="text-gray-500 text-xs leading-relaxed">
                                                 Transcrição vinculada ao deal. Próxima ação sugerida pode ser gerada por botão, somente quando fizer sentido.
                                             </p>
                                         </div>
 
-                                        <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+                                        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
                                             <div className="flex items-center justify-between mb-3">
-                                                <p className="text-white text-sm" style={{ fontWeight: "var(--fw-semibold)" }}>O que seu time ganha</p>
-                                                <Sparkles className="h-4 w-4 text-emerald-300" />
+                                                <p className="text-gray-900 text-sm" style={{ fontWeight: "var(--fw-semibold)" }}>O que seu time ganha</p>
+                                                <Sparkles className="h-4 w-4 text-emerald-600" />
                                             </div>
                                             <div className="space-y-2">
                                                 {[
@@ -712,7 +720,7 @@ const LandingPage = () => {
                                                     "Follow-up mais rápido porque a conversa já está no CRM",
                                                     "Evolução de abordagem comercial com base em chamadas reais"
                                                 ].map((item) => (
-                                                    <div key={item} className="flex items-start gap-2 text-xs text-white/70">
+                                                    <div key={item} className="flex items-start gap-2 text-xs text-gray-600">
                                                         <Check className="h-3.5 w-3.5 text-emerald-300 mt-0.5 shrink-0" />
                                                         <span>{item}</span>
                                                     </div>
@@ -728,7 +736,7 @@ const LandingPage = () => {
             </section>
 
             {/* ── Pricing Section ───────────────────────────────────────────── */}
-            <section id="pricing" className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-slate-950 to-slate-900 relative overflow-hidden">
+            <section id="pricing" className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-gray-50 relative overflow-hidden">
                 {/* Ambient glow */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full pointer-events-none"
                     style={{ background: "radial-gradient(ellipse, rgba(16,185,129,0.05) 0%, transparent 60%)", filter: "blur(80px)" }} />
@@ -749,29 +757,29 @@ const LandingPage = () => {
                             PLANOS E PREÇOS
                         </span>
 
-                        <h2 className="text-white mb-4"
-                            style={{ fontWeight: "var(--fw-extrabold)", fontSize: "clamp(1.75rem, 4vw, 2.5rem)", lineHeight: "var(--lh-tight)", letterSpacing: "var(--ls-snug)" }}>
+                        <h2 className="font-heading text-gray-900 mb-4 tracking-tight"
+                            style={{ fontWeight: "var(--fw-extrabold)", fontSize: "clamp(1.75rem, 4vw, 2.5rem)", lineHeight: "var(--lh-tight)" }}>
                             Investimento que se{" "}
-                            <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
+                            <span className="bg-gradient-to-r from-emerald-600 to-emerald-500 bg-clip-text text-transparent">
                                 multiplica
                             </span>
                         </h2>
 
                         <p className="text-gray-400 max-w-xl mx-auto mb-8" style={{ fontSize: "1.0625rem" }}>
-                            Retorno médio de <strong className="text-white">12× o valor investido</strong>. Sem surpresas, sem taxas escondidas.
+                            Retorno médio de <strong className="text-gray-900">12× o valor investido</strong>. Sem surpresas, sem taxas escondidas.
                         </p>
 
                         {/* Billing toggle */}
-                        <div className="inline-flex gap-1 p-1 rounded-2xl border border-white/6"
-                            style={{ background: "rgba(15,23,42,0.85)" }}>
+                        <div className="inline-flex gap-1 p-1 rounded-2xl border border-gray-200"
+                            style={{ background: "rgba(249,250,251,0.9)" }}>
                             {([false, true] as const).map((annual) => (
                                 <button key={String(annual)} onClick={() => setIsAnnual(annual)}
-                                    className={`relative flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm transition-all duration-200 ${isAnnual === annual ? "text-white" : "text-white/35 hover:text-white/55"}`}
+                                    className={`relative flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm transition-all duration-200 ${isAnnual === annual ? "text-gray-900" : "text-gray-400 hover:text-gray-600"}`}
                                     style={{ fontWeight: "var(--fw-semibold)" }}>
                                     {isAnnual === annual && (
                                         <motion.div layoutId="billing-pill"
-                                            className="absolute inset-0 rounded-xl border border-white/8"
-                                            style={{ background: "rgba(30,41,59,0.9)" }}
+                                            className="absolute inset-0 rounded-xl border border-gray-200"
+                                            style={{ background: "rgba(255,255,255,0.95)" }}
                                             transition={{ type: "spring", bounce: 0.18, duration: 0.38 }} />
                                     )}
                                     <span className="relative">{annual ? "Anual" : "Mensal"}</span>
@@ -825,14 +833,14 @@ const LandingPage = () => {
                                     <div className="relative flex flex-col flex-1 rounded-2xl border overflow-hidden"
                                         style={{
                                             background: isPopular
-                                                ? "linear-gradient(155deg, rgba(16,185,129,0.07) 0%, rgba(13,21,38,0.97) 55%)"
-                                                : "rgba(15,23,42,0.55)",
+                                                ? "linear-gradient(155deg, rgba(16,185,129,0.05) 0%, rgba(255,255,255,0.97) 55%)"
+                                                : "rgba(255,255,255,0.95)",
                                             borderColor: isPopular
                                                 ? "rgba(16,185,129,0.28)"
-                                                : "rgba(255,255,255,0.05)",
+                                                : "rgba(229,231,235,1)",
                                             boxShadow: isPopular
                                                 ? "0 0 0 1px rgba(16,185,129,0.06), 0 24px 64px rgba(16,185,129,0.1)"
-                                                : "0 1px 2px rgba(0,0,0,0.4)",
+                                                : "0 1px 3px rgba(0,0,0,0.08)",
                                         }}>
                                         {/* Decorative top gradient line (popular only) */}
                                         {isPopular && (
@@ -844,10 +852,10 @@ const LandingPage = () => {
                                             {/* Plan name + tagline */}
                                             <div className="mb-5">
                                                 <p className="text-xs mb-0.5"
-                                                    style={{ color: isPopular ? "#10b981" : "rgba(255,255,255,0.28)", fontWeight: "var(--fw-bold)", letterSpacing: "var(--ls-widest)" }}>
+                                                    style={{ color: isPopular ? "#10b981" : "rgba(107,114,128,0.7)", fontWeight: "var(--fw-bold)", letterSpacing: "var(--ls-widest)" }}>
                                                     {plan.name.toUpperCase()}
                                                 </p>
-                                                <p className="text-white/38 text-sm leading-snug">{plan.tagline}</p>
+                                                <p className="text-gray-400 text-sm leading-snug">{plan.tagline}</p>
                                             </div>
 
                                             {/* Price */}
@@ -857,9 +865,9 @@ const LandingPage = () => {
                                                     animate={{ opacity: 1, y: 0 }}
                                                     transition={{ duration: 0.22 }}
                                                     className="flex items-end gap-1">
-                                                    <span className="text-white/38 text-base leading-none mb-1.5"
+                                                    <span className="text-gray-400 text-base leading-none mb-1.5"
                                                         style={{ fontWeight: "var(--fw-medium)" }}>R$</span>
-                                                    <span className="text-white leading-none tabular-nums"
+                                                    <span className="text-gray-900 leading-none tabular-nums"
                                                         style={{
                                                             fontWeight: "var(--fw-extrabold)",
                                                             fontSize: isPopular
@@ -868,7 +876,7 @@ const LandingPage = () => {
                                                         }}>
                                                         {monthly}
                                                     </span>
-                                                    <span className="text-white/32 text-sm leading-none mb-1.5">/mês</span>
+                                                    <span className="text-gray-400 text-sm leading-none mb-1.5">/mês</span>
                                                 </motion.div>
                                             </div>
 
@@ -878,14 +886,14 @@ const LandingPage = () => {
                                                     <motion.div key="annual-info"
                                                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}
                                                         className="flex items-center gap-2 flex-wrap mt-1">
-                                                        <span className="text-[11px] text-white/27">
+                                                        <span className="text-[11px] text-gray-400">
                                                             Cobrado R$ {Math.round(monthly * 12).toLocaleString("pt-BR")}/ano
                                                         </span>
                                                         {annualSaving > 0 && (
                                                             <span className="text-[10px] px-1.5 py-0.5 rounded"
                                                                 style={{
-                                                                    background: isPopular ? "rgba(16,185,129,0.12)" : "rgba(255,255,255,0.05)",
-                                                                    color: isPopular ? "#10b981" : "rgba(255,255,255,0.3)",
+                                                                    background: isPopular ? "rgba(16,185,129,0.12)" : "rgba(243,244,246,1)",
+                                                                    color: isPopular ? "#10b981" : "rgba(107,114,128,0.8)",
                                                                     fontWeight: "var(--fw-semibold)"
                                                                 }}>
                                                                 Economize R$ {annualSaving.toLocaleString("pt-BR")}
@@ -893,28 +901,28 @@ const LandingPage = () => {
                                                         )}
                                                     </motion.div>
                                                 ) : (
-                                                    <p className="text-[11px] text-white/22 mt-1">Faturado mensalmente</p>
+                                                    <p className="text-[11px] text-gray-400 mt-1">Faturado mensalmente</p>
                                                 )}
                                                 {plan.extraInfo && (
-                                                    <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.2)" }}>{plan.extraInfo}</p>
+                                                    <p className="text-[11px] mt-0.5" style={{ color: "rgba(107,114,128,0.6)" }}>{plan.extraInfo}</p>
                                                 )}
                                             </div>
 
                                             {/* Divider */}
                                             <div className="h-px mb-5"
-                                                style={{ background: isPopular ? "rgba(16,185,129,0.1)" : "rgba(255,255,255,0.04)" }} />
+                                                style={{ background: isPopular ? "rgba(16,185,129,0.15)" : "rgba(229,231,235,0.8)" }} />
 
                                             {/* Features list */}
                                             <ul className="flex flex-col gap-2.5 mb-7 flex-1">
                                                 {plan.features.map((f) => (
                                                     <li key={f} className="flex items-start gap-2.5">
                                                         <div className="w-4 h-4 mt-0.5 rounded flex items-center justify-center flex-shrink-0"
-                                                            style={{ background: isPopular ? "rgba(16,185,129,0.14)" : "rgba(255,255,255,0.05)" }}>
+                                                            style={{ background: isPopular ? "rgba(16,185,129,0.14)" : "rgba(243,244,246,1)" }}>
                                                             <Check className="h-2.5 w-2.5" strokeWidth={3}
-                                                                style={{ color: isPopular ? "#10b981" : "rgba(255,255,255,0.38)" }} />
+                                                                style={{ color: isPopular ? "#10b981" : "rgba(107,114,128,0.7)" }} />
                                                         </div>
                                                         <span className="text-sm leading-snug"
-                                                            style={{ color: isPopular ? "rgba(255,255,255,0.68)" : "rgba(255,255,255,0.45)", fontWeight: "var(--fw-medium)" }}>
+                                                            style={{ color: isPopular ? "rgba(17,24,39,0.85)" : "rgba(75,85,99,0.85)", fontWeight: "var(--fw-medium)" }}>
                                                             {f}
                                                         </span>
                                                     </li>
@@ -944,9 +952,9 @@ const LandingPage = () => {
                                                     onClick={() => goToRegister(plan.name.toLowerCase())}
                                                     className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm transition-all duration-200 cursor-pointer"
                                                     style={{
-                                                        background: "rgba(255,255,255,0.04)",
-                                                        border: "1px solid rgba(255,255,255,0.07)",
-                                                        color: "rgba(255,255,255,0.55)",
+                                                        background: "rgba(249,250,251,1)",
+                                                        border: "1px solid rgba(229,231,235,1)",
+                                                        color: "rgba(55,65,81,0.9)",
                                                         fontWeight: "var(--fw-semibold)"
                                                     }}>
                                                     Escolher {plan.name}
@@ -969,7 +977,7 @@ const LandingPage = () => {
                             { icon: <PhoneCall className="h-3.5 w-3.5" />, label: "Ligações (Plus e Pro)" },
                             { icon: <Award className="h-3.5 w-3.5" />, label: "Suporte via WhatsApp" },
                         ].map(({ icon, label }) => (
-                            <div key={label} className="flex items-center gap-1.5 text-xs text-white/25"
+                            <div key={label} className="flex items-center gap-1.5 text-xs text-gray-400"
                                 style={{ fontWeight: "var(--fw-medium)" }}>
                                 <span className="text-emerald-500/45">{icon}</span>
                                 {label}
@@ -993,7 +1001,7 @@ const LandingPage = () => {
                         {...fadeInUp}
                         className="text-center mb-12"
                     >
-                        <h2 className="text-3xl font-bold text-white mb-4 font-serif">
+                        <h2 className="font-heading text-3xl font-bold text-gray-900 mb-4 tracking-tight">
                             Dúvidas? Temos Respostas.
                         </h2>
                         <p className="text-gray-400">
@@ -1033,10 +1041,10 @@ const LandingPage = () => {
                             <motion.details
                                 key={idx}
                                 variants={fadeInUp}
-                                className="group bg-slate-900 rounded-xl border border-white/10 overflow-hidden"
+                                className="group bg-gray-50 rounded-xl border border-gray-200 overflow-hidden"
                             >
                                 <summary className="flex items-center justify-between p-5 cursor-pointer hover:bg-white/5 transition-colors">
-                                    <span className="font-medium text-white">{faq.q}</span>
+                                    <span className="font-medium text-gray-900">{faq.q}</span>
                                     <ArrowRight className="h-5 w-5 text-gray-400 group-open:rotate-90 transition-transform" />
                                 </summary>
                                 <div className="px-5 pb-5 text-gray-400">
@@ -1057,7 +1065,7 @@ const LandingPage = () => {
             <footer className="py-12 px-4 sm:px-6 lg:px-8 bg-slate-950 border-t border-white/5">
                 <div className="max-w-7xl mx-auto">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                        <img src={brandLogoWhite} alt="Vyzon" className="h-8" />
+                        <img src={brandLogoDark} alt="Vyzon" className="h-8" />
                         <div className="flex gap-8 text-sm text-gray-400">
                             <button onClick={() => scrollToSection("features")} className="hover:text-white transition-colors">
                                 Funcionalidades

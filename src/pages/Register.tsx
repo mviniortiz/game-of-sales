@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { z } from "zod";
-import brandLogo from "@/assets/logo-full.png";
+import brandLogoDark from "@/assets/logo-dark.png";
+import { ThemeLogo } from "@/components/ui/ThemeLogo";
 import {
     Mail,
     Lock,
@@ -168,7 +169,7 @@ const Register = () => {
                 <div className="relative z-10 flex flex-col justify-between p-12 text-white w-full">
                     {/* Logo */}
                     <div>
-                        <img src={brandLogo} alt="Vyzon" className="h-12 w-auto brightness-0 invert" />
+                        <img src={brandLogoDark} alt="Vyzon" className="h-12 w-auto" />
                     </div>
 
                     {/* Testimonial */}
@@ -214,7 +215,7 @@ const Register = () => {
                 <div className="w-full max-w-md space-y-6">
                     {/* Mobile Logo */}
                     <div className="lg:hidden flex justify-center mb-4">
-                        <img src={brandLogo} alt="Vyzon" className="h-10 w-auto" />
+                        <ThemeLogo className="h-10 w-auto" />
                     </div>
 
                     {/* Back Button */}

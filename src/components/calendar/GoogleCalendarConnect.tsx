@@ -169,9 +169,9 @@ export const GoogleCalendarConnect = () => {
     <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
       <CardContent className="p-4">
         {!isConnected ? (
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/10">
+              <div className="p-2 rounded-lg bg-blue-500/10 flex-shrink-0">
                 <CalendarDays className="h-5 w-5 text-blue-500" />
               </div>
               <div>
@@ -188,7 +188,7 @@ export const GoogleCalendarConnect = () => {
               variant="outline"
               size="sm"
               disabled={connecting}
-              className="flex items-center gap-2 whitespace-nowrap"
+              className="flex items-center gap-2 whitespace-nowrap w-full sm:w-auto"
             >
               {connecting ? (
                 <>
@@ -201,15 +201,15 @@ export const GoogleCalendarConnect = () => {
             </Button>
           </div>
         ) : (
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-green-500/10">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="p-2 rounded-lg bg-green-500/10 flex-shrink-0">
                 <Check className="h-5 w-5 text-green-500" />
               </div>
-              <div>
-                <h3 className="font-semibold text-foreground flex items-center gap-2">
-                  Conectado ao Google Calendar
-                  <Badge variant="outline" className="text-xs bg-primary/10 border-primary/30 text-primary flex items-center gap-1">
+              <div className="min-w-0">
+                <h3 className="font-semibold text-foreground flex flex-wrap items-center gap-2">
+                  <span className="truncate">Conectado ao Google Calendar</span>
+                  <Badge variant="outline" className="text-xs bg-primary/10 border-primary/30 text-primary flex items-center gap-1 flex-shrink-0">
                     <RefreshCw className="h-3 w-3" />
                     Auto-Sync 15min
                   </Badge>
@@ -219,13 +219,13 @@ export const GoogleCalendarConnect = () => {
                 </p>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 w-full sm:w-auto flex-shrink-0">
               <Button
                 onClick={syncAllEvents}
                 variant="outline"
                 size="sm"
                 disabled={syncing || disconnecting}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 flex-1 sm:flex-initial"
               >
                 {syncing ? (
                   <>
@@ -241,7 +241,7 @@ export const GoogleCalendarConnect = () => {
                 variant="destructive"
                 size="sm"
                 disabled={syncing || disconnecting}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 flex-1 sm:flex-initial"
               >
                 {disconnecting ? (
                   <>

@@ -44,8 +44,8 @@ const FAQItem = ({
         layout
         className="relative overflow-hidden rounded-2xl border transition-colors duration-200 cursor-pointer"
         style={{
-            background: isOpen ? "rgba(16,185,129,0.04)" : "rgba(15,23,42,0.55)",
-            borderColor: isOpen ? "rgba(16,185,129,0.22)" : "rgba(255,255,255,0.06)",
+            background: isOpen ? "rgba(16,185,129,0.04)" : "rgba(255,255,255,0.95)",
+            borderColor: isOpen ? "rgba(16,185,129,0.22)" : "rgba(229,231,235,1)",
         }}
         onClick={onToggle}
     >
@@ -68,7 +68,7 @@ const FAQItem = ({
             <span
                 className="text-sm leading-snug transition-colors duration-200"
                 style={{
-                    color: isOpen ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.65)",
+                    color: isOpen ? "rgba(17,24,39,0.9)" : "rgba(55,65,81,0.85)",
                     fontWeight: "600",
                 }}
             >
@@ -79,8 +79,8 @@ const FAQItem = ({
                 transition={{ duration: 0.2, ease: "easeInOut" }}
                 className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center"
                 style={{
-                    background: isOpen ? "rgba(16,185,129,0.15)" : "rgba(255,255,255,0.06)",
-                    color: isOpen ? "#10b981" : "rgba(255,255,255,0.35)",
+                    background: isOpen ? "rgba(16,185,129,0.15)" : "rgba(243,244,246,1)",
+                    color: isOpen ? "#10b981" : "rgba(156,163,175,1)",
                 }}
             >
                 <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
@@ -98,7 +98,7 @@ const FAQItem = ({
                 >
                     <div
                         className="px-6 pb-5 text-sm leading-relaxed"
-                        style={{ color: "rgba(255,255,255,0.45)" }}
+                        style={{ color: "rgba(107,114,128,0.9)" }}
                     >
                         {a}
                     </div>
@@ -112,7 +112,7 @@ export const FAQSection = () => {
     const [open, setOpen] = useState<number | null>(null);
 
     return (
-        <section className="py-24 px-4 sm:px-6 lg:px-8 bg-slate-950 relative overflow-hidden">
+        <section className="py-24 px-4 sm:px-6 lg:px-8 bg-gray-50 relative overflow-hidden">
             {/* Faint radial glow */}
             <div
                 className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] pointer-events-none"
@@ -132,26 +132,25 @@ export const FAQSection = () => {
                     transition={{ duration: 0.5 }}
                 >
                     <span
-                        className="inline-block text-xs text-emerald-400 border border-emerald-500/20 bg-emerald-500/6 rounded-full px-4 py-1.5 mb-5"
+                        className="inline-block text-xs text-emerald-600 border border-emerald-500/20 bg-emerald-500/6 rounded-full px-4 py-1.5 mb-5"
                         style={{ letterSpacing: "0.1em", fontWeight: 600 }}
                     >
                         PERGUNTAS FREQUENTES
                     </span>
                     <h2
-                        className="text-white mb-3"
+                        className="font-heading text-gray-900 mb-3 tracking-tight"
                         style={{
                             fontWeight: 800,
                             fontSize: "clamp(1.75rem, 4vw, 2.25rem)",
                             lineHeight: 1.2,
-                            letterSpacing: "-0.02em",
                         }}
                     >
                         Dúvidas?{" "}
-                        <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
+                        <span className="bg-gradient-to-r from-emerald-600 to-emerald-500 bg-clip-text text-transparent">
                             Temos respostas.
                         </span>
                     </h2>
-                    <p className="text-white/35 text-sm">
+                    <p className="text-gray-400 text-sm">
                         Tudo que você precisa saber antes de começar.
                     </p>
                 </motion.div>

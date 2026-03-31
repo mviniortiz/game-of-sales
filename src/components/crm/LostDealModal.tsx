@@ -57,7 +57,7 @@ export const LostDealModal = ({ open, onClose, onConfirm, dealTitle }: LostDealM
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[480px] max-h-[90vh] overflow-y-auto bg-card/98 backdrop-blur-xl border-border shadow-2xl">
+      <DialogContent className="max-w-[95vw] sm:max-w-[480px] max-h-[90vh] overflow-y-auto bg-card/98 backdrop-blur-xl border-border shadow-2xl">
         <DialogHeader className="pb-4 border-b border-border">
           <DialogTitle className="flex items-center gap-3 text-foreground">
             <div className="p-2.5 rounded-xl bg-rose-500/10 ring-1 ring-rose-500/20">

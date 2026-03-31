@@ -21,7 +21,7 @@ const testimonials = [
 
 export const Testimonials = () => {
     return (
-        <section className="py-24 px-4 sm:px-6 lg:px-8 bg-slate-950">
+        <section className="py-24 px-4 sm:px-6 lg:px-8 bg-white">
             <div className="max-w-6xl mx-auto">
                 <motion.div
                     className="text-center mb-16"
@@ -29,8 +29,8 @@ export const Testimonials = () => {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                 >
-                    <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-                        Quem usa, <span className="text-emerald-400">não volta pra planilha</span>
+                    <h2 className="font-heading text-3xl sm:text-4xl font-bold text-gray-900 mb-4 tracking-tight">
+                        Quem usa, <span className="text-emerald-600">não volta pra planilha</span>
                     </h2>
                     <p className="text-gray-400 max-w-xl mx-auto">
                         Resultados reais de times que migraram para o Vyzon.
@@ -41,7 +41,7 @@ export const Testimonials = () => {
                     {testimonials.map((testimonial, index) => (
                         <motion.div
                             key={index}
-                            className="bg-slate-900 border border-white/10 rounded-2xl p-6"
+                            className="bg-gray-50 border border-gray-200 rounded-2xl p-6"
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
@@ -55,19 +55,19 @@ export const Testimonials = () => {
                             </div>
 
                             {/* Quote */}
-                            <p className="text-gray-300 mb-6 leading-relaxed italic">
+                            <p className="text-gray-600 mb-6 leading-relaxed italic">
                                 "{testimonial.quote}"
                             </p>
 
                             {/* Author */}
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                                    <span className="text-emerald-400 font-semibold text-sm">
+                                    <span className="text-emerald-600 font-semibold text-sm">
                                         {testimonial.author.charAt(0)}
                                     </span>
                                 </div>
                                 <div>
-                                    <p className="text-white font-medium text-sm">{testimonial.author}</p>
+                                    <p className="text-gray-900 font-medium text-sm">{testimonial.author}</p>
                                     <p className="text-gray-500 text-xs">{testimonial.role}</p>
                                 </div>
                             </div>

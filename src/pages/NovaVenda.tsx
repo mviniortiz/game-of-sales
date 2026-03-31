@@ -264,7 +264,7 @@ const NovaVenda = () => {
             </CardTitle>
 
             {/* Card de Pontuação - Compacto */}
-            <div className="rounded-lg p-4 min-w-[280px] border border-yellow-500/20 bg-yellow-500/10 backdrop-blur-md shadow-lg shadow-yellow-500/10">
+            <div className="rounded-lg p-4 w-full sm:min-w-[280px] border border-yellow-500/20 bg-yellow-500/10 backdrop-blur-md shadow-lg shadow-yellow-500/10">
               <div className="flex items-center gap-3">
                 {/* Troféu com Glow */}
                 <div className="relative flex-shrink-0">

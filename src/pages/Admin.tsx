@@ -45,9 +45,9 @@ const Admin = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Shield className="h-8 w-8 text-primary" />
+        <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
         <div>
-          <h1 className="text-3xl font-bold">Administração</h1>
+          <h1 className="text-xl sm:text-3xl font-bold">Administração</h1>
           <p className="text-muted-foreground">Painel de controle administrativo</p>
         </div>
       </div>
@@ -58,17 +58,19 @@ const Admin = () => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="vendedores" className="w-full">
-            <TabsList className={`grid w-full ${isSuperAdmin ? 'grid-cols-9' : 'grid-cols-7'}`}>
-              <TabsTrigger value="vendedores">Vendedores</TabsTrigger>
-              <TabsTrigger value="vendas">Vendas</TabsTrigger>
-              <TabsTrigger value="produtos">Produtos</TabsTrigger>
-              <TabsTrigger value="pagamentos">Pagamentos</TabsTrigger>
-              <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
-              <TabsTrigger value="metas">Metas</TabsTrigger>
-              {isSuperAdmin && <TabsTrigger value="empresas">Empresas</TabsTrigger>}
-              {isSuperAdmin && <TabsTrigger value="monitor">Monitor</TabsTrigger>}
-              <TabsTrigger value="usuarios">Usuários</TabsTrigger>
-            </TabsList>
+            <div className="overflow-x-auto -mx-1 px-1 pb-1">
+              <TabsList className={`inline-flex w-auto min-w-full sm:grid sm:w-full ${isSuperAdmin ? 'sm:grid-cols-9' : 'sm:grid-cols-7'}`}>
+                <TabsTrigger value="vendedores" className="whitespace-nowrap">Vendedores</TabsTrigger>
+                <TabsTrigger value="vendas" className="whitespace-nowrap">Vendas</TabsTrigger>
+                <TabsTrigger value="produtos" className="whitespace-nowrap">Produtos</TabsTrigger>
+                <TabsTrigger value="pagamentos" className="whitespace-nowrap">Pagamentos</TabsTrigger>
+                <TabsTrigger value="relatorios" className="whitespace-nowrap">Relatórios</TabsTrigger>
+                <TabsTrigger value="metas" className="whitespace-nowrap">Metas</TabsTrigger>
+                {isSuperAdmin && <TabsTrigger value="empresas" className="whitespace-nowrap">Empresas</TabsTrigger>}
+                {isSuperAdmin && <TabsTrigger value="monitor" className="whitespace-nowrap">Monitor</TabsTrigger>}
+                <TabsTrigger value="usuarios" className="whitespace-nowrap">Usuários</TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="vendedores" className="mt-6">
               <AdminVendedores />

@@ -14,6 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
+        heading: ['var(--font-heading)'],
         serif: ['"Playfair Display"', 'Georgia', 'serif'],
       },
       colors: {

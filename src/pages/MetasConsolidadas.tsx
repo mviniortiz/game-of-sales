@@ -64,10 +64,10 @@ const MetasConsolidadas = () => {
 
   if (!metaAtual && !isAdmin) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="container mx-auto px-4 py-4 sm:p-6">
         <div className="text-center py-12">
           <Target className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-foreground mb-2">
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-2">
             Nenhuma Meta Definida
           </h2>
           <p className="text-muted-foreground">
@@ -79,10 +79,10 @@ const MetasConsolidadas = () => {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto px-4 py-4 sm:p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
             Metas Consolidadas
           </h1>
           <p className="text-muted-foreground">

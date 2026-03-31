@@ -314,7 +314,7 @@ const IntegracaoIllustration = () => (
 const CASES = [
     {
         icon: BarChart3,
-        iconColor: "text-emerald-400",
+        iconColor: "text-emerald-600",
         tag: "Gestor Comercial",
         title: "Visibilidade total sem cobrar ninguém",
         description:
@@ -325,7 +325,7 @@ const CASES = [
     },
     {
         icon: Trophy,
-        iconColor: "text-amber-400",
+        iconColor: "text-amber-600",
         tag: "Vendedor",
         title: "Competição que motiva sem pressão",
         description:
@@ -336,7 +336,7 @@ const CASES = [
     },
     {
         icon: Link2,
-        iconColor: "text-emerald-400",
+        iconColor: "text-emerald-600",
         tag: "Dono de Infoproduto",
         title: "Vendas automáticas, zero trabalho manual",
         description:
@@ -352,7 +352,7 @@ export const UseCasesSection = () => {
     const [active, setActive] = useState(0);
 
     return (
-        <section className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-slate-900 to-slate-950 relative overflow-hidden">
+        <section className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-gray-50 to-white relative overflow-hidden">
             {/* Background glow */}
             <div
                 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] rounded-full pointer-events-none"
@@ -369,7 +369,7 @@ export const UseCasesSection = () => {
                     transition={{ duration: 0.5 }}
                 >
                     <span
-                        className="inline-flex items-center gap-1.5 text-xs text-emerald-400 border border-emerald-500/25 bg-emerald-500/8 rounded-full px-4 py-1.5 mb-5"
+                        className="inline-flex items-center gap-1.5 text-xs text-emerald-600 border border-emerald-200 bg-emerald-50 rounded-full px-4 py-1.5 mb-5"
                         style={{ letterSpacing: "var(--ls-widest)", fontWeight: "var(--fw-semibold)" }}
                     >
                         <Zap className="h-3 w-3" />
@@ -377,11 +377,11 @@ export const UseCasesSection = () => {
                     </span>
 
                     <h2
-                        className="text-white mb-4"
-                        style={{ fontWeight: "var(--fw-extrabold)", fontSize: "clamp(1.75rem, 4vw, 2.5rem)", lineHeight: "var(--lh-tight)", letterSpacing: "var(--ls-snug)" }}
+                        className="font-heading text-gray-900 mb-4 tracking-tight"
+                        style={{ fontWeight: "var(--fw-extrabold)", fontSize: "clamp(1.75rem, 4vw, 2.5rem)", lineHeight: "var(--lh-tight)" }}
                     >
                         Funciona para o{" "}
-                        <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
+                        <span className="bg-gradient-to-r from-emerald-600 to-emerald-500 bg-clip-text text-transparent">
                             seu time
                         </span>
                     </h2>
@@ -394,7 +394,7 @@ export const UseCasesSection = () => {
                 {/* Tab selector */}
                 <div className="mb-10 -mx-4 px-4 sm:mx-0 sm:px-0">
                     <div className="flex justify-start sm:justify-center overflow-x-auto scrollbar-none pb-1">
-                        <div className="inline-flex gap-1 p-1 rounded-2xl bg-slate-900/80 border border-white/6 min-w-max">
+                        <div className="inline-flex gap-1 p-1 rounded-2xl bg-white/90 border border-gray-200 min-w-max">
                         {CASES.map((c, i) => {
                             const Icon = c.icon;
                             const isActive = active === i;
@@ -402,13 +402,13 @@ export const UseCasesSection = () => {
                                 <button
                                     key={c.tag}
                                     onClick={() => setActive(i)}
-                                    className={`relative flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm transition-all duration-200 whitespace-nowrap shrink-0 ${isActive ? "text-white" : "text-white/40 hover:text-white/60"}`}
+                                    className={`relative flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm transition-all duration-200 whitespace-nowrap shrink-0 ${isActive ? "text-gray-900" : "text-gray-400 hover:text-gray-500"}`}
                                     style={{ fontWeight: "var(--fw-semibold)" }}
                                 >
                                     {isActive && (
                                         <motion.div
                                             layoutId="tab-bg"
-                                            className="absolute inset-0 rounded-xl bg-slate-800 border border-white/8"
+                                            className="absolute inset-0 rounded-xl bg-white border border-gray-200"
                                             transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
                                         />
                                     )}
@@ -436,7 +436,7 @@ export const UseCasesSection = () => {
                             >
                                 {/* Illustration */}
                                 <div
-                                    className="relative rounded-2xl overflow-hidden border border-white/6 p-4"
+                                    className="relative rounded-2xl overflow-hidden border border-gray-200 p-4"
                                     style={{ background: "#0D1526", boxShadow: "0 20px 60px -20px rgba(0,0,0,0.6), 0 0 0 1px rgba(16,185,129,0.06)" }}
                                 >
                                     <c.Illustration />
@@ -446,8 +446,8 @@ export const UseCasesSection = () => {
                                 <div className="flex flex-col gap-4">
                                     <span
                                         className={`inline-flex items-center gap-1.5 self-start text-xs border rounded-full px-3 py-1 ${c.accent === "amber"
-                                            ? "text-amber-400 border-amber-500/25 bg-amber-500/8"
-                                            : "text-emerald-400 border-emerald-500/25 bg-emerald-500/8"
+                                            ? "text-amber-600 border-amber-200 bg-amber-50"
+                                            : "text-emerald-600 border-emerald-200 bg-emerald-50"
                                             }`}
                                         style={{ fontWeight: "var(--fw-semibold)", letterSpacing: "var(--ls-wide)" }}
                                     >
@@ -456,7 +456,7 @@ export const UseCasesSection = () => {
                                     </span>
 
                                     <h3
-                                        className="text-white"
+                                        className="text-gray-900"
                                         style={{ fontWeight: "var(--fw-bold)", fontSize: "clamp(1.25rem, 2.5vw, 1.75rem)", lineHeight: "var(--lh-snug)", letterSpacing: "var(--ls-snug)" }}
                                     >
                                         {c.title}
@@ -470,9 +470,9 @@ export const UseCasesSection = () => {
                                         {c.bullets.map((b) => (
                                             <li key={b} className="flex items-center gap-3">
                                                 <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${c.accent === "amber" ? "bg-amber-500/10" : "bg-emerald-500/10"}`}>
-                                                    <Check className={`h-3 w-3 ${c.accent === "amber" ? "text-amber-400" : "text-emerald-400"}`} strokeWidth={3} />
+                                                    <Check className={`h-3 w-3 ${c.accent === "amber" ? "text-amber-600" : "text-emerald-600"}`} strokeWidth={3} />
                                                 </div>
-                                                <span className="text-white/70 text-sm" style={{ fontWeight: "var(--fw-medium)" }}>{b}</span>
+                                                <span className="text-gray-600 text-sm" style={{ fontWeight: "var(--fw-medium)" }}>{b}</span>
                                             </li>
                                         ))}
                                     </ul>

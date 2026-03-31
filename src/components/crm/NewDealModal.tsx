@@ -187,7 +187,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) { form.reset(); setDisplayValue(""); onClose(); } }}>
-      <DialogContent className="sm:max-w-[520px] max-h-[92vh] overflow-y-auto bg-card border border-border shadow-2xl p-0">
+      <DialogContent className="max-w-[95vw] sm:max-w-[520px] max-h-[92vh] overflow-y-auto bg-card border border-border shadow-2xl p-0">
 
         {/* ── Header ─────────────────────────────────────── */}
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-border sticky top-0 bg-card z-10">
@@ -231,7 +231,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
             />
 
             {/* ── Value + Stage ─────────────────────────── */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Value */}
               <FormField
                 control={form.control}
@@ -347,7 +347,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
                 )}
               />
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <FormField
                   control={form.control}
                   name="customer_email"
@@ -393,7 +393,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
             </div>
 
             {/* ── Product + Date ────────────────────────── */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="product_id"

@@ -11,7 +11,7 @@ const getStoredTheme = (): Theme => {
   const stored = localStorage.getItem(storageKey) ?? legacyStorageKeys.map(key => localStorage.getItem(key)).find(Boolean);
   if (stored === "light") return "light";
   if (stored === "dark") return "dark";
-  return "dark"; // Default to dark mode for Sales Command Center experience
+  return "light"; // Default to light mode
 };
 
 export const ThemeToggle = () => {

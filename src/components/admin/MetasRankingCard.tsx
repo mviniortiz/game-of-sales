@@ -129,7 +129,7 @@ export const MetasRankingCard = ({
           </div>
         </div>
         <Select value={statusFiltro} onValueChange={onStatusChange}>
-          <SelectTrigger className="w-[160px] bg-card border-border text-foreground">
+          <SelectTrigger className="w-full sm:w-[160px] bg-card border-border text-foreground">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent className="bg-card border border-border shadow-sm">

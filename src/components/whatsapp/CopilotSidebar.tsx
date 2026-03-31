@@ -162,7 +162,7 @@ export const CopilotSidebar = ({
     // ─── Collapsed state ───
     if (!sidebarOpen) {
         return (
-            <div className={`${containerClassName || 'hidden lg:flex'} flex-col items-center py-4 px-1.5 border-l border-white/[0.04] bg-card/40`}>
+            <div className={`${containerClassName || 'hidden md:flex'} flex-col items-center py-4 px-1.5 border-l border-white/[0.04] bg-card/40`}>
                 <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger asChild>
@@ -180,7 +180,7 @@ export const CopilotSidebar = ({
     // ─── Empty / Group state ───
     if (!chat || chat.isGroup) {
         return (
-            <div className={`${containerClassName || 'hidden lg:flex'} w-[360px] shrink-0 flex-col border-l border-white/[0.04] bg-card/40 backdrop-blur-md`}>
+            <div className={`${containerClassName || 'hidden md:flex'} w-[360px] shrink-0 flex-col border-l border-white/[0.04] bg-card/40 backdrop-blur-md`}>
                 <div className="flex items-center justify-between px-4 py-3.5 border-b border-white/[0.04]">
                     <div className="flex items-center gap-2.5">
                         <div className="p-1.5 rounded-lg bg-gradient-to-br from-emerald-500/20 to-emerald-600/10">
@@ -208,7 +208,7 @@ export const CopilotSidebar = ({
 
     // ─── Full sidebar ───
     return (
-        <div className={`${containerClassName || 'hidden lg:flex'} w-[360px] shrink-0 flex-col border-l border-white/[0.04] bg-card/40 backdrop-blur-md overflow-hidden`}>
+        <div className={`${containerClassName || 'hidden md:flex'} w-[360px] shrink-0 flex-col border-l border-white/[0.04] bg-card/40 backdrop-blur-md overflow-hidden`}>
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.04] shrink-0">
                 <div className="flex items-center gap-2.5">

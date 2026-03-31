@@ -179,7 +179,7 @@ export const HotmartConfigModal = ({ open, onClose, onSaved }: HotmartConfigModa
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[500px] bg-card border-border">
+            <DialogContent className="max-w-[95vw] sm:max-w-[500px] bg-card border-border">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-3 text-foreground">
                         <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-500/20">

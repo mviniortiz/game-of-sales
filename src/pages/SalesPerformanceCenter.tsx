@@ -84,19 +84,19 @@ const KPICard = ({
 
     const cardContent = (
         <Card className="relative overflow-hidden border border-border bg-card shadow-sm hover:shadow-lg transition-all duration-300 group cursor-default rounded-xl">
-            <CardContent className="relative p-5">
-                <div className="flex items-start justify-between gap-4">
+            <CardContent className="relative p-3 sm:p-5">
+                <div className="flex items-start justify-between gap-2 sm:gap-4">
                     {/* Left: Icon */}
-                    <div className={`relative p-3 rounded-2xl ${iconBg} group-hover:scale-105 transition-all duration-200 ease-out`}>
-                        <Icon className={`h-6 w-6 ${iconColor}`} />
+                    <div className={`relative p-2 sm:p-3 rounded-xl sm:rounded-2xl ${iconBg} group-hover:scale-105 transition-all duration-200 ease-out`}>
+                        <Icon className={`h-4 w-4 sm:h-6 sm:w-6 ${iconColor}`} />
                     </div>
 
                     {/* Right: Content */}
-                    <div className="flex-1 text-right">
-                        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.1em] mb-2">
+                    <div className="flex-1 text-right min-w-0">
+                        <p className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.1em] mb-1 sm:mb-2 truncate">
                             {title}
                         </p>
-                        <p className="text-3xl font-bold text-foreground tabular-nums tracking-tight leading-none">
+                        <p className="text-xl sm:text-3xl font-bold text-foreground tabular-nums tracking-tight leading-none truncate">
                             {value}
                         </p>
 
@@ -283,9 +283,9 @@ const SalesPerformanceCenter = () => {
             <div className="relative">
                 <div className="absolute -top-4 -left-4 w-64 h-64 bg-emerald-500/5 blur-3xl pointer-events-none" />
 
-                <div className="relative flex items-center justify-between flex-wrap gap-4">
+                <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-foreground tracking-tight flex items-center gap-3">
+                        <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight flex items-center gap-3 flex-wrap">
                             Sales Performance Center
                             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 text-xs font-semibold uppercase tracking-wider ring-1 ring-amber-500/20">
                                 <Sparkles className="h-3 w-3" />
@@ -298,7 +298,7 @@ const SalesPerformanceCenter = () => {
                     </div>
 
                     {/* Quick Date Filters */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
                         {[
                             { id: "hoje", label: "Hoje" },
                             { id: "semana", label: "Esta Semana" },
@@ -366,9 +366,9 @@ const SalesPerformanceCenter = () => {
             </div>
 
             {/* Row 1: KPIs + Main Chart */}
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6">
                 {/* Left: 4 KPI Cards stacked 2x2 */}
-                <div className="lg:col-span-2 grid grid-cols-2 gap-4">
+                <div className="lg:col-span-2 grid grid-cols-2 gap-3 sm:gap-4">
                     <KPICard
                         title="Pipeline Ativo"
                         value={formatCurrencyCompact(stats?.pipelineValue || 0)}

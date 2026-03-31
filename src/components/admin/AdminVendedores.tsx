@@ -694,7 +694,8 @@ export const AdminVendedores = () => {
 
       {/* Table */}
       <div className="rounded-xl border border-border overflow-hidden bg-card">
-        <Table>
+        <div className="overflow-x-auto">
+        <Table className="min-w-[800px]">
           <TableHeader>
             <TableRow className="bg-muted/50 hover:bg-muted/50">
               <TableHead className="text-muted-foreground font-semibold">Vendedor</TableHead>
@@ -886,6 +887,7 @@ export const AdminVendedores = () => {
             })}
           </TableBody>
         </Table>
+        </div>
 
         {filteredVendedores?.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
@@ -967,7 +969,7 @@ export const AdminVendedores = () => {
 
       {/* Transfer Company Modal (Super-Admin Only) */}
       <Dialog open={showTransferModal} onOpenChange={setShowTransferModal}>
-        <DialogContent className="bg-card border-border sm:max-w-md">
+        <DialogContent className="bg-card border-border max-w-[95vw] sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-foreground flex items-center gap-2">
               <Building2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
@@ -1027,7 +1029,7 @@ export const AdminVendedores = () => {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <DialogContent className="bg-card border-border sm:max-w-md">
+        <DialogContent className="bg-card border-border max-w-[95vw] sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-foreground flex items-center gap-2">
               <Trash2 className="h-5 w-5 text-rose-500" />
@@ -1065,7 +1067,7 @@ export const AdminVendedores = () => {
 
       {/* ─── Seller Stats Modal ─── */}
       <Dialog open={!!statsVendedor} onOpenChange={(open) => { if (!open) setStatsVendedor(null); }}>
-        <DialogContent className="sm:max-w-[600px] bg-card border-border p-0 overflow-hidden">
+        <DialogContent className="max-w-[95vw] sm:max-w-[600px] bg-card border-border p-0 overflow-hidden">
           <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
             <div className="flex items-center gap-3">
               <Avatar className="h-12 w-12 ring-2 ring-border">

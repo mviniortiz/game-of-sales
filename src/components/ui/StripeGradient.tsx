@@ -568,11 +568,12 @@ const StripeGradient = ({ className = '' }: StripeGradientProps) => {
         const canvas = canvasRef.current;
         if (!canvas) return;
 
-        // Emerald brand color scheme — white base with emerald waves
+        // Emerald + teal — 3 wave layers (balanced quality vs performance)
         const colors = [
-            normalizeColor(0xffffff),  // Pure white base
-            normalizeColor(0x6ee7b7),  // emerald-300 (light wave)
-            normalizeColor(0x34d399),  // emerald-400 (medium wave)
+            normalizeColor(0xf0fdf9),  // emerald-50 base
+            normalizeColor(0x6ee7b7),  // emerald-300
+            normalizeColor(0x34d399),  // emerald-400
+            normalizeColor(0x5eead4),  // teal-300 accent
         ];
 
         let minigl: MiniGl;
@@ -585,8 +586,8 @@ const StripeGradient = ({ className = '' }: StripeGradientProps) => {
 
             const uniforms = {
                 u_time: new minigl.Uniform({ value: 0 }),
-                u_shadow_power: new minigl.Uniform({ value: 6 }),
-                u_darken_top: new minigl.Uniform({ value: 1 }),
+                u_shadow_power: new minigl.Uniform({ value: 5 }),
+                u_darken_top: new minigl.Uniform({ value: 0 }),
                 u_active_colors: new minigl.Uniform({ value: [1, 1, 1, 1], type: "vec4" }),
                 u_global: new minigl.Uniform({
                     value: {
@@ -601,7 +602,7 @@ const StripeGradient = ({ className = '' }: StripeGradientProps) => {
                         offsetTop: new minigl.Uniform({ value: -0.5 }),
                         offsetBottom: new minigl.Uniform({ value: -0.5 }),
                         noiseFreq: new minigl.Uniform({ value: [3, 4], type: "vec2" }),
-                        noiseAmp: new minigl.Uniform({ value: 320 }),
+                        noiseAmp: new minigl.Uniform({ value: 350 }),
                         noiseSpeed: new minigl.Uniform({ value: 10 }),
                         noiseFlow: new minigl.Uniform({ value: 3 }),
                         noiseSeed: new minigl.Uniform({ value: 5 })
@@ -613,18 +614,24 @@ const StripeGradient = ({ className = '' }: StripeGradientProps) => {
                 u_waveLayers: new minigl.Uniform({ value: [], excludeFrom: "fragment", type: "array" })
             };
 
-            // Add wave layers for additional colors
+            const waveConfigs = [
+                { noiseFreq: [2, 3], noiseSpeed: 11, noiseFlow: 6.5, noiseSeed: 5, noiseFloor: 0.1, noiseCeil: 0.63 },
+                { noiseFreq: [2.5, 3.5], noiseSpeed: 11.3, noiseFlow: 6.8, noiseSeed: 15, noiseFloor: 0.1, noiseCeil: 0.7 },
+                { noiseFreq: [1.8, 4], noiseSpeed: 10, noiseFlow: 7.2, noiseSeed: 30, noiseFloor: 0.08, noiseCeil: 0.6 },
+            ];
+
             for (let i = 1; i < colors.length; i++) {
+                const cfg = waveConfigs[i - 1];
                 uniforms.u_waveLayers.value.push(
                     new minigl.Uniform({
                         value: {
                             color: new minigl.Uniform({ value: colors[i], type: "vec3" }),
-                            noiseFreq: new minigl.Uniform({ value: [2 + i / colors.length, 3 + i / colors.length], type: "vec2" }),
-                            noiseSpeed: new minigl.Uniform({ value: 11 + 0.3 * i }),
-                            noiseFlow: new minigl.Uniform({ value: 6.5 + 0.3 * i }),
-                            noiseSeed: new minigl.Uniform({ value: 5 + 10 * i }),
-                            noiseFloor: new minigl.Uniform({ value: 0.1 }),
-                            noiseCeil: new minigl.Uniform({ value: 0.63 + 0.07 * i })
+                            noiseFreq: new minigl.Uniform({ value: cfg.noiseFreq, type: "vec2" }),
+                            noiseSpeed: new minigl.Uniform({ value: cfg.noiseSpeed }),
+                            noiseFlow: new minigl.Uniform({ value: cfg.noiseFlow }),
+                            noiseSeed: new minigl.Uniform({ value: cfg.noiseSeed }),
+                            noiseFloor: new minigl.Uniform({ value: cfg.noiseFloor }),
+                            noiseCeil: new minigl.Uniform({ value: cfg.noiseCeil })
                         },
                         type: "struct"
                     })
@@ -636,7 +643,6 @@ const StripeGradient = ({ className = '' }: StripeGradientProps) => {
             const geometry = new minigl.PlaneGeometry();
             mesh = new minigl.Mesh(geometry, material);
 
-            // Set size
             const resize = () => {
                 const width = window.innerWidth;
                 const height = 700;
@@ -652,14 +658,21 @@ const StripeGradient = ({ className = '' }: StripeGradientProps) => {
             resize();
             window.addEventListener('resize', resize);
 
-            // Animation loop
+            // Animation loop — capped at 30fps for performance
+            const targetInterval = 1000 / 30;
             const animate = (time: number) => {
                 if (!isPlayingRef.current) {
                     animationRef.current = requestAnimationFrame(animate);
                     return;
                 }
 
-                t += Math.min(time - last, 1000 / 15);
+                const delta = time - last;
+                if (delta < targetInterval) {
+                    animationRef.current = requestAnimationFrame(animate);
+                    return;
+                }
+
+                t += Math.min(delta, 1000 / 15);
                 last = time;
                 mesh.material.uniforms.u_time.value = t;
                 minigl.render();
@@ -667,7 +680,10 @@ const StripeGradient = ({ className = '' }: StripeGradientProps) => {
             };
 
             animationRef.current = requestAnimationFrame(animate);
-            canvas.classList.add('isLoaded');
+            // Fade in after first frame renders
+            requestAnimationFrame(() => {
+                canvas.style.opacity = '1';
+            });
 
             return () => {
                 window.removeEventListener('resize', resize);
@@ -688,10 +704,7 @@ const StripeGradient = ({ className = '' }: StripeGradientProps) => {
         <canvas
             ref={canvasRef}
             className={`absolute inset-0 w-full h-full ${className}`}
-            style={{
-                opacity: 0.85,
-                transition: 'opacity 1s ease-out'
-            }}
+            style={{ opacity: 0, transition: 'opacity 1.5s ease-out' }}
         />
     );
 };

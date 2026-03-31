@@ -76,7 +76,7 @@ export const WhatsappConfigModal = ({ open, onClose }: WhatsappConfigModalProps)
 
     return (
         <Dialog open={open} onOpenChange={handleClose}>
-            <DialogContent className="sm:max-w-[425px] bg-[#121214] border-white/[0.05] p-0 overflow-hidden shadow-2xl">
+            <DialogContent className="max-w-[95vw] sm:max-w-[425px] bg-[#121214] border-white/[0.05] p-0 overflow-hidden shadow-2xl">
                 <DialogHeader className="p-6 pb-2">
                     <DialogTitle className="text-xl font-semibold text-white flex items-center gap-2">
                         <div className="p-1.5 rounded-lg bg-emerald-500/10">

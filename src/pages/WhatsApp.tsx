@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { logger } from "@/utils/logger";
-import { MessageCircle, Search, Phone, Send, QrCode, Target, CheckCircle2, Sparkles, Brain, TrendingUp, AlertCircle, RefreshCcw, Loader2, Settings2, Users, ChevronDown, Flame, Snowflake, ThermometerSun, Zap, Copy, ArrowRight, User, StickyNote, PanelRightOpen, PanelRightClose, Plus, ChevronRight, Bot, Paperclip, Mic, Reply, DollarSign, FileText, ClipboardList, X, Clock, History, Play, Pause, Image, Film, Download } from "lucide-react";
+import { MessageCircle, Search, Phone, Send, QrCode, Target, CheckCircle2, Sparkles, Brain, TrendingUp, AlertCircle, RefreshCcw, Loader2, Settings2, Users, ChevronDown, Flame, Snowflake, ThermometerSun, Zap, Copy, ArrowRight, ArrowLeft, User, StickyNote, PanelRightOpen, PanelRightClose, Plus, ChevronRight, Bot, Paperclip, Mic, Reply, DollarSign, FileText, ClipboardList, X, Clock, History, Play, Pause, Image, Film, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -16,6 +16,7 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useEvolutionIntegration } from "@/hooks/useEvolutionAPI";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { TemplatePicker } from "@/components/whatsapp/TemplatePicker";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -430,8 +431,8 @@ function MediaMessageBubble({
     // Loading state
     if (loading) {
         return (
-            <div className={`flex flex-col gap-1.5 ${isSticker ? 'w-32' : 'w-52'}`}>
-                <div className={`${isSticker ? 'h-32 w-32' : 'h-40 w-52'} rounded-lg bg-muted/20 flex items-center justify-center`}>
+            <div className={`flex flex-col gap-1.5 ${isSticker ? 'w-32' : 'w-44 sm:w-52'}`}>
+                <div className={`${isSticker ? 'h-32 w-32' : 'h-36 w-44 sm:h-40 sm:w-52'} rounded-lg bg-muted/20 flex items-center justify-center`}>
                     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground/40" />
                 </div>
                 {caption && <p className={`text-[13px] leading-snug ${isMe ? 'text-white' : 'text-foreground/85'}`}>{caption}</p>}
@@ -442,8 +443,8 @@ function MediaMessageBubble({
     // Error state
     if (error || !mediaSrc) {
         return (
-            <div className={`flex flex-col gap-1.5 ${isSticker ? 'w-32' : 'w-52'}`}>
-                <div className={`${isSticker ? 'h-32 w-32' : 'h-40 w-52'} rounded-lg bg-muted/10 border border-white/[0.06] flex flex-col items-center justify-center gap-1.5`}>
+            <div className={`flex flex-col gap-1.5 ${isSticker ? 'w-32' : 'w-44 sm:w-52'}`}>
+                <div className={`${isSticker ? 'h-32 w-32' : 'h-36 w-44 sm:h-40 sm:w-52'} rounded-lg bg-muted/10 border border-white/[0.06] flex flex-col items-center justify-center gap-1.5`}>
                     {isVideo ? <Film className="h-6 w-6 text-muted-foreground/30" /> : <Image className="h-6 w-6 text-muted-foreground/30" />}
                     <span className="text-[10px] text-muted-foreground/40">{isVideo ? "Vídeo" : "Imagem"} indisponível</span>
                 </div>
@@ -454,9 +455,9 @@ function MediaMessageBubble({
 
     return (
         <>
-            <div className={`flex flex-col gap-1.5 ${isSticker ? '' : 'w-52'}`}>
+            <div className={`flex flex-col gap-1.5 ${isSticker ? '' : 'w-44 sm:w-52'}`}>
                 <div
-                    className={`relative cursor-pointer group overflow-hidden ${isSticker ? 'w-32 h-32' : 'w-52 h-40 rounded-lg'}`}
+                    className={`relative cursor-pointer group overflow-hidden ${isSticker ? 'w-32 h-32' : 'w-44 h-36 sm:w-52 sm:h-40 rounded-lg'}`}
                     onClick={() => setLightboxOpen(true)}
                 >
                     {isVideo ? (
@@ -1020,7 +1021,7 @@ const CopilotSidebar = ({
 
     if (!sidebarOpen) {
         return (
-            <div className={`${containerClassName || 'hidden lg:flex'} flex-col items-center py-3 px-1 border-l border-white/5 bg-card/60`}>
+            <div className={`${containerClassName || 'hidden md:flex'} flex-col items-center py-3 px-1 border-l border-white/5 bg-card/60`}>
                 <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger asChild>
@@ -1037,7 +1038,7 @@ const CopilotSidebar = ({
 
     if (!chat || chat.isGroup) {
         return (
-            <div className={`${containerClassName || 'hidden lg:flex'} w-[350px] shrink-0 flex-col border-l border-white/5 bg-card/60 backdrop-blur-md`}>
+            <div className={`${containerClassName || 'hidden md:flex'} w-[350px] shrink-0 flex-col border-l border-white/5 bg-card/60 backdrop-blur-md`}>
                 <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
                     <div className="flex items-center gap-2">
                         <Bot className="w-4 h-4 text-primary" />
@@ -1064,7 +1065,7 @@ const CopilotSidebar = ({
     const canMoveNext = deal && currentStageIdx >= 0 && currentStageIdx < PIPELINE_STAGES.length - 2;
 
     return (
-        <div className={`${containerClassName || 'hidden lg:flex'} w-[350px] shrink-0 flex-col border-l border-white/5 bg-card/60 backdrop-blur-md overflow-hidden`}>
+        <div className={`${containerClassName || 'hidden md:flex'} w-[350px] shrink-0 flex-col border-l border-white/5 bg-card/60 backdrop-blur-md overflow-hidden`}>
             {/* ─── Header ─── */}
             <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/5 shrink-0">
                 <div className="flex items-center gap-2">
@@ -1589,6 +1590,8 @@ const WhatsApp = () => {
 
     const { aiThinking, aiSuggestion, getAiAnalysis, setAiSuggestion, remaining, rateLimited } = useCopilot();
 
+    const isMobile = useIsMobile();
+
     const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
     const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
@@ -1833,11 +1836,11 @@ const WhatsApp = () => {
     const groupCount = useMemo(() => chats.filter(c => c.isGroup).length, [chats]);
 
     return (
-        <div className="flex flex-col lg:flex-row h-[calc(100vh-theme(spacing.16))] w-full bg-background overflow-hidden relative font-sans">
+        <div className="flex flex-col md:flex-row h-[calc(100vh-theme(spacing.16))] w-full bg-background overflow-hidden relative font-sans">
             {/* ─── Left Panel (Chat List) ─── */}
-            <div className={`w-full lg:w-[30%] lg:min-w-[320px] lg:max-w-[420px] h-[45vh] lg:h-full border-r-0 lg:border-r border-b lg:border-b-0 border-white/5 flex flex-col bg-card/60 backdrop-blur-md z-20 shadow-xl transition-all duration-300 ${!connected ? 'opacity-90 grayscale-[20%]' : ''}`}>
+            <div className={`w-full md:w-[30%] md:min-w-[320px] md:max-w-[420px] h-full md:h-full border-r-0 md:border-r border-b md:border-b-0 border-white/5 flex-col bg-card/60 backdrop-blur-md z-20 shadow-xl transition-all duration-300 ${!connected ? 'opacity-90 grayscale-[20%]' : ''} ${selectedChatId && isMobile ? 'hidden' : 'flex'}`}>
                 {/* Header */}
-                <div className="h-[72px] flex items-center justify-between px-4 lg:px-5 shrink-0 border-b border-white/5">
+                <div className="h-[72px] flex items-center justify-between px-4 md:px-5 shrink-0 border-b border-white/5">
                     <div className="flex items-center gap-3">
                         <Avatar className="h-10 w-10 ring-2 ring-primary/20 shadow-sm">
                             <AvatarFallback className="bg-primary/10 text-primary">
@@ -2084,7 +2087,7 @@ const WhatsApp = () => {
             </div>
 
             {/* ─── Main Chat Area ─── */}
-            <div className="flex-1 flex flex-col relative w-full h-[62vh] lg:h-full bg-background z-10 transition-all duration-500">
+            <div className={`flex-1 flex-col relative w-full h-full md:h-full bg-background z-10 transition-all duration-500 ${!selectedChatId && isMobile ? 'hidden' : 'flex'}`}>
                 <div className="absolute inset-0 z-0 opacity-[0.015] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at center, white 1px, transparent 1px)', backgroundSize: '28px 28px' }}></div>
 
                 {/* Connection success overlay */}
@@ -2103,13 +2106,13 @@ const WhatsApp = () => {
 
                 {!connected ? (
                     /* ─── QR Code / Connect ─── */
-                    <div className="flex-1 flex flex-col items-center justify-center p-8 z-10 relative">
+                    <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 z-10 relative">
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-500/5 rounded-full blur-[120px] pointer-events-none"></div>
 
                         {qrCodeBase64 ? (
                             <div className="flex flex-col items-center animate-in fade-in zoom-in-95 duration-500 relative z-10">
-                                <div className="bg-white p-6 rounded-3xl shadow-2xl shadow-emerald-500/10 mb-8 relative border-4 border-emerald-500/20">
-                                    <img src={qrCodeBase64.startsWith('data:image') ? qrCodeBase64 : `data:image/png;base64,${qrCodeBase64}`} alt="QR Code WhatsApp" className="w-[260px] h-[260px] object-contain" />
+                                <div className="bg-white p-4 sm:p-6 rounded-3xl shadow-2xl shadow-emerald-500/10 mb-6 sm:mb-8 relative border-4 border-emerald-500/20">
+                                    <img src={qrCodeBase64.startsWith('data:image') ? qrCodeBase64 : `data:image/png;base64,${qrCodeBase64}`} alt="QR Code WhatsApp" className="w-[220px] h-[220px] sm:w-[260px] sm:h-[260px] object-contain" />
                                 </div>
                                 <div className="flex items-center gap-3 mb-3">
                                     <div className="relative flex h-3 w-3">
@@ -2127,16 +2130,16 @@ const WhatsApp = () => {
                                 <div className="h-24 w-24 rounded-[2rem] bg-emerald-500/10 flex items-center justify-center mb-8 border border-emerald-500/20 shadow-[0_0_60px_rgba(16,185,129,0.15)] relative overflow-hidden group">
                                     <WhatsAppIcon className="h-12 w-12 text-emerald-500 relative z-10" />
                                 </div>
-                                <h3 className="text-2xl font-extrabold mb-3 tracking-tight">Conectar WhatsApp</h3>
-                                <p className="text-[15px] text-muted-foreground mb-8 leading-relaxed max-w-[380px] text-center font-medium">
+                                <h3 className="text-xl sm:text-2xl font-extrabold mb-3 tracking-tight">Conectar WhatsApp</h3>
+                                <p className="text-[13px] sm:text-[15px] text-muted-foreground mb-6 sm:mb-8 leading-relaxed max-w-[380px] text-center font-medium px-4">
                                     Gere o QR Code para conectar seu WhatsApp ao Vyzon.
                                 </p>
                                 {error && (
-                                    <p className="text-red-400 text-[12px] font-bold mb-6 bg-red-400/10 py-2.5 px-5 rounded-xl flex items-center gap-2 max-w-[360px] text-center border border-red-500/20">
+                                    <p className="text-red-400 text-[12px] font-bold mb-6 bg-red-400/10 py-2.5 px-4 sm:px-5 rounded-xl flex items-center gap-2 max-w-[360px] text-center border border-red-500/20">
                                         <AlertCircle className="w-4 h-4 shrink-0" /> {error}
                                     </p>
                                 )}
-                                <Button onClick={connect} disabled={connecting} className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold shadow-xl shadow-emerald-500/25 h-14 px-10 rounded-2xl text-[16px] transition-all hover:-translate-y-0.5">
+                                <Button onClick={connect} disabled={connecting} className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold shadow-xl shadow-emerald-500/25 h-12 sm:h-14 px-6 sm:px-10 rounded-2xl text-[14px] sm:text-[16px] transition-all hover:-translate-y-0.5">
                                     {connecting ? (<><Loader2 className="mr-2 h-5 w-5 animate-spin" />Gerando QR Code...</>) : (<><QrCode className="mr-2 h-5 w-5" />Ativar WhatsApp Hub</>)}
                                 </Button>
                             </div>
@@ -2144,23 +2147,30 @@ const WhatsApp = () => {
                     </div>
                 ) : !selectedChatData ? (
                     /* ─── No chat selected ─── */
-                    <div className="flex-1 flex flex-col items-center justify-center p-8 z-10 relative">
-                        <div className="h-28 w-28 rounded-[2rem] bg-card border border-white/10 flex items-center justify-center mb-8 shadow-2xl relative overflow-hidden">
+                    <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 z-10 relative">
+                        <div className="h-20 w-20 sm:h-28 sm:w-28 rounded-[1.5rem] sm:rounded-[2rem] bg-card border border-white/10 flex items-center justify-center mb-6 sm:mb-8 shadow-2xl relative overflow-hidden">
                             <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-emerald-500/20 opacity-60"></div>
-                            <WhatsAppIcon className="h-14 w-14 text-emerald-500 relative z-10 opacity-80" />
-                            <Sparkles className="h-6 w-6 text-primary absolute top-4 right-4 animate-pulse z-10" />
+                            <WhatsAppIcon className="h-10 w-10 sm:h-14 sm:w-14 text-emerald-500 relative z-10 opacity-80" />
+                            <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-primary absolute top-3 right-3 sm:top-4 sm:right-4 animate-pulse z-10" />
                         </div>
-                        <h1 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-br from-white via-white to-white/40 mb-3 text-center tracking-tight">Inbox AI</h1>
-                        <p className="text-muted-foreground/80 text-center max-w-sm text-[14px] leading-relaxed font-medium">Selecione uma conversa e use a Eva para analisar leads sob demanda.</p>
+                        <h1 className="text-2xl sm:text-3xl font-black bg-clip-text text-transparent bg-gradient-to-br from-white via-white to-white/40 mb-3 text-center tracking-tight">Inbox AI</h1>
+                        <p className="text-muted-foreground/80 text-center max-w-sm text-[13px] sm:text-[14px] leading-relaxed font-medium px-4">Selecione uma conversa e use a Eva para analisar leads sob demanda.</p>
                     </div>
                 ) : (
                     /* ─── Active Chat ─── */
                     <>
                         {/* Chat Header - Enhanced */}
                         <div className="bg-card/90 backdrop-blur-xl border-b border-white/5 flex flex-col z-10 shrink-0 shadow-sm">
-                            <div className="min-h-[64px] flex items-center px-4 sm:px-5 justify-between gap-3 py-2">
-                                <div className="flex items-center gap-3 min-w-0">
-                                    <Avatar className="h-10 w-10 ring-2 ring-white/10">
+                            <div className="min-h-[64px] flex items-center px-2 sm:px-4 md:px-5 justify-between gap-2 sm:gap-3 py-2">
+                                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                                    {/* Mobile back button */}
+                                    <button
+                                        onClick={() => setSelectedChatId(null)}
+                                        className="md:hidden h-9 w-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-white/[0.06] transition-colors shrink-0"
+                                    >
+                                        <ArrowLeft className="h-5 w-5" />
+                                    </button>
+                                    <Avatar className="h-9 w-9 sm:h-10 sm:w-10 ring-2 ring-white/10">
                                         {selectedChatData.profilePicUrl && <AvatarImage src={selectedChatData.profilePicUrl} />}
                                         <AvatarFallback className={`font-bold ${selectedChatData.isGroup ? 'bg-emerald-500/20 text-emerald-400' : 'bg-primary/20 text-primary'}`}>
                                             {selectedChatData.isGroup ? <Users className="h-5 w-5" /> : selectedChatData.name.substring(0, 2).toUpperCase()}
@@ -2169,10 +2179,10 @@ const WhatsApp = () => {
                                     <div className="flex flex-col min-w-0">
                                         <div className="flex items-center gap-2 min-w-0">
                                             {selectedChatData.isGroup && <Users className="h-3.5 w-3.5 text-emerald-400 shrink-0" />}
-                                            <h2 className="text-[15px] font-bold text-foreground truncate">{selectedChatData.name}</h2>
+                                            <h2 className="text-[13px] sm:text-[15px] font-bold text-foreground truncate max-w-[120px] sm:max-w-none">{selectedChatData.name}</h2>
                                             {/* Interactive stage badge in header */}
                                             {headerDeal && (
-                                                <div className="flex items-center gap-1 shrink-0">
+                                                <div className="hidden sm:flex items-center gap-1 shrink-0">
                                                     <Select
                                                         value={headerDeal.stage}
                                                         onValueChange={handleHeaderStageChange}
@@ -2223,7 +2233,7 @@ const WhatsApp = () => {
                                 </div>
 
                                 {/* Mobile Header Actions */}
-                                <div className="flex lg:hidden items-center gap-1.5 shrink-0">
+                                <div className="flex md:hidden items-center gap-1.5 shrink-0">
                                     {!selectedChatData.isGroup && !headerDeal && (
                                         <Button variant="outline" size="icon" className="h-8 w-8 border-primary/20 text-primary hover:bg-primary/10"
                                             onClick={() => {
@@ -2246,7 +2256,7 @@ const WhatsApp = () => {
                                 </div>
 
                                 {/* Desktop Header Actions */}
-                                <div className="hidden lg:flex items-center gap-2 shrink-0">
+                                <div className="hidden md:flex items-center gap-2 shrink-0">
                                     {/* Quick Action Buttons */}
                                     {!selectedChatData.isGroup && !headerDeal && (
                                         <TooltipProvider>
@@ -2621,7 +2631,7 @@ const WhatsApp = () => {
 
             {/* ─── Create Deal Dialog ─── */}
             <Dialog open={showCreateDealDialog} onOpenChange={setShowCreateDealDialog}>
-                <DialogContent className="sm:max-w-md">
+                <DialogContent className="max-w-[95vw] sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-[15px]">
                             <div className="p-1.5 rounded-lg bg-primary/10">
@@ -2685,7 +2695,7 @@ const WhatsApp = () => {
 
             {/* Config Modal */}
             <Dialog open={isConfigModalOpen} onOpenChange={setIsConfigModalOpen}>
-                <DialogContent className="sm:max-w-lg">
+                <DialogContent className="max-w-[95vw] sm:max-w-lg">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <WhatsAppIcon className="h-5 w-5 text-emerald-500" />

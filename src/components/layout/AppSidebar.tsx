@@ -7,8 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
 import { usePlan } from "@/hooks/usePlan";
 import { supabase } from "@/integrations/supabase/client";
-import brandLogo from "@/assets/logo-full.png";
-import brandLogoIcon from "@/assets/logo-icon.png";
+import { ThemeLogo } from "@/components/ui/ThemeLogo";
 import { AnimatedIcon } from "@/components/ui/animated-icon";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { NovaVendaModal } from "@/components/vendas/NovaVendaModal";
@@ -132,14 +131,9 @@ export function AppSidebar() {
         <SidebarContent className="gap-0">
           {/* Logo Section */}
           <div className="p-4 border-b border-sidebar-border">
-            {!collapsed && (
-              <div className="flex items-center justify-center">
-                <img src={brandLogo} alt="Vyzon" className="h-20 w-auto object-contain" />
-              </div>
-            )}
-            {collapsed && (
-              <img src={brandLogoIcon} alt="Vyzon" className="w-12 h-12 object-contain mx-auto" />
-            )}
+            <div className="flex items-center justify-center">
+              <ThemeLogo className={collapsed ? "h-10 w-auto object-contain" : "h-16 w-auto object-contain"} />
+            </div>
           </div>
 
           {/* CTA Button - Registrar Venda */}

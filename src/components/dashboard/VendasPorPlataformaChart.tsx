@@ -63,8 +63,9 @@ export const VendasPorPlataformaChart = ({ data }: VendasPorPlataformaChartProps
         <p className="text-xs text-muted-foreground">Distribuição por canal</p>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="flex items-center">
-          <ResponsiveContainer width="60%" height={220}>
+        <div className="flex flex-col sm:flex-row items-center">
+          <div className="w-full sm:w-[60%]">
+          <ResponsiveContainer width="100%" height={220}>
             <PieChart>
               <Pie
                 data={chartData}
@@ -100,6 +101,7 @@ export const VendasPorPlataformaChart = ({ data }: VendasPorPlataformaChartProps
               />
             </PieChart>
           </ResponsiveContainer>
+          </div>
 
           {/* Legend */}
           <div className="flex-1 space-y-2">

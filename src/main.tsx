@@ -15,8 +15,8 @@ if (typeof window !== "undefined") {
     localStorage.getItem(THEME_STORAGE_KEY) ??
     LEGACY_THEME_KEYS.map((key) => localStorage.getItem(key)).find(Boolean);
 
-  const isDark = storedTheme === "dark";
-  if (isDark) {
+  // Default to light; only apply dark if explicitly stored
+  if (storedTheme === "dark") {
     document.documentElement.classList.add("dark");
   } else {
     document.documentElement.classList.remove("dark");

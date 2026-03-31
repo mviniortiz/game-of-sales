@@ -96,7 +96,7 @@ export function CustomFieldsManager({ companyId, open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="max-w-[95vw] sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Campos Personalizados</DialogTitle>
         </DialogHeader>
@@ -147,7 +147,7 @@ export function CustomFieldsManager({ companyId, open, onOpenChange }: Props) {
               Novo campo
             </Label>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">Nome</Label>
                 <Input

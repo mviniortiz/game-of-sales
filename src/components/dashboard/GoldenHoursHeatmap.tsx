@@ -140,9 +140,9 @@ export const GoldenHoursHeatmap = ({ dateRange }: GoldenHoursHeatmapProps) => {
             <div className="absolute bottom-0 right-0 w-32 h-32 bg-gradient-to-tl from-amber-500/5 to-transparent blur-2xl pointer-events-none" />
 
             <CardHeader className="pb-2 relative">
-                <div className="flex items-start justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                     <div>
-                        <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2.5">
+                        <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2.5 flex-wrap">
                             <div className="p-2 rounded-xl bg-gradient-to-br from-orange-500/20 to-amber-500/10 ring-1 ring-orange-500/20">
                                 <Flame className="h-4 w-4 text-orange-400" />
                             </div>
@@ -159,7 +159,7 @@ export const GoldenHoursHeatmap = ({ dateRange }: GoldenHoursHeatmapProps) => {
 
                     {/* Quick Stats */}
                     {bestTime && (
-                        <div className="flex items-center gap-3 bg-muted/50 px-3 py-2 rounded-xl ring-1 ring-border/50">
+                        <div className="flex items-center gap-3 bg-muted/50 px-3 py-2 rounded-xl ring-1 ring-border/50 self-end sm:self-auto">
                             <div className="text-right">
                                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Melhor Horário</p>
                                 <p className="text-sm font-bold text-orange-400">{bestTime.day} {bestTime.hour}h</p>
@@ -184,11 +184,11 @@ export const GoldenHoursHeatmap = ({ dateRange }: GoldenHoursHeatmapProps) => {
                 ) : (
                     <div className="overflow-x-auto">
                         {/* Hours header */}
-                        <div className="flex items-center gap-1.5 mb-3 ml-12">
+                        <div className="flex items-center gap-1 sm:gap-1.5 mb-3 ml-10 sm:ml-12">
                             {HOURS.map((hour) => (
                                 <div
                                     key={hour}
-                                    className="w-9 text-center text-[10px] text-muted-foreground font-medium"
+                                    className="w-7 sm:w-9 text-center text-[9px] sm:text-[10px] text-muted-foreground font-medium"
                                 >
                                     {hour}h
                                 </div>
@@ -198,8 +198,8 @@ export const GoldenHoursHeatmap = ({ dateRange }: GoldenHoursHeatmapProps) => {
                         {/* Grid */}
                         <div className="space-y-1.5">
                             {DAYS.map((day, dayIndex) => (
-                                <div key={day} className="flex items-center gap-1.5 group">
-                                    <div className="w-10 text-[11px] text-muted-foreground font-medium text-right pr-2 group-hover:text-foreground transition-colors">
+                                <div key={day} className="flex items-center gap-1 sm:gap-1.5 group">
+                                    <div className="w-8 sm:w-10 text-[10px] sm:text-[11px] text-muted-foreground font-medium text-right pr-1 sm:pr-2 group-hover:text-foreground transition-colors">
                                         {day}
                                     </div>
                                     {HOURS.map((_, hourIndex) => {
@@ -210,7 +210,7 @@ export const GoldenHoursHeatmap = ({ dateRange }: GoldenHoursHeatmapProps) => {
                                                 <TooltipTrigger asChild>
                                                     <div
                                                         className={`
-                                                            w-9 h-8 rounded-lg flex items-center justify-center
+                                                            w-7 h-7 sm:w-9 sm:h-8 rounded-lg flex items-center justify-center
                                                             transition-all duration-300 cursor-default
                                                             hover:scale-110 hover:z-10 hover:ring-2 hover:ring-white/20
                                                             ${bg} ${glow}
@@ -252,7 +252,7 @@ export const GoldenHoursHeatmap = ({ dateRange }: GoldenHoursHeatmapProps) => {
                         </div>
 
                         {/* Legend */}
-                        <div className="flex items-center justify-between mt-5 pt-4 border-t border-border">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-5 pt-4 border-t border-border gap-2">
                             <div className="flex items-center gap-2">
                                 <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
                                 <span className="text-[10px] text-muted-foreground">Intensidade de atividade</span>

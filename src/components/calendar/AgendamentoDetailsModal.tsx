@@ -213,17 +213,17 @@ export const AgendamentoDetailsModal = ({
   return (
     <>
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[420px] bg-[#121214] border-white/[0.05] p-0 overflow-hidden shadow-2xl">
-          <DialogHeader className="p-6 pb-0">
-            <div className="flex items-center justify-between">
-              <DialogTitle className="text-xl font-semibold text-white">
+        <DialogContent className="max-w-[95vw] sm:max-w-[420px] bg-[#121214] border-white/[0.05] p-0 overflow-hidden shadow-2xl">
+          <DialogHeader className="p-4 md:p-6 pb-0">
+            <div className="flex items-center justify-between gap-2">
+              <DialogTitle className="text-lg md:text-xl font-semibold text-white truncate">
                 {isEditing ? "Editar Agendamento" : "Detalhes do Agendamento"}
               </DialogTitle>
               {!isEditing && getStatusBadge(agendamento.status)}
             </div>
           </DialogHeader>
 
-          <div className="px-6 py-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+          <div className="px-4 md:px-6 py-4 md:py-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
             {!isEditing ? (
               // View Mode
               <div className="space-y-3">
@@ -241,7 +241,7 @@ export const AgendamentoDetailsModal = ({
                 </div>
 
                 {/* Data e Hora Row */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="flex items-start gap-3 p-4 bg-white/[0.02] rounded-xl border border-white/[0.05] hover:bg-white/[0.04] transition-colors">
                     <div className="p-2 bg-primary/10 rounded-lg shrink-0 mt-0.5">
                       <Calendar className="h-4 w-4 text-primary" />
@@ -296,7 +296,7 @@ export const AgendamentoDetailsModal = ({
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-slate-300">Data <span className="text-destructive">*</span></Label>
                     <Popover>
@@ -372,7 +372,7 @@ export const AgendamentoDetailsModal = ({
             )}
           </div>
 
-          <DialogFooter className="px-6 py-4 bg-black/20 border-t border-white/[0.05] gap-2 sm:justify-between">
+          <DialogFooter className="px-4 md:px-6 py-3 md:py-4 bg-black/20 border-t border-white/[0.05] gap-2 sm:justify-between">
             {!isEditing ? (
               <>
                 <Button

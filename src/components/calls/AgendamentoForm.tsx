@@ -194,7 +194,7 @@ export const AgendamentoForm = ({ onSuccess }: AgendamentoFormProps) => {
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[440px] p-4 bg-card border-border shadow-lg" align="start">
+              <PopoverContent className="w-[min(95vw,440px)] p-4 bg-card border-border shadow-lg" align="start">
                 <div className="space-y-4">
                   <CalendarPicker
                     mode="single"
@@ -204,7 +204,7 @@ export const AgendamentoForm = ({ onSuccess }: AgendamentoFormProps) => {
                     locale={ptBR}
                     initialFocus
                   />
-                  <div className="grid grid-cols-2 gap-3 items-end">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
                     <div className="space-y-1.5">
                       <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
                         <Clock className="h-3.5 w-3.5 text-primary" />

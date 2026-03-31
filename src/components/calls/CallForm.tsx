@@ -322,7 +322,7 @@ export const CallForm = ({ onSuccess }: CallFormProps) => {
             {/* Attendance Status - Compact */}
             <div className="space-y-2">
               <Label className="text-xs text-muted-foreground">Status de Comparecimento *</Label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, attendance_status: "show" })}
@@ -465,7 +465,7 @@ export const CallForm = ({ onSuccess }: CallFormProps) => {
 
       {/* Sales Modal */}
       <Dialog open={showSalesModal} onOpenChange={setShowSalesModal}>
-        <DialogContent className="sm:max-w-[450px] bg-card border-border shadow-lg">
+        <DialogContent className="max-w-[95vw] sm:max-w-[450px] bg-card border-border shadow-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-foreground text-base">
               <div className="p-1.5 rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200">
@@ -577,7 +577,7 @@ export const CallForm = ({ onSuccess }: CallFormProps) => {
 
       {/* Loss Reason Modal */}
       <Dialog open={showLossReasonModal} onOpenChange={setShowLossReasonModal}>
-        <DialogContent className="sm:max-w-[400px] bg-card border-border shadow-lg">
+        <DialogContent className="max-w-[95vw] sm:max-w-[400px] bg-card border-border shadow-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-foreground text-base">
               <div className="p-1.5 rounded-lg bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-200">

@@ -11,7 +11,7 @@ interface BentoCardProps {
 
 const BentoCard = ({ children, className = "", hoverColor = "rgba(16,185,129,0.08)", delay = 0 }: BentoCardProps) => (
     <motion.div
-        className={`relative group rounded-2xl border border-white/6 bg-slate-900/60 backdrop-blur-sm overflow-hidden ${className}`}
+        className={`relative group rounded-2xl border border-gray-200 bg-white/80 backdrop-blur-sm overflow-hidden ${className}`}
         initial={{ opacity: 0, y: 28 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-40px" }}
@@ -31,7 +31,7 @@ const BentoCard = ({ children, className = "", hoverColor = "rgba(16,185,129,0.0
 // ─── ProductBentoGrid ─────────────────────────────────────────────────────────
 export const ProductBentoGrid = () => {
     return (
-        <section id="features" className="py-24 px-4 sm:px-6 lg:px-8 bg-slate-950 relative overflow-hidden">
+        <section id="features" className="py-24 px-4 sm:px-6 lg:px-8 bg-white relative overflow-hidden">
             {/* Background blobs */}
             <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-600/6 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-emerald-600/6 rounded-full blur-3xl pointer-events-none" />
@@ -47,15 +47,15 @@ export const ProductBentoGrid = () => {
                     transition={{ duration: 0.5 }}
                 >
                     <span
-                        className="text-label inline-flex items-center gap-1.5 text-xs text-emerald-400 border border-emerald-500/25 bg-emerald-500/8 rounded-full px-4 py-1.5 mb-5"
+                        className="text-label inline-flex items-center gap-1.5 text-xs text-emerald-600 border border-emerald-200 bg-emerald-50 rounded-full px-4 py-1.5 mb-5"
                         style={{ letterSpacing: "var(--ls-widest)" }}
                     >
                         <Zap className="h-3 w-3" />
                         ARSENAL COMPLETO
                     </span>
-                    <h2 className="text-heading text-3xl sm:text-4xl text-white mb-4">
+                    <h2 className="font-heading text-3xl sm:text-4xl text-gray-900 mb-4 tracking-tight font-bold">
                         Tudo que seu time precisa.{" "}
-                        <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
+                        <span className="bg-gradient-to-r from-emerald-600 to-emerald-500 bg-clip-text text-transparent">
                             Em um só lugar.
                         </span>
                     </h2>
@@ -64,7 +64,7 @@ export const ProductBentoGrid = () => {
                         style={{ fontSize: "1.0625rem" }}
                     >
                         CRM, ranking, metas, calendário, calls e integrações.{" "}
-                        <span className="text-white" style={{ fontWeight: "var(--fw-medium)" }}>Sem trocar de aba</span>.
+                        <span className="text-gray-900" style={{ fontWeight: "var(--fw-medium)" }}>Sem trocar de aba</span>.
                     </p>
                 </motion.div>
 
@@ -105,7 +105,7 @@ export const ProductBentoGrid = () => {
                                         animate={{ rotate: [0, 15, 0], scale: [1, 1.1, 1] }}
                                         transition={{ duration: 2 + i * 0.5, repeat: Infinity, delay: s.delay }}
                                     >
-                                        <Star className={`${s.size} text-amber-400`} fill="currentColor" />
+                                        <Star className={`${s.size} text-amber-600`} fill="currentColor" />
                                     </motion.div>
                                 ))}
 
@@ -118,17 +118,17 @@ export const ProductBentoGrid = () => {
                                     ].map((p, i) => (
                                         <motion.div
                                             key={p.initials}
-                                            className="flex items-center gap-2 bg-slate-800/80 rounded-lg px-2.5 py-1.5"
+                                            className="flex items-center gap-2 bg-gray-100 rounded-lg px-2.5 py-1.5"
                                             initial={{ opacity: 0, x: -10 }}
                                             whileInView={{ opacity: 1, x: 0 }}
                                             viewport={{ once: true }}
                                             transition={{ delay: 0.4 + i * 0.1 }}
                                         >
                                             <div className={`w-5 h-5 rounded-full ${p.color} flex items-center justify-center flex-shrink-0`}>
-                                                <span className="text-white" style={{ fontSize: "7px", fontWeight: "var(--fw-bold)" }}>{p.initials}</span>
+                                                <span className="text-gray-900" style={{ fontSize: "7px", fontWeight: "var(--fw-bold)" }}>{p.initials}</span>
                                             </div>
-                                            <span className="text-white/70 flex-1" style={{ fontSize: "10px", fontWeight: "var(--fw-medium)" }}>{p.name}</span>
-                                            <span className="text-emerald-400" style={{ fontSize: "10px", fontWeight: "var(--fw-bold)" }}>{p.pts}</span>
+                                            <span className="text-gray-600 flex-1" style={{ fontSize: "10px", fontWeight: "var(--fw-medium)" }}>{p.name}</span>
+                                            <span className="text-emerald-600" style={{ fontSize: "10px", fontWeight: "var(--fw-bold)" }}>{p.pts}</span>
                                         </motion.div>
                                     ))}
                                 </div>
@@ -137,10 +137,10 @@ export const ProductBentoGrid = () => {
 
                         {/* Text — pushed to bottom */}
                         <div className="mt-auto pt-16">
-                            <span className="text-label text-[10px] text-amber-400/70 border border-amber-500/20 bg-amber-500/5 rounded-full px-2.5 py-0.5 mb-3 inline-block">
+                            <span className="text-label text-[10px] text-amber-600/70 border border-amber-500/20 bg-amber-500/5 rounded-full px-2.5 py-0.5 mb-3 inline-block">
                                 Destaque
                             </span>
-                            <h3 className="text-white mb-2" style={{ fontWeight: "var(--fw-bold)", fontSize: "1.125rem" }}>
+                            <h3 className="text-gray-900 mb-2" style={{ fontWeight: "var(--fw-bold)", fontSize: "1.125rem" }}>
                                 Ranking ao Vivo
                             </h3>
                             <p className="text-body text-gray-400 text-sm">
@@ -154,7 +154,7 @@ export const ProductBentoGrid = () => {
                         {/* Toast notification visual */}
                         <div className="relative h-28 flex items-center justify-center mb-5">
                             <motion.div
-                                className="relative bg-slate-800/90 border border-emerald-500/25 rounded-xl px-4 py-3 shadow-xl"
+                                className="relative bg-gray-50 border border-emerald-200 rounded-xl px-4 py-3 shadow-xl"
                                 initial={{ x: 40, opacity: 0 }}
                                 whileInView={{ x: 0, opacity: 1 }}
                                 viewport={{ once: true }}
@@ -162,13 +162,13 @@ export const ProductBentoGrid = () => {
                             >
                                 <div className="flex items-center gap-3">
                                     <div className="w-9 h-9 rounded-full bg-emerald-500/15 flex items-center justify-center">
-                                        <TrendingUp className="h-4 w-4 text-emerald-400" />
+                                        <TrendingUp className="h-4 w-4 text-emerald-600" />
                                     </div>
                                     <div>
-                                        <p className="text-white/80 text-xs" style={{ fontWeight: "var(--fw-medium)" }}>
+                                        <p className="text-gray-700 text-xs" style={{ fontWeight: "var(--fw-medium)" }}>
                                             💰 Venda Aprovada
                                         </p>
-                                        <p className="text-emerald-400" style={{ fontWeight: "var(--fw-bold)", fontSize: "0.9375rem" }}>
+                                        <p className="text-emerald-600" style={{ fontWeight: "var(--fw-bold)", fontSize: "0.9375rem" }}>
                                             + R$ 297,00
                                         </p>
                                     </div>
@@ -181,7 +181,7 @@ export const ProductBentoGrid = () => {
                                 />
                             </motion.div>
                         </div>
-                        <h3 className="text-white mb-1.5" style={{ fontWeight: "var(--fw-bold)", fontSize: "1.0625rem" }}>
+                        <h3 className="text-gray-900 mb-1.5" style={{ fontWeight: "var(--fw-bold)", fontSize: "1.0625rem" }}>
                             Vendas em Tempo Real
                         </h3>
                         <p className="text-body text-gray-400 text-sm">
@@ -200,10 +200,10 @@ export const ProductBentoGrid = () => {
                             ].map(({ label, pct, color }, i) => (
                                 <div key={label}>
                                     <div className="flex justify-between mb-1">
-                                        <span className="text-white/50" style={{ fontSize: "10px", fontWeight: "var(--fw-medium)" }}>{label}</span>
-                                        <span className="text-white/70" style={{ fontSize: "10px", fontWeight: "var(--fw-bold)" }}>{pct}%</span>
+                                        <span className="text-gray-500" style={{ fontSize: "10px", fontWeight: "var(--fw-medium)" }}>{label}</span>
+                                        <span className="text-gray-600" style={{ fontSize: "10px", fontWeight: "var(--fw-bold)" }}>{pct}%</span>
                                     </div>
-                                    <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                                         <motion.div
                                             className={`h-full ${color} rounded-full`}
                                             initial={{ width: 0 }}
@@ -215,7 +215,7 @@ export const ProductBentoGrid = () => {
                                 </div>
                             ))}
                         </div>
-                        <h3 className="text-white mb-1.5" style={{ fontWeight: "var(--fw-bold)", fontSize: "1.0625rem" }}>
+                        <h3 className="text-gray-900 mb-1.5" style={{ fontWeight: "var(--fw-bold)", fontSize: "1.0625rem" }}>
                             Metas com Visibilidade
                         </h3>
                         <p className="text-body text-gray-400 text-sm">
@@ -231,10 +231,10 @@ export const ProductBentoGrid = () => {
                     >
                         {/* Left: text */}
                         <div className="md:w-1/2">
-                            <span className="text-label text-[10px] text-emerald-400/70 border border-emerald-500/20 bg-emerald-500/5 rounded-full px-2.5 py-0.5 mb-3 inline-block">
+                            <span className="text-label text-[10px] text-emerald-600/70 border border-emerald-500/20 bg-emerald-500/5 rounded-full px-2.5 py-0.5 mb-3 inline-block">
                                 CRM + WhatsApp
                             </span>
-                            <h3 className="text-white mb-2" style={{ fontWeight: "var(--fw-bold)", fontSize: "1.125rem" }}>
+                            <h3 className="text-gray-900 mb-2" style={{ fontWeight: "var(--fw-bold)", fontSize: "1.125rem" }}>
                                 Pipeline + WhatsApp IA integrados
                             </h3>
                             <p className="text-body text-gray-400 text-sm mb-4">
@@ -244,7 +244,7 @@ export const ProductBentoGrid = () => {
                                 {["Pipeline Kanban", "WhatsApp IA", "Ligações com gravação"].map(tag => (
                                     <span
                                         key={tag}
-                                        className="text-xs text-white/40 border border-white/8 rounded-full px-2.5 py-0.5"
+                                        className="text-xs text-gray-400 border border-gray-200 rounded-full px-2.5 py-0.5"
                                         style={{ fontWeight: "var(--fw-medium)" }}
                                     >
                                         {tag}
@@ -256,24 +256,24 @@ export const ProductBentoGrid = () => {
                         {/* Right: WhatsApp mockup */}
                         <div className="md:w-1/2 flex items-center justify-center gap-3">
                             {/* Chat window */}
-                            <div className="bg-slate-800 rounded-xl p-3 w-36 shadow-lg border border-white/5">
+                            <div className="bg-gray-100 rounded-xl p-3 w-36 shadow-lg border border-gray-200">
                                 <div className="flex items-center gap-2 mb-3">
                                     <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
-                                        <MessageCircle className="h-3 w-3 text-white" />
+                                        <MessageCircle className="h-3 w-3 text-gray-900" />
                                     </div>
-                                    <span className="text-white/70" style={{ fontSize: "10px", fontWeight: "var(--fw-semibold)" }}>WhatsApp</span>
+                                    <span className="text-gray-600" style={{ fontSize: "10px", fontWeight: "var(--fw-semibold)" }}>WhatsApp</span>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <div className="h-1.5 bg-slate-700 rounded w-full" />
-                                    <div className="h-1.5 bg-slate-700 rounded w-4/5" />
+                                    <div className="h-1.5 bg-gray-200 rounded w-full" />
+                                    <div className="h-1.5 bg-gray-200 rounded w-4/5" />
                                     <div className="h-1.5 bg-green-500/25 rounded w-full" />
-                                    <div className="h-1.5 bg-slate-700 rounded w-3/5" />
+                                    <div className="h-1.5 bg-gray-200 rounded w-3/5" />
                                 </div>
                             </div>
 
                             {/* Sidebar */}
                             <motion.div
-                                className="bg-slate-800 border border-emerald-500/20 rounded-xl p-3 w-24 shadow-xl"
+                                className="bg-gray-100 border border-emerald-500/20 rounded-xl p-3 w-24 shadow-xl"
                                 initial={{ x: 16, opacity: 0 }}
                                 whileInView={{ x: 0, opacity: 1 }}
                                 viewport={{ once: true }}
@@ -281,18 +281,18 @@ export const ProductBentoGrid = () => {
                             >
                                 <div className="flex items-center gap-1 mb-2">
                                     <div className="w-3 h-3 rounded-full bg-emerald-500 flex-shrink-0" />
-                                    <span className="text-emerald-400" style={{ fontSize: "8px", fontWeight: "var(--fw-bold)" }}>Vyzon</span>
+                                    <span className="text-emerald-600" style={{ fontSize: "8px", fontWeight: "var(--fw-bold)" }}>Vyzon</span>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <div className="h-1 bg-white/15 rounded w-full" />
-                                    <div className="h-1 bg-white/15 rounded w-2/3" />
+                                    <div className="h-1 bg-gray-200 rounded w-full" />
+                                    <div className="h-1 bg-gray-200 rounded w-2/3" />
                                     <div className="flex items-center gap-1 mt-2.5 bg-amber-500/10 rounded px-1.5 py-1">
-                                        <Trophy className="h-2 w-2 text-amber-400" />
-                                        <span className="text-amber-300" style={{ fontSize: "7px", fontWeight: "var(--fw-bold)" }}>Ranking #3</span>
+                                        <Trophy className="h-2 w-2 text-amber-600" />
+                                        <span className="text-amber-600" style={{ fontSize: "7px", fontWeight: "var(--fw-bold)" }}>Ranking #3</span>
                                     </div>
                                     <div className="flex items-center gap-1 bg-emerald-500/10 rounded px-1.5 py-1">
-                                        <Bell className="h-2 w-2 text-emerald-400" />
-                                        <span className="text-emerald-300" style={{ fontSize: "7px" }}>+R$297</span>
+                                        <Bell className="h-2 w-2 text-emerald-600" />
+                                        <span className="text-emerald-600" style={{ fontSize: "7px" }}>+R$297</span>
                                     </div>
                                 </div>
                             </motion.div>

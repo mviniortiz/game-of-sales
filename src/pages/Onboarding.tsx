@@ -38,7 +38,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import vyzonLogo from "@/assets/logo-full.png";
+import vyzonLogo from "@/assets/logo-dark.png";
 import { Confetti } from "@/components/crm/Confetti";
 import { PLANS, formatPrice, getAnnualMonthlyEquivalent, getAnnualPrice, getBillingConfig, type BillingCycle } from "@/config/plans";
 import { initMercadoPago } from "@mercadopago/sdk-react";
@@ -903,7 +903,7 @@ export default function Onboarding() {
             </div>
 
             {/* Step icons row */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between overflow-x-auto">
                 {stepMeta.map((step, index) => {
                     const StepIcon = step.icon;
                     const isComplete = index + 1 < displayStep;
@@ -911,7 +911,7 @@ export default function Onboarding() {
                     return (
                         <div key={index} className="flex flex-col items-center gap-1.5">
                             <div
-                                className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 ${
+                                className={`w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all duration-300 ${
                                     isComplete
                                         ? "bg-emerald-500/20 border border-emerald-500/50"
                                         : isCurrent
@@ -1125,7 +1125,7 @@ export default function Onboarding() {
                                 <Label className="text-slate-300 text-sm font-medium">
                                     Segmento
                                 </Label>
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     {SEGMENT_OPTIONS.map((seg) => (
                                         <button
                                             key={seg}
@@ -1272,7 +1272,7 @@ export default function Onboarding() {
                             Escolha um modelo de funil para começar. Você pode personalizar depois.
                         </p>
 
-                        <div className="grid gap-3">
+                        <div className="grid gap-3 max-h-[50vh] overflow-y-auto pr-1">
                             {Object.entries(PIPELINE_TEMPLATES).map(([key, template], index) => {
                                 const Icon = template.icon;
                                 const isSelected = selectedTemplate === key;
@@ -1820,7 +1820,7 @@ export default function Onboarding() {
             </div>
 
             {/* Right Panel - Form Steps */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 overflow-y-auto">
+            <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-6 md:p-12 overflow-y-auto">
                 <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -1836,7 +1836,7 @@ export default function Onboarding() {
                     <Stepper />
 
                     {/* Step Card */}
-                    <div className="bg-slate-900 border border-slate-800 shadow-2xl shadow-black/50 rounded-3xl p-8 relative overflow-hidden">
+                    <div className="bg-slate-900 border border-slate-800 shadow-2xl shadow-black/50 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 relative overflow-hidden">
                         {/* Shimmer top border */}
                         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
 

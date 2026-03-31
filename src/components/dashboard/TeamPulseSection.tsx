@@ -133,9 +133,9 @@ export const TeamPulseSection = () => {
             <div className="absolute top-0 left-1/2 w-48 h-48 bg-gradient-to-b from-emerald-500/5 to-transparent blur-3xl pointer-events-none" />
 
             <CardHeader className="pb-3 relative">
-                <div className="flex items-start justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                     <div>
-                        <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2.5">
+                        <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2.5 flex-wrap">
                             <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/10 ring-1 ring-emerald-500/20">
                                 <Users className="h-4 w-4 text-emerald-400" />
                             </div>
@@ -152,7 +152,7 @@ export const TeamPulseSection = () => {
 
                     {/* Week summary */}
                     {totalWeekSales > 0 && (
-                        <div className="bg-gradient-to-r from-emerald-500/10 to-green-500/5 px-4 py-2 rounded-xl ring-1 ring-emerald-500/20">
+                        <div className="bg-gradient-to-r from-emerald-500/10 to-green-500/5 px-4 py-2 rounded-xl ring-1 ring-emerald-500/20 self-end sm:self-auto">
                             <p className="text-[10px] text-emerald-400 uppercase tracking-wider font-medium">Vendas da Semana</p>
                             <p className="text-lg font-bold text-emerald-400">{formatCurrency(totalWeekSales)}</p>
                         </div>

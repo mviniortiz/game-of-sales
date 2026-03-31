@@ -396,7 +396,7 @@ const WebhookLogRow = ({ log }: { log: WebhookLog }) => {
   const colors = getStatusColor(log.status);
 
   return (
-    <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/30 transition-colors group">
+    <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/30 transition-colors group min-w-[500px]">
       {/* Status dot */}
       <div className={`w-2 h-2 rounded-full flex-shrink-0 ${colors.dot}`} />
 
@@ -769,9 +769,9 @@ const Integracoes = () => {
                     transition={{ duration: 0.2 }}
                     className="overflow-hidden"
                   >
-                    <div className="bg-card border border-border rounded-xl overflow-hidden">
+                    <div className="bg-card border border-border rounded-xl overflow-hidden overflow-x-auto">
                       {/* Header */}
-                      <div className="px-4 py-2.5 border-b border-border/50 bg-muted/30 flex items-center gap-3">
+                      <div className="px-4 py-2.5 border-b border-border/50 bg-muted/30 flex items-center gap-3 min-w-[500px]">
                         <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold w-8">St</span>
                         <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold w-20">Plataforma</span>
                         <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold flex-1">Evento</span>

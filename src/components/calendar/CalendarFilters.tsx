@@ -43,15 +43,15 @@ export const CalendarFilters = ({
   };
 
   return (
-    <div className="flex flex-wrap gap-3 items-center p-4 bg-card/30 backdrop-blur-sm border border-border/50 rounded-xl">
-      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+    <div className="flex flex-wrap gap-2 md:gap-3 items-center p-3 md:p-4 bg-card/30 backdrop-blur-sm border border-border/50 rounded-xl">
+      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground w-full md:w-auto">
         <Filter className="h-4 w-4" />
         Filtros:
       </div>
 
       {!hideVendedorFilter && (
         <Select value={selectedVendedor} onValueChange={onVendedorChange}>
-          <SelectTrigger className="w-[200px] bg-background/50 border-border/50">
+          <SelectTrigger className="w-full sm:w-[200px] bg-background/50 border-border/50">
             <SelectValue placeholder="Vendedores" />
           </SelectTrigger>
           <SelectContent>
@@ -66,7 +66,7 @@ export const CalendarFilters = ({
       )}
 
       <Select value={selectedStatus} onValueChange={onStatusChange}>
-        <SelectTrigger className="w-[180px] bg-background/50 border-border/50">
+        <SelectTrigger className="w-full sm:w-[180px] bg-background/50 border-border/50">
           <SelectValue placeholder="Todos os status" />
         </SelectTrigger>
         <SelectContent>

@@ -31,6 +31,7 @@ interface Props {
     onEventClick: (ag: Agendamento) => void;
     onAgendamentoUpdate: (id: string, newDate: Date) => void;
     showSellerName: boolean;
+    isMobile?: boolean;
 }
 
 // ── Position helpers ──────────────────────────────────────────────────────────
@@ -277,6 +278,7 @@ export function CalendarTimelineView({
     agendamentos,
     onEventClick,
     showSellerName,
+    isMobile = false,
 }: Props) {
     const scrollRef = useRef<HTMLDivElement>(null);
     const isWeek = view === "week";
@@ -298,19 +300,25 @@ export function CalendarTimelineView({
     // Today's column
     const todayIndex = days.findIndex(d => dateFnsIsToday(d));
 
+    // On mobile week view, we show a horizontally scrollable container
+    // On mobile day view, we show single day with smaller gutter
+    const gutterWidth = isMobile ? "w-10" : "w-14";
+    const gutterPx = isMobile ? 40 : 56;
+
     return (
         <div className="flex h-full flex-col overflow-hidden">
             {/* ── DAY HEADERS ─────────────────────────────────────── */}
             <div className="flex flex-shrink-0 border-b border-border bg-card/60">
                 {/* Gutter spacer */}
-                <div className="w-14 flex-shrink-0" />
+                <div className={`${gutterWidth} flex-shrink-0`} />
                 {days.map((day, i) => {
                     const isNow = dateFnsIsToday(day);
                     return (
                         <div
                             key={i}
                             className={`
-                flex-1 py-2.5 text-center border-l border-border/60
+                flex-1 py-2 md:py-2.5 text-center border-l border-border/60
+                ${isMobile && isWeek ? "min-w-[100px]" : ""}
                 ${isNow ? "bg-emerald-500/5" : ""}
               `}
                         >
@@ -318,7 +326,7 @@ export function CalendarTimelineView({
                                 {weekDayLabels[day.getDay()]}
                             </p>
                             <div className={`
-                w-8 h-8 mx-auto flex items-center justify-center rounded-full text-[15px] font-bold
+                w-7 h-7 md:w-8 md:h-8 mx-auto flex items-center justify-center rounded-full text-[13px] md:text-[15px] font-bold
                 ${isNow ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/40" : "text-muted-foreground"}
               `}>
                                 {format(day, "d")}
@@ -329,20 +337,20 @@ export function CalendarTimelineView({
             </div>
 
             {/* ── SCROLLABLE TIMELINE BODY ─────────────────────────── */}
-            <div ref={scrollRef} className="flex overflow-y-auto overflow-x-hidden flex-1 custom-scrollbar">
+            <div ref={scrollRef} className={`flex overflow-y-auto flex-1 custom-scrollbar ${isMobile && isWeek ? "overflow-x-auto" : "overflow-x-hidden"}`}>
                 {/* ── HOUR GUTTER ─────────────────────────────────────── */}
                 <div
-                    className="w-14 flex-shrink-0 relative bg-card/30"
+                    className={`${gutterWidth} flex-shrink-0 relative bg-card/30`}
                     style={{ height: TOTAL_HOURS * HOUR_HEIGHT }}
                 >
                     {HOURS.map((h, i) => (
                         <div
                             key={h}
-                            className="absolute w-full flex items-start justify-end pr-2"
+                            className={`absolute w-full flex items-start justify-end ${isMobile ? "pr-1" : "pr-2"}`}
                             style={{ top: i * HOUR_HEIGHT - 8 }}
                         >
                             {i > 0 && (
-                                <span className="text-[10px] text-muted-foreground tabular-nums">
+                                <span className={`${isMobile ? "text-[9px]" : "text-[10px]"} text-muted-foreground tabular-nums`}>
                                     {h.toString().padStart(2, "0")}h
                                 </span>
                             )}
@@ -351,14 +359,14 @@ export function CalendarTimelineView({
                 </div>
 
                 {/* ── DAY COLUMNS ──────────────────────────────────────── */}
-                <div className="flex flex-1 relative">
+                <div className={`flex flex-1 relative ${isMobile && isWeek ? "min-w-[700px]" : ""}`}>
                     {/* Current time indicator (spans all columns) */}
                     {days.some(d => dateFnsIsToday(d)) && <CurrentTimeIndicator />}
 
                     {days.map((day, i) => (
                         <div
                             key={i}
-                            className="flex-1 min-w-0 border-l border-border/60 relative"
+                            className={`flex-1 border-l border-border/60 relative ${isMobile && isWeek ? "min-w-[100px]" : "min-w-0"}`}
                             style={{ height: TOTAL_HOURS * HOUR_HEIGHT }}
                         >
                             <DayColumn

@@ -32,7 +32,7 @@ const COMPARISONS = [
 // ─── PainPoints ───────────────────────────────────────────────────────────────
 export const PainPoints = () => {
     return (
-        <section className="py-24 px-4 sm:px-6 lg:px-8 bg-slate-950 relative overflow-hidden">
+        <section className="py-24 px-4 sm:px-6 lg:px-8 bg-gray-50 relative overflow-hidden">
             {/* Background texture */}
             <div
                 className="absolute inset-0 pointer-events-none"
@@ -58,7 +58,7 @@ export const PainPoints = () => {
                     >
                         ISSO PARECE FAMILIAR?
                     </span>
-                    <h2 className="text-heading text-3xl sm:text-4xl text-white">
+                    <h2 className="font-heading text-3xl sm:text-4xl text-gray-900 tracking-tight font-bold">
                         Seu processo de vendas{" "}
                         <span className="text-red-400">não deveria ser assim</span>
                     </h2>
@@ -85,13 +85,13 @@ export const PainPoints = () => {
                                     <div className="flex items-center gap-2 mb-1">
                                         <X className="h-3.5 w-3.5 text-red-500 flex-shrink-0" strokeWidth={3} />
                                         <p
-                                            className="text-white/90 text-sm"
+                                            className="text-gray-900/90 text-sm"
                                             style={{ fontWeight: "var(--fw-semibold)" }}
                                         >
                                             {before}
                                         </p>
                                     </div>
-                                    <p className="text-body text-xs text-red-300/50 leading-relaxed">
+                                    <p className="text-body text-xs text-red-600/60 leading-relaxed">
                                         {beforeDesc}
                                     </p>
                                 </div>
@@ -100,11 +100,11 @@ export const PainPoints = () => {
                             {/* ── Arrow separator ── */}
                             <div className="hidden md:flex items-center justify-center">
                                 <motion.div
-                                    className="w-8 h-8 rounded-full bg-slate-800 border border-white/8 flex items-center justify-center"
+                                    className="w-8 h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center"
                                     animate={{ x: [0, 3, 0] }}
                                     transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut", delay: delay + 0.5 }}
                                 >
-                                    <ChevronRight className="h-4 w-4 text-white/30" />
+                                    <ChevronRight className="h-4 w-4 text-gray-400" />
                                 </motion.div>
                             </div>
 
@@ -112,19 +112,19 @@ export const PainPoints = () => {
                             <div className="flex items-start gap-4 p-5 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 group hover:border-emerald-500/25 transition-colors duration-300">
                                 {/* Icon */}
                                 <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
-                                    <Icon className="h-5 w-5 text-emerald-400" strokeWidth={2} />
+                                    <Icon className="h-5 w-5 text-emerald-600" strokeWidth={2} />
                                 </div>
                                 <div className="min-w-0">
                                     <div className="flex items-center gap-2 mb-1">
-                                        <Check className="h-3.5 w-3.5 text-emerald-400 flex-shrink-0" strokeWidth={3} />
+                                        <Check className="h-3.5 w-3.5 text-emerald-600 flex-shrink-0" strokeWidth={3} />
                                         <p
-                                            className="text-white/90 text-sm"
+                                            className="text-gray-900/90 text-sm"
                                             style={{ fontWeight: "var(--fw-semibold)" }}
                                         >
                                             {after}
                                         </p>
                                     </div>
-                                    <p className="text-body text-xs text-emerald-300/50 leading-relaxed">
+                                    <p className="text-body text-xs text-emerald-600/60 leading-relaxed">
                                         {afterDesc}
                                     </p>
                                 </div>
@@ -142,21 +142,21 @@ export const PainPoints = () => {
                     transition={{ delay: 0.5, duration: 0.5 }}
                 >
                     <p
-                        className="text-white/70 mb-1"
+                        className="text-gray-700 mb-1"
                         style={{ fontWeight: "var(--fw-medium)", fontSize: "1.0625rem" }}
                     >
                         Existe uma forma{" "}
-                        <span className="text-emerald-400" style={{ fontWeight: "var(--fw-bold)" }}>
+                        <span className="text-emerald-600" style={{ fontWeight: "var(--fw-bold)" }}>
                             melhor.
                         </span>
                     </p>
-                    <p className="text-caption text-xs text-white/30 mb-8">
+                    <p className="text-caption text-xs text-gray-400 mb-8">
                         Um CRM completo que resolve tudo isso — e se configura em 5 minutos.
                     </p>
 
                     {/* Animated gradient line */}
                     <div className="relative h-16 w-px overflow-hidden">
-                        <div className="absolute inset-0 bg-white/5" />
+                        <div className="absolute inset-0 bg-gray-100" />
                         <motion.div
                             className="absolute top-0 left-0 right-0 h-full"
                             style={{

@@ -44,8 +44,8 @@ export function MediaMessageBubble({
 
     if (loading) {
         return (
-            <div className={`flex flex-col gap-1.5 ${isSticker ? 'w-32' : 'w-56'}`}>
-                <div className={`${isSticker ? 'h-32 w-32' : 'h-44 w-56'} rounded-xl bg-muted/15 flex items-center justify-center animate-pulse`}>
+            <div className={`flex flex-col gap-1.5 ${isSticker ? 'w-32' : 'w-48 sm:w-56'}`}>
+                <div className={`${isSticker ? 'h-32 w-32' : 'h-36 w-48 sm:h-44 sm:w-56'} rounded-xl bg-muted/15 flex items-center justify-center animate-pulse`}>
                     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground/30" />
                 </div>
                 {caption && <p className={`text-[13px] leading-snug ${isMe ? 'text-white' : 'text-foreground/85'}`}>{caption}</p>}
@@ -55,8 +55,8 @@ export function MediaMessageBubble({
 
     if (error || !mediaSrc) {
         return (
-            <div className={`flex flex-col gap-1.5 ${isSticker ? 'w-32' : 'w-56'}`}>
-                <div className={`${isSticker ? 'h-32 w-32' : 'h-44 w-56'} rounded-xl bg-muted/10 border border-white/[0.06] flex flex-col items-center justify-center gap-1.5`}>
+            <div className={`flex flex-col gap-1.5 ${isSticker ? 'w-32' : 'w-48 sm:w-56'}`}>
+                <div className={`${isSticker ? 'h-32 w-32' : 'h-36 w-48 sm:h-44 sm:w-56'} rounded-xl bg-muted/10 border border-white/[0.06] flex flex-col items-center justify-center gap-1.5`}>
                     {isVideo ? <Film className="h-6 w-6 text-muted-foreground/25" /> : <Image className="h-6 w-6 text-muted-foreground/25" />}
                     <span className="text-[10px] text-muted-foreground/35">{isVideo ? "Vídeo" : "Imagem"} indisponível</span>
                 </div>
@@ -67,9 +67,9 @@ export function MediaMessageBubble({
 
     return (
         <>
-            <div className={`flex flex-col gap-1.5 ${isSticker ? '' : 'w-56'}`}>
+            <div className={`flex flex-col gap-1.5 ${isSticker ? '' : 'w-48 sm:w-56'}`}>
                 <div
-                    className={`relative cursor-pointer group overflow-hidden ${isSticker ? 'w-32 h-32' : 'w-56 h-44 rounded-xl'}`}
+                    className={`relative cursor-pointer group overflow-hidden ${isSticker ? 'w-32 h-32' : 'w-48 h-36 sm:w-56 sm:h-44 rounded-xl'}`}
                     onClick={() => setLightboxOpen(true)}
                 >
                     {isVideo ? (

@@ -362,7 +362,7 @@ export const DealProducts = ({ dealId, companyId, deal }: DealProductsProps) => 
 
             {/* Add Product Modal */}
             <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
-                <DialogContent className="sm:max-w-[500px]">
+                <DialogContent className="max-w-[95vw] sm:max-w-[500px]">
                     <DialogHeader>
                         <DialogTitle>Adicionar Produto</DialogTitle>
                     </DialogHeader>

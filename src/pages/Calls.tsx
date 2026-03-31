@@ -101,26 +101,26 @@ const KPICard = ({
 
   return (
     <Card className={`border bg-card shadow-sm hover:shadow-md transition-all duration-300 ${highlight ? colorClasses.ring : 'border-border'}`}>
-      <CardContent className="p-5">
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+      <CardContent className="p-3 sm:p-5">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1 sm:mb-2 truncate">
               {title}
             </p>
-            <p className={`text-3xl font-bold tabular-nums tracking-tight ${highlight ? colorClasses.text : 'text-foreground'}`}>
+            <p className={`text-xl sm:text-3xl font-bold tabular-nums tracking-tight ${highlight ? colorClasses.text : 'text-foreground'}`}>
               {value}
             </p>
 
             {/* Trend or Subtitle */}
-            <div className="flex items-center gap-2 mt-2">
+            <div className="flex items-center gap-2 mt-1 sm:mt-2">
               {trend !== undefined && (
-                <span className={`flex items-center text-xs font-medium ${isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                <span className={`flex items-center text-[10px] sm:text-xs font-medium ${isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                   <TrendIcon className="h-3 w-3 mr-0.5" />
                   {Math.abs(trend).toFixed(1)}%
                 </span>
               )}
               {(trendLabel || subtitle) && (
-                <span className="text-xs text-muted-foreground">
+                <span className="text-[10px] sm:text-xs text-muted-foreground truncate">
                   {trendLabel || subtitle}
                 </span>
               )}
@@ -128,8 +128,8 @@ const KPICard = ({
           </div>
 
           {/* Icon */}
-          <div className={`p-3 rounded-xl ${highlight ? colorClasses.bg : 'bg-emerald-50 dark:bg-emerald-500/10'}`}>
-            <Icon className={`h-6 w-6 ${highlight ? colorClasses.text : 'text-emerald-600 dark:text-emerald-400'}`} />
+          <div className={`p-2 sm:p-3 rounded-xl flex-shrink-0 ${highlight ? colorClasses.bg : 'bg-emerald-50 dark:bg-emerald-500/10'}`}>
+            <Icon className={`h-5 w-5 sm:h-6 sm:w-6 ${highlight ? colorClasses.text : 'text-emerald-600 dark:text-emerald-400'}`} />
           </div>
         </div>
       </CardContent>
@@ -335,8 +335,8 @@ const CallHistoryTable = ({ data }: { data: CallHistory[] }) => {
         </CardTitle>
         <p className="text-xs text-muted-foreground">Últimas 10 calls registradas</p>
       </CardHeader>
-      <CardContent className="p-0">
-        <Table>
+      <CardContent className="p-0 overflow-x-auto">
+        <Table className="min-w-[600px]">
           <TableHeader>
             <TableRow className="border-border hover:bg-transparent">
               <TableHead className="text-muted-foreground font-medium text-xs">Data/Hora</TableHead>
@@ -583,18 +583,18 @@ const Calls = () => {
   }
 
   return (
-    <div className="space-y-6 px-1">
+    <div className="space-y-4 sm:space-y-6 px-1">
       {/* Header with Action Buttons */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Performance de Calls</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Performance de Calls</h1>
           <p className="text-sm text-muted-foreground">
             Analytics e métricas • {format(new Date(), "MMMM 'de' yyyy", { locale: ptBR })}
           </p>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           <Sheet open={showAgendamentoSheet} onOpenChange={setShowAgendamentoSheet}>
             <SheetTrigger asChild>
               <Button variant="outline" className="gap-2">

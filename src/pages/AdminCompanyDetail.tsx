@@ -156,7 +156,7 @@ export const AdminCompanyDetail = () => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="overview">
-            <TabsList className="grid grid-cols-3 w-full">
+            <TabsList className="grid grid-cols-3 w-full text-xs sm:text-sm">
               <TabsTrigger value="overview">Configurações</TabsTrigger>
               <TabsTrigger value="products">Produtos</TabsTrigger>
               <TabsTrigger value="team">Time</TabsTrigger>
@@ -181,7 +181,7 @@ export const AdminCompanyDetail = () => {
                   </select>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                 <div className="flex items-center gap-3">
                   <Avatar className="h-14 w-14">
                     {company?.logo_url ? <AvatarImage src={company.logo_url} alt={company.name} /> : null}
@@ -194,7 +194,7 @@ export const AdminCompanyDetail = () => {
                     <Input type="file" accept="image/*" onChange={(e) => setLogoFile(e.target.files?.[0] || null)} />
                   </div>
                 </div>
-                <Button onClick={() => uploadLogo.mutate()} disabled={!logoFile || uploadLogo.isPending}>
+                <Button onClick={() => uploadLogo.mutate()} disabled={!logoFile || uploadLogo.isPending} className="w-full sm:w-auto">
                   {uploadLogo.isPending ? "Enviando..." : "Atualizar Logo"}
                 </Button>
               </div>
@@ -241,6 +241,7 @@ export const AdminCompanyDetail = () => {
               </div>
               <Card className="border border-border bg-card shadow-sm">
                 <CardContent className="p-0">
+                  <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -266,6 +267,7 @@ export const AdminCompanyDetail = () => {
                       ))}
                     </TableBody>
                   </Table>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -279,6 +281,7 @@ export const AdminCompanyDetail = () => {
               </div>
               <Card className="border border-border bg-card shadow-sm">
                 <CardContent className="p-0">
+                  <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -310,6 +313,7 @@ export const AdminCompanyDetail = () => {
                       ))}
                     </TableBody>
                   </Table>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>

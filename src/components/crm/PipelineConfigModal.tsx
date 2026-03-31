@@ -330,7 +330,7 @@ export const PipelineEditor = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[520px] p-0 gap-0
+      <DialogContent className="max-w-[95vw] sm:max-w-[520px] p-0 gap-0
         bg-background
         border-border
         shadow-2xl max-h-[85vh] overflow-hidden flex flex-col">
