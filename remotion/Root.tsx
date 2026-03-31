@@ -10,7 +10,7 @@ import { SalesVideoComposition } from "./scenes/SalesVideoScene";
 // Full video composition
 import { AbsoluteFill, Series } from "remotion";
 
-const GameSalesDemo = () => {
+const VyzonDemo = () => {
     return (
         <AbsoluteFill>
             <Series>
@@ -42,8 +42,8 @@ export const RemotionRoot: React.FC = () => {
         <>
             {/* Full Demo Video - ~20 seconds */}
             <Composition
-                id="GameSalesDemo"
-                component={GameSalesDemo}
+                id="VyzonDemo"
+                component={VyzonDemo}
                 durationInFrames={620}
                 fps={30}
                 width={1920}

@@ -19,7 +19,7 @@ const getPageTitle = (pathname: string) => {
   if (pathname.startsWith("/deal")) return "Detalhes do Deal";
   if (pathname.startsWith("/admin")) return "Administração";
   if (pathname.startsWith("/profile")) return "Perfil";
-  return "Game Sales";
+  return "Vyzon";
 };
 
 // Pages that should remain accessible even with expired trial
@@ -35,7 +35,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const title = getPageTitle(location.pathname);
-    document.title = `Game Sales | ${title}`;
+    document.title = `Vyzon | ${title}`;
   }, [location.pathname]);
 
   // Check if current path is allowed for expired trial

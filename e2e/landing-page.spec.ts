@@ -8,7 +8,7 @@ test.describe('Landing Page', () => {
         await page.waitForLoadState('networkidle');
 
         // Check that the page has loaded by looking for key elements
-        await expect(page).toHaveTitle(/Game Sales|Game of Sales/i);
+        await expect(page).toHaveTitle(/Vyzon/i);
     });
 
     test('should display the hero section', async ({ page }) => {

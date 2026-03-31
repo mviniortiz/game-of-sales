@@ -37,7 +37,7 @@ const urgencyConfigs: Record<UrgencyStage, UrgencyConfig> = {
         getMessage: (days) => (
             <>
                 Você está no{' '}
-                <span className="font-bold text-emerald-400">Game Sales PRO Trial</span>
+                <span className="font-bold text-emerald-400">Vyzon PRO Trial</span>
                 <span className="hidden sm:inline text-slate-400">
                     {' '}— Acesso completo por{' '}
                     <span className="font-bold text-white">{days} dias</span>

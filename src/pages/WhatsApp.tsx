@@ -10,6 +10,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 
 
 import { useEvolutionIntegration } from "@/hooks/useEvolutionAPI";
@@ -500,9 +501,9 @@ function MediaMessageBubble({
 // ─── Pipeline stage definitions (mirrors CRM.tsx) ─────────────────────────
 const PIPELINE_STAGES = [
     { id: "lead", title: "Lead", color: "text-gray-400", bgColor: "bg-gray-500/10", borderColor: "border-gray-500/30" },
-    { id: "qualification", title: "Qualificacao", color: "text-blue-400", bgColor: "bg-blue-500/10", borderColor: "border-blue-500/30" },
+    { id: "qualification", title: "Qualificação", color: "text-blue-400", bgColor: "bg-blue-500/10", borderColor: "border-blue-500/30" },
     { id: "proposal", title: "Proposta", color: "text-emerald-400", bgColor: "bg-emerald-500/10", borderColor: "border-emerald-500/30" },
-    { id: "negotiation", title: "Negociacao", color: "text-amber-400", bgColor: "bg-amber-500/10", borderColor: "border-amber-500/30" },
+    { id: "negotiation", title: "Negociação", color: "text-amber-400", bgColor: "bg-amber-500/10", borderColor: "border-amber-500/30" },
     { id: "closed_won", title: "Ganho", color: "text-emerald-400", bgColor: "bg-emerald-500/10", borderColor: "border-emerald-500/30" },
     { id: "closed_lost", title: "Perdido", color: "text-rose-400", bgColor: "bg-rose-500/10", borderColor: "border-rose-500/30" },
 ];
@@ -550,12 +551,12 @@ export const useCopilot = () => {
                 setRateLimited(true);
                 setRemaining(0);
                 setAiSuggestion({
-                    sentiment: "Limite diario atingido",
+                    sentiment: "Limite diário atingido",
                     temperature: "morno",
-                    strategy: ["Voce usou todas as 10 analises de hoje.", "O limite reseta amanha automaticamente."],
+                    strategy: ["Você usou todas as 10 análises de hoje.", "O limite reseta amanhã automaticamente."],
                     draft: "",
                     objections: [],
-                    nextAction: "Aguardar reset do limite amanha",
+                    nextAction: "Aguardar reset do limite amanhã",
                 });
                 return;
             }
@@ -563,7 +564,7 @@ export const useCopilot = () => {
             if (error || !data?.analysis) {
                 logger.error("[useCopilot] error:", error || data?.error);
                 setAiSuggestion({
-                    sentiment: "Analise indisponivel",
+                    sentiment: "Análise indisponível",
                     temperature: "morno",
                     strategy: ["Tente novamente em alguns segundos."],
                     draft: "",
@@ -582,7 +583,7 @@ export const useCopilot = () => {
             setAiSuggestion({
                 sentiment: "Erro ao analisar",
                 temperature: "morno",
-                strategy: ["Servico de IA temporariamente indisponivel."],
+                strategy: ["Serviço de IA temporariamente indisponível."],
                 draft: "",
                 objections: [],
                 nextAction: "Tentar novamente",
@@ -762,7 +763,7 @@ const RegisterSaleForm = ({ phone, companyId, onClose, onSuccess }: {
     const [saving, setSaving] = useState(false);
 
     const handleSubmit = async () => {
-        if (!product.trim()) { toast.error("Informe o produto/servico"); return; }
+        if (!product.trim()) { toast.error("Informe o produto/serviço"); return; }
         const numValue = parseFloat(value.replace(/[^\d.,]/g, "").replace(",", ".")) || 0;
         if (numValue <= 0) { toast.error("Informe um valor valido"); return; }
 
@@ -800,7 +801,7 @@ const RegisterSaleForm = ({ phone, companyId, onClose, onSuccess }: {
             <Input
                 value={product}
                 onChange={(e) => setProduct(e.target.value)}
-                placeholder="Produto / Servico"
+                placeholder="Produto / Serviço"
                 className="h-8 text-[11px] bg-background/60 border-white/10 text-foreground placeholder:text-muted-foreground/50"
             />
             <Input
@@ -812,7 +813,7 @@ const RegisterSaleForm = ({ phone, companyId, onClose, onSuccess }: {
             <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Observacoes (opcional)"
+                placeholder="Observações (opcional)"
                 rows={2}
                 className="w-full text-[11px] bg-background/60 border border-white/10 rounded-lg px-3 py-2 text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
             />
@@ -841,7 +842,7 @@ const CreateProposalForm = ({ contactName, onClose }: {
     const [description, setDescription] = useState("");
 
     const handleSubmit = () => {
-        toast.success("Proposta criada! (Em breve: integracao completa)");
+        toast.success("Proposta criada! (Em breve: integração completa)");
         onClose();
     };
 
@@ -858,7 +859,7 @@ const CreateProposalForm = ({ contactName, onClose }: {
             <Input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Titulo da proposta"
+                placeholder="Título da proposta"
                 className="h-8 text-[11px] bg-background/60 border-white/10 text-foreground placeholder:text-muted-foreground/50"
             />
             <Input
@@ -870,7 +871,7 @@ const CreateProposalForm = ({ contactName, onClose }: {
             <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Descricao da proposta"
+                placeholder="Descrição da proposta"
                 rows={3}
                 className="w-full text-[11px] bg-background/60 border border-white/10 rounded-lg px-3 py-2 text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:ring-1 focus:ring-blue-500/50"
             />
@@ -900,6 +901,7 @@ const CopilotSidebar = ({
     onUseDraft,
     sidebarOpen,
     onToggle,
+    containerClassName,
 }: {
     chat: { id: string; name: string; phone?: string; profilePicUrl?: string; isGroup: boolean } | undefined;
     messages: Array<{ text: string; sender: "me" | "lead" }>;
@@ -911,6 +913,7 @@ const CopilotSidebar = ({
     onUseDraft: () => void;
     sidebarOpen: boolean;
     onToggle: () => void;
+    containerClassName?: string;
 }) => {
     const { user, companyId } = useAuth();
     const { activeCompanyId } = useTenant();
@@ -1017,7 +1020,7 @@ const CopilotSidebar = ({
 
     if (!sidebarOpen) {
         return (
-            <div className="hidden lg:flex flex-col items-center py-3 px-1 border-l border-white/5 bg-card/60">
+            <div className={`${containerClassName || 'hidden lg:flex'} flex-col items-center py-3 px-1 border-l border-white/5 bg-card/60`}>
                 <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger asChild>
@@ -1034,7 +1037,7 @@ const CopilotSidebar = ({
 
     if (!chat || chat.isGroup) {
         return (
-            <div className="hidden lg:flex w-[350px] shrink-0 flex-col border-l border-white/5 bg-card/60 backdrop-blur-md">
+            <div className={`${containerClassName || 'hidden lg:flex'} w-[350px] shrink-0 flex-col border-l border-white/5 bg-card/60 backdrop-blur-md`}>
                 <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
                     <div className="flex items-center gap-2">
                         <Bot className="w-4 h-4 text-primary" />
@@ -1048,7 +1051,7 @@ const CopilotSidebar = ({
                     <div className="text-center">
                         <Bot className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
                         <p className="text-[12px] text-muted-foreground/60 font-medium">
-                            {chat?.isGroup ? "Analise nao disponivel para grupos" : "Selecione uma conversa"}
+                            {chat?.isGroup ? "Análise não disponível para grupos" : "Selecione uma conversa"}
                         </p>
                     </div>
                 </div>
@@ -1061,7 +1064,7 @@ const CopilotSidebar = ({
     const canMoveNext = deal && currentStageIdx >= 0 && currentStageIdx < PIPELINE_STAGES.length - 2;
 
     return (
-        <div className="hidden lg:flex w-[350px] shrink-0 flex-col border-l border-white/5 bg-card/60 backdrop-blur-md overflow-hidden">
+        <div className={`${containerClassName || 'hidden lg:flex'} w-[350px] shrink-0 flex-col border-l border-white/5 bg-card/60 backdrop-blur-md overflow-hidden`}>
             {/* ─── Header ─── */}
             <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/5 shrink-0">
                 <div className="flex items-center gap-2">
@@ -1103,7 +1106,7 @@ const CopilotSidebar = ({
                                             {aiSuggestion.temperature?.charAt(0).toUpperCase() + aiSuggestion.temperature?.slice(1)}
                                         </Badge>
                                     )}
-                                    {aiSuggestion?.sentiment && aiSuggestion.sentiment !== "Limite diario atingido" && (
+                                    {aiSuggestion?.sentiment && aiSuggestion.sentiment !== "Limite diário atingido" && (
                                         <Badge variant="outline" className="text-[9px] font-bold border-violet-500/30 text-violet-400 bg-violet-500/10 gap-0.5 h-5">
                                             <Brain className="w-3 h-3" />
                                             {aiSuggestion.sentiment}
@@ -1344,7 +1347,7 @@ const CopilotSidebar = ({
                             <div className="space-y-3">
                                 <div className="rounded-xl bg-background/30 border border-dashed border-white/10 p-3 text-center">
                                     <Target className="w-6 h-6 text-muted-foreground/30 mx-auto mb-2" />
-                                    <p className="text-[11px] text-muted-foreground font-medium mb-0.5">Contato nao encontrado no CRM</p>
+                                    <p className="text-[11px] text-muted-foreground font-medium mb-0.5">Contato não encontrado no CRM</p>
                                     <p className="text-[10px] text-muted-foreground/60">Crie um lead para acompanhar este contato</p>
                                 </div>
 
@@ -1365,7 +1368,7 @@ const CopilotSidebar = ({
                                         <Input
                                             value={newDealTitle}
                                             onChange={(e) => setNewDealTitle(e.target.value)}
-                                            placeholder="Titulo do deal"
+                                            placeholder="Título do deal"
                                             className="h-8 text-[11px] bg-background/60 border-white/10 text-foreground placeholder:text-muted-foreground/50"
                                         />
                                         <Input
@@ -1403,7 +1406,7 @@ const CopilotSidebar = ({
                     </SidebarSection>
 
                     {/* 3. AI ANALYSIS (ON-DEMAND) */}
-                    <SidebarSection title="Analise Eva" icon={Brain} defaultOpen={true}
+                    <SidebarSection title="Análise Eva" icon={Brain} defaultOpen={true}
                         badge={remaining !== null ? (
                             <Badge variant="outline" className={`text-[8px] h-4 px-1 font-bold ${remaining <= 2 ? "border-orange-500/30 text-orange-400" : "border-white/10 text-muted-foreground"}`}>
                                 {remaining}/10
@@ -1515,9 +1518,9 @@ const CopilotSidebar = ({
                         )}
                     </SidebarSection>
 
-                    {/* 4. HISTORICO */}
+                    {/* 4. HISTÓRICO */}
                     {deal && noteHistory.length > 0 && (
-                        <SidebarSection title="Historico" icon={History} defaultOpen={false}>
+                        <SidebarSection title="Histórico" icon={History} defaultOpen={false}>
                             <div className="space-y-2">
                                 {noteHistory.map((entry, i) => (
                                     <div key={i} className="flex items-start gap-2 text-[10px]">
@@ -1597,6 +1600,12 @@ const WhatsApp = () => {
     const [hoveredMsgId, setHoveredMsgId] = useState<string | null>(null);
     const [isRecording, setIsRecording] = useState(false);
     const [showAttachMenu, setShowAttachMenu] = useState(false);
+    const [showCreateDealDialog, setShowCreateDealDialog] = useState(false);
+    const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
+    const [newDealTitleDialog, setNewDealTitleDialog] = useState("");
+    const [newDealValueDialog, setNewDealValueDialog] = useState("");
+    const [creatingDealDialog, setCreatingDealDialog] = useState(false);
+    const [headerStageUpdating, setHeaderStageUpdating] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const fileInputTypeRef = useRef<"image" | "document">("image");
     const attachMenuRef = useRef<HTMLDivElement>(null);
@@ -1628,7 +1637,7 @@ const WhatsApp = () => {
     const selectedChatData = chats.find(c => c.id === selectedChatId);
 
     // CRM lookup for selected chat (for header badges)
-    const { deal: headerDeal } = useCrmLookup(selectedChatData?.phone);
+    const { deal: headerDeal, refresh: refreshHeaderDeal } = useCrmLookup(selectedChatData?.phone);
 
     const filteredChats = useMemo(() => {
         let filtered = chats;
@@ -1716,6 +1725,54 @@ const WhatsApp = () => {
         fetchChats();
     };
 
+    // Create deal from header dialog
+    const handleCreateDealFromHeader = async () => {
+        if (!selectedChatData || !user) return;
+        const title = newDealTitleDialog.trim() || `Lead - ${selectedChatData.name}`;
+        const value = parseFloat(newDealValueDialog.replace(/[^\d.,]/g, "").replace(",", ".")) || 0;
+        setCreatingDealDialog(true);
+        try {
+            const { error } = await supabase.from("deals").insert({
+                title,
+                value,
+                customer_name: selectedChatData.name,
+                customer_phone: selectedChatData.phone || null,
+                customer_email: null,
+                stage: "lead" as any,
+                probability: 10,
+                position: 0,
+                user_id: user.id,
+                company_id: activeCompanyId || companyId || null,
+                is_hot: false,
+            });
+            if (error) throw error;
+            toast.success("Lead criado no CRM!");
+            setShowCreateDealDialog(false);
+            setNewDealTitleDialog("");
+            setNewDealValueDialog("");
+            refreshHeaderDeal();
+        } catch {
+            toast.error("Erro ao criar lead");
+        } finally {
+            setCreatingDealDialog(false);
+        }
+    };
+
+    // Change stage from header
+    const handleHeaderStageChange = async (newStage: string) => {
+        if (!headerDeal) return;
+        setHeaderStageUpdating(true);
+        try {
+            await updateDealStage(headerDeal.id, newStage);
+            toast.success("Estágio atualizado!");
+            refreshHeaderDeal();
+        } catch {
+            toast.error("Erro ao atualizar estágio");
+        } finally {
+            setHeaderStageUpdating(false);
+        }
+    };
+
     const handleUseDraft = () => {
         if (aiSuggestion?.draft) {
             setInputText(aiSuggestion.draft);
@@ -1778,7 +1835,7 @@ const WhatsApp = () => {
     return (
         <div className="flex flex-col lg:flex-row h-[calc(100vh-theme(spacing.16))] w-full bg-background overflow-hidden relative font-sans">
             {/* ─── Left Panel (Chat List) ─── */}
-            <div className={`w-full lg:w-[30%] lg:min-w-[320px] lg:max-w-[420px] h-[38vh] lg:h-full border-r-0 lg:border-r border-b lg:border-b-0 border-white/5 flex flex-col bg-card/60 backdrop-blur-md z-20 shadow-xl transition-all duration-300 ${!connected ? 'opacity-90 grayscale-[20%]' : ''}`}>
+            <div className={`w-full lg:w-[30%] lg:min-w-[320px] lg:max-w-[420px] h-[45vh] lg:h-full border-r-0 lg:border-r border-b lg:border-b-0 border-white/5 flex flex-col bg-card/60 backdrop-blur-md z-20 shadow-xl transition-all duration-300 ${!connected ? 'opacity-90 grayscale-[20%]' : ''}`}>
                 {/* Header */}
                 <div className="h-[72px] flex items-center justify-between px-4 lg:px-5 shrink-0 border-b border-white/5">
                     <div className="flex items-center gap-3">
@@ -2072,7 +2129,7 @@ const WhatsApp = () => {
                                 </div>
                                 <h3 className="text-2xl font-extrabold mb-3 tracking-tight">Conectar WhatsApp</h3>
                                 <p className="text-[15px] text-muted-foreground mb-8 leading-relaxed max-w-[380px] text-center font-medium">
-                                    Gere o QR Code para conectar seu WhatsApp ao Game Sales.
+                                    Gere o QR Code para conectar seu WhatsApp ao Vyzon.
                                 </p>
                                 {error && (
                                     <p className="text-red-400 text-[12px] font-bold mb-6 bg-red-400/10 py-2.5 px-5 rounded-xl flex items-center gap-2 max-w-[360px] text-center border border-red-500/20">
@@ -2113,11 +2170,46 @@ const WhatsApp = () => {
                                         <div className="flex items-center gap-2 min-w-0">
                                             {selectedChatData.isGroup && <Users className="h-3.5 w-3.5 text-emerald-400 shrink-0" />}
                                             <h2 className="text-[15px] font-bold text-foreground truncate">{selectedChatData.name}</h2>
-                                            {/* Deal stage badge in header */}
+                                            {/* Interactive stage badge in header */}
                                             {headerDeal && (
-                                                <Badge variant="outline" className={`text-[9px] font-bold h-5 shrink-0 ${getStageInfo(headerDeal.stage).bgColor} ${getStageInfo(headerDeal.stage).color} ${getStageInfo(headerDeal.stage).borderColor}`}>
-                                                    {getStageInfo(headerDeal.stage).title}
-                                                </Badge>
+                                                <div className="flex items-center gap-1 shrink-0">
+                                                    <Select
+                                                        value={headerDeal.stage}
+                                                        onValueChange={handleHeaderStageChange}
+                                                        disabled={headerStageUpdating}
+                                                    >
+                                                        <SelectTrigger className={`h-5 text-[9px] font-bold border-0 gap-1 px-2 w-auto rounded-md ${getStageInfo(headerDeal.stage).bgColor} ${getStageInfo(headerDeal.stage).color}`}>
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent className="bg-card border-white/10">
+                                                            {PIPELINE_STAGES.map(s => (
+                                                                <SelectItem key={s.id} value={s.id} className="text-foreground focus:bg-white/5 text-[11px]">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <div className={`w-2 h-2 rounded-full ${s.bgColor.replace('/10', '')} ${s.color}`} />
+                                                                        {s.title}
+                                                                    </div>
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                    {(() => {
+                                                        const idx = PIPELINE_STAGES.findIndex(s => s.id === headerDeal.stage);
+                                                        return idx >= 0 && idx < PIPELINE_STAGES.length - 2 ? (
+                                                            <TooltipProvider>
+                                                                <Tooltip>
+                                                                    <TooltipTrigger asChild>
+                                                                        <Button variant="ghost" size="icon" className="h-5 w-5 rounded-md text-primary hover:bg-primary/10"
+                                                                            disabled={headerStageUpdating}
+                                                                            onClick={() => handleHeaderStageChange(PIPELINE_STAGES[idx + 1].id)}>
+                                                                            <ChevronRight className="w-3 h-3" />
+                                                                        </Button>
+                                                                    </TooltipTrigger>
+                                                                    <TooltipContent side="bottom" className="text-[10px]">Avançar para {PIPELINE_STAGES[idx + 1]?.title}</TooltipContent>
+                                                                </Tooltip>
+                                                            </TooltipProvider>
+                                                        ) : null;
+                                                    })()}
+                                                </div>
                                             )}
                                         </div>
                                         <p className="text-[11px] text-muted-foreground flex items-center gap-2 font-medium">
@@ -2130,14 +2222,41 @@ const WhatsApp = () => {
                                     </div>
                                 </div>
 
-                                {/* Header Actions */}
+                                {/* Mobile Header Actions */}
+                                <div className="flex lg:hidden items-center gap-1.5 shrink-0">
+                                    {!selectedChatData.isGroup && !headerDeal && (
+                                        <Button variant="outline" size="icon" className="h-8 w-8 border-primary/20 text-primary hover:bg-primary/10"
+                                            onClick={() => {
+                                                setNewDealTitleDialog(`Lead - ${selectedChatData.name}`);
+                                                setShowCreateDealDialog(true);
+                                            }}>
+                                            <Plus className="w-3.5 h-3.5" />
+                                        </Button>
+                                    )}
+                                    {headerDeal && (
+                                        <Button variant="outline" size="icon" className="h-8 w-8 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/10"
+                                            onClick={() => window.open(`/deals/${headerDeal.id}`, '_blank')}>
+                                            <Target className="w-3.5 h-3.5" />
+                                        </Button>
+                                    )}
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary"
+                                        onClick={() => setMobileSheetOpen(true)}>
+                                        <PanelRightOpen className="w-4 h-4" />
+                                    </Button>
+                                </div>
+
+                                {/* Desktop Header Actions */}
                                 <div className="hidden lg:flex items-center gap-2 shrink-0">
                                     {/* Quick Action Buttons */}
                                     {!selectedChatData.isGroup && !headerDeal && (
                                         <TooltipProvider>
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
-                                                    <Button variant="outline" size="sm" className="h-8 text-[10px] font-bold border-primary/20 text-primary hover:bg-primary/10 gap-1">
+                                                    <Button variant="outline" size="sm" className="h-8 text-[10px] font-bold border-primary/20 text-primary hover:bg-primary/10 gap-1"
+                                                        onClick={() => {
+                                                            setNewDealTitleDialog(`Lead - ${selectedChatData.name}`);
+                                                            setShowCreateDealDialog(true);
+                                                        }}>
                                                         <Plus className="w-3 h-3" /> Adicionar ao CRM
                                                     </Button>
                                                 </TooltipTrigger>
@@ -2149,7 +2268,8 @@ const WhatsApp = () => {
                                         <TooltipProvider>
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
-                                                    <Button variant="outline" size="sm" className="h-8 text-[10px] font-bold border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/10 gap-1">
+                                                    <Button variant="outline" size="sm" className="h-8 text-[10px] font-bold border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/10 gap-1"
+                                                        onClick={() => window.open(`/deals/${headerDeal.id}`, '_blank')}>
                                                         <Target className="w-3 h-3" /> Ver no Pipeline
                                                     </Button>
                                                 </TooltipTrigger>
@@ -2477,16 +2597,102 @@ const WhatsApp = () => {
                 />
             )}
 
+            {/* ─── Mobile Eva Sheet ─── */}
+            {connected && (
+                <Sheet open={mobileSheetOpen} onOpenChange={setMobileSheetOpen}>
+                    <SheetContent side="right" className="w-[90vw] sm:w-[400px] p-0 bg-card/95 backdrop-blur-xl border-white/5">
+                        <SheetTitle className="sr-only">Eva AI</SheetTitle>
+                        <CopilotSidebar
+                            chat={selectedChatData}
+                            messages={selectedChatMessages.map(m => ({ text: m.text, sender: m.sender }))}
+                            aiThinking={aiThinking}
+                            aiSuggestion={aiSuggestion}
+                            remaining={remaining}
+                            rateLimited={rateLimited}
+                            onAnalyze={handleAnalyze}
+                            onUseDraft={handleUseDraft}
+                            sidebarOpen={true}
+                            onToggle={() => setMobileSheetOpen(false)}
+                            containerClassName="flex"
+                        />
+                    </SheetContent>
+                </Sheet>
+            )}
+
+            {/* ─── Create Deal Dialog ─── */}
+            <Dialog open={showCreateDealDialog} onOpenChange={setShowCreateDealDialog}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-[15px]">
+                            <div className="p-1.5 rounded-lg bg-primary/10">
+                                <Target className="h-4 w-4 text-primary" />
+                            </div>
+                            Adicionar ao CRM
+                        </DialogTitle>
+                        <DialogDescription className="text-[12px]">
+                            Crie um lead no pipeline para acompanhar este contato.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-3 pt-2">
+                        <div className="space-y-1.5">
+                            <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Título do Lead</label>
+                            <Input
+                                value={newDealTitleDialog}
+                                onChange={(e) => setNewDealTitleDialog(e.target.value)}
+                                placeholder="Ex: Lead - João Silva"
+                                className="h-10 text-[13px] bg-background/60 border-white/10"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Valor estimado (R$)</label>
+                            <Input
+                                value={newDealValueDialog}
+                                onChange={(e) => setNewDealValueDialog(e.target.value)}
+                                placeholder="0,00"
+                                className="h-10 text-[13px] bg-background/60 border-white/10"
+                            />
+                        </div>
+                        {selectedChatData && (
+                            <div className="rounded-lg bg-muted/20 border border-white/5 px-3 py-2.5 flex items-center gap-3">
+                                <Avatar className="h-8 w-8 ring-1 ring-white/10">
+                                    {selectedChatData.profilePicUrl && <AvatarImage src={selectedChatData.profilePicUrl} />}
+                                    <AvatarFallback className="bg-primary/20 text-primary text-[10px] font-bold">
+                                        {selectedChatData.name.substring(0, 2).toUpperCase()}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div className="min-w-0">
+                                    <p className="text-[12px] font-semibold text-foreground truncate">{selectedChatData.name}</p>
+                                    {selectedChatData.phone && <p className="text-[10px] text-muted-foreground">{selectedChatData.phone}</p>}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    <DialogFooter className="gap-2 pt-2">
+                        <Button variant="outline" onClick={() => setShowCreateDealDialog(false)} className="text-[12px]">
+                            Cancelar
+                        </Button>
+                        <Button
+                            className="bg-primary hover:bg-primary/90 text-primary-foreground text-[12px] font-bold gap-1.5"
+                            onClick={handleCreateDealFromHeader}
+                            disabled={creatingDealDialog}
+                        >
+                            {creatingDealDialog ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                            Criar Lead
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
             {/* Config Modal */}
             <Dialog open={isConfigModalOpen} onOpenChange={setIsConfigModalOpen}>
                 <DialogContent className="sm:max-w-lg">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <WhatsAppIcon className="h-5 w-5 text-emerald-500" />
-                            Conexao WhatsApp
+                            Conexão WhatsApp
                         </DialogTitle>
                         <DialogDescription>
-                            Configuracao da conexao gerenciada pelo servidor.
+                            Configuração da conexão gerenciada pelo servidor.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">

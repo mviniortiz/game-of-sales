@@ -54,7 +54,7 @@ const formatCurrency = (value: number) => {
   }).format(value);
 };
 
-// Premium KPI Card — Game Sales Identity
+// Premium KPI Card — Vyzon Identity
 interface KPICardProps {
   title: string;
   value: string;

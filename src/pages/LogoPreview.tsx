@@ -1,11 +1,11 @@
-import { GameSalesLogoV1, GameSalesLogoV2, GameSalesLogoV3 } from '@/components/branding/GameSalesLogo';
+import { VyzonLogoV1, VyzonLogoV2, VyzonLogoV3 } from '@/components/branding/VyzonLogo';
 
 export default function LogoPreview() {
     return (
         <div className="min-h-screen bg-slate-950 p-12">
             <div className="max-w-6xl mx-auto space-y-16">
                 <div className="text-center mb-16">
-                    <h1 className="text-4xl font-bold text-white mb-4">Game Sales - Logo Variations</h1>
+                    <h1 className="text-4xl font-bold text-white mb-4">Vyzon - Logo Variations</h1>
                     <p className="text-gray-400">Escolha a logo que mais gostar!</p>
                 </div>
 
@@ -16,20 +16,20 @@ export default function LogoPreview() {
                         <div className="space-y-4">
                             <p className="text-gray-400 text-sm">Ícone apenas</p>
                             <div className="bg-white rounded-xl p-6 flex items-center justify-center">
-                                <GameSalesLogoV1 variant="icon" className="w-24 h-24" />
+                                <VyzonLogoV1 variant="icon" className="w-24 h-24" />
                             </div>
                         </div>
                         <div className="md:col-span-2 space-y-4">
                             <p className="text-gray-400 text-sm">Logo completa</p>
                             <div className="bg-white rounded-xl p-6 flex items-center justify-center">
-                                <GameSalesLogoV1 variant="full" className="w-full h-20" />
+                                <VyzonLogoV1 variant="full" className="w-full h-20" />
                             </div>
                         </div>
                     </div>
                     <div className="mt-6 space-y-4">
                         <p className="text-gray-400 text-sm">Em fundo escuro</p>
                         <div className="bg-slate-900 rounded-xl p-6 flex items-center justify-center">
-                            <GameSalesLogoV1 variant="full" className="w-96 h-20" />
+                            <VyzonLogoV1 variant="full" className="w-96 h-20" />
                         </div>
                     </div>
                 </div>
@@ -42,20 +42,20 @@ export default function LogoPreview() {
                         <div className="space-y-4">
                             <p className="text-gray-400 text-sm">Ícone apenas</p>
                             <div className="bg-white rounded-xl p-6 flex items-center justify-center">
-                                <GameSalesLogoV2 variant="icon" className="w-24 h-24" />
+                                <VyzonLogoV2 variant="icon" className="w-24 h-24" />
                             </div>
                         </div>
                         <div className="md:col-span-2 space-y-4">
                             <p className="text-gray-400 text-sm">Logo completa</p>
                             <div className="bg-white rounded-xl p-6 flex items-center justify-center">
-                                <GameSalesLogoV2 variant="full" className="w-full h-20" />
+                                <VyzonLogoV2 variant="full" className="w-full h-20" />
                             </div>
                         </div>
                     </div>
                     <div className="mt-6 space-y-4">
                         <p className="text-gray-400 text-sm">Em fundo escuro</p>
                         <div className="bg-slate-900 rounded-xl p-6 flex items-center justify-center">
-                            <GameSalesLogoV2 variant="full" className="w-96 h-20" />
+                            <VyzonLogoV2 variant="full" className="w-96 h-20" />
                         </div>
                     </div>
                 </div>
@@ -67,20 +67,20 @@ export default function LogoPreview() {
                         <div className="space-y-4">
                             <p className="text-gray-400 text-sm">Ícone apenas</p>
                             <div className="bg-white rounded-xl p-6 flex items-center justify-center">
-                                <GameSalesLogoV3 variant="icon" className="w-24 h-24" />
+                                <VyzonLogoV3 variant="icon" className="w-24 h-24" />
                             </div>
                         </div>
                         <div className="md:col-span-2 space-y-4">
                             <p className="text-gray-400 text-sm">Logo completa</p>
                             <div className="bg-white rounded-xl p-6 flex items-center justify-center">
-                                <GameSalesLogoV3 variant="full" className="w-full h-20" />
+                                <VyzonLogoV3 variant="full" className="w-full h-20" />
                             </div>
                         </div>
                     </div>
                     <div className="mt-6 space-y-4">
                         <p className="text-gray-400 text-sm">Em fundo escuro</p>
                         <div className="bg-slate-900 rounded-xl p-6 flex items-center justify-center">
-                            <GameSalesLogoV3 variant="full" className="w-96 h-20" />
+                            <VyzonLogoV3 variant="full" className="w-96 h-20" />
                         </div>
                     </div>
                 </div>
@@ -90,13 +90,13 @@ export default function LogoPreview() {
                     <h2 className="text-2xl font-bold text-white mb-6">Como usar as logos</h2>
                     <div className="space-y-4 text-gray-300">
                         <pre className="bg-slate-900 p-4 rounded-lg overflow-x-auto">
-                            {`import { GameSalesLogoV2 } from '@/components/branding/GameSalesLogo';
+                            {`import { VyzonLogoV2 } from '@/components/branding/VyzonLogo';
 
 // Logo completa
-<GameSalesLogoV2 variant="full" className="w-64 h-16" />
+<VyzonLogoV2 variant="full" className="w-64 h-16" />
 
 // Apenas ícone (para favicons, avatars)
-<GameSalesLogoV2 variant="icon" className="w-10 h-10" />`}
+<VyzonLogoV2 variant="icon" className="w-10 h-10" />`}
                         </pre>
                     </div>
                 </div>

@@ -1,5 +1,5 @@
 /**
- * Game Sales - Plan Configuration
+ * Vyzon - Plan Configuration
  * Centralized plan definitions for the entire application
  */
 
@@ -165,12 +165,13 @@ export const getBillingConfig = (planId: string, cycle: BillingCycle): BillingCo
         };
     }
 
-    // Annual: 10% discount, charged once per year
-    const annualTotal = getAnnualPrice(plan);
+    // Annual: 10% discount, charged monthly at discounted rate
+    // (MP has a per-transaction limit, so we charge monthly instead of lump-sum)
+    const annualMonthly = getAnnualMonthlyEquivalent(plan);
     return {
-        frequency: 12,
+        frequency: 1,
         frequencyType: "months",
-        transactionAmount: annualTotal,
+        transactionAmount: parseFloat(annualMonthly.toFixed(2)),
         label: "Anual",
     };
 };

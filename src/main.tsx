@@ -6,7 +6,7 @@ import "./index.css";
 
 initSentry();
 
-const THEME_STORAGE_KEY = "gamesales-theme";
+const THEME_STORAGE_KEY = "vyzon-theme";
 const LEGACY_THEME_KEYS = ["vyzon-theme"];
 
 // Apply stored theme preference before React mounts (persistent light/dark)

@@ -26,7 +26,7 @@ function json(status: number, body: unknown) {
     });
 }
 
-const SYSTEM_PROMPT = `Voce e o Copiloto de Vendas do Game Sales, um assistente de IA integrado ao WhatsApp do vendedor.
+const SYSTEM_PROMPT = `Voce e o Copiloto de Vendas do Vyzon, um assistente de IA integrado ao WhatsApp do vendedor.
 
 Seu papel: analisar a conversa em tempo real e ajudar o vendedor a fechar mais negocios.
 

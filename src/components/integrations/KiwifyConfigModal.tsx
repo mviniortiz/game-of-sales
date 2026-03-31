@@ -95,7 +95,7 @@ export const KiwifyConfigModal = ({ open, onClose, onSaved }: KiwifyConfigModalP
 
     const handleSave = async () => {
         if (!companyId || !user?.id) {
-            toast.error("Erro: Usuario nao autenticado");
+            toast.error("Erro: Usuário não autenticado");
             return;
         }
 
@@ -128,12 +128,12 @@ export const KiwifyConfigModal = ({ open, onClose, onSaved }: KiwifyConfigModalP
                 if (error) throw error;
             }
 
-            toast.success("Configuracao salva com sucesso!");
+            toast.success("Configuração salva com sucesso!");
             onSaved?.();
             onClose();
         } catch (error: any) {
             console.error("Error saving config:", error);
-            toast.error("Erro ao salvar configuracao: " + error.message);
+            toast.error("Erro ao salvar configuração: " + error.message);
         } finally {
             setIsSaving(false);
         }
@@ -154,7 +154,7 @@ export const KiwifyConfigModal = ({ open, onClose, onSaved }: KiwifyConfigModalP
             setIsActive(false);
             setSignatureSecret("");
 
-            toast.success("Integracao desconectada com sucesso!");
+            toast.success("Integração desconectada com sucesso!");
             onSaved?.();
             onClose();
         } catch (error: any) {
@@ -201,7 +201,7 @@ export const KiwifyConfigModal = ({ open, onClose, onSaved }: KiwifyConfigModalP
                         <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
                             <div className="flex items-center gap-2">
                                 <span className="text-sm font-medium text-foreground">
-                                    Status da Integracao
+                                    Status da Integração
                                 </span>
                             </div>
                             <div className="flex items-center gap-3">
@@ -244,7 +244,7 @@ export const KiwifyConfigModal = ({ open, onClose, onSaved }: KiwifyConfigModalP
                                 className="bg-card border-border"
                             />
                             <p className="text-xs text-muted-foreground">
-                                Encontre o token secreto em: Kiwify Dashboard &rarr; Configuracoes &rarr; Webhooks
+                                Encontre o token secreto em: Kiwify Dashboard &rarr; Configurações &rarr; Webhooks
                             </p>
                         </div>
 
@@ -282,11 +282,11 @@ export const KiwifyConfigModal = ({ open, onClose, onSaved }: KiwifyConfigModalP
                             </h4>
                             <ol className="text-sm text-emerald-700 dark:text-emerald-400 space-y-1 list-decimal list-inside">
                                 <li>Copie a URL do webhook acima</li>
-                                <li>Acesse o painel da Kiwify &rarr; Configuracoes &rarr; Webhooks</li>
+                                <li>Acesse o painel da Kiwify &rarr; Configurações &rarr; Webhooks</li>
                                 <li>Adicione a URL do webhook</li>
                                 <li>Selecione os eventos: <strong>Pedido Aprovado</strong>, <strong>Reembolso</strong>, <strong>Chargeback</strong></li>
                                 <li>Copie o token secreto gerado e cole aqui</li>
-                                <li>Ative a integracao e salve</li>
+                                <li>Ative a integração e salve</li>
                             </ol>
                         </div>
 

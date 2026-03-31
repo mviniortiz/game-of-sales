@@ -4,7 +4,7 @@ import { Plus, X } from "lucide-react";
 
 const FAQS = [
     {
-        q: "O que é o Game Sales?",
+        q: "O que é o Vyzon?",
         a: "Um CRM de vendas completo com pipeline Kanban, ranking gamificado, metas em tempo real, funil de calls, calendário com sync Google Calendar, hub WhatsApp com IA, e integrações automáticas com Hotmart, Kiwify e Greenn.",
     },
     {

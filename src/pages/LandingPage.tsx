@@ -218,7 +218,7 @@ const LandingPage = () => {
                             {/* Logo */}
                             <motion.img
                                 src={brandLogo}
-                                alt="Game Sales"
+                                alt="Vyzon"
                                 initial={{ y: -20, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
                                 className="h-12 mx-auto mb-12 brightness-0 invert"
@@ -290,7 +290,7 @@ const LandingPage = () => {
                                 className="text-center p-6 bg-white/5 rounded-2xl border border-white/10"
                             >
                                 <p className="text-white/80 italic mb-3">
-                                    "Nosso time bateu a meta <span className="text-emerald-400 font-semibold">3 meses seguidos</span> depois que implementamos o Game Sales."
+                                    "Nosso time bateu a meta <span className="text-emerald-400 font-semibold">3 meses seguidos</span> depois que implementamos o Vyzon."
                                 </p>
                                 <p className="text-sm text-white/50">— Lucas M., Gerente de Vendas</p>
                             </motion.div>
@@ -352,7 +352,7 @@ const LandingPage = () => {
                             className="text-white mb-4"
                             style={{ fontWeight: "var(--fw-extrabold)", fontSize: "clamp(1.75rem, 4vw, 2.5rem)", lineHeight: "var(--lh-tight)", letterSpacing: "var(--ls-snug)" }}
                         >
-                            Veja o Game Sales em{" "}
+                            Veja o Vyzon em{" "}
                             <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
                                 ação
                             </span>
@@ -583,7 +583,7 @@ const LandingPage = () => {
                                 </h2>
 
                                 <p className="text-slate-300/90 max-w-xl mb-6" style={{ fontSize: "1.05rem" }}>
-                                    O vendedor liga dentro da plataforma e o historico fica no proprio CRM. Gravacao, contexto da conversa e transcricao no deal para ninguem depender de memoria ou anotacoes soltas.
+                                    O vendedor liga dentro da plataforma e o histórico fica no próprio CRM. Gravação, contexto da conversa e transcrição no deal para ninguém depender de memória ou anotações soltas.
                                 </p>
 
                                 <div className="mb-6 rounded-2xl border border-white/10 bg-white/[0.02] p-4 max-w-xl">
@@ -605,18 +605,18 @@ const LandingPage = () => {
                                         },
                                         {
                                             icon: MessageCircle,
-                                            title: "Transcricao no historico",
+                                            title: "Transcrição no histórico",
                                             desc: "Conversa salva no deal para consulta e follow-up."
                                         },
                                         {
                                             icon: Target,
                                             title: "Mais previsibilidade",
-                                            desc: "Gestor acompanha volume, evolucao e qualidade."
+                                            desc: "Gestor acompanha volume, evolução e qualidade."
                                         },
                                         {
                                             icon: Sparkles,
                                             title: "Insights sob demanda",
-                                            desc: "Opcional por botao, sem travar o fluxo do vendedor."
+                                            desc: "Opcional por botão, sem travar o fluxo do vendedor."
                                         }
                                     ].map(({ icon: Icon, title, desc }) => (
                                         <div key={title} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
@@ -638,7 +638,7 @@ const LandingPage = () => {
                                         onClick={() => scrollToSection("pricing")}
                                         className="h-11 px-5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white border-0"
                                     >
-                                        Ver planos com Ligacoes
+                                        Ver planos com Ligações
                                         <ArrowRight className="h-4 w-4 ml-2" />
                                     </Button>
                                     <Button
@@ -663,8 +663,8 @@ const LandingPage = () => {
                                 <div className="relative rounded-3xl border border-emerald-400/15 bg-slate-950/85 p-4 sm:p-5 shadow-[0_20px_70px_-30px_rgba(16,185,129,0.35)]">
                                     <div className="flex items-center justify-between mb-4">
                                         <div>
-                                            <p className="text-white text-sm" style={{ fontWeight: "var(--fw-semibold)" }}>Ligacoes no Deal</p>
-                                            <p className="text-white/45 text-xs">Tudo no mesmo contexto da negociacao</p>
+                                            <p className="text-white text-sm" style={{ fontWeight: "var(--fw-semibold)" }}>Ligações no Deal</p>
+                                            <p className="text-white/45 text-xs">Tudo no mesmo contexto da negociação</p>
                                         </div>
                                         <div className="flex items-center gap-1.5">
                                             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -675,10 +675,10 @@ const LandingPage = () => {
                                     <div className="space-y-3">
                                         <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
                                             <div className="flex items-center justify-between mb-2 gap-2">
-                                                <p className="text-white text-sm" style={{ fontWeight: "var(--fw-semibold)" }}>Lead: Clinica Horizonte</p>
+                                                <p className="text-white text-sm" style={{ fontWeight: "var(--fw-semibold)" }}>Lead: Clínica Horizonte</p>
                                                 <Badge className="bg-cyan-500/10 text-cyan-300 border-cyan-400/20">Deal #A12</Badge>
                                             </div>
-                                            <p className="text-white/55 text-xs mb-3">Etapa: Proposta enviada • Ultimo contato: ontem, 17:42</p>
+                                            <p className="text-white/55 text-xs mb-3">Etapa: Proposta enviada • Último contato: ontem, 17:42</p>
                                             <div className="flex flex-wrap gap-2">
                                                 <div className="h-9 px-3 rounded-xl bg-emerald-500 text-white text-xs font-semibold inline-flex items-center">
                                                     <PhoneCall className="h-3.5 w-3.5 mr-1.5" />
@@ -686,18 +686,18 @@ const LandingPage = () => {
                                                 </div>
                                                 <div className="h-9 px-3 rounded-xl border border-white/10 bg-white/[0.03] text-white/75 text-xs font-semibold inline-flex items-center">
                                                     <MessageCircle className="h-3.5 w-3.5 mr-1.5" />
-                                                    Ver historico
+                                                    Ver histórico
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/5 p-4">
                                             <div className="flex items-center justify-between mb-2">
-                                                <p className="text-white text-sm" style={{ fontWeight: "var(--fw-semibold)" }}>Chamada concluida • 08:31</p>
-                                                <span className="text-emerald-300 text-xs">Gravacao salva</span>
+                                                <p className="text-white text-sm" style={{ fontWeight: "var(--fw-semibold)" }}>Chamada concluída • 08:31</p>
+                                                <span className="text-emerald-300 text-xs">Gravação salva</span>
                                             </div>
                                             <p className="text-white/65 text-xs leading-relaxed">
-                                                Transcricao vinculada ao deal. Proxima acao sugerida pode ser gerada por botao, somente quando fizer sentido.
+                                                Transcrição vinculada ao deal. Próxima ação sugerida pode ser gerada por botão, somente quando fizer sentido.
                                             </p>
                                         </div>
 
@@ -709,8 +709,8 @@ const LandingPage = () => {
                                             <div className="space-y-2">
                                                 {[
                                                     "Menos perda de contexto entre vendedores e gestores",
-                                                    "Follow-up mais rapido porque a conversa ja esta no CRM",
-                                                    "Evolucao de abordagem comercial com base em chamadas reais"
+                                                    "Follow-up mais rápido porque a conversa já está no CRM",
+                                                    "Evolução de abordagem comercial com base em chamadas reais"
                                                 ].map((item) => (
                                                     <div key={item} className="flex items-start gap-2 text-xs text-white/70">
                                                         <Check className="h-3.5 w-3.5 text-emerald-300 mt-0.5 shrink-0" />
@@ -1019,7 +1019,7 @@ const LandingPage = () => {
                             },
                             {
                                 q: "Funciona para qualquer tipo de venda?",
-                                a: "O Game Sales é ideal para times que vendem infoprodutos, serviços ou produtos físicos. Se você tem um time de vendas, o Game Sales é para você."
+                                a: "O Vyzon é ideal para times que vendem infoprodutos, serviços ou produtos físicos. Se você tem um time de vendas, o Vyzon é para você."
                             },
                             {
                                 q: "Meus dados estão seguros?",
@@ -1057,7 +1057,7 @@ const LandingPage = () => {
             <footer className="py-12 px-4 sm:px-6 lg:px-8 bg-slate-950 border-t border-white/5">
                 <div className="max-w-7xl mx-auto">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                        <img src={brandLogoWhite} alt="Game Sales" className="h-8" />
+                        <img src={brandLogoWhite} alt="Vyzon" className="h-8" />
                         <div className="flex gap-8 text-sm text-gray-400">
                             <button onClick={() => scrollToSection("features")} className="hover:text-white transition-colors">
                                 Funcionalidades
@@ -1069,7 +1069,7 @@ const LandingPage = () => {
                                 Privacidade
                             </a>
                             <a href="/termos-de-servico" className="hover:text-white transition-colors">
-                                Termos de Servico
+                                Termos de Serviço
                             </a>
                             <button onClick={() => navigate("/auth")} className="hover:text-white transition-colors">
                                 Login
@@ -1077,7 +1077,7 @@ const LandingPage = () => {
                         </div>
                     </div>
                     <div className="mt-8 text-center text-sm text-gray-500">
-                        © 2025 Game Sales. Todos os direitos reservados.
+                        © 2025 Vyzon. Todos os direitos reservados.
                     </div>
                 </div>
             </footer>

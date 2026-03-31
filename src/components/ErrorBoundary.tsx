@@ -24,6 +24,25 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("[ErrorBoundary]", error, errorInfo);
+
+    // Auto-reload on stale chunk errors (happens after new deploys)
+    const msg = error.message || "";
+    if (
+      msg.includes("dynamically imported module") ||
+      msg.includes("Failed to fetch") ||
+      msg.includes("Loading chunk") ||
+      msg.includes("Loading CSS chunk")
+    ) {
+      const reloadKey = "chunk_reload_ts";
+      const lastReload = Number(sessionStorage.getItem(reloadKey) || "0");
+      // Only auto-reload once per 30s to avoid infinite loops
+      if (Date.now() - lastReload > 30000) {
+        sessionStorage.setItem(reloadKey, String(Date.now()));
+        window.location.reload();
+        return;
+      }
+    }
+
     Sentry.captureException(error, { extra: { componentStack: errorInfo.componentStack } });
   }
 

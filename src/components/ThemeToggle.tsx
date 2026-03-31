@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 
 type Theme = "light" | "dark";
 
-const storageKey = "gamesales-theme";
+const storageKey = "vyzon-theme";
 const legacyStorageKeys = ["vyzon-theme"];
 
 const getStoredTheme = (): Theme => {

@@ -160,8 +160,8 @@ export interface Deal {
 }
 
 // LocalStorage key for pipeline config - now includes company ID
-const PIPELINE_CONFIG_KEY_PREFIX = "gamesales_pipeline_config_v3_";
-const LEGACY_PIPELINE_KEYS = ["vyzon_pipeline_config_v2", "gamesales_pipeline_config_v2"];
+const PIPELINE_CONFIG_KEY_PREFIX = "vyzon_pipeline_config_v3_";
+const LEGACY_PIPELINE_KEYS = ["vyzon_pipeline_config_v2", "vyzon_pipeline_config_v2"];
 
 // Helper to get company-specific key
 const getPipelineConfigKey = (companyId: string | null) =>

@@ -43,13 +43,13 @@ interface ImportResult {
 // ── Field definitions ────────────────────────────────────────────────────────
 
 const DEAL_FIELDS = [
-  { key: "title", label: "Titulo da Negociacao", required: true },
+  { key: "title", label: "Título da Negociação", required: true },
   { key: "customer_name", label: "Nome do Cliente", required: true },
   { key: "customer_email", label: "Email do Cliente", required: false },
   { key: "customer_phone", label: "Telefone do Cliente", required: false },
   { key: "value", label: "Valor (R$)", required: false },
   { key: "stage", label: "Etapa (lead, qualification, proposal, negotiation, closed_won, closed_lost)", required: false },
-  { key: "notes", label: "Observacoes", required: false },
+  { key: "notes", label: "Observações", required: false },
   { key: "expected_close_date", label: "Data Prevista de Fechamento", required: false },
 ] as const;
 
@@ -61,7 +61,7 @@ const VENDA_FIELDS = [
   { key: "data_venda", label: "Data da Venda (YYYY-MM-DD)", required: false },
   { key: "status", label: "Status (Aprovado, Pendente, Reembolsado)", required: false },
   { key: "plataforma", label: "Plataforma", required: false },
-  { key: "observacoes", label: "Observacoes", required: false },
+  { key: "observacoes", label: "Observações", required: false },
 ] as const;
 
 const VALID_STAGES = ["lead", "qualification", "proposal", "negotiation", "closed_won", "closed_lost"];
@@ -267,7 +267,7 @@ const ImportarDados = () => {
 
   const handleImport = async () => {
     if (!user?.id || !activeCompanyId) {
-      toast.error("Usuario nao autenticado");
+      toast.error("Usuário não autenticado");
       return;
     }
 
@@ -295,12 +295,12 @@ const ImportarDados = () => {
 
           if (importType === "deals") {
             if (!mapped.title && !mapped.customer_name) {
-              importResult.errors.push({ row: rowIndex, message: "Titulo e Nome do Cliente vazios" });
+              importResult.errors.push({ row: rowIndex, message: "Título e Nome do Cliente vazios" });
               continue;
             }
 
             records.push({
-              title: mapped.title || mapped.customer_name || "Sem titulo",
+              title: mapped.title || mapped.customer_name || "Sem título",
               customer_name: mapped.customer_name || mapped.title || "Cliente",
               customer_email: mapped.customer_email || null,
               customer_phone: mapped.customer_phone || null,
@@ -395,7 +395,7 @@ const ImportarDados = () => {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Importar Dados</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Importe negociacoes ou vendas a partir de um arquivo CSV ou Excel
+            Importe negociações ou vendas a partir de um arquivo CSV ou Excel
           </p>
         </div>
 
@@ -430,8 +430,8 @@ const ImportarDados = () => {
         {step === "select" && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
-              { type: "deals" as ImportType, icon: Kanban, title: "Negociacoes (Deals)", desc: "Leads, oportunidades e negociacoes do CRM", color: "emerald" },
-              { type: "vendas" as ImportType, icon: ShoppingCart, title: "Vendas", desc: "Historico de vendas realizadas", color: "blue" },
+              { type: "deals" as ImportType, icon: Kanban, title: "Negociações (Deals)", desc: "Leads, oportunidades e negociações do CRM", color: "emerald" },
+              { type: "vendas" as ImportType, icon: ShoppingCart, title: "Vendas", desc: "Histórico de vendas realizadas", color: "blue" },
             ].map(({ type, icon: Icon, title, desc, color }) => (
               <Card
                 key={type}
@@ -459,7 +459,7 @@ const ImportarDados = () => {
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">
-                Enviar Arquivo - {importType === "deals" ? "Negociacoes" : "Vendas"}
+                Enviar Arquivo - {importType === "deals" ? "Negociações" : "Vendas"}
               </CardTitle>
               <CardDescription>
                 Aceita arquivos .csv, .xlsx ou .xls
@@ -611,9 +611,9 @@ const ImportarDados = () => {
 
               <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-sm text-amber-600 dark:text-amber-400">
                 <AlertCircle className="w-4 h-4 inline mr-1.5" />
-                Serao importados <strong>{rows.length}</strong> registros como{" "}
-                <strong>{importType === "deals" ? "Negociacoes" : "Vendas"}</strong>.
-                Esta acao nao pode ser desfeita facilmente.
+                Serão importados <strong>{rows.length}</strong> registros como{" "}
+                <strong>{importType === "deals" ? "Negociações" : "Vendas"}</strong>.
+                Esta ação não pode ser desfeita facilmente.
               </div>
 
               <div className="flex items-center justify-between pt-2">

@@ -69,7 +69,7 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
                         className="flex items-center gap-2.5 flex-shrink-0"
                     >
-                        <img src={brandLogoWhite} alt="Game Sales" className="h-8 w-auto" />
+                        <img src={brandLogoWhite} alt="Vyzon" className="h-8 w-auto" />
                     </button>
 
                     {/* Desktop links */}
@@ -220,7 +220,7 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                                 className="flex items-center justify-between px-5 h-16 border-b"
                                 style={{ borderColor: "rgba(255,255,255,0.06)" }}
                             >
-                                <img src={brandLogoWhite} alt="Game Sales" className="h-7 w-auto" />
+                                <img src={brandLogoWhite} alt="Vyzon" className="h-7 w-auto" />
                                 <button
                                     onClick={() => setMobileOpen(false)}
                                     className="w-8 h-8 flex items-center justify-center rounded-lg"

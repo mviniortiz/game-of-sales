@@ -80,7 +80,7 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                     {/* Logo */}
                     <motion.img
                         src={brandLogoWhite}
-                        alt="Game Sales"
+                        alt="Vyzon"
                         className="h-9 w-auto"
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -250,7 +250,7 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                                     <div className="flex-1">
                                         <div className="w-52 h-7 bg-white/5 rounded-lg flex items-center justify-center gap-2 border border-white/5">
                                             <div className="w-3 h-3 rounded-full bg-emerald-500/50" />
-                                            <span className="text-xs text-white/40">app.gamesales.com.br</span>
+                                            <span className="text-xs text-white/40">app.vyzon.com.br</span>
                                         </div>
                                     </div>
                                     <div className="flex gap-2">

@@ -88,7 +88,7 @@ const Auth = () => {
 
           {/* Logo */}
           <div className="flex items-center animate-fade-in" style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>
-            <img src={brandLogo} alt="Game Sales" className="h-28 w-auto object-contain" />
+            <img src={brandLogo} alt="Vyzon" className="h-28 w-auto object-contain" />
           </div>
 
           {/* Header */}

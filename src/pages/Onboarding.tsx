@@ -38,10 +38,11 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import gameSalesLogo from "@/assets/logo-full.png";
+import vyzonLogo from "@/assets/logo-full.png";
 import { Confetti } from "@/components/crm/Confetti";
 import { PLANS, formatPrice, getAnnualMonthlyEquivalent, getAnnualPrice, getBillingConfig, type BillingCycle } from "@/config/plans";
-import { initMercadoPago, CardNumber, SecurityCode, ExpirationDate, createCardToken } from "@mercadopago/sdk-react";
+import { initMercadoPago } from "@mercadopago/sdk-react";
+import coreCreateCardToken from "@mercadopago/sdk-react/esm/coreMethods/cardToken/create";
 import { RATE_LIMITS, resetRateLimit } from "@/lib/rateLimiter";
 import { z } from "zod";
 
@@ -51,69 +52,68 @@ if (mpPublicKey) {
     initMercadoPago(mpPublicKey, { locale: "pt-BR" });
 }
 
-// MP field styles — stable reference (outside component to avoid re-creation)
-const MP_FIELD_STYLE = {
-    style: {
-        "font-size": "16px",
-        "font-family": "inherit",
-        color: "#e2e8f0",
-        "placeholder-color": "#64748b",
-    },
+// MP error code to user-friendly message mapping
+const MP_ERROR_MESSAGES: Record<string, string> = {
+    "106": "Número do cartão inválido. Verifique e tente novamente.",
+    "109": "Esse cartão não processa o número de parcelas selecionado.",
+    "126": "Não foi possível processar o pagamento. Tente novamente.",
+    "129": "Esse cartão não processa o valor selecionado.",
+    "145": "Usuário não encontrado. Verifique seus dados.",
+    "150": "Pagamento não disponível no momento. Tente novamente mais tarde.",
+    "151": "Pagamento não disponível no momento. Tente outro cartão.",
+    "160": "Não foi possível processar o pagamento. Tente outro cartão.",
+    "204": "Bandeira do cartão não disponível no momento.",
+    "205": "Número do cartão inválido. Verifique e tente novamente.",
+    "208": "Mês de validade inválido.",
+    "209": "Ano de validade inválido.",
+    "212": "CPF inválido. Verifique e tente novamente.",
+    "213": "CPF inválido. Verifique e tente novamente.",
+    "214": "CPF inválido. Verifique e tente novamente.",
+    "220": "Banco emissor não disponível. Tente outro cartão.",
+    "221": "Titular do cartão inválido. Verifique o nome.",
+    "224": "Código de segurança (CVV) inválido.",
+    "E301": "Número do cartão inválido. Verifique e tente novamente.",
+    "E302": "Código de segurança (CVV) inválido.",
+    "316": "Titular do cartão inválido. Verifique o nome.",
+    "322": "CPF inválido. Verifique e tente novamente.",
+    "323": "CPF inválido. Verifique e tente novamente.",
+    "324": "CPF inválido. Verifique e tente novamente.",
+    "325": "Mês de validade inválido.",
+    "326": "Ano de validade inválido.",
+    "default": "Não foi possível processar o cartão. Verifique os dados e tente novamente.",
 };
 
-const mpContainerClass =
-    "h-12 rounded-xl border border-slate-800 bg-slate-900/50 px-3 flex items-center hover:border-slate-700 transition-colors [&_iframe]:!h-full [&_iframe]:!w-full [&_div]:!w-full [&_div]:!h-full";
+const getMpErrorMessage = (error: any): string => {
+    const cause = error?.cause;
+    if (Array.isArray(cause)) {
+        for (const c of cause) {
+            const code = c?.code || c?.message;
+            if (code && MP_ERROR_MESSAGES[code]) return MP_ERROR_MESSAGES[code];
+        }
+    }
+    const msg = String(error?.message || "").toLowerCase();
+    if (msg.includes("whitespace") || msg.includes("public_key")) return "Erro de configuração do pagamento. Entre em contato com o suporte.";
+    if (msg.includes("card number")) return "Número do cartão inválido.";
+    if (msg.includes("security code") || msg.includes("cvv")) return "Código de segurança (CVV) inválido.";
+    if (msg.includes("expiration")) return "Data de validade inválida.";
+    if (msg.includes("cardholder")) return "Nome do titular inválido.";
+    if (msg.includes("timeout") || msg.includes("tempo")) return "Tempo esgotado. Verifique sua conexão e tente novamente.";
+    if (msg.includes("4000") || msg.includes("amount")) return "Valor acima do limite permitido. Entre em contato com o suporte.";
+    if (msg.includes("validation") || msg.includes("failed")) return "Dados do cartão inválidos. Verifique e tente novamente.";
+    return MP_ERROR_MESSAGES["default"];
+};
 
-// Memoized MP card fields — prevents iframe destruction on parent re-renders
-const MpCardFields = memo(({ onReady }: { onReady: (field: "number" | "expiration" | "security") => void }) => {
-    return (
-        <>
-            <div className="space-y-2">
-                <label className="text-slate-300 text-sm font-medium">
-                    Número do cartão <span className="text-rose-400">*</span>
-                </label>
-                <div className={mpContainerClass}>
-                    <CardNumber
-                        placeholder="0000 0000 0000 0000"
-                        style={MP_FIELD_STYLE.style}
-                        onReady={() => onReady("number")}
-                        onError={(err: any) => console.error("[MP CardNumber]", err)}
-                    />
-                </div>
-            </div>
+// Card number formatting helpers
+const formatCardNumber = (value: string): string => {
+    const digits = value.replace(/\D/g, "").slice(0, 16);
+    return digits.replace(/(\d{4})(?=\d)/g, "$1 ");
+};
 
-            <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                    <label className="text-slate-300 text-sm font-medium">
-                        Validade <span className="text-rose-400">*</span>
-                    </label>
-                    <div className={mpContainerClass}>
-                        <ExpirationDate
-                            placeholder="MM/AA"
-                            style={MP_FIELD_STYLE.style}
-                            onReady={() => onReady("expiration")}
-                            onError={(err: any) => console.error("[MP ExpirationDate]", err)}
-                        />
-                    </div>
-                </div>
-                <div className="space-y-2">
-                    <label className="text-slate-300 text-sm font-medium">
-                        CVV <span className="text-rose-400">*</span>
-                    </label>
-                    <div className={mpContainerClass}>
-                        <SecurityCode
-                            placeholder="123"
-                            style={MP_FIELD_STYLE.style}
-                            onReady={() => onReady("security")}
-                            onError={(err: any) => console.error("[MP SecurityCode]", err)}
-                        />
-                    </div>
-                </div>
-            </div>
-        </>
-    );
-});
-MpCardFields.displayName = "MpCardFields";
+const formatExpiration = (value: string): string => {
+    const digits = value.replace(/\D/g, "").slice(0, 4);
+    if (digits.length > 2) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+    return digits;
+};
 
 // ── Pipeline stage config type (matches CRM.tsx StageConfig) ──
 interface StageConfig {
@@ -127,13 +127,13 @@ interface StageConfig {
 const PIPELINE_TEMPLATES: Record<string, { label: string; description: string; icon: LucideIcon; stages: StageConfig[] }> = {
     b2b: {
         label: "Vendas B2B",
-        description: "Funil classico para vendas empresariais",
+        description: "Funil clássico para vendas empresariais",
         icon: Briefcase,
         stages: [
             { id: "lead", title: "Lead", iconId: "target", colorId: "gray" },
-            { id: "qualification", title: "Qualificacao", iconId: "users", colorId: "blue" },
+            { id: "qualification", title: "Qualificação", iconId: "users", colorId: "blue" },
             { id: "proposal", title: "Proposta", iconId: "dollar", colorId: "indigo" },
-            { id: "negotiation", title: "Negociacao", iconId: "trending", colorId: "amber" },
+            { id: "negotiation", title: "Negociação", iconId: "trending", colorId: "amber" },
             { id: "closed_won", title: "Ganho", iconId: "check", colorId: "emerald" },
         ],
     },
@@ -145,31 +145,31 @@ const PIPELINE_TEMPLATES: Record<string, { label: string; description: string; i
             { id: "lead", title: "Lead Captado", iconId: "target", colorId: "gray" },
             { id: "qualification", title: "Engajado", iconId: "zap", colorId: "blue" },
             { id: "proposal", title: "Checkout", iconId: "dollar", colorId: "indigo" },
-            { id: "negotiation", title: "Recuperacao", iconId: "trending", colorId: "amber" },
+            { id: "negotiation", title: "Recuperação", iconId: "trending", colorId: "amber" },
             { id: "closed_won", title: "Comprou", iconId: "check", colorId: "emerald" },
         ],
     },
     servicos: {
-        label: "Servicos",
-        description: "Para prestadores de servicos e consultorias",
+        label: "Serviços",
+        description: "Para prestadores de serviços e consultorias",
         icon: Wrench,
         stages: [
             { id: "lead", title: "Contato Inicial", iconId: "target", colorId: "gray" },
-            { id: "qualification", title: "Diagnostico", iconId: "users", colorId: "blue" },
-            { id: "proposal", title: "Orcamento", iconId: "dollar", colorId: "indigo" },
+            { id: "qualification", title: "Diagnóstico", iconId: "users", colorId: "blue" },
+            { id: "proposal", title: "Orçamento", iconId: "dollar", colorId: "indigo" },
             { id: "negotiation", title: "Follow-up", iconId: "trending", colorId: "amber" },
             { id: "closed_won", title: "Fechado", iconId: "check", colorId: "emerald" },
         ],
     },
     custom: {
         label: "Personalizado",
-        description: "Use o pipeline padrao e personalize depois",
+        description: "Use o pipeline padrão e personalize depois",
         icon: Palette,
         stages: [
             { id: "lead", title: "Lead", iconId: "target", colorId: "gray" },
-            { id: "qualification", title: "Qualificacao", iconId: "users", colorId: "blue" },
+            { id: "qualification", title: "Qualificação", iconId: "users", colorId: "blue" },
             { id: "proposal", title: "Proposta", iconId: "dollar", colorId: "indigo" },
-            { id: "negotiation", title: "Negociacao", iconId: "trending", colorId: "amber" },
+            { id: "negotiation", title: "Negociação", iconId: "trending", colorId: "amber" },
             { id: "closed_won", title: "Ganho", iconId: "check", colorId: "emerald" },
         ],
     },
@@ -189,7 +189,7 @@ const SEGMENT_OPTIONS = [
     "Outro",
 ];
 
-const PIPELINE_CONFIG_KEY_PREFIX = "gamesales_pipeline_config_v3_";
+const PIPELINE_CONFIG_KEY_PREFIX = "vyzon_pipeline_config_v3_";
 
 const PLAN_ICONS: Record<string, LucideIcon> = {
     starter: Zap,
@@ -198,10 +198,10 @@ const PLAN_ICONS: Record<string, LucideIcon> = {
 };
 
 const registerSchema = z.object({
-    nome: z.string().min(3, "Nome deve ter no minimo 3 caracteres"),
-    email: z.string().email("Email invalido"),
-    password: z.string().min(8, "Senha deve ter no minimo 8 caracteres"),
-    companyName: z.string().min(2, "Nome da empresa deve ter no minimo 2 caracteres"),
+    nome: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
+    email: z.string().email("Email inválido"),
+    password: z.string().min(8, "Senha deve ter no mínimo 8 caracteres"),
+    companyName: z.string().min(2, "Nome da empresa deve ter no mínimo 2 caracteres"),
 });
 
 const TOTAL_STEPS = 7;
@@ -252,13 +252,9 @@ export default function Onboarding() {
     const [cardToken, setCardToken] = useState<string | null>(null);
     const [paymentLoading, setPaymentLoading] = useState(false);
     const [paymentError, setPaymentError] = useState<string | null>(null);
-    const [cardFormReady, setCardFormReady] = useState({ number: false, security: false, expiration: false });
-    const cardFormRef = useRef<any>(null);
-
-    // Stable callback for MpCardFields — prevents re-renders from propagating
-    const handleMpFieldReady = useCallback((field: "number" | "expiration" | "security") => {
-        setCardFormReady(prev => ({ ...prev, [field]: true }));
-    }, []);
+    const [cardNumber, setCardNumber] = useState("");
+    const [cardExpiration, setCardExpiration] = useState("");
+    const [cardCvv, setCardCvv] = useState("");
 
     // Step 6: Invite team
     const [teamEmails, setTeamEmails] = useState<string[]>([""]);
@@ -270,16 +266,16 @@ export default function Onboarding() {
         let error = "";
         switch (field) {
             case "regName":
-                if (value.length > 0 && value.trim().length < 3) error = "Minimo 3 caracteres";
+                if (value.length > 0 && value.trim().length < 3) error = "Mínimo 3 caracteres";
                 break;
             case "regEmail":
-                if (value.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) error = "Formato invalido (ex: nome@empresa.com)";
+                if (value.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) error = "Formato inválido (ex: nome@empresa.com)";
                 break;
             case "regPassword":
                 if (value.length > 0 && value.length < 8) error = `Faltam ${8 - value.length} caractere(s)`;
                 break;
             case "regCompanyName":
-                if (value.length > 0 && value.trim().length < 2) error = "Minimo 2 caracteres";
+                if (value.length > 0 && value.trim().length < 2) error = "Mínimo 2 caracteres";
                 break;
         }
         setFieldErrors(prev => ({ ...prev, [field]: error }));
@@ -291,10 +287,21 @@ export default function Onboarding() {
     }, [validateField]);
 
     // Determine effective company ID
+    // Use a ref to lock the company ID once set during registration (Step 1),
+    // preventing the auth-state useEffect from overwriting it with a stale value.
     const [effectiveCompanyId, setEffectiveCompanyId] = useState<string | null>(null);
+    const companyIdLockedRef = useRef(false);
+
+    const lockAndSetCompanyId = useCallback((id: string) => {
+        companyIdLockedRef.current = true;
+        setEffectiveCompanyId(id);
+    }, []);
 
     // On mount, determine company context and pre-fill from existing profile
     useEffect(() => {
+        // If company ID was already locked by Step 1 registration, don't overwrite
+        if (companyIdLockedRef.current) return;
+
         const compId = authCompanyId || searchParams.get("company_id");
         setEffectiveCompanyId(compId);
 
@@ -334,7 +341,7 @@ export default function Onboarding() {
         const file = e.target.files?.[0];
         if (!file) return;
         if (file.size > 2 * 1024 * 1024) {
-            toast({ title: "Arquivo muito grande", description: "Maximo 2MB", variant: "destructive" });
+            toast({ title: "Arquivo muito grande", description: "Máximo 2MB", variant: "destructive" });
             return;
         }
         setLogoFile(file);
@@ -400,20 +407,35 @@ export default function Onboarding() {
     // Handle payment submission for step 5
     const handlePayment = async () => {
         if (!effectiveCompanyId || !user?.email) {
-            toast({ title: "Erro", description: "Dados da empresa nao encontrados", variant: "destructive" });
+            toast({ title: "Erro", description: "Dados da empresa não encontrados", variant: "destructive" });
             return;
         }
 
         const cardholderName = (document.getElementById("cardholder-name") as HTMLInputElement)?.value;
         const docNumber = (document.getElementById("doc-number") as HTMLInputElement)?.value;
+        const rawCardNumber = cardNumber.replace(/\D/g, "");
+        const expParts = cardExpiration.split("/");
+        const expMonth = expParts[0] || "";
+        const expYear = expParts[1] ? (expParts[1].length === 2 ? `20${expParts[1]}` : expParts[1]) : "";
+        const rawCvv = cardCvv.replace(/\D/g, "");
 
-        if (!cardholderName || !docNumber) {
-            toast({ title: "Campos obrigatorios", description: "Preencha o nome e CPF do titular do cartão", variant: "destructive" });
+        if (!cardholderName || !docNumber || !rawCardNumber || !expMonth || !expYear || !rawCvv) {
+            toast({ title: "Campos obrigatórios", description: "Preencha todos os dados do cartão", variant: "destructive" });
+            return;
+        }
+
+        if (rawCardNumber.length < 13 || rawCardNumber.length > 19) {
+            toast({ title: "Cartão inválido", description: "O número do cartão deve ter entre 13 e 19 dígitos", variant: "destructive" });
+            return;
+        }
+
+        if (rawCvv.length < 3 || rawCvv.length > 4) {
+            toast({ title: "CVV inválido", description: "O código de segurança deve ter 3 ou 4 dígitos", variant: "destructive" });
             return;
         }
 
         if (docNumber.replace(/\D/g, "").length < 11) {
-            toast({ title: "CPF invalido", description: "O CPF deve ter 11 digitos", variant: "destructive" });
+            toast({ title: "CPF inválido", description: "O CPF deve ter 11 dígitos", variant: "destructive" });
             return;
         }
 
@@ -421,16 +443,23 @@ export default function Onboarding() {
         setPaymentError(null);
 
         try {
-            // Create card token using the SDK's exported function
-            console.log("[handlePayment] Creating card token...", { cardholderName, docNumber: docNumber.replace(/\D/g, ""), cardFormReady });
+            console.log("[handlePayment] Creating card token with core method...");
 
-            const tokenResponse = await createCardToken({
+            const tokenPromise = coreCreateCardToken({
+                cardNumber: rawCardNumber,
                 cardholderName,
+                cardExpirationMonth: expMonth,
+                cardExpirationYear: expYear,
+                securityCode: rawCvv,
                 identificationType: "CPF",
                 identificationNumber: docNumber.replace(/\D/g, ""),
             });
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error("Tempo esgotado ao processar cartão. Tente novamente.")), 30000)
+            );
+            const tokenResponse = await Promise.race([tokenPromise, timeoutPromise]) as any;
 
-            console.log("[handlePayment] Token response:", JSON.stringify(tokenResponse, null, 2));
+            console.log("[handlePayment] Token response:", tokenResponse?.id ? "OK" : "FAILED");
 
             if (!tokenResponse?.id) {
                 throw new Error("Não foi possível processar o cartão. Verifique os dados e tente novamente.");
@@ -438,7 +467,7 @@ export default function Onboarding() {
 
             // Get billing config
             const billing = getBillingConfig(selectedPlan, billingCycle);
-            if (!billing) throw new Error("Plano invalido");
+            if (!billing) throw new Error("Plano inválido");
 
             // Call edge function to create subscription
             const response = await supabase.functions.invoke("mercadopago-create-subscription", {
@@ -495,7 +524,8 @@ export default function Onboarding() {
             toast({ title: "Assinatura criada!", description: "Seu trial de 14 dias começou. Aproveite!" });
             advanceStep();
         } catch (error: any) {
-            const msg = error.message || "Erro ao processar pagamento";
+            const msg = getMpErrorMessage(error);
+            console.error("[handlePayment] Error:", error);
             setPaymentError(msg);
             toast({ title: "Erro no pagamento", description: msg, variant: "destructive" });
         } finally {
@@ -517,7 +547,7 @@ export default function Onboarding() {
             });
             if (!validation.success) {
                 const errors = validation.error.errors.map(e => e.message).join(", ");
-                toast({ title: "Dados invalidos", description: errors, variant: "destructive" });
+                toast({ title: "Dados inválidos", description: errors, variant: "destructive" });
                 return;
             }
 
@@ -536,7 +566,7 @@ export default function Onboarding() {
                     .insert({ id: newCompanyId, name: regCompanyName, plan: selectedPlan } as any);
                 if (companyError) throw new Error(`Erro ao criar empresa: ${companyError.message}`);
 
-                setEffectiveCompanyId(newCompanyId);
+                lockAndSetCompanyId(newCompanyId);
                 setCompanyName(regCompanyName);
                 setUserName(regName);
 
@@ -621,7 +651,7 @@ export default function Onboarding() {
                     if (createError) throw createError;
 
                     const newId = newCompany.id;
-                    setEffectiveCompanyId(newId);
+                    lockAndSetCompanyId(newId);
 
                     const logoUrl = await uploadLogo(newId);
                     if (logoUrl || segment) {
@@ -810,7 +840,7 @@ export default function Onboarding() {
         setTimeout(() => {
             navigate(`/${destination}`);
             toast({
-                title: "Bem-vindo ao Game Sales!",
+                title: "Bem-vindo ao Vyzon!",
                 description: "Seu ambiente esta pronto. Boas vendas!",
             });
         }, 1800);
@@ -1017,7 +1047,7 @@ export default function Onboarding() {
                                 <div className="relative">
                                     <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                                     <Input
-                                        placeholder="Minimo 8 caracteres"
+                                        placeholder="Mínimo 8 caracteres"
                                         value={regPassword}
                                         onChange={(e) => { setRegPassword(e.target.value); validateField("regPassword", e.target.value); }}
                                         onBlur={() => handleFieldBlur("regPassword", regPassword)}
@@ -1044,7 +1074,7 @@ export default function Onboarding() {
                         </div>
 
                         <p className="text-[11px] text-slate-500 mt-5 text-center">
-                            Ao criar sua conta, voce concorda com nossos{" "}
+                            Ao criar sua conta, você concorda com nossos{" "}
                             <a
                                 href="/termos-de-servico"
                                 target="_blank"
@@ -1239,7 +1269,7 @@ export default function Onboarding() {
                             Configure seu Pipeline
                         </h2>
                         <p className="text-slate-400 mb-8 text-sm text-center">
-                            Escolha um modelo de funil para comecar. Voce pode personalizar depois.
+                            Escolha um modelo de funil para começar. Você pode personalizar depois.
                         </p>
 
                         <div className="grid gap-3">
@@ -1416,16 +1446,52 @@ export default function Onboarding() {
                             </p>
                         </div>
 
-                        {/* Card form loading state */}
-                        {!cardFormReady.number && !cardFormReady.security && !cardFormReady.expiration && (
-                            <div className="flex items-center gap-2 text-sm text-slate-400">
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                                Carregando campos de pagamento...
-                            </div>
-                        )}
-
                         {/* Card form */}
                         <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label className="text-slate-300 text-sm font-medium">
+                                    Número do cartão <span className="text-rose-400">*</span>
+                                </Label>
+                                <Input
+                                    placeholder="0000 0000 0000 0000"
+                                    className={inputClasses}
+                                    maxLength={19}
+                                    value={cardNumber}
+                                    onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
+                                    inputMode="numeric"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-2">
+                                    <Label className="text-slate-300 text-sm font-medium">
+                                        Validade <span className="text-rose-400">*</span>
+                                    </Label>
+                                    <Input
+                                        placeholder="MM/AA"
+                                        className={inputClasses}
+                                        maxLength={5}
+                                        value={cardExpiration}
+                                        onChange={(e) => setCardExpiration(formatExpiration(e.target.value))}
+                                        inputMode="numeric"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-slate-300 text-sm font-medium">
+                                        CVV <span className="text-rose-400">*</span>
+                                    </Label>
+                                    <Input
+                                        placeholder="123"
+                                        className={inputClasses}
+                                        maxLength={4}
+                                        value={cardCvv}
+                                        onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                                        inputMode="numeric"
+                                        type="password"
+                                    />
+                                </div>
+                            </div>
+
                             <div className="space-y-2">
                                 <Label className="text-slate-300 text-sm font-medium">
                                     Nome no cartão <span className="text-rose-400">*</span>
@@ -1446,6 +1512,7 @@ export default function Onboarding() {
                                     placeholder="000.000.000-00"
                                     className={inputClasses}
                                     maxLength={14}
+                                    inputMode="numeric"
                                     onChange={(e) => {
                                         const digits = e.target.value.replace(/\D/g, "").slice(0, 11);
                                         let formatted = digits;
@@ -1456,8 +1523,6 @@ export default function Onboarding() {
                                     }}
                                 />
                             </div>
-
-                            <MpCardFields onReady={handleMpFieldReady} />
                         </div>
 
                         {/* Payment error */}
@@ -1609,8 +1674,8 @@ export default function Onboarding() {
                         </h2>
                         <p className="text-slate-400 mb-10 text-sm max-w-sm mx-auto">
                             {companyName
-                                ? `A empresa "${companyName}" esta pronta para usar o Game Sales.`
-                                : "Seu Game Sales esta pronto para usar."}{" "}
+                                ? `A empresa "${companyName}" esta pronta para usar o Vyzon.`
+                                : "Seu Vyzon esta pronto para usar."}{" "}
                             {invitedCount > 0 &&
                                 `${invitedCount} vendedor(es) ja receberam convite por e-mail.`}
                         </p>
@@ -1704,11 +1769,11 @@ export default function Onboarding() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6 }}
                     >
-                        <img src={gameSalesLogo} alt="Game Sales" className="h-12 mb-8" />
+                        <img src={vyzonLogo} alt="Vyzon" className="h-12 mb-8" />
                         <h1 className="text-4xl xl:text-5xl font-bold text-white leading-tight mb-6">
-                            Transforme sua operacao comercial em uma{" "}
+                            Transforme sua operação comercial em uma{" "}
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-600">
-                                maquina de vendas
+                                máquina de vendas
                             </span>
                             .
                         </h1>
@@ -1731,7 +1796,7 @@ export default function Onboarding() {
                             ))}
                         </div>
                         <p className="text-slate-300 font-medium italic mb-4 text-base">
-                            "Desde que implementamos o Game Sales, o engajamento do time explodiu. A
+                            "Desde que implementamos o Vyzon, o engajamento do time explodiu. A
                             conversao de leads nunca esteve tao alta e finalmente temos visao clara das
                             metas."
                         </p>
@@ -1764,7 +1829,7 @@ export default function Onboarding() {
                 >
                     {/* Mobile Logo */}
                     <div className="lg:hidden text-center mb-10">
-                        <img src={gameSalesLogo} alt="Game Sales" className="h-10 mx-auto" />
+                        <img src={vyzonLogo} alt="Vyzon" className="h-10 mx-auto" />
                     </div>
 
                     {/* Stepper */}

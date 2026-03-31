@@ -15,7 +15,7 @@ interface Step {
 
 const steps: Step[] = [
   {
-    title: "Bem-vindo ao Game Sales! 🎉",
+    title: "Bem-vindo ao Vyzon! 🎉",
     description: "Vamos configurar sua máquina de vendas. Este tour rápido vai te mostrar os recursos principais.",
   },
   {

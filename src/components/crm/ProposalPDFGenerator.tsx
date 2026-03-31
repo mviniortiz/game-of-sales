@@ -211,7 +211,7 @@ const drawFooter = (doc: jsPDF, pageWidth: number, margin: number) => {
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
     doc.text(
-        "Proposta gerada automaticamente • Game Sales CRM",
+        "Proposta gerada automaticamente • Vyzon CRM",
         pageWidth / 2,
         pageHeight - 15,
         { align: "center" }

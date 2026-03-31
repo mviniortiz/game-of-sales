@@ -113,7 +113,7 @@ export function DealTagPicker({ dealId, companyId }: DealTagPickerProps) {
               </div>
             ) : availableTags.length === 0 && !search ? (
               <p className="text-xs text-muted-foreground text-center py-3">
-                Nenhuma tag disponivel
+                Nenhuma tag disponível
               </p>
             ) : (
               availableTags.map((tag) => (

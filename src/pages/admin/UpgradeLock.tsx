@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Lock, AlertTriangle, Check, Sparkles, Crown, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import gameSalesLogo from '@/assets/logo-full.png';
+import vyzonLogo from '@/assets/logo-full.png';
 
 const plans = [
     {
@@ -71,7 +71,7 @@ export default function UpgradeLock() {
             {/* Content */}
             <div className="relative z-10 flex-1 flex flex-col items-center justify-center p-4 sm:p-8">
                 {/* Logo */}
-                <img src={gameSalesLogo} alt="Game Sales" className="h-10 mb-8" />
+                <img src={vyzonLogo} alt="Vyzon" className="h-10 mb-8" />
 
                 {/* Lock Icon */}
                 <motion.div
@@ -94,7 +94,7 @@ export default function UpgradeLock() {
                         Seu período de teste acabou
                     </h1>
                     <p className="text-white/60 text-lg max-w-md mx-auto">
-                        Escolha um plano para continuar usando o Game Sales e potencializar suas vendas.
+                        Escolha um plano para continuar usando o Vyzon e potencializar suas vendas.
                     </p>
                 </motion.div>
 
@@ -175,8 +175,8 @@ export default function UpgradeLock() {
                     className="text-white/40 text-sm mt-8 text-center"
                 >
                     Dúvidas? Entre em contato com{' '}
-                    <a href="mailto:suporte@gamesales.app" className="text-emerald-400 hover:underline">
-                        suporte@gamesales.app
+                    <a href="mailto:suporte@vyzon.com.br" className="text-emerald-400 hover:underline">
+                        suporte@vyzon.com.br
                     </a>
                 </motion.p>
             </div>

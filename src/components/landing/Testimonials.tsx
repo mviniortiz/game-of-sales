@@ -33,7 +33,7 @@ export const Testimonials = () => {
                         Quem usa, <span className="text-emerald-400">não volta pra planilha</span>
                     </h2>
                     <p className="text-gray-400 max-w-xl mx-auto">
-                        Resultados reais de times que migraram para o Game Sales.
+                        Resultados reais de times que migraram para o Vyzon.
                     </p>
                 </motion.div>
 

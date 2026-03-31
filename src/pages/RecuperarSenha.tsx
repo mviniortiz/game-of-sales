@@ -68,7 +68,7 @@ const RecuperarSenha = () => {
       <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center mb-8 animate-fade-in">
-            <img src={brandLogo} alt="Game Sales" className="h-28 w-auto object-contain hover-scale" />
+            <img src={brandLogo} alt="Vyzon" className="h-28 w-auto object-contain hover-scale" />
           </div>
         </div>
 

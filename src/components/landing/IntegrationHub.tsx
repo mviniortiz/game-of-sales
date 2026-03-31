@@ -10,7 +10,7 @@ import {
 import kiwifyLogo from "@/assets/integrations/kiwify-logo-png_seeklogo-537186.png";
 import greennLogo from "@/assets/integrations/greenn.png";
 import hotmartLogo from "@/assets/integrations/hotmart-logo-png_seeklogo-485917.png";
-import gameSalesLogo from "@/assets/logo-only.png";
+import vyzonLogo from "@/assets/logo-only.png";
 
 interface ItemCardProps {
     item: {
@@ -88,10 +88,10 @@ export const IntegrationHub = () => {
                                 className="w-12 h-12 rounded-full flex items-center justify-center bg-slate-900 border border-white/10"
                                 style={{ boxShadow: "0 0 20px rgba(16, 185, 129, 0.18)" }}
                             >
-                                <img src={gameSalesLogo} alt="Game Sales" className="w-7 h-7 object-contain" />
+                                <img src={vyzonLogo} alt="Vyzon" className="w-7 h-7 object-contain" />
                             </div>
                             <div className="text-left">
-                                <p className="text-white text-sm font-semibold">Game Sales</p>
+                                <p className="text-white text-sm font-semibold">Vyzon</p>
                                 <p className="text-xs text-gray-400">Centraliza vendas, pagamentos e operação</p>
                             </div>
                         </div>
@@ -209,7 +209,7 @@ export const IntegrationHub = () => {
                                 className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center bg-slate-900 border border-white/10"
                                 style={{ boxShadow: "0 0 30px rgba(16, 185, 129, 0.25)" }}
                             >
-                                <img src={gameSalesLogo} alt="Game Sales" className="w-12 h-12 sm:w-14 sm:h-14 object-contain" />
+                                <img src={vyzonLogo} alt="Vyzon" className="w-12 h-12 sm:w-14 sm:h-14 object-contain" />
                             </div>
                         </motion.div>
                     </div>

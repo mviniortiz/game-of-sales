@@ -50,7 +50,7 @@ const PRESETS = [
     },
   },
   {
-    label: "Proxima segunda",
+    label: "Próxima segunda",
     getDate: getNextMonday9am,
   },
   {
@@ -81,7 +81,7 @@ export function AddReminderForm({ dealId, dealTitle, onClose }: AddReminderFormP
 
   const handleSave = async () => {
     if (!title.trim()) {
-      toast.error("Informe um titulo para o lembrete");
+      toast.error("Informe um título para o lembrete");
       return;
     }
     if (!remindAt) {
@@ -112,7 +112,7 @@ export function AddReminderForm({ dealId, dealTitle, onClose }: AddReminderFormP
 
       <div className="space-y-2">
         <div>
-          <Label className="text-xs">Titulo</Label>
+          <Label className="text-xs">Título</Label>
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -147,7 +147,7 @@ export function AddReminderForm({ dealId, dealTitle, onClose }: AddReminderFormP
         </div>
 
         <div>
-          <Label className="text-xs">Descricao (opcional)</Label>
+          <Label className="text-xs">Descrição (opcional)</Label>
           <Textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}

@@ -271,7 +271,7 @@ export const GoogleCalendarConfigModal = ({ open, onClose, onSaved }: GoogleCale
                             </h4>
                             <ul className="text-sm text-blue-700 dark:text-blue-400 space-y-1 list-disc list-inside">
                                 <li>Seus agendamentos são sincronizados automaticamente</li>
-                                <li>Eventos criados no Game Sales aparecem no seu Google Calendar</li>
+                                <li>Eventos criados no Vyzon aparecem no seu Google Calendar</li>
                                 <li>Sincronização a cada 15 minutos</li>
                             </ul>
                         </div>

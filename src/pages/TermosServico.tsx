@@ -21,9 +21,9 @@ const TermosServico = () => {
         <div className="space-y-6">
           <div className="text-center space-y-4 mb-8">
             <FileText className="h-16 w-16 mx-auto text-primary" />
-            <h1 className="text-4xl font-bold">Termos de Servico</h1>
+            <h1 className="text-4xl font-bold">Termos de Serviço</h1>
             <p className="text-muted-foreground">
-              Ultima atualizacao: {new Date().toLocaleDateString('pt-BR')}
+              Última atualização: {new Date().toLocaleDateString('pt-BR')}
             </p>
           </div>
 
@@ -31,15 +31,15 @@ const TermosServico = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                1. Aceitacao dos Termos
+                1. Aceitação dos Termos
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <p>
-                Ao acessar ou utilizar o Game Sales ("Plataforma"), voce concorda em cumprir e estar vinculado a estes Termos de Servico. Se voce nao concordar com algum destes termos, nao utilize a Plataforma.
+                Ao acessar ou utilizar o Vyzon ("Plataforma"), você concorda em cumprir e estar vinculado a estes Termos de Serviço. Se você não concordar com algum destes termos, não utilize a Plataforma.
               </p>
               <p>
-                Estes termos constituem um acordo legal entre voce ("Usuario") e o Game Sales ("Nos", "Nosso"). O uso continuado da Plataforma apos quaisquer alteracoes nestes termos constitui aceitacao dessas alteracoes.
+                Estes termos constituem um acordo legal entre você ("Usuário") e o Vyzon ("Nós", "Nosso"). O uso continuado da Plataforma após quaisquer alterações nestes termos constitui aceitação dessas alterações.
               </p>
             </CardContent>
           </Card>
@@ -48,17 +48,17 @@ const TermosServico = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Globe className="h-5 w-5" />
-                2. Descricao do Servico
+                2. Descrição do Serviço
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <p>
-                O Game Sales e uma plataforma de gestao de vendas que oferece:
+                O Vyzon é uma plataforma de gestão de vendas que oferece:
               </p>
               <ul className="space-y-2">
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span>CRM (Customer Relationship Management) com pipeline de negociacoes</span>
+                  <span>CRM (Customer Relationship Management) com pipeline de negociações</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
@@ -66,23 +66,23 @@ const TermosServico = () => {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span>Gestao de metas e desempenho de equipe</span>
+                  <span>Gestão de metas e desempenho de equipe</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span>Agendamentos e integracao com Google Calendar</span>
+                  <span>Agendamentos e integração com Google Calendar</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span>Integracoes com plataformas de vendas (Hotmart, Kiwify, Greenn, RD Station)</span>
+                  <span>Integrações com plataformas de vendas (Hotmart, Kiwify, Greenn, RD Station)</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span>Comunicacao via WhatsApp integrado</span>
+                  <span>Comunicação via WhatsApp integrado</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span>Dashboards, relatorios e gamificacao de vendas</span>
+                  <span>Dashboards, relatórios e gamificação de vendas</span>
                 </li>
               </ul>
             </CardContent>
@@ -92,27 +92,27 @@ const TermosServico = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
-                3. Contas de Usuario
+                3. Contas de Usuário
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <h3 className="font-semibold mb-2">3.1 Criacao de Conta</h3>
+                <h3 className="font-semibold mb-2">3.1 Criação de Conta</h3>
                 <p className="text-muted-foreground">
-                  Para utilizar a Plataforma, voce deve criar uma conta fornecendo informacoes verdadeiras, completas e atualizadas. Contas podem ser criadas individualmente ou por um administrador da sua empresa.
+                  Para utilizar a Plataforma, você deve criar uma conta fornecendo informações verdadeiras, completas e atualizadas. Contas podem ser criadas individualmente ou por um administrador da sua empresa.
                 </p>
               </div>
               <div>
-                <h3 className="font-semibold mb-2">3.2 Seguranca da Conta</h3>
+                <h3 className="font-semibold mb-2">3.2 Segurança da Conta</h3>
                 <p className="text-muted-foreground">
-                  Voce e responsavel por manter a confidencialidade de suas credenciais de acesso (e-mail e senha). Qualquer atividade realizada em sua conta e de sua responsabilidade. Recomendamos trocar sua senha apos o primeiro acesso e utilizar senhas fortes.
+                  Você é responsável por manter a confidencialidade de suas credenciais de acesso (e-mail e senha). Qualquer atividade realizada em sua conta é de sua responsabilidade. Recomendamos trocar sua senha após o primeiro acesso e utilizar senhas fortes.
                 </p>
               </div>
               <div>
                 <h3 className="font-semibold mb-2">3.3 Tipos de Conta</h3>
                 <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                  <li><strong>Vendedor:</strong> acesso as funcionalidades de vendas, CRM, calendario e metas</li>
-                  <li><strong>Administrador:</strong> acesso completo incluindo gestao de equipe, integracoes e configuracoes da empresa</li>
+                  <li><strong>Vendedor:</strong> acesso às funcionalidades de vendas, CRM, calendário e metas</li>
+                  <li><strong>Administrador:</strong> acesso completo incluindo gestão de equipe, integrações e configurações da empresa</li>
                 </ul>
               </div>
             </CardContent>
@@ -122,11 +122,11 @@ const TermosServico = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <ShieldCheck className="h-5 w-5" />
-                4. Uso Aceitavel
+                4. Uso Aceitável
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p>Ao utilizar a Plataforma, voce concorda em:</p>
+              <p>Ao utilizar a Plataforma, você concorda em:</p>
               <ul className="space-y-2">
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
@@ -134,15 +134,15 @@ const TermosServico = () => {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span>Nao tentar acessar contas de outros usuarios ou dados de outras empresas</span>
+                  <span>Não tentar acessar contas de outros usuários ou dados de outras empresas</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span>Nao utilizar a Plataforma para envio de spam ou comunicacoes nao solicitadas</span>
+                  <span>Não utilizar a Plataforma para envio de spam ou comunicações não solicitadas</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span>Nao tentar comprometer a seguranca ou estabilidade da Plataforma</span>
+                  <span>Não tentar comprometer a segurança ou estabilidade da Plataforma</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
@@ -161,21 +161,21 @@ const TermosServico = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <h3 className="font-semibold mb-2">5.1 Planos Disponiveis</h3>
+                <h3 className="font-semibold mb-2">5.1 Planos Disponíveis</h3>
                 <p className="text-muted-foreground">
-                  A Plataforma oferece diferentes planos (Basic, Pro, Enterprise) com funcionalidades especificas para cada nivel. Os detalhes e precos de cada plano estao disponiveis na pagina de planos.
+                  A Plataforma oferece diferentes planos (Basic, Pro, Enterprise) com funcionalidades específicas para cada nível. Os detalhes e preços de cada plano estão disponíveis na página de planos.
                 </p>
               </div>
               <div>
-                <h3 className="font-semibold mb-2">5.2 Alteracoes de Preco</h3>
+                <h3 className="font-semibold mb-2">5.2 Alterações de Preço</h3>
                 <p className="text-muted-foreground">
-                  Reservamo-nos o direito de alterar os precos dos planos mediante aviso previo de 30 dias. Alteracoes de preco nao afetarao o periodo de assinatura ja pago.
+                  Reservamo-nos o direito de alterar os preços dos planos mediante aviso prévio de 30 dias. Alterações de preço não afetarão o período de assinatura já pago.
                 </p>
               </div>
               <div>
                 <h3 className="font-semibold mb-2">5.3 Cancelamento</h3>
                 <p className="text-muted-foreground">
-                  Voce pode cancelar sua assinatura a qualquer momento. O acesso sera mantido ate o final do periodo ja pago. Nao realizamos reembolsos proporcionais, exceto quando exigido por lei.
+                  Você pode cancelar sua assinatura a qualquer momento. O acesso será mantido até o final do período já pago. Não realizamos reembolsos proporcionais, exceto quando exigido por lei.
                 </p>
               </div>
             </CardContent>
@@ -190,43 +190,43 @@ const TermosServico = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <p>
-                Todo o conteudo da Plataforma, incluindo mas nao limitado a textos, graficos, logotipos, icones, imagens, software e codigo-fonte, e de propriedade do Game Sales ou de seus licenciadores e e protegido por leis de direitos autorais.
+                Todo o conteúdo da Plataforma, incluindo mas não limitado a textos, gráficos, logotipos, ícones, imagens, software e código-fonte, é de propriedade do Vyzon ou de seus licenciadores e é protegido por leis de direitos autorais.
               </p>
               <p>
-                Os dados que voce insere na Plataforma (vendas, contatos, negociacoes) permanecem de sua propriedade. Nos concedemos a voce uma licenca limitada, nao exclusiva e revogavel para usar a Plataforma de acordo com estes Termos.
+                Os dados que você insere na Plataforma (vendas, contatos, negociações) permanecem de sua propriedade. Nós concedemos a você uma licença limitada, não exclusiva e revogável para usar a Plataforma de acordo com estes Termos.
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>7. Integracoes com Terceiros</CardTitle>
+              <CardTitle>7. Integrações com Terceiros</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <p>
-                A Plataforma oferece integracoes com servicos de terceiros, incluindo:
+                A Plataforma oferece integrações com serviços de terceiros, incluindo:
               </p>
               <ul className="space-y-2 text-muted-foreground">
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span><strong>Google Calendar:</strong> sincronizacao de agendamentos. Sujeito aos Termos de Servico do Google.</span>
+                  <span><strong>Google Calendar:</strong> sincronização de agendamentos. Sujeito aos Termos de Serviço do Google.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span><strong>Hotmart, Kiwify, Greenn:</strong> sincronizacao automatica de vendas via webhooks.</span>
+                  <span><strong>Hotmart, Kiwify, Greenn:</strong> sincronização automática de vendas via webhooks.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span><strong>RD Station CRM:</strong> sincronizacao de leads e negociacoes.</span>
+                  <span><strong>RD Station CRM:</strong> sincronização de leads e negociações.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span><strong>WhatsApp (Evolution API):</strong> comunicacao com clientes integrada ao CRM.</span>
+                  <span><strong>WhatsApp (Evolution API):</strong> comunicação com clientes integrada ao CRM.</span>
                 </li>
               </ul>
               <div className="bg-muted p-4 rounded-lg">
                 <p className="text-sm">
-                  Nao nos responsabilizamos por falhas, indisponibilidades ou alteracoes nos servicos de terceiros. O uso dessas integracoes esta sujeito aos termos e politicas de cada provedor.
+                  Não nos responsabilizamos por falhas, indisponibilidades ou alterações nos serviços de terceiros. O uso dessas integrações está sujeito aos termos e políticas de cada provedor.
                 </p>
               </div>
             </CardContent>
@@ -238,10 +238,10 @@ const TermosServico = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <p>
-                Nos esforcaremos para manter a Plataforma disponivel 24 horas por dia, 7 dias por semana. No entanto, nao garantimos disponibilidade ininterrupta, pois podem ocorrer manutencoes programadas ou problemas tecnicos.
+                Nos esforçaremos para manter a Plataforma disponível 24 horas por dia, 7 dias por semana. No entanto, não garantimos disponibilidade ininterrupta, pois podem ocorrer manutenções programadas ou problemas técnicos.
               </p>
               <p>
-                O suporte tecnico esta disponivel por e-mail e pelos canais indicados na Plataforma, em horario comercial.
+                O suporte técnico está disponível por e-mail e pelos canais indicados na Plataforma, em horário comercial.
               </p>
             </CardContent>
           </Card>
@@ -250,12 +250,12 @@ const TermosServico = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5" />
-                9. Limitacao de Responsabilidade
+                9. Limitação de Responsabilidade
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <p>
-                Na extensao maxima permitida por lei, o Game Sales nao sera responsavel por:
+                Na extensão máxima permitida por lei, o Vyzon não será responsável por:
               </p>
               <ul className="space-y-2 text-muted-foreground">
                 <li className="flex items-start gap-2">
@@ -268,11 +268,11 @@ const TermosServico = () => {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span>Interrupcoes causadas por provedores de servicos terceiros</span>
+                  <span>Interrupções causadas por provedores de serviços terceiros</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span>Decisoes comerciais tomadas com base nos dados da Plataforma</span>
+                  <span>Decisões comerciais tomadas com base nos dados da Plataforma</span>
                 </li>
               </ul>
             </CardContent>
@@ -284,21 +284,21 @@ const TermosServico = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <p>
-                Podemos suspender ou encerrar sua conta caso voce viole estes Termos de Servico. Em caso de encerramento, voce podera solicitar a exportacao dos seus dados dentro de 30 dias.
+                Podemos suspender ou encerrar sua conta caso você viole estes Termos de Serviço. Em caso de encerramento, você poderá solicitar a exportação dos seus dados dentro de 30 dias.
               </p>
               <p>
-                Voce pode encerrar sua conta a qualquer momento entrando em contato com nosso suporte ou atraves das configuracoes da Plataforma.
+                Você pode encerrar sua conta a qualquer momento entrando em contato com nosso suporte ou através das configurações da Plataforma.
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>11. Lei Aplicavel</CardTitle>
+              <CardTitle>11. Lei Aplicável</CardTitle>
             </CardHeader>
             <CardContent>
               <p>
-                Estes Termos de Servico sao regidos pelas leis da Republica Federativa do Brasil. Qualquer disputa decorrente destes termos sera submetida ao foro da comarca da sede da empresa, com exclusao de qualquer outro, por mais privilegiado que seja.
+                Estes Termos de Serviço são regidos pelas leis da República Federativa do Brasil. Qualquer disputa decorrente destes termos será submetida ao foro da comarca da sede da empresa, com exclusão de qualquer outro, por mais privilegiado que seja.
               </p>
             </CardContent>
           </Card>
@@ -309,15 +309,15 @@ const TermosServico = () => {
             </CardHeader>
             <CardContent>
               <p className="mb-4">
-                Para duvidas sobre estes Termos de Servico, entre em contato:
+                Para dúvidas sobre estes Termos de Serviço, entre em contato:
               </p>
               <div className="bg-muted p-4 rounded-lg space-y-2">
                 <p><strong>E-mail:</strong> contato@gameofsales.com.br</p>
               </div>
               <p className="mt-4 text-sm text-muted-foreground">
-                Consulte tambem nossa{" "}
+                Consulte também nossa{" "}
                 <Link to="/politica-privacidade" className="text-primary hover:underline">
-                  Politica de Privacidade
+                  Política de Privacidade
                 </Link>{" "}
                 para entender como tratamos seus dados.
               </p>

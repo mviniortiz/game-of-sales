@@ -168,7 +168,7 @@ const Register = () => {
                 <div className="relative z-10 flex flex-col justify-between p-12 text-white w-full">
                     {/* Logo */}
                     <div>
-                        <img src={brandLogo} alt="Game Sales" className="h-12 w-auto brightness-0 invert" />
+                        <img src={brandLogo} alt="Vyzon" className="h-12 w-auto brightness-0 invert" />
                     </div>
 
                     {/* Testimonial */}
@@ -176,7 +176,7 @@ const Register = () => {
                         <div className="relative">
                             <Quote className="h-12 w-12 text-emerald-400 opacity-50 mb-4" />
                             <blockquote className="text-2xl font-light leading-relaxed mb-6">
-                                "O Game Sales aumentou nossas vendas em <span className="font-semibold text-emerald-400">30%</span> no primeiro mês. O ranking gamificado deixou o time completamente viciado em bater metas."
+                                "O Vyzon aumentou nossas vendas em <span className="font-semibold text-emerald-400">30%</span> no primeiro mês. O ranking gamificado deixou o time completamente viciado em bater metas."
                             </blockquote>
                             <div className="flex items-center gap-3">
                                 <div className="h-12 w-12 rounded-full bg-emerald-600 flex items-center justify-center font-bold text-lg">
@@ -214,7 +214,7 @@ const Register = () => {
                 <div className="w-full max-w-md space-y-6">
                     {/* Mobile Logo */}
                     <div className="lg:hidden flex justify-center mb-4">
-                        <img src={brandLogo} alt="Game Sales" className="h-10 w-auto" />
+                        <img src={brandLogo} alt="Vyzon" className="h-10 w-auto" />
                     </div>
 
                     {/* Back Button */}

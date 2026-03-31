@@ -479,7 +479,7 @@ export default function DealCommandCenter() {
             setShowCallModal(false);
 
             if (data?.requiresSetup) {
-                toast.warning(data?.message || "Telefonia ainda nao configurada");
+                toast.warning(data?.message || "Telefonia ainda não configurada");
                 setActiveTab("ligacoes");
                 return;
             }
@@ -1394,7 +1394,7 @@ export default function DealCommandCenter() {
                             }}
                             onCallEnded={() => {
                                 queryClient.invalidateQueries({ queryKey: ["deal-calls", id] });
-                                toast.success("Chamada encerrada. Transcricao sera processada automaticamente.");
+                                toast.success("Chamada encerrada. Transcrição será processada automaticamente.");
                             }}
                             onError={(err) => {
                                 toast.error(err);

@@ -1,6 +1,6 @@
-# Game Sales - Enterprise Sales
+# Vyzon - Enterprise Sales
 
-Sistema completo de gestão de vendas com gamificação. Acompanhe métricas, registre vendas, compita em rankings e alcance suas metas com o Game Sales.
+Sistema completo de gestão de vendas com gamificação. Acompanhe métricas, registre vendas, compita em rankings e alcance suas metas com o Vyzon.
 
 ## Tech Stack
 

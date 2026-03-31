@@ -41,7 +41,7 @@ async function consumeRateLimit(
 serve(async (req) => {
     try {
         const corsOrigin = req.headers.get('origin') || '';
-        const allowedOrigins = ['http://localhost:5173', 'http://localhost:8080', 'https://gamesales.app', 'https://game-of-sales.vercel.app'];
+        const allowedOrigins = ['http://localhost:5173', 'http://localhost:8080', 'https://vyzon.com.br', 'https://www.vyzon.com.br'];
         const origin = allowedOrigins.includes(corsOrigin) ? corsOrigin : allowedOrigins[0];
 
         const strictCorsHeaders = {
@@ -101,11 +101,11 @@ serve(async (req) => {
 
         // Build MP subscription body
         const subscriptionBody: Record<string, any> = {
-            reason: "Assinatura Game Sales",
+            reason: "Assinatura Vyzon",
             external_reference: companyId,
             payer_email: email,
             card_token_id: token,
-            back_url: "https://gamesales.com.br/dashboard",
+            back_url: "https://vyzon.com.br/dashboard",
             status: "authorized",
         };
 

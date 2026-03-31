@@ -3,7 +3,7 @@ import { IntroScene } from "./scenes/IntroScene";
 import { DashboardScene } from "./scenes/DashboardScene";
 import { KanbanScene } from "./scenes/KanbanScene";
 
-export const GameSalesVideo: React.FC = () => {
+export const VyzonVideo: React.FC = () => {
     return (
         <AbsoluteFill style={{ backgroundColor: "#0f0a1e" }}>
             {/* Intro: 0-3s (frames 0-89) */}

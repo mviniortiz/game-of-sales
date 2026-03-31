@@ -134,11 +134,11 @@ export function AppSidebar() {
           <div className="p-4 border-b border-sidebar-border">
             {!collapsed && (
               <div className="flex items-center justify-center">
-                <img src={brandLogo} alt="Game Sales" className="h-20 w-auto object-contain" />
+                <img src={brandLogo} alt="Vyzon" className="h-20 w-auto object-contain" />
               </div>
             )}
             {collapsed && (
-              <img src={brandLogoIcon} alt="Game Sales" className="w-12 h-12 object-contain mx-auto" />
+              <img src={brandLogoIcon} alt="Vyzon" className="w-12 h-12 object-contain mx-auto" />
             )}
           </div>
 

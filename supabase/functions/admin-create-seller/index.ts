@@ -96,7 +96,7 @@ function buildWelcomeEmailHtml(opts: {
               <table role="presentation" cellpadding="0" cellspacing="0">
                 <tr>
                   <td style="background:linear-gradient(135deg,#059669 0%,#10b981 50%,#06b6d4 100%);border-radius:16px;padding:14px 28px;box-shadow:0 8px 32px rgba(16,185,129,0.25);">
-                    <span style="color:#ffffff;font-size:24px;font-weight:800;letter-spacing:-0.5px;text-shadow:0 1px 2px rgba(0,0,0,0.2);">Game Sales</span>
+                    <span style="color:#ffffff;font-size:24px;font-weight:800;letter-spacing:-0.5px;text-shadow:0 1px 2px rgba(0,0,0,0.2);">Vyzon</span>
                   </td>
                 </tr>
               </table>
@@ -287,13 +287,13 @@ function buildWelcomeEmailHtml(opts: {
           <tr>
             <td align="center" style="padding:32px 0 16px;">
               <p style="margin:0 0 8px;color:#334155;font-size:12px;">
-                Enviado por <strong style="color:#475569;">Game Sales</strong>
+                Enviado por <strong style="color:#475569;">Vyzon</strong>
               </p>
               <p style="margin:0;color:#1e293b;font-size:11px;line-height:1.6;">
                 Se voce nao solicitou esta conta, ignore este e-mail.
               </p>
               <p style="margin:12px 0 0;color:#1e293b;font-size:10px;">
-                &copy; ${year} Game Sales. Todos os direitos reservados.
+                &copy; ${year} Vyzon. Todos os direitos reservados.
               </p>
             </td>
           </tr>
@@ -448,7 +448,7 @@ serve(async (req) => {
     }
 
     // Get company name for the email
-    let companyName = "Game Sales";
+    let companyName = "Vyzon";
     const { data: company } = await (supabaseAdmin as any)
       .from("companies")
       .select("name")
@@ -463,7 +463,7 @@ serve(async (req) => {
 
     if (RESEND_API_KEY && sendPassword) {
       try {
-        const fromEmail = Deno.env.get("RESEND_FROM_EMAIL") || "Game Sales <onboarding@resend.dev>";
+        const fromEmail = Deno.env.get("RESEND_FROM_EMAIL") || "Vyzon <onboarding@resend.dev>";
         console.log(`[admin-create-seller] Sending email from=${fromEmail} to=${normalizedEmail}`);
 
         const emailRes = await fetch("https://api.resend.com/emails", {

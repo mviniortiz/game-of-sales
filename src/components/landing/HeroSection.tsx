@@ -455,7 +455,7 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onLoginClick }: HeroSecti
                                 >
                                     230+ empresas
                                 </motion.span>
-                                {" "}já usam o Game Sales
+                                {" "}já usam o Vyzon
                             </span>
                         </motion.div>
 

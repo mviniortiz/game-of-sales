@@ -1,5 +1,14 @@
 project_id = "omsdkjzkphflpwnbaeye"
 
+[auth]
+site_url = "https://vyzon.com.br"
+additional_redirect_urls = [
+  "https://vyzon.com.br/**",
+  "https://www.vyzon.com.br/**",
+  "http://localhost:5173/**",
+  "http://localhost:8080/**"
+]
+
 [functions.google-oauth-callback]
 verify_jwt = false
 

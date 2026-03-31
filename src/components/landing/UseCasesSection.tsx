@@ -237,7 +237,7 @@ const IntegracaoIllustration = () => (
         {/* Channel background glow */}
         <rect x="100" y="8" width="78" height="158" rx="4" fill="url(#chGrad)" />
 
-        {/* "Game Sales" hub box */}
+        {/* "Vyzon" hub box */}
         <motion.g
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}

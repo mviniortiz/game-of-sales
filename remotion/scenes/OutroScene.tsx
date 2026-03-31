@@ -179,7 +179,7 @@ export const OutroScene: React.FC = () => {
                     opacity: interpolate(frame, [70, 85], [0, 1], { extrapolateRight: "clamp" }),
                 }}
             >
-                gamesales.com.br
+                vyzon.com.br
             </div>
         </AbsoluteFill>
     );
