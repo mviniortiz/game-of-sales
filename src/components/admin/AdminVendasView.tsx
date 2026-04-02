@@ -469,8 +469,8 @@ export const AdminVendasView = ({
                 <svg className="w-full h-8" viewBox="0 0 120 24" preserveAspectRatio="none">
                   <defs>
                     <linearGradient id="kpiSparkFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(var(--foreground))" stopOpacity="0.08" />
-                      <stop offset="100%" stopColor="hsl(var(--foreground))" stopOpacity="0" />
+                      <stop offset="0%" stopColor="#10b981" stopOpacity="0.15" />
+                      <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
                     </linearGradient>
                   </defs>
                   {(() => {
@@ -481,7 +481,7 @@ export const AdminVendasView = ({
                     return (
                       <>
                         <path d={`M${pts} L120,24 L0,24 Z`} fill="url(#kpiSparkFill)" />
-                        <path d={`M${pts}`} fill="none" stroke="hsl(var(--foreground))" strokeOpacity="0.25" strokeWidth="1.5" strokeLinecap="round" />
+                        <path d={`M${pts}`} fill="none" stroke="#10b981" strokeOpacity="0.6" strokeWidth="1.5" strokeLinecap="round" />
                       </>
                     );
                   })()}
@@ -506,7 +506,7 @@ export const AdminVendasView = ({
               const d = (vendasEvolution || []).slice(-14);
               const max = Math.max(...d.map(v => v.valor), 1);
               return d.map((v, i) => (
-                <div key={i} className="flex-1 rounded-t-sm bg-foreground/10 min-h-[2px]"
+                <div key={i} className="flex-1 rounded-t-sm bg-blue-500/40 dark:bg-blue-400/35 min-h-[2px]"
                   style={{ height: `${Math.max((v.valor / max) * 100, 6)}%` }} />
               ));
             })()}
@@ -692,7 +692,7 @@ export const AdminVendasView = ({
                         <span className="text-[11px] font-semibold tabular-nums text-foreground ml-2 shrink-0">{formatCurrencyCompact(seller.total)}</span>
                       </div>
                       <div className="w-full bg-muted rounded-full h-1">
-                        <div className="h-1 bg-foreground/20 rounded-full transition-all duration-700"
+                        <div className="h-1 bg-emerald-500/50 rounded-full transition-all duration-700"
                           style={{ width: `${(seller.total / maxVal) * 100}%` }} />
                       </div>
                     </div>
@@ -724,7 +724,13 @@ export const AdminVendasView = ({
                     contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }}
                     formatter={(value: number) => [formatCurrency(value), "Faturamento"]}
                   />
-                  <Bar dataKey="total" fill="hsl(var(--foreground))" fillOpacity={0.15} radius={[0, 4, 4, 0]} />
+                  <defs>
+                    <linearGradient id="prodBarGrad" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="#6366f1" stopOpacity={0.6} />
+                      <stop offset="100%" stopColor="#10b981" stopOpacity={0.6} />
+                    </linearGradient>
+                  </defs>
+                  <Bar dataKey="total" fill="url(#prodBarGrad)" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
