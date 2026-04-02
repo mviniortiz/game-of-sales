@@ -1,10 +1,12 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { initSentry } from "./lib/sentry";
+import { initAnalytics } from "./lib/analytics";
 import App from "./App.tsx";
 import "./index.css";
 
 initSentry();
+initAnalytics();
 
 const THEME_STORAGE_KEY = "vyzon-theme";
 const LEGACY_THEME_KEYS = ["vyzon-theme"];

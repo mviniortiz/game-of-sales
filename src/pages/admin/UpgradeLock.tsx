@@ -1,8 +1,10 @@
 // Upgrade Lock Page - Full screen blocker when trial expires
+import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Lock, AlertTriangle, Check, Sparkles, Crown, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { trackEvent, FUNNEL_EVENTS } from '@/lib/analytics';
 import { ThemeLogo } from '@/components/ui/ThemeLogo';
 
 const plans = [
@@ -60,6 +62,10 @@ const plans = [
 ];
 
 export default function UpgradeLock() {
+    useEffect(() => {
+        trackEvent(FUNNEL_EVENTS.TRIAL_EXPIRED);
+    }, []);
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col">
             {/* Background effects */}
@@ -152,7 +158,7 @@ export default function UpgradeLock() {
                                 </ul>
 
                                 {/* CTA Button */}
-                                <Link to={`/checkout?plan=${plan.id}`} className="block">
+                                <Link to={`/checkout?plan=${plan.id}`} className="block" onClick={() => trackEvent(FUNNEL_EVENTS.UPGRADE_CLICK, { plan: plan.id })}>
                                     <Button
                                         className={`w-full h-12 font-semibold ${plan.highlight
                                                 ? 'bg-gradient-to-r from-emerald-500 to-emerald-500 hover:opacity-90 text-white'

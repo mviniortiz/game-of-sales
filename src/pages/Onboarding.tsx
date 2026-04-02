@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, memo } from "react";
 import { logger } from "@/utils/logger";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { trackEvent, trackConversion, FUNNEL_EVENTS } from "@/lib/analytics";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -406,6 +407,8 @@ export default function Onboarding() {
 
     // Handle payment submission for step 5
     const handlePayment = async () => {
+        trackEvent(FUNNEL_EVENTS.PAYMENT_SUBMIT, { plan: selectedPlan });
+
         if (!effectiveCompanyId || !user?.email) {
             toast({ title: "Erro", description: "Dados da empresa não encontrados", variant: "destructive" });
             return;
@@ -521,11 +524,14 @@ export default function Onboarding() {
             }
 
             console.log("[handlePayment] SUCCESS! Advancing to next step...");
+            trackEvent(FUNNEL_EVENTS.PAYMENT_SUCCESS, { plan: selectedPlan });
+            trackConversion(import.meta.env.VITE_GADS_CONVERSION_LABEL || "", Number(billingConfig?.amount) || 0);
             toast({ title: "Assinatura criada!", description: "Seu trial de 14 dias começou. Aproveite!" });
             advanceStep();
         } catch (error: any) {
             const msg = getMpErrorMessage(error);
             console.error("[handlePayment] Error:", error);
+            trackEvent(FUNNEL_EVENTS.PAYMENT_ERROR, { plan: selectedPlan, error: msg });
             setPaymentError(msg);
             toast({ title: "Erro no pagamento", description: msg, variant: "destructive" });
         } finally {
@@ -614,6 +620,7 @@ export default function Onboarding() {
                     throw new Error(`Erro ao criar conta: ${signUpError.message}`);
                 }
 
+                trackEvent(FUNNEL_EVENTS.REGISTER_COMPLETE, { plan: selectedPlan });
                 toast({ title: "Conta criada!", description: "Vamos configurar sua empresa." });
                 advanceStep();
             } catch (error: any) {
@@ -746,7 +753,9 @@ export default function Onboarding() {
 
     const advanceStep = () => {
         setDirection(1);
-        setCurrentStep((prev) => Math.min(prev + 1, TOTAL_STEPS));
+        const nextStep = Math.min(currentStep + 1, TOTAL_STEPS);
+        trackEvent(FUNNEL_EVENTS.ONBOARDING_STEP, { step: nextStep, plan: selectedPlan });
+        setCurrentStep(nextStep);
     };
 
     const handleBack = () => {

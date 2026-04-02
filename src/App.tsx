@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useSearchParams } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Analytics } from "@vercel/analytics/react";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -40,6 +40,13 @@ const ImportarDados = lazy(() => import("./pages/ImportarDados"));
 const PoliticaPrivacidade = lazy(() => import("./pages/PoliticaPrivacidade"));
 const TermosServico = lazy(() => import("./pages/TermosServico"));
 const LogoPreview = lazy(() => import("./pages/LogoPreview"));
+
+// Redirect /checkout?plan=X to /onboarding?plan=X&step=5
+const CheckoutRedirect = () => {
+  const [params] = useSearchParams();
+  const plan = params.get("plan") || "plus";
+  return <Navigate to={`/onboarding?plan=${plan}&step=5`} replace />;
+};
 
 const LazyFallback = () => (
   <div className="flex items-center justify-center min-h-[50vh]">
@@ -83,6 +90,7 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/register" element={<Register />} />
               <Route path="/onboarding" element={<Onboarding />} />
+              <Route path="/checkout" element={<CheckoutRedirect />} />
               <Route path="/recuperar-senha" element={<RecuperarSenha />} />
               <Route path="/logo-preview" element={<LogoPreview />} />
 

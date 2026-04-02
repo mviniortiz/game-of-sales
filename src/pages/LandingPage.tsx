@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { trackEvent, FUNNEL_EVENTS } from "@/lib/analytics";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -93,6 +94,8 @@ const LandingPage = () => {
     const goToRegister = (planId?: string) => {
         setSelectedPlan(planId || 'plus');
         setIsNavigating(true);
+
+        trackEvent(FUNNEL_EVENTS.LANDING_CTA_CLICK, { plan: planId || "plus" });
 
         // Animate then navigate to onboarding with plan pre-selected
         setTimeout(() => {
