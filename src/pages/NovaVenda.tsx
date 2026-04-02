@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
+import { trackEvent, FUNNEL_EVENTS } from "@/lib/analytics";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -144,6 +145,7 @@ const NovaVenda = () => {
       queryClient.invalidateQueries({ queryKey: ["seller-ranking"] });
 
       playSaleChime();
+      trackEvent(FUNNEL_EVENTS.FIRST_SALE_CREATED, { valor: parseFloat(valor) || 0 });
       toast.success("🎉 Venda registrada com sucesso!", {
         description: `Você ganhou ${Math.floor(parseFloat(valor) || 0)} pontos!`
       });

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { trackEvent, FUNNEL_EVENTS } from "@/lib/analytics";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -168,6 +169,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
       setSubmitted(true);
       setTimeout(() => {
         setSubmitted(false);
+        trackEvent(FUNNEL_EVENTS.FIRST_DEAL_CREATED);
         toast.success("Negociação criada!");
         form.reset();
         setDisplayValue("");

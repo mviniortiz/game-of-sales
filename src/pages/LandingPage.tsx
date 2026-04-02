@@ -68,6 +68,7 @@ const LandingPage = () => {
         const html = document.documentElement;
         const wasDark = html.classList.contains("dark");
         html.classList.remove("dark");
+        trackEvent(FUNNEL_EVENTS.LANDING_VIEW);
         return () => {
             if (wasDark) html.classList.add("dark");
         };

@@ -217,7 +217,11 @@ export default function Onboarding() {
     const isLoggedIn = !!user;
 
     // Step tracking - start at step 2 if already logged in
-    const [currentStep, setCurrentStep] = useState(isLoggedIn ? 2 : 1);
+    const [currentStep, setCurrentStep] = useState(() => {
+        const initial = isLoggedIn ? 2 : 1;
+        trackEvent(FUNNEL_EVENTS.ONBOARDING_START, { step: initial, plan: selectedPlan });
+        return initial;
+    });
     const [direction, setDirection] = useState(1);
     const [showConfetti, setShowConfetti] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -802,6 +806,7 @@ export default function Onboarding() {
 
         setInvitedCount(successCount);
         if (successCount > 0) {
+            trackEvent(FUNNEL_EVENTS.TEAM_INVITE_SENT, { count: successCount });
             toast({
                 title: "Convites enviados!",
                 description: `${successCount} vendedor(es) convidado(s) com sucesso.`,
