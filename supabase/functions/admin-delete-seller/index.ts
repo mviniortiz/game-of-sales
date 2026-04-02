@@ -21,8 +21,8 @@ serve(async (req) => {
     // Auth check
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
+      return new Response(JSON.stringify({ error: "Não autorizado" }), {
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -33,24 +33,24 @@ serve(async (req) => {
 
     const { data: { user }, error: userError } = await userSupabase.auth.getUser();
     if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
+      return new Response(JSON.stringify({ error: "Não autorizado" }), {
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const { sellerId } = await req.json();
     if (!sellerId) {
-      return new Response(JSON.stringify({ error: "sellerId e obrigatorio" }), {
-        status: 400,
+      return new Response(JSON.stringify({ error: "sellerId é obrigatório" }), {
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     // Prevent self-deletion
     if (sellerId === user.id) {
-      return new Response(JSON.stringify({ error: "Voce nao pode remover sua propria conta" }), {
-        status: 400,
+      return new Response(JSON.stringify({ error: "Você não pode remover sua própria conta" }), {
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -63,8 +63,8 @@ serve(async (req) => {
       .single();
 
     if (!requesterProfile) {
-      return new Response(JSON.stringify({ error: "Perfil nao encontrado" }), {
-        status: 403,
+      return new Response(JSON.stringify({ error: "Perfil não encontrado" }), {
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -80,8 +80,8 @@ serve(async (req) => {
     const isAdmin = !!adminRole;
 
     if (!isSuperAdmin && !isAdmin) {
-      return new Response(JSON.stringify({ error: "Forbidden" }), {
-        status: 403,
+      return new Response(JSON.stringify({ error: "Sem permissão para realizar esta ação" }), {
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -94,15 +94,15 @@ serve(async (req) => {
       .single();
 
     if (!sellerProfile) {
-      return new Response(JSON.stringify({ error: "Vendedor nao encontrado" }), {
-        status: 404,
+      return new Response(JSON.stringify({ error: "Vendedor não encontrado" }), {
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     if (!isSuperAdmin && sellerProfile.company_id !== requesterProfile.company_id) {
-      return new Response(JSON.stringify({ error: "Forbidden: Vendedor de outra empresa" }), {
-        status: 403,
+      return new Response(JSON.stringify({ error: "Vendedor pertence a outra empresa" }), {
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -116,8 +116,8 @@ serve(async (req) => {
       .maybeSingle();
 
     if (sellerAdminRole && !isSuperAdmin) {
-      return new Response(JSON.stringify({ error: "Nao e possivel remover um administrador" }), {
-        status: 403,
+      return new Response(JSON.stringify({ error: "Não é possível remover um administrador" }), {
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -128,7 +128,7 @@ serve(async (req) => {
     if (deleteError) {
       console.error("[admin-delete-seller] deleteUser error:", deleteError);
       return new Response(JSON.stringify({ error: deleteError.message }), {
-        status: 400,
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -146,8 +146,8 @@ serve(async (req) => {
 
   } catch (error: any) {
     console.error("[admin-delete-seller] error:", error);
-    return new Response(JSON.stringify({ error: "Erro interno" }), {
-      status: 500,
+    return new Response(JSON.stringify({ error: "Erro interno ao remover vendedor" }), {
+      status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }

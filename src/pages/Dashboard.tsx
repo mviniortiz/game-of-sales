@@ -154,14 +154,14 @@ const Dashboard = () => {
   }
 
   const now = new Date();
-  const startOfMonthDate = startOfMonth(now).toISOString().split("T")[0];
-  const endOfMonthDate = endOfMonth(now).toISOString().split("T")[0];
+  const startOfMonthDate = format(startOfMonth(now), "yyyy-MM-dd");
+  const endOfMonthDate = format(endOfMonth(now), "yyyy-MM-dd");
   const startOfMonthObj = startOfMonth(now);
 
   // Previous month boundaries for trend calculation
   const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const startOfPrevMonth = startOfMonth(prevMonth).toISOString().split("T")[0];
-  const endOfPrevMonth = endOfMonth(prevMonth).toISOString().split("T")[0];
+  const startOfPrevMonth = format(startOfMonth(prevMonth), "yyyy-MM-dd");
+  const endOfPrevMonth = format(endOfMonth(prevMonth), "yyyy-MM-dd");
 
   const { data: vendas } = useQuery({
     queryKey: ["vendas", user?.id],
@@ -552,10 +552,10 @@ const Dashboard = () => {
       </div >
 
       {/* Row 3: Meta Progress - Premium Card with Ring */}
-      {
-        metaValor > 0 && (
-          <Card className="relative overflow-hidden bg-card border-border" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
-            <CardContent className="relative p-4 sm:p-5">
+      <Card className="relative overflow-hidden bg-card border-border" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+        <CardContent className="relative p-4 sm:p-5">
+          {metaValor > 0 ? (
+            <>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
                 <div className="flex items-center gap-4">
                   {/* Progress Ring */}
@@ -626,10 +626,27 @@ const Dashboard = () => {
                 <span className="text-[10px] text-muted-foreground">50%</span>
                 <span className="text-[10px] text-muted-foreground">100%</span>
               </div>
-            </CardContent>
-          </Card>
-        )
-      }
+            </>
+          ) : (
+            <div className="flex items-center gap-4">
+              <div className="relative w-14 h-14 shrink-0">
+                <svg className="w-14 h-14 -rotate-90" viewBox="0 0 36 36">
+                  <circle cx="18" cy="18" r="14" fill="none" className="stroke-muted" strokeWidth="3" />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Target className="h-5 w-5 text-muted-foreground" />
+                </div>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">Meta do Mês</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Nenhuma meta definida para este mês. Peça ao seu administrador para configurar.
+                </p>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div >
   );
 };

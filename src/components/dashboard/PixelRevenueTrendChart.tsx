@@ -59,10 +59,10 @@ export function PixelRevenueTrendChart({ data, height = 260 }: PixelRevenueTrend
       </div>
 
       {/* Area Chart */}
-      <ChartContainer config={chartConfig} className="w-full" style={{ height }}>
+      <ChartContainer config={chartConfig} className="w-full" style={{ height, minHeight: 200 }}>
         <AreaChart
           data={data}
-          margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+          margin={{ top: 8, right: 12, left: -10, bottom: 0 }}
         >
           <defs>
             <linearGradient id="areaGradientValor" x1="0" y1="0" x2="0" y2="1">

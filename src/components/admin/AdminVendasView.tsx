@@ -13,7 +13,10 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   BarChart3,
-  UserCheck
+  UserCheck,
+  Filter,
+  CheckCircle,
+  XCircle
 } from "lucide-react";
 import {
   BarChart,
@@ -162,8 +165,8 @@ export const AdminVendasView = ({
 }: AdminVendasViewProps) => {
   const [statusFiltro, setStatusFiltro] = useState("todos");
   const [topView, setTopView] = useState<"vendedores" | "produtos">("vendedores");
-  const inicioMes = dateRange.from?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0];
-  const fimMes = dateRange.to?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0];
+  const inicioMes = dateRange.from ? format(dateRange.from, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd");
+  const fimMes = dateRange.to ? format(dateRange.to, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd");
   const { activeCompanyId } = useTenant();
 
   const applyCompanyFilter = <T,>(query: any) => {
@@ -382,6 +385,51 @@ export const AdminVendasView = ({
 
       return result;
     },
+  });
+
+  // Pipeline Funnel - deals por estágio
+  const PIPELINE_STAGES = [
+    { id: "lead", label: "Leads", color: "#6B7280", bgColor: "bg-gray-100 dark:bg-gray-500/10" },
+    { id: "qualification", label: "Qualificação", color: "#3B82F6", bgColor: "bg-blue-100 dark:bg-blue-500/10" },
+    { id: "proposal", label: "Proposta", color: "#6366F1", bgColor: "bg-indigo-100 dark:bg-indigo-500/10" },
+    { id: "negotiation", label: "Negociação", color: "#F59E0B", bgColor: "bg-amber-100 dark:bg-amber-500/10" },
+    { id: "closed_won", label: "Fechado (Ganho)", color: "#10B981", bgColor: "bg-emerald-100 dark:bg-emerald-500/10" },
+    { id: "closed_lost", label: "Perdido", color: "#EF4444", bgColor: "bg-rose-100 dark:bg-rose-500/10" },
+  ];
+
+  const { data: pipelineData } = useQuery({
+    queryKey: ["admin-pipeline-funnel", activeCompanyId, selectedVendedor],
+    queryFn: async () => {
+      let query = applyCompanyFilter(
+        supabase
+          .from("deals")
+          .select("id, stage, value")
+      );
+
+      if (selectedVendedor !== "todos") {
+        query = query.eq("user_id", selectedVendedor);
+      }
+
+      const { data: deals, error } = await query;
+      if (error) throw error;
+
+      const stageMap: Record<string, { count: number; value: number }> = {};
+      PIPELINE_STAGES.forEach(s => { stageMap[s.id] = { count: 0, value: 0 }; });
+
+      (deals || []).forEach((deal: any) => {
+        if (stageMap[deal.stage]) {
+          stageMap[deal.stage].count += 1;
+          stageMap[deal.stage].value += Number(deal.value) || 0;
+        }
+      });
+
+      return PIPELINE_STAGES.map(stage => ({
+        ...stage,
+        count: stageMap[stage.id].count,
+        value: stageMap[stage.id].value,
+      }));
+    },
+    enabled: !!activeCompanyId,
   });
 
   // Meta consolidada - busca a meta do mês atual (baseado no filtro)
@@ -703,7 +751,7 @@ export const AdminVendasView = ({
             </div>
           </CardHeader>
           <CardContent className="pt-0 relative">
-            <PixelRevenueTrendChart data={vendasEvolution || []} height={460} />
+            <PixelRevenueTrendChart data={vendasEvolution || []} height={300} />
           </CardContent>
         </Card>
 
@@ -802,7 +850,142 @@ export const AdminVendasView = ({
       </div>
 
 
-      {/* Row 4: Ranking de Metas */}
+      {/* Row 4: Pipeline Funnel */}
+      {pipelineData && pipelineData.some(s => s.count > 0) && (() => {
+        const activeStages = pipelineData.filter(s => s.id !== "closed_lost");
+        const lostStage = pipelineData.find(s => s.id === "closed_lost");
+        const maxCount = Math.max(...activeStages.map(s => s.count), 1);
+        const totalDeals = pipelineData.reduce((acc, s) => acc + s.count, 0);
+        const totalValue = pipelineData.reduce((acc, s) => acc + s.value, 0);
+        const wonStage = pipelineData.find(s => s.id === "closed_won");
+        const leadStage = pipelineData.find(s => s.id === "lead");
+        const overallConversion = leadStage && leadStage.count > 0 && wonStage
+          ? ((wonStage.count / leadStage.count) * 100).toFixed(1)
+          : "0";
+
+        return (
+          <Card className="relative overflow-hidden border border-border bg-card shadow-sm rounded-xl">
+            <div className="absolute top-0 left-0 w-40 h-40 bg-indigo-500/5 blur-3xl pointer-events-none" />
+            <CardHeader className="pb-3 relative">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-indigo-500/10">
+                      <Filter className="h-4 w-4 text-indigo-400" />
+                    </div>
+                    Funil do Pipeline
+                  </CardTitle>
+                  <p className="text-[11px] text-muted-foreground mt-1 ml-8">
+                    {totalDeals} deals • {formatCurrency(totalValue)} em pipeline • Taxa de conversão geral: {overallConversion}%
+                  </p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0 relative">
+              <div className="space-y-2">
+                {activeStages.map((stage, i) => {
+                  const widthPercent = Math.max((stage.count / maxCount) * 100, 8);
+                  const nextStage = activeStages[i + 1];
+                  const conversionRate = nextStage && stage.count > 0
+                    ? ((nextStage.count / stage.count) * 100).toFixed(0)
+                    : null;
+
+                  return (
+                    <div key={stage.id}>
+                      <div className="flex items-center gap-3">
+                        {/* Stage label */}
+                        <div className="w-28 shrink-0 text-right">
+                          <p className="text-xs font-semibold text-foreground">{stage.label}</p>
+                          <p className="text-[10px] text-muted-foreground">{formatCurrencyCompact(stage.value)}</p>
+                        </div>
+
+                        {/* Funnel bar */}
+                        <div className="flex-1 relative">
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 relative h-9 flex items-center justify-center" style={{ maxWidth: `${widthPercent}%`, minWidth: "60px" }}>
+                              <div
+                                className="absolute inset-0 rounded-md opacity-90"
+                                style={{ backgroundColor: stage.color }}
+                              />
+                              <span className="relative text-xs font-bold text-white z-10">
+                                {stage.count}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Conversion arrow */}
+                        <div className="w-16 shrink-0 text-center">
+                          {conversionRate && (
+                            <span className="text-[10px] font-bold text-muted-foreground">
+                              {conversionRate}% →
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Lost deals indicator */}
+                {lostStage && lostStage.count > 0 && (
+                  <div className="flex items-center gap-3 pt-2 mt-2 border-t border-border/50">
+                    <div className="w-28 shrink-0 text-right">
+                      <p className="text-xs font-semibold text-rose-500 flex items-center justify-end gap-1">
+                        <XCircle className="h-3 w-3" />
+                        {lostStage.label}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">{formatCurrencyCompact(lostStage.value)}</p>
+                    </div>
+                    <div className="flex-1 relative">
+                      <div className="flex items-center gap-2">
+                        <div className="relative h-9 flex items-center justify-center rounded-md" style={{ width: `${Math.max((lostStage.count / maxCount) * 100, 8)}%`, minWidth: "60px", backgroundColor: lostStage.color + "20", border: `1px dashed ${lostStage.color}` }}>
+                          <span className="text-xs font-bold text-rose-500 z-10">{lostStage.count}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="w-16 shrink-0 text-center">
+                      {leadStage && leadStage.count > 0 && (
+                        <span className="text-[10px] font-bold text-rose-400">
+                          {((lostStage.count / leadStage.count) * 100).toFixed(0)}% lost
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Summary footer */}
+                <div className="flex items-center justify-between pt-3 mt-2 border-t border-border/50">
+                  <div className="flex items-center gap-4">
+                    {wonStage && wonStage.count > 0 && (
+                      <div className="flex items-center gap-1.5">
+                        <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
+                        <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                          {wonStage.count} ganhos • {formatCurrency(wonStage.value)}
+                        </span>
+                      </div>
+                    )}
+                    {lostStage && lostStage.count > 0 && (
+                      <div className="flex items-center gap-1.5">
+                        <XCircle className="h-3.5 w-3.5 text-rose-500" />
+                        <span className="text-xs font-semibold text-rose-500">
+                          {lostStage.count} perdidos • {formatCurrency(lostStage.value)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Win Rate</p>
+                    <p className="text-sm font-bold text-foreground">{overallConversion}%</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
+
+      {/* Row 5: Ranking de Metas */}
       {(metaConsolidada || vendedoresMetas || true) && (() => {
         const hasActiveFilters = selectedVendedor !== "todos" || selectedFormaPagamento !== "todas" || selectedProduto !== "todos";
 
