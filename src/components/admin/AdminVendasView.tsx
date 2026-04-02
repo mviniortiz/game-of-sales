@@ -850,23 +850,26 @@ export const AdminVendasView = ({
       </div>
 
 
-      {/* Row 4: Pipeline Funnel */}
+      {/* Row 4: Pipeline Funnel — Premium Centered Design */}
       {pipelineData && pipelineData.some(s => s.count > 0) && (() => {
-        const activeStages = pipelineData.filter(s => s.id !== "closed_lost");
+        const funnelStages = pipelineData.filter(s => s.id !== "closed_lost" && s.id !== "closed_won");
+        const wonStage = pipelineData.find(s => s.id === "closed_won");
         const lostStage = pipelineData.find(s => s.id === "closed_lost");
-        const maxCount = Math.max(...activeStages.map(s => s.count), 1);
         const totalDeals = pipelineData.reduce((acc, s) => acc + s.count, 0);
         const totalValue = pipelineData.reduce((acc, s) => acc + s.value, 0);
-        const wonStage = pipelineData.find(s => s.id === "closed_won");
         const leadStage = pipelineData.find(s => s.id === "lead");
-        const overallConversion = leadStage && leadStage.count > 0 && wonStage
-          ? ((wonStage.count / leadStage.count) * 100).toFixed(1)
-          : "0";
+        const winRate = leadStage && leadStage.count > 0 && wonStage
+          ? ((wonStage.count / leadStage.count) * 100) : 0;
+
+        // Width tiers for the funnel shape (centered, decreasing)
+        const widthTiers = [100, 82, 62, 44];
 
         return (
           <Card className="relative overflow-hidden border border-border bg-card shadow-sm rounded-xl">
-            <div className="absolute top-0 left-0 w-40 h-40 bg-indigo-500/5 blur-3xl pointer-events-none" />
-            <CardHeader className="pb-3 relative">
+            <div className="absolute top-0 left-0 w-48 h-48 bg-indigo-500/5 blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl pointer-events-none" />
+
+            <CardHeader className="pb-4 relative">
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
@@ -876,108 +879,93 @@ export const AdminVendasView = ({
                     Funil do Pipeline
                   </CardTitle>
                   <p className="text-[11px] text-muted-foreground mt-1 ml-8">
-                    {totalDeals} deals • {formatCurrency(totalValue)} em pipeline • Taxa de conversão geral: {overallConversion}%
+                    {totalDeals} deals no pipeline • {formatCurrency(totalValue)} em valor total
                   </p>
+                </div>
+                {/* Win rate badge */}
+                <div className="flex items-center gap-2">
+                  <div className={`px-3 py-1.5 rounded-full text-xs font-bold ${
+                    winRate >= 30 ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-500/20" :
+                    winRate >= 15 ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 ring-1 ring-amber-500/20" :
+                    "bg-rose-500/10 text-rose-600 dark:text-rose-400 ring-1 ring-rose-500/20"
+                  }`}>
+                    {winRate.toFixed(1)}% Win Rate
+                  </div>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="pt-0 relative">
-              <div className="space-y-2">
-                {activeStages.map((stage, i) => {
-                  const widthPercent = Math.max((stage.count / maxCount) * 100, 8);
-                  const nextStage = activeStages[i + 1];
-                  const conversionRate = nextStage && stage.count > 0
+
+            <CardContent className="pt-0 relative pb-5">
+              {/* Funnel visualization */}
+              <div className="flex flex-col items-center gap-0">
+                {funnelStages.map((stage, i) => {
+                  const width = widthTiers[i] || 30;
+                  const nextStage = funnelStages[i + 1];
+                  const convRate = nextStage && stage.count > 0
                     ? ((nextStage.count / stage.count) * 100).toFixed(0)
                     : null;
+                  const convColor = convRate
+                    ? Number(convRate) >= 60 ? "text-emerald-500" : Number(convRate) >= 35 ? "text-amber-500" : "text-rose-400"
+                    : "";
 
                   return (
-                    <div key={stage.id}>
-                      <div className="flex items-center gap-3">
-                        {/* Stage label */}
-                        <div className="w-28 shrink-0 text-right">
-                          <p className="text-xs font-semibold text-foreground">{stage.label}</p>
-                          <p className="text-[10px] text-muted-foreground">{formatCurrencyCompact(stage.value)}</p>
-                        </div>
+                    <div key={stage.id} className="w-full flex flex-col items-center">
+                      {/* Stage bar */}
+                      <div
+                        className="relative rounded-lg border-l-4 flex items-center justify-between px-4 py-3 transition-all duration-300 hover:scale-[1.01] cursor-default group"
+                        style={{
+                          width: `${width}%`,
+                          borderLeftColor: stage.color,
+                          backgroundColor: `${stage.color}10`,
+                        }}
+                      >
+                        {/* Subtle gradient overlay */}
+                        <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: `linear-gradient(90deg, ${stage.color}08, ${stage.color}15)` }} />
 
-                        {/* Funnel bar */}
-                        <div className="flex-1 relative">
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1 relative h-9 flex items-center justify-center" style={{ maxWidth: `${widthPercent}%`, minWidth: "60px" }}>
-                              <div
-                                className="absolute inset-0 rounded-md opacity-90"
-                                style={{ backgroundColor: stage.color }}
-                              />
-                              <span className="relative text-xs font-bold text-white z-10">
-                                {stage.count}
-                              </span>
-                            </div>
-                          </div>
+                        <div className="relative flex items-center gap-2.5">
+                          <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: stage.color }} />
+                          <span className="text-xs font-semibold text-foreground">{stage.label}</span>
                         </div>
-
-                        {/* Conversion arrow */}
-                        <div className="w-16 shrink-0 text-center">
-                          {conversionRate && (
-                            <span className="text-[10px] font-bold text-muted-foreground">
-                              {conversionRate}% →
-                            </span>
-                          )}
+                        <div className="relative flex items-center gap-3">
+                          <span className="text-xs tabular-nums text-muted-foreground">{formatCurrencyCompact(stage.value)}</span>
+                          <span className="text-sm font-bold tabular-nums text-foreground min-w-[28px] text-right">{stage.count}</span>
                         </div>
                       </div>
+
+                      {/* Conversion connector */}
+                      {convRate && (
+                        <div className="flex items-center gap-1.5 py-1.5">
+                          <div className="w-px h-3 bg-border" />
+                          <span className={`text-[10px] font-bold ${convColor}`}>
+                            ↓ {convRate}%
+                          </span>
+                          <div className="w-px h-3 bg-border" />
+                        </div>
+                      )}
                     </div>
                   );
                 })}
 
-                {/* Lost deals indicator */}
-                {lostStage && lostStage.count > 0 && (
-                  <div className="flex items-center gap-3 pt-2 mt-2 border-t border-border/50">
-                    <div className="w-28 shrink-0 text-right">
-                      <p className="text-xs font-semibold text-rose-500 flex items-center justify-end gap-1">
-                        <XCircle className="h-3 w-3" />
-                        {lostStage.label}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground">{formatCurrencyCompact(lostStage.value)}</p>
-                    </div>
-                    <div className="flex-1 relative">
-                      <div className="flex items-center gap-2">
-                        <div className="relative h-9 flex items-center justify-center rounded-md" style={{ width: `${Math.max((lostStage.count / maxCount) * 100, 8)}%`, minWidth: "60px", backgroundColor: lostStage.color + "20", border: `1px dashed ${lostStage.color}` }}>
-                          <span className="text-xs font-bold text-rose-500 z-10">{lostStage.count}</span>
-                        </div>
+                {/* Won / Lost results */}
+                <div className="w-full flex items-center justify-center gap-3 mt-3 pt-3 border-t border-border/40">
+                  {wonStage && (
+                    <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-500/10 ring-1 ring-emerald-500/20">
+                      <CheckCircle className="h-4 w-4 text-emerald-500" />
+                      <div>
+                        <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{wonStage.count} ganhos</p>
+                        <p className="text-[10px] text-emerald-600/70 dark:text-emerald-400/70">{formatCurrencyCompact(wonStage.value)}</p>
                       </div>
                     </div>
-                    <div className="w-16 shrink-0 text-center">
-                      {leadStage && leadStage.count > 0 && (
-                        <span className="text-[10px] font-bold text-rose-400">
-                          {((lostStage.count / leadStage.count) * 100).toFixed(0)}% lost
-                        </span>
-                      )}
+                  )}
+                  {lostStage && lostStage.count > 0 && (
+                    <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-rose-500/10 ring-1 ring-rose-500/20">
+                      <XCircle className="h-4 w-4 text-rose-500" />
+                      <div>
+                        <p className="text-xs font-bold text-rose-600 dark:text-rose-400">{lostStage.count} perdidos</p>
+                        <p className="text-[10px] text-rose-600/70 dark:text-rose-400/70">{formatCurrencyCompact(lostStage.value)}</p>
+                      </div>
                     </div>
-                  </div>
-                )}
-
-                {/* Summary footer */}
-                <div className="flex items-center justify-between pt-3 mt-2 border-t border-border/50">
-                  <div className="flex items-center gap-4">
-                    {wonStage && wonStage.count > 0 && (
-                      <div className="flex items-center gap-1.5">
-                        <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
-                        <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                          {wonStage.count} ganhos • {formatCurrency(wonStage.value)}
-                        </span>
-                      </div>
-                    )}
-                    {lostStage && lostStage.count > 0 && (
-                      <div className="flex items-center gap-1.5">
-                        <XCircle className="h-3.5 w-3.5 text-rose-500" />
-                        <span className="text-xs font-semibold text-rose-500">
-                          {lostStage.count} perdidos • {formatCurrency(lostStage.value)}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Win Rate</p>
-                    <p className="text-sm font-bold text-foreground">{overallConversion}%</p>
-                  </div>
+                  )}
                 </div>
               </div>
             </CardContent>
