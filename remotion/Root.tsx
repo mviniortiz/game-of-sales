@@ -6,6 +6,7 @@ import { IntegrationsScene } from "./scenes/IntegrationsScene";
 import { CalendarScene } from "./scenes/CalendarScene";
 import { OutroScene } from "./scenes/OutroScene";
 import { SalesVideoComposition } from "./scenes/SalesVideoScene";
+import { SalesVideoReelsComposition } from "./scenes/SalesVideoReels";
 
 // Full video composition
 import { AbsoluteFill, Series } from "remotion";
@@ -100,14 +101,24 @@ export const RemotionRoot: React.FC = () => {
                 height={1080}
             />
 
-            {/* Sales Video - Professional marketing video ~33 seconds */}
+            {/* Sales Video - Cinematic marketing video, 45 seconds */}
             <Composition
                 id="SalesVideo"
                 component={SalesVideoComposition}
-                durationInFrames={1005}
+                durationInFrames={1350}
                 fps={30}
                 width={1920}
                 height={1080}
+            />
+
+            {/* Sales Video - Instagram Reels / Stories (9:16), 45 seconds */}
+            <Composition
+                id="SalesVideoReels"
+                component={SalesVideoReelsComposition}
+                durationInFrames={1350}
+                fps={30}
+                width={1080}
+                height={1920}
             />
         </>
     );

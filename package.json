@@ -11,6 +11,7 @@
     "preview": "vite preview",
     "remotion:studio": "remotion studio",
     "remotion:build": "remotion render VyzonDemo out/demo.mp4",
+    "remotion:sales": "remotion render SalesVideo public/videos/sales-video.mp4 --concurrency=4",
     "remotion:preview": "remotion preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
