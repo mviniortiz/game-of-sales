@@ -217,11 +217,7 @@ export default function Onboarding() {
     const isLoggedIn = !!user;
 
     // Step tracking - start at step 2 if already logged in
-    const [currentStep, setCurrentStep] = useState(() => {
-        const initial = isLoggedIn ? 2 : 1;
-        trackEvent(FUNNEL_EVENTS.ONBOARDING_START, { step: initial, plan: selectedPlan });
-        return initial;
-    });
+    const [currentStep, setCurrentStep] = useState(isLoggedIn ? 2 : 1);
     const [direction, setDirection] = useState(1);
     const [showConfetti, setShowConfetti] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -265,6 +261,15 @@ export default function Onboarding() {
     const [teamEmails, setTeamEmails] = useState<string[]>([""]);
     const [inviteLoading, setInviteLoading] = useState(false);
     const [invitedCount, setInvitedCount] = useState(0);
+
+    // Track onboarding start once on mount
+    useEffect(() => {
+        trackEvent(FUNNEL_EVENTS.ONBOARDING_START, {
+            step: isLoggedIn ? 2 : 1,
+            plan: selectedPlan,
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Inline validation for registration fields
     const validateField = useCallback((field: string, value: string) => {
