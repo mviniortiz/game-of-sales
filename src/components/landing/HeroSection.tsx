@@ -493,11 +493,6 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onLoginClick }: HeroSecti
                         animate={{ opacity: 1, y: 0 }}
                         transition={fadeInTransition}
                     >
-                        <Badge className="mb-6 bg-emerald-50 text-emerald-600 border-emerald-300 hover:bg-emerald-100">
-                            <Sparkles className="h-3 w-3 mr-1" />
-                            <span className="text-label text-[10px]">CRM DE VENDAS GAMIFICADO</span>
-                        </Badge>
-
                         <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl mb-6 tracking-tight">
                             <motion.span
                                 className="text-gray-900 block"
@@ -575,30 +570,6 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onLoginClick }: HeroSecti
                                     {text}
                                 </span>
                             ))}
-                        </motion.div>
-
-                        {/* Live Counter */}
-                        <motion.div
-                            className="mt-6 inline-flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-full px-4 py-2"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.8 }}
-                        >
-                            <span className="relative flex h-2.5 w-2.5">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
-                            </span>
-                            <span className="text-body-strong text-emerald-600 text-sm">
-                                <motion.span
-                                    style={{ fontWeight: 'var(--fw-bold)' }}
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: 1.2 }}
-                                >
-                                    230+ empresas
-                                </motion.span>
-                                {" "}já usam o Vyzon
-                            </span>
                         </motion.div>
 
                         {/* Integration logos */}

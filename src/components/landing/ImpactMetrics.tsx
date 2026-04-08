@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { TrendingUp, Clock, Users, Trophy, LayoutGrid } from "lucide-react";
+import { TrendingUp, Clock, Trophy, LayoutGrid } from "lucide-react";
 import { AnimatedCounter } from "./AnimatedCounter";
 
 // ─── Metric definitions — números reais e críveis ─────────────────────────────
@@ -14,17 +14,6 @@ const METRICS = [
         label: "Para configurar",
         sublabel: "integre e comece a usar",
         delay: 0,
-    },
-    {
-        icon: Users,
-        iconColor: "text-emerald-600",
-        iconBg: "bg-emerald-400/10",
-        prefix: "",
-        value: 230,
-        suffix: "+",
-        label: "Empresas ativas",
-        sublabel: "times de vendas no Brasil",
-        delay: 0.1,
     },
     {
         icon: Clock,
@@ -91,7 +80,7 @@ export const ImpactMetrics = () => {
             />
 
             <div className="max-w-6xl mx-auto">
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-0 divide-x divide-gray-200">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-0 divide-x divide-gray-200">
                     {METRICS.map(({ icon: Icon, iconColor, iconBg, prefix, value, suffix, label, sublabel, delay, ...rest }) => {
                         const isZero = "isZero" in rest && rest.isZero;
                         return (

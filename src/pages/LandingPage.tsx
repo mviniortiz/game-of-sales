@@ -295,18 +295,6 @@ const LandingPage = () => {
                                 ))}
                             </motion.div>
 
-                            {/* Mini Testimonial */}
-                            <motion.div
-                                initial={{ y: 20, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.6 }}
-                                className="text-center p-6 bg-white/5 rounded-2xl border border-white/10"
-                            >
-                                <p className="text-white/80 italic mb-3">
-                                    "Nosso time bateu a meta <span className="text-emerald-400 font-semibold">3 meses seguidos</span> depois que implementamos o Vyzon."
-                                </p>
-                                <p className="text-sm text-white/50">— Lucas M., Gerente de Vendas</p>
-                            </motion.div>
                         </div>
                     </div>
                 </motion.div>
