@@ -151,7 +151,7 @@ export const OutroScene: React.FC = () => {
                     opacity: interpolate(frame, [50, 70], [0, 1], { extrapolateRight: "clamp" }),
                 }}
             >
-                {["✓ Teste de 7 dias grátis", "✓ Sem cartão de crédito", "✓ Suporte em português"].map(
+                {["✓ Teste de 7 dias grátis", "✓ Suporte em português"].map(
                     (feature, i) => (
                         <div
                             key={i}
