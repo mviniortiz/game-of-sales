@@ -5,6 +5,7 @@ import { AppSidebar } from "./AppSidebar";
 import { TrialBanner } from "./TrialBanner";
 import { useTrial } from "@/hooks/useTrial";
 import UpgradeLock from "@/pages/admin/UpgradeLock";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 
 const getPageTitle = (pathname: string) => {
   if (pathname === "/") return "Dashboard";
@@ -65,6 +66,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
           </main>
         </div>
       </div>
+      <WhatsAppButton variant="dark" />
     </SidebarProvider>
   );
 };
