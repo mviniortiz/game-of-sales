@@ -158,7 +158,7 @@ export const TrialBanner = () => {
                                 <div className="w-20 h-1.5 bg-white/10 rounded-full overflow-hidden">
                                     <div
                                         className="h-full bg-emerald-500 rounded-full"
-                                        style={{ width: `${Math.round(((7 - daysRemaining) / 7) * 100)}%` }}
+                                        style={{ width: `${Math.round(((14 - daysRemaining) / 14) * 100)}%` }}
                                     />
                                 </div>
                                 <span className="text-[10px] text-slate-500 whitespace-nowrap">
@@ -167,7 +167,7 @@ export const TrialBanner = () => {
                             </div>
                         )}
 
-                        <Link to="/admin/upgrade">
+                        <Link to="/upgrade">
                             <Button
                                 size="sm"
                                 className={`h-7 px-3.5 text-xs border-0 rounded-lg ${config.buttonClass}`}

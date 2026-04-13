@@ -27,7 +27,7 @@ const plans = [
     {
         id: 'plus',
         name: 'Plus',
-        price: 'R$ 297',
+        price: 'R$ 397',
         period: '/mês',
         description: 'Para times em crescimento',
         icon: Sparkles,
@@ -158,7 +158,7 @@ export default function UpgradeLock() {
                                 </ul>
 
                                 {/* CTA Button */}
-                                <Link to={`/checkout?plan=${plan.id}`} className="block" onClick={() => trackEvent(FUNNEL_EVENTS.UPGRADE_CLICK, { plan: plan.id })}>
+                                <Link to={`/upgrade?plan=${plan.id}`} className="block" onClick={() => trackEvent(FUNNEL_EVENTS.UPGRADE_CLICK, { plan: plan.id })}>
                                     <Button
                                         className={`w-full h-12 font-semibold ${plan.highlight
                                                 ? 'bg-gradient-to-r from-emerald-500 to-emerald-500 hover:opacity-90 text-white'

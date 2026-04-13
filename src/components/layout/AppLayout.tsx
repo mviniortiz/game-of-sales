@@ -25,6 +25,7 @@ const getPageTitle = (pathname: string) => {
 
 // Pages that should remain accessible even with expired trial
 const ALLOWED_EXPIRED_PATHS = [
+  "/upgrade",
   "/admin/upgrade",
   "/admin/settings/billing",
   "/checkout"
