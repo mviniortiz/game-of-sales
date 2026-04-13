@@ -57,7 +57,7 @@ const EvaPaywall = () => {
             </div>
 
             <button
-              onClick={() => navigate("/admin?tab=billing")}
+              onClick={() => navigate("/upgrade?plan=plus")}
               className="w-full flex items-center justify-center gap-2 h-12 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition-colors"
             >
               <Sparkles className="h-4 w-4" />

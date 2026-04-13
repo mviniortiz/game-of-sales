@@ -475,7 +475,7 @@ export default function Profile() {
                     return (
                       <button
                         key={plan}
-                        onClick={() => navigate(`/onboarding?plan=${plan}&step=5`)}
+                        onClick={() => navigate(`/upgrade?plan=${plan}`)}
                         className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left group ${
                           isPrimary
                             ? "border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 hover:border-blue-500/50"

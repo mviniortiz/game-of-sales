@@ -38,6 +38,7 @@ const Onboarding = lazy(() => import("./pages/Onboarding"));
 const SalesPerformanceCenter = lazy(() => import("./pages/SalesPerformanceCenter"));
 const ImportarDados = lazy(() => import("./pages/ImportarDados"));
 const AgenteRelatorios = lazy(() => import("./pages/AgenteRelatorios"));
+const Upgrade = lazy(() => import("./pages/Upgrade"));
 const PoliticaPrivacidade = lazy(() => import("./pages/PoliticaPrivacidade"));
 const TermosServico = lazy(() => import("./pages/TermosServico"));
 const LogoPreview = lazy(() => import("./pages/LogoPreview"));
@@ -250,6 +251,16 @@ const App = () => (
                   <ProtectedRoute>
                     <AppLayout>
                       <Profile />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/upgrade"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <Upgrade />
                     </AppLayout>
                   </ProtectedRoute>
                 }

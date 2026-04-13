@@ -68,7 +68,7 @@ serve(async (req) => {
             return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: strictCorsHeaders });
         }
 
-        const { token, email, planId, companyId, payerInfo, billingConfig } = await req.json();
+        const { token, email, planId, companyId, payerInfo, billingConfig, upgrade } = await req.json();
 
         if (!token || !email || !companyId) {
             return new Response(JSON.stringify({ error: "Missing required fields" }), { status: 400, headers: strictCorsHeaders });
@@ -99,9 +99,34 @@ serve(async (req) => {
             );
         }
 
+        // If upgrading, cancel the previous subscription first
+        if (upgrade) {
+            const { data: company } = await adminSupabase
+                .from("companies")
+                .select("mp_subscription_id")
+                .eq("id", companyId)
+                .single();
+
+            if (company?.mp_subscription_id) {
+                console.log("[MP] Cancelling previous subscription:", company.mp_subscription_id);
+                try {
+                    await fetch(`https://api.mercadopago.com/preapproval/${company.mp_subscription_id}`, {
+                        method: "PUT",
+                        headers: {
+                            "Authorization": `Bearer ${MERCADOPAGO_ACCESS_TOKEN}`,
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ status: "cancelled" }),
+                    });
+                } catch (cancelErr) {
+                    console.warn("[MP] Failed to cancel previous subscription (non-blocking):", cancelErr);
+                }
+            }
+        }
+
         // Build MP subscription body
         const subscriptionBody: Record<string, any> = {
-            reason: "Assinatura Vyzon",
+            reason: upgrade ? "Upgrade Vyzon" : "Assinatura Vyzon",
             external_reference: companyId,
             payer_email: email,
             card_token_id: token,
@@ -111,16 +136,22 @@ serve(async (req) => {
 
         if (billingConfig) {
             // Transparent checkout: send amount/frequency directly (no preapproval_plan_id)
-            subscriptionBody.auto_recurring = {
+            const autoRecurring: Record<string, any> = {
                 frequency: billingConfig.frequency,
                 frequency_type: billingConfig.frequencyType || "months",
                 transaction_amount: billingConfig.transactionAmount,
                 currency_id: "BRL",
-                free_trial: {
+            };
+
+            // Only add free trial for new subscriptions, not upgrades
+            if (!upgrade) {
+                autoRecurring.free_trial = {
                     frequency: 14,
                     frequency_type: "days",
-                },
-            };
+                };
+            }
+
+            subscriptionBody.auto_recurring = autoRecurring;
         } else {
             // Legacy: use pre-created MP plan
             subscriptionBody.preapproval_plan_id = planId;
@@ -182,8 +213,8 @@ serve(async (req) => {
         const companyUpdate: Record<string, any> = {
             mp_subscription_id: mpData.id,
             mp_customer_id: mpData.payer_id?.toString() || null,
-            subscription_status: "trialing",
-            trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+            subscription_status: upgrade ? "active" : "trialing",
+            ...(upgrade ? {} : { trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString() }),
         };
 
         console.log("[MP] Updating company:", companyId, JSON.stringify(companyUpdate));
