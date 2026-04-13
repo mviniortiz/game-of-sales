@@ -12,20 +12,20 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminRoute } from "@/components/AdminRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Loader2 } from "lucide-react";
-import Dashboard from "./pages/Dashboard";
-import Auth from "./pages/Auth";
-import Ranking from "./pages/Ranking";
-import NovaVenda from "./pages/NovaVenda";
-import Calls from "./pages/Calls";
-import Metas from "./pages/Metas";
-import RecuperarSenha from "./pages/RecuperarSenha";
-import Profile from "./pages/Profile";
-import NotFound from "./pages/NotFound";
 import LandingPage from "./pages/LandingPage";
-import Register from "./pages/Register";
+import NotFound from "./pages/NotFound";
 import { useAuth } from "@/contexts/AuthContext";
 
-// Lazy-loaded routes (admin, heavy pages, rarely visited)
+// Lazy-loaded routes — everything except landing (entry point) and 404
+const Auth = lazy(() => import("./pages/Auth"));
+const Register = lazy(() => import("./pages/Register"));
+const RecuperarSenha = lazy(() => import("./pages/RecuperarSenha"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Ranking = lazy(() => import("./pages/Ranking"));
+const NovaVenda = lazy(() => import("./pages/NovaVenda"));
+const Calls = lazy(() => import("./pages/Calls"));
+const Metas = lazy(() => import("./pages/Metas"));
+const Profile = lazy(() => import("./pages/Profile"));
 const Admin = lazy(() => import("./pages/Admin"));
 const AdminCompaniesPage = lazy(() => import("./pages/AdminCompaniesPage"));
 const AdminCompanyDetail = lazy(() => import("./pages/AdminCompanyDetail"));
@@ -37,6 +37,7 @@ const WhatsApp = lazy(() => import("./pages/WhatsApp"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 const SalesPerformanceCenter = lazy(() => import("./pages/SalesPerformanceCenter"));
 const ImportarDados = lazy(() => import("./pages/ImportarDados"));
+const AgenteRelatorios = lazy(() => import("./pages/AgenteRelatorios"));
 const PoliticaPrivacidade = lazy(() => import("./pages/PoliticaPrivacidade"));
 const TermosServico = lazy(() => import("./pages/TermosServico"));
 const LogoPreview = lazy(() => import("./pages/LogoPreview"));
@@ -142,6 +143,18 @@ const App = () => (
                     <AppLayout>
                       <Metas />
                     </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/agente"
+                element={
+                  <ProtectedRoute>
+                    <AdminRoute>
+                      <AppLayout>
+                        <AgenteRelatorios />
+                      </AppLayout>
+                    </AdminRoute>
                   </ProtectedRoute>
                 }
               />

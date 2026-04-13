@@ -8,6 +8,7 @@ export type PlanFeatures = {
     calls: boolean;
     reports: boolean;
     integrations: boolean;
+    eva: boolean;
     maxUsers: number;
     maxProducts: number;
 };
@@ -19,6 +20,7 @@ export const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
         calls: true,
         reports: true,
         integrations: true,
+        eva: false,
         maxUsers: 2,
         maxProducts: 10
     },
@@ -28,6 +30,7 @@ export const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
         calls: true,
         reports: true,
         integrations: true,
+        eva: true,
         maxUsers: 10,
         maxProducts: 50
     },
@@ -37,6 +40,7 @@ export const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
         calls: true,
         reports: true,
         integrations: true,
+        eva: true,
         maxUsers: Infinity,
         maxProducts: Infinity
     },
@@ -54,7 +58,8 @@ export const FEATURE_NAMES: Record<keyof Omit<PlanFeatures, 'maxUsers' | 'maxPro
     gamification: 'Gamificação',
     calls: 'Ligações na Plataforma',
     reports: 'Relatórios Avançados',
-    integrations: 'Integrações (Hotmart, etc)'
+    integrations: 'Integrações (Hotmart, etc)',
+    eva: 'Eva — Analista de Vendas com IA'
 };
 
 // Get the minimum plan required for a feature

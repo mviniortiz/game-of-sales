@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { TrialBanner } from "./TrialBanner";
 import { useTrial } from "@/hooks/useTrial";
 import UpgradeLock from "@/pages/admin/UpgradeLock";
@@ -17,6 +16,7 @@ const getPageTitle = (pathname: string) => {
   if (pathname.startsWith("/integracoes")) return "Integrações";
   if (pathname.startsWith("/nova-venda")) return "Nova Venda";
   if (pathname.startsWith("/deal")) return "Detalhes do Deal";
+  if (pathname.startsWith("/agente")) return "Eva";
   if (pathname.startsWith("/admin")) return "Administração";
   if (pathname.startsWith("/profile")) return "Perfil";
   return "Vyzon";
@@ -56,9 +56,9 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
       <div className="min-h-screen flex w-full bg-background text-foreground">
         <AppSidebar />
         <div className="flex-1 flex flex-col">
-          <header className="h-14 border-b border-border bg-card text-foreground flex items-center justify-between px-4 shadow-sm">
+          <header className="h-14 border-b border-border/50 bg-background/80 backdrop-blur-sm text-foreground flex items-center gap-4 px-4">
             <SidebarTrigger />
-            <ThemeToggle />
+            <span className="text-sm font-medium text-muted-foreground">{getPageTitle(location.pathname)}</span>
           </header>
           <main className="flex-1 p-6 overflow-auto">
             {children}

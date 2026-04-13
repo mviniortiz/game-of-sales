@@ -2,45 +2,33 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { trackEvent, FUNNEL_EVENTS } from "@/lib/analytics";
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
-    Trophy,
-    Kanban,
     MessageCircle,
     Check,
     ArrowRight,
-    Menu,
-    X,
     Zap,
-    Link2,
     Sparkles,
     Target,
-    Rocket,
     Award,
     PhoneCall,
     Play,
     Pause,
     Volume2,
     VolumeX,
-    Maximize
+    Maximize,
 } from "lucide-react";
 import brandLogoDark from "@/assets/logo-dark.png";
 import demoVideo from "/videos/sales-video.mp4";
-import StripeGradient from "@/components/ui/StripeGradient";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { ImpactMetrics } from "@/components/landing/ImpactMetrics";
 import { ProductBentoGrid } from "@/components/landing/ProductBentoGrid";
 import { HowItWorks } from "@/components/landing/HowItWorks";
-import { IntegrationHub } from "@/components/landing/IntegrationHub";
 import { UseCasesSection } from "@/components/landing/UseCasesSection";
 import { FinalCTA } from "@/components/landing/FinalCTA";
 import { FAQSection } from "@/components/landing/FAQSection";
 import { PainPoints } from "@/components/landing/PainPoints";
 import { LandingNav } from "@/components/landing/LandingNav";
+import { EvaAISection } from "@/components/landing/EvaAISection";
 
 // Animation variants
 const fadeInUp = {
@@ -50,18 +38,9 @@ const fadeInUp = {
     transition: { duration: 0.5 }
 };
 
-const staggerContainer = {
-    initial: {},
-    whileInView: {
-        transition: {
-            staggerChildren: 0.1
-        }
-    }
-};
 
 const LandingPage = () => {
     const navigate = useNavigate();
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     // Force light mode on landing page, restore user preference on unmount
     useEffect(() => {
@@ -89,7 +68,6 @@ const LandingPage = () => {
         if (element) {
             element.scrollIntoView({ behavior: "smooth" });
         }
-        setMobileMenuOpen(false);
     };
 
     const goToRegister = (planId?: string) => {
@@ -103,37 +81,6 @@ const LandingPage = () => {
             navigate(`/onboarding?plan=${planId || 'plus'}`);
         }, 3000);
     };
-
-    const features = [
-        {
-            icon: Trophy,
-            title: "Ranking em Tempo Real",
-            description: "Motive vendedores com competições automáticas.",
-            gradient: "from-amber-500 to-orange-600",
-            size: "md:col-span-1"
-        },
-        {
-            icon: Link2,
-            title: "Venda Caiu, Meta Subiu",
-            description: "Sincronização via Webhook em segundos. Integrado com Kiwify, Greenn e Hotmart.",
-            gradient: "from-emerald-500 to-teal-600",
-            size: "md:col-span-1"
-        },
-        {
-            icon: Kanban,
-            title: "Gestão Visual",
-            description: "Arrastar e soltar nunca foi tão lucrativo.",
-            gradient: "from-emerald-500 to-emerald-600",
-            size: "md:col-span-1"
-        },
-        {
-            icon: PhoneCall,
-            title: "Ligações no CRM",
-            description: "Ligue dentro da plataforma e centralize histórico de contato no deal.",
-            gradient: "from-green-500 to-emerald-600",
-            size: "md:col-span-1"
-        },
-    ];
 
     const plans = [
         {
@@ -162,6 +109,7 @@ const LandingPage = () => {
                 "3 Vendedores + 1 Admin",
                 "Pipeline de vendas",
                 "Ranking gamificado",
+                "Eva — analista de vendas com IA",
                 "Relatórios completos",
                 "Metas consolidadas",
                 "Ligações na plataforma (add-on)",
@@ -179,6 +127,7 @@ const LandingPage = () => {
                 "Tudo do Plus",
                 "8 Vendedores + 3 Admins",
                 "CRM completo",
+                "Eva ilimitada + prioridade",
                 "Integrações (Hotmart, Stripe)",
                 "Ligações + transcrição no deal (add-on)",
                 "Multi-empresa",
@@ -192,110 +141,58 @@ const LandingPage = () => {
 
     return (
         <div className="min-h-screen w-full bg-white text-gray-900 selection:bg-emerald-500/30">
-            {/* Loading Overlay - Immersive Experience */}
+            {/* Loading Overlay */}
             {isNavigating && (
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="fixed inset-0 z-[100] bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 overflow-hidden"
+                    className="fixed inset-0 z-[100] flex items-center justify-center"
+                    style={{ background: "#06080a" }}
                 >
-                    {/* Subtle grid pattern */}
-                    <div
-                        className="absolute inset-0 opacity-10"
-                        style={{
-                            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-                        }}
-                    />
+                    <div className="flex flex-col items-center gap-8 px-4">
+                        {/* Logo */}
+                        <motion.img
+                            src={brandLogoDark}
+                            alt="Vyzon"
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.4 }}
+                            className="h-10"
+                        />
 
-                    {/* Animated glow orbs */}
-                    <motion.div
-                        className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-600/30 rounded-full blur-3xl"
-                        animate={{
-                            scale: [1, 1.2, 1],
-                            opacity: [0.3, 0.5, 0.3]
-                        }}
-                        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                    />
-                    <motion.div
-                        className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-600/30 rounded-full blur-3xl"
-                        animate={{
-                            scale: [1.2, 1, 1.2],
-                            opacity: [0.3, 0.5, 0.3]
-                        }}
-                        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                    />
+                        {/* Text */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.15 }}
+                            className="text-center"
+                        >
+                            <p
+                                className="font-heading text-lg mb-1"
+                                style={{ color: "rgba(255,255,255,0.9)", fontWeight: 600, letterSpacing: "-0.02em" }}
+                            >
+                                Preparando seu plano {selectedPlan?.charAt(0).toUpperCase()}{selectedPlan?.slice(1)}
+                            </p>
+                            <p className="text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>
+                                Isso leva apenas alguns segundos
+                            </p>
+                        </motion.div>
 
-                    {/* Main Content */}
-                    <div className="relative z-10 flex items-center justify-center h-full px-4">
-                        <div className="max-w-2xl w-full">
-                            {/* Logo */}
-                            <motion.img
-                                src={brandLogoDark}
-                                alt="Vyzon"
-                                initial={{ y: -20, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                className="h-12 mx-auto mb-12"
+                        {/* Progress bar */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.25 }}
+                            className="w-48 h-0.5 rounded-full overflow-hidden"
+                            style={{ background: "rgba(255,255,255,0.08)" }}
+                        >
+                            <motion.div
+                                className="h-full rounded-full bg-emerald-500"
+                                initial={{ width: "0%" }}
+                                animate={{ width: "100%" }}
+                                transition={{ duration: 2.5, ease: "easeInOut" }}
                             />
-
-                            {/* Progress Bar */}
-                            <motion.div
-                                className="h-1 bg-white/10 rounded-full overflow-hidden mb-8"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                            >
-                                <motion.div
-                                    className="h-full bg-gradient-to-r from-emerald-500 to-emerald-600"
-                                    initial={{ width: "0%" }}
-                                    animate={{ width: "100%" }}
-                                    transition={{ duration: 0.8, ease: "easeOut" }}
-                                />
-                            </motion.div>
-
-                            {/* Title */}
-                            <motion.div
-                                initial={{ y: 20, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.1 }}
-                                className="text-center mb-10"
-                            >
-                                <h2 className="text-3xl font-bold text-white mb-2">
-                                    Preparando seu Plano {selectedPlan?.charAt(0).toUpperCase()}{selectedPlan?.slice(1)}
-                                </h2>
-                                <p className="text-white/60">
-                                    Você está a um passo de transformar suas vendas
-                                </p>
-                            </motion.div>
-
-
-
-
-                            {/* Value Props - Animated List */}
-                            <motion.div
-                                initial={{ y: 20, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.3 }}
-                                className="flex flex-wrap justify-center gap-3 mb-10"
-                            >
-                                {[
-                                    { icon: Trophy, text: "Ranking Gamificado" },
-                                    { icon: Target, text: "Metas Inteligentes" },
-                                    { icon: Zap, text: "Integração Automática" },
-                                    { icon: Rocket, text: "Dashboard em Tempo Real" }
-                                ].map((item, idx) => (
-                                    <motion.div
-                                        key={idx}
-                                        initial={{ scale: 0, opacity: 0 }}
-                                        animate={{ scale: 1, opacity: 1 }}
-                                        transition={{ delay: 0.4 + idx * 0.1, type: "spring" }}
-                                        className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/10"
-                                    >
-                                        <item.icon className="h-4 w-4 text-emerald-400" />
-                                        <span className="text-sm text-white/80">{item.text}</span>
-                                    </motion.div>
-                                ))}
-                            </motion.div>
-
-                        </div>
+                        </motion.div>
                     </div>
                 </motion.div>
             )}
@@ -330,38 +227,28 @@ const LandingPage = () => {
 
 
             {/* Demo Section */}
-            <section id="demo" className="py-24 px-4 sm:px-6 lg:px-8 bg-white relative overflow-hidden">
-                {/* Background glow */}
-                <div
-                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] rounded-full pointer-events-none"
-                    style={{ background: "radial-gradient(ellipse, rgba(16,185,129,0.05) 0%, transparent 70%)", filter: "blur(60px)" }}
-                />
-
-                <div className="max-w-5xl mx-auto relative z-10">
+            <section id="demo" className="py-28 px-4 sm:px-6 lg:px-8" style={{ background: "#06080a" }}>
+                <div className="max-w-4xl mx-auto">
 
                     {/* Header */}
                     <motion.div {...fadeInUp} className="text-center mb-12">
                         <span
-                            className="inline-flex items-center gap-1.5 text-xs text-emerald-400 border border-emerald-500/25 bg-emerald-500/8 rounded-full px-4 py-1.5 mb-5"
-                            style={{ letterSpacing: "var(--ls-widest)", fontWeight: "var(--fw-semibold)" }}
+                            className="inline-block text-xs text-emerald-400 rounded-full px-4 py-1.5 mb-5"
+                            style={{ letterSpacing: "0.08em", fontWeight: 600, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)" }}
                         >
-                            <Play className="h-3 w-3" fill="currentColor" />
-                            TOUR COMPLETO EM 2 MINUTOS
+                            VEJA EM AÇÃO
                         </span>
 
                         <h2
-                            className="font-heading text-gray-900 mb-4 tracking-tight"
-                            style={{ fontWeight: "var(--fw-extrabold)", fontSize: "clamp(1.75rem, 4vw, 2.5rem)", lineHeight: "var(--lh-tight)" }}
+                            className="font-heading mb-4"
+                            style={{ fontWeight: "var(--fw-bold)", fontSize: "clamp(1.75rem, 4.5vw, 2.75rem)", lineHeight: 1.1, letterSpacing: "-0.04em", color: "rgba(255,255,255,0.95)" }}
                         >
                             Veja o Vyzon em{" "}
-                            <span className="bg-gradient-to-r from-emerald-600 to-emerald-500 bg-clip-text text-transparent">
-                                ação
-                            </span>
+                            <span className="text-emerald-400">ação</span>
                         </h2>
 
-                        <p className="text-body text-gray-400 max-w-xl mx-auto" style={{ fontSize: "1.0625rem" }}>
-                            Interface simples, resultados extraordinários. Assista e descubra como
-                            transformar sua gestão de vendas em minutos.
+                        <p className="max-w-lg mx-auto" style={{ fontSize: "1.0625rem", color: "rgba(255,255,255,0.4)" }}>
+                            Interface simples, resultados extraordinários.
                         </p>
                     </motion.div>
 
@@ -371,21 +258,12 @@ const LandingPage = () => {
                         transition={{ delay: 0.15 }}
                         className="relative"
                     >
-                        {/* Outer glow */}
-                        <div
-                            className="absolute -inset-px rounded-2xl pointer-events-none"
-                            style={{ background: "linear-gradient(135deg, rgba(16,185,129,0.2), rgba(6,182,212,0.1), rgba(16,185,129,0.05))", filter: "blur(1px)" }}
-                        />
-                        <div
-                            className="absolute -inset-6 rounded-3xl pointer-events-none"
-                            style={{ background: "radial-gradient(ellipse, rgba(16,185,129,0.08) 0%, transparent 70%)", filter: "blur(20px)" }}
-                        />
 
-                        {/* Premium Video Player */}
+                        {/* Video Player */}
                         <div
                             ref={videoContainerRef}
-                            className="relative rounded-2xl overflow-hidden border group"
-                            style={{ borderColor: "rgba(16,185,129,0.2)", boxShadow: "0 32px 80px -20px rgba(0,0,0,0.8), 0 0 0 1px rgba(16,185,129,0.08)" }}
+                            className="relative rounded-2xl overflow-hidden group"
+                            style={{ boxShadow: "var(--shadow-md)" }}
                             onMouseEnter={() => setShowControls(true)}
                             onMouseLeave={() => setShowControls(false)}
                         >
@@ -499,26 +377,15 @@ const LandingPage = () => {
                         </div>
 
                         {/* Feature pills below video */}
-                        <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
-                            {[
-                                { icon: Kanban, color: "text-emerald-400", bg: "bg-emerald-500/10", title: "CRM Visual", desc: "Kanban intuitivo" },
-                                { icon: Trophy, color: "text-amber-400", bg: "bg-amber-500/10", title: "Gamificação", desc: "Rankings e conquistas" },
-                                { icon: PhoneCall, color: "text-cyan-400", bg: "bg-cyan-500/10", title: "Ligações", desc: "Histórico no deal + gravação" },
-                            ].map(({ icon: Icon, color, bg, title, desc }) => (
-                                <motion.div
-                                    key={title}
-                                    className="flex items-center gap-3 rounded-xl p-4 border border-gray-200 bg-gray-50/80 backdrop-blur-sm"
-                                    whileHover={{ y: -3, borderColor: "rgba(16,185,129,0.2)" }}
-                                    transition={{ duration: 0.2 }}
+                        <div className="mt-6 flex flex-wrap justify-center gap-3">
+                            {["CRM Visual", "Gamificação", "Ligações", "Integrações"].map((t) => (
+                                <span
+                                    key={t}
+                                    className="text-xs px-3 py-1.5 rounded-full"
+                                    style={{ fontWeight: 500, color: "rgba(255,255,255,0.45)", border: "1px solid rgba(255,255,255,0.1)" }}
                                 >
-                                    <div className={`w-9 h-9 rounded-lg ${bg} flex items-center justify-center flex-shrink-0`}>
-                                        <Icon className={`h-4 w-4 ${color}`} strokeWidth={2} />
-                                    </div>
-                                    <div>
-                                        <p className="text-gray-900 text-sm" style={{ fontWeight: "var(--fw-semibold)" }}>{title}</p>
-                                        <p className="text-gray-400 text-xs" style={{ fontWeight: "var(--fw-light)" }}>{desc}</p>
-                                    </div>
-                                </motion.div>
+                                    {t}
+                                </span>
                             ))}
                         </div>
                     </motion.div>
@@ -530,211 +397,92 @@ const LandingPage = () => {
                 <UseCasesSection />
             </div>
 
-            {/* Ligacoes Section */}
-            <section className="py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-                <div
-                    className="absolute inset-0 pointer-events-none"
-                    style={{
-                        background:
-                            "radial-gradient(circle at 18% 20%, rgba(16,185,129,0.09), transparent 45%), radial-gradient(circle at 82% 78%, rgba(34,197,94,0.08), transparent 45%)"
-                    }}
-                />
-                <div
-                    className="absolute inset-0 opacity-[0.025] pointer-events-none"
-                    style={{
-                        backgroundImage:
-                            "linear-gradient(rgba(255,255,255,0.35) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.35) 1px, transparent 1px)",
-                        backgroundSize: "44px 44px"
-                    }}
-                />
-
-                <div className="max-w-6xl mx-auto relative z-10">
+            {/* Ligações Section */}
+            <section className="py-28 px-4 sm:px-6 lg:px-8" style={{ background: "#06080a" }}>
+                <div className="max-w-4xl mx-auto">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        transition={{ duration: 0.45 }}
-                        className="rounded-3xl border border-gray-200 bg-white/80 backdrop-blur-sm p-6 sm:p-8 lg:p-10"
+                        transition={{ duration: 0.5 }}
+                        className="text-center mb-14"
                     >
-                        <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-8 lg:gap-10 items-start">
-                            <div>
-                                <div className="flex flex-wrap items-center gap-3 mb-5">
-                                    <Badge className="border-emerald-300 bg-emerald-50 text-emerald-600 hover:bg-emerald-500/15">
-                                        <PhoneCall className="h-3.5 w-3.5 mr-1.5" />
-                                        NOVO: LIGACOES NO CRM
-                                    </Badge>
-                                    <Badge variant="secondary" className="bg-gray-100 text-gray-700 border border-gray-200">
-                                        Add-on para Plus e Pro
-                                    </Badge>
-                                </div>
+                        <span
+                            className="inline-flex items-center gap-1.5 text-xs text-emerald-400 rounded-full px-4 py-1.5 mb-5"
+                            style={{ fontWeight: 600, letterSpacing: "0.08em", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)" }}
+                        >
+                            <PhoneCall className="h-3 w-3" />
+                            LIGAÇÕES NO CRM
+                        </span>
 
-                                <h2
-                                    className="font-heading text-gray-900 mb-4 tracking-tight"
-                                    style={{
-                                        fontWeight: "var(--fw-extrabold)",
-                                        fontSize: "clamp(1.7rem, 3.8vw, 2.35rem)",
-                                        lineHeight: "var(--lh-tight)",
-                                    }}
-                                >
-                                    Ligue sem sair do deal.
-                                    <span className="block bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 bg-clip-text text-transparent">
-                                        Registre tudo. Venda melhor.
-                                    </span>
-                                </h2>
+                        <h2
+                            className="font-heading mb-4"
+                            style={{ fontWeight: "var(--fw-bold)", fontSize: "clamp(1.75rem, 4.5vw, 2.75rem)", lineHeight: 1.1, letterSpacing: "-0.04em", color: "rgba(255,255,255,0.95)" }}
+                        >
+                            Ligue sem sair do deal.{" "}
+                            <span className="text-emerald-400">Registre tudo.</span>
+                        </h2>
 
-                                <p className="text-gray-600 max-w-xl mb-6" style={{ fontSize: "1.05rem" }}>
-                                    O vendedor liga dentro da plataforma e o histórico fica no próprio CRM. Gravação, contexto da conversa e transcrição no deal para ninguém depender de memória ou anotações soltas.
-                                </p>
+                        <p className="max-w-xl mx-auto" style={{ fontSize: "1.0625rem", color: "rgba(255,255,255,0.4)" }}>
+                            O vendedor liga dentro da plataforma e o histórico fica no CRM.
+                            Gravação e transcrição no deal — sem depender de memória.
+                        </p>
+                    </motion.div>
 
-                                <div className="mb-6 rounded-2xl border border-gray-200 bg-gray-50 p-4 max-w-xl">
-                                    <p className="text-[11px] uppercase tracking-wider text-emerald-600 mb-1" style={{ fontWeight: "var(--fw-semibold)" }}>
-                                        Como funciona o add-on
-                                    </p>
-                                    <p className="text-xs sm:text-sm text-gray-500 leading-relaxed">
-                                        Ligações é uma contratação opcional (cobrada à parte) para empresas nos planos Plus e Pro.
-                                        Você ativa por empresa e adiciona minutos conforme a operação.
-                                    </p>
-                                </div>
-
-                                <div className="grid sm:grid-cols-2 gap-3 mb-7">
-                                    {[
-                                        {
-                                            icon: PhoneCall,
-                                            title: "Clique para ligar",
-                                            desc: "Chamada iniciada direto do card do lead ou deal."
-                                        },
-                                        {
-                                            icon: MessageCircle,
-                                            title: "Transcrição no histórico",
-                                            desc: "Conversa salva no deal para consulta e follow-up."
-                                        },
-                                        {
-                                            icon: Target,
-                                            title: "Mais previsibilidade",
-                                            desc: "Gestor acompanha volume, evolução e qualidade."
-                                        },
-                                        {
-                                            icon: Sparkles,
-                                            title: "Insights sob demanda",
-                                            desc: "Opcional por botão, sem travar o fluxo do vendedor."
-                                        }
-                                    ].map(({ icon: Icon, title, desc }) => (
-                                        <div key={title} className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-                                            <div className="flex items-start gap-3">
-                                                <div className="mt-0.5 w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-400/20 flex items-center justify-center shrink-0">
-                                                    <Icon className="h-4 w-4 text-emerald-600" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-gray-900 text-sm mb-1" style={{ fontWeight: "var(--fw-semibold)" }}>{title}</p>
-                                                    <p className="text-gray-500 text-xs leading-relaxed">{desc}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <div className="flex flex-col sm:flex-row gap-3">
-                                    <Button
-                                        onClick={() => scrollToSection("pricing")}
-                                        className="h-11 px-5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white border-0"
-                                    >
-                                        Ver planos com Ligações
-                                        <ArrowRight className="h-4 w-4 ml-2" />
-                                    </Button>
-                                    <Button
-                                        onClick={() => goToRegister("plus")}
-                                        variant="outline"
-                                        className="h-11 px-5 border-gray-300 bg-transparent hover:bg-gray-100 text-gray-900"
-                                    >
-                                        Testar no plano Plus
-                                    </Button>
-                                </div>
-                            </div>
-
+                    <div className="grid sm:grid-cols-2 gap-4 mb-10">
+                        {[
+                            { icon: PhoneCall, title: "Clique para ligar", desc: "Chamada direto do card do lead ou deal." },
+                            { icon: MessageCircle, title: "Transcrição no histórico", desc: "Conversa salva no deal para follow-up." },
+                            { icon: Target, title: "Mais previsibilidade", desc: "Gestor acompanha volume e qualidade." },
+                            { icon: Sparkles, title: "Insights sob demanda", desc: "Opcional por botão, sem travar o fluxo." },
+                        ].map(({ icon: Icon, title, desc }) => (
                             <motion.div
-                                initial={{ opacity: 0, x: 16 }}
-                                whileInView={{ opacity: 1, x: 0 }}
+                                key={title}
+                                className="flex items-start gap-4 rounded-xl p-5"
+                                style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}
+                                initial={{ opacity: 0, y: 12 }}
+                                whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
-                                transition={{ duration: 0.45, delay: 0.06 }}
-                                className="relative"
+                                transition={{ duration: 0.4 }}
                             >
-                                <div className="absolute -inset-4 rounded-3xl bg-emerald-500/10 blur-2xl opacity-60 pointer-events-none" />
-
-                                <div className="relative rounded-3xl border border-emerald-200 bg-white p-4 sm:p-5 shadow-[0_20px_70px_-30px_rgba(16,185,129,0.35)]">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div>
-                                            <p className="text-gray-900 text-sm" style={{ fontWeight: "var(--fw-semibold)" }}>Ligações no Deal</p>
-                                            <p className="text-gray-400 text-xs">Tudo no mesmo contexto da negociação</p>
-                                        </div>
-                                        <div className="flex items-center gap-1.5">
-                                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                                            <span className="text-emerald-600 text-xs">Ao vivo</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-3">
-                                        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-                                            <div className="flex items-center justify-between mb-2 gap-2">
-                                                <p className="text-gray-900 text-sm" style={{ fontWeight: "var(--fw-semibold)" }}>Lead: Clínica Horizonte</p>
-                                                <Badge className="bg-cyan-500/10 text-cyan-600 border-cyan-400/20">Deal #A12</Badge>
-                                            </div>
-                                            <p className="text-gray-500 text-xs mb-3">Etapa: Proposta enviada • Último contato: ontem, 17:42</p>
-                                            <div className="flex flex-wrap gap-2">
-                                                <div className="h-9 px-3 rounded-xl bg-emerald-500 text-white text-xs font-semibold inline-flex items-center">
-                                                    <PhoneCall className="h-3.5 w-3.5 mr-1.5" />
-                                                    Ligar agora
-                                                </div>
-                                                <div className="h-9 px-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-600 text-xs font-semibold inline-flex items-center">
-                                                    <MessageCircle className="h-3.5 w-3.5 mr-1.5" />
-                                                    Ver histórico
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/5 p-4">
-                                            <div className="flex items-center justify-between mb-2">
-                                                <p className="text-gray-900 text-sm" style={{ fontWeight: "var(--fw-semibold)" }}>Chamada concluída • 08:31</p>
-                                                <span className="text-emerald-600 text-xs">Gravação salva</span>
-                                            </div>
-                                            <p className="text-gray-500 text-xs leading-relaxed">
-                                                Transcrição vinculada ao deal. Próxima ação sugerida pode ser gerada por botão, somente quando fizer sentido.
-                                            </p>
-                                        </div>
-
-                                        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-                                            <div className="flex items-center justify-between mb-3">
-                                                <p className="text-gray-900 text-sm" style={{ fontWeight: "var(--fw-semibold)" }}>O que seu time ganha</p>
-                                                <Sparkles className="h-4 w-4 text-emerald-600" />
-                                            </div>
-                                            <div className="space-y-2">
-                                                {[
-                                                    "Menos perda de contexto entre vendedores e gestores",
-                                                    "Follow-up mais rápido porque a conversa já está no CRM",
-                                                    "Evolução de abordagem comercial com base em chamadas reais"
-                                                ].map((item) => (
-                                                    <div key={item} className="flex items-start gap-2 text-xs text-gray-600">
-                                                        <Check className="h-3.5 w-3.5 text-emerald-300 mt-0.5 shrink-0" />
-                                                        <span>{item}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
+                                <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(16,185,129,0.1)" }}>
+                                    <Icon className="h-4 w-4 text-emerald-400" />
+                                </div>
+                                <div>
+                                    <p className="text-sm mb-1" style={{ fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>{title}</p>
+                                    <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.4)" }}>{desc}</p>
                                 </div>
                             </motion.div>
-                        </div>
-                    </motion.div>
+                        ))}
+                    </div>
+
+                    <div className="text-center">
+                        <p className="text-xs mb-4" style={{ fontWeight: 500, color: "rgba(255,255,255,0.35)" }}>
+                            Add-on disponível para planos Plus e Pro
+                        </p>
+                        <button
+                            onClick={() => scrollToSection("pricing")}
+                            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm text-white"
+                            style={{ background: "linear-gradient(135deg, #10b981, #059669)", fontWeight: 600 }}
+                        >
+                            Ver planos com Ligações
+                            <ArrowRight className="h-4 w-4" />
+                        </button>
+                    </div>
                 </div>
             </section>
 
+            {/* Eva AI Section */}
+            <EvaAISection onCTAClick={() => scrollToSection("pricing")} />
+
             {/* ── Pricing Section ───────────────────────────────────────────── */}
-            <section id="pricing" className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-gray-50 relative overflow-hidden">
+            <section id="pricing" className="py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden" style={{ background: "#06080a" }}>
                 {/* Ambient glow */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full pointer-events-none"
-                    style={{ background: "radial-gradient(ellipse, rgba(16,185,129,0.05) 0%, transparent 60%)", filter: "blur(80px)" }} />
-                {/* Subtle dot grid */}
-                <div className="absolute inset-0 opacity-[0.018] pointer-events-none"
-                    style={{ backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.6) 1px, transparent 1px)", backgroundSize: "32px 32px" }} />
+                    style={{ background: "radial-gradient(ellipse, rgba(16,185,129,0.1) 0%, transparent 60%)", filter: "blur(80px)" }} />
+                {/* Fine grid overlay */}
+                <div className="absolute inset-0 opacity-[0.02] pointer-events-none"
+                    style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
 
                 <div className="max-w-5xl mx-auto relative z-10">
 
@@ -743,35 +491,35 @@ const LandingPage = () => {
                         initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }} transition={{ duration: 0.5 }}>
 
-                        <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400 border border-emerald-500/25 bg-emerald-500/8 rounded-full px-4 py-1.5 mb-5"
-                            style={{ letterSpacing: "var(--ls-widest)", fontWeight: "var(--fw-semibold)" }}>
+                        <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400 rounded-full px-4 py-1.5 mb-5"
+                            style={{ letterSpacing: "var(--ls-widest)", fontWeight: "var(--fw-semibold)", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)" }}>
                             <Zap className="h-3 w-3" />
                             PLANOS E PREÇOS
                         </span>
 
-                        <h2 className="font-heading text-gray-900 mb-4 tracking-tight"
-                            style={{ fontWeight: "var(--fw-extrabold)", fontSize: "clamp(1.75rem, 4vw, 2.5rem)", lineHeight: "var(--lh-tight)" }}>
+                        <h2 className="font-heading mb-4"
+                            style={{ fontWeight: "var(--fw-bold)", fontSize: "clamp(1.75rem, 4.5vw, 2.75rem)", lineHeight: 1.1, letterSpacing: "-0.04em", color: "rgba(255,255,255,0.95)" }}>
                             Investimento que se{" "}
-                            <span className="bg-gradient-to-r from-emerald-600 to-emerald-500 bg-clip-text text-transparent">
+                            <span className="bg-gradient-to-r from-emerald-400 to-emerald-300 bg-clip-text text-transparent">
                                 multiplica
                             </span>
                         </h2>
 
-                        <p className="text-gray-400 max-w-xl mx-auto mb-8" style={{ fontSize: "1.0625rem" }}>
-                            Retorno médio de <strong className="text-gray-900">12× o valor investido</strong>. Sem surpresas, sem taxas escondidas.
+                        <p className="max-w-xl mx-auto mb-8" style={{ fontSize: "1.0625rem", color: "rgba(255,255,255,0.45)" }}>
+                            Retorno médio de <strong style={{ color: "rgba(255,255,255,0.85)" }}>12× o valor investido</strong>. Sem surpresas, sem taxas escondidas.
                         </p>
 
                         {/* Billing toggle */}
-                        <div className="inline-flex gap-1 p-1 rounded-2xl border border-gray-200"
-                            style={{ background: "rgba(249,250,251,0.9)" }}>
+                        <div className="inline-flex gap-1 p-1 rounded-2xl"
+                            style={{ background: "rgba(255,255,255,0.04)", boxShadow: "0 0 0 1px rgba(255,255,255,0.08)" }}>
                             {([false, true] as const).map((annual) => (
                                 <button key={String(annual)} onClick={() => setIsAnnual(annual)}
-                                    className={`relative flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm transition-all duration-200 ${isAnnual === annual ? "text-gray-900" : "text-gray-400 hover:text-gray-600"}`}
-                                    style={{ fontWeight: "var(--fw-semibold)" }}>
+                                    className="relative flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm transition-all duration-200"
+                                    style={{ fontWeight: "var(--fw-semibold)", color: isAnnual === annual ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.35)" }}>
                                     {isAnnual === annual && (
                                         <motion.div layoutId="billing-pill"
-                                            className="absolute inset-0 rounded-xl border border-gray-200"
-                                            style={{ background: "rgba(255,255,255,0.95)" }}
+                                            className="absolute inset-0 rounded-xl"
+                                            style={{ background: "rgba(255,255,255,0.08)", boxShadow: "0 0 0 1px rgba(255,255,255,0.1)" }}
                                             transition={{ type: "spring", bounce: 0.18, duration: 0.38 }} />
                                     )}
                                     <span className="relative">{annual ? "Anual" : "Mensal"}</span>
@@ -822,17 +570,15 @@ const LandingPage = () => {
                                     )}
 
                                     {/* Card */}
-                                    <div className="relative flex flex-col flex-1 rounded-2xl border overflow-hidden"
+                                    <div className="relative flex flex-col flex-1 rounded-2xl overflow-hidden"
                                         style={{
                                             background: isPopular
-                                                ? "linear-gradient(155deg, rgba(16,185,129,0.05) 0%, rgba(255,255,255,0.97) 55%)"
-                                                : "rgba(255,255,255,0.95)",
-                                            borderColor: isPopular
-                                                ? "rgba(16,185,129,0.28)"
-                                                : "rgba(229,231,235,1)",
+                                                ? "linear-gradient(155deg, rgba(16,185,129,0.06) 0%, rgba(255,255,255,0.04) 55%)"
+                                                : "rgba(255,255,255,0.03)",
+                                            border: "none",
                                             boxShadow: isPopular
-                                                ? "0 0 0 1px rgba(16,185,129,0.06), 0 24px 64px rgba(16,185,129,0.1)"
-                                                : "0 1px 3px rgba(0,0,0,0.08)",
+                                                ? "0 0 0 1px rgba(16,185,129,0.25), 0 8px 24px rgba(16,185,129,0.1), 0 32px 72px -12px rgba(16,185,129,0.15)"
+                                                : "0 0 0 1px rgba(255,255,255,0.08), 0 1px 3px rgba(0,0,0,0.2), 0 4px 12px rgba(0,0,0,0.15)",
                                         }}>
                                         {/* Decorative top gradient line (popular only) */}
                                         {isPopular && (
@@ -844,10 +590,10 @@ const LandingPage = () => {
                                             {/* Plan name + tagline */}
                                             <div className="mb-5">
                                                 <p className="text-xs mb-0.5"
-                                                    style={{ color: isPopular ? "#10b981" : "rgba(107,114,128,0.7)", fontWeight: "var(--fw-bold)", letterSpacing: "var(--ls-widest)" }}>
+                                                    style={{ color: isPopular ? "#34d399" : "rgba(255,255,255,0.4)", fontWeight: "var(--fw-bold)", letterSpacing: "var(--ls-widest)" }}>
                                                     {plan.name.toUpperCase()}
                                                 </p>
-                                                <p className="text-gray-400 text-sm leading-snug">{plan.tagline}</p>
+                                                <p className="text-sm leading-snug" style={{ color: "rgba(255,255,255,0.4)" }}>{plan.tagline}</p>
                                             </div>
 
                                             {/* Price */}
@@ -857,18 +603,19 @@ const LandingPage = () => {
                                                     animate={{ opacity: 1, y: 0 }}
                                                     transition={{ duration: 0.22 }}
                                                     className="flex items-end gap-1">
-                                                    <span className="text-gray-400 text-base leading-none mb-1.5"
-                                                        style={{ fontWeight: "var(--fw-medium)" }}>R$</span>
-                                                    <span className="text-gray-900 leading-none tabular-nums"
+                                                    <span className="text-base leading-none mb-1.5"
+                                                        style={{ fontWeight: "var(--fw-medium)", color: "rgba(255,255,255,0.4)" }}>R$</span>
+                                                    <span className="leading-none tabular-nums"
                                                         style={{
                                                             fontWeight: "var(--fw-extrabold)",
+                                                            color: "rgba(255,255,255,0.95)",
                                                             fontSize: isPopular
                                                                 ? "clamp(2.4rem, 8vw, 3.25rem)"
                                                                 : "clamp(2rem, 7vw, 2.5rem)"
                                                         }}>
                                                         {monthly}
                                                     </span>
-                                                    <span className="text-gray-400 text-sm leading-none mb-1.5">/mês</span>
+                                                    <span className="text-sm leading-none mb-1.5" style={{ color: "rgba(255,255,255,0.35)" }}>/mês</span>
                                                 </motion.div>
                                             </div>
 
@@ -878,14 +625,14 @@ const LandingPage = () => {
                                                     <motion.div key="annual-info"
                                                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}
                                                         className="flex items-center gap-2 flex-wrap mt-1">
-                                                        <span className="text-[11px] text-gray-400">
+                                                        <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.35)" }}>
                                                             Cobrado R$ {Math.round(monthly * 12).toLocaleString("pt-BR")}/ano
                                                         </span>
                                                         {annualSaving > 0 && (
                                                             <span className="text-[10px] px-1.5 py-0.5 rounded"
                                                                 style={{
-                                                                    background: isPopular ? "rgba(16,185,129,0.12)" : "rgba(243,244,246,1)",
-                                                                    color: isPopular ? "#10b981" : "rgba(107,114,128,0.8)",
+                                                                    background: isPopular ? "rgba(16,185,129,0.15)" : "rgba(255,255,255,0.06)",
+                                                                    color: isPopular ? "#34d399" : "rgba(255,255,255,0.5)",
                                                                     fontWeight: "var(--fw-semibold)"
                                                                 }}>
                                                                 Economize R$ {annualSaving.toLocaleString("pt-BR")}
@@ -893,28 +640,28 @@ const LandingPage = () => {
                                                         )}
                                                     </motion.div>
                                                 ) : (
-                                                    <p className="text-[11px] text-gray-400 mt-1">Faturado mensalmente</p>
+                                                    <p className="text-[11px] mt-1" style={{ color: "rgba(255,255,255,0.35)" }}>Faturado mensalmente</p>
                                                 )}
                                                 {plan.extraInfo && (
-                                                    <p className="text-[11px] mt-0.5" style={{ color: "rgba(107,114,128,0.6)" }}>{plan.extraInfo}</p>
+                                                    <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.25)" }}>{plan.extraInfo}</p>
                                                 )}
                                             </div>
 
                                             {/* Divider */}
                                             <div className="h-px mb-5"
-                                                style={{ background: isPopular ? "rgba(16,185,129,0.15)" : "rgba(229,231,235,0.8)" }} />
+                                                style={{ background: isPopular ? "rgba(16,185,129,0.2)" : "rgba(255,255,255,0.06)" }} />
 
                                             {/* Features list */}
                                             <ul className="flex flex-col gap-2.5 mb-7 flex-1">
                                                 {plan.features.map((f) => (
                                                     <li key={f} className="flex items-start gap-2.5">
                                                         <div className="w-4 h-4 mt-0.5 rounded flex items-center justify-center flex-shrink-0"
-                                                            style={{ background: isPopular ? "rgba(16,185,129,0.14)" : "rgba(243,244,246,1)" }}>
+                                                            style={{ background: isPopular ? "rgba(16,185,129,0.15)" : "rgba(255,255,255,0.06)" }}>
                                                             <Check className="h-2.5 w-2.5" strokeWidth={3}
-                                                                style={{ color: isPopular ? "#10b981" : "rgba(107,114,128,0.7)" }} />
+                                                                style={{ color: isPopular ? "#34d399" : "rgba(255,255,255,0.4)" }} />
                                                         </div>
                                                         <span className="text-sm leading-snug"
-                                                            style={{ color: isPopular ? "rgba(17,24,39,0.85)" : "rgba(75,85,99,0.85)", fontWeight: "var(--fw-medium)" }}>
+                                                            style={{ color: isPopular ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.55)", fontWeight: "var(--fw-medium)" }}>
                                                             {f}
                                                         </span>
                                                     </li>
@@ -944,9 +691,10 @@ const LandingPage = () => {
                                                     onClick={() => goToRegister(plan.name.toLowerCase())}
                                                     className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm transition-all duration-200 cursor-pointer"
                                                     style={{
-                                                        background: "rgba(249,250,251,1)",
-                                                        border: "1px solid rgba(229,231,235,1)",
-                                                        color: "rgba(55,65,81,0.9)",
+                                                        background: "rgba(255,255,255,0.04)",
+                                                        border: "none",
+                                                        boxShadow: "0 0 0 1px rgba(255,255,255,0.1)",
+                                                        color: "rgba(255,255,255,0.7)",
                                                         fontWeight: "var(--fw-semibold)"
                                                     }}>
                                                     Escolher {plan.name}
@@ -969,9 +717,9 @@ const LandingPage = () => {
                             { icon: <PhoneCall className="h-3.5 w-3.5" />, label: "Ligações (Plus e Pro)" },
                             { icon: <Award className="h-3.5 w-3.5" />, label: "Suporte via WhatsApp" },
                         ].map(({ icon, label }) => (
-                            <div key={label} className="flex items-center gap-1.5 text-xs text-gray-400"
-                                style={{ fontWeight: "var(--fw-medium)" }}>
-                                <span className="text-emerald-500/45">{icon}</span>
+                            <div key={label} className="flex items-center gap-1.5 text-xs"
+                                style={{ fontWeight: "var(--fw-medium)", color: "rgba(255,255,255,0.35)" }}>
+                                <span className="text-emerald-500/50">{icon}</span>
                                 {label}
                             </div>
                         ))}
@@ -986,98 +734,58 @@ const LandingPage = () => {
             <div id="faq">
                 <FAQSection />
             </div>
-            {/* old FAQ removed — FAQSection component used above */}
-            <section className="py-0" style={{ display: 'none' }}>
-                <div className="max-w-3xl mx-auto">
-                    <motion.div
-                        {...fadeInUp}
-                        className="text-center mb-12"
-                    >
-                        <h2 className="font-heading text-3xl font-bold text-gray-900 mb-4 tracking-tight">
-                            Dúvidas? Temos Respostas.
-                        </h2>
-                        <p className="text-gray-400">
-                            Tudo que você precisa saber antes de começar a dominar.
-                        </p>
-                    </motion.div>
-
-                    <motion.div
-                        variants={staggerContainer}
-                        initial="initial"
-                        whileInView="whileInView"
-                        viewport={{ once: true }}
-                        className="space-y-4"
-                    >
-                        {[
-                            {
-                                q: "Quanto tempo leva para implementar?",
-                                a: "Menos de 5 minutos! Basta criar sua conta, configurar os webhooks e pronto. A integração com Hotmart, Kiwify e Greenn é automática."
-                            },
-                            {
-                                q: "Posso testar antes de assinar?",
-                                a: "Com certeza! Oferecemos 14 dias grátis do plano PRO. Teste tudo à vontade e cancele quando quiser."
-                            },
-                            {
-                                q: "Funciona para qualquer tipo de venda?",
-                                a: "O Vyzon é ideal para times que vendem infoprodutos, serviços ou produtos físicos. Se você tem um time de vendas, o Vyzon é para você."
-                            },
-                            {
-                                q: "Meus dados estão seguros?",
-                                a: "100%. Usamos criptografia de ponta a ponta e nossa infraestrutura é hospedada em servidores seguros. Conformidade total com LGPD."
-                            },
-                            {
-                                q: "Posso cancelar a qualquer momento?",
-                                a: "Sim, sem multas ou taxas. Você pode cancelar diretamente pelo painel, sem precisar falar com ninguém."
-                            }
-                        ].map((faq, idx) => (
-                            <motion.details
-                                key={idx}
-                                variants={fadeInUp}
-                                className="group bg-gray-50 rounded-xl border border-gray-200 overflow-hidden"
-                            >
-                                <summary className="flex items-center justify-between p-5 cursor-pointer hover:bg-white/5 transition-colors">
-                                    <span className="font-medium text-gray-900">{faq.q}</span>
-                                    <ArrowRight className="h-5 w-5 text-gray-400 group-open:rotate-90 transition-transform" />
-                                </summary>
-                                <div className="px-5 pb-5 text-gray-400">
-                                    {faq.a}
-                                </div>
-                            </motion.details>
-                        ))}
-                    </motion.div>
-                </div>
-            </section>
-
 
 
             {/* Final CTA */}
             <FinalCTA onCTAClick={() => goToRegister('pro')} />
 
             {/* Footer */}
-            <footer className="py-12 px-4 sm:px-6 lg:px-8 bg-slate-950 border-t border-white/5">
-                <div className="max-w-7xl mx-auto">
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                        <img src={brandLogoDark} alt="Vyzon" className="h-8" />
-                        <div className="flex gap-8 text-sm text-gray-400">
-                            <button onClick={() => scrollToSection("features")} className="hover:text-white transition-colors">
-                                Funcionalidades
-                            </button>
-                            <button onClick={() => scrollToSection("pricing")} className="hover:text-white transition-colors">
-                                Preços
-                            </button>
-                            <a href="/politica-privacidade" className="hover:text-white transition-colors">
-                                Privacidade
-                            </a>
-                            <a href="/termos-de-servico" className="hover:text-white transition-colors">
-                                Termos de Serviço
-                            </a>
-                            <button onClick={() => navigate("/auth")} className="hover:text-white transition-colors">
-                                Login
-                            </button>
+            <footer className="py-16 px-4 sm:px-6 lg:px-8" style={{ background: "#06080a", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)" }}>
+                <div className="max-w-6xl mx-auto">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
+                        {/* Brand column */}
+                        <div className="col-span-2 md:col-span-1">
+                            <img src={brandLogoDark} alt="Vyzon" className="h-8 mb-4" />
+                            <p className="text-gray-500 text-sm leading-relaxed max-w-[220px]">
+                                CRM gamificado para times de vendas que querem bater meta todo mês.
+                            </p>
+                        </div>
+
+                        {/* Produto */}
+                        <div>
+                            <p className="text-gray-400 text-xs uppercase tracking-widest mb-4" style={{ fontWeight: 600 }}>Produto</p>
+                            <div className="flex flex-col gap-2.5">
+                                <button onClick={() => scrollToSection("features")} className="text-gray-500 text-sm hover:text-gray-300 transition-colors text-left">Funcionalidades</button>
+                                <button onClick={() => scrollToSection("how-it-works")} className="text-gray-500 text-sm hover:text-gray-300 transition-colors text-left">Como funciona</button>
+                                <button onClick={() => scrollToSection("pricing")} className="text-gray-500 text-sm hover:text-gray-300 transition-colors text-left">Preços</button>
+                                <button onClick={() => scrollToSection("faq")} className="text-gray-500 text-sm hover:text-gray-300 transition-colors text-left">FAQ</button>
+                            </div>
+                        </div>
+
+                        {/* Legal */}
+                        <div>
+                            <p className="text-gray-400 text-xs uppercase tracking-widest mb-4" style={{ fontWeight: 600 }}>Legal</p>
+                            <div className="flex flex-col gap-2.5">
+                                <a href="/politica-privacidade" className="text-gray-500 text-sm hover:text-gray-300 transition-colors">Privacidade</a>
+                                <a href="/termos-de-servico" className="text-gray-500 text-sm hover:text-gray-300 transition-colors">Termos de Serviço</a>
+                            </div>
+                        </div>
+
+                        {/* Conta */}
+                        <div>
+                            <p className="text-gray-400 text-xs uppercase tracking-widest mb-4" style={{ fontWeight: 600 }}>Conta</p>
+                            <div className="flex flex-col gap-2.5">
+                                <button onClick={() => navigate("/auth")} className="text-gray-500 text-sm hover:text-gray-300 transition-colors text-left">Login</button>
+                                <button onClick={() => goToRegister('plus')} className="text-gray-500 text-sm hover:text-gray-300 transition-colors text-left">Criar conta</button>
+                            </div>
                         </div>
                     </div>
-                    <div className="mt-8 text-center text-sm text-gray-500">
-                        © 2025 Vyzon. Todos os direitos reservados.
+
+                    {/* Bottom bar */}
+                    <div className="pt-8" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                        <p className="text-center text-sm text-gray-600">
+                            © {new Date().getFullYear()} Vyzon. Todos os direitos reservados.
+                        </p>
                     </div>
                 </div>
             </footer>
