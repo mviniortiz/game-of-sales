@@ -37,18 +37,13 @@ export const ThemeToggle = ({ collapsed = false }: { collapsed?: boolean }) => {
     <button
       type="button"
       onClick={toggle}
-      className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm transition-colors text-muted-foreground hover:text-foreground hover:bg-muted/50"
+      title={theme === "dark" ? "Modo claro" : "Modo escuro"}
+      className="flex items-center justify-center h-9 w-9 rounded-lg text-sm transition-colors text-muted-foreground hover:text-foreground hover:bg-muted/50"
     >
       {theme === "dark" ? (
-        <>
-          <Sun className="h-4 w-4 shrink-0 text-amber-400" />
-          {!collapsed && <span>Modo claro</span>}
-        </>
+        <Sun className="h-4 w-4 text-amber-400" />
       ) : (
-        <>
-          <Moon className="h-4 w-4 shrink-0 text-emerald-400" />
-          {!collapsed && <span>Modo escuro</span>}
-        </>
+        <Moon className="h-4 w-4 text-emerald-400" />
       )}
     </button>
   );
