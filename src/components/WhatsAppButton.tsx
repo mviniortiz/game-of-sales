@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { X, MessageCircle } from "lucide-react";
 
 const WHATSAPP_NUMBER = "5548991696887";
 const DEFAULT_MESSAGE = "Olá! Preciso de ajuda com o Vyzon.";
@@ -14,9 +14,37 @@ function WhatsAppIcon({ size = 24 }: { size?: number }) {
 }
 
 export function WhatsAppButton({ variant = "dark" }: { variant?: "dark" | "light" }) {
-  const [showTooltip, setShowTooltip] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
+  const [pulsing, setPulsing] = useState(true);
 
-  const handleClick = () => {
+  // Auto-show popup after 5s on first visit, then stop pulse
+  useEffect(() => {
+    const alreadySeen = sessionStorage.getItem("wpp-seen");
+    if (alreadySeen) {
+      setPulsing(false);
+      return;
+    }
+    const timer = setTimeout(() => {
+      setOpen(true);
+      setPulsing(false);
+      sessionStorage.setItem("wpp-seen", "1");
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleOpen = () => {
+    setOpen(true);
+    setPulsing(false);
+    setDismissed(false);
+  };
+
+  const handleDismiss = () => {
+    setOpen(false);
+    setDismissed(true);
+  };
+
+  const handleChat = () => {
     const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(DEFAULT_MESSAGE)}`;
     window.open(url, "_blank", "noopener,noreferrer");
   };
@@ -24,53 +52,151 @@ export function WhatsAppButton({ variant = "dark" }: { variant?: "dark" | "light
   const isDark = variant === "dark";
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
+    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+      {/* Chat popup */}
       <AnimatePresence>
-        {showTooltip && (
+        {open && !dismissed && (
           <motion.div
-            initial={{ opacity: 0, y: 8, scale: 0.95 }}
+            initial={{ opacity: 0, y: 12, scale: 0.92 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.95 }}
-            transition={{ duration: 0.15 }}
-            className="rounded-xl px-4 py-3 shadow-xl max-w-[220px] mb-1"
+            exit={{ opacity: 0, y: 12, scale: 0.92 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28 }}
+            className="w-[300px] rounded-2xl overflow-hidden shadow-2xl"
             style={{
-              background: isDark ? "#111318" : "#fff",
+              background: isDark ? "#0c0e14" : "#ffffff",
               border: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)"}`,
+              boxShadow: isDark
+                ? "0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)"
+                : "0 20px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05)",
             }}
           >
-            <button
-              onClick={() => setShowTooltip(false)}
-              className="absolute top-2 right-2 p-0.5 rounded-md transition-colors"
-              style={{ color: isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)" }}
+            {/* Header */}
+            <div
+              className="relative px-5 py-4 flex items-center gap-3"
+              style={{ background: "#25D366" }}
             >
-              <X className="h-3 w-3" />
-            </button>
-            <p
-              className="text-xs leading-relaxed pr-4"
-              style={{ color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.7)" }}
+              <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center">
+                <WhatsAppIcon size={22} />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-white">Vyzon Suporte</p>
+                <div className="flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-white/80" />
+                  <span className="text-[11px] text-white/80">Online agora</span>
+                </div>
+              </div>
+              <button
+                onClick={handleDismiss}
+                className="p-1 rounded-lg hover:bg-white/15 transition-colors text-white/70 hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="px-5 py-4">
+              {/* Message bubble */}
+              <div className="flex gap-2.5 mb-4">
+                <div className="h-7 w-7 rounded-full bg-[#25D366]/15 flex items-center justify-center shrink-0 mt-0.5">
+                  <WhatsAppIcon size={14} />
+                </div>
+                <div
+                  className="rounded-2xl rounded-tl-sm px-3.5 py-2.5 max-w-[85%]"
+                  style={{
+                    background: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)",
+                    border: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)"}`,
+                  }}
+                >
+                  <p
+                    className="text-[13px] leading-relaxed"
+                    style={{ color: isDark ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.7)" }}
+                  >
+                    Oi! Tem alguma dúvida ou precisa de ajuda? Fala com a gente pelo WhatsApp.
+                  </p>
+                  <p
+                    className="text-[10px] mt-1.5 text-right"
+                    style={{ color: isDark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.3)" }}
+                  >
+                    agora
+                  </p>
+                </div>
+              </div>
+
+              {/* CTA button */}
+              <button
+                onClick={handleChat}
+                className="w-full flex items-center justify-center gap-2 h-11 rounded-xl text-white text-sm font-semibold transition-all hover:brightness-110 active:scale-[0.98]"
+                style={{
+                  background: "#25D366",
+                  boxShadow: "0 4px 16px rgba(37,211,102,0.25)",
+                }}
+              >
+                <MessageCircle className="h-4 w-4" />
+                Iniciar conversa
+              </button>
+            </div>
+
+            {/* Footer */}
+            <div
+              className="px-5 py-2.5 text-center"
+              style={{
+                borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"}`,
+              }}
             >
-              Precisa de ajuda?{" "}
-              <button onClick={handleClick} className="font-semibold underline underline-offset-2" style={{ color: "#25D366" }}>
-                Fale conosco
-              </button>{" "}
-              pelo WhatsApp.
-            </p>
+              <p
+                className="text-[10px]"
+                style={{ color: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.3)" }}
+              >
+                Resposta em até 5 minutos
+              </p>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
+      {/* FAB */}
       <motion.button
-        onClick={() => setShowTooltip((prev) => !prev)}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className="h-14 w-14 rounded-full flex items-center justify-center shadow-lg text-white transition-shadow hover:shadow-xl"
+        onClick={open && !dismissed ? handleDismiss : handleOpen}
+        whileHover={{ scale: 1.08 }}
+        whileTap={{ scale: 0.92 }}
+        className="relative h-14 w-14 rounded-full flex items-center justify-center text-white"
         style={{
           background: "#25D366",
-          boxShadow: "0 4px 20px rgba(37,211,102,0.3)",
+          boxShadow: "0 4px 24px rgba(37,211,102,0.35)",
         }}
         aria-label="Suporte via WhatsApp"
       >
-        <WhatsAppIcon size={26} />
+        <AnimatePresence mode="wait">
+          {open && !dismissed ? (
+            <motion.div
+              key="close"
+              initial={{ rotate: -90, opacity: 0 }}
+              animate={{ rotate: 0, opacity: 1 }}
+              exit={{ rotate: 90, opacity: 0 }}
+              transition={{ duration: 0.15 }}
+            >
+              <X className="h-6 w-6" />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="wpp"
+              initial={{ rotate: 90, opacity: 0 }}
+              animate={{ rotate: 0, opacity: 1 }}
+              exit={{ rotate: -90, opacity: 0 }}
+              transition={{ duration: 0.15 }}
+            >
+              <WhatsAppIcon size={26} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Pulse ring */}
+        {pulsing && (
+          <span
+            className="absolute inset-0 rounded-full animate-ping"
+            style={{ background: "#25D366", opacity: 0.3 }}
+          />
+        )}
       </motion.button>
     </div>
   );
