@@ -84,7 +84,7 @@ async function fetchCompanyData(adminClient: any, companyId: string) {
     // Vendas (last 3 months)
     adminClient
       .from("vendas")
-      .select("id, user_id, valor, data_venda, status, produto, company_id")
+      .select("id, user_id, valor, data_venda, status, produto_nome, company_id")
       .eq("company_id", companyId)
       .gte("data_venda", `${now.getFullYear()}-${String(Math.max(1, now.getMonth() - 1)).padStart(2, "0")}-01`)
       .order("data_venda", { ascending: false }),
@@ -142,7 +142,7 @@ async function fetchCompanyData(adminClient: any, companyId: string) {
   // Products ranking
   const produtoMap = new Map<string, { nome: string; total: number; qtd: number }>();
   vendasAprovadas.forEach((v: any) => {
-    const nome = v.produto || "Sem produto";
+    const nome = v.produto_nome || "Sem produto";
     const existing = produtoMap.get(nome) || { nome, total: 0, qtd: 0 };
     existing.total += Number(v.valor || 0);
     existing.qtd += 1;
