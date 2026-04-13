@@ -215,8 +215,12 @@ export default function Onboarding() {
     // If user is already logged in, skip registration step (step 1)
     const isLoggedIn = !!user;
 
-    // Step tracking - start at step 2 if already logged in
-    const [currentStep, setCurrentStep] = useState(isLoggedIn ? 2 : 1);
+    // Step tracking - respect ?step= param for upgrades, otherwise start at 2 if logged in
+    const urlStep = Number(searchParams.get("step"));
+    const resolvedInitialStep = isLoggedIn && urlStep >= 2 && urlStep <= TOTAL_STEPS
+        ? urlStep
+        : isLoggedIn ? 2 : 1;
+    const [currentStep, setCurrentStep] = useState(resolvedInitialStep);
     const [direction, setDirection] = useState(1);
     const [showConfetti, setShowConfetti] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
