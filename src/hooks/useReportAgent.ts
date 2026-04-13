@@ -3,12 +3,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/TenantContext";
 import { logger } from "@/utils/logger";
 
+export interface ChartPayload {
+  type: "bar" | "line" | "pie";
+  title: string;
+  data: Array<Record<string, string | number>>;
+  xKey?: string;
+  yKey?: string;
+}
+
 export interface ReportMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
   type?: "insight" | "ranking" | "comparison" | "alert" | "general";
   highlights?: string[];
+  charts?: ChartPayload[];
   timestamp: Date;
 }
 
@@ -25,10 +34,10 @@ export const useReportAgent = () => {
     return `msg-${Date.now()}-${idCounter.current}`;
   };
 
-  const addAssistantMessage = (content: string, type: ReportMessage["type"] = "alert", highlights: string[] = []) => {
+  const addAssistantMessage = (content: string, type: ReportMessage["type"] = "alert", highlights: string[] = [], charts?: ChartPayload[]) => {
     setMessages((prev) => [
       ...prev,
-      { id: genId(), role: "assistant", content, type, highlights, timestamp: new Date() },
+      { id: genId(), role: "assistant", content, type, highlights, charts, timestamp: new Date() },
     ]);
   };
 
@@ -120,10 +129,12 @@ export const useReportAgent = () => {
 
       // Success
       const { analysis } = body;
+      const charts = Array.isArray(analysis.charts) ? analysis.charts : undefined;
       addAssistantMessage(
         analysis.answer || "Sem resposta.",
         analysis.type || "general",
-        analysis.highlights || []
+        analysis.highlights || [],
+        charts
       );
 
       if (body.remaining !== undefined) {

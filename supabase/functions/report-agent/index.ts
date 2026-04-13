@@ -241,8 +241,31 @@ RETORNE UM JSON com esta estrutura exata:
 {
   "answer": "sua resposta formatada em markdown",
   "type": "insight" | "ranking" | "comparison" | "alert" | "general",
-  "highlights": ["array de 1-3 metricas-chave curtas (ex: 'Faturamento: R$ 50k')"]
+  "highlights": ["array de 1-3 metricas-chave curtas (ex: 'Faturamento: R$ 50k')"],
+  "charts": []
 }
+
+GRÁFICOS (campo "charts"):
+Quando a pergunta envolver rankings, comparações, evolução ou distribuição, inclua um ou mais gráficos no array "charts". Cada gráfico:
+{
+  "type": "bar" | "line" | "pie",
+  "title": "Título curto do gráfico",
+  "data": [{ "name": "Label", "value": 1234 }, ...],
+  "xKey": "name",
+  "yKey": "value"
+}
+
+Guia de quando usar cada tipo:
+- "bar": rankings de vendedores, produtos, comparação de valores lado a lado
+- "line": evolução temporal (mês a mês, semana a semana)
+- "pie": distribuição/participação (% por produto, % por vendedor)
+
+Regras dos gráficos:
+- Máximo 2 gráficos por resposta
+- Máximo 10 itens por gráfico (use top N se necessário)
+- Valores monetários devem ser números (ex: 48200, não "R$ 48.200")
+- "name" deve ser curto (primeiro nome do vendedor, nome abreviado do produto)
+- Se não fizer sentido visual, retorne "charts": [] (array vazio)
 
 SEMPRE retorne JSON valido, sem markdown code blocks ao redor.`;
 }
@@ -353,7 +376,7 @@ serve(async (req) => {
           { role: "user", content: question },
         ],
         temperature: 0.3,
-        max_tokens: 1200,
+        max_tokens: 1800,
         response_format: { type: "json_object" },
       }),
     });

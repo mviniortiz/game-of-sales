@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useReportAgent, ReportMessage } from "@/hooks/useReportAgent";
+import { EvaChartRenderer } from "@/components/admin/EvaChart";
 import { Badge } from "@/components/ui/badge";
 import { EvaAvatar } from "@/components/icons/EvaAvatar";
 import {
@@ -249,6 +250,20 @@ function MessageBubble({ message, isLast, onTypingTick }: { message: ReportMessa
             </div>
           )}
         </div>
+
+        {/* Charts — show after typing completes */}
+        {!isTyping && message.charts && message.charts.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="space-y-2"
+          >
+            {message.charts.map((chart, i) => (
+              <EvaChartRenderer key={i} chart={chart} />
+            ))}
+          </motion.div>
+        )}
 
         {/* Highlights — show after typing completes */}
         {!isTyping && message.highlights && message.highlights.length > 0 && (
