@@ -271,27 +271,14 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await userSupabase.auth.getUser();
     if (userError || !user) return json(401, { error: "Unauthorized" });
 
-    // Verify admin role — admin is stored in user_roles table, super_admin in profiles
-    const [{ data: profile }, { data: adminRole }] = await Promise.all([
-      adminSupabase
-        .from("profiles")
-        .select("is_super_admin, company_id")
-        .eq("id", user.id)
-        .single(),
-      adminSupabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
-        .maybeSingle(),
-    ]);
+    // Fetch profile (company_id + super_admin flag)
+    const { data: profile } = await adminSupabase
+      .from("profiles")
+      .select("is_super_admin, company_id")
+      .eq("id", user.id)
+      .single();
 
-    const isAdmin = !!adminRole;
     const isSuperAdmin = !!profile?.is_super_admin;
-
-    if (!isAdmin && !isSuperAdmin) {
-      return json(403, { error: "Acesso restrito a administradores" });
-    }
 
     const body = await req.json();
     const { question, companyId } = body;
