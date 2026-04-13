@@ -378,7 +378,16 @@ export const AdminVendedores = () => {
         body: { nome, email, sendPassword, companyId: activeCompanyId },
       });
 
-      if (error) throw error;
+      if (error) {
+        // Extract the real error message from the response body
+        let msg = "Não foi possível criar o vendedor";
+        try {
+          const body = error.context?.body ? await new Response(error.context.body).json() : null;
+          if (body?.error) msg = body.error;
+        } catch { /* ignore parse errors */ }
+        toast.error(msg);
+        return;
+      }
 
       if (data?.password && sendPassword) {
         setGeneratedPassword(data.password);
