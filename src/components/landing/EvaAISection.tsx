@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, BarChart3, TrendingUp, Users, Zap, ArrowRight } from "lucide-react";
 
 // ─── Typing animation for the mockup ──────────────────────────────
@@ -181,25 +181,36 @@ function ChatMockup({ onCTAClick }: { onCTAClick?: () => void }) {
           </motion.div>
         )}
 
-        {/* Highlights after done */}
+        {/* Chart + Highlights after done */}
         {phase === "done" && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="flex flex-wrap gap-1.5 pl-9"
-          >
-            {["#1 Carlos M. — R$ 28.4k", "Melhor conversão: Ana L. (34%)"].map((h, i) => (
-              <span
-                key={i}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px]"
-                style={{ background: "rgba(139,92,246,0.08)", border: "1px solid rgba(139,92,246,0.12)", color: "rgba(255,255,255,0.5)", fontWeight: "var(--fw-medium)" }}
-              >
-                <Zap className="h-2.5 w-2.5" style={{ color: "#a78bfa" }} />
-                {h}
-              </span>
-            ))}
-          </motion.div>
+          <>
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.4 }}
+              className="pl-9"
+            >
+              <DemoBarChart />
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="flex flex-wrap gap-1.5 pl-9"
+            >
+              {["#1 Carlos M. — R$ 28.4k", "Melhor conversão: Ana L. (34%)"].map((h, i) => (
+                <span
+                  key={i}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px]"
+                  style={{ background: "rgba(139,92,246,0.08)", border: "1px solid rgba(139,92,246,0.12)", color: "rgba(255,255,255,0.5)", fontWeight: "var(--fw-medium)" }}
+                >
+                  <Zap className="h-2.5 w-2.5" style={{ color: "#a78bfa" }} />
+                  {h}
+                </span>
+              ))}
+            </motion.div>
+          </>
         )}
       </div>
 
@@ -216,11 +227,56 @@ function ChatMockup({ onCTAClick }: { onCTAClick?: () => void }) {
   );
 }
 
+// ─── Demo chart (pure CSS, no Recharts dep) ─────────────────────
+
+const DEMO_CHART_DATA = [
+  { name: "Carlos M.", value: 28400, color: "#8b5cf6" },
+  { name: "Ana L.", value: 21800, color: "#10b981" },
+  { name: "Rafael S.", value: 18200, color: "#f59e0b" },
+  { name: "Julia P.", value: 12600, color: "#06b6d4" },
+];
+
+function DemoBarChart() {
+  const maxValue = Math.max(...DEMO_CHART_DATA.map((d) => d.value));
+
+  return (
+    <div
+      className="rounded-xl p-3.5 mt-2"
+      style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}
+    >
+      <p className="text-[10px] uppercase tracking-wider mb-3" style={{ color: "rgba(255,255,255,0.3)", fontWeight: 600 }}>
+        Ranking — Faturamento do mês
+      </p>
+      <div className="space-y-2.5">
+        {DEMO_CHART_DATA.map((item, i) => (
+          <div key={item.name} className="flex items-center gap-2.5">
+            <span className="text-[11px] w-[72px] truncate shrink-0" style={{ color: "rgba(255,255,255,0.5)", fontWeight: 500 }}>
+              {item.name}
+            </span>
+            <div className="flex-1 h-5 rounded-md overflow-hidden" style={{ background: "rgba(255,255,255,0.03)" }}>
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${(item.value / maxValue) * 100}%` }}
+                transition={{ duration: 0.8, delay: i * 0.15, ease: "easeOut" }}
+                className="h-full rounded-md"
+                style={{ background: item.color, opacity: 0.8 }}
+              />
+            </div>
+            <span className="text-[10px] tabular-nums shrink-0" style={{ color: "rgba(255,255,255,0.4)", fontWeight: 500, minWidth: 42 }}>
+              R$ {(item.value / 1000).toFixed(1)}k
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Feature pills ────────────────────────────────────────────────
 
 const FEATURES = [
-  { icon: BarChart3, label: "Faturamento em tempo real" },
-  { icon: Users, label: "Ranking e performance" },
+  { icon: BarChart3, label: "Gráficos gerados por IA em tempo real" },
+  { icon: Users, label: "Ranking e performance do time" },
   { icon: TrendingUp, label: "Tendências e previsões" },
   { icon: Sparkles, label: "Insights automáticos" },
 ];
