@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, memo } from "react";
 import { logger } from "@/utils/logger";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { trackEvent, trackConversion, FUNNEL_EVENTS } from "@/lib/analytics";
+import { trackEvent, trackConversion, trackPurchaseConversion, FUNNEL_EVENTS } from "@/lib/analytics";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -533,7 +533,7 @@ export default function Onboarding() {
 
             console.log("[handlePayment] SUCCESS! Advancing to next step...");
             trackEvent(FUNNEL_EVENTS.PAYMENT_SUCCESS, { plan: selectedPlan });
-            trackConversion(import.meta.env.VITE_GADS_CONVERSION_LABEL || "", Number(billingConfig?.amount) || 0);
+            trackPurchaseConversion(Number(billingConfig?.amount) || 0, undefined, true);
             toast({ title: "Assinatura criada!", description: "Seu trial de 14 dias começou. Aproveite!" });
             advanceStep();
         } catch (error: any) {
@@ -629,6 +629,7 @@ export default function Onboarding() {
                 }
 
                 trackEvent(FUNNEL_EVENTS.REGISTER_COMPLETE, { plan: selectedPlan });
+                trackPurchaseConversion(undefined, newCompanyId, true);
                 toast({ title: "Conta criada!", description: "Vamos configurar sua empresa." });
                 advanceStep();
             } catch (error: any) {

@@ -2,7 +2,8 @@
 // Supports Google Analytics 4 (GA4) + Google Ads conversions
 
 const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID;
-const GADS_CONVERSION_ID = import.meta.env.VITE_GADS_CONVERSION_ID;
+const GADS_CONVERSION_ID = import.meta.env.VITE_GADS_CONVERSION_ID || "AW-18055201052";
+const GADS_CONVERSION_LABEL = "1oljCLaqtJMcEJyCsqFD";
 
 // Type-safe gtag
 declare global {
@@ -109,6 +110,21 @@ export function trackConversion(
       send_to: `${GADS_CONVERSION_ID}/${conversionLabel}`,
       value,
       currency,
+    });
+  } catch {
+    // Silently fail
+  }
+}
+
+// Track Google Ads purchase conversion (registration/checkout)
+export function trackPurchaseConversion(value?: number, transactionId?: string, isNewCustomer = true) {
+  try {
+    window.gtag?.("event", "conversion", {
+      send_to: `${GADS_CONVERSION_ID}/${GADS_CONVERSION_LABEL}`,
+      value: value || 1.0,
+      currency: "BRL",
+      transaction_id: transactionId || "",
+      new_customer: isNewCustomer,
     });
   } catch {
     // Silently fail
