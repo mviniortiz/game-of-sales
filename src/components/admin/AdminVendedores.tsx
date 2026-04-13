@@ -379,12 +379,15 @@ export const AdminVendedores = () => {
       });
 
       if (error) {
-        // Extract the real error message from the response body
         let msg = "Não foi possível criar o vendedor";
         try {
-          const body = error.context?.body ? await new Response(error.context.body).json() : null;
-          if (body?.error) msg = body.error;
+          // FunctionsHttpError.context is a Response object
+          if (error.context && typeof error.context.json === "function") {
+            const body = await error.context.json();
+            if (body?.error) msg = body.error;
+          }
         } catch { /* ignore parse errors */ }
+        console.error("[admin-create-seller] Error:", msg, error);
         toast.error(msg);
         return;
       }
