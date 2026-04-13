@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Home, Trophy, PlusCircle, Target, PhoneCall, Shield, LogOut, User, Calendar, Kanban, Upload, Settings, ChevronRight } from "lucide-react";
+import { Home, Trophy, PlusCircle, Target, PhoneCall, Shield, LogOut, User, Calendar, Kanban, Upload, Settings, ChevronRight, Sparkles } from "lucide-react";
 import { EvaIcon } from "@/components/icons/EvaAvatar";
 import { ReminderBell } from "@/components/crm/ReminderBell";
 import { NavLink } from "@/components/NavLink";
@@ -57,7 +57,7 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const { user, isAdmin, isSuperAdmin, signOut, profile, companyId } = useAuth();
   const { activeCompanyId } = useTenant();
-  const { hasFeature } = usePlan();
+  const { hasFeature, currentPlan, planInfo } = usePlan();
   const location = useLocation();
   const navigate = useNavigate();
   const collapsed = state === "collapsed";
@@ -102,7 +102,7 @@ export function AppSidebar() {
   const filteredGestaoItems = gestaoItems.filter(item => {
     if (item.url === '/metas') return hasFeature('metas');
     if (item.url === '/ranking') return hasFeature('ranking');
-    if ('feature' in item && item.feature) return isAdmin && hasFeature(item.feature);
+    // Eva: show for all admins (paywall is on the page itself)
     if ('adminOnly' in item && item.adminOnly) return isAdmin;
     return true;
   });
@@ -312,13 +312,25 @@ export function AppSidebar() {
                 <ChevronRight className="h-4 w-4 text-muted-foreground/50 shrink-0" />
               </button>
 
-              {/* Role badge */}
-              {isAdmin && (
-                <div className="flex items-center gap-1.5 px-3 mt-2">
-                  <Shield className="h-3 w-3 text-amber-400" />
-                  <span className="text-[10px] font-semibold text-amber-400 uppercase tracking-wider">Administrador</span>
-                </div>
-              )}
+              {/* Role & Plan badges */}
+              <div className="flex items-center gap-2 px-3 mt-2">
+                {isAdmin && (
+                  <div className="flex items-center gap-1.5">
+                    <Shield className="h-3 w-3 text-amber-400" />
+                    <span className="text-[10px] font-semibold text-amber-400 uppercase tracking-wider">Admin</span>
+                  </div>
+                )}
+                {planInfo && (
+                  <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${
+                    currentPlan === 'pro' ? 'bg-emerald-500/15 text-emerald-400' :
+                    currentPlan === 'plus' ? 'bg-blue-500/15 text-blue-400' :
+                    'bg-zinc-500/15 text-zinc-400'
+                  }`}>
+                    <Sparkles className="h-2.5 w-2.5" />
+                    <span className="text-[10px] font-semibold uppercase tracking-wider">{planInfo.label}</span>
+                  </div>
+                )}
+              </div>
 
               {/* Actions row */}
               <div className="flex items-center gap-1 mt-3 px-1">
