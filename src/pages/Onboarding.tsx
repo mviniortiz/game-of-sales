@@ -423,11 +423,12 @@ export default function Onboarding() {
     const handlePayment = async () => {
         trackEvent(FUNNEL_EVENTS.PAYMENT_SUBMIT, { plan: selectedPlan });
 
-        // Recover company ID from multiple sources if state was lost
-        let companyId = effectiveCompanyId
-            || localStorage.getItem(ONBOARDING_COMPANY_KEY)
-            || authCompanyId;
-        if (companyId && !effectiveCompanyId) {
+        // Recover company ID — prefer authCompanyId (from profile, matches edge function check)
+        // over localStorage which may be stale from a previous attempt
+        let companyId = authCompanyId
+            || effectiveCompanyId
+            || localStorage.getItem(ONBOARDING_COMPANY_KEY);
+        if (companyId && companyId !== effectiveCompanyId) {
             lockAndSetCompanyId(companyId);
         }
 
