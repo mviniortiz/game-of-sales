@@ -77,7 +77,7 @@ async function fetchCompanyData(adminClient: any, companyId: string) {
     // Vendedores
     adminClient
       .from("profiles")
-      .select("id, nome, email, is_admin, is_super_admin")
+      .select("id, nome, email, is_super_admin")
       .eq("company_id", companyId)
       .order("nome"),
 
@@ -206,7 +206,7 @@ async function fetchCompanyData(adminClient: any, companyId: string) {
           descricao: metaConsolidadaAtual.descricao || null,
         }
       : null,
-    vendedores: vendedores.map((v: any) => ({ nome: v.nome, isAdmin: v.is_admin })),
+    vendedores: vendedores.map((v: any) => ({ nome: v.nome })),
   };
 }
 
