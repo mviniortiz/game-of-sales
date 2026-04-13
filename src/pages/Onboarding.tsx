@@ -18,7 +18,6 @@ import {
     Loader2,
     User,
     Check,
-    Star,
     Phone,
     Briefcase,
     LayoutDashboard,
@@ -895,79 +894,54 @@ export default function Onboarding() {
     const displayStep = isLoggedIn ? currentStep - 1 : currentStep;
     const displayTotalSteps = isLoggedIn ? TOTAL_STEPS - 1 : TOTAL_STEPS;
 
-    // ── Stepper ──
-    const Stepper = () => (
-        <div className="mb-10">
-            <div className="flex items-center justify-between mb-3">
-                <span className="text-slate-400 text-sm font-medium">
-                    Passo {displayStep} de {displayTotalSteps}
-                </span>
-                <span className="text-slate-500 text-sm">{stepMeta[displayStep - 1]?.label}</span>
-            </div>
-
-            {/* Progress bar */}
-            <div className="flex items-center gap-2 mb-6">
-                {Array.from({ length: displayTotalSteps }).map((_, index) => (
-                    <div
-                        key={index}
-                        className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${
-                            index + 1 < displayStep
-                                ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]"
-                                : index + 1 === displayStep
-                                ? "bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.4)]"
-                                : "bg-slate-800"
-                        }`}
+    // ── Stepper (compact) ──
+    const Stepper = () => {
+        const pct = ((displayStep - 1) / (displayTotalSteps - 1)) * 100;
+        const currentLabel = stepMeta[displayStep - 1]?.label;
+        return (
+            <div className="mb-8">
+                <div className="flex items-center justify-between mb-2.5">
+                    <div className="flex items-center gap-2">
+                        <span
+                            className="text-[11px] font-bold px-2 py-0.5 rounded-md"
+                            style={{ background: "rgba(16,185,129,0.1)", color: "#34d399" }}
+                        >
+                            {displayStep}/{displayTotalSteps}
+                        </span>
+                        <AnimatePresence mode="wait">
+                            <motion.span
+                                key={currentLabel}
+                                className="text-sm font-medium"
+                                style={{ color: "rgba(255,255,255,0.7)" }}
+                                initial={{ opacity: 0, x: 8 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -8 }}
+                                transition={{ duration: 0.15 }}
+                            >
+                                {currentLabel}
+                            </motion.span>
+                        </AnimatePresence>
+                    </div>
+                    <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.2)" }}>
+                        {Math.round(pct)}%
+                    </span>
+                </div>
+                {/* Single progress bar */}
+                <div className="h-1 w-full rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+                    <motion.div
+                        className="h-full rounded-full"
+                        style={{ background: "linear-gradient(90deg, #10b981, #34d399)" }}
+                        initial={false}
+                        animate={{ width: `${pct}%` }}
+                        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                     />
-                ))}
+                </div>
             </div>
-
-            {/* Step icons row */}
-            <div className="flex items-center justify-between overflow-x-auto">
-                {stepMeta.map((step, index) => {
-                    const StepIcon = step.icon;
-                    const isComplete = index + 1 < displayStep;
-                    const isCurrent = index + 1 === displayStep;
-                    return (
-                        <div key={index} className="flex flex-col items-center gap-1.5">
-                            <div
-                                className={`w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all duration-300 ${
-                                    isComplete
-                                        ? "bg-emerald-500/20 border border-emerald-500/50"
-                                        : isCurrent
-                                        ? "bg-amber-500/20 border border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.3)]"
-                                        : "bg-slate-800/50 border border-slate-700/50"
-                                }`}
-                            >
-                                {isComplete ? (
-                                    <Check className="w-4 h-4 text-emerald-400" />
-                                ) : (
-                                    <StepIcon
-                                        className={`w-4 h-4 ${
-                                            isCurrent ? "text-amber-400" : "text-slate-500"
-                                        }`}
-                                    />
-                                )}
-                            </div>
-                            <span
-                                className={`text-[10px] font-medium hidden sm:block ${
-                                    isComplete
-                                        ? "text-emerald-400"
-                                        : isCurrent
-                                        ? "text-amber-400"
-                                        : "text-slate-600"
-                                }`}
-                            >
-                                {step.label}
-                            </span>
-                        </div>
-                    );
-                })}
-            </div>
-        </div>
-    );
+        );
+    };
 
     const inputClasses =
-        "bg-slate-900/50 backdrop-blur-sm border-slate-800 text-white placeholder:text-slate-500 focus-visible:bg-slate-900 focus-visible:ring-1 focus-visible:ring-emerald-500 focus-visible:border-emerald-500 focus-visible:shadow-[0_0_20px_-5px_rgba(16,185,129,0.3)] hover:border-slate-700 h-12 text-base rounded-xl transition-all duration-300";
+        "bg-[rgba(255,255,255,0.03)] border-[rgba(255,255,255,0.08)] text-white placeholder:text-[rgba(255,255,255,0.25)] focus-visible:ring-1 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500/40 hover:border-[rgba(255,255,255,0.15)] h-12 text-base rounded-xl transition-all duration-200";
 
     // MP Card field styles moved to top-level MpCardFields component
 
@@ -982,25 +956,25 @@ export default function Onboarding() {
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                            className="w-16 h-16 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 border border-emerald-500/30 flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_-3px_rgba(16,185,129,0.2)]"
+                            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.2)" }}
                         >
                             <Rocket className="h-8 w-8 text-emerald-500" />
                         </motion.div>
                         <h2 className="text-2xl font-bold text-white tracking-tight mb-2 text-center">
                             Crie sua conta
                         </h2>
-                        <p className="text-slate-400 mb-8 text-sm text-center">
+                        <p className="text-[rgba(255,255,255,0.45)] mb-8 text-sm text-center">
                             Comece sua jornada de alta performance em vendas
                         </p>
 
                         <div className="space-y-4">
                             {/* Nome */}
                             <div className="space-y-1.5">
-                                <Label className="text-slate-300 text-sm font-medium">
+                                <Label className="text-[rgba(255,255,255,0.6)] text-sm font-medium">
                                     Seu nome completo <span className="text-rose-400">*</span>
                                 </Label>
                                 <div className="relative">
-                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[rgba(255,255,255,0.3)]" />
                                     <Input
                                         ref={inputRef}
                                         placeholder="Joao Silva"
@@ -1018,11 +992,11 @@ export default function Onboarding() {
 
                             {/* Email */}
                             <div className="space-y-1.5">
-                                <Label className="text-slate-300 text-sm font-medium">
+                                <Label className="text-[rgba(255,255,255,0.6)] text-sm font-medium">
                                     E-mail <span className="text-rose-400">*</span>
                                 </Label>
                                 <div className="relative">
-                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[rgba(255,255,255,0.3)]" />
                                     <Input
                                         placeholder="voce@empresa.com"
                                         value={regEmail}
@@ -1040,11 +1014,11 @@ export default function Onboarding() {
 
                             {/* Empresa */}
                             <div className="space-y-1.5">
-                                <Label className="text-slate-300 text-sm font-medium">
+                                <Label className="text-[rgba(255,255,255,0.6)] text-sm font-medium">
                                     Nome da empresa <span className="text-rose-400">*</span>
                                 </Label>
                                 <div className="relative">
-                                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[rgba(255,255,255,0.3)]" />
                                     <Input
                                         placeholder="Sua Empresa Ltda"
                                         value={regCompanyName}
@@ -1060,11 +1034,11 @@ export default function Onboarding() {
 
                             {/* Senha */}
                             <div className="space-y-1.5">
-                                <Label className="text-slate-300 text-sm font-medium">
+                                <Label className="text-[rgba(255,255,255,0.6)] text-sm font-medium">
                                     Senha <span className="text-rose-400">*</span>
                                 </Label>
                                 <div className="relative">
-                                    <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                                    <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[rgba(255,255,255,0.3)]" />
                                     <Input
                                         placeholder="Mínimo 8 caracteres"
                                         value={regPassword}
@@ -1077,7 +1051,7 @@ export default function Onboarding() {
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[rgba(255,255,255,0.3)] hover:text-[rgba(255,255,255,0.6)] transition-colors"
                                     >
                                         {showPassword ? <X className="h-4 w-4" /> : <Check className="h-4 w-4" />}
                                     </button>
@@ -1092,7 +1066,7 @@ export default function Onboarding() {
                             </div>
                         </div>
 
-                        <p className="text-[11px] text-slate-500 mt-5 text-center">
+                        <p className="text-[11px] text-[rgba(255,255,255,0.3)] mt-5 text-center">
                             Ao criar sua conta, você concorda com nossos{" "}
                             <a
                                 href="/termos-de-servico"
@@ -1114,20 +1088,20 @@ export default function Onboarding() {
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                            className="w-16 h-16 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 border border-amber-500/30 flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_-3px_rgba(245,158,11,0.2)]"
+                            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)" }}
                         >
                             <Building2 className="h-8 w-8 text-amber-500" />
                         </motion.div>
                         <h2 className="text-2xl font-bold text-white tracking-tight mb-2 text-center">
                             Dados da Empresa
                         </h2>
-                        <p className="text-slate-400 mb-8 text-sm text-center">
+                        <p className="text-[rgba(255,255,255,0.45)] mb-8 text-sm text-center">
                             Vamos configurar o ambiente da sua empresa
                         </p>
 
                         <div className="space-y-5">
                             <div className="space-y-2">
-                                <Label className="text-slate-300 text-sm font-medium">
+                                <Label className="text-[rgba(255,255,255,0.6)] text-sm font-medium">
                                     Nome da empresa <span className="text-rose-400">*</span>
                                 </Label>
                                 <Input
@@ -1141,7 +1115,7 @@ export default function Onboarding() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="text-slate-300 text-sm font-medium">
+                                <Label className="text-[rgba(255,255,255,0.6)] text-sm font-medium">
                                     Segmento
                                 </Label>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -1153,7 +1127,7 @@ export default function Onboarding() {
                                             className={`text-left px-3 py-2.5 rounded-xl border text-sm transition-all duration-200 ${
                                                 segment === seg
                                                     ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-400"
-                                                    : "bg-slate-900/40 border-slate-800 text-slate-400 hover:bg-slate-800/80 hover:border-slate-700 hover:text-white"
+                                                    : "bg-[rgba(255,255,255,0.03)] border-[rgba(255,255,255,0.06)] text-[rgba(255,255,255,0.45)] hover:bg-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.12)] hover:text-white"
                                             }`}
                                         >
                                             {seg}
@@ -1163,14 +1137,14 @@ export default function Onboarding() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="text-slate-300 text-sm font-medium">
+                                <Label className="text-[rgba(255,255,255,0.6)] text-sm font-medium">
                                     Logo (opcional)
                                 </Label>
                                 <div className="flex items-center gap-4">
                                     <button
                                         type="button"
                                         onClick={() => fileInputRef.current?.click()}
-                                        className="flex items-center justify-center w-16 h-16 rounded-xl border-2 border-dashed border-slate-700 hover:border-slate-500 bg-slate-900/40 transition-colors overflow-hidden"
+                                        className="flex items-center justify-center w-16 h-16 rounded-xl border-2 border-dashed border-[rgba(255,255,255,0.08)] hover:border-[rgba(255,255,255,0.15)] bg-[rgba(255,255,255,0.03)] transition-colors overflow-hidden"
                                     >
                                         {logoPreview ? (
                                             <img
@@ -1179,10 +1153,10 @@ export default function Onboarding() {
                                                 className="w-full h-full object-cover"
                                             />
                                         ) : (
-                                            <Image className="w-6 h-6 text-slate-500" />
+                                            <Image className="w-6 h-6 text-[rgba(255,255,255,0.3)]" />
                                         )}
                                     </button>
-                                    <div className="text-sm text-slate-500">
+                                    <div className="text-sm text-[rgba(255,255,255,0.3)]">
                                         {logoFile ? (
                                             <span className="text-emerald-400">{logoFile.name}</span>
                                         ) : (
@@ -1210,24 +1184,24 @@ export default function Onboarding() {
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                            className="w-16 h-16 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 border border-amber-500/30 flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_-3px_rgba(245,158,11,0.2)]"
+                            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)" }}
                         >
                             <User className="h-8 w-8 text-amber-500" />
                         </motion.div>
                         <h2 className="text-2xl font-bold text-white tracking-tight mb-2 text-center">
                             Seu Perfil
                         </h2>
-                        <p className="text-slate-400 mb-8 text-sm text-center">
+                        <p className="text-[rgba(255,255,255,0.45)] mb-8 text-sm text-center">
                             Conte-nos um pouco sobre voce
                         </p>
 
                         <div className="space-y-5">
                             <div className="space-y-2">
-                                <Label className="text-slate-300 text-sm font-medium">
+                                <Label className="text-[rgba(255,255,255,0.6)] text-sm font-medium">
                                     Seu nome <span className="text-rose-400">*</span>
                                 </Label>
                                 <div className="relative">
-                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[rgba(255,255,255,0.3)]" />
                                     <Input
                                         ref={inputRef}
                                         placeholder="Seu nome completo"
@@ -1240,11 +1214,11 @@ export default function Onboarding() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="text-slate-300 text-sm font-medium">
+                                <Label className="text-[rgba(255,255,255,0.6)] text-sm font-medium">
                                     Telefone / WhatsApp
                                 </Label>
                                 <div className="relative">
-                                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[rgba(255,255,255,0.3)]" />
                                     <Input
                                         placeholder="(11) 99999-9999"
                                         value={userPhone}
@@ -1255,11 +1229,11 @@ export default function Onboarding() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="text-slate-300 text-sm font-medium">
+                                <Label className="text-[rgba(255,255,255,0.6)] text-sm font-medium">
                                     Cargo
                                 </Label>
                                 <div className="relative">
-                                    <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                                    <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[rgba(255,255,255,0.3)]" />
                                     <Input
                                         placeholder="Ex: Gerente Comercial"
                                         value={userRole}
@@ -1280,14 +1254,14 @@ export default function Onboarding() {
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                            className="w-16 h-16 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 border border-amber-500/30 flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_-3px_rgba(245,158,11,0.2)]"
+                            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)" }}
                         >
                             <LayoutDashboard className="h-8 w-8 text-amber-500" />
                         </motion.div>
                         <h2 className="text-2xl font-bold text-white tracking-tight mb-2 text-center">
                             Configure seu Pipeline
                         </h2>
-                        <p className="text-slate-400 mb-8 text-sm text-center">
+                        <p className="text-[rgba(255,255,255,0.45)] mb-8 text-sm text-center">
                             Escolha um modelo de funil para começar. Você pode personalizar depois.
                         </p>
 
@@ -1306,14 +1280,14 @@ export default function Onboarding() {
                                         className={`group relative flex items-start gap-4 px-5 py-4 rounded-2xl border transition-all duration-300 text-left overflow-hidden ${
                                             isSelected
                                                 ? "bg-emerald-500/10 border-emerald-500/50 shadow-[0_0_20px_-5px_rgba(16,185,129,0.2)]"
-                                                : "bg-slate-900/40 backdrop-blur-sm border-slate-800 hover:bg-slate-800/80 hover:border-slate-700 hover:shadow-lg"
+                                                : "bg-[rgba(255,255,255,0.03)] backdrop-blur-sm border-[rgba(255,255,255,0.06)] hover:bg-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.12)] hover:shadow-lg"
                                         }`}
                                     >
                                         <div
                                             className={`p-2.5 rounded-lg shrink-0 transition-colors ${
                                                 isSelected
                                                     ? "bg-emerald-500/20 text-emerald-400"
-                                                    : "bg-slate-800 text-slate-400 group-hover:text-amber-500 group-hover:bg-amber-500/10"
+                                                    : "bg-[rgba(255,255,255,0.06)] text-[rgba(255,255,255,0.45)] group-hover:text-amber-500 group-hover:bg-amber-500/10"
                                             }`}
                                         >
                                             <Icon className="h-5 w-5" />
@@ -1326,7 +1300,7 @@ export default function Onboarding() {
                                             >
                                                 {template.label}
                                             </p>
-                                            <p className="text-xs text-slate-500 mt-0.5">
+                                            <p className="text-xs text-[rgba(255,255,255,0.3)] mt-0.5">
                                                 {template.description}
                                             </p>
                                             <div className="flex flex-wrap gap-1.5 mt-2">
@@ -1336,7 +1310,7 @@ export default function Onboarding() {
                                                         className={`text-[10px] px-2 py-0.5 rounded-full border ${
                                                             isSelected
                                                                 ? "border-emerald-500/30 text-emerald-300 bg-emerald-500/10"
-                                                                : "border-slate-700 text-slate-500 bg-slate-800/50"
+                                                                : "border-[rgba(255,255,255,0.08)] text-[rgba(255,255,255,0.3)] bg-[rgba(255,255,255,0.04)]"
                                                         }`}
                                                     >
                                                         {s.title}
@@ -1366,14 +1340,14 @@ export default function Onboarding() {
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                            className="w-16 h-16 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 border border-emerald-500/30 flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_-3px_rgba(16,185,129,0.2)]"
+                            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.2)" }}
                         >
                             <CreditCard className="h-8 w-8 text-emerald-500" />
                         </motion.div>
                         <h2 className="text-2xl font-bold text-white tracking-tight mb-2 text-center">
                             Escolha seu Plano
                         </h2>
-                        <p className="text-slate-400 mb-6 text-sm text-center">
+                        <p className="text-[rgba(255,255,255,0.45)] mb-6 text-sm text-center">
                             14 dias grátis para testar. Cancele quando quiser.
                         </p>
 
@@ -1383,8 +1357,8 @@ export default function Onboarding() {
                                 onClick={() => setBillingCycle("monthly")}
                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                                     billingCycle === "monthly"
-                                        ? "bg-slate-700 text-white"
-                                        : "text-slate-500 hover:text-slate-300"
+                                        ? "bg-[rgba(255,255,255,0.08)] text-white"
+                                        : "text-[rgba(255,255,255,0.3)] hover:text-[rgba(255,255,255,0.6)]"
                                 }`}
                             >
                                 Mensal
@@ -1394,7 +1368,7 @@ export default function Onboarding() {
                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
                                     billingCycle === "annual"
                                         ? "bg-emerald-600/20 text-emerald-400 border border-emerald-500/30"
-                                        : "text-slate-500 hover:text-slate-300"
+                                        : "text-[rgba(255,255,255,0.3)] hover:text-[rgba(255,255,255,0.6)]"
                                 }`}
                             >
                                 Anual
@@ -1422,11 +1396,11 @@ export default function Onboarding() {
                                         className={`relative flex items-center gap-4 px-4 py-3.5 rounded-xl border transition-all duration-200 text-left ${
                                             isSelected
                                                 ? "bg-emerald-500/10 border-emerald-500/50 shadow-[0_0_15px_-5px_rgba(16,185,129,0.3)]"
-                                                : "bg-slate-900/40 border-slate-800 hover:border-slate-700"
+                                                : "bg-[rgba(255,255,255,0.03)] border-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.12)]"
                                         }`}
                                     >
-                                        <div className={`p-2 rounded-lg ${isSelected ? "bg-emerald-500/20" : "bg-slate-800"}`}>
-                                            <PlanIcon className={`h-4 w-4 ${isSelected ? "text-emerald-400" : "text-slate-400"}`} />
+                                        <div className={`p-2 rounded-lg ${isSelected ? "bg-emerald-500/20" : "bg-[rgba(255,255,255,0.06)]"}`}>
+                                            <PlanIcon className={`h-4 w-4 ${isSelected ? "text-emerald-400" : "text-[rgba(255,255,255,0.45)]"}`} />
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2">
@@ -1439,13 +1413,13 @@ export default function Onboarding() {
                                                     </span>
                                                 )}
                                             </div>
-                                            <p className="text-xs text-slate-500 mt-0.5">{plan.description}</p>
+                                            <p className="text-xs text-[rgba(255,255,255,0.3)] mt-0.5">{plan.description}</p>
                                         </div>
                                         <div className="text-right shrink-0">
                                             <p className={`font-bold text-lg ${isSelected ? "text-emerald-400" : "text-white"}`}>
                                                 R$ {monthlyDisplay}
                                             </p>
-                                            <p className="text-[10px] text-slate-500">/mes</p>
+                                            <p className="text-[10px] text-[rgba(255,255,255,0.3)]">/mes</p>
                                         </div>
                                         {isSelected && (
                                             <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center shrink-0">
@@ -1468,7 +1442,7 @@ export default function Onboarding() {
                         {/* Card form */}
                         <div className="space-y-4">
                             <div className="space-y-2">
-                                <Label className="text-slate-300 text-sm font-medium">
+                                <Label className="text-[rgba(255,255,255,0.6)] text-sm font-medium">
                                     Número do cartão <span className="text-rose-400">*</span>
                                 </Label>
                                 <Input
@@ -1483,7 +1457,7 @@ export default function Onboarding() {
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-2">
-                                    <Label className="text-slate-300 text-sm font-medium">
+                                    <Label className="text-[rgba(255,255,255,0.6)] text-sm font-medium">
                                         Validade <span className="text-rose-400">*</span>
                                     </Label>
                                     <Input
@@ -1496,7 +1470,7 @@ export default function Onboarding() {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="text-slate-300 text-sm font-medium">
+                                    <Label className="text-[rgba(255,255,255,0.6)] text-sm font-medium">
                                         CVV <span className="text-rose-400">*</span>
                                     </Label>
                                     <Input
@@ -1512,7 +1486,7 @@ export default function Onboarding() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="text-slate-300 text-sm font-medium">
+                                <Label className="text-[rgba(255,255,255,0.6)] text-sm font-medium">
                                     Nome no cartão <span className="text-rose-400">*</span>
                                 </Label>
                                 <Input
@@ -1523,7 +1497,7 @@ export default function Onboarding() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="text-slate-300 text-sm font-medium">
+                                <Label className="text-[rgba(255,255,255,0.6)] text-sm font-medium">
                                     CPF do titular <span className="text-rose-400">*</span>
                                 </Label>
                                 <Input
@@ -1557,7 +1531,7 @@ export default function Onboarding() {
                                 variant="outline"
                                 onClick={handleBack}
                                 disabled={paymentLoading}
-                                className="h-12 w-12 shrink-0 p-0 border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl transition-colors disabled:opacity-50"
+                                className="h-12 w-12 shrink-0 p-0 border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.06)] hover:bg-[rgba(255,255,255,0.08)] text-[rgba(255,255,255,0.6)] hover:text-white rounded-xl transition-colors disabled:opacity-50"
                             >
                                 <ArrowLeft className="h-5 w-5" />
                             </Button>
@@ -1590,14 +1564,14 @@ export default function Onboarding() {
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                            className="w-16 h-16 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 border border-amber-500/30 flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_-3px_rgba(245,158,11,0.2)]"
+                            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)" }}
                         >
                             <Users className="h-8 w-8 text-amber-500" />
                         </motion.div>
                         <h2 className="text-2xl font-bold text-white tracking-tight mb-2 text-center">
                             Convide sua Equipe
                         </h2>
-                        <p className="text-slate-400 mb-8 text-sm text-center">
+                        <p className="text-[rgba(255,255,255,0.45)] mb-8 text-sm text-center">
                             Adicione os e-mails dos seus vendedores. Eles receberao um convite por e-mail.
                         </p>
 
@@ -1611,7 +1585,7 @@ export default function Onboarding() {
                                     className="flex items-center gap-2"
                                 >
                                     <div className="relative flex-1">
-                                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[rgba(255,255,255,0.3)]" />
                                         <Input
                                             placeholder="vendedor@empresa.com"
                                             value={email}
@@ -1624,7 +1598,7 @@ export default function Onboarding() {
                                         <button
                                             type="button"
                                             onClick={() => removeEmailField(index)}
-                                            className="p-2 text-slate-500 hover:text-rose-400 transition-colors"
+                                            className="p-2 text-[rgba(255,255,255,0.3)] hover:text-rose-400 transition-colors"
                                         >
                                             <X className="w-4 h-4" />
                                         </button>
@@ -1636,7 +1610,7 @@ export default function Onboarding() {
                                 <button
                                     type="button"
                                     onClick={addEmailField}
-                                    className="flex items-center gap-2 text-sm text-slate-400 hover:text-emerald-400 transition-colors py-2"
+                                    className="flex items-center gap-2 text-sm text-[rgba(255,255,255,0.45)] hover:text-emerald-400 transition-colors py-2"
                                 >
                                     <Plus className="w-4 h-4" />
                                     Adicionar mais um vendedor
@@ -1674,7 +1648,8 @@ export default function Onboarding() {
                             initial={{ scale: 0, rotate: -10 }}
                             animate={{ scale: 1, rotate: 0 }}
                             transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                            className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 border border-emerald-500/40 flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_-3px_rgba(16,185,129,0.3)]"
+                            className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
+                            style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.25)" }}
                         >
                             <Trophy className="h-10 w-10 text-emerald-400" />
                         </motion.div>
@@ -1691,7 +1666,7 @@ export default function Onboarding() {
                         <h2 className="text-2xl font-bold text-white tracking-tight mb-2">
                             Seu ambiente esta configurado!
                         </h2>
-                        <p className="text-slate-400 mb-10 text-sm max-w-sm mx-auto">
+                        <p className="text-[rgba(255,255,255,0.45)] mb-10 text-sm max-w-sm mx-auto">
                             {companyName
                                 ? `A empresa "${companyName}" esta pronta para usar o Vyzon.`
                                 : "Seu Vyzon esta pronto para usar."}{" "}
@@ -1714,7 +1689,7 @@ export default function Onboarding() {
                                     <p className="text-sm font-semibold text-emerald-400">
                                         Ir ao Pipeline
                                     </p>
-                                    <p className="text-xs text-slate-500">
+                                    <p className="text-xs text-[rgba(255,255,255,0.3)]">
                                         Comece a adicionar seus deals
                                     </p>
                                 </div>
@@ -1726,20 +1701,20 @@ export default function Onboarding() {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.4 }}
                                 onClick={() => handleComplete("nova-venda")}
-                                className="group flex items-center gap-4 px-5 py-4 rounded-2xl border border-slate-800 bg-slate-900/40 hover:bg-slate-800/80 hover:border-slate-700 transition-all text-left"
+                                className="group flex items-center gap-4 px-5 py-4 rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.03)] hover:bg-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.12)] transition-all text-left"
                             >
-                                <div className="p-2.5 rounded-lg bg-slate-800">
+                                <div className="p-2.5 rounded-lg bg-[rgba(255,255,255,0.06)]">
                                     <Package className="h-5 w-5 text-amber-400" />
                                 </div>
                                 <div className="flex-1">
                                     <p className="text-sm font-semibold text-white">
                                         Registrar uma Venda
                                     </p>
-                                    <p className="text-xs text-slate-500">
+                                    <p className="text-xs text-[rgba(255,255,255,0.3)]">
                                         Registre sua primeira venda agora
                                     </p>
                                 </div>
-                                <ArrowRight className="h-4 w-4 text-slate-500 group-hover:translate-x-1 transition-transform" />
+                                <ArrowRight className="h-4 w-4 text-[rgba(255,255,255,0.3)] group-hover:translate-x-1 transition-transform" />
                             </motion.button>
 
                             <motion.button
@@ -1747,20 +1722,20 @@ export default function Onboarding() {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.5 }}
                                 onClick={() => handleComplete("dashboard")}
-                                className="group flex items-center gap-4 px-5 py-4 rounded-2xl border border-slate-800 bg-slate-900/40 hover:bg-slate-800/80 hover:border-slate-700 transition-all text-left"
+                                className="group flex items-center gap-4 px-5 py-4 rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.03)] hover:bg-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.12)] transition-all text-left"
                             >
-                                <div className="p-2.5 rounded-lg bg-slate-800">
+                                <div className="p-2.5 rounded-lg bg-[rgba(255,255,255,0.06)]">
                                     <BarChart3 className="h-5 w-5 text-blue-400" />
                                 </div>
                                 <div className="flex-1">
                                     <p className="text-sm font-semibold text-white">
                                         Ver Dashboard
                                     </p>
-                                    <p className="text-xs text-slate-500">
+                                    <p className="text-xs text-[rgba(255,255,255,0.3)]">
                                         Veja metricas e acompanhe o time
                                     </p>
                                 </div>
-                                <ArrowRight className="h-4 w-4 text-slate-500 group-hover:translate-x-1 transition-transform" />
+                                <ArrowRight className="h-4 w-4 text-[rgba(255,255,255,0.3)] group-hover:translate-x-1 transition-transform" />
                             </motion.button>
                         </div>
                     </div>
@@ -1772,69 +1747,153 @@ export default function Onboarding() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-950 flex selection:bg-emerald-500/30">
+        <div className="min-h-screen flex selection:bg-emerald-500/30" style={{ background: "#06080a" }}>
             <Confetti show={showConfetti} />
 
-            {/* Left Panel - Branding (hidden on mobile) */}
-            <div className="hidden lg:flex w-1/2 relative bg-slate-900 border-r border-slate-800 overflow-hidden flex-col justify-between p-12">
-                {/* Background effects */}
-                <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none" />
-                <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 bg-amber-500/10 rounded-full blur-[100px] pointer-events-none" />
-                <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+            {/* Left Panel - Dynamic per step (hidden on mobile) */}
+            <div className="hidden lg:flex w-1/2 relative overflow-hidden flex-col justify-between p-12" style={{ background: "#0a0d10", borderRight: "1px solid rgba(255,255,255,0.06)" }}>
+                {/* Subtle grid overlay */}
+                <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
 
+                {/* Top — Logo + Dynamic headline */}
                 <div className="relative z-10">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6 }}
-                    >
-                        <img src={vyzonLogo} alt="Vyzon" className="h-12 mb-8" />
-                        <h1 className="text-4xl xl:text-5xl font-bold text-white leading-tight mb-6">
-                            Transforme sua operação comercial em uma{" "}
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-600">
-                                máquina de vendas
-                            </span>
-                            .
-                        </h1>
-                        <p className="text-lg text-slate-400 max-w-md">
-                            Configure sua empresa em poucos minutos e comece a vender mais hoje mesmo.
-                        </p>
-                    </motion.div>
+                    <img src={vyzonLogo} alt="Vyzon" className="h-12 mb-10" />
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={`left-${currentStep}`}
+                            initial={{ opacity: 0, y: 16 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -12 }}
+                            transition={{ duration: 0.35 }}
+                        >
+                            {currentStep === 1 && (
+                                <>
+                                    <h1 className="text-4xl xl:text-5xl font-bold leading-tight mb-5" style={{ color: "rgba(255,255,255,0.95)", letterSpacing: "-0.03em" }}>
+                                        Crie sua conta em{" "}
+                                        <span className="text-emerald-400">30 segundos</span>.
+                                    </h1>
+                                    <p className="text-lg max-w-md" style={{ color: "rgba(255,255,255,0.4)" }}>
+                                        Preencha seus dados básicos e já tenha acesso à plataforma completa.
+                                    </p>
+                                </>
+                            )}
+                            {currentStep === 2 && (
+                                <>
+                                    <h1 className="text-4xl xl:text-5xl font-bold leading-tight mb-5" style={{ color: "rgba(255,255,255,0.95)", letterSpacing: "-0.03em" }}>
+                                        Personalize para{" "}
+                                        <span className="text-emerald-400">sua empresa</span>.
+                                    </h1>
+                                    <p className="text-lg max-w-md" style={{ color: "rgba(255,255,255,0.4)" }}>
+                                        Essas informações nos ajudam a configurar o ambiente ideal para o seu negócio.
+                                    </p>
+                                </>
+                            )}
+                            {currentStep === 3 && (
+                                <>
+                                    <h1 className="text-4xl xl:text-5xl font-bold leading-tight mb-5" style={{ color: "rgba(255,255,255,0.95)", letterSpacing: "-0.03em" }}>
+                                        Quem vai{" "}
+                                        <span className="text-emerald-400">liderar</span>?
+                                    </h1>
+                                    <p className="text-lg max-w-md" style={{ color: "rgba(255,255,255,0.4)" }}>
+                                        Seu perfil aparece no ranking e no dashboard do time.
+                                    </p>
+                                </>
+                            )}
+                            {currentStep === 4 && (
+                                <>
+                                    <h1 className="text-4xl xl:text-5xl font-bold leading-tight mb-5" style={{ color: "rgba(255,255,255,0.95)", letterSpacing: "-0.03em" }}>
+                                        Monte seu{" "}
+                                        <span className="text-amber-400">funil de vendas</span>.
+                                    </h1>
+                                    <p className="text-lg max-w-md" style={{ color: "rgba(255,255,255,0.4)" }}>
+                                        Escolha um template pronto ou personalize depois. Você pode mudar a qualquer momento.
+                                    </p>
+                                </>
+                            )}
+                            {currentStep === 5 && (
+                                <>
+                                    <h1 className="text-4xl xl:text-5xl font-bold leading-tight mb-5" style={{ color: "rgba(255,255,255,0.95)", letterSpacing: "-0.03em" }}>
+                                        Escolha o plano{" "}
+                                        <span className="text-emerald-400">ideal</span>.
+                                    </h1>
+                                    <p className="text-lg max-w-md" style={{ color: "rgba(255,255,255,0.4)" }}>
+                                        Todos os planos incluem 14 dias grátis. Cancele quando quiser, sem burocracia.
+                                    </p>
+                                </>
+                            )}
+                            {currentStep === 6 && (
+                                <>
+                                    <h1 className="text-4xl xl:text-5xl font-bold leading-tight mb-5" style={{ color: "rgba(255,255,255,0.95)", letterSpacing: "-0.03em" }}>
+                                        Traga seu{" "}
+                                        <span className="text-blue-400">time junto</span>.
+                                    </h1>
+                                    <p className="text-lg max-w-md" style={{ color: "rgba(255,255,255,0.4)" }}>
+                                        Convide vendedores por e-mail. Eles recebem acesso instantâneo ao pipeline e ranking.
+                                    </p>
+                                </>
+                            )}
+                            {currentStep === 7 && (
+                                <>
+                                    <h1 className="text-4xl xl:text-5xl font-bold leading-tight mb-5" style={{ color: "rgba(255,255,255,0.95)", letterSpacing: "-0.03em" }}>
+                                        Tudo pronto.{" "}
+                                        <span className="text-emerald-400">Boas vendas!</span>
+                                    </h1>
+                                    <p className="text-lg max-w-md" style={{ color: "rgba(255,255,255,0.4)" }}>
+                                        Seu ambiente está configurado. Hora de colocar o time para vender.
+                                    </p>
+                                </>
+                            )}
+                        </motion.div>
+                    </AnimatePresence>
                 </div>
 
+                {/* Bottom — Dynamic feature highlights per step */}
                 <div className="relative z-10">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.2 }}
-                        className="bg-slate-900/50 backdrop-blur-md rounded-2xl border border-slate-800 p-6 shadow-xl"
-                    >
-                        <div className="flex items-center gap-1 mb-3">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                                <Star key={star} className="w-5 h-5 fill-amber-500 text-amber-500" />
-                            ))}
-                        </div>
-                        <p className="text-slate-300 font-medium italic mb-4 text-base">
-                            "Desde que implementamos o Vyzon, o engajamento do time explodiu. A
-                            conversao de leads nunca esteve tao alta e finalmente temos visao clara das
-                            metas."
-                        </p>
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-full bg-slate-800 overflow-hidden border-2 border-slate-700">
-                                <img
-                                    src="https://i.pravatar.cc/150?u=a042581f4e29026704d"
-                                    alt="Avatar"
-                                    className="w-full h-full object-cover"
-                                />
-                            </div>
-                            <div>
-                                <h4 className="text-white font-bold text-sm">Mariana Costa</h4>
-                                <p className="text-slate-400 text-xs text-left">
-                                    Diretora de Vendas - TechGrowth
-                                </p>
-                            </div>
-                        </div>
-                    </motion.div>
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={`features-${currentStep}`}
+                            initial={{ opacity: 0, y: 12 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -8 }}
+                            transition={{ duration: 0.3, delay: 0.1 }}
+                            className="space-y-3"
+                        >
+                            {(currentStep <= 3 ? [
+                                { icon: Zap, text: "Setup em menos de 5 minutos" },
+                                { icon: Trophy, text: "Ranking gamificado ao vivo" },
+                                { icon: LayoutDashboard, text: "Pipeline visual estilo Kanban" },
+                            ] : currentStep === 4 ? [
+                                { icon: Briefcase, text: "Templates prontos para B2B, infoprodutos e serviços" },
+                                { icon: LayoutDashboard, text: "Personalize estágios, cores e ícones" },
+                                { icon: ArrowRight, text: "Mude a qualquer momento nas configurações" },
+                            ] : currentStep === 5 ? [
+                                { icon: Shield, text: "Pagamento seguro via MercadoPago" },
+                                { icon: CreditCard, text: "14 dias grátis — cobrança só depois" },
+                                { icon: Zap, text: "Cancele quando quiser, sem multa" },
+                            ] : currentStep === 6 ? [
+                                { icon: Users, text: "Cada vendedor tem seu próprio login" },
+                                { icon: Trophy, text: "Ranking atualiza automaticamente" },
+                                { icon: Mail, text: "Convite chega direto no e-mail" },
+                            ] : [
+                                { icon: Rocket, text: "Pipeline, ranking e metas prontos" },
+                                { icon: Users, text: "Time convidado e com acesso" },
+                                { icon: Trophy, text: "Comece a bater metas hoje" },
+                            ]).map((item, i) => {
+                                const Icon = item.icon;
+                                return (
+                                    <div key={i} className="flex items-center gap-3">
+                                        <div
+                                            className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                                            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
+                                        >
+                                            <Icon className="w-4 h-4 text-emerald-400" />
+                                        </div>
+                                        <span className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>{item.text}</span>
+                                    </div>
+                                );
+                            })}
+                        </motion.div>
+                    </AnimatePresence>
                 </div>
             </div>
 
@@ -1855,9 +1914,9 @@ export default function Onboarding() {
                     <Stepper />
 
                     {/* Step Card */}
-                    <div className="bg-slate-900 border border-slate-800 shadow-2xl shadow-black/50 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 relative overflow-hidden">
-                        {/* Shimmer top border */}
-                        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
+                    <div className="rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 relative overflow-hidden" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                        {/* Top border accent */}
+                        <div className="absolute top-0 left-0 right-0 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(16,185,129,0.3) 50%, transparent)" }} />
 
                         {/* Step content */}
                         <AnimatePresence mode="wait" custom={direction}>
@@ -1887,7 +1946,7 @@ export default function Onboarding() {
                                         variant="outline"
                                         onClick={handleBack}
                                         disabled={isLoading}
-                                        className="h-12 w-12 shrink-0 p-0 border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl transition-colors disabled:opacity-50"
+                                        className="h-12 w-12 shrink-0 p-0 border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.06)] hover:bg-[rgba(255,255,255,0.08)] text-[rgba(255,255,255,0.6)] hover:text-white rounded-xl transition-colors disabled:opacity-50"
                                     >
                                         <ArrowLeft className="h-5 w-5" />
                                     </Button>
@@ -1919,7 +1978,7 @@ export default function Onboarding() {
                                 <button
                                     type="button"
                                     onClick={handleSkip}
-                                    className="text-sm text-slate-500 hover:text-slate-300 transition-colors"
+                                    className="text-sm text-[rgba(255,255,255,0.3)] hover:text-[rgba(255,255,255,0.6)] transition-colors"
                                 >
                                     Pular por agora
                                 </button>
@@ -1933,7 +1992,7 @@ export default function Onboarding() {
                                     variant="outline"
                                     onClick={handleBack}
                                     disabled={inviteLoading}
-                                    className="h-12 w-12 shrink-0 p-0 border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl transition-colors disabled:opacity-50"
+                                    className="h-12 w-12 shrink-0 p-0 border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.06)] hover:bg-[rgba(255,255,255,0.08)] text-[rgba(255,255,255,0.6)] hover:text-white rounded-xl transition-colors disabled:opacity-50"
                                 >
                                     <ArrowLeft className="h-5 w-5" />
                                 </Button>
@@ -1941,7 +2000,7 @@ export default function Onboarding() {
                                     type="button"
                                     onClick={handleSkip}
                                     disabled={inviteLoading}
-                                    className="flex-1 text-sm text-slate-500 hover:text-slate-300 transition-colors py-3"
+                                    className="flex-1 text-sm text-[rgba(255,255,255,0.3)] hover:text-[rgba(255,255,255,0.6)] transition-colors py-3"
                                 >
                                     Pular por agora
                                 </button>

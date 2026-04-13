@@ -1,163 +1,56 @@
 import { motion } from "framer-motion";
-import { TrendingUp, Clock, Trophy, LayoutGrid } from "lucide-react";
 import { AnimatedCounter } from "./AnimatedCounter";
 
-// ─── Metric definitions — números reais e críveis ─────────────────────────────
 const METRICS = [
-    {
-        icon: TrendingUp,
-        iconColor: "text-emerald-600",
-        iconBg: "bg-emerald-400/10",
-        prefix: "<",
-        value: 5,
-        suffix: " min",
-        label: "Para configurar",
-        sublabel: "integre e comece a usar",
-        delay: 0,
-    },
-    {
-        icon: Clock,
-        iconColor: "text-amber-600",
-        iconBg: "bg-amber-400/10",
-        prefix: "",
-        value: 24,
-        suffix: "/7",
-        label: "Ranking ao vivo",
-        sublabel: "atualização em tempo real",
-        delay: 0.2,
-    },
-    {
-        icon: Trophy,
-        iconColor: "text-amber-600",
-        iconBg: "bg-amber-400/10",
-        prefix: "",
-        value: 8,
-        suffix: "+",
-        label: "Módulos completos",
-        sublabel: "CRM, metas, calls, WhatsApp",
-        delay: 0.3,
-    },
-    {
-        icon: LayoutGrid,
-        iconColor: "text-emerald-600",
-        iconBg: "bg-emerald-400/10",
-        prefix: "",
-        value: 0,
-        suffix: "",
-        label: "Planilhas manuais",
-        sublabel: "seu time não usa mais",
-        isZero: true,
-        delay: 0.4,
-    },
+    { prefix: "<", value: 5, suffix: "min", label: "Para configurar", delay: 0 },
+    { prefix: "", value: 24, suffix: "/7", label: "Ranking ao vivo", delay: 0.1 },
+    { prefix: "", value: 8, suffix: "+", label: "Módulos completos", delay: 0.2 },
+    { prefix: "", value: 0, suffix: "", label: "Planilhas manuais", isZero: true, delay: 0.3 },
 ] as const;
 
-// ─── ImpactMetrics ────────────────────────────────────────────────────────────
 export const ImpactMetrics = () => {
     return (
-        <section className="relative py-14 px-4 sm:px-6 lg:px-8 overflow-hidden">
-            {/* Top glow border */}
-            <div
-                className="absolute top-0 left-1/2 -translate-x-1/2 h-px w-3/4 max-w-2xl"
-                style={{
-                    background: "linear-gradient(90deg, transparent, rgba(16,185,129,0.5), transparent)",
-                }}
-            />
-            {/* Bottom glow border */}
-            <div
-                className="absolute bottom-0 left-1/2 -translate-x-1/2 h-px w-3/4 max-w-2xl"
-                style={{
-                    background: "linear-gradient(90deg, transparent, rgba(16,185,129,0.2), transparent)",
-                }}
-            />
-
-            {/* Background subtle glow */}
-            <div
-                className="absolute inset-0 -z-10"
-                style={{
-                    background:
-                        "radial-gradient(ellipse 80% 60% at 50% 50%, rgba(16,185,129,0.04), transparent)",
-                }}
-            />
-
-            <div className="max-w-6xl mx-auto">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-0 divide-x divide-gray-200">
-                    {METRICS.map(({ icon: Icon, iconColor, iconBg, prefix, value, suffix, label, sublabel, delay, ...rest }) => {
-                        const isZero = "isZero" in rest && rest.isZero;
+        <section className="py-16 px-4 sm:px-6 lg:px-8" style={{ background: "#06080a" }}>
+            <div className="max-w-4xl mx-auto">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4">
+                    {METRICS.map((m) => {
+                        const isZero = "isZero" in m && m.isZero;
                         return (
                             <motion.div
-                                key={label}
-                                className="flex flex-col items-center text-center px-4 py-2 group"
-                                initial={{ opacity: 0, y: 20 }}
+                                key={m.label}
+                                className="text-center"
+                                initial={{ opacity: 0, y: 16 }}
                                 whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true, margin: "-40px" }}
-                                transition={{ duration: 0.45, delay, ease: [0.22, 1, 0.36, 1] }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.4, delay: m.delay }}
                             >
-                                {/* Icon pill */}
                                 <div
-                                    className={`w-9 h-9 rounded-xl ${iconBg} flex items-center justify-center mb-3 transition-transform duration-300 group-hover:scale-110`}
-                                >
-                                    <Icon className={`h-4 w-4 ${iconColor}`} strokeWidth={2} />
-                                </div>
-
-                                {/* Number row */}
-                                <div
-                                    className="flex items-baseline justify-center gap-0.5 mb-1 tabular-nums text-gray-900"
+                                    className="flex items-baseline justify-center gap-0.5 mb-1.5 tabular-nums"
                                     style={{
-                                        fontWeight: "var(--fw-bold)",
-                                        letterSpacing: "var(--ls-snug)",
-                                        lineHeight: "var(--lh-tight)",
-                                        fontSize: "clamp(1.75rem, 3.5vw, 2.5rem)",
+                                        fontSize: "clamp(2rem, 4vw, 2.75rem)",
+                                        fontWeight: 800,
+                                        letterSpacing: "-0.03em",
+                                        color: "rgba(255,255,255,0.95)",
                                     }}
                                 >
-                                    {prefix && (
-                                        <span
-                                            className="text-gray-400"
-                                            style={{ fontWeight: "var(--fw-light)", fontSize: "0.65em" }}
-                                        >
-                                            {prefix}
+                                    {m.prefix && (
+                                        <span style={{ fontSize: "0.6em", color: "rgba(255,255,255,0.35)", fontWeight: 400 }}>
+                                            {m.prefix}
                                         </span>
                                     )}
-
                                     {isZero ? (
-                                        <span className="text-gray-600" style={{ fontWeight: "var(--fw-bold)" }}>
-                                            ZERO
-                                        </span>
+                                        <span>ZERO</span>
                                     ) : (
-                                        <AnimatedCounter
-                                            target={value}
-                                            duration={1.8}
-                                            className="inline"
-                                        />
+                                        <AnimatedCounter target={m.value} duration={1.6} className="inline" />
                                     )}
-
-                                    {suffix && (
-                                        <span
-                                            className={`${iconColor} ml-0.5`}
-                                            style={{
-                                                fontWeight: "var(--fw-semibold)",
-                                                fontSize: "0.6em",
-                                                letterSpacing: 0,
-                                            }}
-                                        >
-                                            {suffix}
+                                    {m.suffix && (
+                                        <span className="text-emerald-400" style={{ fontSize: "0.55em", fontWeight: 700 }}>
+                                            {m.suffix}
                                         </span>
                                     )}
                                 </div>
-
-                                {/* Label */}
-                                <p
-                                    className="text-gray-700 mb-0.5 text-sm"
-                                    style={{ fontWeight: "var(--fw-semibold)" }}
-                                >
-                                    {label}
-                                </p>
-
-                                {/* Sublabel */}
-                                <p
-                                    className="text-gray-400 text-xs"
-                                    style={{ fontWeight: "var(--fw-light)" }}
-                                >
-                                    {sublabel}
+                                <p className="text-sm" style={{ color: "rgba(255,255,255,0.45)", fontWeight: 500 }}>
+                                    {m.label}
                                 </p>
                             </motion.div>
                         );

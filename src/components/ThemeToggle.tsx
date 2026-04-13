@@ -1,20 +1,18 @@
 import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 type Theme = "light" | "dark";
 
 const storageKey = "vyzon-theme";
-const legacyStorageKeys = ["vyzon-theme"];
 
 const getStoredTheme = (): Theme => {
-  const stored = localStorage.getItem(storageKey) ?? legacyStorageKeys.map(key => localStorage.getItem(key)).find(Boolean);
+  const stored = localStorage.getItem(storageKey);
   if (stored === "light") return "light";
   if (stored === "dark") return "dark";
-  return "light"; // Default to light mode
+  return "dark"; // Default to dark mode
 };
 
-export const ThemeToggle = () => {
+export const useTheme = () => {
   const [theme, setTheme] = useState<Theme>(() => getStoredTheme());
 
   useEffect(() => {
@@ -25,31 +23,34 @@ export const ThemeToggle = () => {
       html.classList.remove("dark");
     }
     localStorage.setItem(storageKey, theme);
-    legacyStorageKeys.forEach(key => localStorage.removeItem(key));
   }, [theme]);
 
   const toggle = () => setTheme((prev) => (prev === "light" ? "dark" : "light"));
 
+  return { theme, toggle };
+};
+
+export const ThemeToggle = ({ collapsed = false }: { collapsed?: boolean }) => {
+  const { theme, toggle } = useTheme();
+
   return (
-    <Button
+    <button
       type="button"
-      variant="outline"
-      size="sm"
       onClick={toggle}
-      className="gap-2 border-border bg-card text-foreground hover:bg-muted shadow-sm"
+      className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm transition-colors text-muted-foreground hover:text-foreground hover:bg-muted/50"
     >
-      {theme === "light" ? (
+      {theme === "dark" ? (
         <>
-          <Moon className="h-4 w-4 text-emerald-600" />
-          Escuro
+          <Sun className="h-4 w-4 shrink-0 text-amber-400" />
+          {!collapsed && <span>Modo claro</span>}
         </>
       ) : (
         <>
-          <Sun className="h-4 w-4 text-amber-400" />
-          Claro
+          <Moon className="h-4 w-4 shrink-0 text-emerald-400" />
+          {!collapsed && <span>Modo escuro</span>}
         </>
       )}
-    </Button>
+    </button>
   );
 };
 

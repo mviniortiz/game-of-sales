@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -32,9 +31,7 @@ import {
   Search,
   Plus,
   MoreHorizontal,
-  Edit,
   Trash2,
-  Users,
   ShoppingBag,
   DollarSign,
   Crown,
@@ -77,40 +74,6 @@ const PIPELINE_STAGE_LABELS: Record<string, string> = {
   closed_lost: "Perdido",
 };
 
-// KPI Card Component
-interface KPICardProps {
-  title: string;
-  value: string | number;
-  icon: React.ElementType;
-  iconColor: string;
-  iconBg: string;
-  subtitle?: string;
-}
-
-const KPICard = ({ title, value, icon: Icon, iconColor, iconBg, subtitle }: KPICardProps) => (
-  <Card className="border border-border bg-card shadow-sm hover:shadow-md transition-all duration-300 group">
-    <CardContent className="p-4">
-      <div className="flex items-center gap-4">
-        <div className={`relative p-3 rounded-xl ${iconBg} ring-1 ring-opacity-20 group-hover:scale-110 transition-transform`}>
-          <div className={`absolute inset-0 ${iconBg} rounded-xl blur-lg opacity-40`} />
-          <Icon className={`h-6 w-6 ${iconColor} relative z-10`} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
-            {title}
-          </p>
-          <p className="text-2xl font-bold text-foreground tabular-nums tracking-tight">
-            {value}
-          </p>
-          {subtitle && (
-            <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
-          )}
-        </div>
-      </div>
-    </CardContent>
-  </Card>
-);
-
 // Top Performer Card Component
 interface TopPerformerCardProps {
   vendedor: {
@@ -135,34 +98,28 @@ const TopPerformerCard = ({ vendedor }: TopPerformerCardProps) => {
   };
 
   return (
-    <Card className="border border-border bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 shadow-sm hover:shadow-md transition-all duration-300 group">
-      <CardContent className="p-4">
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <Avatar className="h-12 w-12 ring-2 ring-amber-400 dark:ring-amber-500">
-              <AvatarImage src={vendedor?.avatar_url || ""} />
-              <AvatarFallback className="bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-200 font-semibold">
-                {vendedor ? getInitials(vendedor.nome) : "?"}
-              </AvatarFallback>
-            </Avatar>
-            <div className="absolute -top-1 -right-1 bg-amber-400 dark:bg-amber-500 rounded-full p-1 shadow-lg">
-              <Crown className="h-3 w-3 text-white" />
-            </div>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
-              Top Performer
-            </p>
-            <p className="text-sm font-bold text-foreground truncate">
-              {vendedor ? `Líder: ${vendedor.nome.split(" ")[0]}` : "Sem dados"}
-            </p>
-            <p className="text-xs text-amber-600 dark:text-amber-400 font-medium mt-0.5">
-              {vendedor ? formatCurrency(vendedor.faturamentoMes) : "-"}
-            </p>
-          </div>
+    <div className="flex items-center gap-3 p-3 rounded-xl border border-amber-500/20 bg-amber-500/5">
+      <div className="relative shrink-0">
+        <Avatar className="h-10 w-10 ring-2 ring-amber-500/30">
+          <AvatarImage src={vendedor?.avatar_url || ""} />
+          <AvatarFallback className="bg-amber-500/15 text-amber-400 font-semibold text-sm">
+            {vendedor ? getInitials(vendedor.nome) : "?"}
+          </AvatarFallback>
+        </Avatar>
+        <div className="absolute -top-1 -right-1 bg-amber-500 rounded-full p-0.5">
+          <Crown className="h-2.5 w-2.5 text-white" />
         </div>
-      </CardContent>
-    </Card>
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Top Performer</p>
+        <p className="text-sm font-bold text-foreground truncate">
+          {vendedor ? vendedor.nome.split(" ")[0] : "—"}
+        </p>
+        <p className="text-xs text-amber-400 font-semibold">
+          {vendedor ? formatCurrency(vendedor.faturamentoMes) : "—"}
+        </p>
+      </div>
+    </div>
   );
 };
 
@@ -223,13 +180,20 @@ export const AdminVendedores = () => {
 
         const faturamentoMes = vendasMes.reduce((acc: number, v: any) => acc + Number(v.valor), 0);
 
-        // Simulate online status based on last_sign_in_at or random
+        // Online if signed in within last 30 minutes
         const isOnline = profile.last_sign_in_at
-          ? new Date(profile.last_sign_in_at) > new Date(Date.now() - 30 * 60 * 1000) // Online if signed in last 30 min
-          : Math.random() > 0.5; // Random for demo
+          ? new Date(profile.last_sign_in_at) > new Date(Date.now() - 30 * 60 * 1000)
+          : false;
 
-        // Simulate trend (random for demo)
-        const trend = Math.round((Math.random() * 40) - 10); // -10% to +30%
+        // Calculate real trend: current month vs previous month
+        const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const prevMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+        const vendasPrevMes = profile.vendas?.filter((v: any) => {
+          const d = new Date(v.data_venda || v.created_at);
+          return d >= prevMonthStart && d <= prevMonthEnd;
+        }) || [];
+        const fatPrev = vendasPrevMes.reduce((acc: number, v: any) => acc + Number(v.valor), 0);
+        const trend = fatPrev > 0 ? Math.round(((faturamentoMes - fatPrev) / fatPrev) * 100) : 0;
 
         return {
           ...profile,
@@ -551,32 +515,24 @@ export const AdminVendedores = () => {
         </p>
       </div>
 
-      {/* KPI Summary Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard
-          title="Total Vendedores"
-          value={kpiData.total}
-          icon={Users}
-          iconColor="text-emerald-600 dark:text-emerald-400"
-          iconBg="bg-emerald-100 dark:bg-emerald-500/20"
-          subtitle="Cadastrados"
-        />
-        <KPICard
-          title="Vendas (Mês)"
-          value={kpiData.vendasMes}
-          icon={ShoppingBag}
-          iconColor="text-emerald-600 dark:text-emerald-400"
-          iconBg="bg-emerald-100 dark:bg-emerald-500/20"
-          subtitle="Este mês"
-        />
-        <KPICard
-          title="Faturamento"
-          value={formatCurrency(kpiData.faturamentoMes)}
-          icon={DollarSign}
-          iconColor="text-emerald-600 dark:text-emerald-400"
-          iconBg="bg-emerald-100 dark:bg-emerald-500/20"
-          subtitle="Receita do mês"
-        />
+      {/* Summary Bar */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex items-center gap-6 flex-1">
+          <div>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Vendedores</p>
+            <p className="text-xl font-bold text-foreground tabular-nums">{kpiData.total}</p>
+          </div>
+          <div className="w-px h-8 bg-border/50" />
+          <div>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Vendas (mês)</p>
+            <p className="text-xl font-bold text-foreground tabular-nums">{kpiData.vendasMes}</p>
+          </div>
+          <div className="w-px h-8 bg-border/50" />
+          <div>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Faturamento</p>
+            <p className="text-xl font-bold text-foreground tabular-nums">{formatCurrency(kpiData.faturamentoMes)}</p>
+          </div>
+        </div>
         <TopPerformerCard vendedor={kpiData.topPerformer} />
       </div>
 
@@ -853,11 +809,11 @@ export const AdminVendedores = () => {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="bg-card border-border">
                           <DropdownMenuItem
-                            onClick={() => toast.info("Funcionalidade em desenvolvimento")}
+                            onClick={() => setStatsVendedor(vendedor)}
                             className="cursor-pointer text-muted-foreground hover:text-foreground"
                           >
-                            <Edit className="h-4 w-4 mr-2" />
-                            Editar
+                            <BarChart2 className="h-4 w-4 mr-2" />
+                            Estatísticas
                           </DropdownMenuItem>
                           {isSuperAdmin && (
                             <DropdownMenuItem
@@ -1037,12 +993,12 @@ export const AdminVendedores = () => {
             </DialogTitle>
             <DialogDescription className="text-muted-foreground">
               Tem certeza que deseja remover <span className="font-semibold text-foreground">{sellerToDelete?.nome}</span>?
-              Esta acao e irreversivel e remove a conta, perfil e dados do usuario.
+              Esta ação é irreversível e remove a conta, perfil e dados do usuário.
             </DialogDescription>
           </DialogHeader>
 
           <div className="p-3 rounded-lg bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-sm text-rose-700 dark:text-rose-300">
-            Os deals e vendas do vendedor serao mantidos no sistema, mas nao terao mais dono associado.
+            Os deals e vendas do vendedor serão mantidos no sistema, mas não terão mais dono associado.
           </div>
 
           <div className="flex justify-end gap-2 pt-2">

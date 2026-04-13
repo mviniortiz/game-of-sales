@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -12,7 +11,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Download, MoreHorizontal, FileText, Edit, Trash2, TrendingUp, DollarSign, ShoppingCart } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Download, MoreHorizontal, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { useTenant } from "@/contexts/TenantContext";
@@ -28,21 +34,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { VendasFilters, FilterValues } from "./VendasFilters";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 
-const ITEMS_PER_PAGE = 20;
+const PAGE_SIZE_OPTIONS = [5, 10, 15, 20] as const;
 
 export const AdminVendas = () => {
   const queryClient = useQueryClient();
   const { activeCompanyId } = useTenant();
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number>(10);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [filters, setFilters] = useState<FilterValues>({
     vendedorId: "todos",
@@ -60,7 +59,6 @@ export const AdminVendas = () => {
         .select("id, nome, avatar_url")
         .eq("company_id", activeCompanyId)
         .order("nome");
-
       if (error) throw error;
       return data;
     },
@@ -77,7 +75,6 @@ export const AdminVendas = () => {
         .eq("company_id", activeCompanyId)
         .eq("ativo", true)
         .order("nome");
-
       if (error) throw error;
       return data;
     },
@@ -91,10 +88,7 @@ export const AdminVendas = () => {
 
       let query = supabase
         .from("vendas")
-        .select(`
-          *,
-          profiles:user_id (nome, avatar_url)
-        `)
+        .select(`*, profiles:user_id (nome, avatar_url)`)
         .eq("company_id", activeCompanyId)
         .order("data_venda", { ascending: false });
 
@@ -108,41 +102,34 @@ export const AdminVendas = () => {
         query = query.eq("status", filters.status as any);
       }
       if (filters.dateRange.from) {
-        const fromDate = filters.dateRange.from.toISOString().split('T')[0];
-        query = query.gte("data_venda", fromDate);
+        query = query.gte("data_venda", filters.dateRange.from.toISOString().split("T")[0]);
       }
       if (filters.dateRange.to) {
-        const toDate = filters.dateRange.to.toISOString().split('T')[0];
-        query = query.lte("data_venda", toDate);
+        query = query.lte("data_venda", filters.dateRange.to.toISOString().split("T")[0]);
       }
 
       const { data, error } = await query;
-
       if (error) throw error;
       return data;
     },
     enabled: !!activeCompanyId,
   });
 
-  // Calculate KPIs
   const kpis = useMemo(() => {
     if (!vendas) return { total: 0, valorTotal: 0, ticketMedio: 0 };
-
     const total = vendas.length;
     const valorTotal = vendas.reduce((acc, v) => acc + Number(v.valor), 0);
     const ticketMedio = total > 0 ? valorTotal / total : 0;
-
     return { total, valorTotal, ticketMedio };
   }, [vendas]);
 
-  // Pagination
+  const totalPages = Math.ceil((vendas?.length || 0) / pageSize);
+
   const paginatedVendas = useMemo(() => {
     if (!vendas) return [];
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return vendas.slice(start, start + ITEMS_PER_PAGE);
-  }, [vendas, currentPage]);
-
-  const totalPages = Math.ceil((vendas?.length || 0) / ITEMS_PER_PAGE);
+    const start = (currentPage - 1) * pageSize;
+    return vendas.slice(start, start + pageSize);
+  }, [vendas, currentPage, pageSize]);
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -159,11 +146,11 @@ export const AdminVendas = () => {
     onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ["admin-vendas"] });
       await invalidateSalesQueries(queryClient);
-      toast.success("Venda deletada com sucesso");
+      toast.success("Venda removida com sucesso");
       setDeleteId(null);
     },
     onError: (error: any) => {
-      toast.error(`Erro ao deletar venda: ${error.message}`);
+      toast.error(`Erro ao remover venda: ${error.message}`);
     },
   });
 
@@ -188,234 +175,255 @@ export const AdminVendas = () => {
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Vendas");
-
-    const today = new Date().toISOString().split("T")[0];
-    const filename = `vendas_${today}.xlsx`;
-
-    XLSX.writeFile(workbook, filename);
+    XLSX.writeFile(workbook, `vendas_${new Date().toISOString().split("T")[0]}.xlsx`);
     toast.success("Relatório exportado com sucesso!");
   };
 
-  const getStatusBadgeClass = (status: string) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case "Aprovado":
-        return "bg-emerald-500/20 text-emerald-400 border-emerald-500/50";
+        return "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
       case "Pendente":
-        return "bg-yellow-500/20 text-yellow-400 border-yellow-500/50";
+        return "bg-amber-500/10 text-amber-400 border-amber-500/30";
       case "Reembolsado":
-        return "bg-red-500/20 text-red-400 border-red-500/50";
+        return "bg-rose-500/10 text-rose-400 border-rose-500/30";
       default:
         return "bg-muted text-muted-foreground";
     }
   };
 
-  const getInitials = (nome: string) => {
-    return nome
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
+  const getInitials = (nome: string) =>
+    nome.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+
+  const formatCurrency = (value: number) =>
+    value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+  const startItem = (currentPage - 1) * pageSize + 1;
+  const endItem = Math.min(currentPage * pageSize, vendas?.length || 0);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Todas as Vendas</h3>
-      </div>
-
-      {/* KPI Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total de Vendas</p>
-                <p className="text-2xl font-bold">{kpis.total}</p>
-              </div>
-              <ShoppingCart className="h-8 w-8 text-muted-foreground" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Valor Total</p>
-                <p className="text-2xl font-bold text-emerald-400">
-                  R$ {kpis.valorTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                </p>
-              </div>
-              <DollarSign className="h-8 w-8 text-emerald-400" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Ticket Médio</p>
-                <p className="text-2xl font-bold text-emerald-400">
-                  R$ {kpis.ticketMedio.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                </p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-emerald-400" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filters + Export */}
-      <div className="flex flex-col gap-4">
-        <VendasFilters
-          vendedores={vendedores || []}
-          produtos={produtos || []}
-          onFilterChange={(newFilters) => {
-            setFilters(newFilters);
-            setCurrentPage(1);
-          }}
-        />
-        <div className="flex justify-end">
-          <Button onClick={exportToExcel} variant="outline" className="gap-2">
-            <Download className="h-4 w-4" />
-            Exportar Excel
-          </Button>
+    <div className="space-y-5">
+      {/* Header + KPIs inline */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <h3 className="text-lg font-bold text-foreground">Vendas</h3>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {kpis.total} registros · {formatCurrency(kpis.valorTotal)} total · {formatCurrency(kpis.ticketMedio)} ticket médio
+          </p>
         </div>
+        <Button onClick={exportToExcel} variant="outline" size="sm" className="gap-2 border-border/50 text-muted-foreground hover:text-foreground shrink-0">
+          <Download className="h-3.5 w-3.5" />
+          Exportar
+        </Button>
       </div>
+
+      {/* Filters */}
+      <VendasFilters
+        vendedores={vendedores || []}
+        produtos={produtos || []}
+        onFilterChange={(newFilters) => {
+          setFilters(newFilters);
+          setCurrentPage(1);
+        }}
+      />
 
       {isLoading ? (
-        <div className="text-center py-8 text-muted-foreground">Carregando vendas...</div>
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-pulse text-muted-foreground text-sm">Carregando vendas...</div>
+        </div>
       ) : (
         <>
-          <div className="rounded-md border border-border overflow-x-auto">
-            <Table className="min-w-[700px]">
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead>Data</TableHead>
-                  <TableHead>Vendedor</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Produto</TableHead>
-                  <TableHead>Valor</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedVendas?.map((venda) => (
-                  <TableRow key={venda.id} className="hover:bg-muted/50 transition-colors">
-                    <TableCell className="py-4">
-                      {new Date(venda.data_venda).toLocaleDateString("pt-BR")}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={venda.profiles?.avatar_url || ""} />
-                          <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                            {getInitials(venda.profiles?.nome || "?")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium">{venda.profiles?.nome}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>{venda.cliente_nome}</TableCell>
-                    <TableCell>{venda.produto_nome}</TableCell>
-                    <TableCell className="font-bold text-emerald-400">
-                      R$ {Number(venda.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={getStatusBadgeClass(venda.status || "Aprovado")}>
-                        {venda.status || "Aprovado"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-background border-border z-50">
-                          <DropdownMenuItem
-                            onClick={() => toast.info("Funcionalidade em desenvolvimento")}
-                            className="cursor-pointer"
-                          >
-                            <FileText className="h-4 w-4 mr-2" />
-                            Ver Detalhes
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => toast.info("Funcionalidade em desenvolvimento")}
-                            className="cursor-pointer"
-                          >
-                            <Edit className="h-4 w-4 mr-2" />
-                            Editar
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => setDeleteId(venda.id)}
-                            className="cursor-pointer text-destructive focus:text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Excluir Venda
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+          {/* Table */}
+          <div className="rounded-xl border border-border/50 overflow-hidden">
+            <div className="overflow-x-auto">
+              <Table className="min-w-[700px]">
+                <TableHeader>
+                  <TableRow className="bg-muted/30 hover:bg-muted/30 border-border/50">
+                    <TableHead className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Data</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Vendedor</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Cliente</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Produto</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold text-right">Valor</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Status</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold w-10" />
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {paginatedVendas.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-12 text-muted-foreground text-sm">
+                        Nenhuma venda encontrada.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    paginatedVendas.map((venda) => (
+                      <TableRow key={venda.id} className="group hover:bg-muted/30 transition-colors border-border/50">
+                        <TableCell className="py-3.5">
+                          <div className="text-sm text-foreground">
+                            {new Date(venda.data_venda).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground">
+                            {new Date(venda.data_venda).getFullYear()}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2.5">
+                            <Avatar className="h-7 w-7">
+                              <AvatarImage src={venda.profiles?.avatar_url || ""} />
+                              <AvatarFallback className="bg-emerald-500/10 text-emerald-400 text-[10px] font-semibold">
+                                {getInitials(venda.profiles?.nome || "?")}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="text-sm font-medium text-foreground truncate max-w-[120px]">
+                              {venda.profiles?.nome}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm text-muted-foreground truncate max-w-[120px] block">
+                            {venda.cliente_nome || "—"}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm text-muted-foreground truncate max-w-[140px] block">
+                            {venda.produto_nome}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <span className="text-sm font-semibold text-foreground tabular-nums">
+                            {formatCurrency(Number(venda.valor))}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={`text-[10px] font-semibold ${getStatusBadge(venda.status || "Aprovado")}`}>
+                            {venda.status || "Aprovado"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="bg-popover border-border">
+                              <DropdownMenuItem
+                                onClick={() => setDeleteId(venda.id)}
+                                className="cursor-pointer text-rose-400 focus:text-rose-400"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Excluir
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </div>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                  />
-                </PaginationItem>
-                {[...Array(totalPages)].map((_, i) => (
-                  <PaginationItem key={i}>
-                    <PaginationLink
-                      onClick={() => setCurrentPage(i + 1)}
-                      isActive={currentPage === i + 1}
-                      className="cursor-pointer"
+          {/* Pagination Bar */}
+          {(vendas?.length || 0) > 0 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
+              {/* Left: page size selector */}
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>Exibir</span>
+                <Select
+                  value={String(pageSize)}
+                  onValueChange={(val) => {
+                    setPageSize(Number(val));
+                    setCurrentPage(1);
+                  }}
+                >
+                  <SelectTrigger className="w-[70px] h-8 text-xs border-border/50 bg-transparent">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover border-border">
+                    {PAGE_SIZE_OPTIONS.map((size) => (
+                      <SelectItem key={size} value={String(size)} className="text-xs">
+                        {size}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <span>por página</span>
+              </div>
+
+              {/* Center: showing X-Y of Z */}
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {startItem}–{endItem} de {vendas?.length || 0}
+              </span>
+
+              {/* Right: prev/next */}
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 w-8 p-0 border-border/50"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((p) => p - 1)}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+
+                {/* Page numbers — show max 5 */}
+                {(() => {
+                  const pages: number[] = [];
+                  let start = Math.max(1, currentPage - 2);
+                  let end = Math.min(totalPages, start + 4);
+                  if (end - start < 4) start = Math.max(1, end - 4);
+                  for (let i = start; i <= end; i++) pages.push(i);
+                  return pages.map((p) => (
+                    <Button
+                      key={p}
+                      variant={p === currentPage ? "default" : "outline"}
+                      size="sm"
+                      className={`h-8 w-8 p-0 text-xs ${
+                        p === currentPage
+                          ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20"
+                          : "border-border/50 text-muted-foreground hover:text-foreground"
+                      }`}
+                      onClick={() => setCurrentPage(p)}
                     >
-                      {i + 1}
-                    </PaginationLink>
-                  </PaginationItem>
-                ))}
-                <PaginationItem>
-                  <PaginationNext
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+                      {p}
+                    </Button>
+                  ));
+                })()}
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 w-8 p-0 border-border/50"
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  onClick={() => setCurrentPage((p) => p + 1)}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           )}
         </>
       )}
 
-      {/* Delete Confirmation Dialog */}
+      {/* Delete Confirmation */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-card border-border">
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja deletar esta venda? Esta ação não pode ser desfeita.
+            <AlertDialogTitle className="text-foreground">Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
+              Tem certeza que deseja remover esta venda? Esta ação é irreversível.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel className="border-border text-muted-foreground">Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteId && deleteMutation.mutate(deleteId)}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-rose-600 hover:bg-rose-700 text-white"
             >
-              Deletar
+              {deleteMutation.isPending ? "Removendo..." : "Remover"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

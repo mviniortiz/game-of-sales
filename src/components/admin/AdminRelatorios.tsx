@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
@@ -14,220 +13,24 @@ import {
 import {
   TrendingUp,
   TrendingDown,
-  DollarSign,
-  Package,
-  ShoppingBag,
   CalendarIcon,
-  Download,
   Crown,
   Trophy,
-  Medal
+  Medal,
+  Package,
 } from "lucide-react";
 import { EvolucaoVendasChart } from "./charts/EvolucaoVendasChart";
 import { DistribuicaoProdutosChart } from "./charts/DistribuicaoProdutosChart";
 import { ComparativoVendedoresChart } from "./charts/ComparativoVendedoresChart";
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { toast } from "sonner";
 import { useTenant } from "@/contexts/TenantContext";
-import {
-  AreaChart,
-  Area,
-  ResponsiveContainer,
-} from "recharts";
-
-// Mini Sparkline Component for KPI Cards
-interface SparklineProps {
-  data: number[];
-  color: string;
-}
-
-const Sparkline = ({ data, color }: SparklineProps) => {
-  const chartData = data.map((value, index) => ({ value, index }));
-
-  return (
-    <div className="absolute bottom-0 left-0 right-0 h-12 opacity-30">
-      <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={chartData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-          <defs>
-            <linearGradient id={`sparkline-${color}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={color} stopOpacity={0.6} />
-              <stop offset="100%" stopColor={color} stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <Area
-            type="monotone"
-            dataKey="value"
-            stroke={color}
-            strokeWidth={1.5}
-            fill={`url(#sparkline-${color})`}
-          />
-        </AreaChart>
-      </ResponsiveContainer>
-    </div>
-  );
-};
-
-// Enhanced KPI Card Component
-interface KPICardProps {
-  title: string;
-  value: string | number;
-  subtitle: string;
-  icon: React.ElementType;
-  iconBg: string;
-  iconColor: string;
-  trend?: number;
-  sparklineData?: number[];
-  sparklineColor?: string;
-}
-
-const KPICard = ({
-  title,
-  value,
-  subtitle,
-  icon: Icon,
-  iconBg,
-  iconColor,
-  trend,
-  sparklineData,
-  sparklineColor = "#4F46E5"
-}: KPICardProps) => {
-  const isPositive = trend !== undefined && trend >= 0;
-  const TrendIcon = isPositive ? TrendingUp : TrendingDown;
-
-  return (
-    <Card className="relative overflow-hidden border border-border bg-card shadow-sm hover:shadow-md transition-all group">
-      {sparklineData && sparklineData.length > 0 && (
-        <Sparkline data={sparklineData} color={sparklineColor} />
-      )}
-      <CardContent className="p-5 relative z-10">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-              {title}
-            </p>
-            <p className="text-3xl font-bold text-foreground tabular-nums tracking-tight">
-              {value}
-            </p>
-            <div className="flex items-center gap-2 mt-2">
-              {trend !== undefined && (
-                <span className={`flex items-center text-sm font-semibold ${isPositive
-                  ? 'text-emerald-600 dark:text-emerald-400'
-                  : 'text-rose-600 dark:text-rose-400'
-                  }`}>
-                  <TrendIcon className="h-4 w-4 mr-0.5" />
-                  {Math.abs(trend).toFixed(1)}%
-                </span>
-              )}
-              <span className="text-xs text-muted-foreground">
-                {subtitle}
-              </span>
-            </div>
-          </div>
-          <div className={`p-3 rounded-xl ${iconBg} group-hover:scale-110 transition-transform`}>
-            <Icon className={`h-6 w-6 ${iconColor}`} />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
-
-// Top Performer Item Component
-interface TopItemProps {
-  rank: number;
-  name: string;
-  subtitle: string;
-  value: string;
-  maxValue: number;
-  currentValue: number;
-  avatarUrl?: string;
-  showAvatar?: boolean;
-}
-
-const TopItem = ({ rank, name, subtitle, value, maxValue, currentValue, avatarUrl, showAvatar }: TopItemProps) => {
-  const progress = maxValue > 0 ? (currentValue / maxValue) * 100 : 0;
-
-  const getInitials = (nome: string) => {
-    return nome.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
-  };
-
-  const getRankIcon = (r: number) => {
-    switch (r) {
-      case 1: return <Crown className="h-4 w-4 text-amber-500" />;
-      case 2: return <Medal className="h-4 w-4 text-gray-400" />;
-      case 3: return <Trophy className="h-4 w-4 text-amber-700" />;
-      default: return <span className="text-sm font-bold text-gray-400">{r}</span>;
-    }
-  };
-
-  const getRankBg = (r: number) => {
-    switch (r) {
-      case 1: return "bg-amber-100 dark:bg-amber-500/20 ring-2 ring-amber-300 dark:ring-amber-500/30";
-      case 2: return "bg-gray-100 dark:bg-gray-500/20 ring-2 ring-gray-300 dark:ring-gray-500/30";
-      case 3: return "bg-orange-100 dark:bg-orange-500/20 ring-2 ring-orange-300 dark:ring-orange-500/30";
-      default: return "bg-muted";
-    }
-  };
-
-  return (
-    <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors">
-      {/* Rank Badge or Avatar */}
-      {showAvatar ? (
-        <div className="relative">
-          <Avatar className={`h-10 w-10 ${getRankBg(rank)}`}>
-            <AvatarImage src={avatarUrl || ""} />
-            <AvatarFallback className="bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200 font-semibold text-xs">
-              {getInitials(name)}
-            </AvatarFallback>
-          </Avatar>
-          {rank <= 3 && (
-            <div className="absolute -top-1 -right-1 bg-card rounded-full p-0.5 shadow-sm">
-              {getRankIcon(rank)}
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${getRankBg(rank)}`}>
-          {getRankIcon(rank)}
-        </div>
-      )}
-
-      {/* Info */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between mb-1">
-          <p className="font-semibold text-foreground truncate pr-2">{name}</p>
-          <p className="font-bold text-foreground text-sm tabular-nums whitespace-nowrap">
-            {value}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Progress value={progress} className="h-1.5 flex-1" />
-          <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-            {subtitle}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 export const AdminRelatorios = () => {
   const { activeCompanyId } = useTenant();
   const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
     from: startOfMonth(new Date()),
     to: endOfMonth(new Date()),
-  });
-
-  // Fetch profiles for avatar URLs
-  const { data: profiles } = useQuery({
-    queryKey: ["profiles-avatars", activeCompanyId],
-    queryFn: async () => {
-      if (!activeCompanyId) return [];
-      const { data } = await supabase.from("profiles").select("id, nome, avatar_url").eq("company_id", activeCompanyId);
-      return data || [];
-    },
-    enabled: !!activeCompanyId,
   });
 
   const { data: stats, isLoading } = useQuery({
@@ -247,10 +50,9 @@ export const AdminRelatorios = () => {
       const faturamentoTotal = vendas?.reduce((acc, v) => acc + Number(v.valor), 0) || 0;
       const ticketMedio = totalVendas > 0 ? faturamentoTotal / totalVendas : 0;
 
-      // Get previous period for comparison
+      // Previous period for trend
       const prevStart = subMonths(dateRange.from, 1);
       const prevEnd = subMonths(dateRange.to, 1);
-
       const { data: prevVendas } = await supabase
         .from("vendas")
         .select("id, valor")
@@ -260,68 +62,48 @@ export const AdminRelatorios = () => {
 
       const prevTotal = prevVendas?.length || 0;
       const prevFaturamento = prevVendas?.reduce((acc, v) => acc + Number(v.valor), 0) || 0;
-
       const trendVendas = prevTotal > 0 ? ((totalVendas - prevTotal) / prevTotal) * 100 : 0;
       const trendFaturamento = prevFaturamento > 0 ? ((faturamentoTotal - prevFaturamento) / prevFaturamento) * 100 : 0;
 
       // Top 3 vendedores
-      const vendedoresMap = new Map();
+      const vendedoresMap = new Map<string, { id: string; nome: string; avatarUrl?: string; total: number; vendas: number }>();
       vendas?.forEach((venda) => {
-        const vendedorId = venda.profiles?.id;
-        const vendedorNome = venda.profiles?.nome || "Desconhecido";
-        const avatarUrl = venda.profiles?.avatar_url;
-        const current = vendedoresMap.get(vendedorNome) || {
-          id: vendedorId,
-          nome: vendedorNome,
-          avatarUrl,
+        const key = venda.profiles?.nome || "Desconhecido";
+        const current = vendedoresMap.get(key) || {
+          id: venda.profiles?.id || "",
+          nome: key,
+          avatarUrl: venda.profiles?.avatar_url,
           total: 0,
-          vendas: 0
+          vendas: 0,
         };
         current.total += Number(venda.valor);
         current.vendas += 1;
-        vendedoresMap.set(vendedorNome, current);
+        vendedoresMap.set(key, current);
       });
-
       const topVendedores = Array.from(vendedoresMap.values())
         .sort((a, b) => b.total - a.total)
         .slice(0, 3);
 
       // Top 3 produtos
-      const produtosMap = new Map();
+      const produtosMap = new Map<string, { nome: string; total: number; vendas: number }>();
       vendas?.forEach((venda) => {
-        const produtoNome = venda.produto_nome;
-        const current = produtosMap.get(produtoNome) || { nome: produtoNome, total: 0, vendas: 0 };
+        const key = venda.produto_nome;
+        const current = produtosMap.get(key) || { nome: key, total: 0, vendas: 0 };
         current.total += Number(venda.valor);
         current.vendas += 1;
-        produtosMap.set(produtoNome, current);
+        produtosMap.set(key, current);
       });
-
       const topProdutos = Array.from(produtosMap.values())
         .sort((a, b) => b.total - a.total)
         .slice(0, 3);
 
       // Top plataforma
-      const plataformasMap = new Map();
+      const plataformasMap = new Map<string, number>();
       vendas?.forEach((venda) => {
-        const plataforma = venda.plataforma || "Não especificada";
-        const current = plataformasMap.get(plataforma) || 0;
-        plataformasMap.set(plataforma, current + 1);
+        const p = venda.plataforma || "Manual";
+        plataformasMap.set(p, (plataformasMap.get(p) || 0) + 1);
       });
-
-      const topPlataforma = Array.from(plataformasMap.entries())
-        .sort((a, b) => b[1] - a[1])[0];
-
-      // Generate sparkline data (last 7 days)
-      const sparklineVendas: number[] = [];
-      const sparklineFaturamento: number[] = [];
-      for (let i = 6; i >= 0; i--) {
-        const day = new Date();
-        day.setDate(day.getDate() - i);
-        const dayStr = day.toISOString().split("T")[0];
-        const dayVendas = vendas?.filter(v => v.data_venda?.startsWith(dayStr)) || [];
-        sparklineVendas.push(dayVendas.length);
-        sparklineFaturamento.push(dayVendas.reduce((acc, v) => acc + Number(v.valor), 0));
-      }
+      const topPlataforma = Array.from(plataformasMap.entries()).sort((a, b) => b[1] - a[1])[0];
 
       return {
         totalVendas,
@@ -332,35 +114,29 @@ export const AdminRelatorios = () => {
         topPlataforma: topPlataforma ? { nome: topPlataforma[0], vendas: topPlataforma[1] } : null,
         trendVendas,
         trendFaturamento,
-        sparklineVendas,
-        sparklineFaturamento,
       };
     },
     enabled: !!activeCompanyId,
   });
 
-  // Chart data queries
+  // Chart queries
   const { data: evolucaoData } = useQuery({
     queryKey: ["evolucao-vendas", dateRange, activeCompanyId],
     queryFn: async () => {
       if (!activeCompanyId) return [];
       const sixMonthsAgo = subMonths(dateRange.from, 6);
-
       const { data: vendas, error } = await supabase
         .from("vendas")
         .select("data_venda, valor")
         .eq("company_id", activeCompanyId)
         .gte("data_venda", sixMonthsAgo.toISOString())
         .order("data_venda");
-
       if (error) throw error;
 
       const monthlyData = new Map<string, { vendas: number; faturamento: number }>();
-
       vendas?.forEach((venda) => {
         const date = new Date(venda.data_venda);
-        const monthName = date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
-
+        const monthName = date.toLocaleDateString("pt-BR", { month: "short", year: "2-digit" });
         const current = monthlyData.get(monthName) || { vendas: 0, faturamento: 0 };
         current.vendas += 1;
         current.faturamento += Number(venda.valor);
@@ -386,23 +162,16 @@ export const AdminRelatorios = () => {
         .eq("company_id", activeCompanyId)
         .gte("data_venda", dateRange.from.toISOString())
         .lte("data_venda", dateRange.to.toISOString());
-
       if (error) throw error;
 
-      const produtosMap = new Map<string, { valor: number; vendas: number }>();
-
-      vendas?.forEach((venda) => {
-        const current = produtosMap.get(venda.produto_nome) || { valor: 0, vendas: 0 };
-        current.valor += Number(venda.valor);
+      const map = new Map<string, { valor: number; vendas: number }>();
+      vendas?.forEach((v) => {
+        const current = map.get(v.produto_nome) || { valor: 0, vendas: 0 };
+        current.valor += Number(v.valor);
         current.vendas += 1;
-        produtosMap.set(venda.produto_nome, current);
+        map.set(v.produto_nome, current);
       });
-
-      return Array.from(produtosMap.entries()).map(([nome, data]) => ({
-        nome,
-        valor: data.valor,
-        vendas: data.vendas,
-      }));
+      return Array.from(map.entries()).map(([nome, data]) => ({ nome, valor: data.valor, vendas: data.vendas }));
     },
     enabled: !!activeCompanyId,
   });
@@ -417,22 +186,19 @@ export const AdminRelatorios = () => {
         .eq("company_id", activeCompanyId)
         .gte("data_venda", dateRange.from.toISOString())
         .lte("data_venda", dateRange.to.toISOString());
-
       if (error) throw error;
 
-      const vendedoresMap = new Map<string, { vendas: number; faturamento: number }>();
-
-      vendas?.forEach((venda) => {
-        const nome = venda.profiles?.nome || "Desconhecido";
-        const current = vendedoresMap.get(nome) || { vendas: 0, faturamento: 0 };
+      const map = new Map<string, { vendas: number; faturamento: number }>();
+      vendas?.forEach((v) => {
+        const nome = v.profiles?.nome || "Desconhecido";
+        const current = map.get(nome) || { vendas: 0, faturamento: 0 };
         current.vendas += 1;
-        current.faturamento += Number(venda.valor);
-        vendedoresMap.set(nome, current);
+        current.faturamento += Number(v.valor);
+        map.set(nome, current);
       });
-
-      return Array.from(vendedoresMap.entries())
+      return Array.from(map.entries())
         .map(([nome, data]) => ({
-          nome: nome.length > 15 ? nome.substring(0, 15) + '...' : nome,
+          nome: nome.length > 15 ? nome.substring(0, 15) + "..." : nome,
           vendas: data.vendas,
           faturamento: data.faturamento,
         }))
@@ -442,220 +208,177 @@ export const AdminRelatorios = () => {
     enabled: !!activeCompanyId,
   });
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
+  const formatCurrency = (value: number) =>
+    value.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
+  const getInitials = (nome: string) =>
+    nome.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+
+  const getRankIcon = (r: number) => {
+    if (r === 1) return <Crown className="h-3.5 w-3.5 text-amber-400" />;
+    if (r === 2) return <Medal className="h-3.5 w-3.5 text-gray-400" />;
+    if (r === 3) return <Trophy className="h-3.5 w-3.5 text-amber-600" />;
+    return null;
   };
 
-  const formatCurrencyFull = (value: number) => {
-    return `R$ ${value.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
-  };
+  const maxVendedor = stats?.topVendedores?.[0]?.total || 1;
+  const maxProduto = stats?.topProdutos?.[0]?.total || 1;
 
-  const handleExport = () => {
-    toast.info("Funcionalidade de exportação em desenvolvimento");
+  const TrendBadge = ({ value }: { value?: number }) => {
+    if (value === undefined || value === 0) return null;
+    const positive = value >= 0;
+    return (
+      <span className={`inline-flex items-center gap-0.5 text-xs font-semibold ${positive ? "text-emerald-400" : "text-rose-400"}`}>
+        {positive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+        {positive ? "+" : ""}{value.toFixed(1)}%
+      </span>
+    );
   };
-
-  const maxVendedorTotal = stats?.topVendedores?.[0]?.total || 1;
-  const maxProdutoTotal = stats?.topProdutos?.[0]?.total || 1;
 
   return (
     <div className="space-y-6">
-      {/* Header with Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h3 className="text-xl font-bold text-foreground">
-            Relatórios Gerais
-          </h3>
-          <p className="text-sm text-muted-foreground mt-1">
-            Analytics & Performance • {format(dateRange.from, "MMMM yyyy", { locale: ptBR })}
+          <h3 className="text-lg font-bold text-foreground">Relatórios</h3>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {format(dateRange.from, "dd MMM", { locale: ptBR })} — {format(dateRange.to, "dd MMM yyyy", { locale: ptBR })}
           </p>
         </div>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-2 border-border/50 text-muted-foreground hover:text-foreground shrink-0">
+              <CalendarIcon className="h-3.5 w-3.5" />
+              Período
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0 bg-popover border-border" align="end">
+            <Calendar
+              mode="range"
+              selected={{ from: dateRange.from, to: dateRange.to }}
+              onSelect={(range) => {
+                if (range?.from && range?.to) setDateRange({ from: range.from, to: range.to });
+                else if (range?.from) setDateRange({ from: range.from, to: range.from });
+              }}
+              locale={ptBR}
+              numberOfMonths={2}
+            />
+          </PopoverContent>
+        </Popover>
+      </div>
 
-        <div className="flex items-center gap-3">
-          {/* Date Range Picker */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="gap-2 border-border text-muted-foreground bg-card"
-              >
-                <CalendarIcon className="h-4 w-4" />
-                {format(dateRange.from, "dd MMM", { locale: ptBR })} - {format(dateRange.to, "dd MMM", { locale: ptBR })}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 bg-card" align="end">
-              <Calendar
-                mode="range"
-                selected={{ from: dateRange.from, to: dateRange.to }}
-                onSelect={(range) => {
-                  if (range?.from && range?.to) {
-                    setDateRange({ from: range.from, to: range.to });
-                  } else if (range?.from) {
-                    setDateRange({ from: range.from, to: range.from });
-                  }
-                }}
-                locale={ptBR}
-                numberOfMonths={2}
-              />
-            </PopoverContent>
-          </Popover>
-
-          {/* Export Button */}
-          <Button
-            variant="outline"
-            className="gap-2 border-border text-muted-foreground bg-card"
-            onClick={handleExport}
-          >
-            <Download className="h-4 w-4" />
-            Exportar
-          </Button>
+      {/* KPI Row */}
+      {isLoading ? (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-20 rounded-xl bg-muted animate-pulse" />
+          ))}
         </div>
-      </div>
-
-      {/* KPI Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <KPICard
-          title="Total de Vendas"
-          value={stats?.totalVendas || 0}
-          subtitle="vs mês anterior"
-          icon={ShoppingBag}
-          iconBg="bg-emerald-100 dark:bg-emerald-500/20"
-          iconColor="text-emerald-600 dark:text-emerald-400"
-          trend={stats?.trendVendas}
-          sparklineData={stats?.sparklineVendas}
-          sparklineColor="#4F46E5"
-        />
-
-        <KPICard
-          title="Faturamento Total"
-          value={formatCurrency(stats?.faturamentoTotal || 0)}
-          subtitle="vs mês anterior"
-          icon={DollarSign}
-          iconBg="bg-emerald-100 dark:bg-emerald-500/20"
-          iconColor="text-emerald-600 dark:text-emerald-400"
-          trend={stats?.trendFaturamento}
-          sparklineData={stats?.sparklineFaturamento}
-          sparklineColor="#10B981"
-        />
-
-        <KPICard
-          title="Ticket Médio"
-          value={formatCurrency(stats?.ticketMedio || 0)}
-          subtitle="por venda"
-          icon={TrendingUp}
-          iconBg="bg-emerald-100 dark:bg-emerald-500/20"
-          iconColor="text-emerald-600 dark:text-emerald-400"
-        />
-
-        <KPICard
-          title="Top Plataforma"
-          value={stats?.topPlataforma?.nome || "-"}
-          subtitle={`${stats?.topPlataforma?.vendas || 0} vendas`}
-          icon={Package}
-          iconBg="bg-amber-100 dark:bg-amber-500/20"
-          iconColor="text-amber-600 dark:text-amber-400"
-        />
-      </div>
+      ) : (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="p-4 rounded-xl border border-border/50 bg-card">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Vendas</p>
+            <p className="text-2xl font-bold text-foreground tabular-nums mt-1">{stats?.totalVendas || 0}</p>
+            <TrendBadge value={stats?.trendVendas} />
+          </div>
+          <div className="p-4 rounded-xl border border-border/50 bg-card">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Faturamento</p>
+            <p className="text-2xl font-bold text-foreground tabular-nums mt-1">{formatCurrency(stats?.faturamentoTotal || 0)}</p>
+            <TrendBadge value={stats?.trendFaturamento} />
+          </div>
+          <div className="p-4 rounded-xl border border-border/50 bg-card">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Ticket Médio</p>
+            <p className="text-2xl font-bold text-foreground tabular-nums mt-1">{formatCurrency(stats?.ticketMedio || 0)}</p>
+          </div>
+          <div className="p-4 rounded-xl border border-border/50 bg-card">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Top Plataforma</p>
+            <p className="text-2xl font-bold text-foreground mt-1 truncate">{stats?.topPlataforma?.nome || "—"}</p>
+            <span className="text-xs text-muted-foreground">{stats?.topPlataforma?.vendas || 0} vendas</span>
+          </div>
+        </div>
+      )}
 
       {/* Charts */}
-      <div className="space-y-6">
-        {evolucaoData && evolucaoData.length > 0 && (
-          <EvolucaoVendasChart data={evolucaoData} />
+      {evolucaoData && evolucaoData.length > 0 && (
+        <EvolucaoVendasChart data={evolucaoData} />
+      )}
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        {produtosData && produtosData.length > 0 && (
+          <DistribuicaoProdutosChart data={produtosData} />
         )}
-
-        <div className="grid gap-6 md:grid-cols-2">
-          {produtosData && produtosData.length > 0 && (
-            <DistribuicaoProdutosChart data={produtosData} />
-          )}
-
-          {vendedoresData && vendedoresData.length > 0 && (
-            <ComparativoVendedoresChart data={vendedoresData} />
-          )}
-        </div>
+        {vendedoresData && vendedoresData.length > 0 && (
+          <ComparativoVendedoresChart data={vendedoresData} />
+        )}
       </div>
 
       {/* Top Lists */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Top 3 Vendedores */}
-        <Card className="border border-border bg-card shadow-sm">
-          <CardHeader className="pb-2">
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-500/20">
-                <Trophy className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-              </div>
-              <div>
-                <CardTitle className="text-base font-semibold text-foreground">
-                  Top 3 Vendedores
-                </CardTitle>
-                <p className="text-xs text-muted-foreground">Ranking por faturamento</p>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-2">
-            <div className="space-y-1">
-              {stats?.topVendedores?.map((vendedor, index) => (
-                <TopItem
-                  key={index}
-                  rank={index + 1}
-                  name={vendedor.nome}
-                  subtitle={`${vendedor.vendas} vendas`}
-                  value={formatCurrencyFull(vendedor.total)}
-                  maxValue={maxVendedorTotal}
-                  currentValue={vendedor.total}
-                  avatarUrl={vendedor.avatarUrl}
-                  showAvatar={true}
-                />
+      <div className="grid gap-4 lg:grid-cols-2">
+        {/* Top Vendedores */}
+        <div className="rounded-xl border border-border/50 bg-card p-4">
+          <h4 className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-3">Top Vendedores</h4>
+          {stats?.topVendedores && stats.topVendedores.length > 0 ? (
+            <div className="space-y-3">
+              {stats.topVendedores.map((v, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="relative shrink-0">
+                    <Avatar className="h-9 w-9">
+                      <AvatarImage src={v.avatarUrl || ""} />
+                      <AvatarFallback className="bg-emerald-500/10 text-emerald-400 text-xs font-semibold">
+                        {getInitials(v.nome)}
+                      </AvatarFallback>
+                    </Avatar>
+                    {getRankIcon(i + 1) && (
+                      <div className="absolute -top-1 -right-1 bg-card rounded-full p-0.5">
+                        {getRankIcon(i + 1)}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-medium text-foreground truncate">{v.nome}</span>
+                      <span className="text-sm font-bold text-foreground tabular-nums shrink-0 ml-2">{formatCurrency(v.total)}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Progress value={(v.total / maxVendedor) * 100} className="h-1.5 flex-1" />
+                      <span className="text-[10px] text-muted-foreground shrink-0">{v.vendas} vendas</span>
+                    </div>
+                  </div>
+                </div>
               ))}
-              {(!stats?.topVendedores || stats.topVendedores.length === 0) && (
-                <p className="text-center text-muted-foreground py-8">
-                  Nenhum vendedor encontrado
-                </p>
-              )}
             </div>
-          </CardContent>
-        </Card>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-6">Sem dados no período</p>
+          )}
+        </div>
 
-        {/* Top 3 Produtos */}
-        <Card className="border border-border bg-card shadow-sm">
-          <CardHeader className="pb-2">
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-500/20">
-                <Package className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-              </div>
-              <div>
-                <CardTitle className="text-base font-semibold text-foreground">
-                  Top 3 Produtos
-                </CardTitle>
-                <p className="text-xs text-muted-foreground">Ranking por faturamento</p>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-2">
-            <div className="space-y-1">
-              {stats?.topProdutos?.map((produto, index) => (
-                <TopItem
-                  key={index}
-                  rank={index + 1}
-                  name={produto.nome}
-                  subtitle={`${produto.vendas} vendas`}
-                  value={formatCurrencyFull(produto.total)}
-                  maxValue={maxProdutoTotal}
-                  currentValue={produto.total}
-                  showAvatar={false}
-                />
+        {/* Top Produtos */}
+        <div className="rounded-xl border border-border/50 bg-card p-4">
+          <h4 className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-3">Top Produtos</h4>
+          {stats?.topProdutos && stats.topProdutos.length > 0 ? (
+            <div className="space-y-3">
+              {stats.topProdutos.map((p, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="flex items-center justify-center h-9 w-9 rounded-lg bg-muted shrink-0">
+                    {getRankIcon(i + 1) || <Package className="h-4 w-4 text-muted-foreground" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-medium text-foreground truncate">{p.nome}</span>
+                      <span className="text-sm font-bold text-foreground tabular-nums shrink-0 ml-2">{formatCurrency(p.total)}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Progress value={(p.total / maxProduto) * 100} className="h-1.5 flex-1" />
+                      <span className="text-[10px] text-muted-foreground shrink-0">{p.vendas} vendas</span>
+                    </div>
+                  </div>
+                </div>
               ))}
-              {(!stats?.topProdutos || stats.topProdutos.length === 0) && (
-                <p className="text-center text-muted-foreground py-8">
-                  Nenhum produto encontrado
-                </p>
-              )}
             </div>
-          </CardContent>
-        </Card>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-6">Sem dados no período</p>
+          )}
+        </div>
       </div>
     </div>
   );

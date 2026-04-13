@@ -7,13 +7,30 @@ interface FinalCTAProps {
 
 export const FinalCTA = ({ onCTAClick }: FinalCTAProps) => {
     return (
-        <section className="py-24 px-4 sm:px-6 lg:px-8 bg-white relative overflow-hidden">
-            {/* Deep ambient glow behind the card */}
+        <section className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden" style={{ background: "#06080a" }}>
+            {/* Static ambient glow */}
             <div
-                className="absolute inset-0 pointer-events-none"
+                className="absolute top-[-20%] right-[-10%] w-[80%] h-[100%] rounded-full pointer-events-none"
                 style={{
-                    background:
-                        "radial-gradient(ellipse 80% 60% at 50% 100%, rgba(16,185,129,0.08) 0%, transparent 70%)",
+                    background: "radial-gradient(circle, rgba(16,185,129,0.07) 0%, transparent 55%)",
+                }}
+            />
+            <div
+                className="absolute bottom-[-20%] left-[-10%] w-[70%] h-[90%] rounded-full pointer-events-none"
+                style={{
+                    background: "radial-gradient(circle, rgba(245,158,11,0.03) 0%, transparent 55%)",
+                }}
+            />
+
+            {/* Fine grid overlay */}
+            <div
+                className="absolute inset-0 opacity-[0.02] pointer-events-none"
+                style={{
+                    backgroundImage: `
+                        linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)
+                    `,
+                    backgroundSize: "60px 60px",
                 }}
             />
 
@@ -24,79 +41,42 @@ export const FinalCTA = ({ onCTAClick }: FinalCTAProps) => {
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                 style={{
-                    background:
-                        "linear-gradient(145deg, #f0fdf4 0%, #ecfdf5 40%, #f0fdf4 100%)",
-                    border: "1px solid rgba(16,185,129,0.22)",
-                    boxShadow:
-                        "0 0 0 1px rgba(16,185,129,0.06), 0 40px 100px rgba(0,0,0,0.06), 0 0 80px rgba(16,185,129,0.04) inset",
+                    background: "rgba(255,255,255,0.03)",
+                    boxShadow: "0 0 0 1px rgba(255,255,255,0.06), 0 8px 24px rgba(0,0,0,0.3), 0 40px 80px -16px rgba(0,0,0,0.4)",
                 }}
             >
                 {/* Decorative top-edge gradient line */}
                 <div
                     className="absolute top-0 inset-x-0 h-px"
                     style={{
-                        background:
-                            "linear-gradient(90deg, transparent, rgba(16,185,129,0.5) 30%, rgba(20,184,166,0.4) 70%, transparent)",
+                        background: "linear-gradient(90deg, transparent, rgba(16,185,129,0.5) 30%, rgba(20,184,166,0.4) 70%, transparent)",
                     }}
-                />
-
-                {/* Floating orb — top right */}
-                <motion.div
-                    className="absolute -top-20 -right-20 w-72 h-72 rounded-full pointer-events-none"
-                    style={{
-                        background:
-                            "radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%)",
-                        filter: "blur(40px)",
-                    }}
-                    animate={{ scale: [1, 1.15, 1], opacity: [0.6, 1, 0.6] }}
-                    transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                />
-                {/* Floating orb — bottom left */}
-                <motion.div
-                    className="absolute -bottom-24 -left-16 w-80 h-60 rounded-full pointer-events-none"
-                    style={{
-                        background:
-                            "radial-gradient(circle, rgba(245,158,11,0.06) 0%, transparent 70%)",
-                        filter: "blur(50px)",
-                    }}
-                    animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.8, 0.4] }}
-                    transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }}
                 />
 
                 {/* Content */}
                 <div className="relative z-10 py-12 sm:py-20 px-5 sm:px-8 md:px-16 text-center">
                     {/* Eyebrow */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 12 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.1 }}
-                        className="inline-flex items-center gap-2 mb-7"
-                    >
-                        <motion.span
-                            animate={{ opacity: [1, 0.3, 1] }}
-                            transition={{ duration: 1.2, repeat: Infinity }}
+                    <div className="inline-flex items-center gap-2 mb-7">
+                        <span
                             className="w-1.5 h-1.5 rounded-full bg-emerald-400"
                         />
                         <span
-                            className="text-xs text-emerald-600"
+                            className="text-xs text-emerald-400"
                             style={{ fontWeight: 600, letterSpacing: "0.12em" }}
                         >
                             COMECE AGORA
                         </span>
-                    </motion.div>
+                    </div>
 
                     {/* Headline */}
-                    <motion.h2
-                        initial={{ opacity: 0, y: 16 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.18, duration: 0.5 }}
-                        className="font-heading text-gray-900 mb-6 max-w-3xl mx-auto tracking-tight"
+                    <h2
+                        className="font-heading mb-6 max-w-3xl mx-auto"
                         style={{
                             fontWeight: 800,
-                            fontSize: "clamp(1.6rem, 5vw, 3rem)",
-                            lineHeight: 1.15,
+                            fontSize: "clamp(1.6rem, 5vw, 3.25rem)",
+                            lineHeight: 1.05,
+                            letterSpacing: "-0.045em",
+                            color: "rgba(255,255,255,0.95)",
                         }}
                     >
                         Seu time pode estar{" "}
@@ -110,47 +90,36 @@ export const FinalCTA = ({ onCTAClick }: FinalCTAProps) => {
                             vendendo mais
                         </span>{" "}
                         amanhã.
-                    </motion.h2>
+                    </h2>
 
                     {/* Sub-copy */}
-                    <motion.p
-                        initial={{ opacity: 0, y: 10 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.28 }}
+                    <p
                         className="mb-10 max-w-xl mx-auto"
-                        style={{ color: "rgba(107,114,128,0.9)", fontSize: "1rem", lineHeight: 1.7 }}
+                        style={{ color: "rgba(255,255,255,0.45)", fontSize: "1rem", lineHeight: 1.7 }}
                     >
-                        Configure em 5 minutos. Pipeline, ranking, metas e integrações — tudo pronto para usar.
-                    </motion.p>
+                        Configure em 5 minutos. Cancele quando quiser, sem multa e sem burocracia.
+                    </p>
 
                     {/* CTA buttons */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 12 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.36 }}
-                        className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4"
-                    >
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
                         {/* Primary CTA */}
                         <motion.button
                             onClick={onCTAClick}
                             className="relative overflow-hidden flex items-center gap-2.5 px-6 sm:px-8 py-4 rounded-xl text-white group w-full sm:w-auto justify-center"
                             style={{
                                 background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-                                boxShadow: "0 4px 24px rgba(16,185,129,0.35), 0 1px 4px rgba(0,0,0,0.3)",
+                                boxShadow: "0 0 0 1px rgba(16,185,129,0.3), 0 4px 24px rgba(16,185,129,0.35), 0 16px 48px -8px rgba(16,185,129,0.2)",
                                 fontWeight: 700,
                                 fontSize: "0.95rem",
                             }}
-                            whileHover={{ scale: 1.03, boxShadow: "0 8px 32px rgba(16,185,129,0.45)" }}
+                            whileHover={{ scale: 1.03, boxShadow: "0 0 0 1px rgba(16,185,129,0.4), 0 8px 32px rgba(16,185,129,0.5), 0 24px 56px -8px rgba(16,185,129,0.3)" }}
                             whileTap={{ scale: 0.97 }}
                         >
                             {/* Shimmer */}
                             <motion.span
                                 className="absolute inset-0 rounded-xl"
                                 style={{
-                                    background:
-                                        "linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.16) 50%, transparent 70%)",
+                                    background: "linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.16) 50%, transparent 70%)",
                                 }}
                                 animate={{ x: ["-120%", "220%"] }}
                                 transition={{
@@ -161,7 +130,7 @@ export const FinalCTA = ({ onCTAClick }: FinalCTAProps) => {
                                 }}
                             />
                             <Zap className="relative h-4 w-4" fill="currentColor" />
-                            <span className="relative">Começar grátis por 14 dias</span>
+                            <span className="relative">Testar grátis por 14 dias</span>
                             <ArrowRight className="relative h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
                         </motion.button>
 
@@ -170,47 +139,41 @@ export const FinalCTA = ({ onCTAClick }: FinalCTAProps) => {
                             href="#pricing"
                             className="flex items-center gap-2 px-6 py-4 rounded-xl text-sm transition-all duration-200 w-full sm:w-auto justify-center"
                             style={{
-                                color: "rgba(75,85,99,0.9)",
-                                border: "1px solid rgba(229,231,235,1)",
-                                background: "rgba(255,255,255,0.8)",
+                                color: "rgba(255,255,255,0.6)",
+                                background: "rgba(255,255,255,0.04)",
+                                boxShadow: "0 0 0 1px rgba(255,255,255,0.08)",
                                 fontWeight: 600,
                             }}
                             onMouseEnter={(e) => {
-                                (e.currentTarget as HTMLAnchorElement).style.color = "rgba(17,24,39,0.9)";
-                                (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(209,213,219,1)";
+                                (e.currentTarget as HTMLAnchorElement).style.color = "rgba(255,255,255,0.9)";
+                                (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 0 0 1px rgba(16,185,129,0.3)";
                             }}
                             onMouseLeave={(e) => {
-                                (e.currentTarget as HTMLAnchorElement).style.color = "rgba(75,85,99,0.9)";
-                                (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(229,231,235,1)";
+                                (e.currentTarget as HTMLAnchorElement).style.color = "rgba(255,255,255,0.6)";
+                                (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 0 0 1px rgba(255,255,255,0.08)";
                             }}
                         >
                             Ver planos e preços
                         </a>
-                    </motion.div>
+                    </div>
 
                     {/* Trust signals */}
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.5 }}
-                        className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 mt-7"
-                    >
+                    <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 mt-7">
                         {[
-                            "Setup em 5 minutos",
-                            "Cancele quando quiser",
-                            "Suporte via WhatsApp",
+                            "14 dias grátis para testar",
+                            "Cancele a qualquer momento",
+                            "Suporte humano via WhatsApp",
                         ].map((t) => (
                             <div
                                 key={t}
                                 className="flex items-center gap-1.5"
-                                style={{ color: "rgba(107,114,128,0.7)", fontSize: "0.75rem", fontWeight: 500 }}
+                                style={{ color: "rgba(255,255,255,0.35)", fontSize: "0.75rem", fontWeight: 500 }}
                             >
-                                <Check className="h-3 w-3 text-emerald-500/50" strokeWidth={2.5} />
+                                <Check className="h-3 w-3 text-emerald-500/60" strokeWidth={2.5} />
                                 {t}
                             </div>
                         ))}
-                    </motion.div>
+                    </div>
                 </div>
             </motion.div>
         </section>

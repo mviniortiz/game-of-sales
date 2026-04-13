@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Clock, TrendingDown, AlertTriangle, Check, X, ChevronRight } from "lucide-react";
+import { Clock, TrendingDown, AlertTriangle, Check, X, ArrowRight } from "lucide-react";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 const COMPARISONS = [
@@ -29,102 +29,105 @@ const COMPARISONS = [
     },
 ];
 
+// ─── Animations ───────────────────────────────────────────────────────────────
+const fadeUp = (delay = 0) => ({
+    initial: { opacity: 0, y: 20 },
+    whileInView: { opacity: 1, y: 0 },
+    viewport: { once: true, margin: "-60px" as const },
+    transition: { duration: 0.5, delay, ease: [0.25, 0.46, 0.45, 0.94] },
+});
+
 // ─── PainPoints ───────────────────────────────────────────────────────────────
 export const PainPoints = () => {
     return (
-        <section className="py-24 px-4 sm:px-6 lg:px-8 bg-gray-50 relative overflow-hidden">
-            {/* Background texture */}
-            <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                    backgroundImage:
-                        "radial-gradient(circle at 20% 50%, rgba(239,68,68,0.03) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(16,185,129,0.03) 0%, transparent 50%)",
-                }}
-            />
-
-            <div className="max-w-5xl mx-auto relative z-10">
+        <section className="py-28 px-4 sm:px-6 lg:px-8" style={{ background: "#06080a" }}>
+            <div className="max-w-3xl mx-auto">
 
                 {/* Header */}
-                <motion.div
-                    className="text-center mb-16"
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5 }}
-                >
-                    <span
-                        className="text-label inline-block text-xs text-red-400/80 border border-red-500/15 bg-red-500/5 rounded-full px-4 py-1.5 mb-5"
-                        style={{ letterSpacing: "var(--ls-widest)" }}
+                <motion.div className="text-center mb-20" {...fadeUp()}>
+                    <p
+                        className="text-xs uppercase mb-4 tracking-widest"
+                        style={{ fontWeight: "var(--fw-medium)", color: "rgba(255,255,255,0.35)" }}
                     >
-                        ISSO PARECE FAMILIAR?
-                    </span>
-                    <h2 className="font-heading text-3xl sm:text-4xl text-gray-900 tracking-tight font-bold">
+                        Isso parece familiar?
+                    </p>
+                    <h2
+                        className="font-heading"
+                        style={{
+                            fontWeight: "var(--fw-bold)",
+                            fontSize: "clamp(1.75rem, 4vw, 2.5rem)",
+                            lineHeight: 1.1,
+                            letterSpacing: "-0.04em",
+                            color: "rgba(255,255,255,0.95)",
+                        }}
+                    >
                         Seu processo de vendas{" "}
                         <span className="text-red-400">não deveria ser assim</span>
                     </h2>
                 </motion.div>
 
                 {/* Comparison rows */}
-                <div className="space-y-4">
+                <div className="space-y-6">
                     {COMPARISONS.map(({ icon: Icon, before, beforeDesc, after, afterDesc, delay }, i) => (
                         <motion.div
                             key={i}
-                            className="grid md:grid-cols-[1fr_auto_1fr] gap-3 items-stretch"
-                            initial={{ opacity: 0, y: 24 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true, margin: "-40px" }}
-                            transition={{ duration: 0.45, delay, ease: [0.22, 1, 0.36, 1] }}
+                            className="grid md:grid-cols-[1fr_auto_1fr] gap-4 items-stretch"
+                            {...fadeUp(delay)}
                         >
-                            {/* ── BEFORE card ── */}
-                            <div className="flex items-start gap-4 p-5 rounded-2xl bg-red-500/5 border border-red-500/10 group hover:border-red-500/25 transition-colors duration-300">
-                                {/* Icon */}
-                                <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center flex-shrink-0">
-                                    <Icon className="h-5 w-5 text-red-400" strokeWidth={2} />
+                            {/* Before */}
+                            <div
+                                className="flex items-start gap-3.5 rounded-xl p-5"
+                                style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)" }}
+                            >
+                                <div
+                                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+                                    style={{ background: "rgba(239,68,68,0.15)" }}
+                                >
+                                    <Icon className="h-[18px] w-[18px] text-red-400" strokeWidth={1.8} />
                                 </div>
                                 <div className="min-w-0">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <X className="h-3.5 w-3.5 text-red-500 flex-shrink-0" strokeWidth={3} />
+                                    <div className="flex items-center gap-1.5 mb-1">
+                                        <X className="h-3.5 w-3.5 text-red-400 shrink-0" strokeWidth={2.5} />
                                         <p
-                                            className="text-gray-900/90 text-sm"
-                                            style={{ fontWeight: "var(--fw-semibold)" }}
+                                            className="text-sm"
+                                            style={{ fontWeight: "var(--fw-semibold)", color: "rgba(255,255,255,0.95)" }}
                                         >
                                             {before}
                                         </p>
                                     </div>
-                                    <p className="text-body text-xs text-red-600/60 leading-relaxed">
+                                    <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>
                                         {beforeDesc}
                                     </p>
                                 </div>
                             </div>
 
-                            {/* ── Arrow separator ── */}
-                            <div className="hidden md:flex items-center justify-center">
-                                <motion.div
-                                    className="w-8 h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center"
-                                    animate={{ x: [0, 3, 0] }}
-                                    transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut", delay: delay + 0.5 }}
-                                >
-                                    <ChevronRight className="h-4 w-4 text-gray-400" />
-                                </motion.div>
+                            {/* Arrow */}
+                            <div className="hidden md:flex items-center justify-center px-1">
+                                <ArrowRight className="h-4 w-4" style={{ color: "rgba(255,255,255,0.2)" }} strokeWidth={1.5} />
                             </div>
 
-                            {/* ── AFTER card ── */}
-                            <div className="flex items-start gap-4 p-5 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 group hover:border-emerald-500/25 transition-colors duration-300">
-                                {/* Icon */}
-                                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
-                                    <Icon className="h-5 w-5 text-emerald-600" strokeWidth={2} />
+                            {/* After */}
+                            <div
+                                className="flex items-start gap-3.5 rounded-xl p-5"
+                                style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)" }}
+                            >
+                                <div
+                                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+                                    style={{ background: "rgba(16,185,129,0.15)" }}
+                                >
+                                    <Icon className="h-[18px] w-[18px] text-emerald-400" strokeWidth={1.8} />
                                 </div>
                                 <div className="min-w-0">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <Check className="h-3.5 w-3.5 text-emerald-600 flex-shrink-0" strokeWidth={3} />
+                                    <div className="flex items-center gap-1.5 mb-1">
+                                        <Check className="h-3.5 w-3.5 text-emerald-400 shrink-0" strokeWidth={2.5} />
                                         <p
-                                            className="text-gray-900/90 text-sm"
-                                            style={{ fontWeight: "var(--fw-semibold)" }}
+                                            className="text-sm"
+                                            style={{ fontWeight: "var(--fw-semibold)", color: "rgba(255,255,255,0.95)" }}
                                         >
                                             {after}
                                         </p>
                                     </div>
-                                    <p className="text-body text-xs text-emerald-600/60 leading-relaxed">
+                                    <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>
                                         {afterDesc}
                                     </p>
                                 </div>
@@ -133,39 +136,23 @@ export const PainPoints = () => {
                     ))}
                 </div>
 
-                {/* Bridge to next section */}
+                {/* Bridge */}
                 <motion.div
-                    className="mt-16 flex flex-col items-center"
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: 0.5, duration: 0.5 }}
+                    className="mt-20 flex flex-col items-center text-center"
+                    {...fadeUp(0.4)}
                 >
                     <p
-                        className="text-gray-700 mb-1"
-                        style={{ fontWeight: "var(--fw-medium)", fontSize: "1.0625rem" }}
+                        style={{ fontWeight: "var(--fw-medium)", fontSize: "1.0625rem", color: "rgba(255,255,255,0.95)" }}
                     >
                         Existe uma forma{" "}
-                        <span className="text-emerald-600" style={{ fontWeight: "var(--fw-bold)" }}>
+                        <span className="text-emerald-400" style={{ fontWeight: "var(--fw-bold)" }}>
                             melhor.
                         </span>
                     </p>
-                    <p className="text-caption text-xs text-gray-400 mb-8">
+                    <p className="text-xs mt-1 mb-8" style={{ color: "rgba(255,255,255,0.35)" }}>
                         Um CRM completo que resolve tudo isso — e se configura em 5 minutos.
                     </p>
-
-                    {/* Animated gradient line */}
-                    <div className="relative h-16 w-px overflow-hidden">
-                        <div className="absolute inset-0 bg-gray-100" />
-                        <motion.div
-                            className="absolute top-0 left-0 right-0 h-full"
-                            style={{
-                                background: "linear-gradient(to bottom, rgba(16,185,129,0.6), transparent)",
-                            }}
-                            animate={{ y: ["-100%", "200%"] }}
-                            transition={{ duration: 1.8, repeat: Infinity, ease: "linear" }}
-                        />
-                    </div>
+                    <div className="h-12 w-px" style={{ background: "rgba(255,255,255,0.08)" }} />
                 </motion.div>
             </div>
         </section>

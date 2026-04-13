@@ -17,11 +17,11 @@ if (typeof window !== "undefined") {
     localStorage.getItem(THEME_STORAGE_KEY) ??
     LEGACY_THEME_KEYS.map((key) => localStorage.getItem(key)).find(Boolean);
 
-  // Default to light; only apply dark if explicitly stored
-  if (storedTheme === "dark") {
-    document.documentElement.classList.add("dark");
-  } else {
+  // Default to dark; only remove if explicitly stored as light
+  if (storedTheme === "light") {
     document.documentElement.classList.remove("dark");
+  } else {
+    document.documentElement.classList.add("dark");
   }
 
   // Migrate legacy keys to the new brand key

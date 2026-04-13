@@ -1,5 +1,4 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package } from "lucide-react";
 import { useMemo } from "react";
 
@@ -11,51 +10,37 @@ interface DistribuicaoProdutosChartProps {
   }>;
 }
 
-// Color palette for bars — Emerald brand palette
-const BAR_COLORS = [
-  "#10b981", // Emerald-500 (primary)
-  "#059669", // Emerald-600
-  "#34d399", // Emerald-400
-  "#6ee7b7", // Emerald-300
-  "#0891b2", // Cyan-600 (accent)
-  "#94A3B8", // Slate-400 for "Others"
-];
+const BAR_COLORS = ["#10b981", "#059669", "#34d399", "#6ee7b7", "#0891b2", "#64748b"];
 
 export const DistribuicaoProdutosChart = ({ data }: DistribuicaoProdutosChartProps) => {
-  // Process data: top 5 + Others
   const chartData = useMemo(() => {
     const sorted = [...data].sort((a, b) => b.valor - a.valor);
 
     if (sorted.length <= 6) {
       return sorted.map((item, index) => ({
         ...item,
-        shortName: item.nome.length > 25 ? item.nome.substring(0, 22) + "..." : item.nome,
-        color: BAR_COLORS[index % BAR_COLORS.length]
+        shortName: item.nome.length > 20 ? item.nome.substring(0, 18) + "..." : item.nome,
+        color: BAR_COLORS[index % BAR_COLORS.length],
       }));
     }
 
     const top5 = sorted.slice(0, 5);
     const others = sorted.slice(5);
-    const othersTotal = others.reduce((acc, item) => acc + item.valor, 0);
-    const othersVendas = others.reduce((acc, item) => acc + item.vendas, 0);
-
     return [
       ...top5.map((item, index) => ({
         ...item,
-        shortName: item.nome.length > 25 ? item.nome.substring(0, 22) + "..." : item.nome,
-        color: BAR_COLORS[index]
+        shortName: item.nome.length > 20 ? item.nome.substring(0, 18) + "..." : item.nome,
+        color: BAR_COLORS[index],
       })),
       {
-        nome: `Outros (${others.length} produtos)`,
+        nome: `Outros (${others.length})`,
         shortName: `Outros (${others.length})`,
-        valor: othersTotal,
-        vendas: othersVendas,
-        color: BAR_COLORS[5]
-      }
+        valor: others.reduce((a, i) => a + i.valor, 0),
+        vendas: others.reduce((a, i) => a + i.vendas, 0),
+        color: BAR_COLORS[5],
+      },
     ];
   }, [data]);
-
-  const maxValue = Math.max(...chartData.map(d => d.valor));
 
   const formatCurrency = (value: number) => {
     if (value >= 1000000) return `R$ ${(value / 1000000).toFixed(1)}M`;
@@ -63,115 +48,44 @@ export const DistribuicaoProdutosChart = ({ data }: DistribuicaoProdutosChartPro
     return `R$ ${value.toFixed(0)}`;
   };
 
-  const formatCurrencyFull = (value: number) => {
-    return `R$ ${value.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
-  };
-
   return (
-    <Card className="border border-border bg-card shadow-sm">
-      <CardHeader className="pb-2">
-        <div className="flex items-center gap-2">
-          <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-500/20">
-            <Package className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-          </div>
-          <div>
-            <CardTitle className="text-base font-semibold text-foreground">
-              Faturamento por Produto
-            </CardTitle>
-            <p className="text-xs text-muted-foreground">
-              Top {Math.min(5, data.length)} produtos do mês
-            </p>
-          </div>
+    <div className="rounded-xl border border-border/50 bg-card p-4">
+      <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-muted">
+          <Package className="h-4 w-4 text-muted-foreground" />
         </div>
-      </CardHeader>
-      <CardContent className="pt-4">
-        <ResponsiveContainer width="100%" height={320}>
-          <BarChart
-            data={chartData}
-            layout="vertical"
-            margin={{ top: 5, right: 30, left: 10, bottom: 5 }}
-          >
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke="rgba(148,163,184,0.2)"
-              horizontal={false}
-            />
-            <XAxis
-              type="number"
-              stroke="rgba(100,116,139,0.5)"
-              fontSize={11}
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={formatCurrency}
-            />
-            <YAxis
-              type="category"
-              dataKey="shortName"
-              stroke="rgba(100,116,139,0.5)"
-              fontSize={11}
-              tickLine={false}
-              axisLine={false}
-              width={130}
-              tick={{ fill: "rgb(107, 114, 128)" }}
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "rgba(255,255,255,0.98)",
-                border: "1px solid rgba(226,232,240,0.8)",
-                borderRadius: "12px",
-                boxShadow: "0 12px 40px rgba(15,23,42,0.12)",
-                padding: "12px 16px"
-              }}
-              labelStyle={{
-                color: "#1e293b",
-                fontWeight: 600,
-                marginBottom: "8px"
-              }}
-              formatter={(value: number, _name: string, props: any) => {
-                const percent = ((value / maxValue) * 100).toFixed(1);
-                return [
-                  <div key="tooltip" className="space-y-1">
-                    <div className="font-bold text-foreground">{formatCurrencyFull(value)}</div>
-                    <div className="text-xs text-muted-foreground">{props.payload.vendas} vendas • {percent}% do top</div>
-                  </div>,
-                  ""
-                ];
-              }}
-              labelFormatter={(label) => label}
-            />
-            <Bar
-              dataKey="valor"
-              radius={[0, 6, 6, 0]}
-              barSize={28}
-            >
-              {chartData.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={entry.color}
-                  className="hover:opacity-80 transition-opacity"
-                />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-
-        {/* Legend with percentages */}
-        <div className="mt-4 pt-4 border-t border-border">
-          <div className="grid grid-cols-2 gap-2">
-            {chartData.slice(0, 4).map((item, index) => (
-              <div key={index} className="flex items-center gap-2 text-xs">
-                <span
-                  className="w-2.5 h-2.5 rounded-sm flex-shrink-0"
-                  style={{ backgroundColor: item.color }}
-                />
-                <span className="text-muted-foreground truncate">
-                  {item.vendas} vendas
-                </span>
-              </div>
+        <div>
+          <h4 className="text-sm font-semibold text-foreground">Faturamento por Produto</h4>
+          <p className="text-[11px] text-muted-foreground">Top {Math.min(5, data.length)} produtos</p>
+        </div>
+      </div>
+      <ResponsiveContainer width="100%" height={280}>
+        <BarChart data={chartData} layout="vertical" margin={{ top: 0, right: 10, left: 0, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(128,128,128,0.1)" horizontal={false} />
+          <XAxis type="number" stroke="rgba(128,128,128,0.4)" fontSize={11} tickLine={false} axisLine={false} tickFormatter={formatCurrency} />
+          <YAxis type="category" dataKey="shortName" stroke="rgba(128,128,128,0.4)" fontSize={11} tickLine={false} axisLine={false} width={120} tick={{ fill: "hsl(var(--muted-foreground))" }} />
+          <Tooltip
+            contentStyle={{
+              backgroundColor: "hsl(var(--popover))",
+              border: "1px solid hsl(var(--border))",
+              borderRadius: "10px",
+              boxShadow: "0 8px 24px rgba(0,0,0,0.2)",
+              padding: "10px 14px",
+              color: "hsl(var(--popover-foreground))",
+            }}
+            labelStyle={{ color: "hsl(var(--popover-foreground))", fontWeight: 600, marginBottom: "4px" }}
+            formatter={(value: number, _name: string, props: any) => [
+              `R$ ${value.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} · ${props.payload.vendas} vendas`,
+              "",
+            ]}
+          />
+          <Bar dataKey="valor" radius={[0, 6, 6, 0]} barSize={24}>
+            {chartData.map((entry, index) => (
+              <Cell key={index} fill={entry.color} />
             ))}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
   );
 };

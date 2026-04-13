@@ -32,12 +32,27 @@
   --lh-normal: 1.6;
   --lh-relaxed: 1.75;
 
-  /* Letter spacing */
+  /* Letter spacing — progressive tightening at display sizes (inspired by Linear/Vercel) */
   --ls-tight: -0.03em;
   --ls-snug: -0.015em;
   --ls-normal: 0em;
   --ls-wide: 0.04em;
   --ls-widest: 0.12em;
+  --ls-display: -0.04em;    /* For 48px+ headlines */
+  --ls-display-lg: -0.05em; /* For 56px+ display text */
+
+  /* Premium shadow system (inspired by Stripe blue-tinted + Vercel shadow-as-border) */
+  --shadow-border: 0 0 0 1px rgba(0,0,0,0.06);
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-sm: 0 0 0 1px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04);
+  --shadow-md: 0 0 0 1px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.06), 0 12px 28px -4px rgba(0,0,0,0.06);
+  --shadow-lg: 0 0 0 1px rgba(0,0,0,0.06), 0 8px 20px rgba(0,0,0,0.06), 0 24px 48px -8px rgba(0,0,0,0.08);
+  --shadow-xl: 0 0 0 1px rgba(0,0,0,0.06), 0 16px 40px rgba(0,0,0,0.06), 0 32px 80px -12px rgba(0,0,0,0.1);
+  --shadow-brand: 0 0 0 1px rgba(16,185,129,0.08), 0 8px 24px rgba(16,185,129,0.12), 0 24px 56px -8px rgba(16,185,129,0.08);
+  --shadow-brand-lg: 0 0 0 1px rgba(16,185,129,0.1), 0 16px 40px rgba(16,185,129,0.15), 0 40px 80px -12px rgba(16,185,129,0.1);
+
+  /* Nav shadow */
+  --shadow-nav: 0 0 0 1px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.04), 0 8px 24px -4px rgba(0,0,0,0.03);
 }
 
 html {
@@ -107,50 +122,50 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 230 35% 7%;
-    --foreground: 180 100% 90%;
+    --background: 220 20% 5%;
+    --foreground: 0 0% 93%;
 
-    --card: 230 30% 10%;
-    --card-foreground: 180 100% 90%;
+    --card: 220 18% 8%;
+    --card-foreground: 0 0% 93%;
 
-    --popover: 230 30% 10%;
-    --popover-foreground: 180 100% 90%;
+    --popover: 220 18% 8%;
+    --popover-foreground: 0 0% 93%;
 
     --primary: 160 84% 39%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 230 25% 15%;
-    --secondary-foreground: 180 100% 90%;
+    --secondary: 220 16% 12%;
+    --secondary-foreground: 0 0% 85%;
 
-    --muted: 230 25% 20%;
-    --muted-foreground: 180 20% 65%;
+    --muted: 220 14% 14%;
+    --muted-foreground: 0 0% 55%;
 
     --accent: 160 84% 39%;
     --accent-foreground: 0 0% 100%;
 
     --success: 142 76% 45%;
-    --success-foreground: 230 35% 7%;
+    --success-foreground: 220 20% 5%;
 
     --warning: 38 92% 50%;
-    --warning-foreground: 230 35% 7%;
+    --warning-foreground: 220 20% 5%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 230 20% 20%;
-    --input: 230 20% 18%;
+    --border: 220 12% 14%;
+    --input: 220 12% 12%;
     --ring: 160 84% 39%;
 
-    --shadow-glow: 0 0 40px hsl(160 84% 39% / 0.2);
-    --shadow-card: 0 10px 30px -10px hsl(0 0% 0% / 0.5);
+    --shadow-glow: 0 0 40px hsl(160 84% 39% / 0.15);
+    --shadow-card: 0 1px 3px hsl(0 0% 0% / 0.3), 0 8px 24px -4px hsl(0 0% 0% / 0.4);
 
-    --sidebar-background: 230 30% 10%;
-    --sidebar-foreground: 180 100% 90%;
+    --sidebar-background: 220 18% 6%;
+    --sidebar-foreground: 0 0% 93%;
     --sidebar-primary: 160 84% 39%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 230 25% 15%;
-    --sidebar-accent-foreground: 180 100% 90%;
-    --sidebar-border: 230 20% 20%;
+    --sidebar-accent: 220 14% 12%;
+    --sidebar-accent-foreground: 0 0% 85%;
+    --sidebar-border: 220 12% 14%;
     --sidebar-ring: 160 84% 39%;
   }
 }
@@ -242,20 +257,20 @@ All colors MUST be HSL.
 ──────────────────────────────────────────────────────────────────────────── */
 @layer components {
 
-  /* Display — Hero headline numbers or giant stats (fw-black, tight tracking) */
+  /* Display — Hero headline numbers or giant stats (fw-black, aggressive tracking like Vercel/Linear) */
   .text-display {
     font-family: var(--font-sans);
     font-weight: var(--fw-black);
-    line-height: var(--lh-tight);
-    letter-spacing: var(--ls-tight);
+    line-height: 1.05;
+    letter-spacing: var(--ls-display-lg);
   }
 
-  /* Heading — Section titles, H1/H2 (fw-extrabold, snug) */
+  /* Heading — Section titles, H1/H2 (fw-extrabold, tighter tracking) */
   .text-heading {
     font-family: var(--font-sans);
     font-weight: var(--fw-extrabold);
-    line-height: var(--lh-snug);
-    letter-spacing: var(--ls-snug);
+    line-height: 1.15;
+    letter-spacing: var(--ls-display);
   }
 
   /* Subheading — Card titles, feature names (fw-bold) */
@@ -318,4 +333,32 @@ All colors MUST be HSL.
 .landing-root * {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Premium Card System (inspired by Stripe/Vercel) ────────────────────────
+   Shadow-as-border technique: use box-shadow instead of CSS border for
+   smoother rendering and brand-tinted depth.
+──────────────────────────────────────────────────────────────────────────── */
+@layer components {
+  .card-elevated {
+    background: rgba(255,255,255,0.97);
+    box-shadow: var(--shadow-sm);
+    border: none;
+    transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .card-elevated:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-4px);
+  }
+
+  .card-brand {
+    background: rgba(255,255,255,0.97);
+    box-shadow: var(--shadow-brand);
+    border: none;
+    transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .card-brand:hover {
+    box-shadow: var(--shadow-brand-lg);
+    transform: translateY(-6px);
+  }
 }

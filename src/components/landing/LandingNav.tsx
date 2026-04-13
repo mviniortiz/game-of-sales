@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ArrowRight, LogIn } from "lucide-react";
-import brandLogoLight from "@/assets/logo-light.svg";
+import brandLogoDark from "@/assets/logo-dark.png";
 
 interface LandingNavProps {
     onLoginClick: () => void;
@@ -48,14 +48,13 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                 className="fixed top-0 inset-x-0 z-50 transition-all duration-300"
                 style={{
                     background: scrolled
-                        ? "rgba(255,255,255,0.92)"
+                        ? "rgba(6,8,10,0.85)"
                         : "transparent",
-                    backdropFilter: scrolled ? "blur(18px) saturate(160%)" : "none",
-                    borderBottom: scrolled
-                        ? "1px solid rgba(229,231,235,0.8)"
-                        : "1px solid transparent",
+                    backdropFilter: scrolled ? "blur(12px)" : "none",
+                    WebkitBackdropFilter: scrolled ? "blur(12px)" : "none",
+                    borderBottom: scrolled ? "1px solid rgba(255,255,255,0.06)" : "1px solid transparent",
                     boxShadow: scrolled
-                        ? "0 4px 16px rgba(0,0,0,0.06)"
+                        ? "0 1px 3px rgba(0,0,0,0.4)"
                         : "none",
                 }}
                 initial={{ y: -64, opacity: 0 }}
@@ -69,7 +68,7 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
                         className="flex items-center gap-2.5 flex-shrink-0"
                     >
-                        <img src={brandLogoLight} alt="Vyzon" className="h-8 w-auto" />
+                        <img src={brandLogoDark} alt="Vyzon" className="h-8 w-auto" />
                     </button>
 
                     {/* Desktop links */}
@@ -79,19 +78,19 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                                 key={link.anchor}
                                 onClick={() => handleAnchor(link.anchor)}
                                 className="relative px-4 py-2 rounded-lg text-sm transition-colors duration-150 group"
-                                style={{ color: "rgba(75,85,99,0.9)", fontWeight: 500 }}
+                                style={{ color: "rgba(255,255,255,0.6)", fontWeight: 500 }}
                                 onMouseEnter={(e) =>
-                                    ((e.currentTarget as HTMLButtonElement).style.color = "rgba(17,24,39,0.95)")
+                                    ((e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.95)")
                                 }
                                 onMouseLeave={(e) =>
-                                    ((e.currentTarget as HTMLButtonElement).style.color = "rgba(75,85,99,0.9)")
+                                    ((e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.6)")
                                 }
                             >
                                 <span className="relative z-10">{link.label}</span>
                                 {/* Hover pill */}
                                 <span
                                     className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-150"
-                                    style={{ background: "rgba(243,244,246,0.8)" }}
+                                    style={{ background: "rgba(255,255,255,0.08)" }}
                                 />
                             </button>
                         ))}
@@ -102,15 +101,15 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                         <button
                             onClick={onLoginClick}
                             className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm transition-all duration-150"
-                            style={{ color: "rgba(75,85,99,0.9)", fontWeight: 500 }}
+                            style={{ color: "rgba(255,255,255,0.6)", fontWeight: 500 }}
                             onMouseEnter={(e) => {
                                 const b = e.currentTarget as HTMLButtonElement;
-                                b.style.color = "rgba(17,24,39,0.95)";
-                                b.style.background = "rgba(243,244,246,0.8)";
+                                b.style.color = "rgba(255,255,255,0.95)";
+                                b.style.background = "rgba(255,255,255,0.08)";
                             }}
                             onMouseLeave={(e) => {
                                 const b = e.currentTarget as HTMLButtonElement;
-                                b.style.color = "rgba(75,85,99,0.9)";
+                                b.style.color = "rgba(255,255,255,0.6)";
                                 b.style.background = "transparent";
                             }}
                         >
@@ -149,14 +148,14 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                         <button
                             onClick={onLoginClick}
                             className="text-xs px-3 py-2 rounded-lg"
-                            style={{ color: "rgba(75,85,99,0.9)", fontWeight: 500 }}
+                            style={{ color: "rgba(255,255,255,0.6)", fontWeight: 500 }}
                         >
                             Entrar
                         </button>
                         <button
                             onClick={() => setMobileOpen((v) => !v)}
                             className="w-9 h-9 flex items-center justify-center rounded-lg transition-colors"
-                            style={{ background: "rgba(243,244,246,0.8)", color: "rgba(55,65,81,0.9)" }}
+                            style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.8)" }}
                             aria-label="Menu"
                         >
                             <AnimatePresence mode="wait" initial={false}>
@@ -205,10 +204,10 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                         <motion.div
                             className="fixed top-0 right-0 bottom-0 z-50 w-[280px] flex flex-col md:hidden"
                             style={{
-                                background: "rgba(255,255,255,0.97)",
-                                backdropFilter: "blur(24px)",
-                                borderLeft: "1px solid rgba(229,231,235,0.8)",
-                                boxShadow: "-24px 0 80px rgba(0,0,0,0.08)",
+                                background: "rgba(10,13,16,0.97)",
+                                backdropFilter: "blur(16px)",
+                                borderLeft: "1px solid rgba(255,255,255,0.06)",
+                                boxShadow: "-24px 0 80px rgba(0,0,0,0.4)",
                             }}
                             initial={{ x: "100%" }}
                             animate={{ x: 0 }}
@@ -218,13 +217,13 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                             {/* Drawer header */}
                             <div
                                 className="flex items-center justify-between px-5 h-16 border-b"
-                                style={{ borderColor: "rgba(229,231,235,0.8)" }}
+                                style={{ borderColor: "rgba(255,255,255,0.06)" }}
                             >
-                                <img src={brandLogoLight} alt="Vyzon" className="h-7 w-auto" />
+                                <img src={brandLogoDark} alt="Vyzon" className="h-7 w-auto" />
                                 <button
                                     onClick={() => setMobileOpen(false)}
                                     className="w-8 h-8 flex items-center justify-center rounded-lg"
-                                    style={{ background: "rgba(243,244,246,0.8)", color: "rgba(75,85,99,0.9)" }}
+                                    style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.6)" }}
                                 >
                                     <X className="h-4 w-4" />
                                 </button>
@@ -237,18 +236,18 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                                         key={link.anchor}
                                         onClick={() => handleAnchor(link.anchor)}
                                         className="flex items-center gap-3 w-full px-4 py-3.5 rounded-xl text-left transition-colors"
-                                        style={{ color: "rgba(75,85,99,0.9)", fontWeight: 500, fontSize: "0.9375rem" }}
+                                        style={{ color: "rgba(255,255,255,0.6)", fontWeight: 500, fontSize: "0.9375rem" }}
                                         initial={{ opacity: 0, x: 20 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: 0.06 + i * 0.05 }}
                                         onMouseEnter={(e) => {
                                             const b = e.currentTarget as HTMLButtonElement;
-                                            b.style.color = "rgba(17,24,39,0.95)";
-                                            b.style.background = "rgba(243,244,246,0.6)";
+                                            b.style.color = "rgba(255,255,255,0.95)";
+                                            b.style.background = "rgba(255,255,255,0.06)";
                                         }}
                                         onMouseLeave={(e) => {
                                             const b = e.currentTarget as HTMLButtonElement;
-                                            b.style.color = "rgba(75,85,99,0.9)";
+                                            b.style.color = "rgba(255,255,255,0.6)";
                                             b.style.background = "transparent";
                                         }}
                                     >
@@ -264,15 +263,15 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                             {/* Drawer CTAs */}
                             <div
                                 className="px-4 py-5 border-t flex flex-col gap-2"
-                                style={{ borderColor: "rgba(229,231,235,0.8)" }}
+                                style={{ borderColor: "rgba(255,255,255,0.06)" }}
                             >
                                 <button
                                     onClick={() => { onLoginClick(); setMobileOpen(false); }}
                                     className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm transition-colors"
                                     style={{
-                                        color: "rgba(75,85,99,0.9)",
-                                        border: "1px solid rgba(229,231,235,1)",
-                                        background: "rgba(249,250,251,1)",
+                                        color: "rgba(255,255,255,0.6)",
+                                        border: "1px solid rgba(255,255,255,0.08)",
+                                        background: "rgba(255,255,255,0.03)",
                                         fontWeight: 500,
                                     }}
                                 >
