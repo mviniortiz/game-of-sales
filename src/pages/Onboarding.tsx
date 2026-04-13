@@ -298,12 +298,17 @@ export default function Onboarding() {
     // Determine effective company ID
     // Use a ref to lock the company ID once set during registration (Step 1),
     // preventing the auth-state useEffect from overwriting it with a stale value.
-    const [effectiveCompanyId, setEffectiveCompanyId] = useState<string | null>(null);
-    const companyIdLockedRef = useRef(false);
+    // Also persist to localStorage so it survives re-renders / auth state changes.
+    const ONBOARDING_COMPANY_KEY = "onboarding_company_id";
+    const [effectiveCompanyId, setEffectiveCompanyId] = useState<string | null>(
+        () => localStorage.getItem(ONBOARDING_COMPANY_KEY)
+    );
+    const companyIdLockedRef = useRef(!!localStorage.getItem(ONBOARDING_COMPANY_KEY));
 
     const lockAndSetCompanyId = useCallback((id: string) => {
         companyIdLockedRef.current = true;
         setEffectiveCompanyId(id);
+        localStorage.setItem(ONBOARDING_COMPANY_KEY, id);
     }, []);
 
     // On mount, determine company context and pre-fill from existing profile
@@ -417,8 +422,16 @@ export default function Onboarding() {
     const handlePayment = async () => {
         trackEvent(FUNNEL_EVENTS.PAYMENT_SUBMIT, { plan: selectedPlan });
 
-        if (!effectiveCompanyId || !user?.email) {
-            toast({ title: "Erro", description: "Dados da empresa não encontrados", variant: "destructive" });
+        // Recover company ID from multiple sources if state was lost
+        let companyId = effectiveCompanyId
+            || localStorage.getItem(ONBOARDING_COMPANY_KEY)
+            || authCompanyId;
+        if (companyId && !effectiveCompanyId) {
+            lockAndSetCompanyId(companyId);
+        }
+
+        if (!companyId || !user?.email) {
+            toast({ title: "Erro", description: "Dados da empresa não encontrados. Tente recarregar a página.", variant: "destructive" });
             return;
         }
 
@@ -485,7 +498,7 @@ export default function Onboarding() {
                 body: {
                     token: tokenResponse.id,
                     email: user.email,
-                    companyId: effectiveCompanyId,
+                    companyId,
                     billingConfig: {
                         frequency: billing.frequency,
                         frequencyType: billing.frequencyType,
@@ -525,7 +538,7 @@ export default function Onboarding() {
                 const { error: planErr } = await supabase
                     .from("companies")
                     .update({ plan: selectedPlan })
-                    .eq("id", effectiveCompanyId);
+                    .eq("id", companyId);
                 if (planErr) console.warn("[handlePayment] Plan update error (non-critical):", planErr);
             } catch (planErr) {
                 console.warn("[handlePayment] Plan update exception (non-critical):", planErr);
@@ -843,6 +856,7 @@ export default function Onboarding() {
     // Complete onboarding
     const handleComplete = async (destination: string) => {
         setIsLoading(true);
+        localStorage.removeItem(ONBOARDING_COMPANY_KEY);
         try {
             if (user) {
                 await supabase
@@ -860,7 +874,7 @@ export default function Onboarding() {
             navigate(`/${destination}`);
             toast({
                 title: "Bem-vindo ao Vyzon!",
-                description: "Seu ambiente esta pronto. Boas vendas!",
+                description: "Seu ambiente está pronto. Boas vendas!",
             });
         }, 1800);
     };
