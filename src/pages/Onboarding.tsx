@@ -305,6 +305,7 @@ export default function Onboarding() {
     );
     const companyIdLockedRef = useRef(!!localStorage.getItem(ONBOARDING_COMPANY_KEY));
 
+    const ONBOARDING_EMAIL_KEY = "onboarding_email";
     const lockAndSetCompanyId = useCallback((id: string) => {
         companyIdLockedRef.current = true;
         setEffectiveCompanyId(id);
@@ -430,7 +431,17 @@ export default function Onboarding() {
             lockAndSetCompanyId(companyId);
         }
 
-        if (!companyId || !user?.email) {
+        // Recover user email — auth state may not have updated after signUp
+        let email = user?.email || regEmail || localStorage.getItem(ONBOARDING_EMAIL_KEY) || "";
+        if (!email) {
+            try {
+                const { data: { session: freshSession } } = await supabase.auth.getSession();
+                email = freshSession?.user?.email || "";
+            } catch { /* ignore */ }
+        }
+
+        if (!companyId || !email) {
+            console.error("[handlePayment] Missing data:", { companyId, email, user: !!user, regEmail, authCompanyId, effectiveCompanyId });
             toast({ title: "Erro", description: "Dados da empresa não encontrados. Tente recarregar a página.", variant: "destructive" });
             return;
         }
@@ -497,7 +508,7 @@ export default function Onboarding() {
             const response = await supabase.functions.invoke("mercadopago-create-subscription", {
                 body: {
                     token: tokenResponse.id,
-                    email: user.email,
+                    email,
                     companyId,
                     billingConfig: {
                         frequency: billing.frequency,
@@ -594,6 +605,7 @@ export default function Onboarding() {
                 if (companyError) throw new Error(`Erro ao criar empresa: ${companyError.message}`);
 
                 lockAndSetCompanyId(newCompanyId);
+                localStorage.setItem(ONBOARDING_EMAIL_KEY, regEmail);
                 setCompanyName(regCompanyName);
                 setUserName(regName);
 
@@ -857,6 +869,7 @@ export default function Onboarding() {
     const handleComplete = async (destination: string) => {
         setIsLoading(true);
         localStorage.removeItem(ONBOARDING_COMPANY_KEY);
+        localStorage.removeItem(ONBOARDING_EMAIL_KEY);
         try {
             if (user) {
                 await supabase
