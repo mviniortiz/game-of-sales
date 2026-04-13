@@ -478,6 +478,19 @@ export default function Onboarding() {
         setPaymentError(null);
 
         try {
+            // Ensure user is authenticated before calling edge function
+            const { data: { session: currentSession } } = await supabase.auth.getSession();
+            if (!currentSession && regEmail && regPassword) {
+                console.log("[handlePayment] No active session, attempting sign-in...");
+                const { error: signInErr } = await supabase.auth.signInWithPassword({
+                    email: regEmail,
+                    password: regPassword,
+                });
+                if (signInErr) {
+                    console.warn("[handlePayment] Auto sign-in failed:", signInErr.message);
+                }
+            }
+
             console.log("[handlePayment] Creating card token with core method...");
 
             const tokenPromise = coreCreateCardToken({
