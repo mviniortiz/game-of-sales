@@ -40,7 +40,7 @@ const RecuperarSenha = () => {
     setLoading(true);
 
     try {
-      const redirectUrl = `${window.location.origin}/auth`;
+      const redirectUrl = `${window.location.origin}/redefinir-senha`;
 
       const { error } = await supabase.auth.resetPasswordForEmail(
         validationResult.data.email,

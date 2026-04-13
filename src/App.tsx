@@ -20,6 +20,7 @@ import { useAuth } from "@/contexts/AuthContext";
 const Auth = lazy(() => import("./pages/Auth"));
 const Register = lazy(() => import("./pages/Register"));
 const RecuperarSenha = lazy(() => import("./pages/RecuperarSenha"));
+const RedefinirSenha = lazy(() => import("./pages/RedefinirSenha"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Ranking = lazy(() => import("./pages/Ranking"));
 const NovaVenda = lazy(() => import("./pages/NovaVenda"));
@@ -95,6 +96,7 @@ const App = () => (
               <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/checkout" element={<CheckoutRedirect />} />
               <Route path="/recuperar-senha" element={<RecuperarSenha />} />
+              <Route path="/redefinir-senha" element={<RedefinirSenha />} />
               <Route path="/logo-preview" element={<LogoPreview />} />
 
               {/* Protected routes */}
