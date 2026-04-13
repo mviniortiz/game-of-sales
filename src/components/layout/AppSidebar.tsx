@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Home, Trophy, PlusCircle, Target, PhoneCall, Shield, LogOut, User, Calendar, Kanban, Upload, Settings, ChevronRight, Sparkles } from "lucide-react";
+import { Home, Trophy, PlusCircle, Target, PhoneCall, Shield, LogOut, User, Calendar, Kanban, Upload, Settings, ChevronRight, Sparkles, HelpCircle } from "lucide-react";
 import { EvaIcon } from "@/components/icons/EvaAvatar";
 import { ReminderBell } from "@/components/crm/ReminderBell";
 import { NavLink } from "@/components/NavLink";
@@ -334,6 +334,15 @@ export function AppSidebar() {
 
               {/* Actions row */}
               <div className="flex items-center gap-1 mt-3 px-1">
+                <a
+                  href="https://wa.me/5548991696887?text=Ol%C3%A1!%20Preciso%20de%20ajuda%20com%20o%20Vyzon."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors text-muted-foreground hover:text-emerald-400 hover:bg-emerald-500/10"
+                >
+                  <HelpCircle className="h-4 w-4 shrink-0" />
+                  <span>Suporte</span>
+                </a>
                 <ThemeToggle />
                 <button
                   onClick={signOut}
@@ -365,6 +374,23 @@ export function AppSidebar() {
                 </TooltipTrigger>
                 <TooltipContent side="right" className="font-medium">
                   {profile?.nome || "Perfil"}
+                </TooltipContent>
+              </Tooltip>
+
+              {/* Collapsed: support */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <a
+                    href="https://wa.me/5548991696887?text=Ol%C3%A1!%20Preciso%20de%20ajuda%20com%20o%20Vyzon."
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center p-2.5 rounded-lg text-sm transition-colors text-muted-foreground hover:text-emerald-400 hover:bg-emerald-500/10"
+                  >
+                    <HelpCircle className="h-4 w-4" />
+                  </a>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="font-medium">
+                  Suporte
                 </TooltipContent>
               </Tooltip>
 
