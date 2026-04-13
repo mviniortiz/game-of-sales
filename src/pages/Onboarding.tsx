@@ -44,6 +44,7 @@ import { PLANS, formatPrice, getAnnualMonthlyEquivalent, getAnnualPrice, getBill
 import { initMercadoPago } from "@mercadopago/sdk-react";
 import coreCreateCardToken from "@mercadopago/sdk-react/esm/coreMethods/cardToken/create";
 import { RATE_LIMITS, resetRateLimit } from "@/lib/rateLimiter";
+import { formatDocument, validateDocument } from "@/utils/document";
 import { z } from "zod";
 
 // Initialize MercadoPago SDK
@@ -66,18 +67,18 @@ const MP_ERROR_MESSAGES: Record<string, string> = {
     "205": "Número do cartão inválido. Verifique e tente novamente.",
     "208": "Mês de validade inválido.",
     "209": "Ano de validade inválido.",
-    "212": "CPF inválido. Verifique e tente novamente.",
-    "213": "CPF inválido. Verifique e tente novamente.",
-    "214": "CPF inválido. Verifique e tente novamente.",
+    "212": "CPF/CNPJ inválido. Verifique e tente novamente.",
+    "213": "CPF/CNPJ inválido. Verifique e tente novamente.",
+    "214": "CPF/CNPJ inválido. Verifique e tente novamente.",
     "220": "Banco emissor não disponível. Tente outro cartão.",
     "221": "Titular do cartão inválido. Verifique o nome.",
     "224": "Código de segurança (CVV) inválido.",
     "E301": "Número do cartão inválido. Verifique e tente novamente.",
     "E302": "Código de segurança (CVV) inválido.",
     "316": "Titular do cartão inválido. Verifique o nome.",
-    "322": "CPF inválido. Verifique e tente novamente.",
-    "323": "CPF inválido. Verifique e tente novamente.",
-    "324": "CPF inválido. Verifique e tente novamente.",
+    "322": "CPF/CNPJ inválido. Verifique e tente novamente.",
+    "323": "CPF/CNPJ inválido. Verifique e tente novamente.",
+    "324": "CPF/CNPJ inválido. Verifique e tente novamente.",
     "325": "Mês de validade inválido.",
     "326": "Ano de validade inválido.",
     "default": "Não foi possível processar o cartão. Verifique os dados e tente novamente.",
@@ -474,8 +475,9 @@ export default function Onboarding() {
             return;
         }
 
-        if (docNumber.replace(/\D/g, "").length < 11) {
-            toast({ title: "CPF inválido", description: "O CPF deve ter 11 dígitos", variant: "destructive" });
+        const docResult = validateDocument(docNumber);
+        if (!docResult.valid) {
+            toast({ title: "Documento inválido", description: docResult.error || "CPF/CNPJ inválido", variant: "destructive" });
             return;
         }
 
@@ -504,7 +506,7 @@ export default function Onboarding() {
                 cardExpirationMonth: expMonth,
                 cardExpirationYear: expYear,
                 securityCode: rawCvv,
-                identificationType: "CPF",
+                identificationType: docResult.type!,
                 identificationNumber: docNumber.replace(/\D/g, ""),
             });
             const timeoutPromise = new Promise((_, reject) =>
@@ -1544,21 +1546,16 @@ export default function Onboarding() {
 
                             <div className="space-y-2">
                                 <Label className="text-[rgba(255,255,255,0.6)] text-sm font-medium">
-                                    CPF do titular <span className="text-rose-400">*</span>
+                                    CPF ou CNPJ do titular <span className="text-rose-400">*</span>
                                 </Label>
                                 <Input
                                     id="doc-number"
-                                    placeholder="000.000.000-00"
+                                    placeholder="000.000.000-00 ou 00.000.000/0000-00"
                                     className={inputClasses}
-                                    maxLength={14}
+                                    maxLength={18}
                                     inputMode="numeric"
                                     onChange={(e) => {
-                                        const digits = e.target.value.replace(/\D/g, "").slice(0, 11);
-                                        let formatted = digits;
-                                        if (digits.length > 9) formatted = `${digits.slice(0,3)}.${digits.slice(3,6)}.${digits.slice(6,9)}-${digits.slice(9)}`;
-                                        else if (digits.length > 6) formatted = `${digits.slice(0,3)}.${digits.slice(3,6)}.${digits.slice(6)}`;
-                                        else if (digits.length > 3) formatted = `${digits.slice(0,3)}.${digits.slice(3)}`;
-                                        e.target.value = formatted;
+                                        e.target.value = formatDocument(e.target.value);
                                     }}
                                 />
                             </div>

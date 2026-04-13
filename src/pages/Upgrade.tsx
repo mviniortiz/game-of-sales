@@ -13,6 +13,7 @@ import {
   ArrowLeft, ArrowRight, Check, Crown, CreditCard, Eye, EyeOff,
   Loader2, Lock, Rocket, Shield, Sparkles, Zap, Users, Package, Bot
 } from "lucide-react";
+import { formatDocument, validateDocument } from "@/utils/document";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,8 +43,8 @@ const MP_ERROR_MESSAGES: Record<string, string> = {
   "205": "Número do cartão inválido.",
   "208": "Mês de validade inválido.",
   "209": "Ano de validade inválido.",
-  "212": "CPF inválido.",
-  "214": "CPF inválido.",
+  "212": "CPF/CNPJ inválido.",
+  "214": "CPF/CNPJ inválido.",
   "221": "Nome do titular inválido.",
   "224": "CVV inválido.",
   "E301": "Número do cartão inválido.",
@@ -79,13 +80,6 @@ const formatExpiration = (value: string): string => {
   return digits;
 };
 
-const formatCpf = (value: string): string => {
-  const digits = value.replace(/\D/g, "").slice(0, 11);
-  if (digits.length <= 3) return digits;
-  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
-  if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
-  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
-};
 
 // ─── Main ──────────────────────────────────────────────────────────
 
@@ -161,7 +155,8 @@ export default function Upgrade() {
     }
     if (rawCard.length < 13) { toast.error("Número do cartão inválido."); return; }
     if (rawCvv.length < 3) { toast.error("CVV inválido."); return; }
-    if (rawDoc.length < 11) { toast.error("CPF inválido."); return; }
+    const docResult = validateDocument(rawDoc);
+    if (!docResult.valid) { toast.error(docResult.error || "CPF/CNPJ inválido."); return; }
 
     setLoading(true);
     setError(null);
@@ -174,7 +169,7 @@ export default function Upgrade() {
         cardExpirationMonth: expMonth,
         cardExpirationYear: expYear,
         securityCode: rawCvv,
-        identificationType: "CPF",
+        identificationType: docResult.type!,
         identificationNumber: rawDoc,
       });
       const timeoutPromise = new Promise((_, reject) =>
@@ -487,15 +482,15 @@ export default function Upgrade() {
             />
           </div>
 
-          {/* CPF */}
+          {/* CPF / CNPJ */}
           <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">CPF do titular</Label>
+            <Label className="text-xs text-muted-foreground">CPF ou CNPJ do titular</Label>
             <Input
               value={docNumber}
-              onChange={e => setDocNumber(formatCpf(e.target.value))}
-              placeholder="000.000.000-00"
+              onChange={e => setDocNumber(formatDocument(e.target.value))}
+              placeholder="000.000.000-00 ou 00.000.000/0000-00"
               className={inputClasses}
-              maxLength={14}
+              maxLength={18}
             />
           </div>
 
