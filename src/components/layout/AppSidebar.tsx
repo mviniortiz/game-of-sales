@@ -335,15 +335,17 @@ export function AppSidebar() {
               {/* Actions row */}
               <div className="flex items-center justify-between mt-3 px-1">
                 <div className="flex items-center gap-0.5">
-                  <a
-                    href="https://wa.me/5548991696887?text=Ol%C3%A1!%20Preciso%20de%20ajuda%20com%20o%20Vyzon."
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center h-9 w-9 rounded-lg transition-colors text-muted-foreground hover:text-emerald-400 hover:bg-emerald-500/10"
-                    title="Suporte"
+                  <button
+                    onClick={() => navigate("/docs")}
+                    className={`flex items-center justify-center h-9 w-9 rounded-lg transition-colors ${
+                      location.pathname === "/docs"
+                        ? "text-emerald-400 bg-emerald-500/10"
+                        : "text-muted-foreground hover:text-emerald-400 hover:bg-emerald-500/10"
+                    }`}
+                    title="Ajuda"
                   >
                     <HelpCircle className="h-4 w-4" />
-                  </a>
+                  </button>
                   <ThemeToggle />
                 </div>
                 <button
@@ -379,20 +381,22 @@ export function AppSidebar() {
                 </TooltipContent>
               </Tooltip>
 
-              {/* Collapsed: support */}
+              {/* Collapsed: help */}
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <a
-                    href="https://wa.me/5548991696887?text=Ol%C3%A1!%20Preciso%20de%20ajuda%20com%20o%20Vyzon."
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center p-2.5 rounded-lg text-sm transition-colors text-muted-foreground hover:text-emerald-400 hover:bg-emerald-500/10"
+                  <button
+                    onClick={() => navigate("/docs")}
+                    className={`flex items-center justify-center p-2.5 rounded-lg text-sm transition-colors ${
+                      location.pathname === "/docs"
+                        ? "text-emerald-400 bg-emerald-500/10"
+                        : "text-muted-foreground hover:text-emerald-400 hover:bg-emerald-500/10"
+                    }`}
                   >
                     <HelpCircle className="h-4 w-4" />
-                  </a>
+                  </button>
                 </TooltipTrigger>
                 <TooltipContent side="right" className="font-medium">
-                  Suporte
+                  Ajuda
                 </TooltipContent>
               </Tooltip>
 

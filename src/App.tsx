@@ -39,6 +39,7 @@ const SalesPerformanceCenter = lazy(() => import("./pages/SalesPerformanceCenter
 const ImportarDados = lazy(() => import("./pages/ImportarDados"));
 const AgenteRelatorios = lazy(() => import("./pages/AgenteRelatorios"));
 const Upgrade = lazy(() => import("./pages/Upgrade"));
+const Docs = lazy(() => import("./pages/Docs"));
 const PoliticaPrivacidade = lazy(() => import("./pages/PoliticaPrivacidade"));
 const TermosServico = lazy(() => import("./pages/TermosServico"));
 const LogoPreview = lazy(() => import("./pages/LogoPreview"));
@@ -261,6 +262,16 @@ const App = () => (
                   <ProtectedRoute>
                     <AppLayout>
                       <Upgrade />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/docs"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <Docs />
                     </AppLayout>
                   </ProtectedRoute>
                 }

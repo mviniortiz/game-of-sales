@@ -19,6 +19,7 @@ const getPageTitle = (pathname: string) => {
   if (pathname.startsWith("/agente")) return "Eva";
   if (pathname.startsWith("/admin")) return "Administração";
   if (pathname.startsWith("/profile")) return "Perfil";
+  if (pathname.startsWith("/docs")) return "Central de Ajuda";
   return "Vyzon";
 };
 
