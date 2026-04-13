@@ -571,7 +571,7 @@ export default function Onboarding() {
 
             console.log("[handlePayment] SUCCESS! Advancing to next step...");
             trackEvent(FUNNEL_EVENTS.PAYMENT_SUCCESS, { plan: selectedPlan });
-            trackPurchaseConversion(Number(billingConfig?.amount) || 0, undefined, true);
+            trackPurchaseConversion(Number(billing?.transactionAmount) || 0, undefined, true);
             toast({ title: "Assinatura criada!", description: "Seu trial de 14 dias começou. Aproveite!" });
             advanceStep();
         } catch (error: any) {
