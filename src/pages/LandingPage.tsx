@@ -29,7 +29,6 @@ import { FAQSection } from "@/components/landing/FAQSection";
 import { PainPoints } from "@/components/landing/PainPoints";
 import { LandingNav } from "@/components/landing/LandingNav";
 import { EvaAISection } from "@/components/landing/EvaAISection";
-import { WhatsAppButton } from "@/components/WhatsAppButton";
 
 // Animation variants
 const fadeInUp = {
@@ -790,8 +789,6 @@ const LandingPage = () => {
                     </div>
                 </div>
             </footer>
-
-            <WhatsAppButton variant="light" />
         </div>
     );
 };
