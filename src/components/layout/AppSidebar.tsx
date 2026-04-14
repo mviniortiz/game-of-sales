@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Home, Trophy, PlusCircle, Target, PhoneCall, Shield, LogOut, User, Calendar, Kanban, Upload, Settings, ChevronRight, Sparkles, HelpCircle } from "lucide-react";
+import { Home, Trophy, PlusCircle, Target, PhoneCall, Shield, LogOut, User, Calendar, Kanban, Upload, Settings, ChevronRight, Sparkles, HelpCircle, Inbox } from "lucide-react";
 import { EvaIcon } from "@/components/icons/EvaAvatar";
 import { ReminderBell } from "@/components/crm/ReminderBell";
 import { NavLink } from "@/components/NavLink";
@@ -51,6 +51,7 @@ const configItems = [
   { title: "Integrações", url: "/integracoes", icon: Settings },
   { title: "Importar Dados", url: "/importar", icon: Upload },
   { title: "Administração", url: "/admin", icon: Shield },
+  { title: "Suporte", url: "/admin/suporte", icon: Inbox },
 ];
 
 export function AppSidebar() {
@@ -111,6 +112,7 @@ export function AppSidebar() {
     if (item.url === '/integracoes') return isAdmin && hasFeature('integrations');
     if (item.url === '/importar') return isAdmin;
     if (item.url === '/admin') return isAdmin;
+    if (item.url === '/admin/suporte') return isSuperAdmin;
     return true;
   });
 

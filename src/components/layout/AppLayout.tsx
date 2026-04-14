@@ -17,6 +17,7 @@ const getPageTitle = (pathname: string) => {
   if (pathname.startsWith("/nova-venda")) return "Nova Venda";
   if (pathname.startsWith("/deal")) return "Detalhes do Deal";
   if (pathname.startsWith("/agente")) return "Eva";
+  if (pathname.startsWith("/admin/suporte")) return "Suporte";
   if (pathname.startsWith("/admin")) return "Administração";
   if (pathname.startsWith("/profile")) return "Perfil";
   if (pathname.startsWith("/docs")) return "Central de Ajuda";
