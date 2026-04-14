@@ -54,11 +54,15 @@ serve(async (req) => {
     if (action === "list") {
       const limit = body.limit ?? 50;
       const url = `https://api.resend.com/emails/receiving?limit=${limit}`;
+      console.log("[admin-support-inbox] GET", url);
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${RESEND_API_KEY}` },
       });
-      const data = await res.json();
-      if (!res.ok) return json({ error: data?.message || "Resend API error", details: data }, res.status);
+      const rawText = await res.text();
+      console.log("[admin-support-inbox] status:", res.status, "body:", rawText.slice(0, 500));
+      let data: any;
+      try { data = JSON.parse(rawText); } catch { data = { raw: rawText }; }
+      if (!res.ok) return json({ error: data?.message || `Resend API returned ${res.status}`, status: res.status, details: data }, 200);
       return json(data);
     }
 

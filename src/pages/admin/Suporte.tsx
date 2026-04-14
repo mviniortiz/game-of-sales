@@ -34,13 +34,26 @@ const Suporte = () => {
   const [replyText, setReplyText] = useState("");
 
   // List emails
-  const { data: listData, isLoading, refetch, isFetching } = useQuery({
+  const { data: listData, isLoading, refetch, isFetching, error: listError } = useQuery({
     queryKey: ["support-inbox"],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke("admin-support-inbox", {
         body: { action: "list", limit: 50 },
       });
-      if (error) throw error;
+      if (error) {
+        let msg = "Erro ao listar emails";
+        try {
+          if (error.context && typeof error.context.json === "function") {
+            const body = await error.context.json();
+            if (body?.error) msg = body.error;
+          }
+        } catch {}
+        throw new Error(msg);
+      }
+      console.log("[support-inbox] Resend response:", data);
+      if (data?.error) {
+        throw new Error(`Resend API: ${data.error}${data.status ? ` (${data.status})` : ""}`);
+      }
       return data as { data: ReceivedEmail[]; has_more: boolean };
     },
     refetchInterval: 30_000, // poll every 30s
@@ -168,6 +181,21 @@ const Suporte = () => {
             {isLoading ? (
               <div className="flex items-center justify-center h-64">
                 <Loader2 className="h-6 w-6 animate-spin text-emerald-400" />
+              </div>
+            ) : listError ? (
+              <div className="flex flex-col items-center justify-center h-64 px-6 text-center">
+                <div className="text-rose-400 text-sm font-medium mb-2">Erro ao carregar</div>
+                <p className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
+                  {(listError as Error).message}
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => refetch()}
+                  className="mt-4 border-white/10 bg-white/5 hover:bg-white/10 text-white/80"
+                >
+                  Tentar novamente
+                </Button>
               </div>
             ) : emails.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-64 px-6 text-center">
