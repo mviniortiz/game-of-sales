@@ -116,6 +116,88 @@ async function fetchCompanyData(adminClient: any, companyId: string) {
   const metasConsolidadas = metasConsolidadasRes.data || [];
   const produtos = produtosRes.data || [];
 
+  // ─── WhatsApp context (Eva Unified — Fase 2) ─────────────────────────────
+  // Puxa resumos de conversas recentes analisadas pelo Copilot. Best-effort:
+  // tabela pode não existir ainda em ambientes sem migration aplicada.
+  let whatsappContext: any = null;
+  try {
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    const { data: summaries, error: summariesError } = await adminClient
+      .from("conversation_summaries")
+      .select("user_id, chat_name, chat_phone, summary, temperature, sentiment, stage_suggestion, next_action, objections, analyzed_at")
+      .eq("company_id", companyId)
+      .gte("analyzed_at", sevenDaysAgo)
+      .order("analyzed_at", { ascending: false })
+      .limit(100);
+
+    if (!summariesError && summaries) {
+      const vendedorMap = new Map(vendedores.map((v: any) => [v.id, v.nome]));
+
+      // Agrupa por vendedor
+      const porVendedor = new Map<string, any[]>();
+      summaries.forEach((s: any) => {
+        const nome = vendedorMap.get(s.user_id) || "?";
+        if (!porVendedor.has(nome)) porVendedor.set(nome, []);
+        porVendedor.get(nome)!.push(s);
+      });
+
+      // Resumo por vendedor (só os mais relevantes — top 5 conversas)
+      const porVendedorArray = Array.from(porVendedor.entries()).map(([nome, convs]) => ({
+        vendedor: nome,
+        totalConversas: convs.length,
+        quentes: convs.filter((c: any) => c.temperature === "quente").length,
+        mornas: convs.filter((c: any) => c.temperature === "morno").length,
+        frios: convs.filter((c: any) => c.temperature === "frio").length,
+        conversasRecentes: convs.slice(0, 5).map((c: any) => ({
+          lead: c.chat_name || c.chat_phone,
+          temperatura: c.temperature,
+          sentimento: c.sentiment,
+          estagio: c.stage_suggestion,
+          proximaAcao: c.next_action,
+          objecoes: c.objections || [],
+          resumo: c.summary,
+          analisadoEm: c.analyzed_at,
+        })),
+      }));
+
+      whatsappContext = {
+        periodo: "últimos 7 dias",
+        totalConversasAnalisadas: summaries.length,
+        leadsQuentes: summaries.filter((s: any) => s.temperature === "quente").length,
+        leadsMornos: summaries.filter((s: any) => s.temperature === "morno").length,
+        leadsFrios: summaries.filter((s: any) => s.temperature === "frio").length,
+        porVendedor: porVendedorArray,
+      };
+    }
+  } catch (err) {
+    console.warn("[report-agent] whatsapp context unavailable:", err);
+  }
+
+  // ─── Eva Memory (Fase 4 já prepara leitura) ──────────────────────────────
+  let evaMemory: any = null;
+  try {
+    const { data: memories } = await adminClient
+      .from("eva_memory")
+      .select("type, content, confidence, user_id")
+      .eq("company_id", companyId)
+      .gte("confidence", 0.5)
+      .order("last_used_at", { ascending: false, nullsFirst: false })
+      .limit(50);
+
+    if (memories && memories.length > 0) {
+      const vendedorMap = new Map(vendedores.map((v: any) => [v.id, v.nome]));
+      evaMemory = memories.map((m: any) => ({
+        tipo: m.type,
+        conteudo: m.content,
+        confianca: m.confidence,
+        sobre: m.user_id ? (vendedorMap.get(m.user_id) || "?") : "empresa",
+      }));
+    }
+  } catch (err) {
+    console.warn("[report-agent] eva_memory unavailable:", err);
+  }
+
   // Process sales data
   const vendasMesAtual = vendas.filter((v: any) => (v.data_venda || "").startsWith(currentMonth));
   const vendasMesAnterior = vendas.filter((v: any) => (v.data_venda || "").startsWith(lastMonth));
@@ -207,6 +289,8 @@ async function fetchCompanyData(adminClient: any, companyId: string) {
         }
       : null,
     vendedores: vendedores.map((v: any) => ({ nome: v.nome })),
+    whatsapp: whatsappContext,
+    evaMemory: evaMemory,
   };
 }
 
@@ -227,6 +311,18 @@ PERSONALIDADE:
 - Seja analítica mas acessível — nada de parecer um relatório corporativo chato
 - Quando der boas notícias, celebre de leve. Quando der alertas, seja franca mas construtiva
 - Máximo 1-2 emojis por resposta, só quando fizer sentido
+
+CONTEXTO CRUZADO (você também tem acesso ao WhatsApp):
+- O campo "whatsapp" contém resumos das conversas que seus vendedores tiveram nos últimos 7 dias, analisadas por você mesma (Eva Copilot) dentro do WhatsApp
+- Use esse contexto quando o gestor perguntar sobre atividade no WhatsApp, temperatura dos leads, objeções recorrentes, como cada vendedor está abordando
+- Perguntas típicas que usam esse dado: "Como tá o Pedro no WhatsApp?", "Quais objeções mais aparecem?", "Quem tem mais leads quentes?"
+- Se o gestor perguntar sobre um vendedor específico, procure em whatsapp.porVendedor
+- Se whatsapp for null, diga que ainda não há conversas analisadas no período
+
+MEMÓRIA DA EVA (evaMemory):
+- O campo "evaMemory" contém fatos, preferências e padrões que você aprendeu sobre a empresa e cada vendedor
+- Use quando fizer sentido — ex: "Baseado no que aprendi, o João tem o hábito de X"
+- Confiança alta (>0.7) = pode afirmar; confiança média = mencione com cautela ("tenho a impressão que...")
 
 REGRAS TÉCNICAS:
 - Use SOMENTE os dados fornecidos - NUNCA invente números
