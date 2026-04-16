@@ -744,26 +744,6 @@ const LandingPage = () => {
             {/* Final CTA */}
             <FinalCTA onCTAClick={() => goToRegister('pro')} onScheduleDemoClick={() => scrollToSection("agendar-demo")} />
 
-            {/* Floating demo CTA */}
-            <motion.button
-                onClick={() => scrollToSection("agendar-demo")}
-                className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-5 py-3 rounded-full text-white text-sm shadow-lg group"
-                style={{
-                    background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-                    boxShadow: "0 0 0 1px rgba(16,185,129,0.3), 0 8px 24px rgba(16,185,129,0.35), 0 2px 8px rgba(0,0,0,0.3)",
-                    fontWeight: 600,
-                }}
-                initial={{ opacity: 0, y: 20, scale: 0.9 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ delay: 2, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                whileHover={{ scale: 1.05, boxShadow: "0 0 0 1px rgba(16,185,129,0.4), 0 12px 32px rgba(16,185,129,0.45), 0 4px 12px rgba(0,0,0,0.3)" }}
-                whileTap={{ scale: 0.95 }}
-            >
-                <Calendar className="h-4 w-4" />
-                Agendar demo
-                <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
-            </motion.button>
-
             {/* Footer */}
             <footer className="py-16 px-4 sm:px-6 lg:px-8" style={{ background: "#06080a", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)" }}>
                 <div className="max-w-6xl mx-auto">
