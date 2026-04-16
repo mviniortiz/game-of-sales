@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, ArrowRight, Check, User, Mail, Building2, Phone, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { trackEvent } from "@/lib/analytics";
+import { trackEvent, trackDemoConversion } from "@/lib/analytics";
 
 interface DemoScheduleSectionProps {
     calendlyUrl?: string;
@@ -22,7 +22,7 @@ export const DemoScheduleSection = ({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData.name || !formData.email) return;
+        if (!formData.email || !formData.phone) return;
 
         setIsSubmitting(true);
 
@@ -36,10 +36,10 @@ export const DemoScheduleSection = ({
             await supabase
                 .from("demo_requests")
                 .insert({
-                    name: formData.name,
+                    name: formData.name || "Lead",
                     email: formData.email,
                     company: formData.company || null,
-                    phone: formData.phone || null,
+                    phone: formData.phone,
                     source: "landing_page",
                     status: "pending",
                 });
@@ -58,6 +58,12 @@ export const DemoScheduleSection = ({
         // Open Calendly in new tab and show confirmation instantly
         window.open(`${calendlyUrl}?${params.toString()}`, "_blank", "noopener");
         trackEvent("demo_scheduled", { source: "landing_calendly" });
+        trackDemoConversion();
+        // Meta Pixel: Lead event
+        (window as any).fbq?.("track", "Lead", {
+            content_name: "demo_request",
+            content_category: "landing",
+        });
         setStep("done");
         setIsSubmitting(false);
     };
@@ -243,39 +249,7 @@ export const DemoScheduleSection = ({
 
                                     {/* Right — form */}
                                     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                                        {/* Name */}
-                                        <div className="relative">
-                                            <User
-                                                className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4"
-                                                style={{ color: "rgba(255,255,255,0.25)" }}
-                                            />
-                                            <input
-                                                type="text"
-                                                required
-                                                placeholder="Seu nome"
-                                                value={formData.name}
-                                                onChange={(e) =>
-                                                    setFormData((p) => ({ ...p, name: e.target.value }))
-                                                }
-                                                className="w-full pl-10 pr-4 py-3 rounded-xl text-sm outline-none transition-all duration-200"
-                                                style={{
-                                                    background: "rgba(255,255,255,0.04)",
-                                                    border: "1px solid rgba(255,255,255,0.08)",
-                                                    color: "rgba(255,255,255,0.9)",
-                                                    fontWeight: 500,
-                                                }}
-                                                onFocus={(e) => {
-                                                    e.currentTarget.style.borderColor = "rgba(16,185,129,0.4)";
-                                                    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(16,185,129,0.08)";
-                                                }}
-                                                onBlur={(e) => {
-                                                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
-                                                    e.currentTarget.style.boxShadow = "none";
-                                                }}
-                                            />
-                                        </div>
-
-                                        {/* Email */}
+                                        {/* Email — required */}
                                         <div className="relative">
                                             <Mail
                                                 className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4"
@@ -284,7 +258,7 @@ export const DemoScheduleSection = ({
                                             <input
                                                 type="email"
                                                 required
-                                                placeholder="Seu e-mail"
+                                                placeholder="Seu e-mail *"
                                                 value={formData.email}
                                                 onChange={(e) =>
                                                     setFormData((p) => ({ ...p, email: e.target.value }))
@@ -307,7 +281,70 @@ export const DemoScheduleSection = ({
                                             />
                                         </div>
 
-                                        {/* Company */}
+                                        {/* Phone — required */}
+                                        <div className="relative">
+                                            <Phone
+                                                className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4"
+                                                style={{ color: "rgba(255,255,255,0.25)" }}
+                                            />
+                                            <input
+                                                type="tel"
+                                                required
+                                                placeholder="WhatsApp *"
+                                                value={formData.phone}
+                                                onChange={(e) =>
+                                                    setFormData((p) => ({ ...p, phone: e.target.value }))
+                                                }
+                                                className="w-full pl-10 pr-4 py-3 rounded-xl text-sm outline-none transition-all duration-200"
+                                                style={{
+                                                    background: "rgba(255,255,255,0.04)",
+                                                    border: "1px solid rgba(255,255,255,0.08)",
+                                                    color: "rgba(255,255,255,0.9)",
+                                                    fontWeight: 500,
+                                                }}
+                                                onFocus={(e) => {
+                                                    e.currentTarget.style.borderColor = "rgba(16,185,129,0.4)";
+                                                    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(16,185,129,0.08)";
+                                                }}
+                                                onBlur={(e) => {
+                                                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+                                                    e.currentTarget.style.boxShadow = "none";
+                                                }}
+                                            />
+                                        </div>
+
+                                        {/* Name — optional */}
+                                        <div className="relative">
+                                            <User
+                                                className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4"
+                                                style={{ color: "rgba(255,255,255,0.25)" }}
+                                            />
+                                            <input
+                                                type="text"
+                                                placeholder="Seu nome (opcional)"
+                                                value={formData.name}
+                                                onChange={(e) =>
+                                                    setFormData((p) => ({ ...p, name: e.target.value }))
+                                                }
+                                                className="w-full pl-10 pr-4 py-3 rounded-xl text-sm outline-none transition-all duration-200"
+                                                style={{
+                                                    background: "rgba(255,255,255,0.04)",
+                                                    border: "1px solid rgba(255,255,255,0.08)",
+                                                    color: "rgba(255,255,255,0.9)",
+                                                    fontWeight: 500,
+                                                }}
+                                                onFocus={(e) => {
+                                                    e.currentTarget.style.borderColor = "rgba(16,185,129,0.4)";
+                                                    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(16,185,129,0.08)";
+                                                }}
+                                                onBlur={(e) => {
+                                                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+                                                    e.currentTarget.style.boxShadow = "none";
+                                                }}
+                                            />
+                                        </div>
+
+                                        {/* Company — optional */}
                                         <div className="relative">
                                             <Building2
                                                 className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4"
@@ -338,41 +375,10 @@ export const DemoScheduleSection = ({
                                             />
                                         </div>
 
-                                        {/* Phone */}
-                                        <div className="relative">
-                                            <Phone
-                                                className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4"
-                                                style={{ color: "rgba(255,255,255,0.25)" }}
-                                            />
-                                            <input
-                                                type="tel"
-                                                placeholder="WhatsApp (opcional)"
-                                                value={formData.phone}
-                                                onChange={(e) =>
-                                                    setFormData((p) => ({ ...p, phone: e.target.value }))
-                                                }
-                                                className="w-full pl-10 pr-4 py-3 rounded-xl text-sm outline-none transition-all duration-200"
-                                                style={{
-                                                    background: "rgba(255,255,255,0.04)",
-                                                    border: "1px solid rgba(255,255,255,0.08)",
-                                                    color: "rgba(255,255,255,0.9)",
-                                                    fontWeight: 500,
-                                                }}
-                                                onFocus={(e) => {
-                                                    e.currentTarget.style.borderColor = "rgba(16,185,129,0.4)";
-                                                    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(16,185,129,0.08)";
-                                                }}
-                                                onBlur={(e) => {
-                                                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
-                                                    e.currentTarget.style.boxShadow = "none";
-                                                }}
-                                            />
-                                        </div>
-
                                         {/* Submit */}
                                         <motion.button
                                             type="submit"
-                                            disabled={isSubmitting || !formData.name || !formData.email}
+                                            disabled={isSubmitting || !formData.email || !formData.phone}
                                             className="relative overflow-hidden flex items-center justify-center gap-2.5 w-full px-6 py-3.5 rounded-xl text-white group mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                             style={{
                                                 background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
@@ -473,7 +479,7 @@ export const DemoScheduleSection = ({
                                 </p>
 
                                 <a
-                                    href={`${calendlyUrl}?name=${encodeURIComponent(formData.name)}&email=${encodeURIComponent(formData.email)}`}
+                                    href={`${calendlyUrl}?email=${encodeURIComponent(formData.email)}${formData.name ? `&name=${encodeURIComponent(formData.name)}` : ""}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm transition-all duration-200"
