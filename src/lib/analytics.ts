@@ -4,6 +4,7 @@
 const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID;
 const GADS_CONVERSION_ID = import.meta.env.VITE_GADS_CONVERSION_ID || "AW-18055201052";
 const GADS_CONVERSION_LABEL = "1oljCLaqtJMcEJyCsqFD";
+const GADS_DEMO_CONVERSION_LABEL = import.meta.env.VITE_GADS_DEMO_CONVERSION_LABEL;
 
 // Type-safe gtag
 declare global {
@@ -84,18 +85,14 @@ export function initAnalytics() {
   }
 }
 
-// Track a custom event
+// Track a custom event — sem send_to, vai pra TODOS destinos configurados
+// (GA4 G-YK8230WKT3 + Google Ads AW-18055201052)
 export function trackEvent(
   eventName: string,
   params?: Record<string, string | number | boolean>
 ) {
-  if (!GA_MEASUREMENT_ID) return;
-
   try {
-    window.gtag?.("event", eventName, {
-      ...params,
-      send_to: GA_MEASUREMENT_ID,
-    });
+    window.gtag?.("event", eventName, params || {});
   } catch {
     // Silently fail - analytics should never break the app
   }
@@ -129,6 +126,19 @@ export function trackPurchaseConversion(value?: number, transactionId?: string, 
       currency: "BRL",
       transaction_id: transactionId || "",
       new_customer: isNewCustomer,
+    });
+  } catch {
+    // Silently fail
+  }
+}
+
+// Track Google Ads demo request conversion (lead signal for PMax)
+export function trackDemoConversion() {
+  if (!GADS_DEMO_CONVERSION_LABEL) return;
+  try {
+    window.gtag?.("event", "conversion", {
+      send_to: `${GADS_CONVERSION_ID}/${GADS_DEMO_CONVERSION_LABEL}`,
+      currency: "BRL",
     });
   } catch {
     // Silently fail
