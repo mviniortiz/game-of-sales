@@ -12,8 +12,12 @@ export function initSentry() {
     replaysSessionSampleRate: 0,
     replaysOnErrorSampleRate: 1.0,
     integrations: [
-      Sentry.browserTracingIntegration(),
+      Sentry.browserTracingIntegration({ enableLongTask: false }),
       Sentry.replayIntegration(),
+    ],
+    ignoreErrors: [
+      "Cannot read properties of undefined (reading 'domInteractive')",
+      "undefined is not an object (evaluating 'performance.timing.domInteractive')",
     ],
   });
 }

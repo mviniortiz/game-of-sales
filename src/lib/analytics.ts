@@ -44,6 +44,10 @@ export const FUNNEL_EVENTS = {
   TRIAL_EXPIRED: "trial_expired",
   UPGRADE_CLICK: "upgrade_click",
 
+  // Demo
+  DEMO_REQUEST_SUBMIT: "demo_request_submit",
+  DEMO_SCHEDULED: "demo_scheduled",
+
   // Engagement
   FIRST_DEAL_CREATED: "first_deal_created",
   FIRST_SALE_CREATED: "first_sale_created",

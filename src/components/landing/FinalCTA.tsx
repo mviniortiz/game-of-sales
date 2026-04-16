@@ -1,11 +1,12 @@
 import { motion } from "framer-motion";
-import { ArrowRight, Check, Zap } from "lucide-react";
+import { ArrowRight, Check, Zap, Calendar } from "lucide-react";
 
 interface FinalCTAProps {
     onCTAClick: () => void;
+    onScheduleDemoClick?: () => void;
 }
 
-export const FinalCTA = ({ onCTAClick }: FinalCTAProps) => {
+export const FinalCTA = ({ onCTAClick, onScheduleDemoClick }: FinalCTAProps) => {
     return (
         <section className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden" style={{ background: "#06080a" }}>
             {/* Static ambient glow */}
@@ -134,26 +135,33 @@ export const FinalCTA = ({ onCTAClick }: FinalCTAProps) => {
                             <ArrowRight className="relative h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
                         </motion.button>
 
-                        {/* Secondary — scroll to pricing */}
+                        {/* Secondary — schedule demo */}
                         <a
-                            href="#pricing"
+                            href="#agendar-demo"
                             className="flex items-center gap-2 px-6 py-4 rounded-xl text-sm transition-all duration-200 w-full sm:w-auto justify-center"
                             style={{
-                                color: "rgba(255,255,255,0.6)",
-                                background: "rgba(255,255,255,0.04)",
-                                boxShadow: "0 0 0 1px rgba(255,255,255,0.08)",
+                                color: "rgba(16,185,129,0.8)",
+                                background: "rgba(16,185,129,0.06)",
+                                boxShadow: "0 0 0 1px rgba(16,185,129,0.15)",
                                 fontWeight: 600,
                             }}
                             onMouseEnter={(e) => {
-                                (e.currentTarget as HTMLAnchorElement).style.color = "rgba(255,255,255,0.9)";
-                                (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 0 0 1px rgba(16,185,129,0.3)";
+                                (e.currentTarget as HTMLAnchorElement).style.color = "rgba(16,185,129,1)";
+                                (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 0 0 1px rgba(16,185,129,0.35)";
                             }}
                             onMouseLeave={(e) => {
-                                (e.currentTarget as HTMLAnchorElement).style.color = "rgba(255,255,255,0.6)";
-                                (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 0 0 1px rgba(255,255,255,0.08)";
+                                (e.currentTarget as HTMLAnchorElement).style.color = "rgba(16,185,129,0.8)";
+                                (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 0 0 1px rgba(16,185,129,0.15)";
+                            }}
+                            onClick={(e) => {
+                                if (onScheduleDemoClick) {
+                                    e.preventDefault();
+                                    onScheduleDemoClick();
+                                }
                             }}
                         >
-                            Ver planos e preços
+                            <Calendar className="h-4 w-4" />
+                            Agendar demonstração
                         </a>
                     </div>
 

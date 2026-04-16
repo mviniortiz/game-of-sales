@@ -39,6 +39,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      demo_requests: {
+        Row: {
+          id: string
+          name: string
+          email: string
+          company: string | null
+          phone: string | null
+          source: string | null
+          status: string | null
+          calendly_event_uri: string | null
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          email: string
+          company?: string | null
+          phone?: string | null
+          source?: string | null
+          status?: string | null
+          calendly_event_uri?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          email?: string
+          company?: string | null
+          phone?: string | null
+          source?: string | null
+          status?: string | null
+          calendly_event_uri?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       agendamentos: {
         Row: {
           cliente_nome: string

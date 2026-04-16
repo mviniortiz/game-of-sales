@@ -1,6 +1,6 @@
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { useRef, useEffect, useState, useCallback } from "react";
-import { ArrowRight, Play, TrendingUp, Users, Target, Trophy, Zap, BarChart3, MessageSquare, Settings, Send, Check, CheckCheck, Phone, Paperclip, Clock, ChevronRight, Bell, User, Shield, Palette } from "lucide-react";
+import { ArrowRight, Play, TrendingUp, Users, Target, Trophy, Zap, BarChart3, MessageSquare, Settings, Send, Check, CheckCheck, Phone, Paperclip, Clock, ChevronRight, Bell, User, Shield, Palette, Calendar } from "lucide-react";
 
 // ─── Bar chart data ─────────────────────────────────────────────────────────
 const barData = [
@@ -421,6 +421,7 @@ const DashboardMockup = () => {
             el.style.height = "0%";
             el.style.opacity = "0";
             setTimeout(() => {
+                if (!barsRef.current[i]) return;
                 el.style.height = `${(bar.targetH / 255) * 100}%`;
                 el.style.opacity = "1";
             }, 150 + bar.delay);
@@ -428,11 +429,14 @@ const DashboardMockup = () => {
     }, []);
 
     useEffect(() => {
-        const t = setTimeout(animateBars, 800);
+        const timers: ReturnType<typeof setTimeout>[] = [];
+        timers.push(setTimeout(animateBars, 800));
         if (progressRef.current) {
-            setTimeout(() => { progressRef.current!.style.strokeDashoffset = "18.5"; }, 1000);
+            timers.push(setTimeout(() => {
+                if (progressRef.current) progressRef.current.style.strokeDashoffset = "18.5";
+            }, 1000));
         }
-        return () => clearTimeout(t);
+        return () => timers.forEach(clearTimeout);
     }, [animateBars]);
 
     const handleTabChange = (id: string) => {
@@ -879,10 +883,11 @@ const DashboardMockup = () => {
 interface HeroSectionProps {
     onCTAClick: () => void;
     onDemoClick: () => void;
+    onScheduleDemoClick?: () => void;
     onLoginClick: () => void;
 }
 
-export const HeroSection = ({ onCTAClick, onDemoClick }: HeroSectionProps) => {
+export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: HeroSectionProps) => {
     const sectionRef = useRef<HTMLElement>(null);
     const mockupRef = useRef<HTMLDivElement>(null);
 
@@ -1000,8 +1005,9 @@ export const HeroSection = ({ onCTAClick, onDemoClick }: HeroSectionProps) => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5, delay: 0.5 }}
                     >
+                        {/* Primary — Schedule demo */}
                         <motion.button
-                            onClick={onCTAClick}
+                            onClick={onScheduleDemoClick || onCTAClick}
                             className="group relative inline-flex items-center justify-center gap-2.5 px-7 py-3.5 text-[15px] font-bold text-white rounded-xl overflow-hidden"
                             style={{
                                 background: "linear-gradient(135deg, #10b981, #059669)",
@@ -1014,10 +1020,12 @@ export const HeroSection = ({ onCTAClick, onDemoClick }: HeroSectionProps) => {
                             whileTap={{ scale: 0.97 }}
                         >
                             <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                            <span className="relative">Testar grátis por 14 dias</span>
+                            <Calendar className="relative h-4 w-4" />
+                            <span className="relative">Agendar demonstração</span>
                             <ArrowRight className="relative h-4 w-4 group-hover:translate-x-1 transition-transform" />
                         </motion.button>
 
+                        {/* Secondary — Watch video */}
                         <motion.button
                             onClick={onDemoClick}
                             className="flex items-center gap-2 px-5 py-3 rounded-xl text-[15px]"

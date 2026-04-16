@@ -16,6 +16,7 @@ import {
     Volume2,
     VolumeX,
     Maximize,
+    Calendar,
 } from "lucide-react";
 import brandLogoDark from "@/assets/logo-dark.png";
 import demoVideo from "/videos/sales-video.mp4";
@@ -29,6 +30,7 @@ import { FAQSection } from "@/components/landing/FAQSection";
 import { PainPoints } from "@/components/landing/PainPoints";
 import { LandingNav } from "@/components/landing/LandingNav";
 import { EvaAISection } from "@/components/landing/EvaAISection";
+import { DemoScheduleSection } from "@/components/landing/DemoScheduleSection";
 
 // Animation variants
 const fadeInUp = {
@@ -200,7 +202,7 @@ const LandingPage = () => {
 
             {/* Sticky scroll-aware navbar */}
             <LandingNav
-                onCTAClick={() => scrollToSection("pricing")}
+                onCTAClick={() => scrollToSection("agendar-demo")}
                 onLoginClick={() => navigate("/auth")}
             />
 
@@ -208,6 +210,7 @@ const LandingPage = () => {
             <HeroSection
                 onCTAClick={() => scrollToSection("pricing")}
                 onDemoClick={() => scrollToSection("demo")}
+                onScheduleDemoClick={() => scrollToSection("agendar-demo")}
                 onLoginClick={() => navigate("/auth")}
             />
 
@@ -668,10 +671,10 @@ const LandingPage = () => {
                                                 ))}
                                             </ul>
 
-                                            {/* CTA */}
+                                            {/* CTA — all plans point to demo scheduling */}
                                             {isPopular ? (
                                                 <button
-                                                    onClick={() => goToRegister(plan.name.toLowerCase())}
+                                                    onClick={() => scrollToSection("agendar-demo")}
                                                     className="relative w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm text-white overflow-hidden cursor-pointer"
                                                     style={{
                                                         background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
@@ -683,12 +686,12 @@ const LandingPage = () => {
                                                         style={{ background: "linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.14) 50%, transparent 70%)" }}
                                                         animate={{ x: ["-120%", "220%"] }}
                                                         transition={{ duration: 2.4, repeat: Infinity, repeatDelay: 1.8, ease: "easeInOut" }} />
-                                                    <span className="relative">Começar agora</span>
+                                                    <span className="relative">Agendar demonstração</span>
                                                     <ArrowRight className="relative h-4 w-4" />
                                                 </button>
                                             ) : (
                                                 <button
-                                                    onClick={() => goToRegister(plan.name.toLowerCase())}
+                                                    onClick={() => scrollToSection("agendar-demo")}
                                                     className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm transition-all duration-200 cursor-pointer"
                                                     style={{
                                                         background: "rgba(255,255,255,0.04)",
@@ -697,7 +700,7 @@ const LandingPage = () => {
                                                         color: "rgba(255,255,255,0.7)",
                                                         fontWeight: "var(--fw-semibold)"
                                                     }}>
-                                                    Escolher {plan.name}
+                                                    Agendar demonstração
                                                     <ArrowRight className="h-4 w-4" />
                                                 </button>
                                             )}
@@ -735,9 +738,31 @@ const LandingPage = () => {
                 <FAQSection />
             </div>
 
+            {/* Demo Scheduling */}
+            <DemoScheduleSection />
 
             {/* Final CTA */}
-            <FinalCTA onCTAClick={() => goToRegister('pro')} />
+            <FinalCTA onCTAClick={() => goToRegister('pro')} onScheduleDemoClick={() => scrollToSection("agendar-demo")} />
+
+            {/* Floating demo CTA */}
+            <motion.button
+                onClick={() => scrollToSection("agendar-demo")}
+                className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-5 py-3 rounded-full text-white text-sm shadow-lg group"
+                style={{
+                    background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                    boxShadow: "0 0 0 1px rgba(16,185,129,0.3), 0 8px 24px rgba(16,185,129,0.35), 0 2px 8px rgba(0,0,0,0.3)",
+                    fontWeight: 600,
+                }}
+                initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ delay: 2, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                whileHover={{ scale: 1.05, boxShadow: "0 0 0 1px rgba(16,185,129,0.4), 0 12px 32px rgba(16,185,129,0.45), 0 4px 12px rgba(0,0,0,0.3)" }}
+                whileTap={{ scale: 0.95 }}
+            >
+                <Calendar className="h-4 w-4" />
+                Agendar demo
+                <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
+            </motion.button>
 
             {/* Footer */}
             <footer className="py-16 px-4 sm:px-6 lg:px-8" style={{ background: "#06080a", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)" }}>

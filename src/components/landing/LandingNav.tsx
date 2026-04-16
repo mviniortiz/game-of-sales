@@ -12,6 +12,7 @@ const NAV_LINKS = [
     { label: "Funcionalidades", anchor: "features" },
     { label: "Como funciona", anchor: "how-it-works" },
     { label: "Para quem", anchor: "use-cases" },
+    { label: "Agendar demo", anchor: "agendar-demo" },
     { label: "FAQ", anchor: "faq" },
 ];
 
@@ -138,7 +139,7 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                                 animate={{ x: ["-120%", "220%"] }}
                                 transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 2.5, ease: "easeInOut" }}
                             />
-                            <span className="relative">Começar agora</span>
+                            <span className="relative">Agendar demo</span>
                             <ArrowRight className="relative h-3.5 w-3.5" />
                         </motion.button>
                     </div>
@@ -298,7 +299,7 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                                         animate={{ x: ["-120%", "220%"] }}
                                         transition={{ duration: 2.2, repeat: Infinity, repeatDelay: 2, ease: "easeInOut" }}
                                     />
-                                    <span className="relative">Começar agora</span>
+                                    <span className="relative">Agendar demo</span>
                                     <ArrowRight className="relative h-4 w-4" />
                                 </motion.button>
                             </div>
