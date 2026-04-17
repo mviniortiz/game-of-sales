@@ -220,6 +220,10 @@ const LandingPage = () => {
                 onLoginClick={() => navigate("/auth")}
             />
 
+            <Suspense fallback={null}>
+                <DemoScheduleSection />
+            </Suspense>
+
             <ImpactMetrics />
 
             <PainPoints />
@@ -541,8 +545,6 @@ const LandingPage = () => {
                 <div id="faq">
                     <FAQSection />
                 </div>
-
-                <DemoScheduleSection />
 
                 <FinalCTA onCTAClick={() => goToRegister("pro")} onScheduleDemoClick={() => scrollToSection("agendar-demo")} />
             </Suspense>

@@ -988,7 +988,7 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
                         style={{
                             fontSize: "clamp(1rem, 2vw, 1.2rem)",
                             lineHeight: 1.7,
-                            color: "rgba(255,255,255,0.42)",
+                            color: "rgba(255,255,255,0.7)",
                         }}
                         initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -1054,8 +1054,8 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
                         transition={{ delay: 0.65 }}
                     >
                         {["14 dias grátis para testar", "Setup em 5 minutos", "Suporte humano via WhatsApp"].map((t) => (
-                            <span key={t} className="flex items-center gap-1.5 text-[13px]" style={{ color: "rgba(255,255,255,0.3)" }}>
-                                <span className="w-1 h-1 rounded-full bg-emerald-500" />
+                            <span key={t} className="flex items-center gap-1.5 text-[13px]" style={{ color: "rgba(255,255,255,0.6)" }}>
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                                 {t}
                             </span>
                         ))}
@@ -1065,7 +1065,7 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
                 {/* ── Product mockup ── */}
                 <motion.div
                     ref={mockupRef}
-                    className="relative max-w-4xl mx-auto pb-4"
+                    className="relative max-w-4xl mx-auto pb-4 hidden sm:block"
                     initial={{ opacity: 0, y: 60 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.6, ease: [0.22, 1, 0.36, 1] }}
