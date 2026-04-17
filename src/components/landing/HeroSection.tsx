@@ -950,7 +950,7 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
                                 letterSpacing: "0.08em",
                             }}
                         >
-                            CRM GAMIFICADO PARA TIMES DE VENDAS
+                            CRM GAMIFICADO • INTEGRA HOTMART, KIWIFY E GREENN
                         </span>
                     </motion.div>
 
@@ -968,7 +968,7 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
                         transition={{ duration: 0.6, delay: 0.2 }}
                     >
                         <span style={{ fontWeight: 800, color: "rgba(255,255,255,0.95)" }}>
-                            Seu time batendo{" "}
+                            Seu time bate meta quando{" "}
                         </span>
                         <span
                             style={{
@@ -978,7 +978,7 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
                                 WebkitTextFillColor: "transparent",
                             }}
                         >
-                            meta todo mês.
+                            enxerga o placar.
                         </span>
                     </motion.h1>
 
@@ -994,8 +994,9 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5, delay: 0.35 }}
                     >
-                        Pipeline visual, ranking ao vivo, metas em tempo real e integrações
-                        automáticas com Hotmart, Kiwify e Greenn. Tudo em um só lugar.
+                        Vyzon conecta seus checkouts ao time de vendas e mostra em tempo real
+                        quem tá fechando, quem tá travado e onde o time precisa de ajuda.
+                        Ranking ao vivo, pipeline visual, setup em 5 minutos.
                     </motion.p>
 
                     {/* CTAs */}
