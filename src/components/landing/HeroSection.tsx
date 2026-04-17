@@ -500,7 +500,7 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 0.2 }}
                     >
-                        <span style={{ fontWeight: 800, color: "rgba(255,255,255,0.95)" }}>
+                        <span style={{ fontWeight: 700, color: "rgba(255,255,255,0.95)" }}>
                             Seu time bate meta quando{" "}
                         </span>
                         <span
