@@ -38,11 +38,11 @@ export const HeroDashboardMockup = () => {
         barData.forEach((bar, i) => {
             const el = barsRef.current[i];
             if (!el) return;
-            el.style.height = "0%";
+            el.style.transform = "scaleY(0)";
             el.style.opacity = "0";
             setTimeout(() => {
                 if (!barsRef.current[i]) return;
-                el.style.height = `${(bar.targetH / 255) * 100}%`;
+                el.style.transform = "scaleY(1)";
                 el.style.opacity = "1";
             }, 150 + bar.delay);
         });
@@ -258,15 +258,17 @@ export const HeroDashboardMockup = () => {
                                                 <div className="w-full relative h-14 flex items-end cursor-pointer">
                                                     <div
                                                         ref={el => barsRef.current[i] = el}
-                                                        className="w-full rounded-t transition-all duration-[1200ms] ease-out"
+                                                        className="w-full rounded-t"
                                                         style={{
-                                                            height: "0%",
+                                                            height: `${(bar.targetH / 255) * 100}%`,
+                                                            transformOrigin: "bottom center",
+                                                            transform: "scaleY(0)",
                                                             opacity: 0,
                                                             background: bar.isWinner || isHovered
                                                                 ? "linear-gradient(to top, #059669, #34d399)"
                                                                 : "linear-gradient(to top, rgba(5,150,105,0.4), rgba(52,211,153,0.25))",
-                                                            transform: isHovered ? "scaleX(1.15)" : "scaleX(1)",
-                                                            transition: isHovered ? "background 0.15s, transform 0.15s" : "height 1.2s ease-out, opacity 1.2s ease-out",
+                                                            transition: "transform 1.2s ease-out, opacity 1.2s ease-out, background 0.15s",
+                                                            willChange: "transform, opacity",
                                                         }}
                                                     />
                                                 </div>
@@ -307,10 +309,15 @@ export const HeroDashboardMockup = () => {
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-[8px] font-semibold truncate transition-colors duration-150" style={{ color: isHovered ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.65)" }}>{seller.name}</p>
-                                                    <div className="w-full rounded-full h-1 mt-0.5" style={{ background: "rgba(255,255,255,0.06)" }}>
+                                                    <div className="w-full rounded-full h-1 mt-0.5 overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
                                                         <div
-                                                            className="h-1 bg-emerald-400 rounded-full transition-all duration-300"
-                                                            style={{ width: isHovered ? `${Math.min(seller.pct + 5, 100)}%` : `${seller.pct}%` }}
+                                                            className="h-1 bg-emerald-400 rounded-full"
+                                                            style={{
+                                                                width: "100%",
+                                                                transformOrigin: "left center",
+                                                                transform: `scaleX(${(isHovered ? Math.min(seller.pct + 5, 100) : seller.pct) / 100})`,
+                                                                transition: "transform 0.3s ease-out",
+                                                            }}
                                                         />
                                                     </div>
                                                 </div>
@@ -349,7 +356,15 @@ export const HeroDashboardMockup = () => {
                                                     boxShadow: isHovered ? "0 4px 12px rgba(0,0,0,0.3)" : "none",
                                                 }}
                                             >
-                                                <div className={`w-5 h-1 mx-auto rounded-full bg-gradient-to-r ${s.color} mb-1 transition-all duration-150`} style={{ width: isHovered ? "28px" : "20px" }} />
+                                                <div
+                                                    className={`h-1 mx-auto rounded-full bg-gradient-to-r ${s.color} mb-1`}
+                                                    style={{
+                                                        width: "28px",
+                                                        transformOrigin: "center",
+                                                        transform: isHovered ? "scaleX(1)" : "scaleX(0.714)",
+                                                        transition: "transform 0.15s ease-out",
+                                                    }}
+                                                />
                                                 <p className="text-sm font-bold transition-transform duration-150" style={{ color: s.text, transform: isHovered ? "scale(1.1)" : "scale(1)" }}>{s.count}</p>
                                                 <p className="text-[7px] mt-0.5" style={{ color: isHovered ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.25)" }}>{s.stage}</p>
                                             </div>
