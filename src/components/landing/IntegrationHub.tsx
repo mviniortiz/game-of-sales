@@ -7,9 +7,9 @@ import {
     CreditCard,
 } from "lucide-react";
 
-import kiwifyLogo from "@/assets/integrations/kiwify-logo-png_seeklogo-537186.png";
-import greennLogo from "@/assets/integrations/greenn.png";
-import hotmartLogo from "@/assets/integrations/hotmart-logo-png_seeklogo-485917.png";
+import kiwifyLogo from "@/assets/integrations/kiwify-logo-png_seeklogo-537186.webp";
+import greennLogo from "@/assets/integrations/greenn.webp";
+import hotmartLogo from "@/assets/integrations/hotmart-logo-png_seeklogo-485917.webp";
 import vyzonLogo from "@/assets/logo-light.svg";
 
 interface ItemCardProps {

@@ -184,7 +184,7 @@ export const HotmartConfigModal = ({ open, onClose, onSaved }: HotmartConfigModa
                     <DialogTitle className="flex items-center gap-3 text-foreground">
                         <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-500/20">
                             <img
-                                src="/src/assets/integrations/hotmart-logo-png_seeklogo-485917.png"
+                                src="/src/assets/integrations/hotmart-logo-png_seeklogo-485917.webp"
                                 alt="Hotmart"
                                 className="w-6 h-6"
                             />

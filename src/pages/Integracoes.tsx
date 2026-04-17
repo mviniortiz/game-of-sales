@@ -43,12 +43,12 @@ import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 // Import logo images
-import googleCalendarLogo from "@/assets/integrations/google-calendar.png";
-import celetusLogo from "@/assets/integrations/celetus.png";
-import caktoLogo from "@/assets/integrations/cakto.png";
-import greennLogo from "@/assets/integrations/greenn.png";
-import hotmartLogo from "@/assets/integrations/hotmart-logo-png_seeklogo-485917.png";
-import kiwifyLogo from "@/assets/integrations/kiwify-logo-png_seeklogo-537186.png";
+import googleCalendarLogo from "@/assets/integrations/google-calendar.webp";
+import celetusLogo from "@/assets/integrations/celetus.webp";
+import caktoLogo from "@/assets/integrations/cakto.webp";
+import greennLogo from "@/assets/integrations/greenn.webp";
+import hotmartLogo from "@/assets/integrations/hotmart-logo-png_seeklogo-485917.webp";
+import kiwifyLogo from "@/assets/integrations/kiwify-logo-png_seeklogo-537186.webp";
 
 // ── Types ──────────────────────────────────────────────────────────
 type IntegrationStatus = "active" | "available" | "roadmap";

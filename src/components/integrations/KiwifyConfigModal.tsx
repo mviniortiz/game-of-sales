@@ -179,7 +179,7 @@ export const KiwifyConfigModal = ({ open, onClose, onSaved }: KiwifyConfigModalP
                     <DialogTitle className="flex items-center gap-3 text-foreground">
                         <div className="p-2 rounded-lg bg-green-100 dark:bg-green-500/20">
                             <img
-                                src="/src/assets/integrations/kiwify-logo-png_seeklogo-537186.png"
+                                src="/src/assets/integrations/kiwify-logo-png_seeklogo-537186.webp"
                                 alt="Kiwify"
                                 className="w-6 h-6"
                             />

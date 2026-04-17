@@ -19,18 +19,18 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-import hotmartLogo from "@/assets/integrations/hotmart-logo-png_seeklogo-485917.png";
-import kiwifyLogo from "@/assets/integrations/kiwify-logo-png_seeklogo-537186.png";
-import greennLogo from "@/assets/integrations/greenn.png";
-import caktoLogo from "@/assets/integrations/cakto.png";
-import celetusLogo from "@/assets/integrations/celetus.png";
-import rdstationLogo from "@/assets/integrations/rdstation.png";
+import hotmartLogo from "@/assets/integrations/hotmart-logo-png_seeklogo-485917.webp";
+import kiwifyLogo from "@/assets/integrations/kiwify-logo-png_seeklogo-537186.webp";
+import greennLogo from "@/assets/integrations/greenn.webp";
+import caktoLogo from "@/assets/integrations/cakto.webp";
+import celetusLogo from "@/assets/integrations/celetus.webp";
+import rdstationLogo from "@/assets/integrations/rdstation.svg";
 import stripeLogo from "@/assets/integrations/stripe.svg";
-import mercadopagoLogo from "@/assets/integrations/mercadopago.png";
+import mercadopagoLogo from "@/assets/integrations/mercadopago.webp";
 import pagarmeLogo from "@/assets/integrations/pagarme.svg";
-import eduzzLogo from "@/assets/integrations/eduzz.png";
-import monetizzeLogo from "@/assets/integrations/monetizze.png";
-import braipLogo from "@/assets/integrations/braip.png";
+import eduzzLogo from "@/assets/integrations/eduzz.webp";
+import monetizzeLogo from "@/assets/integrations/monetizze.webp";
+import braipLogo from "@/assets/integrations/braip.webp";
 
 // ─── Mockups ─────────────────────────────────────────────────────────────────
 
@@ -434,8 +434,11 @@ function SalesMockup() {
                             <img
                                 src={p.logo}
                                 alt={p.name}
+                                width={25}
+                                height={25}
+                                loading="lazy"
+                                decoding="async"
                                 className="max-w-[70%] max-h-[70%] object-contain"
-                                style={{ imageRendering: "auto" }}
                             />
                         </div>
                         <span

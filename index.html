@@ -79,18 +79,35 @@
   <meta name="twitter:image" content="https://vyzon.com.br/og-image.jpg" />
   <meta name="twitter:creator" content="@vyzonapp" />
 
-  <!-- Preload Critical Resources -->
+  <!-- Font preconnect -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://api.fontshare.com" />
+  <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin />
 
-  <!-- Google Fonts — Inter (full weight range) -->
+  <!-- Inter — trimmed to weights actually used (400, 500, 600, 700), non-blocking -->
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap"
-    rel="stylesheet" />
+    rel="preload"
+    as="style"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+  </noscript>
 
-  <!-- Fontshare — Satoshi (headlines) -->
-  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700,900&display=swap" rel="stylesheet" />
+  <!-- Satoshi — headlines only (400, 700, 900), non-blocking -->
+  <link
+    rel="preload"
+    as="style"
+    href="https://api.fontshare.com/v2/css?f[]=satoshi@400,700,900&display=swap"
+    onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript>
+    <link
+      rel="stylesheet"
+      href="https://api.fontshare.com/v2/css?f[]=satoshi@400,700,900&display=swap" />
+  </noscript>
 
   <!-- Schema.org Structured Data -->
   <script type="application/ld+json">

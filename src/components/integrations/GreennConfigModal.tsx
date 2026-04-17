@@ -179,7 +179,7 @@ export const GreennConfigModal = ({ open, onClose, onSaved }: GreennConfigModalP
                     <DialogTitle className="flex items-center gap-3 text-foreground">
                         <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-500/20">
                             <img
-                                src="/src/assets/integrations/greenn.png"
+                                src="/src/assets/integrations/greenn.webp"
                                 alt="Greenn"
                                 className="w-6 h-6"
                             />
