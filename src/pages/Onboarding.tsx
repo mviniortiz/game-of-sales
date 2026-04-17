@@ -44,6 +44,7 @@ import { PLANS, formatPrice, getAnnualMonthlyEquivalent, getAnnualPrice, getBill
 import { initMercadoPago } from "@mercadopago/sdk-react";
 import coreCreateCardToken from "@mercadopago/sdk-react/esm/coreMethods/cardToken/create";
 import { RATE_LIMITS, resetRateLimit } from "@/lib/rateLimiter";
+import { getAttribution } from "@/lib/attribution";
 import { formatDocument, validateDocument } from "@/utils/document";
 import { z } from "zod";
 
@@ -619,9 +620,10 @@ export default function Onboarding() {
                 );
 
                 // Create company with explicit ID (no .select() needed)
+                const attribution = getAttribution() || {};
                 const { error: companyError } = await supabase
                     .from("companies")
-                    .insert({ id: newCompanyId, name: regCompanyName, plan: selectedPlan } as any);
+                    .insert({ id: newCompanyId, name: regCompanyName, plan: selectedPlan, ...attribution } as any);
                 if (companyError) throw new Error(`Erro ao criar empresa: ${companyError.message}`);
 
                 lockAndSetCompanyId(newCompanyId);
