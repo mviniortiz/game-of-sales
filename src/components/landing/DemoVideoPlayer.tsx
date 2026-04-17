@@ -4,8 +4,8 @@ import { Play, Pause, Volume2, VolumeX, Maximize } from "lucide-react";
 import demoVideo from "/videos/sales-video.mp4";
 
 const fadeInUp = {
-    initial: { opacity: 0, y: 20 },
-    whileInView: { opacity: 1, y: 0 },
+    initial: { y: 20 },
+    whileInView: { y: 0 },
     viewport: { once: true },
     transition: { duration: 0.5 },
 };

@@ -28,8 +28,8 @@ const ItemCard = ({ item, delay }: ItemCardProps) => {
     return (
         <motion.div
             className="px-3 sm:px-4 py-2.5 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center sm:justify-start gap-2 hover:bg-gray-200 transition-all cursor-pointer whitespace-nowrap"
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
+            initial={{ scale: 0.9 }}
+            whileInView={{ scale: 1 }}
             viewport={{ once: true }}
             transition={{ delay, duration: 0.3 }}
             whileHover={{ scale: 1.03, y: -2 }}
@@ -67,8 +67,8 @@ export const IntegrationHub = () => {
             <div className="max-w-4xl mx-auto">
                 {/* Header */}
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
+                    initial={{ y: 20 }}
+                    whileInView={{ y: 0 }}
                     viewport={{ once: true }}
                     className="text-center mb-16"
                 >
@@ -133,15 +133,9 @@ export const IntegrationHub = () => {
                     {/* === LEFT COLUMN === */}
                     <div className="flex flex-col items-end gap-4 relative">
                         {/* Branch label */}
-                        <motion.span
-                            className="absolute -right-12 top-1/2 -translate-y-1/2 text-xs font-semibold text-emerald-600"
-                            initial={{ opacity: 0 }}
-                            whileInView={{ opacity: 1 }}
-                            viewport={{ once: true }}
-                            transition={{ delay: 0.3 }}
-                        >
+                        <span className="absolute -right-12 top-1/2 -translate-y-1/2 text-xs font-semibold text-emerald-600">
                             Vendas
-                        </motion.span>
+                        </span>
 
                         {leftItems.map((item, i) => (
                             <div key={item.name} className="relative">
@@ -217,15 +211,9 @@ export const IntegrationHub = () => {
                     {/* === RIGHT COLUMN === */}
                     <div className="flex flex-col items-start gap-4 relative">
                         {/* Branch label */}
-                        <motion.span
-                            className="absolute -left-16 top-1/2 -translate-y-1/2 text-xs font-semibold text-pink-500"
-                            initial={{ opacity: 0 }}
-                            whileInView={{ opacity: 1 }}
-                            viewport={{ once: true }}
-                            transition={{ delay: 0.3 }}
-                        >
+                        <span className="absolute -left-16 top-1/2 -translate-y-1/2 text-xs font-semibold text-pink-500">
                             Pagamentos
-                        </motion.span>
+                        </span>
 
                         {rightItems.map((item, i) => (
                             <div key={item.name} className="relative">
@@ -247,15 +235,9 @@ export const IntegrationHub = () => {
                 {/* === BOTTOM SECTION === */}
                 <div className="relative mt-20 flex flex-col items-center">
                     {/* Branch label */}
-                    <motion.span
-                        className="text-xs font-semibold text-orange-500 mb-4"
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.5 }}
-                    >
+                    <span className="text-xs font-semibold text-orange-500 mb-4">
                         Operação
-                    </motion.span>
+                    </span>
 
                     {/* Horizontal spreading lines */}
                     <div className="relative w-full max-w-lg mb-4">
@@ -317,15 +299,9 @@ export const IntegrationHub = () => {
                 </div>
 
                 {/* Footer text */}
-                <motion.p
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: 1 }}
-                    className="text-center mt-12 text-gray-500 text-sm"
-                >
+                <p className="text-center mt-12 text-gray-500 text-sm">
                     Vendas integradas automaticamente • Sem trabalho manual
-                </motion.p>
+                </p>
             </div>
         </section>
     );

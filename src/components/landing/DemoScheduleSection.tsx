@@ -101,8 +101,8 @@ export const DemoScheduleSection = ({
                 {/* Section header */}
                 <motion.div
                     className="text-center mb-14"
-                    initial={{ opacity: 0, y: 24 }}
-                    whileInView={{ opacity: 1, y: 0 }}
+                    initial={{ y: 24 }}
+                    whileInView={{ y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                 >
@@ -151,8 +151,8 @@ export const DemoScheduleSection = ({
                 {/* Card container */}
                 <motion.div
                     className="relative rounded-2xl overflow-hidden"
-                    initial={{ opacity: 0, y: 32 }}
-                    whileInView={{ opacity: 1, y: 0 }}
+                    initial={{ y: 32 }}
+                    whileInView={{ y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
                     style={{
@@ -502,13 +502,7 @@ export const DemoScheduleSection = ({
                 </motion.div>
 
                 {/* Trust signals */}
-                <motion.div
-                    className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-8"
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: 0.4 }}
-                >
+                <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-8">
                     {[
                         "Sem compromisso",
                         "Demonstração personalizada",
@@ -523,7 +517,7 @@ export const DemoScheduleSection = ({
                             {t}
                         </div>
                     ))}
-                </motion.div>
+                </div>
             </div>
         </section>
     );

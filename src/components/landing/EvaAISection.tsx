@@ -284,8 +284,8 @@ const FEATURES = [
 // ─── Fade-in ──────────────────────────────────────────────────────
 
 const fadeIn = {
-  initial: { opacity: 0, y: 20 } as const,
-  whileInView: { opacity: 1, y: 0 } as const,
+  initial: { y: 20 } as const,
+  whileInView: { y: 0 } as const,
   viewport: { once: true } as const,
   transition: { duration: 0.5 },
 };
@@ -360,8 +360,8 @@ export function EvaAISection({ onCTAClick }: { onCTAClick?: () => void }) {
         <div className="grid lg:grid-cols-2 gap-10 items-center">
           {/* Left: Chat mockup */}
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            initial={{ x: -20 }}
+            whileInView={{ x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
@@ -370,8 +370,8 @@ export function EvaAISection({ onCTAClick }: { onCTAClick?: () => void }) {
 
           {/* Right: Features + CTA */}
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            initial={{ x: 20 }}
+            whileInView={{ x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.2 }}
             className="space-y-8"
@@ -381,8 +381,8 @@ export function EvaAISection({ onCTAClick }: { onCTAClick?: () => void }) {
               {FEATURES.map(({ icon: Icon, label }, i) => (
                 <motion.div
                   key={label}
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
+                  initial={{ y: 10 }}
+                  whileInView={{ y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: 0.3 + i * 0.08 }}
                   className="flex items-center gap-4"

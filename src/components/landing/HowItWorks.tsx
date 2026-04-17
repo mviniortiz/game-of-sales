@@ -51,9 +51,8 @@ const containerVariants = {
 };
 
 const cardVariants = {
-    hidden: { opacity: 0, y: 24 },
+    hidden: { y: 24 },
     visible: {
-        opacity: 1,
         y: 0,
         transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
     },
@@ -150,8 +149,8 @@ export const HowItWorks = () => {
                 {/* Section header */}
                 <motion.div
                     className="text-center mb-16"
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
+                    initial={{ y: 20 }}
+                    whileInView={{ y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5 }}
                 >
@@ -208,8 +207,8 @@ export const HowItWorks = () => {
                 {/* Bottom CTA */}
                 <motion.div
                     className="text-center mt-14"
-                    initial={{ opacity: 0, y: 12 }}
-                    whileInView={{ opacity: 1, y: 0 }}
+                    initial={{ y: 12 }}
+                    whileInView={{ y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.4, delay: 0.4 }}
                 >
