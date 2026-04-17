@@ -463,8 +463,12 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5, delay: 0.1 }}
                     >
-                        <span
-                            className="text-[11px] px-3.5 py-1 rounded-full"
+                        <motion.button
+                            type="button"
+                            onClick={() => {
+                                document.getElementById("features")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                            }}
+                            className="text-[11px] px-3.5 py-1 rounded-full transition-colors cursor-pointer"
                             style={{
                                 color: "rgba(52,211,153,0.9)",
                                 background: "rgba(16,185,129,0.08)",
@@ -472,9 +476,15 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
                                 fontWeight: 600,
                                 letterSpacing: "0.08em",
                             }}
+                            whileHover={{
+                                backgroundColor: "rgba(16,185,129,0.15)",
+                                borderColor: "rgba(16,185,129,0.3)",
+                                scale: 1.02,
+                            }}
+                            whileTap={{ scale: 0.97 }}
                         >
                             CRM GAMIFICADO • INTEGRA HOTMART, KIWIFY E GREENN
-                        </span>
+                        </motion.button>
                     </motion.div>
 
                     {/* Headline */}
