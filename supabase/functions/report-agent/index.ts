@@ -466,13 +466,12 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: "gpt-5.4-mini",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: question },
         ],
-        temperature: 0.3,
-        max_tokens: 1800,
+        max_completion_tokens: 1800,
         response_format: { type: "json_object" },
       }),
     });
@@ -503,7 +502,7 @@ serve(async (req) => {
     return json(200, {
       success: true,
       analysis,
-      model: "gpt-4o-mini",
+      model: "gpt-5.4-mini",
       tokens: completion.usage?.total_tokens || null,
       remaining: companyPlan === "pro" ? null : (rateLimit.remaining > 0 ? rateLimit.remaining - 1 : 0),
       dailyLimit: companyPlan === "pro" ? null : dailyLimit,

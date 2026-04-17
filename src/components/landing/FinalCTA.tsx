@@ -9,20 +9,6 @@ interface FinalCTAProps {
 export const FinalCTA = ({ onCTAClick, onScheduleDemoClick }: FinalCTAProps) => {
     return (
         <section className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden" style={{ background: "#06080a" }}>
-            {/* Static ambient glow */}
-            <div
-                className="absolute top-[-20%] right-[-10%] w-[80%] h-[100%] rounded-full pointer-events-none"
-                style={{
-                    background: "radial-gradient(circle, rgba(16,185,129,0.07) 0%, transparent 55%)",
-                }}
-            />
-            <div
-                className="absolute bottom-[-20%] left-[-10%] w-[70%] h-[90%] rounded-full pointer-events-none"
-                style={{
-                    background: "radial-gradient(circle, rgba(245,158,11,0.03) 0%, transparent 55%)",
-                }}
-            />
-
             {/* Fine grid overlay */}
             <div
                 className="absolute inset-0 opacity-[0.02] pointer-events-none"
@@ -46,14 +32,6 @@ export const FinalCTA = ({ onCTAClick, onScheduleDemoClick }: FinalCTAProps) => 
                     boxShadow: "0 0 0 1px rgba(255,255,255,0.06), 0 8px 24px rgba(0,0,0,0.3), 0 40px 80px -16px rgba(0,0,0,0.4)",
                 }}
             >
-                {/* Decorative top-edge gradient line */}
-                <div
-                    className="absolute top-0 inset-x-0 h-px"
-                    style={{
-                        background: "linear-gradient(90deg, transparent, rgba(16,185,129,0.5) 30%, rgba(20,184,166,0.4) 70%, transparent)",
-                    }}
-                />
-
                 {/* Content */}
                 <div className="relative z-10 py-12 sm:py-20 px-5 sm:px-8 md:px-16 text-center">
                     {/* Eyebrow */}
@@ -80,17 +58,7 @@ export const FinalCTA = ({ onCTAClick, onScheduleDemoClick }: FinalCTAProps) => 
                             color: "rgba(255,255,255,0.95)",
                         }}
                     >
-                        Seu time pode estar{" "}
-                        <span
-                            style={{
-                                background: "linear-gradient(135deg, #f59e0b, #fbbf24)",
-                                WebkitBackgroundClip: "text",
-                                WebkitTextFillColor: "transparent",
-                            }}
-                        >
-                            vendendo mais
-                        </span>{" "}
-                        amanhã.
+                        Seu time pode estar vendendo mais amanhã.
                     </h2>
 
                     {/* Sub-copy */}

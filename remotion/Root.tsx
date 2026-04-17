@@ -7,6 +7,8 @@ import { CalendarScene } from "./scenes/CalendarScene";
 import { OutroScene } from "./scenes/OutroScene";
 import { SalesVideoComposition } from "./scenes/SalesVideoScene";
 import { SalesVideoReelsComposition } from "./scenes/SalesVideoReels";
+import { SalesVideoSquareComposition } from "./scenes/SalesVideoSquare";
+import { SalesVideoVertical45Composition } from "./scenes/SalesVideoVertical45";
 
 // Full video composition
 import { AbsoluteFill, Series } from "remotion";
@@ -119,6 +121,26 @@ export const RemotionRoot: React.FC = () => {
                 fps={30}
                 width={1080}
                 height={1920}
+            />
+
+            {/* Sales Video - Google Ads Square (1:1), 25 seconds */}
+            <Composition
+                id="SalesVideoSquare"
+                component={SalesVideoSquareComposition}
+                durationInFrames={750}
+                fps={30}
+                width={1080}
+                height={1080}
+            />
+
+            {/* Sales Video - Google Ads Vertical (4:5), 25 seconds */}
+            <Composition
+                id="SalesVideoVertical45"
+                component={SalesVideoVertical45Composition}
+                durationInFrames={750}
+                fps={30}
+                width={1080}
+                height={1350}
             />
         </>
     );

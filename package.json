@@ -12,6 +12,8 @@
     "remotion:studio": "remotion studio",
     "remotion:build": "remotion render VyzonDemo out/demo.mp4",
     "remotion:sales": "remotion render SalesVideo public/videos/sales-video.mp4 --concurrency=4",
+    "remotion:sales-square": "remotion render SalesVideoSquare public/videos/sales-video-square.mp4 --concurrency=4",
+    "remotion:sales-vertical45": "remotion render SalesVideoVertical45 public/videos/sales-video-vertical45.mp4 --concurrency=4",
     "remotion:preview": "remotion preview",
     "test": "vitest",
     "test:ui": "vitest --ui",

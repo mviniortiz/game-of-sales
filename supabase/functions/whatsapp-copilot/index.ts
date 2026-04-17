@@ -120,6 +120,45 @@ async function consumeRateLimit(
     }
 }
 
+// Só LÊ o contador atual, sem incrementar. Usado pra decidir se vale a pena
+// chamar o OpenAI — o consume de fato acontece só no sucesso.
+async function peekRateLimit(
+    adminClient: any,
+    bucket: string,
+    limit: number,
+    windowSeconds: number,
+) {
+    try {
+        const nowEpoch = Math.floor(Date.now() / 1000);
+        const windowStartEpoch = Math.floor(nowEpoch / windowSeconds) * windowSeconds;
+        const windowStart = new Date(windowStartEpoch * 1000).toISOString();
+        const resetAt = new Date((windowStartEpoch + windowSeconds) * 1000).toISOString();
+
+        const { data, error } = await adminClient
+            .from("api_rate_limit_counters")
+            .select("count")
+            .eq("bucket", bucket)
+            .eq("window_start", windowStart)
+            .maybeSingle();
+
+        if (error) {
+            console.warn("[whatsapp-copilot] peek rate limit failed:", error);
+            return { enabled: false, allowed: true, remaining: limit, resetAt };
+        }
+
+        const count = data?.count ?? 0;
+        return {
+            enabled: true,
+            allowed: count < limit,
+            remaining: Math.max(0, limit - count),
+            resetAt,
+        };
+    } catch (error) {
+        console.warn("[whatsapp-copilot] peek rate limit unavailable:", error);
+        return { enabled: false, allowed: true, remaining: limit, resetAt: null };
+    }
+}
+
 serve(async (req) => {
     if (req.method === "OPTIONS") {
         return new Response(null, { status: 204, headers: corsHeaders });
@@ -171,10 +210,10 @@ serve(async (req) => {
 
                 if (cached?.cached_analysis) {
                     console.log("[whatsapp-copilot] cache HIT for", contactPhone);
-                    // Rate limit check (não consome, só lê) pra saber quanto sobra
-                    const peek = await consumeRateLimit(
+                    // Só lê o contador do bucket real, sem consumir
+                    const peek = await peekRateLimit(
                         adminSupabase,
-                        `whatsapp-copilot:user:${user.id}:peek`,
+                        `whatsapp-copilot:user:${user.id}`,
                         DAILY_LIMIT_PER_USER,
                         WINDOW_SECONDS,
                     );
@@ -193,8 +232,9 @@ serve(async (req) => {
             }
         }
 
-        // Rate limit: 10 requests per user per day (só se cache não bateu)
-        const rateLimit = await consumeRateLimit(
+        // Rate limit: 10 requests per user per day (só se cache não bateu).
+        // PEEK antes da chamada — consume real só acontece depois do OpenAI OK.
+        const rateLimit = await peekRateLimit(
             adminSupabase,
             `whatsapp-copilot:user:${user.id}`,
             DAILY_LIMIT_PER_USER,
@@ -278,7 +318,8 @@ ${conversationText}${memoryContext}
 
 Analise a conversa e retorne o JSON com sua analise e sugestoes. ${memoryContext ? "IMPORTANTE: adapte o tom do draft conforme o estilo do vendedor descrito na memoria." : ""}`;
 
-        // Call GPT-4o-mini
+        // gpt-5.x usa max_completion_tokens (não aceita max_tokens nem temperature custom)
+        const modelUsed = "gpt-5.4-mini";
         const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
             method: "POST",
             headers: {
@@ -286,21 +327,25 @@ Analise a conversa e retorne o JSON com sua analise e sugestoes. ${memoryContext
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                model: "gpt-4o-mini",
+                model: modelUsed,
                 messages: [
                     { role: "system", content: SYSTEM_PROMPT },
                     { role: "user", content: userPrompt },
                 ],
-                temperature: 0.4,
-                max_tokens: 800,
+                max_completion_tokens: 1200,
                 response_format: { type: "json_object" },
             }),
         });
 
         if (!openaiResponse.ok) {
             const errBody = await openaiResponse.text();
-            console.error("[whatsapp-copilot] OpenAI error:", errBody);
-            return json(502, { error: "Erro ao consultar IA", code: "OPENAI_ERROR" });
+            console.error(`[whatsapp-copilot] ${modelUsed} failed (${openaiResponse.status}):`, errBody);
+            return json(502, {
+                error: "Erro ao consultar IA",
+                code: "OPENAI_ERROR",
+                openaiStatus: openaiResponse.status,
+                openaiError: errBody,
+            });
         }
 
         const completion = await openaiResponse.json();
@@ -421,12 +466,20 @@ Analise a conversa e retorne o JSON com sua analise e sugestoes. ${memoryContext
             console.error("[eva-persist] persistence THREW:", summaryError);
         }
 
+        // Consome quota SÓ DEPOIS do OpenAI OK — falhas não queimam limite
+        const consumed = await consumeRateLimit(
+            adminSupabase,
+            `whatsapp-copilot:user:${user.id}`,
+            DAILY_LIMIT_PER_USER,
+            WINDOW_SECONDS,
+        );
+
         return json(200, {
             success: true,
             analysis,
-            model: "gpt-4o-mini",
+            model: modelUsed,
             tokens: completion.usage?.total_tokens || null,
-            remaining: rateLimit.remaining > 0 ? rateLimit.remaining - 1 : 0,
+            remaining: consumed.remaining,
             dailyLimit: DAILY_LIMIT_PER_USER,
         });
     } catch (error) {

@@ -38,3 +38,9 @@ verify_jwt = false
 
 [functions.twilio-voice-recording-webhook]
 verify_jwt = false
+
+[functions.evolution-message-webhook]
+verify_jwt = false
+
+[functions.evolution-backfill-webhooks]
+verify_jwt = false

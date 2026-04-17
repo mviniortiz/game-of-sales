@@ -34,7 +34,7 @@ const Integracoes = lazy(() => import("./pages/Integracoes"));
 const Calendario = lazy(() => import("./pages/Calendario"));
 const CRM = lazy(() => import("./pages/CRM"));
 const DealCommandCenter = lazy(() => import("./pages/DealCommandCenter"));
-const WhatsApp = lazy(() => import("./pages/WhatsApp"));
+const Pulse = lazy(() => import("./pages/Pulse"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 const SalesPerformanceCenter = lazy(() => import("./pages/SalesPerformanceCenter"));
 const ImportarDados = lazy(() => import("./pages/ImportarDados"));
@@ -224,15 +224,16 @@ const App = () => (
                 }
               />
               <Route
-                path="/whatsapp"
+                path="/pulse"
                 element={
                   <ProtectedRoute>
                     <AppLayout>
-                      <WhatsApp />
+                      <Pulse />
                     </AppLayout>
                   </ProtectedRoute>
                 }
               />
+              <Route path="/whatsapp" element={<Navigate to="/pulse" replace />} />
               <Route
                 path="/calendario"
                 element={

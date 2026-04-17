@@ -35,7 +35,7 @@ import {
 
 const visaoGeralItems = [
   { title: "Dashboard", url: "/dashboard", icon: Home },
-  { title: "WhatsApp", url: "/whatsapp", icon: WhatsAppIcon },
+  { title: "Pulse", url: "/pulse", icon: WhatsAppIcon },
   { title: "CRM Pipeline", url: "/crm", icon: Kanban },
   { title: "Calls", url: "/calls", icon: PhoneCall },
   { title: "Calendário", url: "/calendario", icon: Calendar },
@@ -125,8 +125,8 @@ export function AppSidebar() {
       .toUpperCase();
   };
 
-  const activeClass = "bg-emerald-500/10 text-emerald-400 font-medium dark:bg-emerald-500/10 dark:text-emerald-400";
-  const inactiveClass = "text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors";
+  const activeClass = "bg-white/[0.04] text-foreground font-medium";
+  const inactiveClass = "text-muted-foreground/80 hover:text-foreground hover:bg-white/[0.02] transition-colors";
 
   const renderNavItem = (item: { title: string; url: string; icon: React.ComponentType<any> }, showBadge = false) => {
     const isActive = location.pathname === item.url || (item.url !== "/dashboard" && location.pathname.startsWith(item.url));
@@ -135,22 +135,23 @@ export function AppSidebar() {
       <NavLink
         to={item.url}
         end={item.url === "/dashboard"}
-        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm ${inactiveClass}`}
-        activeClassName={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm ${activeClass}`}
+        className={`relative flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[13px] ${inactiveClass}`}
+        activeClassName={`relative flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[13px] ${activeClass}`}
       >
+        {isActive && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-[2px] rounded-r-full bg-emerald-500" />}
         <span className="relative shrink-0">
           <AnimatedIcon icon={item.icon} isActive={isActive} />
           {showBadge && rottingDealsCount > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold leading-none">
+            <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[14px] h-3.5 px-1 rounded-full bg-rose-500 text-white text-[9px] font-semibold leading-none">
               {rottingDealsCount > 99 ? "99+" : rottingDealsCount}
             </span>
           )}
         </span>
         {!collapsed && (
           <>
-            <span className="flex-1 truncate">{item.title}</span>
+            <span className="flex-1 truncate tracking-tight">{item.title}</span>
             {showBadge && rottingDealsCount > 0 && (
-              <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-rose-500/15 text-rose-400 text-[10px] font-bold">
+              <span className="flex items-center justify-center min-w-[18px] h-4 px-1 rounded text-[10px] font-medium bg-rose-500/10 text-rose-400">
                 {rottingDealsCount}
               </span>
             )}
@@ -180,37 +181,37 @@ export function AppSidebar() {
 
   return (
     <TooltipProvider delayDuration={300}>
-      <Sidebar collapsible="offcanvas" className="border-r border-border/50 bg-sidebar text-sidebar-foreground">
+      <Sidebar collapsible="offcanvas" className="border-r border-border bg-sidebar text-sidebar-foreground">
         <SidebarContent className="gap-0">
           {/* Logo */}
           <div className="px-4 pt-5 pb-4">
             <div className="flex items-center justify-center">
-              <ThemeLogo className={collapsed ? "h-8 w-auto" : "h-10 w-auto"} />
+              <ThemeLogo className={collapsed ? "h-7 w-auto" : "h-9 w-auto"} />
             </div>
           </div>
 
           {/* CTA - Registrar Venda */}
-          <div className="px-3 pb-3" data-tour="register-sale-btn">
+          <div className="px-3 pb-2.5" data-tour="register-sale-btn">
             {collapsed ? (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
                     onClick={() => setIsNovaVendaOpen(true)}
-                    className="w-full flex items-center justify-center h-10 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white font-semibold transition-colors"
+                    className="w-full flex items-center justify-center h-8 rounded-md bg-emerald-500 hover:bg-emerald-400 text-white transition-colors"
                   >
-                    <PlusCircle className="h-4 w-4" />
+                    <PlusCircle className="h-3.5 w-3.5" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="right" className="font-semibold">
+                <TooltipContent side="right" className="text-[11px]">
                   Registrar Venda
                 </TooltipContent>
               </Tooltip>
             ) : (
               <button
                 onClick={() => setIsNovaVendaOpen(true)}
-                className="w-full flex items-center justify-center gap-2 h-10 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-semibold transition-colors"
+                className="w-full flex items-center justify-center gap-1.5 h-8 rounded-md bg-emerald-500 hover:bg-emerald-400 text-white text-[12.5px] font-medium transition-colors"
               >
-                <PlusCircle className="h-4 w-4" />
+                <PlusCircle className="h-3.5 w-3.5" />
                 <span>Registrar Venda</span>
               </button>
             )}
@@ -222,12 +223,12 @@ export function AppSidebar() {
           </div>
 
           {/* Separator */}
-          <div className="mx-3 h-px bg-border/50 mb-2" />
+          <div className="mx-3 h-px bg-border mb-2" />
 
           {/* Visão Geral */}
-          <SidebarGroup className="py-1 px-1">
+          <SidebarGroup className="py-1 px-1.5">
             {!collapsed && (
-              <SidebarGroupLabel className="text-[11px] uppercase text-muted-foreground/50 font-semibold tracking-widest px-3 mb-1">
+              <SidebarGroupLabel className="text-[10px] uppercase text-muted-foreground/50 font-medium tracking-wider px-2.5 mb-1">
                 Visão Geral
               </SidebarGroupLabel>
             )}
@@ -244,9 +245,9 @@ export function AppSidebar() {
 
           {/* Gestão */}
           {filteredGestaoItems.length > 0 && (
-            <SidebarGroup className="py-1 px-1">
+            <SidebarGroup className="py-1 px-1.5">
               {!collapsed && (
-                <SidebarGroupLabel className="text-[11px] uppercase text-muted-foreground/50 font-semibold tracking-widest px-3 mb-1">
+                <SidebarGroupLabel className="text-[10px] uppercase text-muted-foreground/50 font-medium tracking-wider px-2.5 mb-1">
                   Gestão
                 </SidebarGroupLabel>
               )}
@@ -264,9 +265,9 @@ export function AppSidebar() {
 
           {/* Configurações */}
           {filteredConfigItems.length > 0 && (
-            <SidebarGroup className="py-1 px-1">
+            <SidebarGroup className="py-1 px-1.5">
               {!collapsed && (
-                <SidebarGroupLabel className="text-[11px] uppercase text-muted-foreground/50 font-semibold tracking-widest px-3 mb-1">
+                <SidebarGroupLabel className="text-[10px] uppercase text-muted-foreground/50 font-medium tracking-wider px-2.5 mb-1">
                   Configurações
                 </SidebarGroupLabel>
               )}
@@ -284,101 +285,103 @@ export function AppSidebar() {
         </SidebarContent>
 
         {/* Footer — Profile + Theme + Logout */}
-        <SidebarFooter className="border-t border-border/50 mt-auto p-0">
+        <SidebarFooter className="border-t border-border mt-auto p-0">
           {/* Profile Card */}
           {!collapsed ? (
-            <div className="p-3">
+            <div className="p-2.5">
               {/* User info card */}
               <button
                 onClick={() => navigate("/profile")}
-                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-colors ${
+                className={`w-full flex items-center gap-2.5 p-2 rounded-md transition-colors ${
                   isProfileActive
-                    ? "bg-emerald-500/10"
-                    : "hover:bg-muted/50"
+                    ? "bg-white/[0.04]"
+                    : "hover:bg-white/[0.02]"
                 }`}
               >
-                <Avatar className="h-10 w-10 shrink-0 ring-2 ring-border/50">
-                  {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt="Avatar" />}
-                  <AvatarFallback className="bg-emerald-500/15 text-emerald-400 text-sm font-semibold">
+                <Avatar className="h-8 w-8 shrink-0 rounded-md">
+                  {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt="Avatar" className="rounded-md" />}
+                  <AvatarFallback className="bg-white/[0.04] text-muted-foreground text-[11px] font-semibold rounded-md">
                     {profile?.nome ? getInitials(profile.nome) : "U"}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex flex-col items-start text-left flex-1 min-w-0">
-                  <span className="text-sm font-semibold text-foreground truncate w-full">
+                <div className="flex flex-col items-start text-left flex-1 min-w-0 leading-tight">
+                  <span className="text-[12.5px] font-semibold text-foreground truncate w-full tracking-tight">
                     {profile?.nome || "Usuário"}
                   </span>
-                  <span className="text-[11px] text-muted-foreground truncate w-full">
+                  <span className="text-[10.5px] text-muted-foreground/60 truncate w-full mt-0.5">
                     {user?.email || ""}
                   </span>
                 </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground/50 shrink-0" />
+                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" />
               </button>
 
               {/* Role & Plan badges */}
-              <div className="flex items-center gap-2 px-3 mt-2">
-                {isAdmin && (
-                  <div className="flex items-center gap-1.5">
-                    <Shield className="h-3 w-3 text-amber-400" />
-                    <span className="text-[10px] font-semibold text-amber-400 uppercase tracking-wider">Admin</span>
-                  </div>
-                )}
-                {planInfo && (
-                  <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${
-                    currentPlan === 'pro' ? 'bg-emerald-500/15 text-emerald-400' :
-                    currentPlan === 'plus' ? 'bg-blue-500/15 text-blue-400' :
-                    'bg-zinc-500/15 text-zinc-400'
-                  }`}>
-                    <Sparkles className="h-2.5 w-2.5" />
-                    <span className="text-[10px] font-semibold uppercase tracking-wider">{planInfo.label}</span>
-                  </div>
-                )}
-              </div>
+              {(isAdmin || planInfo) && (
+                <div className="flex items-center gap-1.5 px-2 mt-1.5">
+                  {isAdmin && (
+                    <span className="flex items-center gap-1 text-[10px] font-medium text-amber-400/90">
+                      <Shield className="h-2.5 w-2.5" />
+                      Admin
+                    </span>
+                  )}
+                  {planInfo && (
+                    <span className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                      currentPlan === 'pro' ? 'bg-emerald-500/10 text-emerald-400' :
+                      currentPlan === 'plus' ? 'bg-blue-500/10 text-blue-400' :
+                      'bg-white/[0.04] text-muted-foreground'
+                    }`}>
+                      <Sparkles className="h-2.5 w-2.5" />
+                      {planInfo.label}
+                    </span>
+                  )}
+                </div>
+              )}
 
               {/* Actions row */}
-              <div className="flex items-center justify-between mt-3 px-1">
+              <div className="flex items-center justify-between mt-2 px-0.5">
                 <div className="flex items-center gap-0.5">
                   <button
                     onClick={() => navigate("/docs")}
-                    className={`flex items-center justify-center h-9 w-9 rounded-lg transition-colors ${
+                    className={`flex items-center justify-center h-7 w-7 rounded-md transition-colors ${
                       location.pathname === "/docs"
-                        ? "text-emerald-400 bg-emerald-500/10"
-                        : "text-muted-foreground hover:text-emerald-400 hover:bg-emerald-500/10"
+                        ? "text-foreground bg-white/[0.04]"
+                        : "text-muted-foreground/70 hover:text-foreground hover:bg-white/[0.02]"
                     }`}
                     title="Ajuda"
                   >
-                    <HelpCircle className="h-4 w-4" />
+                    <HelpCircle className="h-3.5 w-3.5" />
                   </button>
                   <ThemeToggle />
                 </div>
                 <button
                   onClick={signOut}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-colors text-muted-foreground hover:text-rose-400 hover:bg-rose-500/10"
+                  className="flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] transition-colors text-muted-foreground/70 hover:text-rose-400 hover:bg-rose-500/[0.06]"
                 >
-                  <LogOut className="h-3.5 w-3.5 shrink-0" />
+                  <LogOut className="h-3 w-3 shrink-0" />
                   <span>Sair</span>
                 </button>
               </div>
             </div>
           ) : (
-            <div className="p-2 flex flex-col items-center gap-1">
+            <div className="p-2 flex flex-col items-center gap-0.5">
               {/* Collapsed: avatar → profile */}
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
                     onClick={() => navigate("/profile")}
-                    className={`p-1.5 rounded-lg transition-colors ${
-                      isProfileActive ? "bg-emerald-500/10" : "hover:bg-muted/50"
+                    className={`p-1 rounded-md transition-colors ${
+                      isProfileActive ? "bg-white/[0.04]" : "hover:bg-white/[0.02]"
                     }`}
                   >
-                    <Avatar className="h-8 w-8">
-                      {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt="Avatar" />}
-                      <AvatarFallback className="bg-emerald-500/15 text-emerald-400 text-xs font-semibold">
+                    <Avatar className="h-7 w-7 rounded-md">
+                      {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt="Avatar" className="rounded-md" />}
+                      <AvatarFallback className="bg-white/[0.04] text-muted-foreground text-[10px] font-semibold rounded-md">
                         {profile?.nome ? getInitials(profile.nome) : "U"}
                       </AvatarFallback>
                     </Avatar>
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="right" className="font-medium">
+                <TooltipContent side="right" className="text-[11px]">
                   {profile?.nome || "Perfil"}
                 </TooltipContent>
               </Tooltip>
@@ -388,16 +391,16 @@ export function AppSidebar() {
                 <TooltipTrigger asChild>
                   <button
                     onClick={() => navigate("/docs")}
-                    className={`flex items-center justify-center p-2.5 rounded-lg text-sm transition-colors ${
+                    className={`flex items-center justify-center h-7 w-7 rounded-md transition-colors ${
                       location.pathname === "/docs"
-                        ? "text-emerald-400 bg-emerald-500/10"
-                        : "text-muted-foreground hover:text-emerald-400 hover:bg-emerald-500/10"
+                        ? "text-foreground bg-white/[0.04]"
+                        : "text-muted-foreground/70 hover:text-foreground hover:bg-white/[0.02]"
                     }`}
                   >
-                    <HelpCircle className="h-4 w-4" />
+                    <HelpCircle className="h-3.5 w-3.5" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="right" className="font-medium">
+                <TooltipContent side="right" className="text-[11px]">
                   Ajuda
                 </TooltipContent>
               </Tooltip>
@@ -407,7 +410,7 @@ export function AppSidebar() {
                 <TooltipTrigger asChild>
                   <div><ThemeToggle collapsed /></div>
                 </TooltipTrigger>
-                <TooltipContent side="right" className="font-medium">
+                <TooltipContent side="right" className="text-[11px]">
                   Alternar tema
                 </TooltipContent>
               </Tooltip>
@@ -417,12 +420,12 @@ export function AppSidebar() {
                 <TooltipTrigger asChild>
                   <button
                     onClick={signOut}
-                    className="flex items-center justify-center p-2.5 rounded-lg text-sm transition-colors text-muted-foreground hover:text-rose-400 hover:bg-rose-500/10"
+                    className="flex items-center justify-center h-7 w-7 rounded-md text-muted-foreground/70 hover:text-rose-400 hover:bg-rose-500/[0.06] transition-colors"
                   >
-                    <LogOut className="h-4 w-4" />
+                    <LogOut className="h-3.5 w-3.5" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="right" className="font-medium">
+                <TooltipContent side="right" className="text-[11px]">
                   Sair
                 </TooltipContent>
               </Tooltip>

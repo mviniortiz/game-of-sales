@@ -580,11 +580,62 @@ export const useEvolutionIntegration = () => {
         }
     }, [connected, invokeProxy]);
 
+    /**
+     * Merge a whatsapp_messages row (from Supabase Realtime) into the current
+     * chat timeline. No-op if the row isn't for the selected chat or is already present.
+     */
+    const appendRealtimeMessage = useCallback((row: any, expectedChatJid: string) => {
+        if (!row || row.chat_jid !== expectedChatJid) return;
+        const id = row.external_id || row.id;
+        const fromMe = row.direction === "outbound";
+        const tsIso = row.message_timestamp;
+        const timestamp = tsIso ? Math.floor(new Date(tsIso).getTime() / 1000) : Date.now() / 1000;
+        const time = new Date(timestamp * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+        const text = row.body
+            || row.media_caption
+            || (row.message_type === "image" ? "📷 Imagem"
+                : row.message_type === "video" ? "🎥 Vídeo"
+                : row.message_type === "audio" ? "🎤 Áudio"
+                : row.message_type === "sticker" ? "🏷️ Sticker"
+                : row.message_type === "document" ? "📎 Documento"
+                : row.message_type === "location" ? "📍 Localização"
+                : "");
+        if (!text) return;
+
+        const mediaType: MediaType = ["image", "video", "audio", "sticker", "document"].includes(row.message_type)
+            ? (row.message_type as MediaType)
+            : null;
+
+        const next: MessageLine = {
+            id,
+            text,
+            sender: fromMe ? "me" : "lead",
+            time,
+            timestamp,
+            senderName: row.contact_name || undefined,
+            audioUrl: row.message_type === "audio" ? row.media_url || undefined : undefined,
+            audioDuration: row.audio_duration || undefined,
+            mediaType,
+            mediaCaption: row.media_caption || undefined,
+            mediaMimetype: row.media_mimetype || undefined,
+        };
+
+        setSelectedChatMessages((prev) => {
+            // Dedup: same id, OR optimistic temp message that matches text+sender within 60s
+            if (prev.some((m) => m.id === id)) return prev;
+            const withoutOptimistic = prev.filter((m) => {
+                if (!m.id.startsWith("temp_")) return true;
+                if (!fromMe || m.sender !== "me") return true;
+                if (m.text !== next.text) return true;
+                return Math.abs(m.timestamp - next.timestamp) > 60;
+            });
+            return [...withoutOptimistic, next].sort((a, b) => a.timestamp - b.timestamp);
+        });
+    }, []);
+
     const sendMessage = useCallback(async (chatId: string, text: string) => {
-        if (!connected || !chatId || !text.trim()) {
-            console.warn("[sendMessage] blocked:", { connected, chatId: !!chatId, text: !!text.trim() });
-            return;
-        }
+        if (!connected || !chatId || !text.trim()) return;
 
         const optimistic: MessageLine = {
             id: `temp_${Date.now()}`,
@@ -598,10 +649,8 @@ export const useEvolutionIntegration = () => {
         setError(null);
 
         try {
-            const result = await invokeProxy("send", { chatId, text: text.trim() });
-            console.log("[sendMessage] success:", result?.success);
+            await invokeProxy("send", { chatId, text: text.trim() });
         } catch (err: any) {
-            console.error("[sendMessage] error:", err?.message || err);
             setSelectedChatMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
             setError(err?.message || "Falha ao enviar mensagem.");
         }
@@ -768,5 +817,6 @@ export const useEvolutionIntegration = () => {
         getAudioMedia: stableGetAudioMedia,
         sendMediaMessage,
         sendAudioMessage,
+        appendRealtimeMessage,
     };
 };

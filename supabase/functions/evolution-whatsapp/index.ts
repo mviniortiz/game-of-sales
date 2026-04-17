@@ -6,6 +6,86 @@ const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const EVOLUTION_API_URL = Deno.env.get("EVOLUTION_API_URL")?.replace(/\/+$/, "");
 const EVOLUTION_API_KEY = Deno.env.get("EVOLUTION_API_KEY");
+const EVOLUTION_WEBHOOK_SECRET = Deno.env.get("EVOLUTION_WEBHOOK_SECRET") || "";
+
+const WEBHOOK_RECEIVER_URL = `${SUPABASE_URL}/functions/v1/evolution-message-webhook`;
+
+// ─────────────────────────────────────────────────────────────
+// Profile cache (hot path only)
+// Isolates Deno reutilizam o módulo entre requests — Map persiste.
+// Keyed por user.id (vindo de JWT validado). TTL curto para minimizar
+// janela de permissão stale. Nunca cacheia is_super_admin=true.
+// ─────────────────────────────────────────────────────────────
+type CachedProfile = {
+  id: string;
+  company_id: string | null;
+  role: string | null;
+  is_super_admin: boolean;
+  expiresAt: number;
+};
+const PROFILE_CACHE_TTL_MS = 30_000;
+const profileCache = new Map<string, CachedProfile>();
+const HOT_PATH_ACTIONS = new Set([
+  "send", "sendMedia", "sendAudio", "messages", "chats", "profilePic", "getMedia", "status",
+]);
+
+async function loadProfile(adminClient: any, userId: string): Promise<CachedProfile | null> {
+  const { data } = await adminClient
+    .from("profiles")
+    .select("id, company_id, is_super_admin, role")
+    .eq("id", userId)
+    .single();
+  if (!data) return null;
+  return {
+    id: data.id,
+    company_id: data.company_id,
+    role: data.role,
+    is_super_admin: data.is_super_admin === true,
+    expiresAt: Date.now() + PROFILE_CACHE_TTL_MS,
+  };
+}
+
+async function getProfile(adminClient: any, userId: string, useCache: boolean): Promise<CachedProfile | null> {
+  if (useCache) {
+    const cached = profileCache.get(userId);
+    if (cached && cached.expiresAt > Date.now() && !cached.is_super_admin) {
+      return cached;
+    }
+  }
+  const fresh = await loadProfile(adminClient, userId);
+  if (fresh && !fresh.is_super_admin) {
+    profileCache.set(userId, fresh);
+  } else {
+    profileCache.delete(userId);
+  }
+  return fresh;
+}
+
+async function ensureWebhook(instanceName: string): Promise<{ ok: boolean; error?: string }> {
+  if (!EVOLUTION_WEBHOOK_SECRET) {
+    return { ok: false, error: "EVOLUTION_WEBHOOK_SECRET not set" };
+  }
+  const url = `${WEBHOOK_RECEIVER_URL}?secret=${EVOLUTION_WEBHOOK_SECRET}`;
+  try {
+    await evolutionRequest(`/webhook/set/${instanceName}`, {
+      method: "POST",
+      body: JSON.stringify({
+        webhook: {
+          enabled: true,
+          url,
+          byEvents: false,
+          base64: false,
+          events: ["MESSAGES_UPSERT"],
+        },
+      }),
+    });
+    return { ok: true };
+  } catch (err: any) {
+    const msg = err?.message || "unknown error";
+    console.error(`[ensureWebhook] ${instanceName}:`, msg);
+    return { ok: false, error: msg };
+  }
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -26,7 +106,8 @@ type Action =
   | "instances"
   | "getMedia"
   | "monitor"
-  | "deleteInstance";
+  | "deleteInstance"
+  | "setWebhookAll";
 
 type Body = {
   action?: Action;
@@ -135,6 +216,13 @@ serve(async (req) => {
     return new Response(null, { status: 204, headers: corsHeaders });
   }
 
+  // Keep-warm ping: curto-circuito antes de auth/DB. Mantém o isolate do Deno quente
+  // sem gastar latência com verificações. Usado pelo cron pg_cron a cada 4min.
+  const url = new URL(req.url);
+  if (url.searchParams.get("ping") === "1") {
+    return json(200, { ok: true, ts: Date.now() });
+  }
+
   try {
     if (!EVOLUTION_API_URL || !EVOLUTION_API_KEY) {
       return json(500, {
@@ -158,11 +246,9 @@ serve(async (req) => {
     const action = body.action;
     if (!action) return json(400, { error: "action is required" });
 
-    const { data: profile } = await (adminSupabase as any)
-      .from("profiles")
-      .select("id, company_id, is_super_admin, role")
-      .eq("id", user.id)
-      .single();
+    // Cache só no hot path. Admin ops/operações privilegiadas sempre buscam fresh.
+    const useCache = HOT_PATH_ACTIONS.has(action);
+    const profile = await getProfile(adminSupabase, user.id, useCache);
 
     if (!profile) return json(403, { error: "Profile not found" });
 
@@ -187,12 +273,7 @@ serve(async (req) => {
     if (body.targetUserId && isAdmin) {
       // Verify the target user belongs to the same company (unless super admin)
       if (!isSuperAdmin) {
-        const { data: targetProfile } = await (adminSupabase as any)
-          .from("profiles")
-          .select("id, company_id")
-          .eq("id", body.targetUserId)
-          .single();
-
+        const targetProfile = await getProfile(adminSupabase, body.targetUserId, useCache);
         if (!targetProfile || targetProfile.company_id !== profile.company_id) {
           return json(403, { error: "Target user not in your company" });
         }
@@ -251,13 +332,22 @@ serve(async (req) => {
 
       // 2. Try to create instance
       try {
+        const createBody: any = {
+          instanceName,
+          integration: "WHATSAPP-BAILEYS",
+          qrcode: true,
+        };
+        if (EVOLUTION_WEBHOOK_SECRET) {
+          createBody.webhook = {
+            url: `${WEBHOOK_RECEIVER_URL}?secret=${EVOLUTION_WEBHOOK_SECRET}`,
+            byEvents: false,
+            base64: false,
+            events: ["MESSAGES_UPSERT"],
+          };
+        }
         const createRes = await evolutionRequest("/instance/create", {
           method: "POST",
-          body: JSON.stringify({
-            instanceName,
-            integration: "WHATSAPP-BAILEYS",
-            qrcode: true,
-          }),
+          body: JSON.stringify(createBody),
         });
         console.log("[connect] create response:", JSON.stringify(createRes));
         qrCodeBase64 = extractQrBase64(createRes);
@@ -265,6 +355,10 @@ serve(async (req) => {
       } catch (err: any) {
         console.log("[connect] create error:", err?.message, "status:", (err as any)?.status, "payload:", JSON.stringify((err as any)?.payload));
       }
+
+      // 2.5. Ensure webhook is set (works for both fresh create and pre-existing instance)
+      const whRes = await ensureWebhook(instanceName);
+      console.log("[connect] ensureWebhook:", whRes);
 
       // 3. If no QR yet, try connect endpoint
       if (!qrCodeBase64) {
@@ -348,7 +442,6 @@ serve(async (req) => {
             text: String(body.text).trim(),
           }),
         });
-        console.log("[send] success:", JSON.stringify(sendRes));
         return json(200, { success: true, instanceName, result: sendRes });
       } catch (sendErr: any) {
         console.error("[send] error:", sendErr?.message, "status:", sendErr?.status, "payload:", JSON.stringify(sendErr?.payload));
@@ -668,6 +761,42 @@ serve(async (req) => {
           disconnected,
           estimatedRamMb: total * RAM_PER_INSTANCE_MB,
         },
+      });
+    }
+
+    // ── SET WEBHOOK (ALL): backfill webhook config em todas as instâncias existentes ──
+    if (action === "setWebhookAll") {
+      if (!isSuperAdmin) {
+        return json(403, { error: "Only super admins can backfill webhooks" });
+      }
+      if (!EVOLUTION_WEBHOOK_SECRET) {
+        return json(500, { error: "EVOLUTION_WEBHOOK_SECRET not configured" });
+      }
+
+      let all: any[] = [];
+      try {
+        const res = await evolutionRequest("/instance/fetchInstances", { method: "GET" });
+        all = Array.isArray(res) ? res : [];
+      } catch (err: any) {
+        return json(502, { error: `Failed to list instances: ${err?.message || err}` });
+      }
+
+      const results: Array<{ instanceName: string; ok: boolean; error?: string }> = [];
+      for (const inst of all) {
+        const name = inst.instance?.instanceName || inst.instanceName || inst.name;
+        if (!name || !String(name).startsWith("wa_")) continue;
+        const r = await ensureWebhook(name);
+        results.push({ instanceName: name, ok: r.ok, error: r.error });
+      }
+
+      const okCount = results.filter((r) => r.ok).length;
+      return json(200, {
+        success: true,
+        total: results.length,
+        configured: okCount,
+        failed: results.length - okCount,
+        webhookUrl: `${WEBHOOK_RECEIVER_URL}?secret=***`,
+        results,
       });
     }
 
