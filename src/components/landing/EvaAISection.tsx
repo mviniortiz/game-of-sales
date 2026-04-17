@@ -132,7 +132,7 @@ function ChatMockup({ onCTAClick }: { onCTAClick?: () => void }) {
             <span className="text-[9px] px-1.5 py-0.5 rounded-full" style={{ fontWeight: "var(--fw-semibold)", background: "rgba(139,92,246,0.15)", color: "#a78bfa", border: "1px solid rgba(139,92,246,0.2)" }}>AI</span>
           </div>
           <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.3)" }}>
-            {phase === "typing" ? "Analisando..." : "Online"}
+            {phase === "typing" ? "Analisando..." : "Online agora"}
           </span>
         </div>
       </div>
@@ -275,7 +275,7 @@ function DemoBarChart() {
 // ─── Feature pills ────────────────────────────────────────────────
 
 const FEATURES = [
-  { icon: BarChart3, label: "Gráficos gerados por IA em tempo real" },
+  { icon: BarChart3, label: "Gráficos gerados por IA na hora" },
   { icon: Users, label: "Ranking e performance do time" },
   { icon: TrendingUp, label: "Tendências e previsões" },
   { icon: Sparkles, label: "Insights automáticos" },
@@ -342,9 +342,9 @@ export function EvaAISection({ onCTAClick }: { onCTAClick?: () => void }) {
             className="max-w-xl mx-auto"
             style={{ fontSize: "1.0625rem", lineHeight: 1.6, color: "rgba(255,255,255,0.4)" }}
           >
-            Faturamento, ranking, metas, tendências — em linguagem natural.{" "}
+            Faturamento, ranking, metas, tendências — é só perguntar.{" "}
             <span style={{ fontWeight: "var(--fw-medium)", color: "rgba(255,255,255,0.75)" }}>
-              Sem filtros, sem relatórios manuais.
+              Sem filtro, sem relatório manual.
             </span>
           </p>
         </motion.div>
@@ -402,7 +402,7 @@ export function EvaAISection({ onCTAClick }: { onCTAClick?: () => void }) {
                 Disponível nos planos{" "}
                 <span style={{ fontWeight: "var(--fw-semibold)", color: "#a78bfa" }}>Plus</span> e{" "}
                 <span style={{ fontWeight: "var(--fw-semibold)", color: "#a78bfa" }}>Pro</span>.
-                {" "}Consultas ilimitadas no Pro — pergunte sobre faturamento, metas, ranking, produtos e tendências.
+                {" "}Consultas ilimitadas no Pro — pergunte sobre faturamento, meta, ranking, produto e tendência.
               </p>
             </div>
 

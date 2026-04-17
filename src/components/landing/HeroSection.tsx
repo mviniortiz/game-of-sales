@@ -994,9 +994,9 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5, delay: 0.35 }}
                     >
-                        Vyzon conecta seus checkouts ao time de vendas e mostra em tempo real
+                        Vyzon conecta os seus checkouts ao time de vendas e mostra em tempo real
                         quem tá fechando, quem tá travado e onde o time precisa de ajuda.
-                        Ranking ao vivo, pipeline visual, setup em 5 minutos.
+                        Ranking ao vivo, pipeline visual e pronto em 5 minutos.
                     </motion.p>
 
                     {/* CTAs */}
@@ -1054,7 +1054,7 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.65 }}
                     >
-                        {["14 dias grátis para testar", "Setup em 5 minutos", "Suporte humano via WhatsApp"].map((t) => (
+                        {["14 dias grátis pra testar", "Pronto em 5 minutos", "Suporte humano no WhatsApp"].map((t) => (
                             <span key={t} className="flex items-center gap-1.5 text-[13px]" style={{ color: "rgba(255,255,255,0.6)" }}>
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                                 {t}

@@ -58,7 +58,7 @@ export const FinalCTA = ({ onCTAClick, onScheduleDemoClick }: FinalCTAProps) => 
                             color: "rgba(255,255,255,0.95)",
                         }}
                     >
-                        Seu time pode estar vendendo mais amanhã.
+                        Seu time pode tá vendendo mais amanhã.
                     </h2>
 
                     {/* Sub-copy */}
@@ -66,7 +66,7 @@ export const FinalCTA = ({ onCTAClick, onScheduleDemoClick }: FinalCTAProps) => 
                         className="mb-10 max-w-xl mx-auto"
                         style={{ color: "rgba(255,255,255,0.45)", fontSize: "1rem", lineHeight: 1.7 }}
                     >
-                        Configure em 5 minutos. Cancele quando quiser, sem multa e sem burocracia.
+                        Configura em 5 minutos. Cancela quando quiser — sem multa e sem burocracia.
                     </p>
 
                     {/* CTA buttons */}
@@ -136,9 +136,9 @@ export const FinalCTA = ({ onCTAClick, onScheduleDemoClick }: FinalCTAProps) => 
                     {/* Trust signals */}
                     <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 mt-7">
                         {[
-                            "14 dias grátis para testar",
-                            "Cancele a qualquer momento",
-                            "Suporte humano via WhatsApp",
+                            "14 dias grátis pra testar",
+                            "Cancela quando quiser",
+                            "Suporte humano no WhatsApp",
                         ].map((t) => (
                             <div
                                 key={t}

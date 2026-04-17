@@ -19,16 +19,16 @@ const STEPS: readonly Step[] = [
         badge: "Conecte",
         title: "Integre sua plataforma",
         description:
-            "Cole o webhook da Kiwify, Greenn ou Hotmart. As vendas começam a entrar automaticamente em segundos.",
+            "Cola o webhook da Kiwify, Greenn ou Hotmart. As vendas começam a cair automaticamente em segundos.",
         bullets: ["Kiwify", "Greenn", "Hotmart"],
     },
     {
         number: "02",
         icon: BarChart3,
         badge: "Configure",
-        title: "Monte seu pipeline e metas",
+        title: "Monte o pipeline e as metas",
         description:
-            "Crie os estágios do seu funil, defina metas individuais e do time. Convide seus vendedores — cada um com seu login.",
+            "Monta as etapas do seu funil, define meta individual e do time. Convide os vendedores — cada um com o login dele.",
         bullets: ["Pipeline customizável", "Metas individuais", "Convite por email"],
     },
     {
@@ -37,8 +37,8 @@ const STEPS: readonly Step[] = [
         badge: "Resultado",
         title: "Acompanhe e escale",
         description:
-            "Dashboard ao vivo, ranking gamificado, funil de calls e WhatsApp integrado. Tudo que você precisa para escalar vendas sem microgerenciar.",
-        bullets: ["Dashboard em tempo real", "Ranking gamificado", "WhatsApp IA"],
+            "Painel ao vivo, ranking gamificado, funil de calls e WhatsApp integrado. Tudo pra escalar vendas sem ficar microgerenciando.",
+        bullets: ["Painel em tempo real", "Ranking gamificado", "WhatsApp com IA"],
     },
 ];
 
@@ -171,7 +171,7 @@ export const HowItWorks = () => {
                             letterSpacing: "-0.04em",
                         }}
                     >
-                        Do zero ao dashboard em{" "}
+                        Do zero ao painel em{" "}
                         <span className="text-emerald-400">5 minutos</span>
                     </h2>
 
@@ -210,7 +210,7 @@ export const HowItWorks = () => {
                         className="text-sm mb-3"
                         style={{ color: "rgba(255,255,255,0.35)", fontWeight: "var(--fw-semibold)" }}
                     >
-                        Mais rápido que uma reunião de alinhamento
+                        Mais rápido que uma reunião de alinhamento.
                     </p>
                     <a
                         href="#pricing"

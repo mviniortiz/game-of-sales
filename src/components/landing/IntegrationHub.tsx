@@ -73,9 +73,9 @@ export const IntegrationHub = () => {
                     className="text-center mb-16"
                 >
                     <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 tracking-tight">
-                        A solução que{" "}
+                        Uma ferramenta que{" "}
                         <span className="text-emerald-600">
-                            unifica tudo
+                            conecta tudo
                         </span>
                     </h2>
                 </motion.div>
@@ -92,7 +92,7 @@ export const IntegrationHub = () => {
                             </div>
                             <div className="text-left">
                                 <p className="text-gray-900 text-sm font-semibold">Vyzon</p>
-                                <p className="text-xs text-gray-400">Centraliza vendas, pagamentos e operação</p>
+                                <p className="text-xs text-gray-400">Junta vendas, pagamentos e operação num só lugar</p>
                             </div>
                         </div>
                     </div>
@@ -324,7 +324,7 @@ export const IntegrationHub = () => {
                     transition={{ delay: 1 }}
                     className="text-center mt-12 text-gray-500 text-sm"
                 >
-                    Vendas integradas automaticamente • Zero trabalho manual
+                    Vendas integradas automaticamente • Sem trabalho manual
                 </motion.p>
             </div>
         </section>

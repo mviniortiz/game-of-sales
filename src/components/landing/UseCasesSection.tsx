@@ -7,13 +7,13 @@ const CASES = [
     {
         icon: BarChart3,
         tag: "Gestor Comercial",
-        title: "Visibilidade total sem cobrar ninguém",
+        title: "Visibilidade total, sem ficar cobrando",
         description:
-            "Dashboard ao vivo com faturamento, ticket médio, taxa de conversão e show rate. Veja quem está performando e se o time vai bater a meta — tudo em tempo real.",
+            "Painel ao vivo com faturamento, ticket médio, taxa de conversão e show rate. Enxergue quem está performando e se o time vai bater meta — tudo em tempo real.",
         bullets: [
-            "Dashboard com KPIs ao vivo",
+            "Painel com KPIs ao vivo",
             "Funil de calls (agendamento → show → venda)",
-            "Metas consolidadas do time",
+            "Metas do time consolidadas",
         ],
     },
     {
@@ -21,7 +21,7 @@ const CASES = [
         tag: "Vendedor",
         title: "Competição que motiva sem pressão",
         description:
-            "Ranking com níveis, pódio ao vivo e meta individual. Cada venda fechada sobe sua posição. Acompanhe seu progresso e seus deals no pipeline.",
+            "Ranking com níveis, pódio ao vivo e meta individual. Cada venda fechada faz você subir. Acompanhe seu progresso e seus deals no pipeline.",
         bullets: [
             "Ranking com níveis e pódio",
             "Pipeline pessoal de deals",
@@ -33,11 +33,11 @@ const CASES = [
         tag: "Dono de Infoproduto",
         title: "Vendas automáticas, zero trabalho manual",
         description:
-            "Conecte Hotmart, Kiwify ou Greenn via webhook. Cada venda aprovada entra automaticamente no dashboard e atualiza o ranking. Sem copiar e colar.",
+            "Conecta Hotmart, Kiwify ou Greenn via webhook. Cada venda aprovada cai no painel e atualiza o ranking automaticamente. Sem copia-e-cola.",
         bullets: [
-            "Sync automático via webhook",
-            "Dashboard de receita em tempo real",
-            "Extensão Chrome para WhatsApp",
+            "Sincronização automática via webhook",
+            "Painel de receita ao vivo",
+            "Extensão Chrome pro WhatsApp",
         ],
     },
 ] as const;
@@ -68,12 +68,12 @@ export const UseCasesSection = () => {
                         className="font-heading mb-4"
                         style={{ fontWeight: 800, fontSize: "clamp(1.75rem, 4.5vw, 2.75rem)", lineHeight: 1.1, letterSpacing: "-0.04em", color: "rgba(255,255,255,0.95)" }}
                     >
-                        Funciona para o{" "}
+                        Funciona pro{" "}
                         <span className="text-emerald-400">seu time</span>
                     </h2>
 
                     <p className="max-w-lg mx-auto" style={{ fontSize: "1.0625rem", color: "rgba(255,255,255,0.45)" }}>
-                        Gestores ganham visibilidade. Vendedores ganham motivação. Donos de infoproduto ganham controle.
+                        Gestor ganha visibilidade. Vendedor ganha motivação. Dono de infoproduto ganha controle.
                     </p>
                 </motion.div>
 

@@ -50,15 +50,15 @@ export const ProductBentoGrid = () => {
                         }}
                     >
                         Tudo que seu time precisa.{" "}
-                        <span className="text-emerald-400">Em um s&oacute; lugar.</span>
+                        <span className="text-emerald-400">Num lugar só.</span>
                     </h2>
                     <p
                         className="max-w-xl mx-auto"
                         style={{ fontSize: "1.0625rem", lineHeight: 1.6, color: "rgba(255,255,255,0.45)" }}
                     >
-                        CRM, ranking, metas, calend&aacute;rio, calls e integra&ccedil;&otilde;es.{" "}
+                        CRM, ranking, metas, calendário, ligações e integrações.{" "}
                         <span style={{ fontWeight: "var(--fw-medium)", color: "rgba(255,255,255,0.85)" }}>
-                            Sem trocar de aba
+                            Sem ficar pulando de aba
                         </span>
                         .
                     </p>
@@ -136,8 +136,8 @@ export const ProductBentoGrid = () => {
                                 Ranking ao Vivo
                             </h3>
                             <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>
-                                P&oacute;dio em tempo real com n&iacute;veis Bronze, Prata, Ouro, Platina e Diamante. Cada venda
-                                atualiza o placar na hora. Seu time compete — e vende mais.
+                                Pódio ao vivo com níveis Bronze, Prata, Ouro, Platina e Diamante. Cada venda
+                                sobe o placar na hora. Seu time compete — e vende mais.
                             </p>
                         </div>
                     </BentoCard>
@@ -177,8 +177,8 @@ export const ProductBentoGrid = () => {
                             Vendas em Tempo Real
                         </h3>
                         <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>
-                            Hotmart, Kiwify ou Greenn vendeu? A venda aparece no dashboard em segundos via webhook. Zero
-                            digita&ccedil;&atilde;o manual.
+                            Vendeu no Hotmart, Kiwify ou Greenn? Cai no painel em segundos via webhook. Zero
+                            digitação manual.
                         </p>
                     </BentoCard>
 
@@ -226,8 +226,8 @@ export const ProductBentoGrid = () => {
                             Metas com Visibilidade
                         </h3>
                         <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>
-                            Meta individual e consolidada do time. Cada vendedor v&ecirc; quanto falta e quanto contribuiu.
-                            Gestor acompanha tudo sem perguntar.
+                            Meta individual e do time consolidada. Cada vendedor vê quanto falta e quanto já entregou.
+                            Gestor acompanha tudo sem precisar perguntar.
                         </p>
                     </BentoCard>
 
@@ -253,8 +253,8 @@ export const ProductBentoGrid = () => {
                                 Pipeline + WhatsApp IA integrados
                             </h3>
                             <p className="text-sm leading-relaxed mb-4" style={{ color: "rgba(255,255,255,0.45)" }}>
-                                CRM com pipeline Kanban, hist&oacute;rico de liga&ccedil;&otilde;es, e hub WhatsApp com copiloto
-                                IA que sugere respostas e detecta obje&ccedil;&otilde;es em tempo real.
+                                CRM com pipeline Kanban, histórico de ligações e hub WhatsApp com copiloto
+                                de IA que sugere resposta e identifica objeção na hora.
                             </p>
                             <div className="flex flex-wrap gap-2">
                                 {["Pipeline Kanban", "WhatsApp IA", "Ligações com gravação"].map((tag) => (

@@ -134,7 +134,7 @@ export const DemoScheduleSection = ({
                                 WebkitTextFillColor: "transparent",
                             }}
                         >
-                            funcionando na prática
+                            rodando na prática
                         </span>
                         ?
                     </h2>
@@ -143,8 +143,8 @@ export const DemoScheduleSection = ({
                         className="max-w-xl mx-auto"
                         style={{ color: "rgba(255,255,255,0.4)", fontSize: "1rem", lineHeight: 1.7 }}
                     >
-                        Agende uma demonstração gratuita de 30 minutos. Mostramos como o Vyzon
-                        se adapta ao seu time e respondemos todas as suas dúvidas.
+                        Agenda uma demonstração gratuita de 30 minutos. A gente mostra como o Vyzon
+                        se encaixa no seu time e responde todas as suas dúvidas.
                     </p>
                 </motion.div>
 
@@ -215,11 +215,11 @@ export const DemoScheduleSection = ({
 
                                         <div className="flex flex-col gap-3.5">
                                             {[
-                                                "Dashboard e pipeline configurados para seu negócio",
+                                                "Painel e pipeline configurados pro seu negócio",
                                                 "Gamificação e ranking em tempo real",
-                                                "Eva IA analisando dados do seu time",
-                                                "Integrações com suas ferramentas atuais",
-                                                "Plano ideal para o tamanho do seu time",
+                                                "Eva IA analisando os dados do seu time",
+                                                "Integrações com as ferramentas que você já usa",
+                                                "Plano ideal pro tamanho do seu time",
                                             ].map((item) => (
                                                 <div
                                                     key={item}
@@ -431,7 +431,7 @@ export const DemoScheduleSection = ({
                                             className="text-center text-xs mt-1"
                                             style={{ color: "rgba(255,255,255,0.25)" }}
                                         >
-                                            Sem compromisso. Cancele ou remarque a qualquer momento.
+                                            Sem compromisso. Cancela ou remarca quando quiser.
                                         </p>
                                     </form>
                                 </div>
@@ -476,8 +476,8 @@ export const DemoScheduleSection = ({
                                     className="max-w-md mx-auto mb-4"
                                     style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.95rem", lineHeight: 1.6 }}
                                 >
-                                    Escolha o melhor horário na aba que acabou de abrir.
-                                    A confirmação será enviada para{" "}
+                                    Escolhe o melhor horário na aba que acabou de abrir.
+                                    A confirmação vai pro{" "}
                                     <span style={{ color: "rgba(255,255,255,0.7)" }}>{formData.email}</span>.
                                 </p>
 
@@ -512,7 +512,7 @@ export const DemoScheduleSection = ({
                     {[
                         "Sem compromisso",
                         "Demonstração personalizada",
-                        "Tire todas suas dúvidas",
+                        "Tira todas as suas dúvidas",
                     ].map((t) => (
                         <div
                             key={t}

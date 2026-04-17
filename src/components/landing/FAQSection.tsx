@@ -5,27 +5,27 @@ import { ChevronDown } from "lucide-react";
 const FAQS = [
     {
         q: "O que é o Vyzon?",
-        a: "Um CRM de vendas completo com pipeline Kanban, ranking gamificado, metas em tempo real, funil de calls, calendário com sync Google Calendar, hub WhatsApp com IA, e integrações automáticas com Hotmart, Kiwify e Greenn.",
+        a: "Um CRM de vendas completo com pipeline Kanban, ranking gamificado, metas em tempo real, funil de calls, calendário integrado com Google Calendar, hub WhatsApp com IA e integrações automáticas com Hotmart, Kiwify e Greenn.",
     },
     {
-        q: "Quanto tempo leva para configurar?",
-        a: "Menos de 5 minutos. Crie sua conta, cole o webhook da sua plataforma de vendas e convide seu time. As vendas começam a aparecer automaticamente.",
+        q: "Quanto tempo leva pra configurar?",
+        a: "Menos de 5 minutos. Cria a conta, cola o webhook da sua plataforma de vendas e convida o time. As vendas começam a aparecer automaticamente.",
     },
     {
         q: "Posso testar antes de assinar?",
-        a: "Sim! Todos os planos pagos incluem 14 dias grátis com acesso completo. Você só é cobrado após o período de teste.",
+        a: "Sim! Todos os planos pagos têm 14 dias grátis com acesso completo. Você só é cobrado depois do período de teste.",
     },
     {
         q: "Quais plataformas integram?",
-        a: "Hotmart, Kiwify e Greenn com sync automático via webhook. Google Calendar para agendamentos. WhatsApp via Evolution API. Mais integrações sendo votadas pela comunidade.",
+        a: "Hotmart, Kiwify e Greenn com sincronização automática via webhook. Google Calendar pra agendamentos. WhatsApp via Evolution API. Novas integrações entram por votação da comunidade.",
     },
     {
         q: "Tem ligação dentro da plataforma?",
-        a: "Sim. Ligações é um add-on disponível nos planos Plus e Pro. Inclui chamadas dentro do CRM, gravação automática, transcrição e insights de cada conversa.",
+        a: "Tem. Ligações é um add-on dos planos Plus e Pro. Inclui chamadas dentro do CRM, gravação automática, transcrição e insights de cada conversa.",
     },
     {
-        q: "Posso cancelar a qualquer momento?",
-        a: "Sim, sem multas ou taxas. Cancele direto pelo painel, sem precisar falar com ninguém.",
+        q: "Posso cancelar quando quiser?",
+        a: "Pode, sem multa nem taxa. Cancela direto pelo painel, sem precisar falar com ninguém.",
     },
 ];
 
@@ -119,10 +119,10 @@ export const FAQSection = () => {
                             color: "rgba(255,255,255,0.95)",
                         }}
                     >
-                        Dúvidas? Temos respostas.
+                        Dúvida? A gente responde.
                     </h2>
                     <p className="mt-3 text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>
-                        Tudo que você precisa saber antes de começar.
+                        Tudo o que você precisa saber antes de começar.
                     </p>
                 </motion.div>
 

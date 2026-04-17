@@ -6,25 +6,25 @@ const COMPARISONS = [
     {
         icon: Clock,
         before: "Pipeline invisível",
-        beforeDesc: "Deals espalhados em planilhas, WhatsApp e cabeça do vendedor. Ninguém sabe o status real.",
+        beforeDesc: "Deal espalhado em planilha, WhatsApp e na cabeça do vendedor. Ninguém sabe onde tá cada coisa.",
         after: "Pipeline visual Kanban",
-        afterDesc: "Drag & drop intuitivo. Todo deal visível, do lead ao fechamento, em tempo real.",
+        afterDesc: "Arrasta e solta. Cada deal aparece, do lead ao fechamento, em tempo real.",
         delay: 0,
     },
     {
         icon: TrendingDown,
-        before: "Time sem meta clara",
-        beforeDesc: "Vendedores não sabem quanto falta pra bater a meta. Gestor cobra todo dia.",
+        before: "Time sem norte",
+        beforeDesc: "Vendedor não sabe quanto falta pra bater meta. Gestor cobra todo dia no grupo.",
         after: "Metas e ranking ao vivo",
-        afterDesc: "Cada vendedor vê sua meta, seu progresso e sua posição no ranking. Motivação automática.",
+        afterDesc: "Cada vendedor enxerga a meta, o progresso e a posição no ranking. Motivação sem precisar cobrar.",
         delay: 0.1,
     },
     {
         icon: AlertTriangle,
-        before: "Vendas caem no vácuo",
-        beforeDesc: "Hotmart aprovou, mas ninguém registrou. Kiwify vendeu, mas o dashboard não sabe.",
-        after: "Sync automático de vendas",
-        afterDesc: "Webhooks com Hotmart, Kiwify e Greenn. A venda chega, o ranking atualiza, o dashboard reflete.",
+        before: "Venda caindo no vácuo",
+        beforeDesc: "Hotmart aprovou e ninguém registrou. Kiwify vendeu e o painel nem ficou sabendo.",
+        after: "Sincronização automática",
+        afterDesc: "Webhook com Hotmart, Kiwify e Greenn. Caiu venda, ranking atualiza e o painel reflete na hora.",
         delay: 0.2,
     },
 ];
@@ -49,7 +49,7 @@ export const PainPoints = () => {
                         className="text-xs uppercase mb-4 tracking-widest"
                         style={{ fontWeight: "var(--fw-medium)", color: "rgba(255,255,255,0.35)" }}
                     >
-                        Isso parece familiar?
+                        Soa familiar?
                     </p>
                     <h2
                         className="font-heading"
@@ -62,7 +62,7 @@ export const PainPoints = () => {
                         }}
                     >
                         Seu processo de vendas{" "}
-                        <span className="text-red-400">não deveria ser assim</span>
+                        <span className="text-red-400">não precisa ser assim.</span>
                     </h2>
                 </motion.div>
 
@@ -144,13 +144,13 @@ export const PainPoints = () => {
                     <p
                         style={{ fontWeight: "var(--fw-medium)", fontSize: "1.0625rem", color: "rgba(255,255,255,0.95)" }}
                     >
-                        Existe uma forma{" "}
+                        Tem um jeito{" "}
                         <span className="text-emerald-400" style={{ fontWeight: "var(--fw-bold)" }}>
                             melhor.
                         </span>
                     </p>
                     <p className="text-xs mt-1 mb-8" style={{ color: "rgba(255,255,255,0.35)" }}>
-                        Um CRM completo que resolve tudo isso — e se configura em 5 minutos.
+                        Um CRM que resolve tudo isso — e fica no ar em 5 minutos.
                     </p>
                     <div className="h-12 w-px" style={{ background: "rgba(255,255,255,0.08)" }} />
                 </motion.div>
