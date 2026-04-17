@@ -1,7 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { trackEvent, FUNNEL_EVENTS } from "@/lib/analytics";
-import { motion } from "framer-motion";
 import {
     MessageCircle,
     Check,
@@ -42,13 +41,6 @@ const DemoScheduleSection = lazy(() =>
 const FinalCTA = lazy(() =>
     import("@/components/landing/FinalCTA").then((m) => ({ default: m.FinalCTA }))
 );
-
-const fadeInUp = {
-    initial: { opacity: 0, y: 20 },
-    whileInView: { opacity: 1, y: 0 },
-    viewport: { once: true },
-    transition: { duration: 0.5 },
-};
 
 const PLANS = [
     {
@@ -159,27 +151,19 @@ const LandingPage = () => {
     return (
         <div className="min-h-screen w-full bg-white text-gray-900 selection:bg-emerald-500/30">
             {isNavigating && (
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="fixed inset-0 z-[100] flex items-center justify-center"
+                <div
+                    className="fixed inset-0 z-[100] flex items-center justify-center landing-fade-in"
                     style={{ background: "#06080a" }}
                 >
                     <div className="flex flex-col items-center gap-8 px-4">
-                        <motion.img
+                        <img
                             src={brandLogoDark}
                             alt="Vyzon"
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: 0.4 }}
-                            className="h-10"
+                            width={320}
+                            height={60}
+                            className="h-10 w-auto landing-fade-in"
                         />
-                        <motion.div
-                            initial={{ opacity: 0, y: 8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.15 }}
-                            className="text-center"
-                        >
+                        <div className="text-center landing-fade-in-up landing-delay-150">
                             <p
                                 className="font-heading text-lg mb-1"
                                 style={{ color: "rgba(255,255,255,0.9)", fontWeight: 600, letterSpacing: "-0.02em" }}
@@ -189,23 +173,18 @@ const LandingPage = () => {
                             <p className="text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>
                                 Isso leva apenas alguns segundos
                             </p>
-                        </motion.div>
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.25 }}
-                            className="w-48 h-0.5 rounded-full overflow-hidden"
+                        </div>
+                        <div
+                            className="w-48 h-0.5 rounded-full overflow-hidden landing-fade-in landing-delay-300"
                             style={{ background: "rgba(255,255,255,0.08)" }}
                         >
-                            <motion.div
-                                className="h-full rounded-full bg-emerald-500"
-                                initial={{ width: "0%" }}
-                                animate={{ width: "100%" }}
-                                transition={{ duration: 0.8, ease: "easeInOut" }}
+                            <div
+                                className="h-full rounded-full bg-emerald-500 loader-progress"
+                                style={{ width: "100%" }}
                             />
-                        </motion.div>
+                        </div>
                     </div>
-                </motion.div>
+                </div>
             )}
 
             <LandingNav
@@ -241,13 +220,7 @@ const LandingPage = () => {
 
                 <section className="py-28 px-4 sm:px-6 lg:px-8" style={{ background: "#06080a" }}>
                     <div className="max-w-4xl mx-auto">
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.5 }}
-                            className="text-center mb-14"
-                        >
+                        <div className="text-center mb-14 landing-fade-in-up">
                             <span
                                 className="inline-flex items-center gap-1.5 text-xs text-emerald-400 rounded-full px-4 py-1.5 mb-5"
                                 style={{ fontWeight: 600, letterSpacing: "0.08em", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)" }}
@@ -268,28 +241,27 @@ const LandingPage = () => {
                                 O vendedor liga dentro da plataforma e o histórico fica no CRM.
                                 Gravação e transcrição no deal — sem depender de memória.
                             </p>
-                        </motion.div>
+                        </div>
 
                         <div className="grid sm:grid-cols-2 gap-4 mb-10">
-                            {LIGACOES_FEATURES.map(({ icon: Icon, title, desc }) => (
-                                <motion.div
-                                    key={title}
-                                    className="flex items-start gap-4 rounded-xl p-5"
-                                    style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}
-                                    initial={{ opacity: 0, y: 12 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true }}
-                                    transition={{ duration: 0.4 }}
-                                >
-                                    <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(16,185,129,0.1)" }}>
-                                        <Icon className="h-4 w-4 text-emerald-400" />
+                            {LIGACOES_FEATURES.map(({ icon: Icon, title, desc }, idx) => {
+                                const delayClass = idx === 0 ? "" : idx === 1 ? "landing-delay-100" : idx === 2 ? "landing-delay-200" : "landing-delay-300";
+                                return (
+                                    <div
+                                        key={title}
+                                        className={`flex items-start gap-4 rounded-xl p-5 landing-fade-in-up ${delayClass}`}
+                                        style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}
+                                    >
+                                        <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(16,185,129,0.1)" }}>
+                                            <Icon className="h-4 w-4 text-emerald-400" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm mb-1" style={{ fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>{title}</p>
+                                            <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.4)" }}>{desc}</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="text-sm mb-1" style={{ fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>{title}</p>
-                                        <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.4)" }}>{desc}</p>
-                                    </div>
-                                </motion.div>
-                            ))}
+                                );
+                            })}
                         </div>
 
                         <div className="text-center">
@@ -317,9 +289,7 @@ const LandingPage = () => {
                         style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
 
                     <div className="max-w-5xl mx-auto relative z-10">
-                        <motion.div className="text-center mb-14"
-                            initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }} transition={{ duration: 0.5 }}>
+                        <div className="text-center mb-14 landing-fade-in-up">
 
                             <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400 rounded-full px-4 py-1.5 mb-5"
                                 style={{ letterSpacing: "var(--ls-widest)", fontWeight: "var(--fw-semibold)", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)" }}>
@@ -346,10 +316,10 @@ const LandingPage = () => {
                                         className="relative flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm transition-all duration-200"
                                         style={{ fontWeight: "var(--fw-semibold)", color: isAnnual === annual ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.35)" }}>
                                         {isAnnual === annual && (
-                                            <motion.div layoutId="billing-pill"
+                                            <span
                                                 className="absolute inset-0 rounded-xl"
                                                 style={{ background: "rgba(255,255,255,0.08)", boxShadow: "0 0 0 1px rgba(255,255,255,0.1)" }}
-                                                transition={{ type: "spring", bounce: 0.18, duration: 0.38 }} />
+                                            />
                                         )}
                                         <span className="relative">{annual ? "Anual" : "Mensal"}</span>
                                         {annual && (
@@ -361,25 +331,21 @@ const LandingPage = () => {
                                     </button>
                                 ))}
                             </div>
-                        </motion.div>
+                        </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:items-end">
                             {PLANS.map((plan, i) => {
                                 const monthly = isAnnual ? Math.round(plan.priceNumber * 0.9) : plan.priceNumber;
                                 const annualSaving = Math.round((plan.priceNumber - Math.round(plan.priceNumber * 0.9)) * 12);
                                 const isPopular = plan.popular;
+                                const delayClass = i === 0 ? "" : i === 1 ? "landing-delay-100" : "landing-delay-200";
 
                                 return (
-                                    <motion.div key={plan.name}
-                                        className={`relative flex flex-col ${isPopular
+                                    <div key={plan.name}
+                                        className={`pricing-card relative flex flex-col landing-fade-in-up ${delayClass} ${isPopular
                                             ? "order-first md:order-none md:-mt-7 pt-8 md:pt-0"
                                             : ""
-                                            }`}
-                                        initial={{ opacity: 0, y: 24 }}
-                                        whileInView={{ opacity: 1, y: 0 }}
-                                        viewport={{ once: true }}
-                                        transition={{ delay: i * 0.1, duration: 0.45 }}
-                                        whileHover={{ y: -6, transition: { duration: 0.2 } }}>
+                                            }`}>
 
                                         {isPopular && (
                                             <div className="absolute -top-4 inset-x-0 flex justify-center z-10">
@@ -421,11 +387,7 @@ const LandingPage = () => {
                                                 </div>
 
                                                 <div className="mb-1">
-                                                    <motion.div key={monthly}
-                                                        initial={{ opacity: 0, y: -8 }}
-                                                        animate={{ opacity: 1, y: 0 }}
-                                                        transition={{ duration: 0.22 }}
-                                                        className="flex items-end gap-1">
+                                                    <div key={monthly} className="flex items-end gap-1 landing-fade-in">
                                                         <span className="text-base leading-none mb-1.5"
                                                             style={{ fontWeight: "var(--fw-medium)", color: "rgba(255,255,255,0.4)" }}>R$</span>
                                                         <span className="leading-none tabular-nums"
@@ -439,14 +401,12 @@ const LandingPage = () => {
                                                             {monthly}
                                                         </span>
                                                         <span className="text-sm leading-none mb-1.5" style={{ color: "rgba(255,255,255,0.35)" }}>/mês</span>
-                                                    </motion.div>
+                                                    </div>
                                                 </div>
 
                                                 <div className="min-h-[34px] mb-5">
                                                     {isAnnual ? (
-                                                        <motion.div key="annual-info"
-                                                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}
-                                                            className="flex items-center gap-2 flex-wrap mt-1">
+                                                        <div key="annual-info" className="flex items-center gap-2 flex-wrap mt-1 landing-fade-in">
                                                             <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.35)" }}>
                                                                 Cobrado R$ {Math.round(monthly * 12).toLocaleString("pt-BR")}/ano
                                                             </span>
@@ -460,7 +420,7 @@ const LandingPage = () => {
                                                                     Economize R$ {annualSaving.toLocaleString("pt-BR")}
                                                                 </span>
                                                             )}
-                                                        </motion.div>
+                                                        </div>
                                                     ) : (
                                                         <p className="text-[11px] mt-1" style={{ color: "rgba(255,255,255,0.35)" }}>Faturado mensalmente</p>
                                                     )}
@@ -497,11 +457,10 @@ const LandingPage = () => {
                                                             boxShadow: "0 4px 20px rgba(16,185,129,0.28), 0 1px 4px rgba(0,0,0,0.25)",
                                                             fontWeight: "var(--fw-semibold)"
                                                         }}>
-                                                        <motion.span
-                                                            className="absolute inset-0 rounded-xl"
+                                                        <span
+                                                            className="absolute inset-0 rounded-xl landing-shine"
                                                             style={{ background: "linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.14) 50%, transparent 70%)" }}
-                                                            animate={{ x: ["-120%", "220%"] }}
-                                                            transition={{ duration: 2.4, repeat: Infinity, repeatDelay: 1.8, ease: "easeInOut" }} />
+                                                        />
                                                         <span className="relative">Agendar demonstração</span>
                                                         <ArrowRight className="relative h-4 w-4" />
                                                     </button>
@@ -522,13 +481,12 @@ const LandingPage = () => {
                                                 )}
                                             </div>
                                         </div>
-                                    </motion.div>
+                                    </div>
                                 );
                             })}
                         </div>
 
-                        <motion.div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 mt-12"
-                            initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.55 }}>
+                        <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 mt-12 landing-fade-in landing-delay-500">
                             {TRUST_ITEMS.map(({ icon, label }) => (
                                 <div key={label} className="flex items-center gap-1.5 text-xs"
                                     style={{ fontWeight: "var(--fw-medium)", color: "rgba(255,255,255,0.35)" }}>
@@ -536,7 +494,7 @@ const LandingPage = () => {
                                     {label}
                                 </div>
                             ))}
-                        </motion.div>
+                        </div>
                     </div>
                 </section>
 
@@ -551,7 +509,7 @@ const LandingPage = () => {
                 <div className="max-w-6xl mx-auto">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
                         <div className="col-span-2 md:col-span-1">
-                            <img src={brandLogoDark} alt="Vyzon" className="h-8 mb-4" />
+                            <img src={brandLogoDark} alt="Vyzon" width={320} height={60} className="h-8 w-auto mb-4" />
                             <p className="text-gray-500 text-sm leading-relaxed max-w-[220px]">
                                 CRM gamificado para times de vendas que querem bater meta todo mês.
                             </p>

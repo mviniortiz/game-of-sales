@@ -1,7 +1,5 @@
-import { motion } from "framer-motion";
 import { Clock, TrendingDown, AlertTriangle, Check, X, ArrowRight } from "lucide-react";
 
-// ─── Data ─────────────────────────────────────────────────────────────────────
 const COMPARISONS = [
     {
         icon: Clock,
@@ -9,7 +7,7 @@ const COMPARISONS = [
         beforeDesc: "Deal espalhado em planilha, WhatsApp e na cabeça do vendedor. Ninguém sabe onde tá cada coisa.",
         after: "Pipeline visual Kanban",
         afterDesc: "Arrasta e solta. Cada deal aparece, do lead ao fechamento, em tempo real.",
-        delay: 0,
+        delayClass: "",
     },
     {
         icon: TrendingDown,
@@ -17,7 +15,7 @@ const COMPARISONS = [
         beforeDesc: "Vendedor não sabe quanto falta pra bater meta. Gestor cobra todo dia no grupo.",
         after: "Metas e ranking ao vivo",
         afterDesc: "Cada vendedor enxerga a meta, o progresso e a posição no ranking. Motivação sem precisar cobrar.",
-        delay: 0.1,
+        delayClass: "landing-delay-100",
     },
     {
         icon: AlertTriangle,
@@ -25,23 +23,13 @@ const COMPARISONS = [
         beforeDesc: "Hotmart aprovou e ninguém registrou. Kiwify vendeu e o painel nem ficou sabendo.",
         after: "Sincronização automática",
         afterDesc: "Webhook com Hotmart, Kiwify e Greenn. Caiu venda, ranking atualiza e o painel reflete na hora.",
-        delay: 0.2,
+        delayClass: "landing-delay-200",
     },
 ];
 
-// ─── Animations ───────────────────────────────────────────────────────────────
-const fadeUp = (delay = 0) => ({
-    initial: { y: 20 },
-    whileInView: { y: 0 },
-    viewport: { once: true, margin: "-60px" as const },
-    transition: { duration: 0.5, delay, ease: [0.25, 0.46, 0.45, 0.94] },
-});
-
-// ─── PainPoints ───────────────────────────────────────────────────────────────
 export const PainPoints = () => {
     return (
         <section className="relative py-28 px-4 sm:px-6 lg:px-8 overflow-hidden" style={{ background: "#06080a" }}>
-            {/* Green spotlight from top */}
             <div
                 className="absolute inset-x-0 top-0 h-[400px] pointer-events-none"
                 style={{
@@ -49,9 +37,7 @@ export const PainPoints = () => {
                 }}
             />
             <div className="relative max-w-3xl mx-auto">
-
-                {/* Header */}
-                <motion.div className="text-center mb-20" {...fadeUp()}>
+                <div className="text-center mb-20 landing-fade-in-up">
                     <p
                         className="text-xs uppercase mb-4 tracking-widest"
                         style={{ fontWeight: "var(--fw-medium)", color: "rgba(255,255,255,0.35)" }}
@@ -71,17 +57,14 @@ export const PainPoints = () => {
                         Seu processo de vendas{" "}
                         <span className="text-red-400">não precisa ser assim.</span>
                     </h2>
-                </motion.div>
+                </div>
 
-                {/* Comparison rows */}
                 <div className="space-y-6">
-                    {COMPARISONS.map(({ icon: Icon, before, beforeDesc, after, afterDesc, delay }, i) => (
-                        <motion.div
+                    {COMPARISONS.map(({ icon: Icon, before, beforeDesc, after, afterDesc, delayClass }, i) => (
+                        <div
                             key={i}
-                            className="grid md:grid-cols-[1fr_auto_1fr] gap-4 items-stretch"
-                            {...fadeUp(delay)}
+                            className={`grid md:grid-cols-[1fr_auto_1fr] gap-4 items-stretch landing-fade-in-up ${delayClass}`}
                         >
-                            {/* Before */}
                             <div
                                 className="flex items-start gap-3.5 rounded-xl p-5"
                                 style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)" }}
@@ -108,12 +91,10 @@ export const PainPoints = () => {
                                 </div>
                             </div>
 
-                            {/* Arrow */}
                             <div className="hidden md:flex items-center justify-center px-1">
                                 <ArrowRight className="h-4 w-4" style={{ color: "rgba(255,255,255,0.2)" }} strokeWidth={1.5} />
                             </div>
 
-                            {/* After */}
                             <div
                                 className="flex items-start gap-3.5 rounded-xl p-5"
                                 style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)" }}
@@ -139,15 +120,11 @@ export const PainPoints = () => {
                                     </p>
                                 </div>
                             </div>
-                        </motion.div>
+                        </div>
                     ))}
                 </div>
 
-                {/* Bridge */}
-                <motion.div
-                    className="mt-20 flex flex-col items-center text-center"
-                    {...fadeUp(0.4)}
-                >
+                <div className="mt-20 flex flex-col items-center text-center landing-fade-in-up landing-delay-400">
                     <p
                         style={{ fontWeight: "var(--fw-medium)", fontSize: "1.0625rem", color: "rgba(255,255,255,0.95)" }}
                     >
@@ -160,7 +137,7 @@ export const PainPoints = () => {
                         Um CRM que resolve tudo isso — e fica no ar em 5 minutos.
                     </p>
                     <div className="h-12 w-px" style={{ background: "rgba(255,255,255,0.08)" }} />
-                </motion.div>
+                </div>
             </div>
         </section>
     );

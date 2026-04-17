@@ -5,37 +5,52 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Google Ads Tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18055201052"></script>
+  <!-- Third-party trackers: Google Ads + Meta Pixel + Clarity.
+       Deferred para after window load + requestIdleCallback pra não bloquear FCP/LCP.
+       dataLayer é inicializado inline pra permitir gtag() calls antes do script carregar. -->
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
     gtag('config', 'AW-18055201052');
-  </script>
 
-  <!-- Meta Pixel Code -->
-  <script>
-    !function(f,b,e,v,n,t,s)
-    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-    n.queue=[];t=b.createElement(e);t.async=!0;
-    t.src=v;s=b.getElementsByTagName(e)[0];
-    s.parentNode.insertBefore(t,s)}(window, document,'script',
-    'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', '2941145869417242');
-    fbq('track', 'PageView');
-  </script>
-  <!-- End Meta Pixel Code -->
+    (function () {
+      var loaded = false;
+      var idle = window.requestIdleCallback || function (cb) { return setTimeout(cb, 1); };
 
-  <!-- Microsoft Clarity -->
-  <script type="text/javascript">
-    (function(c,l,a,r,i,t,y){
-        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-    })(window, document, "clarity", "script", "wd4vh454ta");
+      function loadTrackers() {
+        if (loaded) return;
+        loaded = true;
+
+        // Google Ads gtag
+        var g = document.createElement('script');
+        g.async = true;
+        g.src = 'https://www.googletagmanager.com/gtag/js?id=AW-18055201052';
+        document.head.appendChild(g);
+
+        // Meta Pixel
+        !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+        n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
+        (window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init','2941145869417242');
+        fbq('track','PageView');
+
+        // Microsoft Clarity
+        (function(c,l,a,r,i,t,y){
+          c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+          t=l.createElement(r);t.async=1;t.src='https://www.clarity.ms/tag/'+i;
+          y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+        })(window, document, 'clarity', 'script', 'wd4vh454ta');
+      }
+
+      if (document.readyState === 'complete') {
+        idle(loadTrackers);
+      } else {
+        window.addEventListener('load', function () { idle(loadTrackers); });
+      }
+    })();
   </script>
 
   <!-- Favicon & App Icons -->

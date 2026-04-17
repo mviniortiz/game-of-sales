@@ -15,21 +15,24 @@ export default defineConfig({
     },
   },
   build: {
+    target: "es2020",
     rollupOptions: {
       output: {
-        manualChunks: {
-          "vendor-react": ["react", "react-dom", "react-router-dom"],
-          "vendor-motion": ["framer-motion"],
-          "vendor-query": ["@tanstack/react-query"],
-          "vendor-ui": [
-            "@radix-ui/react-accordion",
-            "@radix-ui/react-dialog",
-            "@radix-ui/react-dropdown-menu",
-            "@radix-ui/react-popover",
-            "@radix-ui/react-select",
-            "@radix-ui/react-tabs",
-            "@radix-ui/react-tooltip",
-          ],
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return;
+          // Keep React runtime (including react/jsx-runtime) together
+          if (/[\\/]node_modules[\\/](react|react-dom|scheduler|react-router|react-router-dom|@remix-run[\\/]router)[\\/]/.test(id)) {
+            return "vendor-react";
+          }
+          if (/[\\/]node_modules[\\/]framer-motion[\\/]/.test(id) || /[\\/]node_modules[\\/]motion[\\/]/.test(id)) {
+            return "vendor-motion";
+          }
+          if (/[\\/]node_modules[\\/]@tanstack[\\/]react-query/.test(id)) {
+            return "vendor-query";
+          }
+          if (/[\\/]node_modules[\\/]@radix-ui[\\/]/.test(id)) {
+            return "vendor-ui";
+          }
         },
       },
     },

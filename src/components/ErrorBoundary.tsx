@@ -1,7 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Sentry } from "@/lib/sentry";
+import { captureException } from "@/lib/sentry";
 
 interface Props {
   children: ReactNode;
@@ -43,7 +42,7 @@ export class ErrorBoundary extends Component<Props, State> {
       }
     }
 
-    Sentry.captureException(error, { extra: { componentStack: errorInfo.componentStack } });
+    captureException(error, { componentStack: errorInfo.componentStack });
   }
 
   handleReload = () => {
@@ -69,13 +68,19 @@ export class ErrorBoundary extends Component<Props, State> {
               </p>
             </div>
             <div className="flex gap-3 justify-center">
-              <Button variant="outline" onClick={this.handleRetry}>
+              <button
+                onClick={this.handleRetry}
+                className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
                 Tentar novamente
-              </Button>
-              <Button onClick={this.handleReload} className="bg-emerald-600 hover:bg-emerald-700">
+              </button>
+              <button
+                onClick={this.handleReload}
+                className="inline-flex items-center justify-center rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+              >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Recarregar
-              </Button>
+              </button>
             </div>
           </div>
         </div>

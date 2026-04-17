@@ -1,5 +1,4 @@
-import { useEffect, useRef } from "react";
-import { useInView, useMotionValue, useSpring, motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
 
 interface AnimatedCounterProps {
     target: number;
@@ -9,6 +8,8 @@ interface AnimatedCounterProps {
     className?: string;
 }
 
+// CSS/IntersectionObserver-based counter — sem framer-motion.
+// Anima de 0 até target com easeOutCubic quando entra no viewport.
 export const AnimatedCounter = ({
     target,
     duration = 1.5,
@@ -17,38 +18,51 @@ export const AnimatedCounter = ({
     className = "",
 }: AnimatedCounterProps) => {
     const ref = useRef<HTMLSpanElement>(null);
-    const isInView = useInView(ref, { once: true, margin: "-50px" });
-    const motionValue = useMotionValue(0);
-    const springValue = useSpring(motionValue, {
-        duration: duration * 1000,
-        bounce: 0,
-    });
+    const [value, setValue] = useState(0);
 
     useEffect(() => {
-        if (isInView) {
-            motionValue.set(target);
-        }
-    }, [isInView, motionValue, target]);
+        const el = ref.current;
+        if (!el) return;
 
-    useEffect(() => {
-        const unsubscribe = springValue.on("change", (latest) => {
-            if (ref.current) {
-                const value = Math.round(latest);
-                ref.current.textContent = `${prefix}${value.toLocaleString("pt-BR")}${suffix}`;
-            }
-        });
-        return unsubscribe;
-    }, [springValue, prefix, suffix]);
+        let rafId = 0;
+        let started = false;
+
+        const animate = (t0: number) => {
+            const step = (now: number) => {
+                const elapsed = now - t0;
+                const progress = Math.min(elapsed / (duration * 1000), 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                setValue(Math.round(target * eased));
+                if (progress < 1) rafId = requestAnimationFrame(step);
+            };
+            rafId = requestAnimationFrame(step);
+        };
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting && !started) {
+                        started = true;
+                        animate(performance.now());
+                        observer.disconnect();
+                    }
+                });
+            },
+            { rootMargin: "-50px" }
+        );
+
+        observer.observe(el);
+        return () => {
+            cancelAnimationFrame(rafId);
+            observer.disconnect();
+        };
+    }, [target, duration]);
 
     return (
-        <motion.span
-            ref={ref}
-            className={className}
-            initial={{ y: 10 }}
-            animate={isInView ? { y: 0 } : {}}
-            transition={{ duration: 0.4 }}
-        >
-            {prefix}0{suffix}
-        </motion.span>
+        <span ref={ref} className={className}>
+            {prefix}
+            {value.toLocaleString("pt-BR")}
+            {suffix}
+        </span>
     );
 };

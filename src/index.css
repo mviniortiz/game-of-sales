@@ -362,3 +362,119 @@ All colors MUST be HSL.
     transform: translateY(-6px);
   }
 }
+
+/* Landing: CSS-only entry animations — replaces framer-motion initial/animate
+   pra manter vendor-motion (128KB) fora do critical path */
+@keyframes landing-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes landing-fade-in-up {
+  from { opacity: 0; transform: translate3d(0, 16px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes landing-fade-in-up-lg {
+  from { opacity: 0; transform: translate3d(0, 24px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+.landing-fade-in {
+  animation: landing-fade-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.landing-fade-in-up {
+  animation: landing-fade-in-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.landing-fade-in-up-lg {
+  animation: landing-fade-in-up-lg 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.landing-delay-100 { animation-delay: 100ms; }
+.landing-delay-150 { animation-delay: 150ms; }
+.landing-delay-200 { animation-delay: 200ms; }
+.landing-delay-300 { animation-delay: 300ms; }
+.landing-delay-400 { animation-delay: 400ms; }
+.landing-delay-500 { animation-delay: 500ms; }
+.landing-delay-550 { animation-delay: 550ms; }
+.landing-delay-600 { animation-delay: 600ms; }
+.landing-delay-650 { animation-delay: 650ms; }
+.landing-delay-700 { animation-delay: 700ms; }
+.landing-delay-800 { animation-delay: 800ms; }
+
+/* Hero CTAs — CSS-only hover/active replacing whileHover/whileTap */
+.hero-eyebrow {
+  transition: background-color 0.18s ease-out, border-color 0.18s ease-out, transform 0.18s ease-out;
+}
+.hero-eyebrow:hover {
+  background: rgba(16,185,129,0.15) !important;
+  border-color: rgba(16,185,129,0.3) !important;
+  transform: scale(1.02);
+}
+.hero-eyebrow:active {
+  transform: scale(0.97);
+}
+
+.hero-cta-primary {
+  transition: transform 0.18s ease-out, box-shadow 0.18s ease-out;
+  will-change: transform;
+}
+.hero-cta-primary:hover {
+  transform: scale(1.04);
+  box-shadow: 0 0 0 1px rgba(16,185,129,0.4), 0 8px 40px rgba(16,185,129,0.45) !important;
+}
+.hero-cta-primary:active {
+  transform: scale(0.97);
+}
+
+.hero-cta-secondary {
+  transition: color 0.18s ease-out, box-shadow 0.18s ease-out, transform 0.18s ease-out;
+}
+.hero-cta-secondary:hover {
+  color: rgba(255,255,255,0.9) !important;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.15) !important;
+}
+.hero-cta-secondary:active {
+  transform: scale(0.97);
+}
+
+/* Pricing card hover lift */
+.pricing-card {
+  transition: transform 0.2s ease-out;
+  will-change: transform;
+}
+.pricing-card:hover {
+  transform: translateY(-6px);
+}
+
+/* Shimmer for popular CTA — pure CSS replacement for framer infinite loop */
+@keyframes landing-shine {
+  0% { transform: translateX(-120%); }
+  55%, 100% { transform: translateX(220%); }
+}
+.landing-shine {
+  animation: landing-shine 4.2s ease-in-out infinite;
+}
+
+/* Loader progress — sweeps from 0 to 100% */
+@keyframes loader-progress-anim {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+.loader-progress {
+  transform-origin: left center;
+  animation: loader-progress-anim 0.8s ease-in-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-fade-in,
+  .landing-fade-in-up,
+  .landing-fade-in-up-lg,
+  .landing-shine {
+    animation: none;
+  }
+  .hero-cta-primary,
+  .hero-cta-secondary,
+  .hero-eyebrow,
+  .pricing-card {
+    transition: none;
+  }
+}

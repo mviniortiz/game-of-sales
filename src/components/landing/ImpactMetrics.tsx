@@ -1,11 +1,10 @@
-import { motion } from "framer-motion";
 import { AnimatedCounter } from "./AnimatedCounter";
 
 const METRICS = [
-    { prefix: "<", value: 5, suffix: "min", label: "Para configurar", delay: 0 },
-    { prefix: "", value: 24, suffix: "/7", label: "Ranking ao vivo", delay: 0.1 },
-    { prefix: "", value: 8, suffix: "+", label: "Módulos completos", delay: 0.2 },
-    { prefix: "", value: 0, suffix: "", label: "Planilhas manuais", isZero: true, delay: 0.3 },
+    { prefix: "<", value: 5, suffix: "min", label: "Para configurar", delayClass: "" },
+    { prefix: "", value: 24, suffix: "/7", label: "Ranking ao vivo", delayClass: "landing-delay-100" },
+    { prefix: "", value: 8, suffix: "+", label: "Módulos completos", delayClass: "landing-delay-200" },
+    { prefix: "", value: 0, suffix: "", label: "Planilhas manuais", isZero: true, delayClass: "landing-delay-300" },
 ] as const;
 
 export const ImpactMetrics = () => {
@@ -16,13 +15,9 @@ export const ImpactMetrics = () => {
                     {METRICS.map((m) => {
                         const isZero = "isZero" in m && m.isZero;
                         return (
-                            <motion.div
+                            <div
                                 key={m.label}
-                                className="text-center"
-                                initial={{ y: 16 }}
-                                whileInView={{ y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 0.4, delay: m.delay }}
+                                className={`text-center landing-fade-in-up ${m.delayClass}`}
                             >
                                 <div
                                     className="flex items-baseline justify-center gap-0.5 mb-1.5 tabular-nums"
@@ -52,7 +47,7 @@ export const ImpactMetrics = () => {
                                 <p className="text-sm" style={{ color: "rgba(255,255,255,0.45)", fontWeight: 500 }}>
                                     {m.label}
                                 </p>
-                            </motion.div>
+                            </div>
                         );
                     })}
                 </div>
