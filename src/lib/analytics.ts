@@ -134,7 +134,12 @@ export function trackPurchaseConversion(value?: number, transactionId?: string, 
 
 // Track Google Ads demo request conversion (lead signal for PMax)
 export function trackDemoConversion() {
-  if (!GADS_DEMO_CONVERSION_LABEL) return;
+  if (!GADS_DEMO_CONVERSION_LABEL) {
+    console.warn(
+      "[analytics] VITE_GADS_DEMO_CONVERSION_LABEL not set — demo conversion will NOT be sent to Google Ads"
+    );
+    return;
+  }
   try {
     window.gtag?.("event", "conversion", {
       send_to: `${GADS_CONVERSION_ID}/${GADS_DEMO_CONVERSION_LABEL}`,
