@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, ArrowRight, Check, User, Mail, Building2, Phone, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { trackEvent, trackDemoConversion } from "@/lib/analytics";
+import { getAttribution } from "@/lib/attribution";
 
 interface DemoScheduleSectionProps {
     calendlyUrl?: string;
@@ -33,6 +34,7 @@ export const DemoScheduleSection = ({
                 has_phone: !!formData.phone,
             });
 
+            const attribution = getAttribution() || {};
             await supabase
                 .from("demo_requests")
                 .insert({
@@ -42,7 +44,8 @@ export const DemoScheduleSection = ({
                     phone: formData.phone,
                     source: "landing_page",
                     status: "pending",
-                });
+                    ...attribution,
+                } as any);
         } catch (err) {
             console.error("Failed to save demo request:", err);
         }
