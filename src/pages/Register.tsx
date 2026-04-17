@@ -28,6 +28,7 @@ import {
     Quote,
 } from "lucide-react";
 import { PLANS, formatPrice } from "@/config/plans";
+import { getAttribution } from "@/lib/attribution";
 import { RATE_LIMITS } from "@/lib/rateLimiter";
 
 // Validation schema
@@ -96,12 +97,14 @@ const Register = () => {
         setLoading(true);
 
         try {
-            // 1. Create the company first
+            // 1. Create the company first (com attribution da sessão, se houver)
+            const attribution = getAttribution() || {};
             const { data: companyData, error: companyError } = await supabase
                 .from("companies")
                 .insert({
                     name: companyName,
                     plan: plan,
+                    ...attribution,
                 })
                 .select("id")
                 .single();
