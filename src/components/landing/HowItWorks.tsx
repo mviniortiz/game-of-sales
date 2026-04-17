@@ -135,10 +135,17 @@ export const HowItWorks = () => {
     return (
         <section
             id="how-it-works"
-            className="py-28 px-4 sm:px-6 lg:px-8"
+            className="relative py-28 px-4 sm:px-6 lg:px-8 overflow-hidden"
             style={{ background: "#06080a" }}
         >
-            <div className="max-w-5xl mx-auto">
+            {/* Green spotlight from top */}
+            <div
+                className="absolute inset-x-0 top-0 h-[400px] pointer-events-none"
+                style={{
+                    background: "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(16,185,129,0.08) 0%, transparent 70%)",
+                }}
+            />
+            <div className="relative max-w-5xl mx-auto">
 
                 {/* Section header */}
                 <motion.div

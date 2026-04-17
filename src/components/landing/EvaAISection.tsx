@@ -294,11 +294,18 @@ const fadeIn = {
 
 export function EvaAISection({ onCTAClick }: { onCTAClick?: () => void }) {
   return (
-    <section className="py-28 px-4 sm:px-6 lg:px-8 relative overflow-hidden" style={{ background: "#06080a" }}>
-      {/* Subtle violet ambient glow */}
+    <section id="eva" className="py-28 px-4 sm:px-6 lg:px-8 relative overflow-hidden" style={{ background: "#06080a" }}>
+      {/* Violet aurora spotlight from top */}
       <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] rounded-full pointer-events-none"
-        style={{ background: "radial-gradient(ellipse, rgba(139,92,246,0.06) 0%, transparent 60%)", filter: "blur(80px)" }}
+        className="absolute inset-x-0 top-0 h-[500px] pointer-events-none"
+        style={{
+          background: "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(139,92,246,0.14) 0%, rgba(139,92,246,0.04) 35%, transparent 70%)",
+        }}
+      />
+      {/* Central violet ambient glow */}
+      <div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] rounded-full pointer-events-none"
+        style={{ background: "radial-gradient(ellipse, rgba(139,92,246,0.08) 0%, transparent 60%)" }}
       />
 
       <div className="max-w-5xl mx-auto relative z-10">

@@ -217,7 +217,7 @@ export const DemoScheduleSection = ({
                                             {[
                                                 "Painel e pipeline configurados pro seu negócio",
                                                 "Gamificação e ranking em tempo real",
-                                                "Eva IA analisando os dados do seu time",
+                                                "Eva analisando os dados do seu time",
                                                 "Integrações com as ferramentas que você já usa",
                                                 "Plano ideal pro tamanho do seu time",
                                             ].map((item) => (

@@ -220,16 +220,14 @@ const LandingPage = () => {
                 onLoginClick={() => navigate("/auth")}
             />
 
-            <Suspense fallback={null}>
-                <DemoScheduleSection />
-            </Suspense>
-
             <ImpactMetrics />
 
             <PainPoints />
 
             <Suspense fallback={null}>
                 <ProductBentoGrid />
+
+                <DemoScheduleSection />
 
                 <div id="how-it-works">
                     <HowItWorks />

@@ -62,12 +62,12 @@ const PLAN_DETAILS: Record<PlanType, {
   plus: {
     icon: Sparkles,
     price: "R$ 297/mês",
-    features: ["10 vendedores", "50 produtos", "Eva IA (30/dia)", "Tudo do Starter"],
+    features: ["10 vendedores", "50 produtos", "Eva (30/dia)", "Tudo do Starter"],
   },
   pro: {
     icon: Crown,
     price: "R$ 797/mês",
-    features: ["Vendedores ilimitados", "Produtos ilimitados", "Eva IA ilimitada", "Tudo do Plus"],
+    features: ["Vendedores ilimitados", "Produtos ilimitados", "Eva ilimitada", "Tudo do Plus"],
   },
 };
 

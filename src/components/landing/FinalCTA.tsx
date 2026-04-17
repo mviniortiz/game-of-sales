@@ -20,6 +20,13 @@ export const FinalCTA = ({ onCTAClick, onScheduleDemoClick }: FinalCTAProps) => 
                     backgroundSize: "60px 60px",
                 }}
             />
+            {/* Green aurora glow */}
+            <div
+                className="absolute inset-x-0 top-0 h-[500px] pointer-events-none"
+                style={{
+                    background: "radial-gradient(ellipse 60% 60% at 50% 0%, rgba(16,185,129,0.12) 0%, transparent 70%)",
+                }}
+            />
 
             <motion.div
                 className="relative max-w-5xl mx-auto rounded-3xl overflow-hidden"

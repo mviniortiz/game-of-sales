@@ -1,6 +1,6 @@
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { useRef, useEffect, useState, useCallback } from "react";
-import { ArrowRight, Play, TrendingUp, Users, Target, Trophy, Zap, BarChart3, MessageSquare, Settings, Send, Check, CheckCheck, Phone, Paperclip, Clock, ChevronRight, Bell, User, Shield, Palette, Calendar } from "lucide-react";
+import { ArrowRight, Play, TrendingUp, Users, Target, Calendar } from "lucide-react";
 
 // ─── Bar chart data ─────────────────────────────────────────────────────────
 const barData = [
@@ -12,23 +12,6 @@ const barData = [
 ];
 
 const SPARKLINE = [30, 45, 35, 55, 48, 65, 58, 72, 68, 85, 78, 92];
-
-const SIDEBAR_ITEMS = [
-    { id: "dashboard", icon: BarChart3, label: "Dashboard" },
-    { id: "pipeline", icon: Target, label: "Pipeline" },
-    { id: "ranking", icon: Trophy, label: "Ranking" },
-    { id: "whatsapp", icon: MessageSquare, label: "WhatsApp" },
-    { id: "settings", icon: Settings, label: "Configurações" },
-];
-
-// ─── View data per sidebar tab ──────────────────────────────────────────────
-const VIEWS: Record<string, { title: string; greeting: string }> = {
-    dashboard: { title: "Dashboard", greeting: "Bom dia, Ana" },
-    pipeline: { title: "Pipeline", greeting: "28 deals ativos" },
-    ranking: { title: "Ranking", greeting: "Temporada Abril" },
-    whatsapp: { title: "WhatsApp", greeting: "3 conversas novas" },
-    settings: { title: "Configurações", greeting: "Conta & Preferências" },
-};
 
 const RANKING_DATA = [
     { name: "Ana Silva", xp: "8.9k", avatar: "bg-gradient-to-br from-rose-400 to-pink-500", initial: "A", medal: "🥇", pct: 92 },
@@ -43,371 +26,10 @@ const PIPELINE_DATA = [
     { stage: "Fechado", count: 3, color: "from-emerald-500 to-emerald-400", bg: "rgba(16,185,129,0.1)", hoverBg: "rgba(16,185,129,0.18)", text: "rgba(110,231,183,0.9)" },
 ];
 
-// ─── Pipeline View ──────────────────────────────────────────────────────────
-const PIPELINE_COLUMNS = [
-    {
-        title: "Novo Lead", color: "#60a5fa", count: 4,
-        deals: [
-            { name: "TechCorp Ltda", value: "R$ 12.500", time: "2h atrás", avatar: "M" },
-            { name: "StartupXYZ", value: "R$ 8.200", time: "5h atrás", avatar: "S" },
-            { name: "InfoDigital", value: "R$ 4.800", time: "1d atrás", avatar: "I" },
-        ],
-    },
-    {
-        title: "Qualificado", color: "#fbbf24", count: 3,
-        deals: [
-            { name: "MegaStore SA", value: "R$ 45.000", time: "Reunião amanhã", avatar: "M", hot: true },
-            { name: "CloudNet", value: "R$ 18.700", time: "Aguardando", avatar: "C" },
-        ],
-    },
-    {
-        title: "Proposta", color: "#a78bfa", count: 2,
-        deals: [
-            { name: "FastLog Express", value: "R$ 32.000", time: "Enviada há 2d", avatar: "F" },
-            { name: "BioHealth", value: "R$ 22.400", time: "Em revisão", avatar: "B" },
-        ],
-    },
-    {
-        title: "Fechado ✓", color: "#34d399", count: 2,
-        deals: [
-            { name: "DataPrime", value: "R$ 28.900", time: "Hoje!", avatar: "D", won: true },
-        ],
-    },
-];
-
-const PipelineView = () => (
-    <div className="space-y-2.5">
-        <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-                <span className="text-[8px] px-2 py-0.5 rounded-full font-semibold" style={{ background: "rgba(16,185,129,0.12)", color: "#34d399" }}>11 deals</span>
-                <span className="text-[8px]" style={{ color: "rgba(255,255,255,0.25)" }}>R$ 172.5k no pipe</span>
-            </div>
-            <div className="flex gap-1">
-                {["Kanban", "Lista"].map((v, i) => (
-                    <span key={v} className="text-[7px] px-1.5 py-0.5 rounded" style={{ background: i === 0 ? "rgba(16,185,129,0.12)" : "transparent", color: i === 0 ? "#34d399" : "rgba(255,255,255,0.25)", fontWeight: i === 0 ? 600 : 400 }}>{v}</span>
-                ))}
-            </div>
-        </div>
-        <div className="flex gap-1.5" style={{ minHeight: 220 }}>
-            {PIPELINE_COLUMNS.map((col, ci) => (
-                <div key={ci} className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 mb-1.5">
-                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: col.color }} />
-                        <span className="text-[8px] font-semibold truncate" style={{ color: "rgba(255,255,255,0.55)" }}>{col.title}</span>
-                        <span className="text-[7px] px-1 rounded-full" style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.3)" }}>{col.count}</span>
-                    </div>
-                    <div className="space-y-1">
-                        {col.deals.map((deal, di) => (
-                            <motion.div
-                                key={di}
-                                className="rounded-lg p-1.5 cursor-pointer transition-all duration-150 group"
-                                style={{ background: "rgba(255,255,255,0.03)", boxShadow: "0 0 0 1px rgba(255,255,255,0.06)" }}
-                                initial={{ opacity: 0, y: 6 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.1 + ci * 0.08 + di * 0.05 }}
-                                whileHover={{ y: -1, boxShadow: `0 0 0 1px ${col.color}33, 0 4px 8px rgba(0,0,0,0.3)` }}
-                            >
-                                <div className="flex items-center gap-1 mb-0.5">
-                                    <div className="w-4 h-4 rounded-full flex items-center justify-center text-[6px] font-bold text-white shrink-0" style={{ background: `${col.color}40` }}>{deal.avatar}</div>
-                                    <p className="text-[8px] font-semibold truncate" style={{ color: "rgba(255,255,255,0.7)" }}>{deal.name}</p>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-[8px] font-bold" style={{ color: deal.won ? "#34d399" : "rgba(255,255,255,0.5)" }}>{deal.value}</span>
-                                    {deal.hot && <span className="text-[6px]">🔥</span>}
-                                    {deal.won && <Check className="w-2.5 h-2.5 text-emerald-400" />}
-                                </div>
-                                <p className="text-[6px] mt-0.5" style={{ color: "rgba(255,255,255,0.2)" }}>{deal.time}</p>
-                            </motion.div>
-                        ))}
-                    </div>
-                </div>
-            ))}
-        </div>
-    </div>
-);
-
-// ─── Ranking View ───────────────────────────────────────────────────────────
-const FULL_RANKING = [
-    { name: "Ana Silva", xp: "8.9k", sales: 38, revenue: "R$ 89k", avatar: "bg-gradient-to-br from-rose-400 to-pink-500", initial: "A", medal: "🥇", pct: 92, trend: "+12%" },
-    { name: "Lucas Mendes", xp: "6.1k", sales: 27, revenue: "R$ 61k", avatar: "bg-gradient-to-br from-blue-400 to-indigo-500", initial: "L", medal: "🥈", pct: 68, trend: "+8%" },
-    { name: "Sofia Reis", xp: "4.5k", sales: 21, revenue: "R$ 45k", avatar: "bg-gradient-to-br from-amber-400 to-orange-500", initial: "S", medal: "🥉", pct: 50, trend: "+15%" },
-    { name: "Mateus Costa", xp: "3.2k", sales: 15, revenue: "R$ 32k", avatar: "bg-gradient-to-br from-emerald-400 to-teal-500", initial: "M", pct: 36, trend: "+3%" },
-    { name: "João Pedro", xp: "2.1k", sales: 11, revenue: "R$ 21k", avatar: "bg-gradient-to-br from-purple-400 to-violet-500", initial: "J", pct: 23, trend: "-2%" },
-];
-
-const RankingView = () => {
-    const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
-    return (
-        <div className="space-y-2.5">
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <span className="text-[8px] px-2 py-0.5 rounded-full font-semibold" style={{ background: "rgba(251,191,36,0.12)", color: "#fbbf24" }}>🏆 Temporada Abril</span>
-                </div>
-                <div className="flex gap-1">
-                    {["Semanal", "Mensal", "Total"].map((v, i) => (
-                        <span key={v} className="text-[7px] px-1.5 py-0.5 rounded cursor-pointer" style={{ background: i === 1 ? "rgba(16,185,129,0.12)" : "transparent", color: i === 1 ? "#34d399" : "rgba(255,255,255,0.25)", fontWeight: i === 1 ? 600 : 400 }}>{v}</span>
-                    ))}
-                </div>
-            </div>
-
-            {/* Podium top 3 */}
-            <div className="flex items-end justify-center gap-3 pt-2 pb-1">
-                {[FULL_RANKING[1], FULL_RANKING[0], FULL_RANKING[2]].map((s, i) => {
-                    const heights = [52, 68, 40];
-                    const places = ["2°", "1°", "3°"];
-                    return (
-                        <motion.div key={i} className="flex flex-col items-center gap-1" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 + i * 0.1 }}>
-                            <div className={`w-7 h-7 rounded-full ${s.avatar} flex items-center justify-center`}>
-                                <span className="text-[8px] font-bold text-white">{s.initial}</span>
-                            </div>
-                            <span className="text-[7px] font-semibold" style={{ color: "rgba(255,255,255,0.6)" }}>{s.name.split(" ")[0]}</span>
-                            <div className="w-10 rounded-t-lg flex flex-col items-center justify-end pb-1" style={{ height: heights[i], background: i === 1 ? "rgba(16,185,129,0.15)" : "rgba(255,255,255,0.04)", borderTop: i === 1 ? "2px solid #34d399" : "2px solid rgba(255,255,255,0.08)" }}>
-                                <span className="text-[10px]">{s.medal}</span>
-                                <span className="text-[7px] font-bold" style={{ color: i === 1 ? "#34d399" : "rgba(255,255,255,0.5)" }}>{places[i]}</span>
-                            </div>
-                        </motion.div>
-                    );
-                })}
-            </div>
-
-            {/* Full list */}
-            <div className="space-y-0.5">
-                {FULL_RANKING.map((s, i) => {
-                    const isHovered = hoveredIdx === i;
-                    return (
-                        <motion.div
-                            key={i}
-                            className="flex items-center gap-1.5 rounded-lg px-1.5 py-1 cursor-pointer transition-all duration-150"
-                            style={{ background: isHovered ? "rgba(255,255,255,0.04)" : "transparent" }}
-                            initial={{ opacity: 0, x: 8 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.4 + i * 0.06 }}
-                            onMouseEnter={() => setHoveredIdx(i)}
-                            onMouseLeave={() => setHoveredIdx(null)}
-                        >
-                            <span className="text-[8px] w-3 text-center" style={{ color: "rgba(255,255,255,0.25)" }}>{s.medal || `${i + 1}`}</span>
-                            <div className={`w-5 h-5 rounded-full ${s.avatar} flex items-center justify-center shrink-0`}>
-                                <span className="text-[7px] font-bold text-white">{s.initial}</span>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-[8px] font-semibold truncate" style={{ color: isHovered ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.6)" }}>{s.name}</p>
-                            </div>
-                            <span className="text-[7px]" style={{ color: "rgba(255,255,255,0.3)" }}>{s.sales} vendas</span>
-                            <span className="text-[7px] font-bold shrink-0" style={{ color: s.trend?.startsWith("+") ? "#34d399" : "#f87171" }}>{s.trend}</span>
-                            <span className="text-[7px] font-bold text-emerald-400 shrink-0 w-6 text-right">{s.xp}</span>
-                        </motion.div>
-                    );
-                })}
-            </div>
-        </div>
-    );
-};
-
-// ─── WhatsApp View ──────────────────────────────────────────────────────────
-const CONVERSATIONS = [
-    { name: "Carlos Souza", lastMsg: "Oi, quero saber mais sobre o plano Pro", time: "agora", unread: 2, avatar: "C", online: true },
-    { name: "Maria Lima", lastMsg: "Pode enviar a proposta atualizada?", time: "15min", unread: 1, avatar: "M", online: true },
-    { name: "Pedro Santos", lastMsg: "Fechado! Vou assinar hoje", time: "1h", avatar: "P", online: false },
-    { name: "Julia Ferreira", lastMsg: "Obrigada pelo atendimento!", time: "3h", avatar: "J", online: false },
-];
-
-const CHAT_MESSAGES = [
-    { from: "them", text: "Oi! Vi o anúncio de vocês no Instagram", time: "14:02" },
-    { from: "them", text: "Quero saber mais sobre o plano Pro", time: "14:02" },
-    { from: "me", text: "Olá Carlos! 😊 Fico feliz pelo interesse!", time: "14:03" },
-    { from: "me", text: "O plano Pro inclui pipeline ilimitado, ranking gamificado e integrações com Hotmart e Kiwify", time: "14:03" },
-    { from: "them", text: "Que legal! Quanto custa?", time: "14:05" },
-];
-
-const WhatsAppView = () => {
-    const [activeChat, setActiveChat] = useState(0);
-    const [hoveredChat, setHoveredChat] = useState<number | null>(null);
-    return (
-        <div className="flex gap-0 rounded-lg overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.06)", minHeight: 230 }}>
-            {/* Contact list */}
-            <div className="w-[38%] shrink-0" style={{ borderRight: "1px solid rgba(255,255,255,0.06)" }}>
-                <div className="px-2 py-1.5" style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                    <div className="flex items-center gap-1 px-1.5 py-1 rounded-md" style={{ background: "rgba(255,255,255,0.03)" }}>
-                        <span className="text-[8px]" style={{ color: "rgba(255,255,255,0.2)" }}>🔍</span>
-                        <span className="text-[7px]" style={{ color: "rgba(255,255,255,0.2)" }}>Buscar conversa...</span>
-                    </div>
-                </div>
-                <div className="space-y-0">
-                    {CONVERSATIONS.map((c, i) => (
-                        <motion.div
-                            key={i}
-                            className="flex items-center gap-1.5 px-2 py-1.5 cursor-pointer transition-all duration-100"
-                            style={{
-                                background: activeChat === i ? "rgba(16,185,129,0.08)" : hoveredChat === i ? "rgba(255,255,255,0.03)" : "transparent",
-                                borderLeft: activeChat === i ? "2px solid #34d399" : "2px solid transparent",
-                            }}
-                            onClick={() => setActiveChat(i)}
-                            onMouseEnter={() => setHoveredChat(i)}
-                            onMouseLeave={() => setHoveredChat(null)}
-                            initial={{ opacity: 0, x: -6 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.1 + i * 0.05 }}
-                        >
-                            <div className="relative shrink-0">
-                                <div className="w-5 h-5 rounded-full flex items-center justify-center text-[7px] font-bold text-white" style={{ background: "rgba(255,255,255,0.1)" }}>{c.avatar}</div>
-                                {c.online && <div className="absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400" style={{ border: "1.5px solid #0d1117" }} />}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between">
-                                    <p className="text-[7px] font-semibold truncate" style={{ color: activeChat === i ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.55)" }}>{c.name}</p>
-                                    <span className="text-[6px] shrink-0" style={{ color: c.unread ? "#34d399" : "rgba(255,255,255,0.2)" }}>{c.time}</span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <p className="text-[6px] truncate" style={{ color: "rgba(255,255,255,0.25)" }}>{c.lastMsg}</p>
-                                    {c.unread && <span className="w-3 h-3 rounded-full bg-emerald-500 flex items-center justify-center text-[6px] font-bold text-white shrink-0">{c.unread}</span>}
-                                </div>
-                            </div>
-                        </motion.div>
-                    ))}
-                </div>
-            </div>
-
-            {/* Chat area */}
-            <div className="flex-1 flex flex-col">
-                {/* Chat header */}
-                <div className="flex items-center justify-between px-2 py-1.5" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
-                    <div className="flex items-center gap-1.5">
-                        <div className="w-5 h-5 rounded-full flex items-center justify-center text-[7px] font-bold text-white" style={{ background: "rgba(255,255,255,0.1)" }}>{CONVERSATIONS[activeChat].avatar}</div>
-                        <div>
-                            <p className="text-[8px] font-semibold" style={{ color: "rgba(255,255,255,0.8)" }}>{CONVERSATIONS[activeChat].name}</p>
-                            <p className="text-[6px]" style={{ color: CONVERSATIONS[activeChat].online ? "#34d399" : "rgba(255,255,255,0.25)" }}>{CONVERSATIONS[activeChat].online ? "online" : "offline"}</p>
-                        </div>
-                    </div>
-                    <div className="flex gap-1.5">
-                        <Phone className="w-2.5 h-2.5 cursor-pointer" style={{ color: "rgba(255,255,255,0.25)" }} />
-                    </div>
-                </div>
-
-                {/* Messages */}
-                <div className="flex-1 px-2 py-1.5 space-y-1 overflow-hidden" style={{ background: "rgba(255,255,255,0.01)" }}>
-                    {CHAT_MESSAGES.map((msg, i) => (
-                        <motion.div
-                            key={i}
-                            className={`flex ${msg.from === "me" ? "justify-end" : "justify-start"}`}
-                            initial={{ opacity: 0, y: 4, scale: 0.97 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            transition={{ delay: 0.2 + i * 0.08 }}
-                        >
-                            <div
-                                className="max-w-[80%] rounded-lg px-2 py-1"
-                                style={{
-                                    background: msg.from === "me" ? "rgba(16,185,129,0.12)" : "rgba(255,255,255,0.04)",
-                                    boxShadow: "0 0 0 1px " + (msg.from === "me" ? "rgba(16,185,129,0.15)" : "rgba(255,255,255,0.04)"),
-                                }}
-                            >
-                                <p className="text-[7px]" style={{ color: "rgba(255,255,255,0.7)", lineHeight: 1.4 }}>{msg.text}</p>
-                                <div className="flex items-center justify-end gap-0.5 mt-0.5">
-                                    <span className="text-[5px]" style={{ color: "rgba(255,255,255,0.2)" }}>{msg.time}</span>
-                                    {msg.from === "me" && <CheckCheck className="w-2 h-2 text-emerald-400" />}
-                                </div>
-                            </div>
-                        </motion.div>
-                    ))}
-                </div>
-
-                {/* Input */}
-                <div className="flex items-center gap-1.5 px-2 py-1.5" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                    <Paperclip className="w-2.5 h-2.5 shrink-0 cursor-pointer" style={{ color: "rgba(255,255,255,0.2)" }} />
-                    <div className="flex-1 rounded-md px-2 py-1 text-[7px]" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.2)" }}>
-                        Digite uma mensagem...
-                    </div>
-                    <div className="w-5 h-5 rounded-full flex items-center justify-center cursor-pointer" style={{ background: "rgba(16,185,129,0.15)" }}>
-                        <Send className="w-2.5 h-2.5 text-emerald-400" />
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-// ─── Settings View ──────────────────────────────────────────────────────────
-const SETTINGS_SECTIONS = [
-    {
-        title: "Conta",
-        items: [
-            { icon: User, label: "Perfil", desc: "Nome, email, avatar", badge: null },
-            { icon: Shield, label: "Segurança", desc: "Senha, 2FA, sessões", badge: "2FA ativo" },
-            { icon: Bell, label: "Notificações", desc: "Email, push, WhatsApp", badge: null },
-        ],
-    },
-    {
-        title: "Preferências",
-        items: [
-            { icon: Palette, label: "Aparência", desc: "Tema, idioma, fuso horário", badge: "Dark" },
-            { icon: Target, label: "Metas", desc: "Configurar metas do time", badge: null },
-            { icon: MessageSquare, label: "Integrações", desc: "Hotmart, Kiwify, Greenn", badge: "3 ativas" },
-        ],
-    },
-];
-
-const SettingsView = () => {
-    const [hoveredItem, setHoveredItem] = useState<string | null>(null);
-    return (
-        <div className="space-y-3">
-            {/* Profile card */}
-            <motion.div
-                className="flex items-center gap-2.5 p-2.5 rounded-xl"
-                style={{ background: "rgba(255,255,255,0.03)", boxShadow: "0 0 0 1px rgba(255,255,255,0.06)" }}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-            >
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-xs font-bold text-white">A</div>
-                <div className="flex-1">
-                    <p className="text-[10px] font-bold" style={{ color: "rgba(255,255,255,0.85)" }}>Ana Silva</p>
-                    <p className="text-[8px]" style={{ color: "rgba(255,255,255,0.35)" }}>ana@empresa.com.br</p>
-                </div>
-                <span className="text-[7px] px-2 py-0.5 rounded-full font-semibold" style={{ background: "rgba(16,185,129,0.12)", color: "#34d399" }}>Pro</span>
-            </motion.div>
-
-            {SETTINGS_SECTIONS.map((section, si) => (
-                <div key={si}>
-                    <p className="text-[8px] uppercase tracking-wider mb-1.5 px-1" style={{ color: "rgba(255,255,255,0.25)", fontWeight: 600 }}>{section.title}</p>
-                    <div className="space-y-0.5">
-                        {section.items.map((item, ii) => {
-                            const Icon = item.icon;
-                            const key = `${si}-${ii}`;
-                            const isHovered = hoveredItem === key;
-                            return (
-                                <motion.div
-                                    key={key}
-                                    className="flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-all duration-150"
-                                    style={{ background: isHovered ? "rgba(255,255,255,0.04)" : "transparent" }}
-                                    initial={{ opacity: 0, x: 6 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: 0.15 + si * 0.1 + ii * 0.05 }}
-                                    onMouseEnter={() => setHoveredItem(key)}
-                                    onMouseLeave={() => setHoveredItem(null)}
-                                >
-                                    <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(255,255,255,0.04)" }}>
-                                        <Icon className="w-3 h-3" style={{ color: isHovered ? "#34d399" : "rgba(255,255,255,0.35)" }} />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-[8px] font-semibold" style={{ color: isHovered ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.6)" }}>{item.label}</p>
-                                        <p className="text-[7px]" style={{ color: "rgba(255,255,255,0.2)" }}>{item.desc}</p>
-                                    </div>
-                                    {item.badge && <span className="text-[6px] px-1.5 py-0.5 rounded-full shrink-0" style={{ background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.35)", border: "1px solid rgba(255,255,255,0.06)" }}>{item.badge}</span>}
-                                    <ChevronRight className="w-2.5 h-2.5 shrink-0 transition-transform duration-150" style={{ color: "rgba(255,255,255,0.15)", transform: isHovered ? "translateX(2px)" : "none" }} />
-                                </motion.div>
-                            );
-                        })}
-                    </div>
-                </div>
-            ))}
-        </div>
-    );
-};
-
 // ─── Inline Dashboard ───────────────────────────────────────────────────────
 const DashboardMockup = () => {
     const barsRef = useRef<(HTMLDivElement | null)[]>([]);
     const progressRef = useRef<HTMLDivElement | null>(null);
-    const [activeTab, setActiveTab] = useState("dashboard");
     const [hoveredBar, setHoveredBar] = useState<number | null>(null);
     const [hoveredKpi, setHoveredKpi] = useState<number | null>(null);
     const [hoveredPipeline, setHoveredPipeline] = useState<number | null>(null);
@@ -438,16 +60,6 @@ const DashboardMockup = () => {
         }
         return () => timers.forEach(clearTimeout);
     }, [animateBars]);
-
-    const handleTabChange = (id: string) => {
-        setActiveTab(id);
-        // Re-trigger bar animation on dashboard tab
-        if (id === "dashboard") {
-            setTimeout(animateBars, 100);
-        }
-    };
-
-    const view = VIEWS[activeTab];
 
     return (
         <div
@@ -482,51 +94,16 @@ const DashboardMockup = () => {
                         <svg className="w-2.5 h-2.5" style={{ color: "rgba(255,255,255,0.2)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                         </svg>
-                        vyzon.com.br/{activeTab}
+                        vyzon.com.br/dashboard
                     </div>
                 </div>
             </div>
 
             {/* App body */}
-            <div className="flex flex-col sm:flex-row">
-                {/* Sidebar — desktop only */}
-                <div
-                    className="hidden sm:flex w-11 flex-col items-center py-3 gap-1 shrink-0"
-                    style={{ background: "rgba(255,255,255,0.02)", borderRight: "1px solid rgba(255,255,255,0.06)" }}
-                >
-                    <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center mb-2">
-                        <span className="text-[8px] font-black text-white">V</span>
-                    </div>
-                    {SIDEBAR_ITEMS.map((item) => {
-                        const isActive = activeTab === item.id;
-                        const Icon = item.icon;
-                        return (
-                            <button
-                                key={item.id}
-                                onClick={() => handleTabChange(item.id)}
-                                className="relative w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 group"
-                                style={{
-                                    background: isActive ? "rgba(16,185,129,0.12)" : "transparent",
-                                    color: isActive ? "#34d399" : "rgba(255,255,255,0.2)",
-                                }}
-                                title={item.label}
-                            >
-                                <Icon className="w-3.5 h-3.5 transition-colors duration-200 group-hover:text-emerald-400" />
-                                {isActive && (
-                                    <motion.div
-                                        layoutId="sidebar-indicator"
-                                        className="absolute -left-[7px] w-0.5 h-4 rounded-full bg-emerald-400"
-                                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                                    />
-                                )}
-                            </button>
-                        );
-                    })}
-                </div>
-
+            <div className="flex">
                 {/* Content */}
                 <div className="flex-1 p-2 sm:p-3 space-y-2 sm:space-y-2.5 overflow-hidden" style={{ background: "rgba(255,255,255,0.015)", minHeight: 220 }}>
-                    {/* Header — reacts to active tab */}
+                    {/* Header */}
                     <motion.div
                         className="flex items-center justify-between"
                         initial={{ opacity: 0 }}
@@ -534,59 +111,24 @@ const DashboardMockup = () => {
                         transition={{ delay: 0.6, duration: 0.4 }}
                     >
                         <div>
-                            <AnimatePresence mode="wait">
-                                <motion.p
-                                    key={`greeting-${activeTab}`}
-                                    className="text-[10px]"
-                                    style={{ color: "rgba(255,255,255,0.3)" }}
-                                    initial={{ opacity: 0, y: -4 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: 4 }}
-                                    transition={{ duration: 0.15 }}
-                                >
-                                    {view.greeting}
-                                </motion.p>
-                            </AnimatePresence>
-                            <AnimatePresence mode="wait">
-                                <motion.p
-                                    key={`title-${activeTab}`}
-                                    className="text-xs font-bold"
-                                    style={{ color: "rgba(255,255,255,0.85)" }}
-                                    initial={{ opacity: 0, y: -4 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: 4 }}
-                                    transition={{ duration: 0.15 }}
-                                >
-                                    {view.title}
-                                </motion.p>
-                            </AnimatePresence>
+                            <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.3)" }}>
+                                Bom dia, Ana
+                            </p>
+                            <p className="text-xs font-bold" style={{ color: "rgba(255,255,255,0.85)" }}>
+                                Dashboard
+                            </p>
                         </div>
                         <div className="flex items-center gap-1.5">
                             <div className="relative">
-                                <div className="w-6 h-6 rounded-full flex items-center justify-center text-[8px] cursor-pointer transition-colors duration-150 hover:bg-[rgba(255,255,255,0.1)]" style={{ background: "rgba(255,255,255,0.06)" }}>🔔</div>
+                                <div className="w-6 h-6 rounded-full flex items-center justify-center text-[8px]" style={{ background: "rgba(255,255,255,0.06)" }}>🔔</div>
                                 <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-rose-500 rounded-full" style={{ border: "2px solid #0d1117" }} />
                             </div>
-                            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-[7px] font-bold text-white cursor-pointer">A</div>
+                            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-[7px] font-bold text-white">A</div>
                         </div>
                     </motion.div>
 
-                    {/* ── Tab content ── */}
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={activeTab}
-                            initial={{ opacity: 0, y: 6 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -6 }}
-                            transition={{ duration: 0.2 }}
-                            className="space-y-2.5"
-                        >
-
-                    {activeTab === "pipeline" && <PipelineView />}
-                    {activeTab === "ranking" && <RankingView />}
-                    {activeTab === "whatsapp" && <WhatsAppView />}
-                    {activeTab === "settings" && <SettingsView />}
-
-                    {activeTab === "dashboard" && <>
+                    {/* Dashboard content */}
+                    <div className="space-y-2.5">
                     {/* KPIs — hoverable */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 sm:gap-2">
                         {[
@@ -846,33 +388,7 @@ const DashboardMockup = () => {
                             })}
                         </div>
                     </motion.div>
-                    </>}
-
-                        </motion.div>
-                    </AnimatePresence>
-                </div>
-
-                {/* Bottom tab bar — mobile only */}
-                <div
-                    className="flex sm:hidden items-center justify-around py-1.5"
-                    style={{ borderTop: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}
-                >
-                    {SIDEBAR_ITEMS.map((item) => {
-                        const isActive = activeTab === item.id;
-                        const Icon = item.icon;
-                        return (
-                            <button
-                                key={item.id}
-                                onClick={() => handleTabChange(item.id)}
-                                className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg transition-all duration-150"
-                                style={{ color: isActive ? "#34d399" : "rgba(255,255,255,0.2)" }}
-                            >
-                                <Icon className="w-3 h-3" />
-                                <span className="text-[6px]" style={{ fontWeight: isActive ? 600 : 400 }}>{item.label.split(" ")[0]}</span>
-                                {isActive && <div className="w-3 h-0.5 rounded-full bg-emerald-400 -mt-0.5" />}
-                            </button>
-                        );
-                    })}
+                    </div>
                 </div>
             </div>
         </div>
@@ -907,11 +423,18 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
         >
             {/* ── Background layer ── */}
             <div className="absolute inset-0">
-                {/* Central emerald glow — static, no blur filter */}
+                {/* Top aurora spotlight — wide and dramatic */}
                 <div
-                    className="absolute top-[10%] left-1/2 -translate-x-1/2 w-[1200px] h-[800px] rounded-full"
+                    className="absolute inset-x-0 top-0 h-[700px] pointer-events-none"
                     style={{
-                        background: "radial-gradient(ellipse, rgba(16,185,129,0.08) 0%, rgba(16,185,129,0.02) 35%, transparent 60%)",
+                        background: "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(16,185,129,0.22) 0%, rgba(16,185,129,0.08) 30%, transparent 65%)",
+                    }}
+                />
+                {/* Central emerald glow — reinforces the aurora */}
+                <div
+                    className="absolute top-[15%] left-1/2 -translate-x-1/2 w-[1400px] h-[900px] rounded-full pointer-events-none"
+                    style={{
+                        background: "radial-gradient(ellipse, rgba(16,185,129,0.14) 0%, rgba(16,185,129,0.04) 35%, transparent 60%)",
                     }}
                 />
                 {/* Fine grid */}
@@ -925,7 +448,7 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
                 {/* Top fade for nav */}
                 <div
                     className="absolute top-0 inset-x-0 h-32"
-                    style={{ background: "linear-gradient(to bottom, #06080a, transparent)" }}
+                    style={{ background: "linear-gradient(to bottom, rgba(6,8,10,0.85), transparent)" }}
                 />
             </div>
 
@@ -1080,57 +603,6 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
                         }}
                     />
                     <DashboardMockup />
-
-                    {/* Floating badges */}
-                    <motion.div
-                        className="absolute -left-6 top-20 rounded-xl p-2.5 hidden lg:block"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0, y: [0, -6, 0] }}
-                        transition={{
-                            opacity: { delay: 2.2, duration: 0.5 },
-                            x: { delay: 2.2, duration: 0.5 },
-                            y: { delay: 2.7, duration: 3.5, repeat: Infinity, ease: "easeInOut" },
-                        }}
-                        style={{
-                            background: "rgba(13,17,23,0.85)",
-                            boxShadow: "0 0 0 1px rgba(245,158,11,0.2), 0 8px 24px rgba(0,0,0,0.4)",
-                        }}
-                    >
-                        <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
-                                <Trophy className="h-4 w-4 text-white" />
-                            </div>
-                            <div>
-                                <p className="text-[8px] uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.35)" }}>Top Seller</p>
-                                <p className="text-base font-bold leading-none" style={{ color: "rgba(255,255,255,0.95)" }}>#1</p>
-                            </div>
-                        </div>
-                    </motion.div>
-
-                    <motion.div
-                        className="absolute -right-4 bottom-28 rounded-xl p-2.5 hidden lg:block"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0, y: [0, 8, 0] }}
-                        transition={{
-                            opacity: { delay: 2.5, duration: 0.5 },
-                            x: { delay: 2.5, duration: 0.5 },
-                            y: { delay: 3, duration: 4, repeat: Infinity, ease: "easeInOut" },
-                        }}
-                        style={{
-                            background: "rgba(13,17,23,0.85)",
-                            boxShadow: "0 0 0 1px rgba(16,185,129,0.2), 0 8px 24px rgba(0,0,0,0.4)",
-                        }}
-                    >
-                        <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center">
-                                <Zap className="h-4 w-4 text-white" />
-                            </div>
-                            <div>
-                                <p className="text-[8px] uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.35)" }}>Nova Venda</p>
-                                <p className="text-sm font-bold text-emerald-400 leading-none">+R$ 3.200</p>
-                            </div>
-                        </div>
-                    </motion.div>
                 </motion.div>
             </div>
 

@@ -10,6 +10,7 @@ interface LandingNavProps {
 
 const NAV_LINKS = [
     { label: "Funcionalidades", anchor: "features" },
+    { label: "Eva", anchor: "eva" },
     { label: "Como funciona", anchor: "how-it-works" },
     { label: "Para quem", anchor: "use-cases" },
     { label: "Agendar demo", anchor: "agendar-demo" },

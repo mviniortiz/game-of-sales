@@ -40,8 +40,15 @@ const fadeUp = (delay = 0) => ({
 // ─── PainPoints ───────────────────────────────────────────────────────────────
 export const PainPoints = () => {
     return (
-        <section className="py-28 px-4 sm:px-6 lg:px-8" style={{ background: "#06080a" }}>
-            <div className="max-w-3xl mx-auto">
+        <section className="relative py-28 px-4 sm:px-6 lg:px-8 overflow-hidden" style={{ background: "#06080a" }}>
+            {/* Green spotlight from top */}
+            <div
+                className="absolute inset-x-0 top-0 h-[400px] pointer-events-none"
+                style={{
+                    background: "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(16,185,129,0.08) 0%, transparent 70%)",
+                }}
+            />
+            <div className="relative max-w-3xl mx-auto">
 
                 {/* Header */}
                 <motion.div className="text-center mb-20" {...fadeUp()}>
