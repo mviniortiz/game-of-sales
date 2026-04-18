@@ -21,23 +21,50 @@ export const DemoScheduleSection = ({
     const [step, setStep] = useState<"form" | "done">("form");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!formData.email || !formData.phone) return;
 
         setIsSubmitting(true);
 
-        try {
-            trackEvent("demo_request_submit", {
-                source: "landing",
-                has_company: !!formData.company,
-                has_phone: !!formData.phone,
-            });
+        // 1) Dispara conversions + abre Calendly IMEDIATAMENTE (síncrono,
+        //    enquanto ainda temos o user gesture — evita popup blocker no mobile).
+        trackEvent("demo_request_submit", {
+            source: "landing",
+            has_company: !!formData.company,
+            has_phone: !!formData.phone,
+        });
+        trackEvent("demo_scheduled", { source: "landing_calendly" });
+        trackDemoConversion();
+        (window as any).fbq?.("track", "Lead", {
+            content_name: "demo_request",
+            content_category: "landing",
+        });
 
-            const attribution = getAttribution() || {};
-            await supabase
-                .from("demo_requests")
-                .insert({
+        const params = new URLSearchParams({
+            name: formData.name,
+            email: formData.email,
+            ...(formData.phone ? { a1: formData.phone } : {}),
+            ...(formData.company ? { a2: formData.company } : {}),
+        });
+        const popup = window.open(
+            `${calendlyUrl}?${params.toString()}`,
+            "_blank",
+            "noopener"
+        );
+        if (!popup) {
+            // Popup bloqueado: redireciona na mesma aba (user ainda vai agendar).
+            window.location.href = `${calendlyUrl}?${params.toString()}`;
+        }
+
+        setStep("done");
+        setIsSubmitting(false);
+
+        // 2) Persiste o lead em background — não bloqueia a UX nem a conversion.
+        (async () => {
+            try {
+                const attribution = getAttribution() || {};
+                await supabase.from("demo_requests").insert({
                     name: formData.name || "Lead",
                     email: formData.email,
                     company: formData.company || null,
@@ -46,29 +73,10 @@ export const DemoScheduleSection = ({
                     status: "pending",
                     ...attribution,
                 } as any);
-        } catch (err) {
-            console.error("Failed to save demo request:", err);
-        }
-
-        // Build Calendly URL with prefilled data
-        const params = new URLSearchParams({
-            name: formData.name,
-            email: formData.email,
-            ...(formData.phone ? { a1: formData.phone } : {}),
-            ...(formData.company ? { a2: formData.company } : {}),
-        });
-
-        // Open Calendly in new tab and show confirmation instantly
-        window.open(`${calendlyUrl}?${params.toString()}`, "_blank", "noopener");
-        trackEvent("demo_scheduled", { source: "landing_calendly" });
-        trackDemoConversion();
-        // Meta Pixel: Lead event
-        (window as any).fbq?.("track", "Lead", {
-            content_name: "demo_request",
-            content_category: "landing",
-        });
-        setStep("done");
-        setIsSubmitting(false);
+            } catch (err) {
+                console.error("Failed to save demo request:", err);
+            }
+        })();
     };
 
     return (
