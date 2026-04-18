@@ -1,6 +1,7 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, lazy } from "react";
 import { useNavigate } from "react-router-dom";
 import { trackEvent, FUNNEL_EVENTS } from "@/lib/analytics";
+import { LazyOnVisible } from "@/components/LazyOnVisible";
 import {
     MessageCircle,
     Check,
@@ -203,20 +204,29 @@ const LandingPage = () => {
 
             <PainPoints />
 
-            <Suspense fallback={null}>
+            <LazyOnVisible minHeight="600px">
                 <ProductBentoGrid />
+            </LazyOnVisible>
 
+            <LazyOnVisible minHeight="800px">
                 <DemoScheduleSection />
+            </LazyOnVisible>
 
+            <LazyOnVisible minHeight="600px">
                 <div id="how-it-works">
                     <HowItWorks />
                 </div>
+            </LazyOnVisible>
 
+            <LazyOnVisible minHeight="500px">
                 <DemoVideoPlayer />
+            </LazyOnVisible>
 
+            <LazyOnVisible minHeight="600px">
                 <div id="use-cases">
                     <UseCasesSection />
                 </div>
+            </LazyOnVisible>
 
                 <section className="py-28 px-4 sm:px-6 lg:px-8" style={{ background: "#06080a" }}>
                     <div className="max-w-4xl mx-auto">
@@ -280,7 +290,9 @@ const LandingPage = () => {
                     </div>
                 </section>
 
-                <EvaAISection onCTAClick={() => scrollToSection("pricing")} />
+                <LazyOnVisible minHeight="700px">
+                    <EvaAISection onCTAClick={() => scrollToSection("pricing")} />
+                </LazyOnVisible>
 
                 <section id="pricing" className="py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden" style={{ background: "#06080a" }}>
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full pointer-events-none"
@@ -498,12 +510,15 @@ const LandingPage = () => {
                     </div>
                 </section>
 
-                <div id="faq">
-                    <FAQSection />
-                </div>
+                <LazyOnVisible minHeight="600px">
+                    <div id="faq">
+                        <FAQSection />
+                    </div>
+                </LazyOnVisible>
 
-                <FinalCTA onCTAClick={() => goToRegister("pro")} onScheduleDemoClick={() => scrollToSection("agendar-demo")} />
-            </Suspense>
+                <LazyOnVisible minHeight="400px">
+                    <FinalCTA onCTAClick={() => goToRegister("pro")} onScheduleDemoClick={() => scrollToSection("agendar-demo")} />
+                </LazyOnVisible>
 
             <footer className="py-16 px-4 sm:px-6 lg:px-8" style={{ background: "#06080a", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)" }}>
                 <div className="max-w-6xl mx-auto">
