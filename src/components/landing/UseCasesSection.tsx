@@ -124,9 +124,9 @@ export const UseCasesSection = () => {
                             <motion.div
                                 key={c.tag}
                                 className="max-w-2xl mx-auto"
-                                initial={{ opacity: 0, y: 12 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -12 }}
+                                initial={{ y: 12 }}
+                                animate={{ y: 0 }}
+                                exit={{ y: -12 }}
                                 transition={{ duration: 0.3 }}
                             >
                                 <h3

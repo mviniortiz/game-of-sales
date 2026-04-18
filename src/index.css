@@ -364,18 +364,19 @@ All colors MUST be HSL.
 }
 
 /* Landing: CSS-only entry animations — replaces framer-motion initial/animate
-   pra manter vendor-motion (128KB) fora do critical path */
+   pra manter vendor-motion (128KB) fora do critical path.
+   Sem opacity:0 — conteúdo pinta imediatamente (não bloqueia LCP) e só desliza. */
 @keyframes landing-fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(0, 0, 0); }
 }
 @keyframes landing-fade-in-up {
-  from { opacity: 0; transform: translate3d(0, 16px, 0); }
-  to { opacity: 1; transform: translate3d(0, 0, 0); }
+  from { transform: translate3d(0, 12px, 0); }
+  to { transform: translate3d(0, 0, 0); }
 }
 @keyframes landing-fade-in-up-lg {
-  from { opacity: 0; transform: translate3d(0, 24px, 0); }
-  to { opacity: 1; transform: translate3d(0, 0, 0); }
+  from { transform: translate3d(0, 18px, 0); }
+  to { transform: translate3d(0, 0, 0); }
 }
 
 .landing-fade-in {

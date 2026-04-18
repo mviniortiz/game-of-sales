@@ -141,8 +141,8 @@ function ChatMockup({ onCTAClick }: { onCTAClick?: () => void }) {
       <div className="px-5 py-5 space-y-4 min-h-[220px]">
         {/* User question */}
         <motion.div
-          initial={{ opacity: 0, y: 6 }}
-          animate={questionVisible ? { opacity: 1, y: 0 } : {}}
+          initial={{ y: 6 }}
+          animate={questionVisible ? { y: 0 } : {}}
           transition={{ duration: 0.3 }}
           className="flex justify-end"
         >
@@ -154,8 +154,8 @@ function ChatMockup({ onCTAClick }: { onCTAClick?: () => void }) {
         {/* Eva response */}
         {(visibleLines.length > 0 || currentLine) && (
           <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 8 }}
+            animate={{ y: 0 }}
             transition={{ duration: 0.3 }}
             className="flex gap-3"
           >
@@ -185,20 +185,15 @@ function ChatMockup({ onCTAClick }: { onCTAClick?: () => void }) {
         {phase === "done" && (
           <>
             <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ y: 8 }}
+              animate={{ y: 0 }}
               transition={{ delay: 0.2, duration: 0.4 }}
               className="pl-9"
             >
               <DemoBarChart />
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
-              className="flex flex-wrap gap-1.5 pl-9"
-            >
+            <div className="flex flex-wrap gap-1.5 pl-9">
               {["#1 Carlos M. — R$ 28.4k", "Melhor conversão: Ana L. (34%)"].map((h, i) => (
                 <span
                   key={i}
@@ -209,7 +204,7 @@ function ChatMockup({ onCTAClick }: { onCTAClick?: () => void }) {
                   {h}
                 </span>
               ))}
-            </motion.div>
+            </div>
           </>
         )}
       </div>

@@ -78,12 +78,10 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
             <nav className="relative z-50 px-4 sm:px-6 lg:px-8 py-5">
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
                     {/* Logo */}
-                    <motion.img
+                    <img
                         src={brandLogoLight}
                         alt="Vyzon"
                         className="h-9 w-auto"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
                     />
 
                     {/* Menu */}
@@ -125,11 +123,7 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
             <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-32">
                 <div className="grid lg:grid-cols-2 gap-12 items-center">
                     {/* Left: Text */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6 }}
-                    >
+                    <div>
                         <Badge className="mb-6 bg-emerald-50 text-emerald-600 border-emerald-300 hover:bg-emerald-100">
                             <Sparkles className="h-3 w-3 mr-1" />
                             TECNOLOGIA GAME SALES + GAMIFICAÇÃO
@@ -196,12 +190,7 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                         </div>
 
                         {/* Trust indicators */}
-                        <motion.div
-                            className="flex items-center gap-6 mt-8 text-gray-400 text-sm"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.5 }}
-                        >
+                        <div className="flex items-center gap-6 mt-8 text-gray-400 text-sm">
                             <span className="flex items-center gap-1.5">
                                 <span className="w-2 h-2 rounded-full bg-emerald-400" />
                                 14 dias grátis
@@ -214,16 +203,11 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                                 <span className="w-2 h-2 rounded-full bg-emerald-400" />
                                 Setup em 5 min
                             </span>
-                        </motion.div>
-                    </motion.div>
+                        </div>
+                    </div>
 
                     {/* Right: Enhanced Dashboard Mockup */}
-                    <motion.div
-                        initial={{ opacity: 0, x: 50 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.8, delay: 0.2 }}
-                        className="relative hidden lg:block"
-                    >
+                    <div className="relative hidden lg:block">
                         {/* Glow behind */}
                         <div
                             className="absolute inset-0 -z-10"
@@ -261,12 +245,7 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                                 </div>
 
                                 {/* Welcome Header */}
-                                <motion.div
-                                    className="flex items-center justify-between mb-5"
-                                    initial={{ opacity: 0, y: -10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.4 }}
-                                >
+                                <div className="flex items-center justify-between mb-5">
                                     <div>
                                         <p className="text-gray-400 text-xs mb-1">👋 Bem-vindo de volta,</p>
                                         <h3 className="text-gray-900 font-semibold text-lg">Gestor</h3>
@@ -279,16 +258,11 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                                         <Flame className="w-4 h-4 text-amber-600" />
                                         <span className="text-xs font-semibold text-amber-600">7 dias streak!</span>
                                     </motion.div>
-                                </motion.div>
+                                </div>
 
                                 {/* Stats Row */}
                                 <div className="grid grid-cols-3 gap-3 mb-5">
-                                    <motion.div
-                                        className="bg-gradient-to-br from-emerald-500/20 to-emerald-600/5 rounded-xl p-3 border border-emerald-500/20"
-                                        initial={{ y: 20, opacity: 0 }}
-                                        animate={{ y: 0, opacity: 1 }}
-                                        transition={{ delay: 0.5 }}
-                                    >
+                                    <div className="bg-gradient-to-br from-emerald-500/20 to-emerald-600/5 rounded-xl p-3 border border-emerald-500/20">
                                         <div className="flex items-center gap-2 mb-1.5">
                                             <div className="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center">
                                                 <TrendingUp className="h-3 w-3 text-emerald-600" />
@@ -299,14 +273,9 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                                         <div className="flex items-center gap-1 mt-1">
                                             <span className="text-[10px] text-emerald-600 bg-emerald-400/10 px-1.5 py-0.5 rounded">↑ 24%</span>
                                         </div>
-                                    </motion.div>
+                                    </div>
 
-                                    <motion.div
-                                        className="bg-gradient-to-br from-emerald-500/20 to-emerald-600/5 rounded-xl p-3 border border-emerald-500/20"
-                                        initial={{ y: 20, opacity: 0 }}
-                                        animate={{ y: 0, opacity: 1 }}
-                                        transition={{ delay: 0.6 }}
-                                    >
+                                    <div className="bg-gradient-to-br from-emerald-500/20 to-emerald-600/5 rounded-xl p-3 border border-emerald-500/20">
                                         <div className="flex items-center gap-2 mb-1.5">
                                             <div className="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center">
                                                 <Target className="h-3 w-3 text-emerald-600" />
@@ -322,14 +291,9 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                                                 transition={{ delay: 1, duration: 1 }}
                                             />
                                         </div>
-                                    </motion.div>
+                                    </div>
 
-                                    <motion.div
-                                        className="bg-gradient-to-br from-pink-500/20 to-pink-600/5 rounded-xl p-3 border border-pink-500/20"
-                                        initial={{ y: 20, opacity: 0 }}
-                                        animate={{ y: 0, opacity: 1 }}
-                                        transition={{ delay: 0.7 }}
-                                    >
+                                    <div className="bg-gradient-to-br from-pink-500/20 to-pink-600/5 rounded-xl p-3 border border-pink-500/20">
                                         <div className="flex items-center gap-2 mb-1.5">
                                             <div className="w-6 h-6 rounded-lg bg-pink-500/20 flex items-center justify-center">
                                                 <Users className="h-3 w-3 text-pink-400" />
@@ -340,16 +304,11 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                                         <div className="flex items-center gap-1 mt-1">
                                             <span className="text-[10px] text-pink-400 bg-pink-400/10 px-1.5 py-0.5 rounded">+58 hoje</span>
                                         </div>
-                                    </motion.div>
+                                    </div>
                                 </div>
 
                                 {/* Mini Leaderboard */}
-                                <motion.div
-                                    className="bg-gray-100 rounded-xl p-4 border border-gray-200 mb-4"
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.8 }}
-                                >
+                                <div className="bg-gray-100 rounded-xl p-4 border border-gray-200 mb-4">
                                     <div className="flex items-center justify-between mb-3">
                                         <div className="flex items-center gap-2">
                                             <Trophy className="w-4 h-4 text-amber-600" />
@@ -364,12 +323,9 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                                             { pos: 2, name: "Maria Silva", value: "R$ 11.2k", xp: 2650, avatar: "MS", color: "from-slate-300 to-slate-400" },
                                             { pos: 3, name: "Pedro Santos", value: "R$ 9.8k", xp: 2320, avatar: "PS", color: "from-amber-600 to-amber-700" },
                                         ].map((player, i) => (
-                                            <motion.div
+                                            <div
                                                 key={player.pos}
                                                 className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                                                initial={{ opacity: 0, x: -20 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                transition={{ delay: 0.9 + i * 0.1 }}
                                             >
                                                 <div className="flex items-center justify-center w-6">
                                                     {player.pos === 1 ? (
@@ -386,18 +342,13 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                                                     <p className="text-[10px] text-gray-400">{player.xp} XP</p>
                                                 </div>
                                                 <span className="text-sm font-semibold text-emerald-600">{player.value}</span>
-                                            </motion.div>
+                                            </div>
                                         ))}
                                     </div>
-                                </motion.div>
+                                </div>
 
                                 {/* Activity Feed */}
-                                <motion.div
-                                    className="flex items-center gap-3 p-3 bg-gradient-to-r from-emerald-500/10 to-transparent rounded-xl border border-emerald-500/20"
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 1.2 }}
-                                >
+                                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-emerald-500/10 to-transparent rounded-xl border border-emerald-500/20">
                                     <motion.div
                                         className="relative"
                                         animate={{ scale: [1, 1.1, 1] }}
@@ -417,7 +368,7 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                                     <Badge className="bg-emerald-500/20 text-emerald-600 border-0">
                                         +150 XP
                                     </Badge>
-                                </motion.div>
+                                </div>
                             </motion.div>
 
                             {/* Floating Cards - Ranking */}
@@ -470,7 +421,7 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                                 </div>
                             </motion.div>
                         </div>
-                    </motion.div>
+                    </div>
                 </div>
             </div>
         </section>
