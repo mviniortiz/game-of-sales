@@ -5,9 +5,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Third-party trackers: Google Ads + Meta Pixel + Clarity.
-       Deferred para after window load + requestIdleCallback pra não bloquear FCP/LCP.
-       dataLayer é inicializado inline pra permitir gtag() calls antes do script carregar. -->
+  <!-- Third-party trackers: só carregam após primeira interação do usuário
+       (pointerdown/keydown/scroll/touchstart) ou timeout de 5s. Isso tira
+       Meta Pixel + Google Ads + Clarity da janela de TBT do Lighthouse. -->
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
@@ -16,19 +16,16 @@
 
     (function () {
       var loaded = false;
-      var idle = window.requestIdleCallback || function (cb) { return setTimeout(cb, 1); };
-
       function loadTrackers() {
         if (loaded) return;
         loaded = true;
+        cleanup();
 
-        // Google Ads gtag
         var g = document.createElement('script');
         g.async = true;
         g.src = 'https://www.googletagmanager.com/gtag/js?id=AW-18055201052';
         document.head.appendChild(g);
 
-        // Meta Pixel
         !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
         n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
         n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
@@ -37,7 +34,6 @@
         fbq('init','2941145869417242');
         fbq('track','PageView');
 
-        // Microsoft Clarity
         (function(c,l,a,r,i,t,y){
           c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
           t=l.createElement(r);t.async=1;t.src='https://www.clarity.ms/tag/'+i;
@@ -45,11 +41,13 @@
         })(window, document, 'clarity', 'script', 'wd4vh454ta');
       }
 
-      if (document.readyState === 'complete') {
-        idle(loadTrackers);
-      } else {
-        window.addEventListener('load', function () { idle(loadTrackers); });
+      var events = ['pointerdown', 'keydown', 'scroll', 'touchstart'];
+      var opts = { once: true, passive: true, capture: true };
+      function cleanup() {
+        events.forEach(function (ev) { window.removeEventListener(ev, loadTrackers, opts); });
       }
+      events.forEach(function (ev) { window.addEventListener(ev, loadTrackers, opts); });
+      setTimeout(loadTrackers, 5000);
     })();
   </script>
 

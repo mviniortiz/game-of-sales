@@ -30,20 +30,43 @@ createRoot(document.getElementById("root")!).render(
   </StrictMode>
 );
 
-// Defer non-critical inits: Sentry, analytics, attribution.
-// Keeps them out of the critical path pra FCP/LCP.
-const idle =
-  (typeof window !== "undefined" && (window as any).requestIdleCallback) ||
-  ((cb: () => void) => setTimeout(cb, 1));
+// Defer non-critical inits until after the user interacts (or 4s fallback).
+// Isso mantém Sentry/Analytics fora da janela de TBT do Lighthouse.
+if (typeof window !== "undefined") {
+  const isLanding =
+    window.location.pathname === "/" || window.location.pathname === "/landing";
 
-idle(() => {
-  Promise.all([
-    import("./lib/sentry"),
-    import("./lib/analytics"),
-    import("./lib/attribution"),
-  ]).then(([sentry, analytics, attribution]) => {
-    sentry.initSentry();
-    analytics.initAnalytics();
-    attribution.captureAttribution();
-  });
-});
+  let fired = false;
+  const boot = () => {
+    if (fired) return;
+    fired = true;
+    cleanup();
+
+    // Analytics + attribution são sempre necessários (gtag, UTM capture)
+    Promise.all([import("./lib/analytics"), import("./lib/attribution")]).then(
+      ([analytics, attribution]) => {
+        analytics.initAnalytics();
+        attribution.captureAttribution();
+      }
+    );
+
+    // Sentry é pesado (~150KB gzip) — só inicializa fora da landing
+    if (!isLanding) {
+      import("./lib/sentry").then((sentry) => sentry.initSentry());
+    }
+  };
+
+  const events: Array<keyof WindowEventMap> = [
+    "pointerdown",
+    "keydown",
+    "scroll",
+    "touchstart",
+  ];
+  const opts: AddEventListenerOptions = { once: true, passive: true };
+  const cleanup = () => {
+    events.forEach((ev) => window.removeEventListener(ev, boot, opts));
+  };
+
+  events.forEach((ev) => window.addEventListener(ev, boot, opts));
+  setTimeout(boot, 4000);
+}
