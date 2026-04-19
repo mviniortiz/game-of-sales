@@ -210,9 +210,9 @@ export default function NativeScheduler({
     }
 
     return (
-        <div className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.02)", boxShadow: "0 0 0 1px rgba(255,255,255,0.06)" }}>
+        <div className="rounded-2xl overflow-hidden w-full max-w-full" style={{ background: "rgba(255,255,255,0.02)", boxShadow: "0 0 0 1px rgba(255,255,255,0.06)" }}>
             {/* Header */}
-            <div className="px-4 sm:px-5 py-3.5 sm:py-4 flex items-center gap-2 border-b" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+            <div className="px-4 sm:px-5 py-3.5 sm:py-4 flex items-center gap-2 border-b min-w-0" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
                 <Calendar className="h-4 w-4 text-emerald-400 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                     <p className="text-[10px] sm:text-xs uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.4)", fontWeight: 600 }}>Escolha o horário</p>
@@ -224,9 +224,9 @@ export default function NativeScheduler({
                 <span className="text-[10px] uppercase tracking-wider px-2 py-1 rounded-full flex-shrink-0" style={{ background: "rgba(16,185,129,0.1)", color: "#10b981", fontWeight: 700 }}>30 MIN</span>
             </div>
 
-            <div className="grid md:grid-cols-[240px_1fr]">
+            <div className="flex flex-col md:grid md:grid-cols-[240px_minmax(0,1fr)] min-w-0">
                 {/* Day picker */}
-                <div className="border-b md:border-b-0 md:border-r" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+                <div className="border-b md:border-b-0 md:border-r min-w-0" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
                     {/* Mobile: chips compactos horizontais */}
                     <div className="flex md:hidden gap-2 px-3 py-3 overflow-x-auto scrollbar-none" style={{ scrollbarWidth: "none" }}>
                         {dayKeys.map((dk) => {
@@ -283,8 +283,8 @@ export default function NativeScheduler({
                 </div>
 
                 {/* Slots grid */}
-                <div className="p-3 sm:p-4 min-h-[200px]">
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5 sm:gap-2 max-h-[220px] sm:max-h-[360px] overflow-y-auto pr-1">
+                <div className="p-3 sm:p-4 min-h-[200px] min-w-0">
+                    <div className="grid grid-cols-[repeat(3,minmax(0,1fr))] sm:grid-cols-[repeat(4,minmax(0,1fr))] gap-1.5 sm:gap-2 max-h-[220px] sm:max-h-[360px] overflow-y-auto pr-1">
                         {currentSlots.map((s) => {
                             const isActive = selectedSlot?.startIso === s.startIso;
                             return (
