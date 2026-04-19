@@ -218,7 +218,6 @@ export const DemoScheduleSection = ({
 
     return (
         <section
-            id="agendar-demo"
             className="relative py-24 sm:py-32 px-4 sm:px-6 lg:px-8 overflow-hidden"
             style={{ background: "#06080a" }}
         >

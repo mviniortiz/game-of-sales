@@ -215,7 +215,7 @@ const LandingPage = () => {
                 <ProductBentoGrid />
             </LazyOnVisible>
 
-            <LazyOnVisible minHeight="800px">
+            <LazyOnVisible minHeight="800px" id="agendar-demo">
                 <DemoScheduleSection />
             </LazyOnVisible>
 

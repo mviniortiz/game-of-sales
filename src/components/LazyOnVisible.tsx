@@ -5,6 +5,7 @@ type Props = {
   rootMargin?: string;
   fallback?: ReactNode;
   minHeight?: string | number;
+  id?: string;
 };
 
 /**
@@ -17,6 +18,7 @@ export const LazyOnVisible = ({
   rootMargin = "400px",
   fallback = null,
   minHeight,
+  id,
 }: Props) => {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
@@ -43,7 +45,7 @@ export const LazyOnVisible = ({
   }, [visible, rootMargin]);
 
   return (
-    <div ref={ref} style={minHeight ? { minHeight } : undefined}>
+    <div ref={ref} id={id} style={minHeight ? { minHeight } : undefined}>
       {visible ? <Suspense fallback={fallback}>{children}</Suspense> : fallback}
     </div>
   );
