@@ -1,10 +1,36 @@
 // Analytics & Conversion Tracking
 // Supports Google Analytics 4 (GA4) + Google Ads conversions
 
+import { getAttribution } from "./attribution";
+
 const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID;
 const GADS_CONVERSION_ID = import.meta.env.VITE_GADS_CONVERSION_ID || "AW-18055201052";
 const GADS_CONVERSION_LABEL = "1oljCLaqtJMcEJyCsqFD";
 const GADS_DEMO_CONVERSION_LABEL = import.meta.env.VITE_GADS_DEMO_CONVERSION_LABEL;
+
+// SHA-256 hex — Google Ads Enhanced Conversions espera lowercase, trimmed, hashed
+async function sha256Hex(value: string): Promise<string | undefined> {
+  try {
+    const normalized = value.trim().toLowerCase();
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(normalized));
+    return Array.from(new Uint8Array(buf))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+  } catch {
+    return undefined;
+  }
+}
+
+// E.164 best-effort: remove não-dígitos, garante + na frente
+function normalizePhone(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  if (!digits) return "";
+  // Se já parece BR completo (13 dígitos com 55) ou já tem código, mantém
+  if (digits.startsWith("55") && digits.length >= 12) return `+${digits}`;
+  // Adiciona +55 default BR
+  if (digits.length >= 10) return `+55${digits}`;
+  return `+${digits}`;
+}
 
 // Type-safe gtag
 declare global {
@@ -132,19 +158,48 @@ export function trackPurchaseConversion(value?: number, transactionId?: string, 
   }
 }
 
-// Track Google Ads demo request conversion (lead signal for PMax)
-export function trackDemoConversion() {
+// Track Google Ads demo request conversion (lead signal for PMax).
+// Passa gclid via attribution (resolve 0 conversões quando o click chega do Ads)
+// + Enhanced Conversions (email/phone hasheado) pra melhor match rate.
+export async function trackDemoConversion(opts?: { email?: string; phone?: string; value?: number }) {
   if (!GADS_DEMO_CONVERSION_LABEL) {
     console.warn(
       "[analytics] VITE_GADS_DEMO_CONVERSION_LABEL not set — demo conversion will NOT be sent to Google Ads"
     );
     return;
   }
+
+  const attribution = getAttribution();
+  const gclid = attribution?.gclid || undefined;
+
+  // Enhanced Conversions: gtag espera set('user_data', {...}) ANTES do event conversion
+  if (opts?.email || opts?.phone) {
+    try {
+      const userData: Record<string, string> = {};
+      if (opts.email) {
+        const h = await sha256Hex(opts.email);
+        if (h) userData.sha256_email_address = h;
+      }
+      if (opts.phone) {
+        const h = await sha256Hex(normalizePhone(opts.phone));
+        if (h) userData.sha256_phone_number = h;
+      }
+      if (Object.keys(userData).length) {
+        window.gtag?.("set", "user_data", userData);
+      }
+    } catch {
+      // Enhanced Conversions nunca pode bloquear a conversão principal
+    }
+  }
+
   try {
-    window.gtag?.("event", "conversion", {
+    const payload: Record<string, unknown> = {
       send_to: `${GADS_CONVERSION_ID}/${GADS_DEMO_CONVERSION_LABEL}`,
       currency: "BRL",
-    });
+      value: opts?.value ?? 50,
+    };
+    if (gclid) payload.gclid = gclid;
+    window.gtag?.("event", "conversion", payload);
   } catch {
     // Silently fail
   }

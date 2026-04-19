@@ -63,7 +63,11 @@ export const DemoScheduleSection = ({
                 has_phone: !!formData.phone,
             });
             trackEvent("demo_scheduled", { source: "landing_calendly" });
-            trackDemoConversion();
+            // Enhanced Conversions: email/phone hasheado + gclid → match rate alto no Ads
+            void trackDemoConversion({
+                email: formData.email,
+                phone: formData.phone,
+            });
             (window as any).fbq?.("track", "Lead", {
                 content_name: "demo_request",
                 content_category: "landing",

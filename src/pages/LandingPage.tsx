@@ -140,6 +140,13 @@ const LandingPage = () => {
         }
     };
 
+    // Scroll pro form de demo + tracking do CTA de origem (Nav, Hero, Pricing, FinalCTA).
+    // Necessário pra identificar qual bloco da landing converte — sem isso, Ads fica cego.
+    const scrollToDemo = (location: string) => {
+        trackEvent(FUNNEL_EVENTS.LANDING_CTA_CLICK, { target: "demo", location });
+        scrollToSection("agendar-demo");
+    };
+
     const goToRegister = (planId?: string) => {
         const plan = planId || "plus";
         setSelectedPlan(plan);
@@ -189,14 +196,14 @@ const LandingPage = () => {
             )}
 
             <LandingNav
-                onCTAClick={() => scrollToSection("agendar-demo")}
+                onCTAClick={() => scrollToDemo("nav")}
                 onLoginClick={() => navigate("/auth")}
             />
 
             <HeroSection
                 onCTAClick={() => scrollToSection("pricing")}
                 onDemoClick={() => scrollToSection("demo")}
-                onScheduleDemoClick={() => scrollToSection("agendar-demo")}
+                onScheduleDemoClick={() => scrollToDemo("hero")}
                 onLoginClick={() => navigate("/auth")}
             />
 
@@ -462,7 +469,7 @@ const LandingPage = () => {
 
                                                 {isPopular ? (
                                                     <button
-                                                        onClick={() => scrollToSection("agendar-demo")}
+                                                        onClick={() => scrollToDemo("pricing_popular")}
                                                         className="relative w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm text-white overflow-hidden cursor-pointer"
                                                         style={{
                                                             background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
@@ -478,7 +485,7 @@ const LandingPage = () => {
                                                     </button>
                                                 ) : (
                                                     <button
-                                                        onClick={() => scrollToSection("agendar-demo")}
+                                                        onClick={() => scrollToDemo("pricing_other")}
                                                         className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm transition-all duration-200 cursor-pointer"
                                                         style={{
                                                             background: "rgba(255,255,255,0.04)",
@@ -517,7 +524,7 @@ const LandingPage = () => {
                 </LazyOnVisible>
 
                 <LazyOnVisible minHeight="400px">
-                    <FinalCTA onCTAClick={() => goToRegister("pro")} onScheduleDemoClick={() => scrollToSection("agendar-demo")} />
+                    <FinalCTA onCTAClick={() => goToRegister("pro")} onScheduleDemoClick={() => scrollToDemo("final_cta")} />
                 </LazyOnVisible>
 
             <footer className="py-16 px-4 sm:px-6 lg:px-8" style={{ background: "#06080a", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)" }}>
