@@ -439,50 +439,48 @@ export default function CRM() {
       const activitiesMap = new Map<string, DealLastActivity>();
 
       if (dealIds.length > 0) {
-        try {
-          const { data: activitiesData } = await (supabase as any)
-            .from("deal_activities")
-            .select("deal_id, activity_type, description, old_value, new_value, created_at")
-            .in("deal_id", dealIds)
-            .order("created_at", { ascending: false });
+        // Activities e notes são enriquecimento opcional — se falhar, log pra
+        // diagnóstico e segue a renderização do CRM sem travar a lista de deals.
+        const { data: activitiesData, error: activitiesError } = await (supabase as any)
+          .from("deal_activities")
+          .select("deal_id, activity_type, description, old_value, new_value, created_at")
+          .in("deal_id", dealIds)
+          .order("created_at", { ascending: false });
 
-          if (activitiesData) {
-            for (const a of activitiesData as any[]) {
-              if (!activitiesMap.has(a.deal_id)) {
-                const isStageChange = a.activity_type === "stage_change";
-                activitiesMap.set(a.deal_id, {
-                  type: isStageChange ? "stage_change" : (a.activity_type === "call" ? "call" : "note"),
-                  text: a.description || (isStageChange ? `${a.old_value || "?"} → ${a.new_value || "?"}` : "Atividade"),
-                  date: a.created_at,
-                });
-              }
+        if (activitiesError) {
+          console.warn("[CRM] deal_activities fetch failed:", activitiesError.message);
+        } else if (activitiesData) {
+          for (const a of activitiesData as any[]) {
+            if (!activitiesMap.has(a.deal_id)) {
+              const isStageChange = a.activity_type === "stage_change";
+              activitiesMap.set(a.deal_id, {
+                type: isStageChange ? "stage_change" : (a.activity_type === "call" ? "call" : "note"),
+                text: a.description || (isStageChange ? `${a.old_value || "?"} → ${a.new_value || "?"}` : "Atividade"),
+                date: a.created_at,
+              });
             }
           }
-        } catch {
-          // deal_activities table may not exist yet
         }
 
-        try {
-          const { data: notesData } = await (supabase as any)
-            .from("deal_notes")
-            .select("deal_id, content, created_at")
-            .in("deal_id", dealIds)
-            .order("created_at", { ascending: false });
+        const { data: notesData, error: notesError } = await (supabase as any)
+          .from("deal_notes")
+          .select("deal_id, content, created_at")
+          .in("deal_id", dealIds)
+          .order("created_at", { ascending: false });
 
-          if (notesData) {
-            for (const n of notesData as any[]) {
-              const existing = activitiesMap.get(n.deal_id);
-              if (!existing || new Date(n.created_at) > new Date(existing.date)) {
-                activitiesMap.set(n.deal_id, {
-                  type: "note",
-                  text: n.content || "Nota",
-                  date: n.created_at,
-                });
-              }
+        if (notesError) {
+          console.warn("[CRM] deal_notes fetch failed:", notesError.message);
+        } else if (notesData) {
+          for (const n of notesData as any[]) {
+            const existing = activitiesMap.get(n.deal_id);
+            if (!existing || new Date(n.created_at) > new Date(existing.date)) {
+              activitiesMap.set(n.deal_id, {
+                type: "note",
+                text: n.content || "Nota",
+                date: n.created_at,
+              });
             }
           }
-        } catch {
-          // deal_notes table may not exist yet
         }
       }
 

@@ -145,13 +145,10 @@ const KPICard = ({
   return cardContent;
 };
 
-const Dashboard = () => {
-  const { user, isAdmin } = useAuth();
-
-  // Se for admin, mostrar dashboard administrativo
-  if (isAdmin) {
-    return <AdminDashboardOverview />;
-  }
+// Seller-facing dashboard. Separado do wrapper pra não violar Rules of Hooks
+// (os useQuery abaixo não podem ficar após um early return admin).
+const SellerDashboard = () => {
+  const { user } = useAuth();
 
   const now = new Date();
   const startOfMonthDate = format(startOfMonth(now), "yyyy-MM-dd");
@@ -649,6 +646,11 @@ const Dashboard = () => {
       </Card>
     </div >
   );
+};
+
+const Dashboard = () => {
+  const { isAdmin } = useAuth();
+  return isAdmin ? <AdminDashboardOverview /> : <SellerDashboard />;
 };
 
 export default Dashboard;

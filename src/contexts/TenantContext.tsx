@@ -67,7 +67,7 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
             // Super admin can see all companies
             const { data: allCompanies, error: companiesError } = await supabase
               .from('companies')
-              .select('id, name, plan, logo_url')
+              .select('id, name, plan, logo_url, trial_ends_at, subscription_status')
               .order('name');
 
             if (companiesError) {
@@ -75,8 +75,7 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
             }
 
             if (allCompanies && allCompanies.length > 0) {
-              // Map with safe defaults for fields that may not exist yet
-              const typedCompanies: Company[] = allCompanies.map((c: any) => ({
+              const typedCompanies: Company[] = allCompanies.map((c) => ({
                 id: c.id,
                 name: c.name,
                 plan: c.plan || 'starter',
@@ -101,7 +100,7 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
               if (profileData.company_id) {
                 const { data: ownCompany } = await supabase
                   .from('companies')
-                  .select('id, name, plan, logo_url')
+                  .select('id, name, plan, logo_url, trial_ends_at, subscription_status')
                   .eq('id', profileData.company_id)
                   .single();
 
@@ -109,10 +108,10 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
                   const typedOwn: Company = {
                     id: ownCompany.id,
                     name: ownCompany.name,
-                    plan: (ownCompany as any).plan || 'starter',
+                    plan: ownCompany.plan || 'starter',
                     logo_url: ownCompany.logo_url || null,
-                    trial_ends_at: (ownCompany as any).trial_ends_at || null,
-                    subscription_status: (ownCompany as any).subscription_status || 'active',
+                    trial_ends_at: ownCompany.trial_ends_at || null,
+                    subscription_status: ownCompany.subscription_status || 'active',
                   };
                   setCompanies([typedOwn]);
                   setActiveCompanyId(profileData.company_id);
@@ -128,7 +127,7 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
             // Regular users load only their own company
             const { data: companyData } = await supabase
               .from('companies')
-              .select('id, name, plan, logo_url')
+              .select('id, name, plan, logo_url, trial_ends_at, subscription_status')
               .eq('id', profileData.company_id)
               .single();
 
@@ -136,10 +135,10 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
               const typedCompany: Company = {
                 id: companyData.id,
                 name: companyData.name,
-                plan: (companyData as any).plan || 'starter',
+                plan: companyData.plan || 'starter',
                 logo_url: companyData.logo_url || null,
-                trial_ends_at: (companyData as any).trial_ends_at || null,
-                subscription_status: (companyData as any).subscription_status || 'active',
+                trial_ends_at: companyData.trial_ends_at || null,
+                subscription_status: companyData.subscription_status || 'active',
               };
               setCompanies([typedCompany]);
               setActiveCompanyId(profileData.company_id);

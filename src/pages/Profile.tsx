@@ -188,13 +188,31 @@ export default function Profile() {
 
   const loadProfile = async () => {
     if (!user) return;
-    const { data } = await supabase.from("profiles").select("nome, email, avatar_url").eq("id", user.id).single();
+    // maybeSingle() em vez de single(): não lança se o row sumiu (perfil deletado
+    // em outra aba, etc) — evita loading infinito no Profile.
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("nome, email, avatar_url")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (error) {
+      console.warn("[Profile] loadProfile:", error.message);
+      return;
+    }
     if (data) { setNome(data.nome); setEmail(data.email); setAvatarUrl(data.avatar_url); }
   };
 
   const loadCompanyData = async () => {
     if (!effectiveCompanyId) return;
-    const { data } = await supabase.from("companies").select("name, logo_url, segment").eq("id", effectiveCompanyId).single();
+    const { data, error } = await supabase
+      .from("companies")
+      .select("name, logo_url, segment")
+      .eq("id", effectiveCompanyId)
+      .maybeSingle();
+    if (error) {
+      console.warn("[Profile] loadCompanyData:", error.message);
+      return;
+    }
     if (data) {
       setCompanyName(data.name || "");
       setCompanyLogo((data as any).logo_url || null);

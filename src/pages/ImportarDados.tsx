@@ -346,8 +346,21 @@ const ImportarDados = () => {
         const { error } = await supabase.from(table as any).insert(records);
 
         if (error) {
-          for (let j = 0; j < records.length; j++) {
-            importResult.errors.push({ row: i + j + 2, message: error.message });
+          // Bulk falhou — retry row-by-row em paralelo pra identificar exatamente
+          // quais linhas violam constraint/permissão (antes todas eram marcadas
+          // com a mesma mensagem genérica, enganando o usuário).
+          const perRow = await Promise.all(
+            records.map(async (rec, j) => {
+              const { error: rowErr } = await supabase.from(table as any).insert(rec);
+              return { row: i + j + 2, error: rowErr };
+            })
+          );
+          for (const r of perRow) {
+            if (r.error) {
+              importResult.errors.push({ row: r.row, message: r.error.message });
+            } else {
+              importResult.success += 1;
+            }
           }
         } else {
           importResult.success += records.length;
@@ -360,11 +373,17 @@ const ImportarDados = () => {
     setResult(importResult);
     setStep("done");
 
-    if (importResult.success > 0) {
-      toast.success(`${importResult.success} registros importados com sucesso!`);
-    }
-    if (importResult.errors.length > 0) {
-      toast.error(`${importResult.errors.length} erros encontrados`);
+    const total = importResult.success + importResult.errors.length;
+    if (importResult.success > 0 && importResult.errors.length === 0) {
+      toast.success(`${importResult.success} de ${total} registros importados com sucesso!`);
+    } else if (importResult.success > 0 && importResult.errors.length > 0) {
+      toast.warning(
+        `${importResult.success} de ${total} importados — ${importResult.errors.length} falharam. Ver detalhes abaixo.`
+      );
+    } else if (importResult.errors.length > 0) {
+      toast.error(
+        `Nenhum registro importado — ${importResult.errors.length} erros. Confira mapeamento e formato.`
+      );
     }
   };
 

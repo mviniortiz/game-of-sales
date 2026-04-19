@@ -55,9 +55,11 @@ vi.mock('framer-motion', () => {
     };
 });
 
-// Mock Sentry
+// Mock Sentry — ErrorBoundary importa `captureException` named export direto
 vi.mock('@/lib/sentry', () => ({
     Sentry: { captureException: vi.fn() },
+    captureException: vi.fn(),
+    initSentry: vi.fn(),
 }));
 
 // Mock AuthContext for pages that need it

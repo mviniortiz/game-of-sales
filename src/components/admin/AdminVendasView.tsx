@@ -182,34 +182,42 @@ export const AdminVendasView = ({
 
       const { data: profiles } = await profilesQuery;
 
-      if (!profiles) return [];
+      if (!profiles || profiles.length === 0) return [];
 
-      const vendedoresData = await Promise.all(
-        profiles.map(async (profile) => {
-          const { data: vendas } = await applyCompanyFilter(
-            supabase
-              .from("vendas")
-              .select("valor")
-              .eq("user_id", profile.id)
-              .eq("status", "Aprovado")
-              .gte("data_venda", inicioMes)
-              .lte("data_venda", fimMes)
-          );
+      // Antes: 1 query por vendedor (N+1 — 50 vendedores = 50 queries paralelas,
+      // Supabase throttle/timeout). Agora: 1 query única com in(user_id) e
+      // agregação client-side.
+      const profileIds = profiles.map((p) => p.id);
+      const { data: vendas } = await applyCompanyFilter(
+        supabase
+          .from("vendas")
+          .select("valor, user_id")
+          .in("user_id", profileIds)
+          .eq("status", "Aprovado")
+          .gte("data_venda", inicioMes)
+          .lte("data_venda", fimMes)
+      );
 
-          const total = vendas?.reduce((acc, v) => acc + Number(v.valor), 0) || 0;
-          const quantidade = vendas?.length || 0;
+      const totals = new Map<string, { total: number; quantidade: number }>();
+      for (const v of vendas || []) {
+        const current = totals.get(v.user_id) || { total: 0, quantidade: 0 };
+        totals.set(v.user_id, {
+          total: current.total + Number(v.valor),
+          quantidade: current.quantidade + 1,
+        });
+      }
 
+      return profiles
+        .map((profile) => {
+          const agg = totals.get(profile.id) || { total: 0, quantidade: 0 };
           return {
             nome: profile.nome,
             avatar_url: profile.avatar_url,
-            total,
-            quantidade,
+            total: agg.total,
+            quantidade: agg.quantidade,
           };
         })
-      );
-
-      return vendedoresData
-        .filter(v => v.total > 0)
+        .filter((v) => v.total > 0)
         .sort((a, b) => b.total - a.total)
         .slice(0, 5);
     },

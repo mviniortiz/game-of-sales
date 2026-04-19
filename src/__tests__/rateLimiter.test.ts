@@ -34,6 +34,6 @@ describe('rateLimiter', () => {
     it('RATE_LIMITS presets work', () => {
         const result = RATE_LIMITS.auth('login');
         expect(result.allowed).toBe(true);
-        expect(result.remaining).toBe(4); // 5 max - 1 used
+        expect(result.remaining).toBe(14); // 15 max - 1 used (rateLimiter.ts:65)
     });
 });
