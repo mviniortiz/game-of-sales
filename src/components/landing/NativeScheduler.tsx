@@ -49,6 +49,16 @@ function formatDayHeader(dayKey: string): string {
     return `${weekday}, ${dd} de ${monthLabel}`;
 }
 
+function formatDayChip(dayKey: string): { weekday: string; dayNum: string; month: string } {
+    const [y, m, d] = dayKey.split("-").map(Number);
+    const date = new Date(Date.UTC(y, m - 1, d, 12));
+    return {
+        weekday: WEEKDAY_LABELS[date.getUTCDay()],
+        dayNum: String(d).padStart(2, "0"),
+        month: MONTH_LABELS[m - 1].slice(0, 3),
+    };
+}
+
 export default function NativeScheduler({
     demoRequestId,
     leadName,
@@ -202,19 +212,51 @@ export default function NativeScheduler({
     return (
         <div className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.02)", boxShadow: "0 0 0 1px rgba(255,255,255,0.06)" }}>
             {/* Header */}
-            <div className="px-5 py-4 flex items-center gap-2 border-b" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-                <Calendar className="h-4 w-4 text-emerald-400" />
+            <div className="px-4 sm:px-5 py-3.5 sm:py-4 flex items-center gap-2 border-b" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+                <Calendar className="h-4 w-4 text-emerald-400 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                    <p className="text-xs uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.4)", fontWeight: 600 }}>Escolha o horário</p>
-                    <p className="text-sm truncate" style={{ color: "rgba(255,255,255,0.9)", fontWeight: 600 }}>{leadName ? `Olá, ${leadName.split(" ")[0]}` : "Quase lá"} — horário de Brasília</p>
+                    <p className="text-[10px] sm:text-xs uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.4)", fontWeight: 600 }}>Escolha o horário</p>
+                    <p className="text-xs sm:text-sm truncate" style={{ color: "rgba(255,255,255,0.9)", fontWeight: 600 }}>
+                        <span className="hidden sm:inline">{leadName ? `Olá, ${leadName.split(" ")[0]} — ` : ""}horário de Brasília</span>
+                        <span className="sm:hidden">Horário de Brasília</span>
+                    </p>
                 </div>
                 <span className="text-[10px] uppercase tracking-wider px-2 py-1 rounded-full flex-shrink-0" style={{ background: "rgba(16,185,129,0.1)", color: "#10b981", fontWeight: 700 }}>30 MIN</span>
             </div>
 
             <div className="grid md:grid-cols-[240px_1fr]">
-                {/* Day picker — scroll horizontal em mobile, vertical em desktop */}
+                {/* Day picker */}
                 <div className="border-b md:border-b-0 md:border-r" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-                    <div className="flex md:flex-col gap-1 p-3 overflow-x-auto md:overflow-visible md:max-h-[420px] md:overflow-y-auto">
+                    {/* Mobile: chips compactos horizontais */}
+                    <div className="flex md:hidden gap-2 px-3 py-3 overflow-x-auto scrollbar-none" style={{ scrollbarWidth: "none" }}>
+                        {dayKeys.map((dk) => {
+                            const isActive = dk === selectedDay;
+                            const chip = formatDayChip(dk);
+                            const slotsCount = slotsByDay.get(dk)?.length || 0;
+                            return (
+                                <button
+                                    key={dk}
+                                    onClick={() => {
+                                        setSelectedDay(dk);
+                                        setSelectedSlot(null);
+                                    }}
+                                    className="flex-shrink-0 flex flex-col items-center justify-center px-3 py-2 rounded-xl transition-all"
+                                    style={{
+                                        background: isActive ? "rgba(16,185,129,0.12)" : "rgba(255,255,255,0.03)",
+                                        boxShadow: isActive ? "0 0 0 1.5px rgba(16,185,129,0.45)" : "0 0 0 1px rgba(255,255,255,0.06)",
+                                        color: isActive ? "#34d399" : "rgba(255,255,255,0.7)",
+                                        minWidth: 58,
+                                    }}
+                                >
+                                    <span className="text-[10px] uppercase" style={{ fontWeight: 600, letterSpacing: "0.05em", color: isActive ? "rgba(52,211,153,0.8)" : "rgba(255,255,255,0.4)" }}>{chip.weekday}</span>
+                                    <span className="text-base tabular-nums" style={{ fontWeight: 700, lineHeight: 1.1 }}>{chip.dayNum}</span>
+                                    <span className="text-[9px] mt-0.5" style={{ color: isActive ? "rgba(52,211,153,0.7)" : "rgba(255,255,255,0.3)" }}>{slotsCount} livres</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                    {/* Desktop: lista vertical */}
+                    <div className="hidden md:flex md:flex-col gap-1 p-3 md:max-h-[420px] md:overflow-y-auto">
                         {dayKeys.map((dk) => {
                             const isActive = dk === selectedDay;
                             const slotsCount = slotsByDay.get(dk)?.length || 0;
@@ -225,7 +267,7 @@ export default function NativeScheduler({
                                         setSelectedDay(dk);
                                         setSelectedSlot(null);
                                     }}
-                                    className="flex-shrink-0 md:flex-shrink text-left px-3 py-2.5 rounded-lg transition-colors whitespace-nowrap md:whitespace-normal"
+                                    className="text-left px-3 py-2.5 rounded-lg transition-colors"
                                     style={{
                                         background: isActive ? "rgba(16,185,129,0.12)" : "transparent",
                                         boxShadow: isActive ? "0 0 0 1px rgba(16,185,129,0.3)" : "none",
@@ -241,19 +283,19 @@ export default function NativeScheduler({
                 </div>
 
                 {/* Slots grid */}
-                <div className="p-4 min-h-[220px]">
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-[240px] sm:max-h-[360px] overflow-y-auto pr-1">
+                <div className="p-3 sm:p-4 min-h-[200px]">
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5 sm:gap-2 max-h-[220px] sm:max-h-[360px] overflow-y-auto pr-1">
                         {currentSlots.map((s) => {
                             const isActive = selectedSlot?.startIso === s.startIso;
                             return (
                                 <button
                                     key={s.startIso}
                                     onClick={() => setSelectedSlot(s)}
-                                    className="px-3 py-2.5 rounded-lg text-sm transition-colors tabular-nums"
+                                    className="px-2 sm:px-3 py-2.5 rounded-lg text-sm transition-colors tabular-nums"
                                     style={{
                                         background: isActive ? "linear-gradient(135deg, #10b981, #059669)" : "rgba(255,255,255,0.04)",
                                         boxShadow: isActive ? "0 4px 16px rgba(16,185,129,0.3)" : "0 0 0 1px rgba(255,255,255,0.06)",
-                                        color: isActive ? "#06080a" : "rgba(255,255,255,0.85)",
+                                        color: isActive ? "#ffffff" : "rgba(255,255,255,0.85)",
                                         fontWeight: isActive ? 700 : 500,
                                     }}
                                 >

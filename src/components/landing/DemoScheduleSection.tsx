@@ -695,32 +695,32 @@ export const DemoScheduleSection = ({
                         </div>
                     )}
 
-                    {/* ── STEP 3: SCHEDULE (inline Calendly) ─────── */}
+                    {/* ── STEP 3: SCHEDULE ─────── */}
                     {step === "schedule" && (
-                        <div className="p-4 sm:p-6 md:p-8 landing-fade-in">
-                            <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-                                <div>
+                        <div className="p-3 sm:p-6 md:p-8 landing-fade-in">
+                            <div className="flex items-start justify-between mb-3 sm:mb-4 gap-3">
+                                <div className="min-w-0 flex-1">
                                     <div className="flex items-center gap-2 mb-1">
-                                        <Calendar className="h-4 w-4 text-emerald-400" />
+                                        <Calendar className="h-3.5 w-3.5 text-emerald-400 flex-shrink-0" />
                                         <span
-                                            className="text-xs uppercase tracking-wider text-emerald-400"
+                                            className="text-[10px] sm:text-xs uppercase tracking-wider text-emerald-400"
                                             style={{ fontWeight: 600, letterSpacing: "0.1em" }}
                                         >
                                             Escolha seu horário
                                         </span>
                                     </div>
                                     <p
-                                        className="text-sm"
+                                        className="text-xs sm:text-sm truncate"
                                         style={{ color: "rgba(255,255,255,0.45)" }}
                                     >
-                                        A confirmação vai pro{" "}
+                                        Confirmação pro{" "}
                                         <span style={{ color: "rgba(255,255,255,0.75)" }}>{form.email}</span>
                                     </p>
                                 </div>
                                 <button
                                     type="button"
                                     onClick={() => setStep("qualify")}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all duration-150"
+                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs flex-shrink-0 transition-all duration-150"
                                     style={{
                                         background: "rgba(255,255,255,0.04)",
                                         boxShadow: "0 0 0 1px rgba(255,255,255,0.08)",
