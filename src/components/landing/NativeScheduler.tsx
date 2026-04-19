@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Calendar, Clock, CheckCircle2, AlertCircle } from "lucide-react";
+import { Loader2, Calendar, Clock, CheckCircle2, AlertCircle, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Slot {
@@ -283,18 +283,20 @@ export default function NativeScheduler({
                             className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-3 rounded-xl text-sm sm:flex-shrink-0 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                             style={{
                                 background: "linear-gradient(135deg, #10b981, #059669)",
-                                color: "#06080a",
+                                color: "#ffffff",
                                 fontWeight: 700,
+                                fontSize: "0.95rem",
                                 boxShadow: "0 0 0 1px rgba(16,185,129,0.4), 0 4px 16px rgba(16,185,129,0.25)",
                             }}
                         >
                             {phase === "booking" ? (
                                 <>
                                     <Loader2 className="h-4 w-4 animate-spin" />
-                                    Confirmando...
+                                    Confirmando…
                                 </>
                             ) : (
                                 <>
+                                    <Check className="h-4 w-4" strokeWidth={3} />
                                     Confirmar agendamento
                                 </>
                             )}
