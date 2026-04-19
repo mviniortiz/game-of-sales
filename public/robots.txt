@@ -1,5 +1,5 @@
-# Game Sales - robots.txt
-# https://gamesales.com.br
+# Vyzon - robots.txt
+# https://vyzon.com.br
 
 User-agent: Googlebot
 Allow: /
@@ -17,4 +17,4 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://gamesales.com.br/sitemap.xml
+Sitemap: https://vyzon.com.br/sitemap.xml
