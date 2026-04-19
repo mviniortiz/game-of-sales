@@ -116,10 +116,10 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
                     </p>
 
                     {/* CTAs */}
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-10 landing-fade-in-up landing-delay-400">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 mt-10 w-full max-w-md mx-auto sm:max-w-none landing-fade-in-up landing-delay-400">
                         <button
                             onClick={onScheduleDemoClick || onCTAClick}
-                            className="hero-cta-primary group relative inline-flex items-center justify-center gap-2.5 px-7 py-3.5 text-[15px] font-bold text-white rounded-xl overflow-hidden"
+                            className="hero-cta-primary group relative inline-flex items-center justify-center gap-2.5 px-5 sm:px-7 py-3.5 text-sm sm:text-[15px] font-bold text-white rounded-xl overflow-hidden"
                             style={{
                                 background: "linear-gradient(135deg, #10b981, #059669)",
                                 boxShadow: "0 0 0 1px rgba(16,185,129,0.3), 0 4px 24px rgba(16,185,129,0.3)",
@@ -133,7 +133,7 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
 
                         <button
                             onClick={onDemoClick}
-                            className="hero-cta-secondary flex items-center gap-2 px-5 py-3 rounded-xl text-[15px]"
+                            className="hero-cta-secondary flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm sm:text-[15px]"
                             style={{
                                 color: "rgba(255,255,255,0.55)",
                                 background: "rgba(255,255,255,0.04)",
@@ -147,7 +147,7 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
                     </div>
 
                     {/* Trust row */}
-                    <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-8 landing-fade-in landing-delay-500">
+                    <div className="flex flex-wrap items-center justify-center gap-x-4 sm:gap-x-6 gap-y-2 mt-8 landing-fade-in landing-delay-500">
                         {["14 dias grátis pra testar", "Pronto em 5 minutos", "Suporte humano no WhatsApp"].map((t) => (
                             <span key={t} className="flex items-center gap-1.5 text-[13px]" style={{ color: "rgba(255,255,255,0.6)" }}>
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />

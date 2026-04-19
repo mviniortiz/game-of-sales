@@ -58,14 +58,14 @@ export const FinalCTA = ({ onCTAClick, onScheduleDemoClick }: FinalCTAProps) => 
                     <h2
                         className="font-heading mb-6 max-w-3xl mx-auto"
                         style={{
-                            fontWeight: 800,
-                            fontSize: "clamp(1.6rem, 5vw, 3.25rem)",
+                            fontWeight: 700,
+                            fontSize: "clamp(1.4rem, 4.5vw, 3.25rem)",
                             lineHeight: 1.05,
                             letterSpacing: "-0.045em",
                             color: "rgba(255,255,255,0.95)",
                         }}
                     >
-                        Seu time pode tá vendendo mais amanhã.
+                        Seu time pode estar vendendo mais amanhã.
                     </h2>
 
                     {/* Sub-copy */}

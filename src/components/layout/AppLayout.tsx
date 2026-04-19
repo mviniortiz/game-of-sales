@@ -59,11 +59,11 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
       <div className="min-h-screen flex w-full bg-background text-foreground">
         <AppSidebar />
         <div className="flex-1 flex flex-col">
-          <header className="h-14 border-b border-border/50 bg-background/80 backdrop-blur-sm text-foreground flex items-center gap-4 px-4">
+          <header className="h-14 border-b border-border/50 bg-background/80 backdrop-blur-sm text-foreground flex items-center gap-2 sm:gap-4 px-3 sm:px-4">
             <SidebarTrigger />
-            <span className="text-sm font-medium text-muted-foreground">{getPageTitle(location.pathname)}</span>
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{getPageTitle(location.pathname)}</span>
           </header>
-          <main className="flex-1 p-6 overflow-auto">
+          <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-auto">
             {children}
           </main>
         </div>

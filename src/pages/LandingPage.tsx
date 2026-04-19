@@ -468,35 +468,53 @@ const LandingPage = () => {
                                                 </ul>
 
                                                 {isPopular ? (
-                                                    <button
-                                                        onClick={() => scrollToDemo("pricing_popular")}
-                                                        className="relative w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm text-white overflow-hidden cursor-pointer"
-                                                        style={{
-                                                            background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-                                                            boxShadow: "0 4px 20px rgba(16,185,129,0.28), 0 1px 4px rgba(0,0,0,0.25)",
-                                                            fontWeight: "var(--fw-semibold)"
-                                                        }}>
-                                                        <span
-                                                            className="absolute inset-0 rounded-xl landing-shine"
-                                                            style={{ background: "linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.14) 50%, transparent 70%)" }}
-                                                        />
-                                                        <span className="relative">Agendar demonstração</span>
-                                                        <ArrowRight className="relative h-4 w-4" />
-                                                    </button>
+                                                    <div className="space-y-2">
+                                                        <button
+                                                            onClick={() => goToRegister(plan.name.toLowerCase())}
+                                                            className="relative w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm text-white overflow-hidden cursor-pointer"
+                                                            style={{
+                                                                background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                                                                boxShadow: "0 4px 20px rgba(16,185,129,0.28), 0 1px 4px rgba(0,0,0,0.25)",
+                                                                fontWeight: "var(--fw-semibold)"
+                                                            }}>
+                                                            <span
+                                                                className="absolute inset-0 rounded-xl landing-shine"
+                                                                style={{ background: "linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.14) 50%, transparent 70%)" }}
+                                                            />
+                                                            <span className="relative">Começar teste de 14 dias</span>
+                                                            <ArrowRight className="relative h-4 w-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => scrollToDemo("pricing_popular")}
+                                                            className="w-full text-xs cursor-pointer transition-colors"
+                                                            style={{ color: "rgba(255,255,255,0.4)", fontWeight: "var(--fw-medium)" }}
+                                                        >
+                                                            ou agende uma demo antes
+                                                        </button>
+                                                    </div>
                                                 ) : (
-                                                    <button
-                                                        onClick={() => scrollToDemo("pricing_other")}
-                                                        className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm transition-all duration-200 cursor-pointer"
-                                                        style={{
-                                                            background: "rgba(255,255,255,0.04)",
-                                                            border: "none",
-                                                            boxShadow: "0 0 0 1px rgba(255,255,255,0.1)",
-                                                            color: "rgba(255,255,255,0.7)",
-                                                            fontWeight: "var(--fw-semibold)"
-                                                        }}>
-                                                        Agendar demonstração
-                                                        <ArrowRight className="h-4 w-4" />
-                                                    </button>
+                                                    <div className="space-y-2">
+                                                        <button
+                                                            onClick={() => goToRegister(plan.name.toLowerCase())}
+                                                            className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm transition-all duration-200 cursor-pointer"
+                                                            style={{
+                                                                background: "rgba(255,255,255,0.04)",
+                                                                border: "none",
+                                                                boxShadow: "0 0 0 1px rgba(255,255,255,0.1)",
+                                                                color: "rgba(255,255,255,0.9)",
+                                                                fontWeight: "var(--fw-semibold)"
+                                                            }}>
+                                                            Começar teste de 14 dias
+                                                            <ArrowRight className="h-4 w-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => scrollToDemo("pricing_other")}
+                                                            className="w-full text-xs cursor-pointer transition-colors"
+                                                            style={{ color: "rgba(255,255,255,0.35)", fontWeight: "var(--fw-medium)" }}
+                                                        >
+                                                            ou agende uma demo antes
+                                                        </button>
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>
@@ -505,7 +523,7 @@ const LandingPage = () => {
                             })}
                         </div>
 
-                        <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 mt-12 landing-fade-in landing-delay-500">
+                        <div className="flex flex-wrap items-center justify-center gap-x-4 sm:gap-x-8 gap-y-2 sm:gap-y-3 mt-10 sm:mt-12 landing-fade-in landing-delay-500">
                             {TRUST_ITEMS.map(({ icon, label }) => (
                                 <div key={label} className="flex items-center gap-1.5 text-xs"
                                     style={{ fontWeight: "var(--fw-medium)", color: "rgba(255,255,255,0.35)" }}>
@@ -529,7 +547,7 @@ const LandingPage = () => {
 
             <footer className="py-16 px-4 sm:px-6 lg:px-8" style={{ background: "#06080a", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)" }}>
                 <div className="max-w-6xl mx-auto">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 md:gap-10 mb-12">
                         <div className="col-span-2 md:col-span-1">
                             <img src={brandLogoDark} alt="Vyzon" width={320} height={60} className="h-8 w-auto mb-4" />
                             <p className="text-gray-500 text-sm leading-relaxed max-w-[220px]">

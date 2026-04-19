@@ -1436,7 +1436,7 @@ const WhatsApp = () => {
                         {qrCodeBase64 ? (
                             <div className="flex flex-col items-center animate-in fade-in zoom-in-95 duration-500 relative z-10">
                                 <div className="bg-white p-4 sm:p-6 rounded-3xl shadow-2xl shadow-emerald-500/10 mb-6 sm:mb-8 relative border-4 border-emerald-500/20">
-                                    <img src={qrCodeBase64.startsWith('data:image') ? qrCodeBase64 : `data:image/png;base64,${qrCodeBase64}`} alt="QR Code WhatsApp" className="w-[220px] h-[220px] sm:w-[260px] sm:h-[260px] object-contain" />
+                                    <img src={qrCodeBase64.startsWith('data:image') ? qrCodeBase64 : `data:image/png;base64,${qrCodeBase64}`} alt="QR Code WhatsApp" className="w-[min(220px,70vw)] h-[min(220px,70vw)] sm:w-[260px] sm:h-[260px] object-contain" />
                                 </div>
                                 <div className="flex items-center gap-3 mb-3">
                                     <div className="relative flex h-3 w-3">

@@ -9,37 +9,25 @@ import {
   Search,
   ThumbsUp,
   Settings,
-  Check,
-  ExternalLink,
   Puzzle,
   Activity,
   Zap,
-  Clock,
   AlertTriangle,
-  CheckCircle2,
-  XCircle,
-  ChevronRight,
   ArrowUpRight,
   Wifi,
-  WifiOff,
   BarChart3,
-  RefreshCw,
   Shield,
-  Eye,
-  EyeOff,
+  Plug,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { HotmartConfigModal } from "@/components/integrations/HotmartConfigModal";
-import { KiwifyConfigModal } from "@/components/integrations/KiwifyConfigModal";
-import { GreennConfigModal } from "@/components/integrations/GreennConfigModal";
+import { motion } from "framer-motion";
+import { IntegrationConfigModal } from "@/components/integrations/IntegrationConfigModal";
 import { GoogleCalendarConfigModal } from "@/components/integrations/GoogleCalendarConfigModal";
-import { WhatsappConfigModal } from "@/components/integrations/WhatsappConfigModal";
-import { RDStationConfigModal } from "@/components/integrations/RDStationConfigModal";
+import { WebhookHeartbeat } from "@/components/integrations/WebhookHeartbeat";
+import { INTEGRATIONS_CONFIG } from "@/config/integrationsConfig";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { PRODUCT_FEATURES } from "@/config/features";
-import { format, formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 // Import logo images
@@ -49,6 +37,16 @@ import caktoLogo from "@/assets/integrations/cakto.webp";
 import greennLogo from "@/assets/integrations/greenn.webp";
 import hotmartLogo from "@/assets/integrations/hotmart-logo-png_seeklogo-485917.webp";
 import kiwifyLogo from "@/assets/integrations/kiwify-logo-png_seeklogo-537186.webp";
+import rdstationLogo from "@/assets/integrations/rdstation.svg";
+import braipLogo from "@/assets/integrations/braip.webp";
+import monetizzeLogo from "@/assets/integrations/monetizze.webp";
+import eduzzLogo from "@/assets/integrations/eduzz.webp";
+import mercadopagoLogo from "@/assets/integrations/mercadopago.webp";
+import pagarmeLogo from "@/assets/integrations/pagarme.svg";
+import stripeLogo from "@/assets/integrations/stripe.svg";
+import asaasLogo from "@/assets/integrations/asaas.svg";
+import zapierLogo from "@/assets/integrations/zapier.svg";
+import notazzLogo from "@/assets/integrations/notazz.png";
 
 // ── Types ──────────────────────────────────────────────────────────
 type IntegrationStatus = "active" | "available" | "roadmap";
@@ -78,18 +76,6 @@ interface WebhookLog {
 }
 
 // ── Integration Data ───────────────────────────────────────────────
-const WHATSAPP_INTEGRATION: Integration = {
-  id: "evolution-api",
-  name: "Evolution API (WhatsApp)",
-  description: "Conecte seu WhatsApp via QR Code e utilize no CRM",
-  logoBg: "bg-emerald-500",
-  logoText: "WA",
-  logoColor: "text-white",
-  status: "available",
-  category: "productivity",
-  features: ["Chat no CRM", "Envio de mensagens", "QR Code"],
-};
-
 const INTEGRATIONS: Integration[] = [
   {
     id: "google-calendar",
@@ -135,12 +121,81 @@ const INTEGRATIONS: Integration[] = [
     id: "rdstation",
     name: "RD Station",
     description: "Sincronize leads, conversões e oportunidades do RD Station Marketing e CRM",
-    logoBg: "bg-violet-600",
-    logoText: "RD",
-    logoColor: "text-white",
+    logo: rdstationLogo,
+    logoBg: "bg-white",
     status: "available",
     category: "sales",
     features: ["Conversões", "Oportunidades", "Leads", "CRM Sync"],
+  },
+  {
+    id: "cakto",
+    name: "Cakto",
+    description: "Conecte vendas e relatórios financeiros via webhook",
+    logo: caktoLogo,
+    logoBg: "bg-white",
+    status: "available",
+    category: "sales",
+    features: ["Vendas", "Reembolsos", "Chargebacks"],
+  },
+  {
+    id: "braip",
+    name: "Braip",
+    description: "Sincronize vendas de produtores e afiliados via postback",
+    logo: braipLogo,
+    logoBg: "bg-white",
+    status: "available",
+    category: "sales",
+    features: ["Pedidos", "Afiliados", "Postbacks"],
+  },
+  {
+    id: "monetizze",
+    name: "Monetizze",
+    description: "Importe vendas, reembolsos e boletos da Monetizze",
+    logo: monetizzeLogo,
+    logoBg: "bg-white",
+    status: "available",
+    category: "sales",
+    features: ["Vendas", "Boletos", "Reembolsos"],
+  },
+  {
+    id: "eduzz",
+    name: "Eduzz",
+    description: "Conecte vendas de cursos e produtos digitais da Eduzz",
+    logo: eduzzLogo,
+    logoBg: "bg-white",
+    status: "available",
+    category: "sales",
+    features: ["Faturas", "Assinaturas", "Reembolsos"],
+  },
+  {
+    id: "asaas",
+    name: "Asaas",
+    description: "Cobrança recorrente, PIX, boleto e cartão em tempo real",
+    logo: asaasLogo,
+    logoBg: "bg-white",
+    status: "available",
+    category: "sales",
+    features: ["PIX / Boleto / Cartão", "Assinaturas", "Chargebacks"],
+  },
+  {
+    id: "zapier",
+    name: "Zapier",
+    description: "Conecte 7.000+ apps — Typeform, Mailchimp, Calendly, Sheets",
+    logo: zapierLogo,
+    logoBg: "bg-white",
+    status: "available",
+    category: "productivity",
+    features: ["7.000+ apps", "No-code", "Payload custom"],
+  },
+  {
+    id: "notazz",
+    name: "Notazz",
+    description: "Emissão automática de NF-e e NFS-e com callback de status",
+    logo: notazzLogo,
+    logoBg: "bg-white",
+    status: "available",
+    category: "productivity",
+    features: ["NF-e / NFS-e", "Callback de status", "PDF/XML no deal"],
   },
   {
     id: "celetus",
@@ -153,14 +208,34 @@ const INTEGRATIONS: Integration[] = [
     votes: 23,
   },
   {
-    id: "cakto",
-    name: "Cakto",
-    description: "Conecte vendas e relatórios financeiros",
-    logo: caktoLogo,
+    id: "mercadopago",
+    name: "Mercado Pago",
+    description: "Receba webhooks de pagamentos aprovados, estornos e assinaturas",
+    logo: mercadopagoLogo,
     logoBg: "bg-white",
     status: "roadmap",
     category: "sales",
-    votes: 18,
+    votes: 19,
+  },
+  {
+    id: "stripe",
+    name: "Stripe",
+    description: "Integre pagamentos internacionais e assinaturas recorrentes",
+    logo: stripeLogo,
+    logoBg: "bg-white",
+    status: "roadmap",
+    category: "sales",
+    votes: 15,
+  },
+  {
+    id: "pagarme",
+    name: "Pagar.me",
+    description: "Sincronize transações e pagamentos da Pagar.me",
+    logo: pagarmeLogo,
+    logoBg: "bg-white",
+    status: "roadmap",
+    category: "sales",
+    votes: 12,
   },
 ];
 
@@ -175,12 +250,19 @@ const PLATFORM_NAMES: Record<string, string> = {
   kiwify: "Kiwify",
   greenn: "Greenn",
   "google-calendar": "Google Calendar",
-  "evolution-api": "WhatsApp",
   rdstation: "RD Station",
+  cakto: "Cakto",
+  braip: "Braip",
+  monetizze: "Monetizze",
+  eduzz: "Eduzz",
+  asaas: "Asaas",
+  zapier: "Zapier",
+  notazz: "Notazz",
 };
 
 const EVENT_LABELS: Record<string, string> = {
   PURCHASE_APPROVED: "Venda aprovada",
+  PURCHASE_COMPLETE: "Compra finalizada",
   PURCHASE_REFUNDED: "Reembolso",
   PURCHASE_CANCELED: "Cancelamento",
   PURCHASE_CHARGEBACK: "Chargeback",
@@ -193,6 +275,38 @@ const EVENT_LABELS: Record<string, string> = {
   purchase_refunded: "Reembolso",
   purchase_canceled: "Cancelamento",
   purchase_chargeback: "Chargeback",
+  "order.paid": "Pedido pago",
+  "order.refunded": "Reembolso",
+  "order.canceled": "Cancelamento",
+  "order.chargeback": "Chargeback",
+  venda_realizada: "Venda realizada",
+  venda_reembolsada: "Reembolso",
+  venda_cancelada: "Cancelamento",
+  venda_chargeback: "Chargeback",
+  boleto_gerado: "Boleto gerado",
+  invoice_paid: "Fatura paga",
+  invoice_refunded: "Reembolso",
+  invoice_canceled: "Cancelamento",
+  invoice_chargeback: "Chargeback",
+  contract_canceled: "Assinatura cancelada",
+  PAYMENT_CREATED: "Cobrança criada",
+  PAYMENT_CONFIRMED: "Pagamento confirmado",
+  PAYMENT_RECEIVED: "Pagamento recebido",
+  PAYMENT_OVERDUE: "Cobrança vencida",
+  PAYMENT_REFUNDED: "Reembolso",
+  PAYMENT_DELETED: "Cobrança deletada",
+  PAYMENT_CHARGEBACK_REQUESTED: "Chargeback",
+  lead_created: "Lead criado",
+  deal_won: "Deal ganho",
+  sale_approved: "Venda aprovada",
+  deal_lost: "Deal perdido",
+  cancellation: "Cancelamento",
+  refund: "Reembolso",
+  NF_AUTHORIZED: "NF autorizada",
+  NF_REJECTED: "NF rejeitada",
+  NF_CANCELLED: "NF cancelada",
+  NF_PROCESSING: "NF em processamento",
+  NF_ERROR: "Erro na NF",
   "WEBHOOK.CONVERTED": "Conversão de lead",
   "WEBHOOK.MARKED_OPPORTUNITY": "Oportunidade marcada",
   crm_deal_created: "Deal criado no CRM",
@@ -206,16 +320,6 @@ const getStatusColor = (status: string | null) => {
     case "error": return { bg: "bg-rose-500/10", text: "text-rose-400", border: "border-rose-500/20", dot: "bg-rose-400" };
     case "processing": return { bg: "bg-amber-500/10", text: "text-amber-400", border: "border-amber-500/20", dot: "bg-amber-400" };
     default: return { bg: "bg-slate-500/10", text: "text-slate-400", border: "border-slate-500/20", dot: "bg-slate-400" };
-  }
-};
-
-const getStatusLabel = (status: string | null) => {
-  switch (status) {
-    case "success": return "Sucesso";
-    case "error": return "Erro";
-    case "processing": return "Processando";
-    case "received": return "Recebido";
-    default: return status || "—";
   }
 };
 
@@ -250,62 +354,65 @@ const IntegrationCard = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25 }}
-      whileHover={{ y: -3, transition: { duration: 0.15 } }}
+      transition={{ duration: 0.2 }}
+      whileHover={{ y: -2, transition: { duration: 0.15 } }}
       className={`
-        relative flex flex-col h-full rounded-xl border transition-all duration-200 overflow-hidden
+        group relative flex flex-col h-full rounded-xl border transition-all duration-200 overflow-hidden
         ${isActive
-          ? "bg-card border-emerald-500/30 shadow-sm shadow-emerald-500/5"
+          ? "bg-card border-emerald-500/25"
           : isRoadmap
-            ? "bg-card/60 border-border/50 opacity-75"
-            : "bg-card border-border hover:border-emerald-500/30 hover:shadow-md hover:shadow-emerald-500/5"
+            ? "bg-card/40 border-border/60"
+            : "bg-card border-border hover:border-emerald-500/30"
         }
       `}
     >
-      {/* Active glow line */}
+      {/* Active accent line */}
       {isActive && (
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500/50 via-emerald-400 to-emerald-500/50" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent" />
       )}
 
-      <div className="p-4 flex-1 flex flex-col">
+      <div className="p-5 flex-1 flex flex-col">
         {/* Header row: Logo + Status */}
-        <div className="flex items-start justify-between mb-3">
-          <div className={`w-11 h-11 rounded-lg flex items-center justify-center ${integration.logoBg} p-1.5 ring-1 ring-border overflow-hidden`}>
+        <div className="flex items-start justify-between mb-4">
+          <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${integration.logoBg} p-2 ring-1 ring-border/80 overflow-hidden shadow-sm`}>
             {integration.logo ? (
               <img src={integration.logo} alt={integration.name} className="w-full h-full object-contain" />
             ) : (
-              <span className={`text-lg font-bold ${integration.logoColor || "text-foreground"}`}>
+              <span className={`text-base font-bold ${integration.logoColor || "text-foreground"}`}>
                 {integration.logoText}
               </span>
             )}
           </div>
 
           {isActive && (
-            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+              <span className="relative flex w-1.5 h-1.5">
+                <span className="absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-60" />
+                <span className="relative rounded-full w-1.5 h-1.5 bg-emerald-400" />
+              </span>
               <span className="text-[10px] font-semibold text-emerald-400 uppercase tracking-wider">Ativo</span>
             </div>
           )}
           {isRoadmap && (
-            <Badge variant="secondary" className="bg-amber-500/10 text-amber-400 border-amber-500/20 text-[10px]">
+            <Badge variant="secondary" className="bg-muted text-muted-foreground border-border text-[10px] font-medium">
               Em Breve
             </Badge>
           )}
         </div>
 
         {/* Name & Description */}
-        <h3 className="text-sm font-semibold text-foreground mb-1">{integration.name}</h3>
-        <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{integration.description}</p>
+        <h3 className="text-[15px] font-semibold text-foreground mb-1 tracking-tight">{integration.name}</h3>
+        <p className="text-xs text-muted-foreground line-clamp-2 mb-4 leading-relaxed">{integration.description}</p>
 
         {/* Feature pills */}
-        {integration.features && (
-          <div className="flex flex-wrap gap-1 mb-3">
+        {integration.features && !isRoadmap && (
+          <div className="flex flex-wrap gap-1.5 mb-4">
             {integration.features.map((feature) => (
               <span
                 key={feature}
-                className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted/50 text-muted-foreground border border-border/50"
+                className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-muted/60 text-muted-foreground border border-border/60"
               >
                 {feature}
               </span>
@@ -315,22 +422,22 @@ const IntegrationCard = ({
 
         {/* Active: Last event info */}
         {isActive && lastEvent && (
-          <div className="mt-auto mb-3 p-2 rounded-lg bg-muted/30 border border-border/50">
+          <div className="mt-auto mb-3 p-2.5 rounded-lg bg-muted/30 border border-border/60">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <div className={`w-1.5 h-1.5 rounded-full ${getStatusColor(lastEvent.status).dot}`} />
-                <span className="text-[10px] text-muted-foreground">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${getStatusColor(lastEvent.status).dot}`} />
+                <span className="text-[10px] text-muted-foreground truncate">
                   {EVENT_LABELS[lastEvent.event_type || ""] || lastEvent.event_type || "Evento"}
                 </span>
               </div>
-              <span className="text-[10px] text-muted-foreground/60">
+              <span className="text-[10px] text-muted-foreground/60 tabular-nums flex-shrink-0 ml-2">
                 {formatDistanceToNow(new Date(lastEvent.created_at), { addSuffix: true, locale: ptBR })}
               </span>
             </div>
             {eventCount !== undefined && eventCount > 0 && (
-              <div className="flex items-center gap-1 mt-1">
-                <BarChart3 className="h-2.5 w-2.5 text-muted-foreground/50" />
-                <span className="text-[10px] text-muted-foreground/50">{eventCount} eventos este mês</span>
+              <div className="flex items-center gap-1 mt-1.5 pt-1.5 border-t border-border/40">
+                <BarChart3 className="h-2.5 w-2.5 text-muted-foreground/60" />
+                <span className="text-[10px] text-muted-foreground/70 tabular-nums">{eventCount} eventos este mês</span>
               </div>
             )}
           </div>
@@ -338,10 +445,11 @@ const IntegrationCard = ({
 
         {/* Spacer for consistent card height */}
         {!isActive && !isRoadmap && <div className="flex-1" />}
+        {isRoadmap && <div className="flex-1" />}
       </div>
 
       {/* Footer */}
-      <div className="px-4 py-3 border-t border-border/50 bg-muted/20">
+      <div className="px-5 py-3 border-t border-border/60 bg-muted/10">
         {isActive && (
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-[11px] text-emerald-400 font-medium">
@@ -362,24 +470,26 @@ const IntegrationCard = ({
 
         {effectiveStatus === "available" && (
           <Button
-            className="w-full gap-2 bg-emerald-600 hover:bg-emerald-500 text-white h-8 text-xs font-medium"
+            className="w-full gap-2 bg-emerald-600 hover:bg-emerald-500 text-white h-8 text-xs font-medium shadow-sm"
             size="sm"
             onClick={onConnect}
           >
-            <Zap className="w-3.5 h-3.5" />
+            <Plug className="w-3.5 h-3.5" />
             Conectar
           </Button>
         )}
 
         {isRoadmap && (
           <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground tabular-nums">{votes} votos</span>
+            <span className="text-[11px] text-muted-foreground tabular-nums">
+              <span className="font-semibold text-foreground">{votes}</span> votos
+            </span>
             <Button
               variant={hasVoted ? "secondary" : "outline"}
               size="sm"
               onClick={handleVote}
               disabled={hasVoted}
-              className={`gap-1 h-7 text-xs ${hasVoted ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : ""}`}
+              className={`gap-1 h-7 text-xs ${hasVoted ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/10" : ""}`}
             >
               <ThumbsUp className={`w-3 h-3 ${hasVoted ? "fill-current" : ""}`} />
               {hasVoted ? "Votado" : "Votar"}
@@ -388,38 +498,6 @@ const IntegrationCard = ({
         )}
       </div>
     </motion.div>
-  );
-};
-
-// ── Webhook Log Row ─────────────────────────────────────────────────
-const WebhookLogRow = ({ log }: { log: WebhookLog }) => {
-  const colors = getStatusColor(log.status);
-
-  return (
-    <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/30 transition-colors group min-w-[500px]">
-      {/* Status dot */}
-      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${colors.dot}`} />
-
-      {/* Platform */}
-      <span className="text-xs font-medium text-foreground/80 w-20 flex-shrink-0 truncate">
-        {PLATFORM_NAMES[log.platform] || log.platform}
-      </span>
-
-      {/* Event */}
-      <span className="text-xs text-muted-foreground flex-1 truncate">
-        {EVENT_LABELS[log.event_type || ""] || log.event_type || "—"}
-      </span>
-
-      {/* Status badge */}
-      <Badge variant="outline" className={`${colors.bg} ${colors.text} ${colors.border} text-[10px] px-1.5 py-0 flex-shrink-0`}>
-        {getStatusLabel(log.status)}
-      </Badge>
-
-      {/* Timestamp */}
-      <span className="text-[10px] text-muted-foreground/50 w-24 text-right flex-shrink-0 tabular-nums">
-        {formatDistanceToNow(new Date(log.created_at), { addSuffix: true, locale: ptBR })}
-      </span>
-    </div>
   );
 };
 
@@ -434,18 +512,13 @@ interface IntegrationConfig {
 // ── Main Component ──────────────────────────────────────────────────
 const Integracoes = () => {
   const { needsUpgrade } = usePlan();
-  const { companyId, isSuperAdmin } = useAuth();
+  const { companyId } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<IntegrationCategory>("all");
-  const [hotmartModalOpen, setHotmartModalOpen] = useState(false);
-  const [kiwifyModalOpen, setKiwifyModalOpen] = useState(false);
-  const [greennModalOpen, setGreennModalOpen] = useState(false);
+  const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
   const [googleCalendarModalOpen, setGoogleCalendarModalOpen] = useState(false);
-  const [whatsappModalOpen, setWhatsappModalOpen] = useState(false);
-  const [rdstationModalOpen, setRdstationModalOpen] = useState(false);
   const [activeIntegrationIds, setActiveIntegrationIds] = useState<Set<string>>(new Set());
   const [googleCalendarConnected, setGoogleCalendarConnected] = useState(false);
-  const [showLogs, setShowLogs] = useState(true);
 
   // Check Google Calendar status
   const checkGoogleCalendarStatus = useCallback(async (userId: string) => {
@@ -542,15 +615,13 @@ const Integracoes = () => {
   };
 
   const handleManageIntegration = (id: string) => {
-    const modals: Record<string, (v: boolean) => void> = {
-      "google-calendar": setGoogleCalendarModalOpen,
-      hotmart: setHotmartModalOpen,
-      kiwify: setKiwifyModalOpen,
-      greenn: setGreennModalOpen,
-      "evolution-api": setWhatsappModalOpen,
-      rdstation: setRdstationModalOpen,
-    };
-    modals[id]?.(true);
+    if (id === "google-calendar") {
+      setGoogleCalendarModalOpen(true);
+      return;
+    }
+    if (INTEGRATIONS_CONFIG[id]) {
+      setSelectedPlatform(id);
+    }
   };
 
   const handleConnect = (id: string) => handleManageIntegration(id);
@@ -559,7 +630,7 @@ const Integracoes = () => {
     return <UpgradePrompt feature="integrations" />;
   }
 
-  const allIntegrations = isSuperAdmin ? [WHATSAPP_INTEGRATION, ...INTEGRATIONS] : INTEGRATIONS;
+  const allIntegrations = INTEGRATIONS;
 
   const getEffectiveStatus = (integration: Integration): IntegrationStatus => {
     if (integration.id === "google-calendar") return googleCalendarConnected ? "active" : "available";
@@ -584,40 +655,56 @@ const Integracoes = () => {
     <>
       <div className="w-full min-h-screen bg-background">
         {/* ── Header ─────────────────────────────────────────── */}
-        <div className="border-b border-border bg-card">
-          <div className="px-4 sm:px-6 py-5">
-            <div className="flex items-start justify-between gap-4 mb-5">
-              <div className="flex items-start gap-3">
-                <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+        <div className="border-b border-border/60 bg-card/40 backdrop-blur-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+            <div className="flex items-start justify-between gap-6 flex-wrap">
+              {/* Title */}
+              <div className="flex items-start gap-4">
+                <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 shadow-sm">
                   <Puzzle className="w-5 h-5 text-emerald-400" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-foreground">
-                    Hub de Integrações
+                  <h1 className="text-2xl font-bold text-foreground tracking-tight" style={{ fontFamily: "var(--font-heading)", letterSpacing: "-0.02em" }}>
+                    Integrações
                   </h1>
-                  <p className="text-sm text-muted-foreground">
-                    Conecte suas plataformas de vendas e automatize seu CRM
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    Conecte suas plataformas e automatize seu fluxo de vendas
                   </p>
                 </div>
               </div>
 
-              {/* Search */}
-              <div className="relative w-64 hidden sm:block">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="Buscar integrações..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 h-9 text-sm"
-                />
+              {/* Stats */}
+              <div className="flex items-center flex-wrap gap-3 md:gap-6">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Conectadas</span>
+                  <span className="text-xl font-bold text-foreground tabular-nums flex items-center gap-1.5">
+                    {connectedCount}
+                    {connectedCount > 0 && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />}
+                  </span>
+                </div>
+                <div className="w-px h-10 bg-border hidden md:block" />
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Eventos/mês</span>
+                  <span className="text-xl font-bold text-foreground tabular-nums">{webhookStats.totalCount}</span>
+                </div>
+                {webhookStats.errorCount > 0 && (
+                  <>
+                    <div className="w-px h-10 bg-border hidden md:block" />
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-semibold text-rose-400/80 uppercase tracking-wider">Erros</span>
+                      <span className="text-xl font-bold text-rose-400 tabular-nums flex items-center gap-1.5">
+                        {webhookStats.errorCount}
+                        <AlertTriangle className="w-4 h-4" />
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
-            {/* Stats Strip + Filters */}
-            <div className="flex items-center justify-between gap-4">
-              {/* Filter Tabs */}
-              <div className="flex gap-1">
+            {/* Filter tabs + search row */}
+            <div className="flex flex-col gap-3 sm:gap-4 mt-6 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex gap-1 p-1 rounded-lg bg-muted/40 border border-border/60 overflow-x-auto max-w-full">
                 {FILTER_TABS.map(tab => {
                   const TabIcon = tab.icon;
                   return (
@@ -625,10 +712,10 @@ const Integracoes = () => {
                       key={tab.id}
                       onClick={() => setActiveFilter(tab.id)}
                       className={`
-                        flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all
+                        relative flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all
                         ${activeFilter === tab.id
-                          ? "bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20"
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                          ? "bg-background text-foreground shadow-sm"
+                          : "text-muted-foreground hover:text-foreground"
                         }
                       `}
                     >
@@ -639,63 +726,37 @@ const Integracoes = () => {
                 })}
               </div>
 
-              {/* Quick Stats */}
-              <div className="hidden md:flex items-center gap-4">
-                <div className="flex items-center gap-1.5">
-                  <Wifi className="h-3.5 w-3.5 text-emerald-400" />
-                  <span className="text-xs text-muted-foreground">
-                    <span className="font-semibold text-foreground">{connectedCount}</span> conectadas
-                  </span>
-                </div>
-                <div className="w-px h-4 bg-border" />
-                <div className="flex items-center gap-1.5">
-                  <Zap className="h-3.5 w-3.5 text-blue-400" />
-                  <span className="text-xs text-muted-foreground">
-                    <span className="font-semibold text-foreground">{webhookStats.totalCount}</span> eventos/mês
-                  </span>
-                </div>
-                {webhookStats.errorCount > 0 && (
-                  <>
-                    <div className="w-px h-4 bg-border" />
-                    <div className="flex items-center gap-1.5">
-                      <AlertTriangle className="h-3.5 w-3.5 text-rose-400" />
-                      <span className="text-xs text-rose-400 font-medium">
-                        {webhookStats.errorCount} erros
-                      </span>
-                    </div>
-                  </>
-                )}
+              {/* Search */}
+              <div className="relative w-full sm:w-72">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Buscar integrações..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 h-9 text-sm bg-background/60"
+                />
               </div>
             </div>
           </div>
         </div>
 
         {/* ── Content ────────────────────────────────────────── */}
-        <div className="px-4 sm:px-6 py-6 space-y-8">
-
-          {/* Mobile Search */}
-          <div className="sm:hidden relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Buscar integrações..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-9 text-sm"
-            />
-          </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
 
           {/* ── Connected Integrations ──────────────────────── */}
           {activeIntegrations.length > 0 && (
             <section>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <h2 className="text-xs font-semibold text-foreground uppercase tracking-wider">
-                  Conectadas
-                </h2>
-                <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px] px-1.5 py-0">
-                  {activeIntegrations.length}
-                </Badge>
+              <div className="flex items-end justify-between mb-5">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <h2 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Conectadas</h2>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {activeIntegrations.length} {activeIntegrations.length === 1 ? "integração ativa" : "integrações ativas"}
+                  </p>
+                </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {activeIntegrations.map(integration => (
@@ -715,13 +776,15 @@ const Integracoes = () => {
           {/* ── Available Integrations ─────────────────────── */}
           {availableIntegrations.length > 0 && (
             <section>
-              <div className="flex items-center gap-2 mb-4">
-                <h2 className="text-xs font-semibold text-foreground uppercase tracking-wider">
-                  Disponíveis
-                </h2>
-                <Badge className="bg-blue-500/10 text-blue-400 border-blue-500/20 text-[10px] px-1.5 py-0">
-                  {availableIntegrations.length}
-                </Badge>
+              <div className="flex items-end justify-between mb-5">
+                <div>
+                  <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                    Disponíveis
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    {availableIntegrations.length} plataformas prontas para conectar
+                  </p>
+                </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {availableIntegrations.map(integration => (
@@ -736,92 +799,46 @@ const Integracoes = () => {
             </section>
           )}
 
-          {/* ── Webhook Activity Feed ─────────────────────── */}
+          {/* ── Webhook Heartbeat Monitor ─────────────────── */}
           {webhookLogs.length > 0 && (
             <section>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-xs font-semibold text-foreground uppercase tracking-wider flex items-center gap-2">
-                    <Activity className="h-3.5 w-3.5 text-blue-400" />
-                    Atividade de Webhooks
-                  </h2>
-                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-muted-foreground">
-                    Últimos 50
-                  </Badge>
+              <div className="flex items-end justify-between mb-5">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Activity className="h-3.5 w-3.5 text-emerald-400" />
+                    <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      Atividade em tempo real
+                    </h2>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Sinal vital dos seus webhooks
+                  </p>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowLogs(!showLogs)}
-                  className="h-7 px-2 text-xs gap-1 text-muted-foreground"
-                >
-                  {showLogs ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                  {showLogs ? "Ocultar" : "Mostrar"}
-                </Button>
               </div>
-
-              <AnimatePresence>
-                {showLogs && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="bg-card border border-border rounded-xl overflow-hidden overflow-x-auto">
-                      {/* Header */}
-                      <div className="px-4 py-2.5 border-b border-border/50 bg-muted/30 flex items-center gap-3 min-w-[500px]">
-                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold w-8">St</span>
-                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold w-20">Plataforma</span>
-                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold flex-1">Evento</span>
-                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold w-16 text-center">Status</span>
-                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold w-24 text-right">Quando</span>
-                      </div>
-
-                      {/* Rows */}
-                      <div className="max-h-[320px] overflow-y-auto divide-y divide-border/30">
-                        {webhookLogs.slice(0, 20).map((log) => (
-                          <WebhookLogRow key={log.id} log={log} />
-                        ))}
-                      </div>
-
-                      {/* Summary footer */}
-                      <div className="px-4 py-2.5 border-t border-border/50 bg-muted/20 flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <span className="flex items-center gap-1.5 text-[10px]">
-                            <CheckCircle2 className="h-3 w-3 text-emerald-400" />
-                            <span className="text-emerald-400 font-medium">{webhookStats.successCount}</span>
-                            <span className="text-muted-foreground">sucesso</span>
-                          </span>
-                          {webhookStats.errorCount > 0 && (
-                            <span className="flex items-center gap-1.5 text-[10px]">
-                              <XCircle className="h-3 w-3 text-rose-400" />
-                              <span className="text-rose-400 font-medium">{webhookStats.errorCount}</span>
-                              <span className="text-muted-foreground">erros</span>
-                            </span>
-                          )}
-                        </div>
-                        <span className="text-[10px] text-muted-foreground/50">
-                          Este mês: {webhookStats.totalCount} eventos
-                        </span>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <WebhookHeartbeat
+                logs={webhookLogs}
+                stats={webhookStats}
+                platformNames={PLATFORM_NAMES}
+                eventLabels={EVENT_LABELS}
+              />
             </section>
           )}
 
           {/* ── Roadmap ──────────────────────────────────────── */}
           {roadmapIntegrations.length > 0 && (
             <section>
-              <div className="flex items-center gap-2 mb-4">
-                <h2 className="text-xs font-semibold text-foreground uppercase tracking-wider">
-                  Roadmap
-                </h2>
-                <Badge className="bg-amber-500/10 text-amber-400 border-amber-500/20 text-[10px] px-1.5 py-0">
-                  Vote nas próximas
+              <div className="flex items-end justify-between mb-5 flex-wrap gap-3">
+                <div>
+                  <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                    Em breve
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    Vote nas próximas integrações que quer ver no Vyzon
+                  </p>
+                </div>
+                <Badge variant="outline" className="bg-amber-500/5 text-amber-500 border-amber-500/20 text-[10px]">
+                  <ThumbsUp className="w-3 h-3 mr-1" />
+                  Votação aberta
                 </Badge>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -837,33 +854,33 @@ const Integracoes = () => {
           )}
 
           {/* ── Request Integration CTA ──────────────────────── */}
-          <div className="p-5 rounded-xl border border-dashed border-border bg-muted/20">
-            <div className="flex items-center gap-4">
-              <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 shrink-0">
+          <div className="relative overflow-hidden rounded-2xl border border-dashed border-emerald-500/20 bg-gradient-to-br from-emerald-500/[0.03] to-transparent p-6">
+            <div className="flex items-center gap-5 flex-wrap">
+              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 shrink-0">
                 <Puzzle className="w-5 h-5 text-emerald-400" />
               </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-foreground text-sm">
+              <div className="flex-1 min-w-[240px]">
+                <h3 className="font-semibold text-foreground text-[15px] tracking-tight">
                   Precisa de outra integração?
                 </h3>
-                <p className="text-xs text-muted-foreground">
-                  Conte-nos qual plataforma você usa e priorizaremos no roadmap
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Conte-nos qual plataforma você usa — priorizamos as mais votadas
                 </p>
               </div>
-              <Button variant="outline" size="sm" className="shrink-0 gap-1.5">
+              <Button variant="outline" size="sm" className="shrink-0 gap-1.5 h-9">
+                Solicitar integração
                 <ArrowUpRight className="w-3.5 h-3.5" />
-                Solicitar
               </Button>
             </div>
           </div>
 
           {/* ── Footer ───────────────────────────────────────── */}
-          <div className="flex items-center justify-between text-[10px] text-muted-foreground/60 pt-4 border-t border-border/50">
+          <div className="flex items-center justify-between text-[11px] text-muted-foreground/70 pt-6 border-t border-border/40 flex-wrap gap-2">
             <span className="flex items-center gap-1.5">
               <Shield className="h-3 w-3" />
               Dados criptografados e protegidos
             </span>
-            <Link to="/politica-privacidade" className="text-emerald-500 hover:underline">
+            <Link to="/politica-privacidade" className="text-emerald-500 hover:text-emerald-400 transition-colors">
               Política de Privacidade
             </Link>
           </div>
@@ -871,12 +888,19 @@ const Integracoes = () => {
       </div>
 
       {/* ── Modals ────────────────────────────────────────── */}
-      <HotmartConfigModal open={hotmartModalOpen} onClose={() => setHotmartModalOpen(false)} onSaved={handleIntegrationSaved} />
-      <KiwifyConfigModal open={kiwifyModalOpen} onClose={() => setKiwifyModalOpen(false)} onSaved={handleIntegrationSaved} />
-      <GreennConfigModal open={greennModalOpen} onClose={() => setGreennModalOpen(false)} onSaved={handleIntegrationSaved} />
-      <GoogleCalendarConfigModal open={googleCalendarModalOpen} onClose={() => setGoogleCalendarModalOpen(false)} onSaved={handleIntegrationSaved} />
-      <RDStationConfigModal open={rdstationModalOpen} onClose={() => setRdstationModalOpen(false)} onSaved={handleIntegrationSaved} />
-      {isSuperAdmin && <WhatsappConfigModal open={whatsappModalOpen} onClose={() => setWhatsappModalOpen(false)} />}
+      {selectedPlatform && INTEGRATIONS_CONFIG[selectedPlatform] && (
+        <IntegrationConfigModal
+          spec={INTEGRATIONS_CONFIG[selectedPlatform]}
+          open={!!selectedPlatform}
+          onClose={() => setSelectedPlatform(null)}
+          onSaved={handleIntegrationSaved}
+        />
+      )}
+      <GoogleCalendarConfigModal
+        open={googleCalendarModalOpen}
+        onClose={() => setGoogleCalendarModalOpen(false)}
+        onSaved={handleIntegrationSaved}
+      />
     </>
   );
 };

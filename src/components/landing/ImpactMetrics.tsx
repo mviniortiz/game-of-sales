@@ -23,7 +23,7 @@ export const ImpactMetrics = () => {
                                     className="flex items-baseline justify-center gap-0.5 mb-1.5 tabular-nums"
                                     style={{
                                         fontSize: "clamp(2rem, 4vw, 2.75rem)",
-                                        fontWeight: 800,
+                                        fontWeight: 700,
                                         letterSpacing: "-0.03em",
                                         color: "rgba(255,255,255,0.95)",
                                     }}

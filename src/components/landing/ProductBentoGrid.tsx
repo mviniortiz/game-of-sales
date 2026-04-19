@@ -31,6 +31,9 @@ import pagarmeLogo from "@/assets/integrations/pagarme.svg";
 import eduzzLogo from "@/assets/integrations/eduzz.webp";
 import monetizzeLogo from "@/assets/integrations/monetizze.webp";
 import braipLogo from "@/assets/integrations/braip.webp";
+import asaasLogo from "@/assets/integrations/asaas.svg";
+import zapierLogo from "@/assets/integrations/zapier.svg";
+import notazzLogo from "@/assets/integrations/notazz.png";
 
 // ─── Mockups ─────────────────────────────────────────────────────────────────
 
@@ -388,6 +391,9 @@ function SalesMockup() {
         { logo: eduzzLogo, name: "Eduzz" },
         { logo: monetizzeLogo, name: "Monetizze" },
         { logo: braipLogo, name: "Braip" },
+        { logo: asaasLogo, name: "Asaas" },
+        { logo: zapierLogo, name: "Zapier" },
+        { logo: notazzLogo, name: "Notazz" },
     ];
 
     return (
@@ -399,7 +405,7 @@ function SalesMockup() {
                     </p>
                     <div className="flex items-center gap-2">
                         <p className="text-sm" style={{ color: "rgba(255,255,255,0.85)", fontWeight: 600 }}>
-                            12 plataformas
+                            15 plataformas
                         </p>
                         <span style={{ color: "rgba(255,255,255,0.2)" }}>•</span>
                         <p className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>
@@ -413,8 +419,8 @@ function SalesMockup() {
                 </div>
             </div>
 
-            {/* Logo grid - 4 cols × 3 rows */}
-            <div className="grid grid-cols-4 gap-2 mb-4">
+            {/* Logo grid - 5 cols × 3 rows */}
+            <div className="grid grid-cols-5 gap-1.5 mb-4">
                 {platforms.map((p, i) => (
                     <motion.div
                         key={p.name}
@@ -579,7 +585,7 @@ function GoalsMockup() {
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.8 }}
                             className="text-3xl tabular-nums"
-                            style={{ color: "rgba(255,255,255,0.95)", fontWeight: 800, letterSpacing: "-0.03em" }}
+                            style={{ color: "rgba(255,255,255,0.95)", fontWeight: 700, letterSpacing: "-0.03em" }}
                         >63%</motion.span>
                         <span className="text-[10px] uppercase tracking-wider mt-0.5" style={{ color: "rgba(255,255,255,0.4)", fontWeight: 600 }}>Semanal</span>
                     </div>

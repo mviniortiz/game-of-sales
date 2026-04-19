@@ -73,7 +73,7 @@ export const UseCasesSection = () => {
 
                     <h2
                         className="font-heading mb-4"
-                        style={{ fontWeight: 800, fontSize: "clamp(1.75rem, 4.5vw, 2.75rem)", lineHeight: 1.1, letterSpacing: "-0.04em", color: "rgba(255,255,255,0.95)" }}
+                        style={{ fontWeight: 700, fontSize: "clamp(1.75rem, 4.5vw, 2.75rem)", lineHeight: 1.1, letterSpacing: "-0.04em", color: "rgba(255,255,255,0.95)" }}
                     >
                         Funciona pro{" "}
                         <span className="text-emerald-400">seu time</span>
@@ -85,9 +85,9 @@ export const UseCasesSection = () => {
                 </motion.div>
 
                 {/* Tab selector */}
-                <div className="flex justify-center mb-12">
+                <div className="flex justify-center mb-10 sm:mb-12 px-2">
                     <div
-                        className="inline-flex gap-1 p-1 rounded-xl"
+                        className="inline-flex gap-1 p-1 rounded-xl max-w-full overflow-x-auto no-scrollbar"
                         style={{ background: "rgba(255,255,255,0.04)", boxShadow: "0 0 0 1px rgba(255,255,255,0.06)" }}
                     >
                         {CASES.map((c, i) => {
@@ -97,7 +97,7 @@ export const UseCasesSection = () => {
                                 <button
                                     key={c.tag}
                                     onClick={() => setActive(i)}
-                                    className="relative flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm transition-colors"
+                                    className="relative flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 rounded-lg text-xs sm:text-sm whitespace-nowrap transition-colors"
                                     style={{ fontWeight: 600, color: isActive ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.35)" }}
                                 >
                                     {isActive && (

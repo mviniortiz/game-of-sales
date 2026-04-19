@@ -368,6 +368,12 @@ export default function Profile() {
   const formatCurrency = (value: number) =>
     value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+  const formatCurrencyCompact = (value: number) => {
+    if (value >= 1_000_000) return `R$ ${(value / 1_000_000).toFixed(1)}M`;
+    if (value >= 1_000) return `R$ ${(value / 1_000).toFixed(1)}K`;
+    return formatCurrency(value);
+  };
+
   const formatRelativeDate = (dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();
     const mins = Math.floor(diff / 60000);
@@ -533,7 +539,10 @@ export default function Profile() {
             <TrendingUp className="h-4 w-4 text-emerald-400" />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-bold text-foreground truncate tabular-nums">{formatCurrency(stats.revenueThisMonth)}</p>
+            <p className="text-sm font-bold text-foreground truncate tabular-nums">
+              <span className="sm:hidden">{formatCurrencyCompact(stats.revenueThisMonth)}</span>
+              <span className="hidden sm:inline">{formatCurrency(stats.revenueThisMonth)}</span>
+            </p>
             <p className="text-[11px] text-muted-foreground">Faturamento</p>
           </div>
         </div>

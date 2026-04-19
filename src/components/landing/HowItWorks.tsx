@@ -65,7 +65,7 @@ function StepCard({ step }: { step: Step }) {
     return (
         <motion.div
             variants={cardVariants}
-            className="group relative flex flex-col flex-1 rounded-2xl p-8"
+            className="group relative flex flex-col flex-1 rounded-2xl p-5 sm:p-8"
             style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 0 0 1px rgba(255,255,255,0.06)" }}
         >
             {/* Step number + icon */}
@@ -193,7 +193,7 @@ export const HowItWorks = () => {
 
                 {/* Step cards */}
                 <motion.div
-                    className="grid gap-6 md:grid-cols-3"
+                    className="grid gap-4 sm:gap-6 md:grid-cols-3"
                     variants={containerVariants}
                     initial="hidden"
                     whileInView="visible"

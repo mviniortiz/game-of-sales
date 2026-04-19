@@ -2,23 +2,25 @@ import { useState, useEffect } from "react";
 import {
     Dialog,
     DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
     CalendarDays,
-    Check,
     Loader2,
     RefreshCw,
     AlertCircle,
-    X
+    Unlink,
+    ExternalLink,
+    Sparkles,
+    Wifi,
+    Clock,
+    Shield,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import googleCalendarLogo from "@/assets/integrations/google-calendar.webp";
 
 interface GoogleCalendarConfigModalProps {
     open: boolean;
@@ -26,25 +28,24 @@ interface GoogleCalendarConfigModalProps {
     onSaved?: () => void;
 }
 
+type ConnState = "connected" | "expired" | "disconnected";
+
 export const GoogleCalendarConfigModal = ({ open, onClose, onSaved }: GoogleCalendarConfigModalProps) => {
     const { user } = useAuth();
-    const [isConnected, setIsConnected] = useState(false);
+    const [state, setState] = useState<ConnState>("disconnected");
     const [loading, setLoading] = useState(true);
     const [syncing, setSyncing] = useState(false);
     const [disconnecting, setDisconnecting] = useState(false);
     const [connecting, setConnecting] = useState(false);
-    const [tokenExpired, setTokenExpired] = useState(false);
+    const [lastSync, setLastSync] = useState<string | null>(null);
 
     useEffect(() => {
-        if (open && user) {
-            checkConnection();
-        }
+        if (open && user) checkConnection();
     }, [open, user]);
 
     const checkConnection = async () => {
         if (!user) return;
         setLoading(true);
-
         try {
             const { data } = await supabase
                 .from("profiles")
@@ -53,20 +54,10 @@ export const GoogleCalendarConfigModal = ({ open, onClose, onSaved }: GoogleCale
                 .single();
 
             if (data?.google_access_token) {
-                // Check if token is expired
                 const expiresAt = data.google_token_expires_at ? new Date(data.google_token_expires_at) : null;
-                const now = new Date();
-
-                if (expiresAt && expiresAt < now) {
-                    setTokenExpired(true);
-                    setIsConnected(false);
-                } else {
-                    setIsConnected(true);
-                    setTokenExpired(false);
-                }
+                setState(expiresAt && expiresAt < new Date() ? "expired" : "connected");
             } else {
-                setIsConnected(false);
-                setTokenExpired(false);
+                setState("disconnected");
             }
         } catch (error) {
             console.error("Error checking connection:", error);
@@ -78,19 +69,16 @@ export const GoogleCalendarConfigModal = ({ open, onClose, onSaved }: GoogleCale
     const handleConnect = async () => {
         try {
             setConnecting(true);
-            toast.loading("Iniciando conexão com Google Calendar...", { id: "google-connect" });
-
+            toast.loading("Iniciando conexão...", { id: "google-connect" });
             const response = await supabase.functions.invoke("google-oauth-init", {
                 body: { userId: user!.id },
             });
-
             if (response.error) throw response.error;
-
-            toast.loading("Redirecionando para autenticação do Google...", { id: "google-connect" });
+            toast.loading("Redirecionando para o Google...", { id: "google-connect" });
             window.location.href = response.data.authUrl;
         } catch (error) {
-            console.error("Error initiating Google OAuth:", error);
-            toast.error("Erro ao iniciar conexão com Google Calendar", { id: "google-connect" });
+            console.error(error);
+            toast.error("Erro ao conectar com o Google Calendar", { id: "google-connect" });
             setConnecting(false);
         }
     };
@@ -98,23 +86,15 @@ export const GoogleCalendarConfigModal = ({ open, onClose, onSaved }: GoogleCale
     const syncAllEvents = async () => {
         try {
             setSyncing(true);
-            toast.loading("Sincronizando eventos do Google Calendar...", { id: "google-sync" });
-
+            toast.loading("Sincronizando eventos...", { id: "google-sync" });
             const response = await supabase.functions.invoke("google-calendar-sync", {
-                body: {
-                    action: "sync_all",
-                    userId: user!.id,
-                },
+                body: { action: "sync_all", userId: user!.id },
             });
-
             if (response.error) throw response.error;
-
-            toast.success(
-                `${response.data?.synced || 0} eventos sincronizados!`,
-                { id: "google-sync" }
-            );
+            setLastSync(new Date().toISOString());
+            toast.success(`${response.data?.synced || 0} eventos sincronizados`, { id: "google-sync" });
         } catch (error) {
-            console.error("Error syncing events:", error);
+            console.error(error);
             toast.error("Erro ao sincronizar eventos", { id: "google-sync" });
         } finally {
             setSyncing(false);
@@ -124,8 +104,7 @@ export const GoogleCalendarConfigModal = ({ open, onClose, onSaved }: GoogleCale
     const handleDisconnect = async () => {
         try {
             setDisconnecting(true);
-            toast.loading("Desconectando do Google Calendar...", { id: "google-disconnect" });
-
+            toast.loading("Desconectando...", { id: "google-disconnect" });
             await supabase
                 .from("profiles")
                 .update({
@@ -135,119 +114,153 @@ export const GoogleCalendarConfigModal = ({ open, onClose, onSaved }: GoogleCale
                     google_calendar_id: null,
                 })
                 .eq("id", user!.id);
-
-            setIsConnected(false);
-            setTokenExpired(false);
+            setState("disconnected");
             toast.success("Desconectado do Google Calendar", { id: "google-disconnect" });
             onSaved?.();
         } catch (error) {
-            console.error("Error disconnecting:", error);
+            console.error(error);
             toast.error("Erro ao desconectar", { id: "google-disconnect" });
         } finally {
             setDisconnecting(false);
         }
     };
 
+    const isConnected = state === "connected";
+    const isExpired = state === "expired";
+
     return (
         <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="max-w-[95vw] sm:max-w-[500px] bg-card border-border">
-                <DialogHeader>
-                    <DialogTitle className="flex items-center gap-3 text-foreground">
-                        <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-500/20">
-                            <CalendarDays className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            <DialogContent className="max-w-[95vw] sm:max-w-[520px] p-0 gap-0 bg-card border-border overflow-hidden">
+                {/* ── Hero ─────────────────────────────────────── */}
+                <div className="relative px-6 pt-6 pb-5 border-b border-border/60 bg-gradient-to-br from-card via-card to-emerald-950/10">
+                    {isConnected && (
+                        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent" />
+                    )}
+                    <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-white p-2 ring-1 ring-border/80 shadow-sm flex items-center justify-center shrink-0">
+                            <img src={googleCalendarLogo} alt="Google Calendar" className="w-full h-full object-contain" />
                         </div>
-                        Gerenciar Google Calendar
-                    </DialogTitle>
-                    <DialogDescription className="text-muted-foreground">
-                        Configure a integração com o Google Calendar
-                    </DialogDescription>
-                </DialogHeader>
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <h2 className="text-[15px] font-semibold text-foreground tracking-tight">
+                                    Google Calendar
+                                </h2>
+                                {isConnected && (
+                                    <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/25 text-[9px] px-1.5 py-0 font-bold tracking-wider">
+                                        <span className="w-1 h-1 rounded-full bg-emerald-400 mr-1 animate-pulse" />
+                                        ATIVO
+                                    </Badge>
+                                )}
+                                {isExpired && (
+                                    <Badge variant="outline" className="bg-amber-500/10 text-amber-400 border-amber-500/25 text-[9px] px-1.5 py-0 font-bold tracking-wider">
+                                        EXPIRADO
+                                    </Badge>
+                                )}
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                                Sincronização bidirecional de agendamentos e calls de vendas
+                            </p>
+                        </div>
+                    </div>
+                </div>
 
                 {loading ? (
-                    <div className="flex items-center justify-center py-8">
-                        <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+                    <div className="flex items-center justify-center py-16">
+                        <Loader2 className="w-5 h-5 animate-spin text-emerald-400" />
                     </div>
                 ) : (
-                    <div className="space-y-6 py-4">
-                        {/* Connection Status */}
-                        <div className="flex items-center justify-between p-4 rounded-lg bg-muted border border-border">
+                    <div className="p-6 space-y-5">
+                        {/* ── Status card ─────────────────────────── */}
+                        <div className={`
+                            rounded-xl border p-4
+                            ${isConnected ? "bg-emerald-500/[0.03] border-emerald-500/20" : ""}
+                            ${isExpired ? "bg-amber-500/[0.03] border-amber-500/20" : ""}
+                            ${state === "disconnected" ? "bg-muted/20 border-border" : ""}
+                        `}>
                             <div className="flex items-center gap-3">
-                                {isConnected ? (
-                                    <div className="p-2 rounded-full bg-emerald-100 dark:bg-emerald-500/20">
-                                        <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                                    </div>
-                                ) : tokenExpired ? (
-                                    <div className="p-2 rounded-full bg-amber-100 dark:bg-amber-500/20">
-                                        <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                                    </div>
-                                ) : (
-                                    <div className="p-2 rounded-full bg-muted">
-                                        <X className="w-4 h-4 text-muted-foreground" />
-                                    </div>
-                                )}
-                                <div>
-                                    <p className="font-medium text-foreground">
-                                        {isConnected ? "Conectado" : tokenExpired ? "Token Expirado" : "Não Conectado"}
+                                <div className={`
+                                    relative flex items-center justify-center w-10 h-10 rounded-lg shrink-0
+                                    ${isConnected ? "bg-emerald-500/10 border border-emerald-500/25" : ""}
+                                    ${isExpired ? "bg-amber-500/10 border border-amber-500/25" : ""}
+                                    ${state === "disconnected" ? "bg-muted border border-border" : ""}
+                                `}>
+                                    {isConnected && <Wifi className="w-4 h-4 text-emerald-400" />}
+                                    {isExpired && <AlertCircle className="w-4 h-4 text-amber-400" />}
+                                    {state === "disconnected" && <CalendarDays className="w-4 h-4 text-muted-foreground" />}
+                                    {isConnected && (
+                                        <span className="absolute -top-0.5 -right-0.5 flex w-2 h-2">
+                                            <span className="absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-60" />
+                                            <span className="relative rounded-full w-2 h-2 bg-emerald-400" />
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-semibold text-foreground">
+                                        {isConnected && "Conectado e sincronizando"}
+                                        {isExpired && "Token expirado"}
+                                        {state === "disconnected" && "Pronto para conectar"}
                                     </p>
-                                    <p className="text-xs text-muted-foreground">
-                                        {isConnected
-                                            ? "Sincronização automática a cada 15 minutos"
-                                            : tokenExpired
-                                                ? "Reconecte para continuar sincronizando"
-                                                : "Conecte para sincronizar seus agendamentos"}
+                                    <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1.5">
+                                        {isConnected && (
+                                            <>
+                                                <Clock className="w-3 h-3" />
+                                                Auto-sync a cada 15 minutos
+                                            </>
+                                        )}
+                                        {isExpired && "Reconecte para continuar sincronizando"}
+                                        {state === "disconnected" && "Autorize uma vez e deixe rodando no piloto automático"}
                                     </p>
                                 </div>
                             </div>
-                            {isConnected && (
-                                <Badge variant="outline" className="text-xs bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/30 text-blue-600 dark:text-blue-400 flex items-center gap-1">
-                                    <RefreshCw className="h-3 w-3" />
-                                    Auto-Sync
-                                </Badge>
-                            )}
                         </div>
 
-                        {/* Actions */}
+                        {/* ── Actions ─────────────────────────────── */}
                         {isConnected ? (
-                            <div className="space-y-3">
+                            <div className="grid grid-cols-2 gap-2">
                                 <Button
                                     onClick={syncAllEvents}
                                     variant="outline"
-                                    className="w-full gap-2"
+                                    size="sm"
+                                    className="gap-2 h-9 bg-background/60"
                                     disabled={syncing}
                                 >
                                     {syncing ? (
                                         <>
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                            Sincronizando...
+                                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                            Sincronizando
                                         </>
                                     ) : (
                                         <>
-                                            <RefreshCw className="h-4 w-4" />
-                                            Sincronizar Agora
+                                            <RefreshCw className="h-3.5 w-3.5" />
+                                            Sincronizar agora
                                         </>
                                     )}
                                 </Button>
-
                                 <Button
                                     onClick={handleDisconnect}
-                                    variant="destructive"
-                                    className="w-full gap-2"
+                                    variant="outline"
+                                    size="sm"
+                                    className="gap-2 h-9 text-rose-400 hover:text-rose-300 hover:bg-rose-500/5 border-rose-500/20 hover:border-rose-500/30"
                                     disabled={disconnecting}
                                 >
                                     {disconnecting ? (
                                         <>
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                            Desconectando...
+                                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                            Desconectando
                                         </>
                                     ) : (
-                                        "Desconectar"
+                                        <>
+                                            <Unlink className="h-3.5 w-3.5" />
+                                            Desconectar
+                                        </>
                                     )}
                                 </Button>
                             </div>
                         ) : (
                             <Button
                                 onClick={handleConnect}
-                                className="w-full gap-2 bg-blue-600 hover:bg-blue-500 text-white"
+                                size="sm"
+                                className="w-full gap-2 h-10 bg-emerald-600 hover:bg-emerald-500 text-white font-medium shadow-sm"
                                 disabled={connecting}
                             >
                                 {connecting ? (
@@ -257,34 +270,62 @@ export const GoogleCalendarConfigModal = ({ open, onClose, onSaved }: GoogleCale
                                     </>
                                 ) : (
                                     <>
-                                        <CalendarDays className="h-4 w-4" />
-                                        {tokenExpired ? "Reconectar" : "Conectar Google Calendar"}
+                                        <img src={googleCalendarLogo} alt="" className="h-4 w-4" />
+                                        {isExpired ? "Reconectar Google Calendar" : "Conectar Google Calendar"}
+                                        <ExternalLink className="h-3 w-3 opacity-70" />
                                     </>
                                 )}
                             </Button>
                         )}
 
-                        {/* Instructions */}
-                        <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20">
-                            <h4 className="font-medium text-blue-900 dark:text-blue-300 mb-2 text-sm">
-                                Como funciona
-                            </h4>
-                            <ul className="text-sm text-blue-700 dark:text-blue-400 space-y-1 list-disc list-inside">
-                                <li>Seus agendamentos são sincronizados automaticamente</li>
-                                <li>Eventos criados no Vyzon aparecem no seu Google Calendar</li>
-                                <li>Sincronização a cada 15 minutos</li>
-                            </ul>
+                        {/* ── How it works ─────────────────────────── */}
+                        <div>
+                            <div className="flex items-center gap-2 mb-3">
+                                <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                                <h4 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                                    Como funciona
+                                </h4>
+                            </div>
+                            <div className="space-y-2">
+                                <StepRow
+                                    n={1}
+                                    text="Agendamentos do Vyzon aparecem no seu Google Calendar"
+                                />
+                                <StepRow
+                                    n={2}
+                                    text="Eventos criados no Google são importados para o CRM"
+                                />
+                                <StepRow
+                                    n={3}
+                                    text="Sync automático a cada 15 minutos, sem intervenção manual"
+                                />
+                            </div>
+                        </div>
+
+                        {/* ── Footer ─────────────────────────────── */}
+                        <div className="flex items-center justify-between pt-4 border-t border-border/60">
+                            <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground/70">
+                                <Shield className="h-3 w-3" />
+                                OAuth 2.0 · Token criptografado
+                            </span>
+                            <Button variant="ghost" size="sm" onClick={onClose} className="h-8 text-xs">
+                                Fechar
+                            </Button>
                         </div>
                     </div>
                 )}
-
-                {/* Footer */}
-                <div className="pt-4 border-t border-border flex justify-end">
-                    <Button variant="outline" onClick={onClose}>
-                        Fechar
-                    </Button>
-                </div>
             </DialogContent>
         </Dialog>
     );
 };
+
+function StepRow({ n, text }: { n: number; text: string }) {
+    return (
+        <div className="flex items-start gap-3">
+            <div className="shrink-0 w-5 h-5 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                <span className="text-[10px] font-bold text-emerald-400 tabular-nums">{n}</span>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed pt-0.5">{text}</p>
+        </div>
+    );
+}
