@@ -23,6 +23,20 @@
             ]
         }
     ],
+    "redirects": [
+        {
+            "source": "/:path*",
+            "has": [{ "type": "host", "value": "gamesales.com.br" }],
+            "destination": "https://vyzon.com.br/:path*",
+            "permanent": true
+        },
+        {
+            "source": "/:path*",
+            "has": [{ "type": "host", "value": "www.gamesales.com.br" }],
+            "destination": "https://vyzon.com.br/:path*",
+            "permanent": true
+        }
+    ],
     "rewrites": [
         {
             "source": "/(.*)",
