@@ -1,6 +1,5 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
-import { beasties } from "vite-plugin-beasties";
 import path from "path";
 
 // https://vitejs.dev/config/
@@ -9,18 +8,7 @@ export default defineConfig({
     host: "::",
     port: 8080,
   },
-  plugins: [
-    react(),
-    beasties({
-      options: {
-        preload: "swap",
-        inlineFonts: false,
-        pruneSource: false,
-        compress: true,
-        logLevel: "info",
-      },
-    }),
-  ],
+  plugins: [react()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
