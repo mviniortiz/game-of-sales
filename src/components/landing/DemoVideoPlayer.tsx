@@ -191,12 +191,14 @@ export const DemoVideoPlayer = () => {
                                     <div className="flex items-center gap-2">
                                         <button
                                             onClick={(e) => { e.stopPropagation(); togglePlay(); }}
+                                            aria-label={isVideoPlaying ? "Pausar vídeo" : "Reproduzir vídeo"}
                                             className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
                                         >
                                             {isVideoPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" fill="currentColor" />}
                                         </button>
                                         <button
                                             onClick={(e) => { e.stopPropagation(); setIsMuted((m) => !m); }}
+                                            aria-label={isMuted ? "Ativar áudio" : "Silenciar áudio"}
                                             className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
                                         >
                                             {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
@@ -209,6 +211,7 @@ export const DemoVideoPlayer = () => {
                                     </div>
                                     <button
                                         onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }}
+                                        aria-label="Tela cheia"
                                         className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
                                     >
                                         <Maximize className="h-4 w-4" />

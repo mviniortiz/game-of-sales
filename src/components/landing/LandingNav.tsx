@@ -148,6 +148,7 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                     <img src={brandLogoDark} alt="Vyzon" width={320} height={60} className="h-7 w-auto" />
                     <button
                         onClick={() => setMobileOpen(false)}
+                        aria-label="Fechar menu"
                         className="w-8 h-8 flex items-center justify-center rounded-lg"
                         style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.6)" }}
                     >
