@@ -56,29 +56,9 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
             {/* Content */}
             <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="pt-32 sm:pt-40 pb-16 sm:pb-20 text-center">
-                    {/* Eyebrow */}
-                    <div className="inline-flex items-center gap-2 mb-6 landing-fade-in-up landing-delay-100">
-                        <button
-                            type="button"
-                            onClick={() => {
-                                document.getElementById("features")?.scrollIntoView({ behavior: "smooth", block: "start" });
-                            }}
-                            className="text-[11px] px-3.5 py-1 rounded-full cursor-pointer hero-eyebrow"
-                            style={{
-                                color: "rgba(52,211,153,0.9)",
-                                background: "rgba(16,185,129,0.08)",
-                                border: "1px solid rgba(16,185,129,0.15)",
-                                fontWeight: 600,
-                                letterSpacing: "0.08em",
-                            }}
-                        >
-                            CRM GAMIFICADO • INTEGRA HOTMART, KIWIFY E GREENN
-                        </button>
-                    </div>
-
                     {/* Headline */}
                     <h1
-                        className="font-heading mx-auto landing-fade-in-up landing-delay-200"
+                        className="font-heading mx-auto landing-fade-in-up landing-delay-100"
                         style={{
                             fontSize: "clamp(2.25rem, 6.5vw, 4.5rem)",
                             lineHeight: 1.05,
@@ -103,7 +83,7 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
 
                     {/* Subtitle */}
                     <p
-                        className="mt-6 mx-auto max-w-2xl landing-fade-in-up landing-delay-300"
+                        className="mt-6 mx-auto max-w-2xl landing-fade-in-up landing-delay-200"
                         style={{
                             fontSize: "clamp(1rem, 2vw, 1.2rem)",
                             lineHeight: 1.7,
@@ -116,7 +96,7 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
                     </p>
 
                     {/* CTAs */}
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 mt-10 w-full max-w-md mx-auto sm:max-w-none landing-fade-in-up landing-delay-400">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 mt-10 w-full max-w-md mx-auto sm:max-w-none landing-fade-in-up landing-delay-300">
                         <button
                             onClick={onScheduleDemoClick || onCTAClick}
                             className="hero-cta-primary group relative inline-flex items-center justify-center gap-2.5 px-5 sm:px-7 py-3.5 text-sm sm:text-[15px] font-bold text-white rounded-xl overflow-hidden"
@@ -147,7 +127,7 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
                     </div>
 
                     {/* Trust row */}
-                    <div className="flex flex-wrap items-center justify-center gap-x-4 sm:gap-x-6 gap-y-2 mt-8 landing-fade-in landing-delay-500">
+                    <div className="flex flex-wrap items-center justify-center gap-x-4 sm:gap-x-6 gap-y-2 mt-8 landing-fade-in landing-delay-400">
                         {["14 dias grátis pra testar", "Pronto em 5 minutos", "Suporte humano no WhatsApp"].map((t) => (
                             <span key={t} className="flex items-center gap-1.5 text-[13px]" style={{ color: "rgba(255,255,255,0.6)" }}>
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
@@ -158,7 +138,7 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
                 </div>
 
                 {/* Product mockup — lazy */}
-                <div className="relative max-w-4xl mx-auto pb-4 hidden sm:block landing-fade-in-up landing-delay-600">
+                <div className="relative max-w-4xl mx-auto pb-4 hidden sm:block landing-fade-in-up landing-delay-500">
                     <div
                         className="absolute -inset-16 -z-10 rounded-3xl"
                         style={{
