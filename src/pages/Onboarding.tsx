@@ -525,6 +525,12 @@ export default function Onboarding() {
             const billing = getBillingConfig(selectedPlan, billingCycle);
             if (!billing) throw new Error("Plano inválido");
 
+            // Split cardholder name into first/last for MP antifraud
+            const trimmedName = cardholderName.trim().replace(/\s+/g, " ");
+            const nameParts = trimmedName.split(" ");
+            const firstName = nameParts[0] || trimmedName;
+            const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : firstName;
+
             // Call edge function to create subscription
             const response = await supabase.functions.invoke("mercadopago-create-subscription", {
                 body: {
@@ -535,6 +541,14 @@ export default function Onboarding() {
                         frequency: billing.frequency,
                         frequencyType: billing.frequencyType,
                         transactionAmount: billing.transactionAmount,
+                    },
+                    payerInfo: {
+                        firstName,
+                        lastName,
+                        identification: {
+                            type: docResult.type!,
+                            number: docNumber.replace(/\D/g, ""),
+                        },
                     },
                 },
             });
@@ -676,7 +690,6 @@ export default function Onboarding() {
                 }
 
                 trackEvent(FUNNEL_EVENTS.REGISTER_COMPLETE, { plan: selectedPlan });
-                trackPurchaseConversion(undefined, newCompanyId, true);
                 toast({ title: "Conta criada!", description: "Vamos configurar sua empresa." });
                 advanceStep();
             } catch (error: any) {

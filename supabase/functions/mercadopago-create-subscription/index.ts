@@ -134,6 +134,23 @@ serve(async (req) => {
             status: "authorized",
         };
 
+        // Enrich payer data to reduce MP antifraud high_risk rejections
+        if (payerInfo) {
+            subscriptionBody.payer = {
+                email,
+                ...(payerInfo.firstName ? { first_name: payerInfo.firstName } : {}),
+                ...(payerInfo.lastName ? { last_name: payerInfo.lastName } : {}),
+                ...(payerInfo.identification?.type && payerInfo.identification?.number
+                    ? {
+                        identification: {
+                            type: payerInfo.identification.type,
+                            number: payerInfo.identification.number,
+                        },
+                    }
+                    : {}),
+            };
+        }
+
         if (billingConfig) {
             // Transparent checkout: send amount/frequency directly (no preapproval_plan_id)
             const autoRecurring: Record<string, any> = {
