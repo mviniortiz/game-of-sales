@@ -9,10 +9,6 @@ import {
     Building2,
     Phone,
     Loader2,
-    Users,
-    Table2,
-    Target,
-    TrendingUp,
     Sparkles,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,34 +21,14 @@ interface DemoScheduleSectionProps {
     calendlyUrl?: string;
 }
 
-type Step = "contact" | "qualify" | "schedule" | "done";
+type Step = "contact" | "schedule" | "done";
 
 interface FormState {
     name: string;
     email: string;
     company: string;
     phone: string;
-    team_size: "" | "1-3" | "4-10" | "11-30" | "30+";
-    uses_spreadsheets: "" | "yes" | "no";
-    biggest_pain: string;
-    improvement_goal: string;
 }
-
-const PAIN_OPTIONS = [
-    { id: "visibility", label: "Falta de visibilidade do pipeline", icon: TrendingUp },
-    { id: "quotas", label: "Equipe não bate metas", icon: Target },
-    { id: "followup", label: "Follow-ups caem no esquecimento", icon: Phone },
-    { id: "reporting", label: "Relatórios demoram e não confiamos nos dados", icon: Table2 },
-    { id: "ramp", label: "Onboarding de vendedor lento", icon: Users },
-    { id: "outro", label: "Outro", icon: Sparkles },
-] as const;
-
-const TEAM_SIZES = [
-    { id: "1-3", label: "1–3", hint: "Começando" },
-    { id: "4-10", label: "4–10", hint: "Em crescimento" },
-    { id: "11-30", label: "11–30", hint: "Escalando" },
-    { id: "30+", label: "30+", hint: "Alto volume" },
-] as const;
 
 // Máscara BR: (11) 99999-9999 · aceita 10 ou 11 dígitos
 function formatBRPhone(raw: string): string {
@@ -83,10 +59,6 @@ export const DemoScheduleSection = ({
         email: "",
         company: "",
         phone: "",
-        team_size: "",
-        uses_spreadsheets: "",
-        biggest_pain: "",
-        improvement_goal: "",
     });
     const [step, setStep] = useState<Step>("contact");
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -102,8 +74,7 @@ export const DemoScheduleSection = ({
     const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim());
     const isNameValid = form.name.trim().length >= 2;
     const isCompanyValid = form.company.trim().length >= 2;
-    const canProceedContact = isEmailValid && isPhoneValid && isNameValid && isCompanyValid;
-    const canSubmitQualify = form.team_size !== "" && form.uses_spreadsheets !== "";
+    const canSubmit = isEmailValid && isPhoneValid && isNameValid && isCompanyValid;
 
     const validateContact = () => {
         const next: typeof errors = {};
@@ -115,7 +86,7 @@ export const DemoScheduleSection = ({
         return Object.keys(next).length === 0;
     };
 
-    const handleContactSubmit = (e: React.FormEvent) => {
+    const handleContactSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         logStep("contact_submit", {
             has_email: !!form.email,
@@ -127,19 +98,6 @@ export const DemoScheduleSection = ({
             logStep("contact_blocked_validation");
             return;
         }
-        setStep("qualify");
-    };
-
-    const handleQualifySubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!canSubmitQualify) return;
-
-        logStep("qualify_submit", {
-            team_size: form.team_size,
-            uses_spreadsheets: form.uses_spreadsheets,
-            has_pain: !!form.biggest_pain,
-            has_goal: !!form.improvement_goal,
-        });
 
         setIsSubmitting(true);
 
@@ -147,8 +105,6 @@ export const DemoScheduleSection = ({
             trackEvent("demo_request_submit", {
                 source: "landing",
                 has_company: !!form.company,
-                team_size: form.team_size,
-                uses_spreadsheets: form.uses_spreadsheets === "yes",
             });
             void trackDemoConversion({ email: form.email, phone: form.phone });
             (window as any).fbq?.("track", "Lead", {
@@ -160,10 +116,9 @@ export const DemoScheduleSection = ({
             logStep("tracking_failed", { err: String(err).slice(0, 120) });
         }
 
-        void saveLead().finally(() => {
-            setStep("schedule");
-            setIsSubmitting(false);
-        });
+        await saveLead();
+        setStep("schedule");
+        setIsSubmitting(false);
     };
 
     const handleEventScheduled = () => {
@@ -189,10 +144,6 @@ export const DemoScheduleSection = ({
                     phone: phoneE164,
                     source: "landing_page",
                     status: "pending",
-                    team_size: form.team_size || null,
-                    uses_spreadsheets: form.uses_spreadsheets === "yes" ? true : form.uses_spreadsheets === "no" ? false : null,
-                    biggest_pain: form.biggest_pain || null,
-                    improvement_goal: form.improvement_goal.trim() || null,
                     ...attribution,
                 } as any)
                 .select("id")
@@ -278,47 +229,10 @@ export const DemoScheduleSection = ({
                         className="max-w-xl mx-auto"
                         style={{ color: "rgba(255,255,255,0.4)", fontSize: "1rem", lineHeight: 1.7 }}
                     >
-                        Responde 2 passos em menos de 1 minuto. A gente prepara a sessão focada nas suas dores reais —
+                        Preenche seus dados em 30 segundos e escolhe o horário. A gente prepara a sessão focada no seu contexto —
                         sem pitch genérico.
                     </p>
                 </div>
-
-                {/* ── Progress indicator ───────────────────── */}
-                {step !== "done" && (
-                    <div className="flex items-center justify-center gap-2 mb-6 landing-fade-in">
-                        <StepDot
-                            active={step === "contact"}
-                            done={step === "qualify" || step === "schedule"}
-                            label="Contato"
-                            n={1}
-                        />
-                        <div
-                            className="w-10 sm:w-12 h-px"
-                            style={{
-                                background:
-                                    step === "qualify" || step === "schedule"
-                                        ? "linear-gradient(90deg, rgba(16,185,129,0.6), rgba(16,185,129,0.3))"
-                                        : "rgba(255,255,255,0.08)",
-                            }}
-                        />
-                        <StepDot
-                            active={step === "qualify"}
-                            done={step === "schedule"}
-                            label="Qualificação"
-                            n={2}
-                        />
-                        <div
-                            className="w-10 sm:w-12 h-px"
-                            style={{
-                                background:
-                                    step === "schedule"
-                                        ? "linear-gradient(90deg, rgba(16,185,129,0.6), rgba(16,185,129,0.3))"
-                                        : "rgba(255,255,255,0.08)",
-                            }}
-                        />
-                        <StepDot active={step === "schedule"} done={false} label="Horário" n={3} />
-                    </div>
-                )}
 
                 {/* Card container */}
                 <div
@@ -460,210 +374,8 @@ export const DemoScheduleSection = ({
 
                                     <button
                                         type="submit"
-                                        disabled={!canProceedContact}
+                                        disabled={!canSubmit || isSubmitting}
                                         className="demo-submit-btn relative overflow-hidden flex items-center justify-center gap-2.5 w-full px-6 py-3.5 rounded-xl text-white group mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                                        style={{
-                                            background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-                                            boxShadow:
-                                                "0 0 0 1px rgba(16,185,129,0.3), 0 4px 24px rgba(16,185,129,0.3)",
-                                            fontWeight: 700,
-                                            fontSize: "0.95rem",
-                                        }}
-                                    >
-                                        <span
-                                            className="absolute inset-0 rounded-xl landing-shine"
-                                            style={{
-                                                background:
-                                                    "linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.16) 50%, transparent 70%)",
-                                            }}
-                                        />
-                                        <span className="relative">Continuar</span>
-                                        <ArrowRight className="relative h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
-                                    </button>
-
-                                    <p className="text-center text-xs mt-1" style={{ color: "rgba(255,255,255,0.25)" }}>
-                                        Sem compromisso · Cancela ou remarca quando quiser
-                                    </p>
-                                </form>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* ── STEP 2: QUALIFY ─────────────────────── */}
-                    {step === "qualify" && (
-                        <div className="p-6 sm:p-10 md:p-12 landing-fade-in">
-                            <form onSubmit={handleQualifySubmit} className="space-y-7 max-w-2xl mx-auto">
-                                <div className="text-center mb-2">
-                                    <h3
-                                        className="font-heading mb-2"
-                                        style={{
-                                            fontWeight: 700,
-                                            fontSize: "1.4rem",
-                                            lineHeight: 1.2,
-                                            letterSpacing: "-0.03em",
-                                            color: "rgba(255,255,255,0.9)",
-                                        }}
-                                    >
-                                        Só mais alguns detalhes
-                                    </h3>
-                                    <p className="text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>
-                                        Isso ajuda a gente a preparar a sessão pro seu contexto real
-                                    </p>
-                                </div>
-
-                                {/* ── Team size ─────────────────────── */}
-                                <QuestionBlock
-                                    icon={Users}
-                                    label="Quantos vendedores têm no seu time hoje?"
-                                    required
-                                >
-                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                        {TEAM_SIZES.map((size) => {
-                                            const selected = form.team_size === size.id;
-                                            return (
-                                                <button
-                                                    key={size.id}
-                                                    type="button"
-                                                    onClick={() => setForm((p) => ({ ...p, team_size: size.id }))}
-                                                    className="relative flex flex-col items-center gap-1 px-3 py-3.5 rounded-xl transition-all duration-150"
-                                                    style={{
-                                                        background: selected
-                                                            ? "rgba(16,185,129,0.1)"
-                                                            : "rgba(255,255,255,0.03)",
-                                                        boxShadow: selected
-                                                            ? "0 0 0 1.5px rgba(16,185,129,0.45), 0 4px 16px rgba(16,185,129,0.15)"
-                                                            : "0 0 0 1px rgba(255,255,255,0.08)",
-                                                    }}
-                                                >
-                                                    <span
-                                                        className="text-base tabular-nums"
-                                                        style={{
-                                                            fontWeight: 700,
-                                                            color: selected ? "#34d399" : "rgba(255,255,255,0.9)",
-                                                        }}
-                                                    >
-                                                        {size.label}
-                                                    </span>
-                                                    <span
-                                                        className="text-[10px]"
-                                                        style={{
-                                                            color: selected ? "rgba(52,211,153,0.7)" : "rgba(255,255,255,0.35)",
-                                                        }}
-                                                    >
-                                                        {size.hint}
-                                                    </span>
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </QuestionBlock>
-
-                                {/* ── Spreadsheets ─────────────────────── */}
-                                <QuestionBlock
-                                    icon={Table2}
-                                    label="Usa planilhas hoje pra controlar o time comercial?"
-                                    required
-                                >
-                                    <div className="grid grid-cols-2 gap-2">
-                                        {[
-                                            { id: "yes" as const, label: "Sim, ainda usamos" },
-                                            { id: "no" as const, label: "Não, já usamos CRM" },
-                                        ].map((opt) => {
-                                            const selected = form.uses_spreadsheets === opt.id;
-                                            return (
-                                                <button
-                                                    key={opt.id}
-                                                    type="button"
-                                                    onClick={() => setForm((p) => ({ ...p, uses_spreadsheets: opt.id }))}
-                                                    className="flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl text-sm transition-all duration-150"
-                                                    style={{
-                                                        background: selected
-                                                            ? "rgba(16,185,129,0.1)"
-                                                            : "rgba(255,255,255,0.03)",
-                                                        boxShadow: selected
-                                                            ? "0 0 0 1.5px rgba(16,185,129,0.45), 0 4px 16px rgba(16,185,129,0.15)"
-                                                            : "0 0 0 1px rgba(255,255,255,0.08)",
-                                                        color: selected ? "#34d399" : "rgba(255,255,255,0.75)",
-                                                        fontWeight: 600,
-                                                    }}
-                                                >
-                                                    {selected && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
-                                                    {opt.label}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </QuestionBlock>
-
-                                {/* ── Biggest pain ─────────────────────── */}
-                                <QuestionBlock icon={Target} label="Qual a maior dor da gestão comercial hoje?">
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                        {PAIN_OPTIONS.map((opt) => {
-                                            const selected = form.biggest_pain === opt.label;
-                                            const Icon = opt.icon;
-                                            return (
-                                                <button
-                                                    key={opt.id}
-                                                    type="button"
-                                                    onClick={() => setForm((p) => ({ ...p, biggest_pain: opt.label }))}
-                                                    className="flex items-center gap-2.5 px-3.5 py-3 rounded-xl text-left text-sm transition-all duration-150"
-                                                    style={{
-                                                        background: selected
-                                                            ? "rgba(16,185,129,0.1)"
-                                                            : "rgba(255,255,255,0.03)",
-                                                        boxShadow: selected
-                                                            ? "0 0 0 1.5px rgba(16,185,129,0.45)"
-                                                            : "0 0 0 1px rgba(255,255,255,0.08)",
-                                                        color: selected ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.6)",
-                                                    }}
-                                                >
-                                                    <Icon
-                                                        className="h-3.5 w-3.5 flex-shrink-0"
-                                                        style={{ color: selected ? "#34d399" : "rgba(255,255,255,0.3)" }}
-                                                    />
-                                                    <span style={{ fontWeight: 500 }}>{opt.label}</span>
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </QuestionBlock>
-
-                                {/* ── Improvement goal ─────────────────── */}
-                                <QuestionBlock
-                                    icon={Sparkles}
-                                    label="O que você mais quer melhorar na operação?"
-                                    hint="Opcional — quanto mais específico, melhor a demo"
-                                >
-                                    <textarea
-                                        placeholder="Ex: reduzir ciclo de venda, aumentar taxa de conversão, ter previsibilidade..."
-                                        value={form.improvement_goal}
-                                        onChange={(e) => setForm((p) => ({ ...p, improvement_goal: e.target.value }))}
-                                        rows={3}
-                                        className="demo-input resize-none"
-                                        style={{ padding: "12px 14px" }}
-                                    />
-                                </QuestionBlock>
-
-                                {/* ── Actions ─────────────────────── */}
-                                <div className="flex items-center gap-3 pt-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setStep("contact")}
-                                        className="flex items-center gap-1.5 px-4 py-3 rounded-xl text-sm transition-all duration-150"
-                                        style={{
-                                            background: "rgba(255,255,255,0.04)",
-                                            boxShadow: "0 0 0 1px rgba(255,255,255,0.08)",
-                                            color: "rgba(255,255,255,0.6)",
-                                            fontWeight: 600,
-                                        }}
-                                    >
-                                        <ArrowLeft className="h-3.5 w-3.5" />
-                                        Voltar
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={!canSubmitQualify || isSubmitting}
-                                        className="demo-submit-btn relative overflow-hidden flex items-center justify-center gap-2.5 flex-1 px-6 py-3.5 rounded-xl text-white group disabled:opacity-50 disabled:cursor-not-allowed"
                                         style={{
                                             background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
                                             boxShadow:
@@ -689,12 +401,16 @@ export const DemoScheduleSection = ({
                                             </>
                                         )}
                                     </button>
-                                </div>
-                            </form>
+
+                                    <p className="text-center text-xs mt-1" style={{ color: "rgba(255,255,255,0.25)" }}>
+                                        Sem compromisso · Cancela ou remarca quando quiser
+                                    </p>
+                                </form>
+                            </div>
                         </div>
                     )}
 
-                    {/* ── STEP 3: SCHEDULE ─────── */}
+                    {/* ── STEP 2: SCHEDULE ─────── */}
                     {step === "schedule" && (
                         <div className="p-3 sm:p-6 md:p-8 landing-fade-in">
                             <div className="flex items-start justify-between mb-3 sm:mb-4 gap-3">
@@ -718,7 +434,7 @@ export const DemoScheduleSection = ({
                                 </div>
                                 <button
                                     type="button"
-                                    onClick={() => setStep("qualify")}
+                                    onClick={() => setStep("contact")}
                                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs flex-shrink-0 transition-all duration-150"
                                     style={{
                                         background: "rgba(255,255,255,0.04)",
@@ -748,7 +464,7 @@ export const DemoScheduleSection = ({
                         </div>
                     )}
 
-                    {/* ── STEP 4: DONE ─────────────────────── */}
+                    {/* ── STEP 3: DONE ─────────────────────── */}
                     {step === "done" && (
                         <div className="py-16 sm:py-24 px-6 text-center landing-fade-in">
                             <div
@@ -849,41 +565,6 @@ export const DemoScheduleSection = ({
 
 // ── Helpers ───────────────────────────────────────────────
 
-function StepDot({ active, done, label, n }: { active: boolean; done: boolean; label: string; n: number }) {
-    return (
-        <div className="flex items-center gap-2">
-            <div
-                className="w-7 h-7 rounded-full flex items-center justify-center text-xs tabular-nums"
-                style={{
-                    background: active
-                        ? "rgba(16,185,129,0.15)"
-                        : done
-                            ? "rgba(16,185,129,0.2)"
-                            : "rgba(255,255,255,0.04)",
-                    boxShadow: active
-                        ? "0 0 0 1.5px rgba(16,185,129,0.5), 0 0 0 4px rgba(16,185,129,0.08)"
-                        : done
-                            ? "0 0 0 1px rgba(16,185,129,0.3)"
-                            : "0 0 0 1px rgba(255,255,255,0.08)",
-                    color: active || done ? "#34d399" : "rgba(255,255,255,0.4)",
-                    fontWeight: 700,
-                }}
-            >
-                {done ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : n}
-            </div>
-            <span
-                className="text-xs hidden sm:inline"
-                style={{
-                    color: active ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.35)",
-                    fontWeight: active ? 600 : 500,
-                }}
-            >
-                {label}
-            </span>
-        </div>
-    );
-}
-
 function FormField({
     icon: Icon,
     children,
@@ -913,45 +594,6 @@ function FormField({
                     {hint}
                 </p>
             ) : null}
-        </div>
-    );
-}
-
-function QuestionBlock({
-    icon: Icon,
-    label,
-    hint,
-    required,
-    children,
-}: {
-    icon: React.ElementType;
-    label: string;
-    hint?: string;
-    required?: boolean;
-    children: React.ReactNode;
-}) {
-    return (
-        <div>
-            <div className="flex items-center gap-2 mb-2.5">
-                <Icon className="h-3.5 w-3.5 text-emerald-400/80" />
-                <label
-                    className="text-sm"
-                    style={{
-                        color: "rgba(255,255,255,0.85)",
-                        fontWeight: 600,
-                        letterSpacing: "-0.01em",
-                    }}
-                >
-                    {label}
-                    {required && <span className="text-emerald-400 ml-1">*</span>}
-                </label>
-            </div>
-            {hint && (
-                <p className="text-[11px] mb-2.5" style={{ color: "rgba(255,255,255,0.35)" }}>
-                    {hint}
-                </p>
-            )}
-            {children}
         </div>
     );
 }
