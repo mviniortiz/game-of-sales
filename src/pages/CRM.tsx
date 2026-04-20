@@ -103,6 +103,7 @@ const DEFAULT_STAGES: StageConfig[] = [
   { id: "proposal", title: "Proposta", iconId: "dollar", colorId: "indigo" },
   { id: "negotiation", title: "Negociação", iconId: "trending", colorId: "amber" },
   { id: "closed_won", title: "Ganho", iconId: "check", colorId: "emerald" },
+  { id: "closed_lost", title: "Perdido", iconId: "target", colorId: "gray" },
 ];
 
 // Convert StageConfig to Stage with icon and colors

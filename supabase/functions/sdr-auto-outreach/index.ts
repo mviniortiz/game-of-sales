@@ -97,7 +97,7 @@ Tudo que você precisa saber pra nossa conversa está logo abaixo. Se precisar r
   }
 
   // OpenAI personalizado
-  const systemBase = `Você é ${SDR_NAME} do Vyzon, um CRM gamificado para times de vendas. Tom: amigável, direto, brasileiro. NUNCA use emojis. NUNCA diga que é "SDR" ou mencione cargo. NUNCA faça perguntas de qualificação (time, planilhas, dor) porque o lead já respondeu isso no formulário — apenas demonstre que você leu as respostas incorporando no texto. NUNCA repita construções ("Vi que..." em frases seguidas).`;
+  const systemBase = `Você é ${SDR_NAME} do Vyzon, um CRM gamificado para times de vendas. Tom: amigável, direto, brasileiro. NUNCA use emojis. NUNCA diga que é "SDR" ou mencione cargo. NUNCA faça perguntas de qualificação no primeiro contato. Se o lead forneceu dados específicos (dor, time, objetivo), incorpore naturalmente 1-2 pontos. Se só tem nome/empresa, foque no que VOCÊ vai trazer pra call (demo focada, sem pitch genérico) — não invente dados. NUNCA repita construções ("Vi que..." em frases seguidas).`;
 
   const leadContext = [
     `Nome: ${lead.name || "não informado"}`,
@@ -123,11 +123,11 @@ A mensagem deve:
 1. Cumprimentar pelo nome
 2. Se apresentar ("aqui é o ${SDR_NAME} do Vyzon")
 3. Agradecer o agendamento
-4. Mostrar que você LEU as respostas do formulário (incorpore 1 ou 2 pontos do contexto naturalmente)
-5. Dizer que vai preparar a call focada no cenário dele
+4. Se houver dados específicos no contexto (dor/time/objetivo), incorpore 1-2 naturalmente; se não, mencione que vai puxar o contexto do site/empresa pra call
+5. Dizer que vai preparar a call focada no cenário dele — sem pitch genérico
 6. Fechar convidando a tirar dúvidas
 
-NÃO faça perguntas (já foram respondidas). NÃO mencione data/link (vai na próxima msg).`
+NÃO invente dados que não estão no contexto. NÃO mencione data/link (vai na próxima msg).`
     : `Escreva o corpo de um email de confirmação pra lead que acabou de agendar demo.
 
 Contexto do lead:
@@ -137,11 +137,11 @@ O email deve:
 1. Ter assunto curto (max 60 chars, sem emojis)
 2. Cumprimentar pelo nome
 3. Se apresentar ("aqui é o ${SDR_NAME} do Vyzon")
-4. Confirmar o agendamento sinalizando que vai preparar a call focada no contexto dele (incorpore 1-2 pontos do formulário naturalmente)
+4. Confirmar o agendamento. Se o contexto tem dor/time/objetivo específicos, incorpore 1-2 naturalmente; se só tem empresa, fale que vai olhar o contexto dela antes da call
 5. Mencionar que os dados da reunião estão logo abaixo (o template insere um bloco visual)
 6. Fechar com "se precisar reagendar ou tirar dúvidas, é só responder esse email"
 
-NÃO faça perguntas de qualificação. NÃO inclua data/link no texto.`;
+NÃO invente dados. NÃO inclua data/link no texto.`;
 
   try {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
