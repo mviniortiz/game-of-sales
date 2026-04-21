@@ -100,22 +100,28 @@ export const DemoScheduleSection = ({
 
         setIsSubmitting(true);
 
+        const id = await saveLead();
+
         try {
             trackEvent("demo_request_submit", {
                 source: "landing",
                 has_company: !!form.company,
+                lead_id: id || undefined,
             });
-            void trackDemoConversion({ email: form.email, phone: form.phone });
+            void trackDemoConversion({
+                email: form.email,
+                phone: form.phone,
+                leadId: id || undefined,
+            });
             (window as any).fbq?.("track", "Lead", {
                 content_name: "demo_request",
                 content_category: "landing",
             });
-            logStep("tracking_fired");
+            logStep("tracking_fired", { has_lead_id: !!id });
         } catch (err) {
             logStep("tracking_failed", { err: String(err).slice(0, 120) });
         }
 
-        await saveLead();
         setStep("schedule");
         setIsSubmitting(false);
     };

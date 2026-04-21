@@ -159,11 +159,18 @@ export function trackPurchaseConversion(value?: number, transactionId?: string, 
 // NÃO precisa passar gclid manualmente. Enhanced Conversions só é enviado se
 // flag VITE_GADS_ENHANCED_CONVERSIONS estiver ativada (precisa ser habilitado
 // no painel do Google Ads antes, senão a conversion inteira pode ser rejeitada).
-export async function trackDemoConversion(opts?: { email?: string; phone?: string; value?: number }) {
+export async function trackDemoConversion(opts?: { email?: string; phone?: string; value?: number; leadId?: string }) {
   if (!GADS_DEMO_CONVERSION_LABEL) {
     console.warn(
       "[analytics] VITE_GADS_DEMO_CONVERSION_LABEL not set — demo conversion will NOT be sent to Google Ads"
     );
+    return;
+  }
+
+  // gtag.js pode não ter carregado (adblocker, network, CSP). Sem ele a conversion
+  // só vai pro dataLayer e nunca chega ao servidor Google Ads.
+  if (typeof window.gtag !== "function") {
+    console.warn("[gads] window.gtag unavailable — demo conversion NOT delivered (adblocker or script load failure)");
     return;
   }
 
@@ -181,7 +188,7 @@ export async function trackDemoConversion(opts?: { email?: string; phone?: strin
         if (h) userData.sha256_phone_number = h;
       }
       if (Object.keys(userData).length) {
-        window.gtag?.("set", "user_data", userData);
+        window.gtag("set", "user_data", userData);
       }
     } catch {
       // Enhanced Conversions nunca pode bloquear a conversão principal
@@ -190,17 +197,26 @@ export async function trackDemoConversion(opts?: { email?: string; phone?: strin
 
   try {
     const sendTo = `${GADS_CONVERSION_ID}/${GADS_DEMO_CONVERSION_LABEL}`;
-    window.gtag?.("event", "conversion", {
+    let acked = false;
+    const ackTimeoutId = window.setTimeout(() => {
+      if (!acked) {
+        console.warn(`[gads] demo conversion NOT acked in 3s — hit likely blocked`, sendTo);
+      }
+    }, 3000);
+
+    window.gtag("event", "conversion", {
       send_to: sendTo,
       currency: "BRL",
       value: opts?.value ?? 50,
+      transaction_id: opts?.leadId,
       event_callback: () => {
-        // eslint-disable-next-line no-console
-        console.log("[gads] demo conversion fired", sendTo);
+        acked = true;
+        window.clearTimeout(ackTimeoutId);
+        console.log("[gads] demo conversion acked", sendTo);
       },
     });
-  } catch {
-    // Silently fail
+  } catch (e) {
+    console.warn("[gads] trackDemoConversion threw", e);
   }
 }
 
