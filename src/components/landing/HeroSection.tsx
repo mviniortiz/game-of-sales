@@ -95,11 +95,17 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
                         sem cobrar atualização no grupo.
                     </p>
 
-                    {/* CTAs */}
+                    {/* CTAs — anchors, não buttons: clique antes da hidratação ainda navega via href nativo */}
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 mt-10 w-full max-w-md mx-auto sm:max-w-none landing-fade-in-up landing-delay-300">
-                        <button
-                            onClick={onScheduleDemoClick || onCTAClick}
-                            className="hero-cta-primary group relative inline-flex h-12 items-center justify-center gap-2 px-6 sm:px-7 text-sm sm:text-[15px] font-bold text-white rounded-xl overflow-hidden"
+                        <a
+                            href="#agendar-demo"
+                            onClick={(e) => {
+                                if (onScheduleDemoClick || onCTAClick) {
+                                    e.preventDefault();
+                                    (onScheduleDemoClick || onCTAClick)();
+                                }
+                            }}
+                            className="hero-cta-primary group relative inline-flex h-12 items-center justify-center gap-2 px-6 sm:px-7 text-sm sm:text-[15px] font-bold text-white rounded-xl overflow-hidden no-underline"
                             style={{
                                 background: "linear-gradient(135deg, #10b981, #059669)",
                                 boxShadow: "0 0 0 1px rgba(16,185,129,0.3), 0 4px 24px rgba(16,185,129,0.3)",
@@ -109,11 +115,17 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
                             <Calendar className="relative h-4 w-4" strokeWidth={2} />
                             <span className="relative">Agendar demonstração</span>
                             <ArrowRight className="relative h-4 w-4 group-hover:translate-x-1 transition-transform" strokeWidth={2} />
-                        </button>
+                        </a>
 
-                        <button
-                            onClick={onDemoClick}
-                            className="hero-cta-secondary group inline-flex h-12 items-center justify-center gap-2 px-6 sm:px-7 rounded-xl text-sm sm:text-[15px]"
+                        <a
+                            href="#how-it-works"
+                            onClick={(e) => {
+                                if (onDemoClick) {
+                                    e.preventDefault();
+                                    onDemoClick();
+                                }
+                            }}
+                            className="hero-cta-secondary group inline-flex h-12 items-center justify-center gap-2 px-6 sm:px-7 rounded-xl text-sm sm:text-[15px] no-underline"
                             style={{
                                 color: "rgba(255,255,255,0.85)",
                                 background: "rgba(255,255,255,0.04)",
@@ -123,7 +135,7 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
                         >
                             <MonitorPlay className="h-4 w-4 transition-colors group-hover:text-emerald-300" strokeWidth={2} />
                             Ver como funciona
-                        </button>
+                        </a>
                     </div>
 
                     {/* Trust row */}

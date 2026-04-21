@@ -88,9 +88,10 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                             Entrar
                         </button>
 
-                        <button
-                            onClick={onCTAClick}
-                            className="relative overflow-hidden flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm text-white transition-transform duration-150 hover:scale-[1.03] active:scale-[0.97]"
+                        <a
+                            href="#agendar-demo"
+                            onClick={(e) => { e.preventDefault(); onCTAClick(); }}
+                            className="relative overflow-hidden flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm text-white transition-transform duration-150 hover:scale-[1.03] active:scale-[0.97] no-underline"
                             style={{
                                 background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
                                 boxShadow: "0 4px 18px rgba(16,185,129,0.3)",
@@ -99,7 +100,7 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                         >
                             <span className="relative">Agendar demo</span>
                             <ArrowRight className="relative h-3.5 w-3.5" />
-                        </button>
+                        </a>
                     </div>
 
                     <div className="flex md:hidden items-center gap-2">
@@ -191,9 +192,10 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                         Entrar na minha conta
                     </button>
 
-                    <button
-                        onClick={() => { onCTAClick(); setMobileOpen(false); }}
-                        className="relative overflow-hidden flex items-center justify-center gap-2 w-full py-3.5 rounded-xl text-sm text-white transition-transform duration-150 active:scale-[0.97]"
+                    <a
+                        href="#agendar-demo"
+                        onClick={(e) => { e.preventDefault(); onCTAClick(); setMobileOpen(false); }}
+                        className="relative overflow-hidden flex items-center justify-center gap-2 w-full py-3.5 rounded-xl text-sm text-white transition-transform duration-150 active:scale-[0.97] no-underline"
                         style={{
                             background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
                             boxShadow: "0 4px 20px rgba(16,185,129,0.32)",
@@ -202,7 +204,7 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                     >
                         <span className="relative">Agendar demo</span>
                         <ArrowRight className="relative h-4 w-4" />
-                    </button>
+                    </a>
                 </div>
             </div>
         </>

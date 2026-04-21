@@ -26,16 +26,33 @@ if (typeof window !== "undefined") {
   const isLanding =
     window.location.pathname === "/" || window.location.pathname === "/landing";
 
-  // Analytics + attribution precisam rodar IMEDIATAMENTE:
-  // - captureAttribution salva gclid/UTM no sessionStorage ao chegar do ad
-  // - initAnalytics carrega gtag.js (GA4) antes do primeiro form submit
-  // Se ficarem lazy atrás de user interaction, conversões podem ser perdidas.
-  Promise.all([import("./lib/analytics"), import("./lib/attribution")]).then(
-    ([analytics, attribution]) => {
-      attribution.captureAttribution();
-      analytics.initAnalytics();
-    }
-  );
+  // captureAttribution precisa rodar IMEDIATAMENTE: salva gclid/UTM no
+  // sessionStorage assim que usuário chega do ad. Barato, só lê URL.
+  import("./lib/attribution").then((m) => m.captureAttribution());
+
+  // initAnalytics carrega gtag.js (~320KB gzip GA4+GAds) — aguarda primeira
+  // interação OU timeout 4s. Mesmo pattern do Meta Pixel em index.html —
+  // tira gtag da janela TBT do Lighthouse sem perder conversions (usuário
+  // sempre interage antes de submeter form de demo).
+  let analyticsBooted = false;
+  const bootAnalytics = () => {
+    if (analyticsBooted) return;
+    analyticsBooted = true;
+    cleanupAnalytics();
+    import("./lib/analytics").then((m) => m.initAnalytics());
+  };
+  const analyticsEvents: Array<keyof WindowEventMap> = [
+    "pointerdown",
+    "keydown",
+    "scroll",
+    "touchstart",
+  ];
+  const analyticsOpts: AddEventListenerOptions = { once: true, passive: true, capture: true };
+  const cleanupAnalytics = () => {
+    analyticsEvents.forEach((ev) => window.removeEventListener(ev, bootAnalytics, analyticsOpts));
+  };
+  analyticsEvents.forEach((ev) => window.addEventListener(ev, bootAnalytics, analyticsOpts));
+  setTimeout(bootAnalytics, 4000);
 
   // Sentry é pesado (~150KB gzip), mantém lazy fora da landing
   if (!isLanding) {

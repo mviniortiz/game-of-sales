@@ -1,11 +1,13 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { TrialBanner } from "./TrialBanner";
 import { useTrial } from "@/hooks/useTrial";
-import UpgradeLock from "@/pages/admin/UpgradeLock";
-import { EvaDock } from "@/components/eva/EvaDock";
+
+// Lazy: UpgradeLock só renderiza quando trial expirou; EvaDock é widget — fora do first paint.
+const UpgradeLock = lazy(() => import("@/pages/admin/UpgradeLock"));
+const EvaDock = lazy(() => import("@/components/eva/EvaDock").then((m) => ({ default: m.EvaDock })));
 
 const getPageTitle = (pathname: string) => {
   if (pathname === "/") return "Dashboard";
@@ -50,7 +52,11 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
 
   // If trial expired and path is not allowed, show upgrade lock
   if (isExpired && !isPathAllowed) {
-    return <UpgradeLock />;
+    return (
+      <Suspense fallback={null}>
+        <UpgradeLock />
+      </Suspense>
+    );
   }
 
   return (
@@ -70,7 +76,9 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
           </main>
         </div>
       </div>
-      <EvaDock />
+      <Suspense fallback={null}>
+        <EvaDock />
+      </Suspense>
     </SidebarProvider>
   );
 };

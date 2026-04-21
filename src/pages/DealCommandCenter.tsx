@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useRef, useCallback } from "react";
+﻿import { lazy, Suspense, useEffect, useState, useRef, useCallback } from "react";
 import { logger } from "@/utils/logger";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -58,12 +58,14 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
-import InBrowserDialer from "@/components/crm/InBrowserDialer";
 import { toast } from "sonner";
 import { syncWonDealToSale } from "@/utils/salesSync";
-import { LostDealModal } from "@/components/crm/LostDealModal";
-import { Confetti } from "@/components/crm/Confetti";
-import { NovaTarefaModal } from "@/components/crm/NovaTarefaModal";
+
+// Lazy: modais e widgets que só renderizam quando o user clica em algo específico
+const InBrowserDialer = lazy(() => import("@/components/crm/InBrowserDialer"));
+const LostDealModal = lazy(() => import("@/components/crm/LostDealModal").then((m) => ({ default: m.LostDealModal })));
+const Confetti = lazy(() => import("@/components/crm/Confetti").then((m) => ({ default: m.Confetti })));
+const NovaTarefaModal = lazy(() => import("@/components/crm/NovaTarefaModal").then((m) => ({ default: m.NovaTarefaModal })));
 import { DealProducts } from "@/components/crm/DealProducts";
 import { CustomFieldsSection } from "@/components/crm/CustomFieldsSection";
 import { usePlan } from "@/hooks/usePlan";
@@ -601,7 +603,11 @@ export default function DealCommandCenter() {
     return (
         <>
             <div className="min-h-[calc(100vh-64px)] bg-background">
-                {showConfetti && <Confetti show={showConfetti} />}
+                {showConfetti && (
+                    <Suspense fallback={null}>
+                        <Confetti show={showConfetti} />
+                    </Suspense>
+                )}
 
                 {/* â"€â"€ HEADER â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
                 <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">
@@ -1400,41 +1406,51 @@ export default function DealCommandCenter() {
                                 Chamada em andamento
                             </DialogTitle>
                         </DialogHeader>
-                        <InBrowserDialer
-                            dealId={id!}
-                            customerPhone={deal?.customer_phone || ""}
-                            customerName={deal?.customer_name || "Cliente"}
-                            callId={webrtcCallId}
-                            onCallStarted={(newCallId) => {
-                                setWebrtcCallId(newCallId);
-                                queryClient.invalidateQueries({ queryKey: ["deal-calls", id] });
-                            }}
-                            onCallEnded={() => {
-                                queryClient.invalidateQueries({ queryKey: ["deal-calls", id] });
-                                toast.success("Chamada encerrada. Transcrição será processada automaticamente.");
-                            }}
-                            onError={(err) => {
-                                toast.error(err);
-                            }}
-                        />
+                        <Suspense fallback={null}>
+                            <InBrowserDialer
+                                dealId={id!}
+                                customerPhone={deal?.customer_phone || ""}
+                                customerName={deal?.customer_name || "Cliente"}
+                                callId={webrtcCallId}
+                                onCallStarted={(newCallId) => {
+                                    setWebrtcCallId(newCallId);
+                                    queryClient.invalidateQueries({ queryKey: ["deal-calls", id] });
+                                }}
+                                onCallEnded={() => {
+                                    queryClient.invalidateQueries({ queryKey: ["deal-calls", id] });
+                                    toast.success("Chamada encerrada. Transcrição será processada automaticamente.");
+                                }}
+                                onError={(err) => {
+                                    toast.error(err);
+                                }}
+                            />
+                        </Suspense>
                     </DialogContent>
                 </Dialog>
 
-                <LostDealModal
-                    open={showLostModal}
-                    onClose={() => setShowLostModal(false)}
-                    onConfirm={async (reason) => {
-                        await updateDeal.mutateAsync({ stage: "closed_lost", loss_reason: reason, probability: 0 });
-                        setShowLostModal(false);
-                    }}
-                    dealTitle={deal.title || "Deal"}
-                />
-                <NovaTarefaModal
-                    open={showTaskModal}
-                    onClose={() => setShowTaskModal(false)}
-                    dealId={id || ""}
-                    dealTitle={deal.title}
-                />
+                {showLostModal && (
+                    <Suspense fallback={null}>
+                        <LostDealModal
+                            open={showLostModal}
+                            onClose={() => setShowLostModal(false)}
+                            onConfirm={async (reason) => {
+                                await updateDeal.mutateAsync({ stage: "closed_lost", loss_reason: reason, probability: 0 });
+                                setShowLostModal(false);
+                            }}
+                            dealTitle={deal.title || "Deal"}
+                        />
+                    </Suspense>
+                )}
+                {showTaskModal && (
+                    <Suspense fallback={null}>
+                        <NovaTarefaModal
+                            open={showTaskModal}
+                            onClose={() => setShowTaskModal(false)}
+                            dealId={id || ""}
+                            dealTitle={deal.title}
+                        />
+                    </Suspense>
+                )}
             </div>
         </>
     );

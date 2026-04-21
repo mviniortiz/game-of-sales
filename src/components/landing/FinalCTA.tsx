@@ -78,10 +78,11 @@ export const FinalCTA = ({ onCTAClick, onScheduleDemoClick }: FinalCTAProps) => 
 
                     {/* CTA buttons */}
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-                        {/* Primary CTA */}
-                        <motion.button
-                            onClick={onCTAClick}
-                            className="relative overflow-hidden flex items-center gap-2.5 px-6 sm:px-8 py-4 rounded-xl text-white group w-full sm:w-auto justify-center"
+                        {/* Primary CTA — anchor pro onboarding, JS intercepta quando hidratado */}
+                        <motion.a
+                            href="/onboarding?plan=pro"
+                            onClick={(e) => { e.preventDefault(); onCTAClick(); }}
+                            className="relative overflow-hidden flex items-center gap-2.5 px-6 sm:px-8 py-4 rounded-xl text-white group w-full sm:w-auto justify-center no-underline"
                             style={{
                                 background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
                                 boxShadow: "0 0 0 1px rgba(16,185,129,0.3), 0 4px 24px rgba(16,185,129,0.35), 0 16px 48px -8px rgba(16,185,129,0.2)",
@@ -108,7 +109,7 @@ export const FinalCTA = ({ onCTAClick, onScheduleDemoClick }: FinalCTAProps) => 
                             <Zap className="relative h-4 w-4" fill="currentColor" />
                             <span className="relative">Testar grátis por 14 dias</span>
                             <ArrowRight className="relative h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
-                        </motion.button>
+                        </motion.a>
 
                         {/* Secondary — schedule demo */}
                         <a

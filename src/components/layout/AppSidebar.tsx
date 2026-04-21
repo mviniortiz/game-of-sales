@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { lazy, Suspense, useState, useEffect } from "react";
 import { Home, Trophy, PlusCircle, Target, PhoneCall, Shield, LogOut, Calendar, Kanban, Settings, ChevronsUpDown, Sparkles, HelpCircle, Inbox, UserCog, Sun, Moon } from "lucide-react";
 import {
   DropdownMenu,
@@ -19,7 +19,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
 import { AnimatedIcon } from "@/components/ui/animated-icon";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
-import { NovaVendaModal } from "@/components/vendas/NovaVendaModal";
+// Lazy: só carrega ao clicar em "Nova venda"
+const NovaVendaModal = lazy(() => import("@/components/vendas/NovaVendaModal").then((m) => ({ default: m.NovaVendaModal })));
 import {
   Sidebar,
   SidebarContent,
@@ -427,10 +428,14 @@ export function AppSidebar() {
         </SidebarFooter>
       </Sidebar>
 
-      <NovaVendaModal
-        open={isNovaVendaOpen}
-        onClose={() => setIsNovaVendaOpen(false)}
-      />
+      {isNovaVendaOpen && (
+        <Suspense fallback={null}>
+          <NovaVendaModal
+            open={isNovaVendaOpen}
+            onClose={() => setIsNovaVendaOpen(false)}
+          />
+        </Suspense>
+      )}
     </TooltipProvider>
   );
 }

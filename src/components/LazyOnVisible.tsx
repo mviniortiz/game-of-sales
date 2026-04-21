@@ -31,17 +31,35 @@ export const LazyOnVisible = ({
       setVisible(true);
       return;
     }
-    const obs = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          setVisible(true);
-          obs.disconnect();
-        }
-      },
-      { rootMargin }
-    );
-    obs.observe(node);
-    return () => obs.disconnect();
+    // Delay observer start até depois do LCP pra não competir com critical path.
+    // rIC ou fallback 300ms — depois disso, IntersectionObserver decide.
+    let obs: IntersectionObserver | undefined;
+    const startObserving = () => {
+      obs = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((e) => e.isIntersecting)) {
+            setVisible(true);
+            obs?.disconnect();
+          }
+        },
+        { rootMargin }
+      );
+      obs.observe(node);
+    };
+    const idle = (window as any).requestIdleCallback as
+      | ((cb: () => void, opts?: { timeout?: number }) => number)
+      | undefined;
+    const handle = idle
+      ? idle(startObserving, { timeout: 1500 })
+      : window.setTimeout(startObserving, 300);
+    return () => {
+      if (idle && typeof handle === "number") {
+        (window as any).cancelIdleCallback?.(handle);
+      } else {
+        window.clearTimeout(handle as number);
+      }
+      obs?.disconnect();
+    };
   }, [visible, rootMargin]);
 
   return (

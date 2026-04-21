@@ -1,6 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
-import { captureException } from "@/lib/sentry";
+// NÃO importe @/lib/sentry estaticamente — puxa Sentry SDK (~150kB gzip) pro critical path da landing.
+// captureException é resolvido dinâmico dentro de componentDidCatch.
 
 interface Props {
   children: ReactNode;
@@ -42,7 +43,9 @@ export class ErrorBoundary extends Component<Props, State> {
       }
     }
 
-    captureException(error, { componentStack: errorInfo.componentStack });
+    import("@/lib/sentry").then(({ captureException }) => {
+      captureException(error, { componentStack: errorInfo.componentStack });
+    }).catch(() => {});
   }
 
   handleReload = () => {
