@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Mail, Lock, ArrowRight, ArrowLeft, Loader2, Eye, EyeOff, Sparkles } from "lucide-react";
+import { Mail, Lock, ArrowRight, ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react";
 import vyzonLogo from "@/assets/logo-dark.png";
 import { motion } from "framer-motion";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
@@ -103,10 +103,6 @@ const Auth = () => {
 
           {/* Tagline */}
           <div className="text-center">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 text-[10px] font-semibold uppercase tracking-wider ring-1 ring-emerald-500/20 mb-4">
-              <Sparkles className="h-3 w-3" />
-              Game of Sales
-            </div>
             <h2
               className="text-2xl font-bold mb-3"
               style={{ color: "rgba(255,255,255,0.95)", letterSpacing: "-0.02em" }}
