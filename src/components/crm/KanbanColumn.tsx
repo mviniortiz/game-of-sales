@@ -68,10 +68,8 @@ export const KanbanColumn = memo(({
     return Math.round((total.count / previousStageCount) * 100);
   }, [showConversionRate, total.count, previousStageCount]);
 
-  // Funnel fill: width of the stage value bar relative to total
-  // We reuse total.count as a proxy — actual % provided from parent would be ideal
-  // but count works well enough for visual rhythm
-  const fillPct = Math.min(100, Math.max(4, total.count > 0 ? 100 : 4));
+  // Map stage color text-* → bg-* for stage dot
+  const dotBg = stage.color.replace("text-", "bg-").replace("-400", "-500");
 
   return (
     <div className="flex items-start gap-0">
@@ -85,83 +83,62 @@ export const KanbanColumn = memo(({
       {/* ── Main Column ─────────────────────────────────────── */}
       <div
         className={`
-          flex flex-col w-[85vw] sm:w-[292px] flex-shrink-0 h-full rounded-xl
+          flex flex-col w-[85vw] sm:w-[280px] flex-shrink-0 h-full rounded-xl
           border transition-all duration-200 snap-center
           ${isOver
-            ? "ring-2 ring-emerald-500/50 ring-offset-2 ring-offset-background scale-[1.01] border-dashed border-emerald-400/50 bg-emerald-500/5 animate-pulse-subtle"
-            : "border-border bg-card/70"
+            ? "ring-2 ring-emerald-500/50 ring-offset-2 ring-offset-background border-dashed border-emerald-400/50 bg-emerald-500/[0.03]"
+            : "border-border/60 bg-card/30"
           }
         `}
         style={isOver ? { animation: "kanban-pulse 1.5s ease-in-out infinite" } : undefined}
       >
         {/* ── Column Header ────────────────────────────────── */}
-        <div className="px-4 pt-4 pb-3 border-b border-border">
-          {/* Row 1: Icon + title + count badge */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2.5">
-              <div className={`p-1.5 rounded-lg ${stage.bgColor}`}>
-                <Icon className={`h-3.5 w-3.5 ${stage.color}`} />
-              </div>
-              <span className="font-semibold text-foreground text-sm tracking-tight">
-                {stage.title}
-              </span>
-            </div>
-
-            {/* Count pill */}
-            <span className={`
-              inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold
-              ${stage.bgColor} ${stage.color}
-            `}>
+        <div className="px-3.5 pt-3.5 pb-3">
+          {/* Row 1: stage dot + title + count */}
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className={`w-2 h-2 rounded-full ${dotBg} flex-shrink-0`} />
+            <Icon className={`h-3.5 w-3.5 ${stage.color} flex-shrink-0`} strokeWidth={2.2} />
+            <span className="font-semibold text-foreground text-[13px] tracking-tight truncate flex-1">
+              {stage.title}
+            </span>
+            <span className="text-[11px] text-muted-foreground font-medium tabular-nums flex-shrink-0">
               {total.count}
             </span>
           </div>
 
-          {/* Funnel bar — visual fill proportional to count */}
-          <div className="h-[3px] w-full rounded-full bg-muted mb-3 overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all duration-500 ${stage.color.replace("text-", "bg-").replace("-400", "-500")}`}
-              style={{ width: `${fillPct}%`, opacity: total.count > 0 ? 1 : 0.2 }}
-            />
-          </div>
-
           {/* Row 2: Value total */}
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">
-              Total em pipeline
-            </span>
-            <span className="text-sm font-bold text-emerald-400 tabular-nums">
+          {total.count > 0 && (
+            <div className="text-[12px] font-semibold text-emerald-400 tabular-nums tracking-tight pl-4">
               {formatCurrency(total.value)}
-            </span>
-          </div>
+            </div>
+          )}
         </div>
+
+        {/* Subtle divider */}
+        <div className="h-px bg-border/40 mx-3" />
 
         {/* ── Cards Track ──────────────────────────────────── */}
         <div
           ref={setNodeRef}
           className={`
-            flex-1 p-3 overflow-hidden
+            flex-1 p-2.5 overflow-hidden
             max-h-[calc(100vh-240px)]
             transition-colors duration-100
-            ${isOver ? "bg-emerald-500/5" : "bg-transparent"}
+            ${isOver ? "bg-emerald-500/[0.04]" : "bg-transparent"}
           `}
         >
           <ScrollArea className="h-full max-h-[calc(100vh-260px)] pr-1">
             <SortableContext items={dealIds} strategy={verticalListSortingStrategy}>
-              <div className="space-y-2.5 pt-1 pb-2">
+              <div className="space-y-2 pt-1 pb-2">
                 {deals.length === 0 ? (
                   <div className={`
-                    flex flex-col items-center justify-center h-28
+                    flex flex-col items-center justify-center h-24
                     transition-all duration-150
-                    ${isOver ? "opacity-100 scale-105" : "opacity-40"}
+                    ${isOver ? "opacity-100" : "opacity-40"}
                   `}>
-                    <div className={`
-                      p-2.5 rounded-xl mb-2
-                      ${isOver ? "bg-emerald-500/20" : "bg-muted"}
-                    `}>
-                      <Inbox className={`h-5 w-5 ${isOver ? "text-emerald-400" : "text-muted-foreground"}`} />
-                    </div>
-                    <p className={`text-[11px] font-medium ${isOver ? "text-emerald-400" : "text-muted-foreground"}`}>
-                      {isOver ? "Solte aqui" : "Sem deals"}
+                    <Inbox className={`h-4 w-4 mb-1.5 ${isOver ? "text-emerald-400" : "text-muted-foreground"}`} strokeWidth={1.5} />
+                    <p className={`text-[10.5px] font-medium ${isOver ? "text-emerald-400" : "text-muted-foreground"}`}>
+                      {isOver ? "Solte aqui" : "Vazio"}
                     </p>
                   </div>
                 ) : (

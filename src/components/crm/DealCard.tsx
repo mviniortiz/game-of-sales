@@ -2,8 +2,8 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
-  Clock, AlertTriangle, Phone, Calendar, CheckCircle2, Flame, Trash2, Copy,
-  Pencil, MessageSquare, ArrowRight, ChevronLeft, ChevronRight
+  Clock, Phone, Calendar, CheckCircle2, Flame, Trash2, Copy,
+  Pencil, MessageSquare, ArrowRight, ChevronLeft, ChevronRight, GripVertical
 } from "lucide-react";
 import { format, differenceInDays, isPast, parseISO, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -43,7 +43,7 @@ interface DealCardProps {
 const getRottingStatus = (days: number) => {
   if (days > 7) return { border: "border-l-rose-500", dot: "bg-rose-500", label: `${days}d`, severity: "high" as const };
   if (days > 3) return { border: "border-l-amber-500", dot: "bg-amber-500", label: `${days}d`, severity: "mid" as const };
-  return { border: "border-l-emerald-500/60", dot: "bg-emerald-500", label: "", severity: "ok" as const };
+  return { border: "border-l-transparent", dot: "bg-emerald-500", label: "", severity: "ok" as const };
 };
 
 // CSS keyframes for pulsing rotting badge (injected once)
@@ -62,8 +62,8 @@ if (typeof document !== "undefined" && !document.getElementById("rotting-pulse-s
   document.head.appendChild(style);
 }
 
-// XP bar color
-const getXPColor = (p: number) =>
+// Probability bar color
+const getProbabilityColor = (p: number) =>
   p >= 70 ? "from-emerald-500 to-emerald-400" :
     p >= 40 ? "from-amber-500 to-amber-400" :
       "from-slate-600 to-slate-500";
@@ -160,7 +160,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
     ? differenceInDays(new Date(), new Date(deal.updated_at)) : 0;
 
   const rotting = getRottingStatus(daysSince);
-  const xpColor = getXPColor(deal.probability);
+  const probabilityColor = getProbabilityColor(deal.probability);
 
   // Is close date overdue?
   const isOverdue = deal.expected_close_date
@@ -449,16 +449,15 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
       }}
       className={`
         group relative
-        bg-card border border-border
-        border-l-4 ${rotting.border}
-        rounded-xl p-3.5
+        bg-card/60 backdrop-blur-sm border border-border/60
+        ${rotting.severity !== "ok" ? `border-l-[3px] ${rotting.border}` : ""}
+        rounded-lg p-3
         ${selectionMode ? "cursor-pointer" : "cursor-grab active:cursor-grabbing"}
-        transition-all duration-200 will-change-transform
-        ${rotting.severity === "high" ? "rotting-pulse !border-l-rose-500" : ""}
-        ${rotting.severity === "mid" ? "!border-l-amber-500" : ""}
+        transition-all duration-150 will-change-transform
+        ${rotting.severity === "high" ? "rotting-pulse" : ""}
         ${isBeingDragged
-          ? "scale-[1.02] rotate-[0.6deg] shadow-2xl shadow-black/45 border-emerald-500/60 z-50 !opacity-100"
-          : "hover:border-border hover:shadow-lg hover:shadow-black/30 hover:-translate-y-0.5"
+          ? "scale-[1.02] rotate-[0.4deg] shadow-2xl shadow-black/50 border-emerald-500/60 z-50 !opacity-100"
+          : "hover:border-border hover:bg-card/80 hover:-translate-y-px"
         }
         ${isSortableDragging ? "opacity-40" : "opacity-100"}
         ${isSelected ? "!border-emerald-500 ring-2 ring-emerald-500/40" : ""}
@@ -575,8 +574,13 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
       )}
 
       <div className="relative">
-        {/* ── Row 1: Title + badges + avatar ─────────────── */}
-        <div className="flex items-start justify-between gap-2 mb-2">
+        {/* Drag handle (hover only, desktop) */}
+        {!selectionMode && !isMobile && (
+          <GripVertical className="absolute -left-1 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+        )}
+
+        {/* ── Row 1: Title + avatar ─────────────────────────── */}
+        <div className="flex items-start justify-between gap-2 mb-1">
           {canInlineEdit && editingField === "title" ? (
             <input
               ref={inputRef}
@@ -593,7 +597,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
             />
           ) : canInlineEdit ? (
             <h4
-              className="font-semibold text-foreground text-[13px] leading-snug line-clamp-2 flex-1 group/title inline-flex items-start gap-1 cursor-text rounded hover:bg-muted/40 transition-colors px-0.5 -mx-0.5"
+              className="font-semibold text-foreground text-[13.5px] leading-snug line-clamp-2 flex-1 group/title inline-flex items-start gap-1 cursor-text rounded hover:bg-muted/40 transition-colors px-0.5 -mx-0.5 tracking-tight"
               onClick={e => startEditing("title", e)}
               onMouseDown={e => e.stopPropagation()}
               onPointerDown={e => e.stopPropagation()}
@@ -602,53 +606,27 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
               <Pencil className="h-2.5 w-2.5 text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity mt-0.5 flex-shrink-0" />
             </h4>
           ) : (
-            <h4 className="font-semibold text-foreground text-[13px] leading-snug line-clamp-2 flex-1">
+            <h4 className="font-semibold text-foreground text-[13.5px] leading-snug line-clamp-2 flex-1 tracking-tight">
               {deal.title}
             </h4>
           )}
 
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            {/* Hot badge */}
+          <div className="flex items-center gap-1 flex-shrink-0">
             {deal.is_hot && (
-              <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-orange-500/20">
-                <Flame className="h-3 w-3 text-orange-400" />
-                <span className="text-[9px] font-bold text-orange-400 uppercase tracking-wide">Hot</span>
-              </div>
+              <Flame className="h-3.5 w-3.5 text-orange-400" />
             )}
-
-            {/* Rotting badge */}
-            {daysSince > 7 && (
-              <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-rose-500/20 rotting-pulse">
-                <AlertTriangle className="h-3 w-3 text-rose-400" />
-                <span className="text-[10px] font-bold text-rose-400">{daysSince}d</span>
-              </div>
-            )}
-            {daysSince > 3 && daysSince <= 7 && (
-              <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-amber-500/20">
-                <Clock className="h-3 w-3 text-amber-400" />
-                <span className="text-[10px] font-bold text-amber-400">{daysSince}d</span>
-              </div>
-            )}
-            {deal.assignee_outside_company && (
-              <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-rose-500/20">
-                <AlertTriangle className="h-3 w-3 text-rose-400" />
-                <span className="text-[9px] font-bold text-rose-300">Org</span>
-              </div>
-            )}
-
-            {/* Avatar */}
-            <Avatar className={`h-6 w-6 ring-1 ${deal.assignee_outside_company ? "ring-rose-500/40" : "ring-emerald-500/30"}`}>
+            <Avatar className={`h-5 w-5 ring-1 ${deal.assignee_outside_company ? "ring-rose-500/40" : "ring-border"}`}>
               <AvatarImage src={deal.profiles?.avatar_url || undefined} />
-              <AvatarFallback className={`text-[9px] font-bold ${deal.assignee_outside_company ? "bg-rose-500/10 text-rose-300" : "bg-muted text-foreground"}`}>
+              <AvatarFallback className={`text-[9px] font-semibold ${deal.assignee_outside_company ? "bg-rose-500/10 text-rose-300" : "bg-muted text-muted-foreground"}`}>
                 {deal.assignee_outside_company ? "!" : getInitials(deal.profiles?.nome || "")}
               </AvatarFallback>
             </Avatar>
           </div>
         </div>
 
-        {/* ── Customer name ────────────────────────────────── */}
-        {canInlineEdit && editingField === "customer_name" ? (
-          <div className="mb-3">
+        {/* ── Row 2: Customer name + tags inline ─────────────── */}
+        <div className="flex items-center gap-1.5 mb-3 min-h-[14px]">
+          {canInlineEdit && editingField === "customer_name" ? (
             <input
               ref={inputRef}
               value={editValue}
@@ -659,61 +637,42 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
               onMouseDown={e => e.stopPropagation()}
               onPointerDown={e => e.stopPropagation()}
               disabled={isSaving}
-              className={`${inlineInputClass} text-[11px] text-slate-300`}
+              className={`${inlineInputClass} text-[11px] text-slate-300 flex-1`}
               autoFocus
             />
-          </div>
-        ) : canInlineEdit ? (
-          <p
-            className="text-[11px] text-muted-foreground mb-3 truncate group/cname inline-flex items-center gap-1 cursor-text rounded hover:bg-muted/40 transition-colors px-0.5 -mx-0.5 max-w-full"
-            onClick={e => startEditing("customer_name", e)}
-            onMouseDown={e => e.stopPropagation()}
-            onPointerDown={e => e.stopPropagation()}
-          >
-            <span className="truncate">{deal.customer_name}</span>
-            <Pencil className="h-2 w-2 text-muted-foreground opacity-0 group-hover/cname:opacity-100 transition-opacity flex-shrink-0" />
-          </p>
-        ) : (
-          <p className="text-[11px] text-muted-foreground mb-3 truncate">
-            {deal.customer_name}
-          </p>
-        )}
-        {deal.assignee_outside_company && (
-          <p className="text-[10px] text-rose-300/90 mb-3 -mt-2 truncate">
-            Responsável de outra organização
-          </p>
-        )}
-
-        {/* ── Tags ─────────────────────────────────────────── */}
-        {dealTags.length > 0 && (
-          <div className="flex items-center gap-1 flex-wrap mb-2 -mt-1">
-            {dealTags.slice(0, 3).map((tag) => (
-              <DealTagBadge key={tag.id} tag={tag} />
-            ))}
-            {dealTags.length > 3 && (
-              <span className="text-[9px] text-muted-foreground font-medium">
-                +{dealTags.length - 3}
-              </span>
-            )}
-          </div>
-        )}
-
-        {/* ── Rotting warning text ──────────────────────────── */}
-        {daysSince > 3 && (
-          <div className={`flex items-center gap-1.5 mb-2.5 -mt-1 px-2 py-1 rounded-md ${
-            daysSince > 7
-              ? "bg-rose-500/10 border border-rose-500/20"
-              : "bg-amber-500/10 border border-amber-500/20"
-          }`}>
-            <AlertTriangle className={`h-3 w-3 flex-shrink-0 ${daysSince > 7 ? "text-rose-400" : "text-amber-400"}`} />
-            <span className={`text-[10px] font-semibold ${daysSince > 7 ? "text-rose-300" : "text-amber-300"}`}>
-              {daysSince} dias sem atualização
+          ) : canInlineEdit ? (
+            <button
+              className="text-[11px] text-muted-foreground/80 truncate group/cname inline-flex items-center gap-1 cursor-text rounded hover:bg-muted/40 transition-colors px-0.5 -mx-0.5 max-w-[60%]"
+              onClick={e => startEditing("customer_name", e)}
+              onMouseDown={e => e.stopPropagation()}
+              onPointerDown={e => e.stopPropagation()}
+            >
+              <span className="truncate">{deal.customer_name}</span>
+              <Pencil className="h-2 w-2 text-muted-foreground opacity-0 group-hover/cname:opacity-100 transition-opacity flex-shrink-0" />
+            </button>
+          ) : (
+            <span className="text-[11px] text-muted-foreground/80 truncate max-w-[60%]">
+              {deal.customer_name}
             </span>
-          </div>
-        )}
+          )}
 
-        {/* ── Value + probability badge ────────────────────── */}
-        <div className="flex items-center justify-between mb-2.5">
+          {dealTags.length > 0 && (
+            <div className="flex items-center gap-1 flex-shrink min-w-0 overflow-hidden">
+              <span className="w-px h-3 bg-border/60 flex-shrink-0" />
+              {dealTags.slice(0, 2).map((tag) => (
+                <DealTagBadge key={tag.id} tag={tag} />
+              ))}
+              {dealTags.length > 2 && (
+                <span className="text-[9px] text-muted-foreground font-medium flex-shrink-0">
+                  +{dealTags.length - 2}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* ── Value hero ───────────────────────────────────── */}
+        <div className="flex items-baseline justify-between gap-2 mb-2">
           {canInlineEdit && editingField === "value" ? (
             <input
               ref={inputRef}
@@ -725,33 +684,33 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
               onMouseDown={e => e.stopPropagation()}
               onPointerDown={e => e.stopPropagation()}
               disabled={isSaving}
-              className={`${inlineInputClass} text-[15px] font-bold text-emerald-400 tabular-nums w-36`}
+              className={`${inlineInputClass} text-[17px] font-bold text-emerald-400 tabular-nums w-36`}
               autoFocus
             />
           ) : canInlineEdit ? (
-            <span
-              className="text-[15px] font-bold text-emerald-400 tabular-nums group/value inline-flex items-center gap-1 cursor-text rounded hover:bg-muted/40 transition-colors px-0.5 -mx-0.5"
+            <button
+              className="text-[17px] font-bold text-emerald-400 tabular-nums tracking-tight group/value inline-flex items-center gap-1 cursor-text rounded hover:bg-muted/40 transition-colors px-0.5 -mx-0.5"
               onClick={e => startEditing("value", e)}
               onMouseDown={e => e.stopPropagation()}
               onPointerDown={e => e.stopPropagation()}
             >
               {formatCurrency(deal.value)}
               <Pencil className="h-2.5 w-2.5 text-muted-foreground opacity-0 group-hover/value:opacity-100 transition-opacity flex-shrink-0" />
-            </span>
+            </button>
           ) : (
-            <span className="text-[15px] font-bold text-emerald-400 tabular-nums">
+            <span className="text-[17px] font-bold text-emerald-400 tabular-nums tracking-tight">
               {formatCurrency(deal.value)}
             </span>
           )}
 
           {deal.probability > 0 && (
             <span className={`
-              px-2 py-0.5 rounded-md text-[10px] font-bold tabular-nums
+              text-[10px] font-semibold tabular-nums
               ${deal.probability >= 70
-                ? "bg-emerald-500/15 text-emerald-300"
+                ? "text-emerald-400"
                 : deal.probability >= 40
-                  ? "bg-amber-500/15 text-amber-300"
-                  : "bg-muted text-muted-foreground"
+                  ? "text-amber-400"
+                  : "text-muted-foreground"
               }
             `}>
               {deal.probability}%
@@ -759,58 +718,67 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
           )}
         </div>
 
-        {/* ── XP / probability bar ─────────────────────────── */}
-        <div className="relative h-1 w-full bg-muted rounded-full overflow-hidden mb-3">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${deal.probability}%` }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            className={`absolute inset-y-0 left-0 bg-gradient-to-r ${xpColor} rounded-full`}
-          />
-        </div>
+        {/* ── Probability bar (slim) ───────────────────────── */}
+        {deal.probability > 0 && (
+          <div className="relative h-[2px] w-full bg-muted/60 rounded-full overflow-hidden mb-3">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${deal.probability}%` }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+              className={`absolute inset-y-0 left-0 bg-gradient-to-r ${probabilityColor} rounded-full`}
+            />
+          </div>
+        )}
 
-        {/* ── Footer: created date + close date ────────────── */}
-        <div className="flex items-center justify-between border-t border-border pt-2">
-          <span className="text-[10px] text-muted-foreground font-medium">
-            {format(new Date(deal.created_at), "dd MMM", { locale: ptBR })}
-          </span>
-
-          {deal.expected_close_date && (
-            <span className={`flex items-center gap-1 text-[10px] font-medium ${isOverdue ? "text-rose-400" : "text-muted-foreground"}`}>
-              <Clock className="h-2.5 w-2.5" />
-              {format(parseISO(deal.expected_close_date), "dd/MM", { locale: ptBR })}
-              {isOverdue && <span className="font-bold"> !</span>}
+        {/* ── Meta row: aging + close date + activity ──────── */}
+        <div className="flex items-center gap-2 text-[10.5px] text-muted-foreground">
+          {/* Aging indicator (só se warn) */}
+          {daysSince > 3 && (
+            <span className={`inline-flex items-center gap-1 font-semibold tabular-nums ${daysSince > 7 ? "text-rose-400" : "text-amber-400"}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${daysSince > 7 ? "bg-rose-500" : "bg-amber-500"}`} />
+              {daysSince}d
             </span>
           )}
+
+          {/* Expected close */}
+          {deal.expected_close_date && (
+            <span className={`inline-flex items-center gap-1 tabular-nums flex-shrink-0 ${isOverdue ? "text-rose-400 font-semibold" : ""}`}>
+              <Calendar className="h-2.5 w-2.5" strokeWidth={2.2} />
+              {format(parseISO(deal.expected_close_date), "dd MMM", { locale: ptBR })}
+            </span>
+          )}
+
+          {/* Last activity (truncated, right-aligned) */}
+          <span className="flex items-center gap-1 truncate flex-1 min-w-0 justify-end">
+            {deal.lastActivity ? (
+              <>
+                {deal.lastActivity.type === "note" && <MessageSquare className="h-2.5 w-2.5 flex-shrink-0" strokeWidth={2.2} />}
+                {deal.lastActivity.type === "call" && <Phone className="h-2.5 w-2.5 flex-shrink-0" strokeWidth={2.2} />}
+                {deal.lastActivity.type === "stage_change" && <ArrowRight className="h-2.5 w-2.5 flex-shrink-0" strokeWidth={2.2} />}
+                {deal.lastActivity.type === "update" && <Clock className="h-2.5 w-2.5 flex-shrink-0" strokeWidth={2.2} />}
+                <span className="truncate">
+                  {formatDistanceToNow(new Date(deal.lastActivity.date), { addSuffix: false, locale: ptBR })}
+                </span>
+              </>
+            ) : (
+              <>
+                <Clock className="h-2.5 w-2.5 flex-shrink-0" strokeWidth={2.2} />
+                <span className="truncate">
+                  {deal.updated_at
+                    ? formatDistanceToNow(new Date(deal.updated_at), { addSuffix: false, locale: ptBR })
+                    : "sem atividade"
+                  }
+                </span>
+              </>
+            )}
+          </span>
         </div>
 
-        {/* ── Activity preview ──────────────────────────────── */}
-        <div className="flex items-center gap-1.5 border-t border-border pt-1.5 mt-1.5">
-          {deal.lastActivity ? (
-            <>
-              {deal.lastActivity.type === "note" && <MessageSquare className="h-2.5 w-2.5 text-muted-foreground flex-shrink-0" />}
-              {deal.lastActivity.type === "call" && <Phone className="h-2.5 w-2.5 text-muted-foreground flex-shrink-0" />}
-              {deal.lastActivity.type === "stage_change" && <ArrowRight className="h-2.5 w-2.5 text-muted-foreground flex-shrink-0" />}
-              {deal.lastActivity.type === "update" && <Clock className="h-2.5 w-2.5 text-muted-foreground flex-shrink-0" />}
-              <span className="text-[11px] text-muted-foreground truncate flex-1 leading-none">
-                {deal.lastActivity.text}
-              </span>
-              <span className="text-[10px] text-muted-foreground flex-shrink-0 whitespace-nowrap">
-                {formatDistanceToNow(new Date(deal.lastActivity.date), { addSuffix: true, locale: ptBR })}
-              </span>
-            </>
-          ) : (
-            <>
-              <Clock className="h-2.5 w-2.5 text-muted-foreground flex-shrink-0" />
-              <span className="text-[11px] text-muted-foreground truncate flex-1 leading-none">
-                {deal.updated_at
-                  ? `Atualizado ${formatDistanceToNow(new Date(deal.updated_at), { addSuffix: true, locale: ptBR })}`
-                  : "Sem atividade"
-                }
-              </span>
-            </>
-          )}
-        </div>
+        {deal.assignee_outside_company && (
+          <div className="mt-2 pt-2 border-t border-rose-500/20 text-[10px] text-rose-300/90 truncate">
+            Responsável de outra organização
+          </div>
+        )}
       </div>
     </div>
     </div>
