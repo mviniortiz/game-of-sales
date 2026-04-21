@@ -30,43 +30,43 @@ createRoot(document.getElementById("root")!).render(
   </StrictMode>
 );
 
-// Defer non-critical inits until after the user interacts (or 4s fallback).
-// Isso mantém Sentry/Analytics fora da janela de TBT do Lighthouse.
 if (typeof window !== "undefined") {
   const isLanding =
     window.location.pathname === "/" || window.location.pathname === "/landing";
 
-  let fired = false;
-  const boot = () => {
-    if (fired) return;
-    fired = true;
-    cleanup();
-
-    // Analytics + attribution são sempre necessários (gtag, UTM capture)
-    Promise.all([import("./lib/analytics"), import("./lib/attribution")]).then(
-      ([analytics, attribution]) => {
-        analytics.initAnalytics();
-        attribution.captureAttribution();
-      }
-    );
-
-    // Sentry é pesado (~150KB gzip) — só inicializa fora da landing
-    if (!isLanding) {
-      import("./lib/sentry").then((sentry) => sentry.initSentry());
+  // Analytics + attribution precisam rodar IMEDIATAMENTE:
+  // - captureAttribution salva gclid/UTM no sessionStorage ao chegar do ad
+  // - initAnalytics carrega gtag.js (GA4) antes do primeiro form submit
+  // Se ficarem lazy atrás de user interaction, conversões podem ser perdidas.
+  Promise.all([import("./lib/analytics"), import("./lib/attribution")]).then(
+    ([analytics, attribution]) => {
+      attribution.captureAttribution();
+      analytics.initAnalytics();
     }
-  };
+  );
 
-  const events: Array<keyof WindowEventMap> = [
-    "pointerdown",
-    "keydown",
-    "scroll",
-    "touchstart",
-  ];
-  const opts: AddEventListenerOptions = { once: true, passive: true };
-  const cleanup = () => {
-    events.forEach((ev) => window.removeEventListener(ev, boot, opts));
-  };
+  // Sentry é pesado (~150KB gzip), mantém lazy fora da landing
+  if (!isLanding) {
+    let fired = false;
+    const boot = () => {
+      if (fired) return;
+      fired = true;
+      cleanup();
+      import("./lib/sentry").then((sentry) => sentry.initSentry());
+    };
 
-  events.forEach((ev) => window.addEventListener(ev, boot, opts));
-  setTimeout(boot, 4000);
+    const events: Array<keyof WindowEventMap> = [
+      "pointerdown",
+      "keydown",
+      "scroll",
+      "touchstart",
+    ];
+    const opts: AddEventListenerOptions = { once: true, passive: true };
+    const cleanup = () => {
+      events.forEach((ev) => window.removeEventListener(ev, boot, opts));
+    };
+
+    events.forEach((ev) => window.addEventListener(ev, boot, opts));
+    setTimeout(boot, 4000);
+  }
 }

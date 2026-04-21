@@ -1,8 +1,6 @@
 // Analytics & Conversion Tracking
 // Supports Google Analytics 4 (GA4) + Google Ads conversions
 
-import { getAttribution } from "./attribution";
-
 const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID;
 const GADS_CONVERSION_ID = import.meta.env.VITE_GADS_CONVERSION_ID || "AW-18055201052";
 const GADS_CONVERSION_LABEL = "1oljCLaqtJMcEJyCsqFD";
@@ -105,10 +103,8 @@ export function initAnalytics() {
     send_page_view: true,
   });
 
-  // Configure Google Ads conversion tracking if available
-  if (GADS_CONVERSION_ID) {
-    window.gtag("config", GADS_CONVERSION_ID);
-  }
+  // Google Ads (AW-...) já tem config feito pelo inline script do index.html.
+  // Não reconfigurar aqui para evitar double-config que pode suprimir conversions.
 }
 
 // Track a custom event — sem send_to, vai pra TODOS destinos configurados
@@ -159,8 +155,10 @@ export function trackPurchaseConversion(value?: number, transactionId?: string, 
 }
 
 // Track Google Ads demo request conversion (lead signal for PMax).
-// Passa gclid via attribution (resolve 0 conversões quando o click chega do Ads)
-// + Enhanced Conversions (email/phone hasheado) pra melhor match rate.
+// Atribuição de click é feita pelo auto-tagging do Google Ads (cookie _gcl_aw),
+// NÃO precisa passar gclid manualmente. Enhanced Conversions só é enviado se
+// flag VITE_GADS_ENHANCED_CONVERSIONS estiver ativada (precisa ser habilitado
+// no painel do Google Ads antes, senão a conversion inteira pode ser rejeitada).
 export async function trackDemoConversion(opts?: { email?: string; phone?: string; value?: number }) {
   if (!GADS_DEMO_CONVERSION_LABEL) {
     console.warn(
@@ -169,11 +167,9 @@ export async function trackDemoConversion(opts?: { email?: string; phone?: strin
     return;
   }
 
-  const attribution = getAttribution();
-  const gclid = attribution?.gclid || undefined;
+  const enhancedEnabled = import.meta.env.VITE_GADS_ENHANCED_CONVERSIONS === "true";
 
-  // Enhanced Conversions: gtag espera set('user_data', {...}) ANTES do event conversion
-  if (opts?.email || opts?.phone) {
+  if (enhancedEnabled && (opts?.email || opts?.phone)) {
     try {
       const userData: Record<string, string> = {};
       if (opts.email) {
@@ -193,13 +189,16 @@ export async function trackDemoConversion(opts?: { email?: string; phone?: strin
   }
 
   try {
-    const payload: Record<string, unknown> = {
-      send_to: `${GADS_CONVERSION_ID}/${GADS_DEMO_CONVERSION_LABEL}`,
+    const sendTo = `${GADS_CONVERSION_ID}/${GADS_DEMO_CONVERSION_LABEL}`;
+    window.gtag?.("event", "conversion", {
+      send_to: sendTo,
       currency: "BRL",
       value: opts?.value ?? 50,
-    };
-    if (gclid) payload.gclid = gclid;
-    window.gtag?.("event", "conversion", payload);
+      event_callback: () => {
+        // eslint-disable-next-line no-console
+        console.log("[gads] demo conversion fired", sendTo);
+      },
+    });
   } catch {
     // Silently fail
   }
