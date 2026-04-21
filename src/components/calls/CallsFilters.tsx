@@ -1,11 +1,21 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Filter, Users, DollarSign, Target, X } from "lucide-react";
-import { format, isSameDay, differenceInCalendarDays, startOfMonth, startOfWeek } from "date-fns";
+import { CalendarIcon, X } from "lucide-react";
+import {
+  format,
+  isSameDay,
+  differenceInCalendarDays,
+  startOfMonth,
+  startOfWeek,
+} from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
@@ -17,8 +27,22 @@ interface CallsFiltersProps {
   selectedResultado: string;
   setSelectedResultado: (value: string) => void;
   vendedores: Array<{ id: string; nome: string }>;
-  isAdmin?: boolean; // Only show vendedor filter for admins
+  isAdmin?: boolean;
 }
+
+const QUICK_RANGES = [
+  { id: "hoje", label: "Hoje" },
+  { id: "semana", label: "Semana" },
+  { id: "mes", label: "Mês" },
+  { id: "30dias", label: "30 dias" },
+] as const;
+
+const RESULTADO_OPTIONS = [
+  { value: "todos", label: "Todos resultados" },
+  { value: "venda", label: "Venda fechada" },
+  { value: "sem_interesse", label: "Sem interesse" },
+  { value: "reagendar", label: "Reagendar" },
+];
 
 export const CallsFilters = ({
   dateRange,
@@ -55,48 +79,10 @@ export const CallsFilters = ({
 
   const formatRangeLabel = () => {
     if (!dateRange.from) return null;
-    if (dateRange.from && dateRange.to) {
-      return `${format(dateRange.from, "dd/MM/yy")} - ${format(dateRange.to, "dd/MM/yy")}`;
+    if (dateRange.to) {
+      return `${format(dateRange.from, "dd/MM/yy")} – ${format(dateRange.to, "dd/MM/yy")}`;
     }
     return format(dateRange.from, "dd/MM/yy");
-  };
-
-  const activeFilters = [
-    dateRange.from
-      ? { key: "dateRange", label: "Período", value: formatRangeLabel() || "" }
-      : null,
-    isAdmin && selectedVendedor !== "todos"
-      ? {
-        key: "vendedor",
-        label: "Vendedor",
-        value: vendedores.find((v) => v.id === selectedVendedor)?.nome || "Selecionado",
-      }
-      : null,
-    selectedResultado !== "todos"
-      ? { key: "resultado", label: "Resultado", value: mapResultadoLabel(selectedResultado) }
-      : null,
-  ].filter(Boolean) as Array<{ key: string; label: string; value: string }>;
-
-  const activeCount = activeFilters.length;
-
-  const handleClearAll = () => {
-    setDateRange({});
-    setSelectedVendedor("todos");
-    setSelectedResultado("todos");
-  };
-
-  const handleRemoveFilter = (key: string) => {
-    switch (key) {
-      case "dateRange":
-        setDateRange({});
-        break;
-      case "vendedor":
-        setSelectedVendedor("todos");
-        break;
-      case "resultado":
-        setSelectedResultado("todos");
-        break;
-    }
   };
 
   const isQuickRangeActive = (range: string) => {
@@ -125,204 +111,157 @@ export const CallsFilters = ({
     }
   };
 
-  function mapResultadoLabel(value: string) {
-    switch (value) {
-      case "venda":
-        return "Venda Fechada";
-      case "sem_interesse":
-        return "Sem Interesse";
-      case "reagendar":
-        return "Reagendar";
-      default:
-        return value;
+  const activeChips = [
+    dateRange.from
+      ? { key: "dateRange", label: formatRangeLabel() || "" }
+      : null,
+    isAdmin && selectedVendedor !== "todos"
+      ? {
+          key: "vendedor",
+          label: vendedores.find((v) => v.id === selectedVendedor)?.nome || "Vendedor",
+        }
+      : null,
+    selectedResultado !== "todos"
+      ? {
+          key: "resultado",
+          label:
+            RESULTADO_OPTIONS.find((r) => r.value === selectedResultado)?.label ||
+            selectedResultado,
+        }
+      : null,
+  ].filter(Boolean) as Array<{ key: string; label: string }>;
+
+  const handleClearAll = () => {
+    setDateRange({});
+    setSelectedVendedor("todos");
+    setSelectedResultado("todos");
+  };
+
+  const handleRemoveChip = (key: string) => {
+    switch (key) {
+      case "dateRange":
+        setDateRange({});
+        break;
+      case "vendedor":
+        setSelectedVendedor("todos");
+        break;
+      case "resultado":
+        setSelectedResultado("todos");
+        break;
     }
-  }
+  };
 
   return (
-    <Card className="relative overflow-hidden bg-card border-border" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
-      <CardContent className="p-4 space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <div className="h-9 w-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-              <Filter className="h-4 w-4 text-primary" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                Filtros (Calls)
-                <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">
-                  {activeCount} ativo{activeCount === 1 ? "" : "s"}
-                </span>
-              </h3>
-              <p className="text-xs text-muted-foreground">Aplique rápido por período, vendedor e resultado.</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
+    <div className="rounded-xl border border-border bg-card/40 p-3 sm:p-4 space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
+        {/* Quick ranges */}
+        <div className="inline-flex items-center gap-0.5 rounded-lg border border-border bg-background/40 p-0.5">
+          {QUICK_RANGES.map((range) => (
+            <button
+              key={range.id}
+              type="button"
+              onClick={() => setQuickRange(range.id)}
+              className={cn(
+                "h-7 px-2.5 text-[11px] font-medium rounded-md transition-colors",
+                isQuickRangeActive(range.id)
+                  ? "bg-card text-foreground shadow-sm ring-1 ring-border"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {range.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Custom range */}
+        <Popover>
+          <PopoverTrigger asChild>
             <Button
               variant="outline"
               size="sm"
-              className="h-9 border-border bg-muted text-foreground hover:bg-muted/80"
-              onClick={() => setDateRange({ from: new Date(), to: new Date() })}
+              className={cn(
+                "h-8 gap-1.5 text-[11px] border-border bg-background/40 hover:bg-card",
+                !dateRange.from && "text-muted-foreground"
+              )}
             >
-              Hoje
+              <CalendarIcon className="h-3 w-3" />
+              {formatRangeLabel() || "Período customizado"}
             </Button>
-            {activeCount > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-9 text-rose-600 dark:text-rose-200 hover:bg-rose-50 dark:hover:bg-rose-500/10"
-                onClick={handleClearAll}
-              >
-                Limpar tudo
-              </Button>
-            )}
-          </div>
-        </div>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0 bg-card border-border" align="start">
+            <Calendar
+              mode="range"
+              selected={{ from: dateRange.from, to: dateRange.to }}
+              onSelect={(range) => setDateRange({ from: range?.from, to: range?.to })}
+              locale={ptBR}
+              numberOfMonths={1}
+              className="pointer-events-auto"
+            />
+          </PopoverContent>
+        </Popover>
 
-        <div className="flex flex-wrap gap-2 min-h-[38px] border border-border rounded-xl bg-muted/60 dark:bg-secondary px-3 py-2">
-          {activeFilters.length === 0 ? (
-            <span className="text-xs text-muted-foreground flex items-center gap-1">
-              Nenhum filtro ativo
-            </span>
-          ) : (
-            activeFilters.map((f) => (
-              <div
-                key={f.key}
-                className="h-8 rounded-full px-3 text-xs bg-muted text-foreground border border-border flex items-center gap-1 dark:bg-white/10 dark:text-white"
-              >
-                <span className="font-semibold text-primary">{f.label}:</span>
-                <span className="ml-1">{f.value}</span>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveFilter(f.key)}
-                  className="ml-2 p-0.5 rounded-full hover:bg-rose-100 dark:hover:bg-rose-500/20 transition-colors"
-                  aria-label={`Remover filtro ${f.label}`}
-                >
-                  <X className="h-3.5 w-3.5 text-muted-foreground hover:text-rose-500 cursor-pointer" />
-                </button>
-              </div>
-            ))
-          )}
-        </div>
+        <div className="flex-1 min-w-[120px]" />
 
-        <div className={`grid grid-cols-1 md:grid-cols-2 ${isAdmin ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-4`}>
-          {/* Período Customizado */}
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
-              <CalendarIcon className="h-3.5 w-3.5 text-primary" />
-              Período
-            </Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full h-10 justify-start text-left font-normal bg-background border-border text-foreground hover:bg-muted",
-                    !dateRange.from && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
-                  {formatRangeLabel() || <span className="text-sm text-muted-foreground">Selecione</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 bg-card border-border shadow-md" align="start">
-                <Calendar
-                  mode="range"
-                  selected={{ from: dateRange.from, to: dateRange.to }}
-                  onSelect={(range) => setDateRange({ from: range?.from, to: range?.to })}
-                  locale={ptBR}
-                  numberOfMonths={1}
-                  className="pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          {/* Períodos Rápidos */}
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Atalhos</Label>
-            <div className="grid grid-cols-2 gap-1.5">
-              {[
-                { id: "hoje", label: "Hoje" },
-                { id: "semana", label: "Semana" },
-                { id: "mes", label: "Mês" },
-                { id: "30dias", label: "30 dias" },
-              ].map((range) => (
-                <Button
-                  key={range.id}
-                  variant={isQuickRangeActive(range.id) ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setQuickRange(range.id)}
-                  className={cn(
-                    "h-9 text-xs",
-                    isQuickRangeActive(range.id)
-                      ? "bg-primary text-primary-foreground border-primary/70"
-                      : "bg-background border-border text-foreground hover:bg-muted"
-                  )}
-                >
-                  {range.label}
-                </Button>
+        {/* Vendedor (admin only) */}
+        {isAdmin && (
+          <Select value={selectedVendedor} onValueChange={setSelectedVendedor}>
+            <SelectTrigger className="h-8 w-auto min-w-[140px] text-[11px] border-border bg-background/40 gap-1.5">
+              <SelectValue placeholder="Vendedor" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos vendedores</SelectItem>
+              {vendedores.map((v) => (
+                <SelectItem key={v.id} value={v.id}>
+                  {v.nome}
+                </SelectItem>
               ))}
-            </div>
-          </div>
+            </SelectContent>
+          </Select>
+        )}
 
-          {/* Vendedor - Only for Admin */}
-          {isAdmin && (
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
-                <Users className="h-3.5 w-3.5 text-primary" />
-                Vendedor
-              </Label>
-              <Select value={selectedVendedor} onValueChange={setSelectedVendedor}>
-                <SelectTrigger className="h-10 bg-background border-border text-foreground focus:ring-emerald-500">
-                  <SelectValue placeholder="Todos" />
-                </SelectTrigger>
-                <SelectContent className="bg-card border-border">
-                  <SelectItem value="todos">Vendedores</SelectItem>
-                  {vendedores.map((v) => (
-                    <SelectItem key={v.id} value={v.id}>
-                      {v.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+        {/* Resultado */}
+        <Select value={selectedResultado} onValueChange={setSelectedResultado}>
+          <SelectTrigger className="h-8 w-auto min-w-[140px] text-[11px] border-border bg-background/40 gap-1.5">
+            <SelectValue placeholder="Resultado" />
+          </SelectTrigger>
+          <SelectContent>
+            {RESULTADO_OPTIONS.map((r) => (
+              <SelectItem key={r.value} value={r.value}>
+                {r.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-          {/* Resultado da Call */}
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
-              <Target className="h-3.5 w-3.5 text-primary" />
-              Resultado
-            </Label>
-            <Select value={selectedResultado} onValueChange={setSelectedResultado}>
-              <SelectTrigger className="h-10 bg-background border-border text-foreground focus:ring-emerald-500">
-                <SelectValue placeholder="Todos" />
-              </SelectTrigger>
-              <SelectContent className="bg-card border-border">
-                <SelectItem value="todos">Todos os resultados</SelectItem>
-                <SelectItem value="venda">
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-3.5 w-3.5 text-emerald-500" />
-                    Venda Fechada
-                  </div>
-                </SelectItem>
-                <SelectItem value="sem_interesse">
-                  <div className="flex items-center gap-2">
-                    <Target className="h-3.5 w-3.5 text-red-500" />
-                    Sem Interesse
-                  </div>
-                </SelectItem>
-                <SelectItem value="reagendar">
-                  <div className="flex items-center gap-2">
-                    <CalendarIcon className="h-3.5 w-3.5 text-blue-500" />
-                    Reagendar
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+      {/* Active chips */}
+      {activeChips.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          {activeChips.map((chip) => (
+            <span
+              key={chip.key}
+              className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 ring-1 ring-emerald-500/20 text-emerald-400 px-2 py-0.5 text-[10.5px] font-medium"
+            >
+              {chip.label}
+              <button
+                type="button"
+                onClick={() => handleRemoveChip(chip.key)}
+                className="ml-0.5 hover:text-emerald-300 transition-colors"
+                aria-label={`Remover ${chip.label}`}
+              >
+                <X className="h-2.5 w-2.5" />
+              </button>
+            </span>
+          ))}
+          <button
+            type="button"
+            onClick={handleClearAll}
+            className="text-[10.5px] text-muted-foreground hover:text-foreground transition-colors ml-1"
+          >
+            Limpar tudo
+          </button>
         </div>
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 };

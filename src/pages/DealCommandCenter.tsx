@@ -106,6 +106,20 @@ const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(value);
 };
 
+const safeFormatDate = (input: unknown, pattern: string): string => {
+    if (!input) return "—";
+    const d = new Date(input as string);
+    if (Number.isNaN(d.getTime())) return "—";
+    try { return format(d, pattern, { locale: ptBR }); } catch { return "—"; }
+};
+
+const safeFormatDistance = (input: unknown): string => {
+    if (!input) return "—";
+    const d = new Date(input as string);
+    if (Number.isNaN(d.getTime())) return "—";
+    try { return formatDistanceToNow(d, { locale: ptBR, addSuffix: true }); } catch { return "—"; }
+};
+
 const formatPhone = (phone?: string | null) => {
     if (!phone) return "Sem telefone";
     const digits = phone.replace(/\D/g, "");
@@ -185,7 +199,7 @@ const TimelineEntry = ({ event, isLast }: { event: any; isLast: boolean }) => {
                 <div className="flex items-center gap-2 text-[11px] mb-1">
                     <span className="font-medium text-foreground">{event.user_name || "Você"}</span>
                     <span className="text-muted-foreground">
-                        {format(new Date(event.created_at), "dd MMM 'às' HH:mm", { locale: ptBR })}
+                        {safeFormatDate(event.created_at, "dd MMM 'às' HH:mm")}
                     </span>
                 </div>
                 <p className="text-sm text-foreground leading-relaxed break-words">{event.content || event.title}</p>
@@ -223,7 +237,7 @@ const FocusCard = ({ task, onComplete }: { task: any; onComplete: () => void }) 
             {task.due_date && !done && (
                 <div className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground flex-shrink-0">
                     <Clock className="h-3 w-3" />
-                    <span>{format(new Date(task.due_date), "dd MMM, HH:mm", { locale: ptBR })}</span>
+                    <span>{safeFormatDate(task.due_date, "dd MMM, HH:mm")}</span>
                 </div>
             )}
         </div>
@@ -683,7 +697,7 @@ export default function DealCommandCenter() {
                         {/* Stage chips row */}
                         <div className="pb-3">
                             <StageChips
-                                currentStage={deal.stage}
+                                currentStage={deal.stage || "lead"}
                                 onStageChange={(s) => {
                                     if (s === "closed_lost") { setShowLostModal(true); return; }
                                     updateDeal.mutate({ stage: s });
@@ -924,7 +938,7 @@ export default function DealCommandCenter() {
                                                                             <span className="text-muted-foreground">Cliente:</span> {formatPhone(call.customer_phone)}
                                                                         </div>
                                                                         <div className="text-xs text-muted-foreground flex flex-wrap gap-x-3 gap-y-1">
-                                                                            <span>{format(new Date(call.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
+                                                                            <span>{safeFormatDate(call.created_at, "dd/MM/yyyy 'às' HH:mm")}</span>
                                                                             {typeof call.duration_seconds === "number" && <span>Duração: {call.duration_seconds}s</span>}
                                                                         </div>
                                                                     </div>
@@ -1240,10 +1254,10 @@ export default function DealCommandCenter() {
                                             <span className="font-medium">{(deal as any).source || "Manual"}</span>
                                         </PropertyRow>
                                         <PropertyRow label="Criado" icon={Calendar}>
-                                            <span className="font-medium">{format(new Date(deal.created_at), "dd MMM yyyy", { locale: ptBR })}</span>
+                                            <span className="font-medium">{safeFormatDate(deal.created_at, "dd MMM yyyy")}</span>
                                         </PropertyRow>
                                         <PropertyRow label="Atualizado" icon={Clock}>
-                                            <span className="font-medium">{formatDistanceToNow(new Date(deal.updated_at), { locale: ptBR, addSuffix: true })}</span>
+                                            <span className="font-medium">{safeFormatDistance(deal.updated_at)}</span>
                                         </PropertyRow>
 
                                         {/* Probability with inline bar */}
@@ -1253,13 +1267,13 @@ export default function DealCommandCenter() {
                                                     <TrendingUp className="h-3.5 w-3.5" />
                                                     Probabilidade
                                                 </span>
-                                                <span className="text-foreground font-semibold tabular-nums">{deal.probability}%</span>
+                                                <span className="text-foreground font-semibold tabular-nums">{deal.probability ?? 0}%</span>
                                             </div>
                                             <div className="h-1 bg-muted rounded-full overflow-hidden">
                                                 <motion.div
                                                     className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-cyan-400"
                                                     initial={{ width: 0 }}
-                                                    animate={{ width: `${deal.probability}%` }}
+                                                    animate={{ width: `${deal.probability ?? 0}%` }}
                                                     transition={{ duration: 0.8, ease: "easeOut" }}
                                                 />
                                             </div>

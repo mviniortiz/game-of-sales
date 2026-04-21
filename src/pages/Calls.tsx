@@ -15,7 +15,6 @@ import {
   ArrowDownRight,
   CalendarPlus,
   Clock,
-  Sparkles,
   Flame,
   Target,
   RotateCcw,
@@ -416,10 +415,10 @@ const Calls = () => {
 
       const agendamentos = agendamentosData?.length || 0;
       const callsRealizadas = callsData?.length || 0;
-      const noShows = callsData?.filter((c: any) => c.attendance_status === "noshow").length || 0;
+      const noShows = callsData?.filter((c: any) => c.attendance_status === "no_show").length || 0;
       const compareceram = callsRealizadas - noShows;
       const vendas = callsData?.filter((c: any) => c.resultado === "venda").length || 0;
-      const followUps = callsData?.filter((c: any) => c.resultado === "follow_up").length || 0;
+      const followUps = callsData?.filter((c: any) => c.resultado === "reagendar").length || 0;
       const totalRevenue = vendasData?.reduce((acc: number, v: any) => acc + (v.valor || 0), 0) || 0;
 
       const showRate = callsRealizadas > 0 ? (compareceram / callsRealizadas) * 100 : 0;
@@ -455,9 +454,9 @@ const Calls = () => {
         const { data: callsData } = await callsQuery;
 
         const sale = callsData?.filter((c: any) => c.resultado === "venda").length || 0;
-        const followup = callsData?.filter((c: any) => c.resultado === "follow_up").length || 0;
-        const lost = callsData?.filter((c: any) => c.resultado === "perdido").length || 0;
-        const noshow = callsData?.filter((c: any) => c.attendance_status === "noshow").length || 0;
+        const followup = callsData?.filter((c: any) => c.resultado === "reagendar").length || 0;
+        const lost = callsData?.filter((c: any) => c.resultado === "sem_interesse").length || 0;
+        const noshow = callsData?.filter((c: any) => c.attendance_status === "no_show").length || 0;
 
         data.push({ data: dataFormatada, dow, sale, followup, lost, noshow });
       }
@@ -472,7 +471,9 @@ const Calls = () => {
     queryFn: async () => {
       let query = supabase
         .from("calls")
-        .select("id, data_call, cliente_nome, resultado, attendance_status, duracao_minutos, profiles!inner(nome, avatar_url, is_super_admin)")
+        .select(
+          "id, data_call, resultado, attendance_status, duracao_minutos, observacoes, agendamentos(cliente_nome), profiles!inner(nome, avatar_url, is_super_admin)"
+        )
         .eq("profiles.is_super_admin", false)
         .order("data_call", { ascending: false })
         .limit(10);
@@ -481,23 +482,31 @@ const Calls = () => {
 
       const { data } = await query;
 
+      const extractClienteNome = (row: any): string => {
+        if (row?.agendamentos?.cliente_nome) return row.agendamentos.cliente_nome;
+        const obs = row?.observacoes || "";
+        const match = obs.match(/^Cliente:\s*(.+?)(?:\s*·|\n|$)/);
+        return match?.[1]?.trim() || "Cliente avulso";
+      };
+
       return (data || []).map((call: any) => {
-        const status: CallHistory["status"] = call.attendance_status === "noshow"
-          ? "noshow"
-          : call.resultado === "venda"
-            ? "venda"
-            : call.resultado === "follow_up"
-              ? "followup"
-              : call.resultado === "perdido"
-                ? "perdido"
-                : "agendado";
+        const status: CallHistory["status"] =
+          call.attendance_status === "no_show"
+            ? "noshow"
+            : call.resultado === "venda"
+              ? "venda"
+              : call.resultado === "reagendar"
+                ? "followup"
+                : call.resultado === "sem_interesse"
+                  ? "perdido"
+                  : "agendado";
 
         return {
           id: call.id,
           dataHora: format(new Date(call.data_call), "dd/MM HH:mm", { locale: ptBR }),
           vendedor: call.profiles?.nome || "Desconhecido",
           vendedorAvatar: call.profiles?.avatar_url,
-          cliente: call.cliente_nome || "Cliente",
+          cliente: extractClienteNome(call),
           status,
           duracao: call.duracao_minutos ? `${call.duracao_minutos}min` : undefined,
         };
@@ -530,25 +539,37 @@ const Calls = () => {
   return (
     <div className="space-y-5 sm:space-y-6 p-1">
       {/* ── Header ─────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">Performance de Calls</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Show rate, conversão e receita, {format(new Date(), "MMMM 'de' yyyy", { locale: ptBR })}
-          </p>
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-border pb-5">
+        <div className="flex items-start gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/20 flex items-center justify-center flex-shrink-0">
+            <Phone className="h-4 w-4 text-emerald-400" strokeWidth={2.2} />
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 text-[11px] text-muted-foreground uppercase tracking-widest font-medium mb-1">
+              <span>Performance</span>
+              <ChevronRight className="h-3 w-3" />
+              <span className="text-foreground/70">Calls</span>
+            </div>
+            <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight truncate">
+              Performance de Calls
+            </h1>
+            <p className="text-[13px] text-muted-foreground mt-0.5">
+              Show rate, conversão e receita · {format(new Date(), "MMMM 'de' yyyy", { locale: ptBR })}
+            </p>
+          </div>
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
           <Sheet open={showAgendamentoSheet} onOpenChange={setShowAgendamentoSheet}>
             <SheetTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2 h-9 border-border">
+              <Button variant="outline" size="sm" className="gap-2 h-9 border-border bg-background/40 hover:bg-card">
                 <CalendarPlus className="h-3.5 w-3.5" />
                 Agendamento
               </Button>
             </SheetTrigger>
             <SheetContent className="sm:max-w-lg overflow-y-auto">
               <SheetHeader>
-                <SheetTitle>Novo Agendamento</SheetTitle>
+                <SheetTitle>Novo agendamento</SheetTitle>
                 <SheetDescription>Agende uma nova call com um prospect ou cliente.</SheetDescription>
               </SheetHeader>
               <div className="mt-6">
@@ -559,14 +580,14 @@ const Calls = () => {
 
           <Sheet open={showCallSheet} onOpenChange={setShowCallSheet}>
             <SheetTrigger asChild>
-              <Button size="sm" className="gap-2 h-9 bg-emerald-500 hover:bg-emerald-400 text-white">
+              <Button size="sm" className="gap-2 h-9 bg-emerald-500 hover:bg-emerald-400 text-white shadow-sm shadow-emerald-500/20">
                 <Phone className="h-3.5 w-3.5" />
                 Registrar resultado
               </Button>
             </SheetTrigger>
             <SheetContent className="sm:max-w-lg overflow-y-auto">
               <SheetHeader>
-                <SheetTitle>Registrar Resultado</SheetTitle>
+                <SheetTitle>Registrar resultado</SheetTitle>
                 <SheetDescription>Registre o resultado de uma call realizada.</SheetDescription>
               </SheetHeader>
               <div className="mt-6">
@@ -654,7 +675,7 @@ const Calls = () => {
               ? "Leads que não apareceram. Dispare reagendamento via WhatsApp pra recuperar."
               : "Excelente comparecimento. Mantenha a rotina de confirmação prévia."
           }
-          cta={insights.noShowsWeek > 0 ? { label: "Ver no-shows", onClick: () => setSelectedResultado("noshow") } : undefined}
+          cta={insights.noShowsWeek > 0 ? { label: "Revisar agendamentos", onClick: () => setShowAgendamentoSheet(true) } : undefined}
         />
 
         <InsightCard
