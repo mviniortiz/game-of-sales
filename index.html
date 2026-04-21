@@ -21,10 +21,8 @@
         loaded = true;
         cleanup();
 
-        var g = document.createElement('script');
-        g.async = true;
-        g.src = 'https://www.googletagmanager.com/gtag/js?id=AW-18055201052';
-        document.head.appendChild(g);
+        // gtag.js é carregado por src/lib/analytics.ts (initAnalytics) —
+        // não duplicar aqui, senão conversions disparam 2x.
 
         !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
         n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
