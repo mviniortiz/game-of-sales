@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -6,7 +6,7 @@ import { useTenant } from "@/contexts/TenantContext";
 import { usePlan } from "@/hooks/usePlan";
 import { UpgradePrompt } from "@/components/shared/UpgradePrompt";
 import {
-  Calendar,
+  Calendar as CalendarIcon,
   Phone,
   TrendingUp,
   DollarSign,
@@ -15,14 +15,16 @@ import {
   ArrowDownRight,
   CalendarPlus,
   Clock,
-  ChevronDown
+  Sparkles,
+  Flame,
+  Target,
+  RotateCcw,
+  ChevronRight,
 } from "lucide-react";
 import { CallsFilters } from "@/components/calls/CallsFilters";
 import { AgendamentoForm } from "@/components/calls/AgendamentoForm";
 import { CallForm } from "@/components/calls/CallForm";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Sheet,
@@ -32,14 +34,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   XAxis,
   YAxis,
@@ -53,7 +47,7 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-// Compact KPI Card — Vyzon Identity (alinhado ao Dashboard)
+// ── KPI Card ──────────────────────────────────────────────────
 interface KPICardProps {
   title: string;
   value: string | number;
@@ -61,67 +55,90 @@ interface KPICardProps {
   icon: React.ElementType;
   trend?: number;
   trendLabel?: string;
-  iconColor?: string;
-  iconBg?: string;
+  accent?: string;
 }
 
-const KPICard = ({
-  title,
-  value,
-  subtitle,
-  icon: Icon,
-  trend,
-  trendLabel,
-  iconColor = "text-emerald-600 dark:text-emerald-400",
-  iconBg = "bg-emerald-50 dark:bg-emerald-500/10",
-}: KPICardProps) => {
+const KPICard = ({ title, value, subtitle, icon: Icon, trend, trendLabel, accent = "text-emerald-400" }: KPICardProps) => {
   const isPositive = trend !== undefined && trend >= 0;
   const TrendIcon = isPositive ? ArrowUpRight : ArrowDownRight;
 
   return (
-    <div
-      className="relative overflow-hidden rounded-xl border border-border bg-card hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group cursor-default"
-      style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
-    >
-      <div className="p-3 sm:p-4">
-        <div className="flex items-center justify-between mb-2">
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.1em]">
-            {title}
-          </p>
-          <div className={`p-1.5 rounded-lg ${iconBg} group-hover:scale-110 transition-transform duration-200`}>
-            <Icon className={`h-3.5 w-3.5 ${iconColor}`} />
-          </div>
-        </div>
-
-        <p className="text-xl sm:text-2xl font-bold text-foreground tabular-nums tracking-tight leading-none mb-2">
-          {value}
+    <div className="rounded-xl border border-border bg-card/50 hover:bg-card hover:border-border/80 transition-colors p-4 min-w-0">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest truncate">
+          {title}
         </p>
+        <Icon className={`h-3.5 w-3.5 ${accent} flex-shrink-0`} />
+      </div>
 
-        <div className="flex items-center gap-1.5">
-          {trend !== undefined && (
-            <span
-              className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                isPositive
-                  ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
-                  : "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400"
-              }`}
-            >
-              <TrendIcon className="h-3 w-3" />
-              {Math.abs(trend).toFixed(1)}%
-            </span>
-          )}
-          {(trendLabel || subtitle) && (
-            <span className="text-[10px] text-muted-foreground truncate">
-              {trendLabel || subtitle}
-            </span>
-          )}
-        </div>
+      <p className="text-2xl font-semibold text-foreground tabular-nums tracking-tight leading-none mb-2">
+        {value}
+      </p>
+
+      <div className="flex items-center gap-1.5 min-h-[16px]">
+        {trend !== undefined && (
+          <span className={`inline-flex items-center gap-0.5 text-[11px] font-semibold tabular-nums ${
+            isPositive ? "text-emerald-400" : "text-rose-400"
+          }`}>
+            <TrendIcon className="h-3 w-3" />
+            {Math.abs(trend).toFixed(1)}%
+          </span>
+        )}
+        {(trendLabel || subtitle) && (
+          <span className="text-[11px] text-muted-foreground truncate">
+            {trendLabel || subtitle}
+          </span>
+        )}
       </div>
     </div>
   );
 };
 
-// Vertical Funnel Component
+// ── Insight Card (derived from data) ──────────────────────────
+type InsightAccent = "amber" | "rose" | "blue" | "emerald";
+
+const ACCENT_CLASSES: Record<InsightAccent, { bg: string; ring: string; icon: string; cta: string }> = {
+  amber:   { bg: "bg-amber-500/10",   ring: "ring-amber-500/20",   icon: "text-amber-400",   cta: "text-amber-400 hover:text-amber-300" },
+  rose:    { bg: "bg-rose-500/10",    ring: "ring-rose-500/20",    icon: "text-rose-400",    cta: "text-rose-400 hover:text-rose-300" },
+  blue:    { bg: "bg-blue-500/10",    ring: "ring-blue-500/20",    icon: "text-blue-400",    cta: "text-blue-400 hover:text-blue-300" },
+  emerald: { bg: "bg-emerald-500/10", ring: "ring-emerald-500/20", icon: "text-emerald-400", cta: "text-emerald-400 hover:text-emerald-300" },
+};
+
+interface InsightCardProps {
+  icon: React.ElementType;
+  accent: InsightAccent;
+  label: string;
+  headline: string;
+  body: string;
+  cta?: { label: string; onClick: () => void };
+}
+
+const InsightCard = ({ icon: Icon, accent, label, headline, body, cta }: InsightCardProps) => {
+  const c = ACCENT_CLASSES[accent];
+  return (
+    <div className="group rounded-xl border border-border bg-card/40 hover:bg-card hover:border-border/80 transition-colors p-4 flex flex-col gap-2 min-w-0">
+      <div className="flex items-center gap-2">
+        <div className={`w-6 h-6 rounded-md flex items-center justify-center ${c.bg} ring-1 ${c.ring} flex-shrink-0`}>
+          <Icon className={`h-3.5 w-3.5 ${c.icon}`} />
+        </div>
+        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">{label}</span>
+      </div>
+      <p className="text-sm font-semibold text-foreground leading-tight tracking-tight">{headline}</p>
+      <p className="text-xs text-muted-foreground leading-relaxed flex-1">{body}</p>
+      {cta && (
+        <button
+          onClick={cta.onClick}
+          className={`flex items-center gap-1 text-[11px] font-medium ${c.cta} transition-colors mt-1 self-start`}
+        >
+          {cta.label}
+          <ChevronRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
+        </button>
+      )}
+    </div>
+  );
+};
+
+// ── Funnel (clean dark) ───────────────────────────────────────
 interface FunnelProps {
   agendamentos: number;
   compareceram: number;
@@ -133,259 +150,210 @@ const VerticalFunnel = ({ agendamentos, compareceram, vendas }: FunnelProps) => 
   const conversionRate = compareceram > 0 ? (vendas / compareceram) * 100 : 0;
 
   const steps = [
-    {
-      label: "Agendados",
-      value: agendamentos,
-      percentage: 100,
-      width: "100%",
-      color: "bg-gradient-to-r from-emerald-500 to-emerald-400",
-      textColor: "text-emerald-600 dark:text-emerald-400"
-    },
-    {
-      label: "Compareceram",
-      value: compareceram,
-      percentage: showRate,
-      width: `${Math.max(showRate, 20)}%`,
-      color: "bg-gradient-to-r from-cyan-500 to-cyan-400",
-      textColor: "text-cyan-600 dark:text-cyan-400"
-    },
-    {
-      label: "Vendas",
-      value: vendas,
-      percentage: conversionRate,
-      width: `${Math.max(conversionRate, 15)}%`,
-      color: "bg-gradient-to-r from-emerald-600 to-emerald-400",
-      textColor: "text-emerald-600 dark:text-emerald-400"
-    },
+    { label: "Agendados", value: agendamentos, width: 100, color: "bg-emerald-500" },
+    { label: "Compareceram", value: compareceram, width: Math.max(showRate, 22), color: "bg-cyan-500" },
+    { label: "Vendas", value: vendas, width: Math.max(conversionRate * (compareceram / Math.max(agendamentos, 1)), 14), color: "bg-emerald-400" },
   ];
 
   return (
-    <Card className="relative overflow-hidden bg-card border-border h-full" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/10">
-            <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-300" />
-          </div>
-          Funil de Conversão
-        </CardTitle>
-        <p className="text-[11px] text-muted-foreground mt-1 ml-8">Agendados → Compareceram → Vendas</p>
-      </CardHeader>
-      <CardContent className="pt-4">
-        <div className="space-y-4">
-          {steps.map((step, index) => (
-            <div key={step.label} className="relative">
-              {index > 0 && (
-                <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
-                  <ChevronDown className="h-4 w-4 text-muted-foreground/60" />
-                </div>
-              )}
+    <div className="rounded-2xl border border-border bg-card/50 h-full flex flex-col">
+      <div className="p-4 pb-3 border-b border-border">
+        <h3 className="text-sm font-semibold text-foreground tracking-tight">Funil de conversão</h3>
+        <p className="text-[11px] text-muted-foreground mt-0.5">Agendados, Compareceram, Vendas</p>
+      </div>
 
-              <div className="flex items-center gap-3">
-                <div className="flex-1">
-                  <div
-                    className={`h-11 ${step.color} rounded-lg flex items-center justify-center transition-all duration-700 mx-auto shadow-sm`}
-                    style={{ width: step.width }}
-                  >
-                    <span className="text-white font-bold text-base tabular-nums">{step.value}</span>
-                  </div>
-                </div>
+      <div className="p-4 flex-1 flex flex-col justify-between gap-5">
+        <div className="space-y-3">
+          {steps.map((step) => (
+            <div key={step.label} className="space-y-1.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">{step.label}</span>
+                <span className="text-foreground font-semibold tabular-nums">{step.value}</span>
               </div>
-
-              <div className="flex items-center justify-between mt-1.5 px-1">
-                <span className="text-[11px] text-muted-foreground font-medium">{step.label}</span>
-                {index > 0 && (
-                  <span className={`text-[11px] font-bold tabular-nums ${step.textColor}`}>
-                    {step.percentage.toFixed(1)}%
-                  </span>
-                )}
+              <div className="h-2 bg-muted/60 rounded-full overflow-hidden">
+                <div
+                  className={`h-full ${step.color} rounded-full transition-all duration-500`}
+                  style={{ width: `${step.width}%` }}
+                />
               </div>
             </div>
           ))}
         </div>
 
-        <div className="mt-6 pt-4 border-t border-border grid grid-cols-2 gap-3">
-          <div className="text-center p-3 rounded-lg bg-cyan-50/60 dark:bg-cyan-500/10 border border-cyan-100 dark:border-cyan-500/20">
-            <p className="text-lg font-bold text-cyan-700 dark:text-cyan-300 tabular-nums leading-none">{showRate.toFixed(1)}%</p>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">Show Rate</p>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="p-3 rounded-lg border border-border bg-background/40">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">Show Rate</p>
+            <p className="text-base font-semibold text-cyan-400 tabular-nums">{showRate.toFixed(1)}%</p>
           </div>
-          <div className="text-center p-3 rounded-lg bg-emerald-50/60 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20">
-            <p className="text-lg font-bold text-emerald-700 dark:text-emerald-300 tabular-nums leading-none">{conversionRate.toFixed(1)}%</p>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">Conversão</p>
+          <div className="p-3 rounded-lg border border-border bg-background/40">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">Conversão</p>
+            <p className="text-base font-semibold text-emerald-400 tabular-nums">{conversionRate.toFixed(1)}%</p>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 
-// Stacked Bar Chart Component
+// ── Stacked bar chart ─────────────────────────────────────────
 interface StackedChartData {
   data: string;
+  dow?: string;
   sale: number;
   followup: number;
   lost: number;
   noshow: number;
 }
 
-const OutcomeStackedChart = ({ data }: { data: StackedChartData[] }) => {
-  return (
-    <Card className="relative overflow-hidden bg-card border-border h-full" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/10">
-            <Calendar className="h-4 w-4 text-emerald-600 dark:text-emerald-300" />
-          </div>
-          Volume por Resultado
-        </CardTitle>
-        <p className="text-[11px] text-muted-foreground mt-1 ml-8">Últimos 7 dias</p>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <ResponsiveContainer width="100%" height={280}>
-          <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.25)" vertical={false} />
-            <XAxis
-              dataKey="data"
-              stroke="rgba(100,116,139,0.6)"
-              fontSize={10}
-              tickLine={false}
-              axisLine={false}
-            />
-            <YAxis
-              stroke="rgba(100,116,139,0.6)"
-              fontSize={10}
-              tickLine={false}
-              axisLine={false}
-              width={25}
-            />
-            <Tooltip
-              cursor={{ fill: "rgba(148,163,184,0.08)" }}
-              contentStyle={{
-                backgroundColor: "hsl(var(--card))",
-                border: "1px solid hsl(var(--border))",
-                borderRadius: "12px",
-                boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
-                padding: "10px 14px",
-                color: "hsl(var(--foreground))",
-              }}
-              labelStyle={{ color: "hsl(var(--muted-foreground))", fontSize: 11, marginBottom: 4 }}
-              itemStyle={{ color: "hsl(var(--foreground))", fontSize: 12 }}
-            />
-            <Legend
-              iconType="circle"
-              iconSize={8}
-              wrapperStyle={{ fontSize: "11px", color: "hsl(var(--muted-foreground))" }}
-            />
-            <Bar dataKey="sale" stackId="a" fill="#10B981" name="Venda" radius={[0, 0, 0, 0]} />
-            <Bar dataKey="followup" stackId="a" fill="#3B82F6" name="Follow-up" />
-            <Bar dataKey="lost" stackId="a" fill="#EF4444" name="Perdido" />
-            <Bar dataKey="noshow" stackId="a" fill="#9CA3AF" name="No-Show" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </CardContent>
-    </Card>
-  );
-};
+const OutcomeStackedChart = ({ data }: { data: StackedChartData[] }) => (
+  <div className="rounded-2xl border border-border bg-card/50 h-full">
+    <div className="p-4 pb-3 border-b border-border flex items-center justify-between">
+      <div>
+        <h3 className="text-sm font-semibold text-foreground tracking-tight">Volume por resultado</h3>
+        <p className="text-[11px] text-muted-foreground mt-0.5">Últimos 7 dias</p>
+      </div>
+      <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+    </div>
+    <div className="p-4">
+      <ResponsiveContainer width="100%" height={270}>
+        <BarChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+          <XAxis
+            dataKey="data"
+            stroke="hsl(var(--muted-foreground))"
+            fontSize={10}
+            tickLine={false}
+            axisLine={false}
+          />
+          <YAxis
+            stroke="hsl(var(--muted-foreground))"
+            fontSize={10}
+            tickLine={false}
+            axisLine={false}
+            width={24}
+          />
+          <Tooltip
+            cursor={{ fill: "hsl(var(--muted) / 0.3)" }}
+            contentStyle={{
+              backgroundColor: "hsl(var(--card))",
+              border: "1px solid hsl(var(--border))",
+              borderRadius: "10px",
+              boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
+              padding: "8px 12px",
+              color: "hsl(var(--foreground))",
+            }}
+            labelStyle={{ color: "hsl(var(--muted-foreground))", fontSize: 11, marginBottom: 2 }}
+            itemStyle={{ color: "hsl(var(--foreground))", fontSize: 12 }}
+          />
+          <Legend
+            iconType="circle"
+            iconSize={7}
+            wrapperStyle={{ fontSize: "11px", color: "hsl(var(--muted-foreground))", paddingTop: 8 }}
+          />
+          <Bar dataKey="sale" stackId="a" fill="#10B981" name="Venda" />
+          <Bar dataKey="followup" stackId="a" fill="#3B82F6" name="Follow-up" />
+          <Bar dataKey="lost" stackId="a" fill="#F43F5E" name="Perdido" />
+          <Bar dataKey="noshow" stackId="a" fill="#64748B" name="No-show" radius={[4, 4, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  </div>
+);
 
-// Recent Calls History Table
+// ── Recent history list ───────────────────────────────────────
 interface CallHistory {
   id: string;
   dataHora: string;
   vendedor: string;
   vendedorAvatar?: string;
   cliente: string;
-  status: 'venda' | 'perdido' | 'noshow' | 'followup' | 'agendado';
+  status: "venda" | "perdido" | "noshow" | "followup" | "agendado";
   duracao?: string;
 }
 
-const CallHistoryTable = ({ data }: { data: CallHistory[] }) => {
-  const getStatusBadge = (status: string) => {
-    const statusConfig: Record<string, { label: string; className: string }> = {
-      venda: { label: "Venda", className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400" },
-      perdido: { label: "Perdido", className: "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400" },
-      noshow: { label: "No-Show", className: "bg-gray-100 text-gray-700 dark:bg-gray-500/20 dark:text-gray-400" },
-      followup: { label: "Follow-up", className: "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400" },
-      agendado: { label: "Agendado", className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400" },
-    };
-    const config = statusConfig[status] || statusConfig.agendado;
-    return <Badge className={config.className}>{config.label}</Badge>;
-  };
+const STATUS_CONFIG: Record<CallHistory["status"], { label: string; dot: string; text: string }> = {
+  venda: { label: "Venda", dot: "bg-emerald-500", text: "text-emerald-400" },
+  perdido: { label: "Perdido", dot: "bg-rose-500", text: "text-rose-400" },
+  noshow: { label: "No-show", dot: "bg-slate-500", text: "text-muted-foreground" },
+  followup: { label: "Follow-up", dot: "bg-blue-500", text: "text-blue-400" },
+  agendado: { label: "Agendado", dot: "bg-emerald-500", text: "text-emerald-400" },
+};
 
+const CallHistoryList = ({ data }: { data: CallHistory[] }) => {
   const getInitials = (name: string) => {
     if (!name) return "?";
-    return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+    return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
   };
 
   return (
-    <Card className="relative overflow-hidden bg-card border-border" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/10">
-            <Clock className="h-4 w-4 text-emerald-600 dark:text-emerald-300" />
-          </div>
-          Histórico Recente
-        </CardTitle>
-        <p className="text-[11px] text-muted-foreground mt-1 ml-8">Últimas 10 calls registradas</p>
-      </CardHeader>
-      <CardContent className="p-0 overflow-x-auto">
-        <Table className="min-w-[600px]">
-          <TableHeader>
-            <TableRow className="border-border hover:bg-transparent">
-              <TableHead className="text-muted-foreground font-medium text-xs">Data/Hora</TableHead>
-              <TableHead className="text-muted-foreground font-medium text-xs">Vendedor</TableHead>
-              <TableHead className="text-muted-foreground font-medium text-xs">Cliente</TableHead>
-              <TableHead className="text-muted-foreground font-medium text-xs">Status</TableHead>
-              <TableHead className="text-muted-foreground font-medium text-xs text-right">Duração</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                  Nenhuma call registrada
-                </TableCell>
-              </TableRow>
-            ) : (
-              data.map((call) => (
-                <TableRow key={call.id} className="border-border hover:bg-muted/40 dark:hover:bg-white/5">
-                  <TableCell className="text-sm text-foreground py-3">{call.dataHora}</TableCell>
-                  <TableCell className="py-3">
-                    <div className="flex items-center gap-2">
-                      <Avatar className="h-7 w-7">
-                        <AvatarImage src={call.vendedorAvatar} />
-                        <AvatarFallback className="bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 text-xs">
-                          {getInitials(call.vendedor)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="text-sm text-foreground">{call.vendedor}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-sm text-foreground py-3">{call.cliente}</TableCell>
-                  <TableCell className="py-3">{getStatusBadge(call.status)}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground py-3 text-right">
-                    {call.duracao || "-"}
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+    <div className="rounded-2xl border border-border bg-card/50">
+      <div className="p-4 pb-3 border-b border-border flex items-center justify-between">
+        <div>
+          <h3 className="text-sm font-semibold text-foreground tracking-tight">Histórico recente</h3>
+          <p className="text-[11px] text-muted-foreground mt-0.5">Últimas 10 calls registradas</p>
+        </div>
+        <Clock className="h-4 w-4 text-muted-foreground" />
+      </div>
+
+      {data.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+          <Phone className="h-8 w-8 mb-3 opacity-40" />
+          <p className="text-sm font-medium">Nenhuma call registrada</p>
+          <p className="text-xs mt-1">Registre uma call para ver o histórico aqui</p>
+        </div>
+      ) : (
+        <ul className="divide-y divide-border">
+          {data.map((call) => {
+            const status = STATUS_CONFIG[call.status];
+            return (
+              <li key={call.id} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/20 transition-colors group">
+                <Avatar className="h-8 w-8 ring-1 ring-border flex-shrink-0">
+                  <AvatarImage src={call.vendedorAvatar} />
+                  <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-cyan-500 text-white font-bold text-[11px]">
+                    {getInitials(call.vendedor)}
+                  </AvatarFallback>
+                </Avatar>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-foreground truncate">{call.cliente}</span>
+                    <span className="text-[11px] text-muted-foreground">·</span>
+                    <span className="text-xs text-muted-foreground truncate">{call.vendedor}</span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className={`inline-flex items-center gap-1.5 text-[11px] font-medium ${status.text}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
+                      {status.label}
+                    </span>
+                    <span className="text-[11px] text-muted-foreground">·</span>
+                    <span className="text-[11px] text-muted-foreground tabular-nums">{call.dataHora}</span>
+                    {call.duracao && (
+                      <>
+                        <span className="text-[11px] text-muted-foreground">·</span>
+                        <span className="text-[11px] text-muted-foreground tabular-nums">{call.duracao}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
   );
 };
 
-// Main Calls Page Component
+// ── Main page ─────────────────────────────────────────────────
 const Calls = () => {
   const { user, isAdmin } = useAuth();
   const { needsUpgrade } = usePlan();
   const queryClient = useQueryClient();
   const { activeCompanyId } = useTenant();
 
-  // Sheet states - hooks must be called unconditionally
   const [showCallSheet, setShowCallSheet] = useState(false);
   const [showAgendamentoSheet, setShowAgendamentoSheet] = useState(false);
 
-  // Filter states
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({
     from: new Date(new Date().setDate(1)),
     to: new Date(),
@@ -393,7 +361,6 @@ const Calls = () => {
   const [selectedVendedor, setSelectedVendedor] = useState("todos");
   const [selectedResultado, setSelectedResultado] = useState("todos");
 
-  // Success handler - closes sheets and refetches
   const handleCallSuccess = () => {
     setShowCallSheet(false);
     setShowAgendamentoSheet(false);
@@ -403,7 +370,6 @@ const Calls = () => {
     queryClient.invalidateQueries({ queryKey: ["vendas"] });
   };
 
-  // Vendedores query
   const { data: vendedores = [] } = useQuery({
     queryKey: ["vendedores", activeCompanyId],
     queryFn: async () => {
@@ -415,84 +381,68 @@ const Calls = () => {
     enabled: isAdmin,
   });
 
-  // Metrics query
   const { data: metricas } = useQuery({
     queryKey: ["metricas-calls", dateRange, selectedVendedor, activeCompanyId],
     queryFn: async () => {
       let callsQuery = supabase
         .from("calls")
         .select("id, resultado, attendance_status, profiles!inner(is_super_admin)")
-        .gte("data_call", dateRange.from?.toISOString().split("T")[0] || '')
-        .lte("data_call", dateRange.to?.toISOString().split("T")[0] || '')
+        .gte("data_call", dateRange.from?.toISOString().split("T")[0] || "")
+        .lte("data_call", dateRange.to?.toISOString().split("T")[0] || "")
         .eq("profiles.is_super_admin", false);
 
-      if (selectedVendedor !== "todos") {
-        callsQuery = callsQuery.eq("user_id", selectedVendedor);
-      }
-      if (activeCompanyId) {
-        callsQuery = callsQuery.eq("company_id", activeCompanyId);
-      }
+      if (selectedVendedor !== "todos") callsQuery = callsQuery.eq("user_id", selectedVendedor);
+      if (activeCompanyId) callsQuery = callsQuery.eq("company_id", activeCompanyId);
 
       const { data: callsData } = await callsQuery;
 
       let agendamentosQuery = supabase
         .from("agendamentos")
         .select("id, profiles!inner(company_id, is_super_admin)")
-        .gte("data_agendamento", dateRange.from?.toISOString().split("T")[0] || '')
-        .lte("data_agendamento", dateRange.to?.toISOString().split("T")[0] || '')
+        .gte("data_agendamento", dateRange.from?.toISOString().split("T")[0] || "")
+        .lte("data_agendamento", dateRange.to?.toISOString().split("T")[0] || "")
         .eq("profiles.is_super_admin", false);
 
-      if (selectedVendedor !== "todos") {
-        agendamentosQuery = agendamentosQuery.eq("user_id", selectedVendedor);
-      }
-      if (activeCompanyId) {
-        agendamentosQuery = agendamentosQuery.eq("profiles.company_id", activeCompanyId);
-      }
+      if (selectedVendedor !== "todos") agendamentosQuery = agendamentosQuery.eq("user_id", selectedVendedor);
+      if (activeCompanyId) agendamentosQuery = agendamentosQuery.eq("profiles.company_id", activeCompanyId);
 
       const { data: agendamentosData } = await agendamentosQuery;
 
-      // Get revenue from vendas
       const { data: vendasData } = await supabase
         .from("vendas")
         .select("valor")
-        .gte("data_venda", dateRange.from?.toISOString().split("T")[0] || '')
-        .lte("data_venda", dateRange.to?.toISOString().split("T")[0] || '');
+        .gte("data_venda", dateRange.from?.toISOString().split("T")[0] || "")
+        .lte("data_venda", dateRange.to?.toISOString().split("T")[0] || "");
 
       const agendamentos = agendamentosData?.length || 0;
       const callsRealizadas = callsData?.length || 0;
-      const noShows = callsData?.filter((c: any) => c.attendance_status === 'noshow').length || 0;
+      const noShows = callsData?.filter((c: any) => c.attendance_status === "noshow").length || 0;
       const compareceram = callsRealizadas - noShows;
       const vendas = callsData?.filter((c: any) => c.resultado === "venda").length || 0;
+      const followUps = callsData?.filter((c: any) => c.resultado === "follow_up").length || 0;
       const totalRevenue = vendasData?.reduce((acc: number, v: any) => acc + (v.valor || 0), 0) || 0;
 
       const showRate = callsRealizadas > 0 ? (compareceram / callsRealizadas) * 100 : 0;
       const taxaConversao = callsRealizadas > 0 ? (vendas / callsRealizadas) * 100 : 0;
 
-      return {
-        agendamentos,
-        callsRealizadas,
-        compareceram,
-        vendas,
-        showRate,
-        taxaConversao,
-        totalRevenue,
-      };
+      return { agendamentos, callsRealizadas, compareceram, vendas, followUps, noShows, showRate, taxaConversao, totalRevenue };
     },
     enabled: !!user,
   });
 
-  // Stacked chart data query
   const { data: stackedChartData = [] } = useQuery({
     queryKey: ["calls-stacked-chart", dateRange, activeCompanyId],
     queryFn: async () => {
       const data: StackedChartData[] = [];
       const hoje = new Date();
+      const dowShort = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
       for (let i = 6; i >= 0; i--) {
         const date = new Date(hoje);
         date.setDate(date.getDate() - i);
         const dateStr = date.toISOString().split("T")[0];
         const dataFormatada = format(date, "dd/MM");
+        const dow = dowShort[date.getDay()];
 
         let callsQuery = supabase
           .from("calls")
@@ -500,9 +450,7 @@ const Calls = () => {
           .eq("data_call", dateStr)
           .eq("profiles.is_super_admin", false);
 
-        if (activeCompanyId) {
-          callsQuery = callsQuery.eq("company_id", activeCompanyId);
-        }
+        if (activeCompanyId) callsQuery = callsQuery.eq("company_id", activeCompanyId);
 
         const { data: callsData } = await callsQuery;
 
@@ -511,7 +459,7 @@ const Calls = () => {
         const lost = callsData?.filter((c: any) => c.resultado === "perdido").length || 0;
         const noshow = callsData?.filter((c: any) => c.attendance_status === "noshow").length || 0;
 
-        data.push({ data: dataFormatada, sale, followup, lost, noshow });
+        data.push({ data: dataFormatada, dow, sale, followup, lost, noshow });
       }
 
       return data;
@@ -519,7 +467,6 @@ const Calls = () => {
     enabled: !!user,
   });
 
-  // Call history query
   const { data: callHistory = [] } = useQuery({
     queryKey: ["calls-history", activeCompanyId],
     queryFn: async () => {
@@ -530,22 +477,20 @@ const Calls = () => {
         .order("data_call", { ascending: false })
         .limit(10);
 
-      if (activeCompanyId) {
-        query = query.eq("company_id", activeCompanyId);
-      }
+      if (activeCompanyId) query = query.eq("company_id", activeCompanyId);
 
       const { data } = await query;
 
       return (data || []).map((call: any) => {
-        const status: CallHistory['status'] = call.attendance_status === 'noshow'
-          ? 'noshow'
-          : call.resultado === 'venda'
-            ? 'venda'
-            : call.resultado === 'follow_up'
-              ? 'followup'
-              : call.resultado === 'perdido'
-                ? 'perdido'
-                : 'agendado';
+        const status: CallHistory["status"] = call.attendance_status === "noshow"
+          ? "noshow"
+          : call.resultado === "venda"
+            ? "venda"
+            : call.resultado === "follow_up"
+              ? "followup"
+              : call.resultado === "perdido"
+                ? "perdido"
+                : "agendado";
 
         return {
           id: call.id,
@@ -561,50 +506,50 @@ const Calls = () => {
     enabled: !!user,
   });
 
+  // ── Derived insights from data ─────────────────────────────
+  const insights = useMemo(() => {
+    const bestDay = stackedChartData.reduce<{ dow: string; sales: number } | null>((best, d) => {
+      if (!best || d.sale > best.sales) return { dow: d.dow || d.data, sales: d.sale };
+      return best;
+    }, null);
+
+    const noShowsWeek = stackedChartData.reduce((acc, d) => acc + d.noshow, 0);
+    const followUpsWeek = stackedChartData.reduce((acc, d) => acc + d.followup, 0);
+
+    return { bestDay, noShowsWeek, followUpsWeek };
+  }, [stackedChartData]);
+
   const formatCurrency = (value: number) => {
-    if (value >= 1000) {
-      return `R$ ${(value / 1000).toFixed(1)}k`;
-    }
+    if (value >= 1_000_000) return `R$ ${(value / 1_000_000).toFixed(1)}M`;
+    if (value >= 1000) return `R$ ${(value / 1000).toFixed(1)}k`;
     return `R$ ${value.toFixed(0)}`;
   };
 
-  // Feature gate check - must be after all hooks
-  if (needsUpgrade('calls')) {
-    return <UpgradePrompt feature="calls" />;
-  }
+  if (needsUpgrade("calls")) return <UpgradePrompt feature="calls" />;
 
   return (
-    <div className="space-y-4 sm:space-y-6 p-1">
-      {/* Header with Action Buttons */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3 mb-1">
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Performance de Calls</h1>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-200 text-[10px] font-semibold uppercase tracking-wider ring-1 ring-emerald-200/70 dark:ring-emerald-500/20">
-              <Phone className="h-3 w-3" />
-              Analytics
-            </span>
-          </div>
-          <p className="text-sm text-muted-foreground font-medium">
-            Acompanhe show rate, conversão e receita • {format(new Date(), "MMMM 'de' yyyy", { locale: ptBR })}
+    <div className="space-y-5 sm:space-y-6 p-1">
+      {/* ── Header ─────────────────────────────────────── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">Performance de Calls</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Show rate, conversão e receita, {format(new Date(), "MMMM 'de' yyyy", { locale: ptBR })}
           </p>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <Sheet open={showAgendamentoSheet} onOpenChange={setShowAgendamentoSheet}>
             <SheetTrigger asChild>
-              <Button variant="outline" className="gap-2">
-                <CalendarPlus className="h-4 w-4" />
-                Novo Agendamento
+              <Button variant="outline" size="sm" className="gap-2 h-9 border-border">
+                <CalendarPlus className="h-3.5 w-3.5" />
+                Agendamento
               </Button>
             </SheetTrigger>
             <SheetContent className="sm:max-w-lg overflow-y-auto">
               <SheetHeader>
                 <SheetTitle>Novo Agendamento</SheetTitle>
-                <SheetDescription>
-                  Agende uma nova call com um prospect ou cliente.
-                </SheetDescription>
+                <SheetDescription>Agende uma nova call com um prospect ou cliente.</SheetDescription>
               </SheetHeader>
               <div className="mt-6">
                 <AgendamentoForm onSuccess={handleCallSuccess} />
@@ -614,17 +559,15 @@ const Calls = () => {
 
           <Sheet open={showCallSheet} onOpenChange={setShowCallSheet}>
             <SheetTrigger asChild>
-              <Button className="gap-2 bg-emerald-600 hover:bg-emerald-700">
-                <Phone className="h-4 w-4" />
-                Registrar Resultado
+              <Button size="sm" className="gap-2 h-9 bg-emerald-500 hover:bg-emerald-400 text-white">
+                <Phone className="h-3.5 w-3.5" />
+                Registrar resultado
               </Button>
             </SheetTrigger>
             <SheetContent className="sm:max-w-lg overflow-y-auto">
               <SheetHeader>
                 <SheetTitle>Registrar Resultado</SheetTitle>
-                <SheetDescription>
-                  Registre o resultado de uma call realizada.
-                </SheetDescription>
+                <SheetDescription>Registre o resultado de uma call realizada.</SheetDescription>
               </SheetHeader>
               <div className="mt-6">
                 <CallForm onSuccess={handleCallSuccess} />
@@ -634,7 +577,7 @@ const Calls = () => {
         </div>
       </div>
 
-      {/* Filters */}
+      {/* ── Filters ────────────────────────────────────── */}
       <CallsFilters
         dateRange={dateRange}
         setDateRange={setDateRange}
@@ -646,44 +589,93 @@ const Calls = () => {
         isAdmin={isAdmin}
       />
 
-      {/* KPI Cards - Row 1: 4 columns */}
+      {/* ── KPI Row ────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <KPICard
-          title="Calls Realizadas"
+          title="Calls realizadas"
           value={metricas?.callsRealizadas || 0}
           icon={Phone}
           subtitle="no período"
-          iconColor="text-emerald-600 dark:text-emerald-400"
-          iconBg="bg-emerald-50 dark:bg-emerald-500/10"
+          accent="text-emerald-400"
         />
         <KPICard
-          title="Show Rate"
+          title="Show rate"
           value={`${(metricas?.showRate || 0).toFixed(0)}%`}
           icon={UserCheck}
           subtitle="compareceram"
-          iconColor="text-cyan-600 dark:text-cyan-400"
-          iconBg="bg-cyan-50 dark:bg-cyan-500/10"
+          accent="text-cyan-400"
         />
         <KPICard
-          title="Taxa de Conversão"
+          title="Conversão"
           value={`${(metricas?.taxaConversao || 0).toFixed(0)}%`}
           icon={TrendingUp}
           trend={(metricas?.taxaConversao || 0) - 25}
           trendLabel="vs média"
-          iconColor="text-amber-600 dark:text-amber-400"
-          iconBg="bg-amber-50 dark:bg-amber-500/10"
+          accent="text-amber-400"
         />
         <KPICard
-          title="Receita Gerada"
+          title="Receita gerada"
           value={formatCurrency(metricas?.totalRevenue || 0)}
           icon={DollarSign}
           subtitle="em vendas"
-          iconColor="text-emerald-600 dark:text-emerald-400"
-          iconBg="bg-emerald-50 dark:bg-emerald-500/10"
+          accent="text-emerald-400"
         />
       </div>
 
-      {/* Analytics Grid - Row 2: 2/3 + 1/3 split */}
+      {/* ── Insights strip (derived from data) ─────────── */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+        <InsightCard
+          icon={Flame}
+          accent="amber"
+          label="Melhor dia"
+          headline={
+            insights.bestDay && insights.bestDay.sales > 0
+              ? `${insights.bestDay.dow} concentra suas vendas`
+              : "Sem padrão claro ainda"
+          }
+          body={
+            insights.bestDay && insights.bestDay.sales > 0
+              ? `${insights.bestDay.sales} venda${insights.bestDay.sales > 1 ? "s" : ""} fechada${insights.bestDay.sales > 1 ? "s" : ""} nesse dia da semana. Concentre agendamentos aí.`
+              : "Registre mais calls pra detectar os dias com maior conversão."
+          }
+        />
+
+        <InsightCard
+          icon={RotateCcw}
+          accent="rose"
+          label="No-shows"
+          headline={
+            insights.noShowsWeek > 0
+              ? `${insights.noShowsWeek} no-show${insights.noShowsWeek > 1 ? "s" : ""} na semana`
+              : "Zero no-shows na semana"
+          }
+          body={
+            insights.noShowsWeek > 0
+              ? "Leads que não apareceram. Dispare reagendamento via WhatsApp pra recuperar."
+              : "Excelente comparecimento. Mantenha a rotina de confirmação prévia."
+          }
+          cta={insights.noShowsWeek > 0 ? { label: "Ver no-shows", onClick: () => setSelectedResultado("noshow") } : undefined}
+        />
+
+        <InsightCard
+          icon={Target}
+          accent="blue"
+          label="Follow-ups"
+          headline={
+            insights.followUpsWeek > 0
+              ? `${insights.followUpsWeek} follow-up${insights.followUpsWeek > 1 ? "s" : ""} em aberto`
+              : "Nenhum follow-up pendente"
+          }
+          body={
+            insights.followUpsWeek > 0
+              ? "Calls marcadas como follow-up precisam de retorno. Entre em contato antes que esfriem."
+              : "Todas as calls foram resolvidas. Foque em novos agendamentos."
+          }
+          cta={insights.followUpsWeek > 0 ? { label: "Ver follow-ups", onClick: () => setSelectedResultado("reagendar") } : undefined}
+        />
+      </div>
+
+      {/* ── Analytics Row ──────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2">
           <OutcomeStackedChart data={stackedChartData} />
@@ -697,8 +689,8 @@ const Calls = () => {
         </div>
       </div>
 
-      {/* History Table - Row 3 */}
-      <CallHistoryTable data={callHistory} />
+      {/* ── History ────────────────────────────────────── */}
+      <CallHistoryList data={callHistory} />
     </div>
   );
 };
