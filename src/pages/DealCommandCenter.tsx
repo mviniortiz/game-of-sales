@@ -37,14 +37,12 @@ import {
     FileText,
     Smile,
     CheckCircle2,
-    Circle,
     Zap,
     Clock,
     Calendar,
     DollarSign,
     Target,
     TrendingUp,
-    Building2,
     PhoneCall,
     StickyNote,
     Rocket,
@@ -53,14 +51,9 @@ import {
     ChevronRight,
     ChevronDown,
     Loader2,
-    MoreHorizontal,
     Plus,
     Lock,
-    Edit3,
-    Save,
-    Play,
     User,
-    Trash2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -144,168 +137,128 @@ const getCallStatusBadge = (status?: string) => {
 
 // â"€â"€â"€ Sub-components â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
-/** Circular probability ring */
-const CircularProgress = ({ value, size = 52 }: { value: number; size?: number }) => {
-    const sw = 4;
-    const r = (size - sw) / 2;
-    const c = r * 2 * Math.PI;
-    const offset = ((100 - value) / 100) * c;
-    const stroke = value >= 70 ? "stroke-emerald-500" : value >= 40 ? "stroke-amber-500" : "stroke-rose-500";
-    return (
-        <div className="relative" style={{ width: size, height: size }}>
-            <svg width={size} height={size} className="-rotate-90">
-                <circle cx={size / 2} cy={size / 2} r={r} strokeWidth={sw} className="stroke-border fill-none" />
-                <motion.circle cx={size / 2} cy={size / 2} r={r} strokeWidth={sw}
-                    className={`${stroke} fill-none`} strokeLinecap="round"
-                    initial={{ strokeDashoffset: c }} animate={{ strokeDashoffset: offset }}
-                    transition={{ duration: 0.9, ease: "easeOut" }} strokeDasharray={c}
-                />
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-xs font-bold text-foreground tabular-nums">{value}%</span>
-            </div>
-        </div>
-    );
-};
-
-/** Pipeline chevron stepper */
-const PipelineStepper = ({ currentStage, onStageChange }: { currentStage: string; onStageChange: (id: string) => void }) => {
+/** Linear-style stage chips */
+const StageChips = ({ currentStage, onStageChange }: { currentStage: string; onStageChange: (id: string) => void }) => {
     const idx = PIPELINE_STAGES.findIndex(s => s.id === currentStage);
     return (
-        <div className="flex items-center gap-0">
+        <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
             {PIPELINE_STAGES.map((stage, i) => {
                 const done = i < idx;
                 const active = i === idx;
-                const pending = i > idx;
                 return (
-                    <div key={stage.id} className="flex items-center">
-                        <button
-                            onClick={() => onStageChange(stage.id)}
-                            className={`
-                                relative px-4 py-1.5 text-xs font-semibold transition-all duration-200
-                                ${i === 0 ? "rounded-l-full" : ""}
-                                ${i === PIPELINE_STAGES.length - 1 ? "rounded-r-full" : ""}
-                                ${active ? `${stage.color} text-white shadow-md` : ""}
-                                ${done ? "bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30" : ""}
-                                ${pending ? "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground" : ""}
-                            `}
-                        >
-                            <span className="flex items-center gap-1">
-                                {done && <CheckCircle2 className="h-3 w-3" />}
-                                <span className="hidden sm:inline">{stage.label}</span>
-                                <span className="sm:hidden">{stage.shortLabel}</span>
-                            </span>
-                            {active && (
-                                <motion.div
-                                    className={`absolute inset-0 ${i === 0 ? "rounded-l-full" : ""} ${i === PIPELINE_STAGES.length - 1 ? "rounded-r-full" : ""} bg-white/10`}
-                                    animate={{ opacity: [0.1, 0.25, 0.1] }}
-                                    transition={{ repeat: Infinity, duration: 2 }}
-                                />
-                            )}
-                        </button>
-                        {i < PIPELINE_STAGES.length - 1 && (
-                            <ChevronRight className={`h-4 w-4 flex-shrink-0 -mx-0.5 z-10 ${i < idx ? "text-emerald-400" : "text-muted-foreground"}`} />
-                        )}
-                    </div>
+                    <button
+                        key={stage.id}
+                        onClick={() => onStageChange(stage.id)}
+                        className={`
+                            flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium
+                            transition-colors whitespace-nowrap
+                            ${active ? "bg-foreground/10 text-foreground ring-1 ring-border" : ""}
+                            ${done ? "text-emerald-400 hover:text-emerald-300" : ""}
+                            ${!done && !active ? "text-muted-foreground hover:text-foreground" : ""}
+                        `}
+                    >
+                        {done
+                            ? <CheckCircle2 className="h-3 w-3" />
+                            : <span className={`w-1.5 h-1.5 rounded-full ${active ? stage.color : "bg-muted-foreground/40"}`} />
+                        }
+                        <span>{stage.label}</span>
+                    </button>
                 );
             })}
         </div>
     );
 };
 
-/** Quick action FAB */
-const QuickBtn = ({ icon: Icon, label, color, onClick, disabled = false }: { icon: typeof Phone; label: string; color: string; onClick?: () => void; disabled?: boolean }) => (
-    <Tooltip>
-        <TooltipTrigger asChild>
-            <motion.button
-                whileHover={disabled ? {} : { scale: 1.12, y: -2 }}
-                whileTap={disabled ? {} : { scale: 0.93 }}
-                onClick={disabled ? undefined : onClick}
-                disabled={disabled}
-                className={`flex flex-col items-center gap-1.5 p-3 rounded-2xl ${disabled ? "bg-muted cursor-not-allowed opacity-60" : color} transition-all duration-200 group`}
-            >
-                <Icon className="h-5 w-5 text-white/90 group-hover:text-white" />
-            </motion.button>
-        </TooltipTrigger>
-        <TooltipContent side="bottom" className="bg-card text-foreground text-xs border border-border">{label}</TooltipContent>
-    </Tooltip>
-);
-
-/** Timeline entry with expanded support for calls */
+/** Clean timeline entry — vertical rail with small dot, no card wrapper */
 const TimelineEntry = ({ event, isLast }: { event: any; isLast: boolean }) => {
-    const [expanded, setExpanded] = useState(false);
     const cfg = EVENT_ICONS[event.type] || EVENT_ICONS.note;
     const Icon = cfg.icon;
-    const isCall = event.type === "call";
-    const isStageChange = event.type === "stage_change";
     return (
-        <div className="flex gap-3">
-            <div className="flex flex-col items-center">
-                <div className={`w-8 h-8 rounded-xl ${cfg.bg} flex items-center justify-center flex-shrink-0 ring-1 ring-white/5`}>
-                    <Icon className={`h-3.5 w-3.5 ${cfg.color}`} />
+        <div className="flex gap-3 group">
+            <div className="flex flex-col items-center pt-0.5">
+                <div className={`w-6 h-6 rounded-full ${cfg.bg} flex items-center justify-center flex-shrink-0`}>
+                    <Icon className={`h-3 w-3 ${cfg.color}`} />
                 </div>
-                {!isLast && <div className="w-0.5 flex-1 bg-border my-1 min-h-[16px]" />}
+                {!isLast && <div className="w-px flex-1 bg-border mt-1.5 min-h-[20px]" />}
             </div>
-            <div className={`flex-1 ${isLast ? "pb-0" : "pb-4"}`}>
-                <div className="bg-muted/50 rounded-xl p-3 border border-border hover:border-border/80 transition-colors">
-                    <p className="text-xs text-muted-foreground mb-1">
-                        <span className="text-emerald-400 font-medium">{event.user_name || "Você"}</span>
-                        {" · "}
-                        {format(new Date(event.created_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
-                    </p>
-                    <p className="text-sm text-foreground leading-relaxed">{event.content || event.title}</p>
+            <div className={`flex-1 min-w-0 ${isLast ? "pb-0" : "pb-5"}`}>
+                <div className="flex items-center gap-2 text-[11px] mb-1">
+                    <span className="font-medium text-foreground">{event.user_name || "Você"}</span>
+                    <span className="text-muted-foreground">
+                        {format(new Date(event.created_at), "dd MMM 'às' HH:mm", { locale: ptBR })}
+                    </span>
                 </div>
+                <p className="text-sm text-foreground leading-relaxed break-words">{event.content || event.title}</p>
             </div>
         </div>
     );
 };
 
-/** Active quest card */
-const QuestCard = ({ task, onComplete }: { task: any; onComplete: () => void }) => {
+/** Focus card — next-action prompt. Clean, no glow, no gradient */
+const FocusCard = ({ task, onComplete }: { task: any; onComplete: () => void }) => {
     const [done, setDone] = useState(false);
-    const handle = () => { setDone(true); setTimeout(onComplete, 800); };
+    const handle = () => { setDone(true); setTimeout(onComplete, 600); };
     return (
-        <motion.div
-            className={`relative overflow-hidden rounded-2xl border p-4 transition-all duration-500 ${done
-                ? "bg-emerald-500/10 border-emerald-500/30"
-                : "bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-amber-500/25"
-                }`}
-            animate={done ? {} : { borderColor: ["rgba(245,158,11,.25)", "rgba(245,158,11,.45)", "rgba(245,158,11,.25)"] }}
-            transition={{ repeat: Infinity, duration: 2.5 }}
-        >
-            {/* Glow */}
-            {!done && (
-                <div className="absolute -top-10 -right-10 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
-            )}
-            <div className="flex items-start gap-3 relative">
-                <motion.button whileTap={{ scale: 0.88 }} onClick={handle}
-                    className={`mt-0.5 p-1.5 rounded-lg flex-shrink-0 transition-all ${done ? "bg-emerald-500 text-white" : "bg-muted text-muted-foreground hover:bg-amber-500 hover:text-white"}`}>
-                    {done ? <CheckCircle2 className="h-4 w-4" /> : <Circle className="h-4 w-4" />}
-                </motion.button>
-                <div className="flex-1">
-                    <div className="flex items-center gap-1.5 mb-1">
-                        <Zap className="h-3.5 w-3.5 text-amber-400" />
-                        <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">Próxima Missão</span>
-                    </div>
-                    <p className={`text-base font-semibold transition-all ${done ? "text-emerald-400 line-through opacity-60" : "text-foreground"}`}>
-                        {task.title}
-                    </p>
-                    {task.due_date && (
-                        <div className="flex items-center gap-1.5 mt-1.5 text-muted-foreground">
-                            <Clock className="h-3 w-3" />
-                            <span className="text-xs">{format(new Date(task.due_date), "dd MMM, HH:mm", { locale: ptBR })}</span>
-                        </div>
-                    )}
-                </div>
-                {done && (
-                    <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-                        <Sparkles className="h-5 w-5 text-emerald-400" />
-                    </motion.div>
-                )}
+        <div className={`
+            flex items-center gap-3 px-4 py-3 rounded-xl border transition-colors
+            ${done ? "bg-emerald-500/5 border-emerald-500/20" : "bg-card border-border hover:border-border/80"}
+        `}>
+            <button
+                onClick={handle}
+                className={`
+                    w-5 h-5 rounded-full flex items-center justify-center transition-colors flex-shrink-0
+                    ${done
+                        ? "bg-emerald-500 text-white"
+                        : "border border-muted-foreground/40 hover:border-emerald-500 hover:bg-emerald-500/10"}
+                `}
+            >
+                {done && <CheckCircle2 className="h-3.5 w-3.5" />}
+            </button>
+            <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-0.5">Próxima ação</p>
+                <p className={`text-sm font-medium truncate ${done ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                    {task.title}
+                </p>
             </div>
-        </motion.div>
+            {task.due_date && !done && (
+                <div className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground flex-shrink-0">
+                    <Clock className="h-3 w-3" />
+                    <span>{format(new Date(task.due_date), "dd MMM, HH:mm", { locale: ptBR })}</span>
+                </div>
+            )}
+        </div>
     );
 };
+
+/** Collapsible property accordion section */
+const PropertiesSection = ({ title, defaultOpen = true, children }: { title: string; defaultOpen?: boolean; children: React.ReactNode }) => {
+    const [open, setOpen] = useState(defaultOpen);
+    return (
+        <div className="border-b border-border last:border-0">
+            <button
+                onClick={() => setOpen(!open)}
+                className="w-full flex items-center justify-between py-3 text-left group"
+            >
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest group-hover:text-foreground transition-colors">
+                    {title}
+                </span>
+                <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${open ? "" : "-rotate-90"}`} />
+            </button>
+            {open && <div className="pb-4 space-y-2.5">{children}</div>}
+        </div>
+    );
+};
+
+/** Property row: label on left, value on right */
+const PropertyRow = ({ label, icon: Icon, children }: { label: string; icon?: typeof Phone; children: React.ReactNode }) => (
+    <div className="flex items-center justify-between gap-3 text-sm min-h-[24px]">
+        <span className="text-muted-foreground flex items-center gap-1.5 flex-shrink-0">
+            {Icon && <Icon className="h-3.5 w-3.5" />}
+            <span className="text-xs">{label}</span>
+        </span>
+        <div className="text-foreground text-right min-w-0 truncate text-[13px]">{children}</div>
+    </div>
+);
 
 // â"€â"€â"€ Main Component â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
@@ -637,24 +590,44 @@ export default function DealCommandCenter() {
                 {showConfetti && <Confetti show={showConfetti} />}
 
                 {/* â"€â"€ HEADER â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
-                <div className="sticky top-0 z-40 bg-background/90 backdrop-blur-xl border-b border-border">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6">
+                <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">
+                    <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
 
-                        {/* Row 1: Back + Title + Actions */}
-                        <div className="flex items-center justify-between gap-4 py-3">
-                            <div className="flex items-center gap-3 min-w-0">
-                                <Button variant="ghost" size="sm" onClick={() => navigate("/crm")}
-                                    className="text-muted-foreground hover:text-foreground hover:bg-muted h-8 w-8 p-0 rounded-lg flex-shrink-0">
-                                    <ArrowLeft className="h-4 w-4" />
-                                </Button>
+                        {/* Breadcrumb row */}
+                        <div className="flex items-center gap-1.5 pt-3 text-[11px] text-muted-foreground">
+                            <button
+                                onClick={() => navigate("/crm")}
+                                className="flex items-center gap-1 hover:text-foreground transition-colors"
+                            >
+                                <ArrowLeft className="h-3 w-3" />
+                                Pipeline
+                            </button>
+                            <ChevronRight className="h-3 w-3" />
+                            <span className="text-foreground/70 truncate">{deal.customer_name}</span>
+                        </div>
 
-                                <div className="p-2 rounded-xl bg-emerald-500/15 ring-1 ring-emerald-500/25 flex-shrink-0">
-                                    <Building2 className="h-4 w-4 text-emerald-400" />
-                                </div>
+                        {/* Main header row */}
+                        <div className="flex items-start justify-between gap-4 py-3">
+                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                                <Avatar className="h-10 w-10 ring-1 ring-border flex-shrink-0">
+                                    <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-cyan-500 text-white font-bold text-xs">
+                                        {deal.customer_name?.substring(0, 2).toUpperCase() || "?"}
+                                    </AvatarFallback>
+                                </Avatar>
 
-                                <div className="min-w-0">
-                                    <h1 className="text-sm sm:text-base font-bold text-foreground truncate leading-tight">{deal.title}</h1>
-                                    <p className="text-xs text-muted-foreground truncate">{deal.customer_name}</p>
+                                <div className="min-w-0 flex-1">
+                                    <h1 className="text-base sm:text-lg font-semibold text-foreground truncate leading-tight tracking-tight">
+                                        {deal.title}
+                                    </h1>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                        <span className="text-xs text-muted-foreground truncate">{deal.customer_name}</span>
+                                        {deal.customer_email && (
+                                            <>
+                                                <span className="text-muted-foreground/40 text-xs">·</span>
+                                                <span className="text-xs text-muted-foreground truncate hidden sm:inline">{deal.customer_email}</span>
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
@@ -662,21 +635,16 @@ export default function DealCommandCenter() {
                                 {/* Value */}
                                 <div className="text-right hidden sm:block">
                                     <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Valor</p>
-                                    <p className="text-lg font-bold text-emerald-400 tabular-nums leading-tight">
+                                    <p className="text-lg font-semibold text-emerald-400 tabular-nums leading-tight">
                                         {formatCurrency(deal.value || 0)}
                                     </p>
                                 </div>
 
-                                {/* Probability ring */}
-                                <div className="hidden sm:block">
-                                    <CircularProgress value={deal.probability || 50} />
-                                </div>
-
                                 {/* CTA buttons */}
                                 {deal.stage !== "closed_won" && deal.stage !== "closed_lost" && (
-                                    <div className="flex gap-2">
+                                    <div className="flex gap-1.5">
                                         <Button size="sm"
-                                            className="bg-emerald-500 hover:bg-emerald-400 text-white font-semibold shadow-lg shadow-emerald-500/20 h-8 px-3 gap-1.5"
+                                            className="bg-emerald-500 hover:bg-emerald-400 text-white font-medium h-8 px-3 gap-1.5"
                                             onClick={async () => {
                                                 await updateDeal.mutateAsync({ stage: "closed_won", probability: 100 });
                                                 setShowConfetti(true);
@@ -687,8 +655,8 @@ export default function DealCommandCenter() {
                                             <Trophy className="h-3.5 w-3.5" />
                                             <span className="hidden sm:inline">Ganho</span>
                                         </Button>
-                                        <Button size="sm" variant="destructive"
-                                            className="shadow-lg shadow-rose-500/20 h-8 px-3 gap-1.5"
+                                        <Button size="sm" variant="outline"
+                                            className="border-border text-muted-foreground hover:text-rose-400 hover:border-rose-500/40 h-8 px-3 gap-1.5"
                                             onClick={() => setShowLostModal(true)}
                                             disabled={updateDeal.isPending}
                                         >
@@ -700,21 +668,21 @@ export default function DealCommandCenter() {
 
                                 {/* Closed badges */}
                                 {deal.stage === "closed_won" && (
-                                    <div className="flex items-center gap-1.5 bg-emerald-500/15 text-emerald-400 px-3 py-1.5 rounded-lg text-xs font-semibold ring-1 ring-emerald-500/25">
-                                        <Trophy className="h-3.5 w-3.5" /> Ganho!
+                                    <div className="flex items-center gap-1.5 bg-emerald-500/15 text-emerald-400 px-3 py-1.5 rounded-md text-xs font-medium ring-1 ring-emerald-500/25">
+                                        <Trophy className="h-3.5 w-3.5" /> Ganho
                                     </div>
                                 )}
                                 {deal.stage === "closed_lost" && (
-                                    <div className="flex items-center gap-1.5 bg-rose-500/15 text-rose-400 px-3 py-1.5 rounded-lg text-xs font-semibold ring-1 ring-rose-500/25">
+                                    <div className="flex items-center gap-1.5 bg-rose-500/15 text-rose-400 px-3 py-1.5 rounded-md text-xs font-medium ring-1 ring-rose-500/25">
                                         <XCircle className="h-3.5 w-3.5" /> Perdido
                                     </div>
                                 )}
                             </div>
                         </div>
 
-                        {/* Row 2: Pipeline stepper (full width) */}
-                        <div className="pb-3 overflow-x-auto">
-                            <PipelineStepper
+                        {/* Stage chips row */}
+                        <div className="pb-3">
+                            <StageChips
                                 currentStage={deal.stage}
                                 onStageChange={(s) => {
                                     if (s === "closed_lost") { setShowLostModal(true); return; }
@@ -726,144 +694,46 @@ export default function DealCommandCenter() {
                 </div>
 
                 {/* â"€â"€ MAIN GRID â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5">
-                    <div className="grid grid-cols-12 gap-4 sm:gap-5">
+                <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-5">
+                    <div className="grid grid-cols-12 gap-4 sm:gap-6">
 
-                        {/* â"€â"€ LEFT PANEL â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
-                        <div className="col-span-12 lg:col-span-3 space-y-4">
+                        {/* â"€â"€ LEFT MAIN (activity) â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
+                        <div className="col-span-12 lg:col-span-8 space-y-4 min-w-0 order-2 lg:order-1">
 
-                            {/* Quick actions */}
-                            <div className="bg-card rounded-2xl p-4 border border-border">
-                                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-3">Ações Rápidas</p>
-                                <TooltipProvider delayDuration={80}>
-                                    <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:justify-around">
-                                        <QuickBtn
-                                            icon={Phone}
-                                            label={canUseCalls ? "Ligar" : (hasCallsPlanAccess ? "Ativar add-on Ligações" : "Ligações (Plus/Pro)")}
-                                            color="bg-emerald-600 hover:bg-emerald-500"
-                                            disabled={!canUseCalls}
-                                            onClick={() => setShowCallModal(true)}
-                                        />
-                                        <QuickBtn icon={MessageSquare} label="WhatsApp" color="bg-green-600 hover:bg-green-500"
-                                            onClick={() => deal.customer_phone && window.open(`https://wa.me/${deal.customer_phone.replace(/\D/g, "")}`, "_blank")} />
-                                        <QuickBtn icon={Mail} label="Email" color="bg-blue-600 hover:bg-blue-500"
-                                            onClick={() => deal.customer_email && window.open(`mailto:${deal.customer_email}`, "_blank")} />
-                                        <QuickBtn icon={Plus} label="Nova Tarefa" color="bg-violet-600 hover:bg-violet-500"
-                                            onClick={() => setShowTaskModal(true)} />
-                                    </div>
-                                </TooltipProvider>
-                            </div>
-
-                            {/* Deal health */}
-                            <div className={`rounded-2xl p-4 border ${health.bg} ${health.border}`}>
-                                <div className="flex items-center gap-3">
-                                    <div className={`p-2 rounded-xl ${health.bg} ring-1 ${health.border}`}>
-                                        <HealthIcon className={`h-4 w-4 ${health.color}`} />
-                                    </div>
-                                    <div>
-                                        <p className={`text-sm font-semibold ${health.color}`}>{health.label}</p>
-                                        <p className="text-xs text-muted-foreground">{health.subtitle}</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Contact card */}
-                            <div className="bg-card rounded-2xl p-4 border border-border space-y-3">
-                                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Contato</p>
-                                <div className="flex items-center gap-3">
-                                    <Avatar className="h-11 w-11 ring-2 ring-border">
-                                        <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-cyan-500 text-white font-bold text-sm">
-                                            {deal.customer_name?.substring(0, 2).toUpperCase() || "?"}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                    <div className="min-w-0">
-                                        <p className="font-semibold text-foreground text-sm truncate">{deal.customer_name}</p>
-                                        <p className="text-xs text-muted-foreground truncate">{deal.customer_email || "Sem email"}</p>
-                                    </div>
-                                </div>
-                                {deal.customer_phone && (
-                                    <div className="flex items-center gap-2 bg-muted/50 rounded-xl px-3 py-2">
-                                        <Phone className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                                        <span className="text-sm text-foreground">{deal.customer_phone}</span>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Details widget */}
-                            <div className="bg-card rounded-2xl p-4 border border-border space-y-3">
-                                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Detalhes</p>
-                                {[
-                                    { icon: Target, label: "Fonte", value: (deal as any).source || "Manual" },
-                                    { icon: Calendar, label: "Criado", value: format(new Date(deal.created_at), "dd MMM yyyy", { locale: ptBR }) },
-                                    { icon: TrendingUp, label: "Probabilidade", value: `${deal.probability}%` },
-                                ].map(({ icon: Icon, label, value }) => (
-                                    <div key={label} className="flex items-center justify-between">
-                                        <span className="text-xs text-muted-foreground flex items-center gap-1.5">
-                                            <Icon className="h-3.5 w-3.5" />{label}
-                                        </span>
-                                        <span className="text-sm text-foreground font-medium">{value}</span>
-                                    </div>
-                                ))}
-
-                                {/* Probability bar */}
-                                <div className="pt-1">
-                                    <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                                        <motion.div
-                                            className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-cyan-400"
-                                            initial={{ width: 0 }}
-                                            animate={{ width: `${deal.probability}%` }}
-                                            transition={{ duration: 0.8, ease: "easeOut" }}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Custom Fields */}
-                            <CustomFieldsSection dealId={id!} compact />
-
-                            {/* Mobile Value / Probability */}
-                            <div className="sm:hidden bg-card rounded-2xl p-4 border border-border flex items-center justify-between">
-                                <div>
-                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Valor</p>
-                                    <p className="text-xl font-bold text-emerald-400">{formatCurrency(deal.value || 0)}</p>
-                                </div>
-                                <CircularProgress value={deal.probability || 50} />
-                            </div>
-                        </div>
-
-                        {/* â"€â"€ RIGHT PANEL â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
-                        <div className="col-span-12 lg:col-span-9 space-y-4">
-
-                            {/* Active Quest */}
-                            <QuestCard
+                            {/* Focus / next action */}
+                            <FocusCard
                                 task={activeTask}
                                 onComplete={() => {
                                     setShowConfetti(true);
                                     setTimeout(() => setShowConfetti(false), 2000);
-                                    toast.success("Missão completa! 🎉");
+                                    toast.success("Ação concluída");
                                 }}
                             />
 
-                            {/* Main panel */}
-                            <div className="bg-card rounded-2xl border border-border overflow-hidden">
+                            {/* Activity panel */}
+                            <div className="bg-card/50 rounded-2xl border border-border overflow-hidden">
 
-                                {/* Tab bar */}
-                                <div className="flex gap-0 border-b border-border px-2 pt-2 overflow-x-auto scrollbar-none">
+                                {/* Tab bar - text-only, underline on active */}
+                                <div className="flex items-center gap-0 border-b border-border px-3 overflow-x-auto scrollbar-none">
                                     {TABS.map((tab) => {
-                                        const TabIcon = tab.icon;
                                         const active = activeTab === tab.id;
                                         return (
-                                            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                                            <button
+                                                key={tab.id}
+                                                onClick={() => setActiveTab(tab.id)}
                                                 className={`
-                                                    flex items-center gap-1.5 px-3 sm:px-4 py-2.5 text-xs font-medium rounded-t-xl transition-all duration-150 whitespace-nowrap shrink-0
-                                                    ${active
-                                                        ? "bg-muted text-emerald-400 border-b-2 border-emerald-500 -mb-px"
-                                                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"}
+                                                    relative flex items-center gap-1.5 px-3 py-3 text-[13px] font-medium transition-colors whitespace-nowrap shrink-0
+                                                    ${active ? "text-foreground" : "text-muted-foreground hover:text-foreground"}
                                                 `}
                                             >
-                                                <TabIcon className="h-3.5 w-3.5" />
-                                                <span className="hidden sm:inline">{tab.label}</span>
+                                                <span>{tab.label}</span>
                                                 {tab.locked && <Lock className="h-3 w-3 text-amber-400" />}
+                                                {active && (
+                                                    <motion.div
+                                                        layoutId="tab-underline"
+                                                        className="absolute left-0 right-0 -bottom-px h-[2px] bg-emerald-500"
+                                                    />
+                                                )}
                                             </button>
                                         );
                                     })}
@@ -876,30 +746,30 @@ export default function DealCommandCenter() {
                                     >
                                         {/* â"€â"€ Histórico â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
                                         {activeTab === "historico" && (
-                                            <>
-                                                <ScrollArea className="h-[360px]">
-                                                    <div className="p-4 space-y-1">
-                                                        {timeline.length === 0 ? (
-                                                            <div className="flex flex-col items-center justify-center py-14 text-muted-foreground">
-                                                                <StickyNote className="h-9 w-9 mb-3 opacity-40" />
-                                                                <p className="text-sm font-medium text-muted-foreground">Nenhuma atividade ainda</p>
-                                                                <p className="text-xs mt-1">Adicione a primeira nota abaixo</p>
-                                                            </div>
-                                                        ) : (
-                                                            timeline.map((ev: any, i: number) => (
+                                            <div className="flex flex-col">
+                                                <div className="px-5 py-5 min-h-[300px]">
+                                                    {timeline.length === 0 ? (
+                                                        <div className="flex flex-col items-center justify-center py-14 text-muted-foreground">
+                                                            <StickyNote className="h-8 w-8 mb-3 opacity-40" />
+                                                            <p className="text-sm font-medium text-muted-foreground">Nenhuma atividade ainda</p>
+                                                            <p className="text-xs mt-1">Adicione a primeira nota abaixo</p>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="space-y-0">
+                                                            {timeline.map((ev: any, i: number) => (
                                                                 <TimelineEntry key={ev.id} event={ev} isLast={i === timeline.length - 1} />
-                                                            ))
-                                                        )}
-                                                    </div>
-                                                </ScrollArea>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
 
-                                                {/* Note input */}
-                                                <div className="p-3 border-t border-border bg-card/80">
-                                                    <div className="flex items-center gap-2 bg-muted/60 rounded-xl px-3 py-2 ring-1 ring-border focus-within:ring-emerald-500/40 transition-all">
+                                                {/* Composer - sticky to bottom of panel */}
+                                                <div className="sticky bottom-0 p-3 border-t border-border bg-card/95 backdrop-blur-sm">
+                                                    <div className="flex items-center gap-2 bg-background/60 rounded-xl px-3 py-2 ring-1 ring-border focus-within:ring-emerald-500/40 transition-all">
                                                         <Input
                                                             value={newNote}
                                                             onChange={(e) => setNewNote(e.target.value)}
-                                                            placeholder="Digite uma nota ou comando..."
+                                                            placeholder="Adicionar nota ou @mencionar..."
                                                             className="flex-1 bg-transparent border-0 text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 h-8 p-0"
                                                             onKeyDown={(e) => { if (e.key === "Enter" && newNote.trim()) addNote.mutate(newNote.trim()); }}
                                                         />
@@ -915,7 +785,7 @@ export default function DealCommandCenter() {
                                                         </Button>
                                                     </div>
                                                 </div>
-                                            </>
+                                            </div>
                                         )}
 
                                         {/* â"€â"€ LigaçÃµes â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
@@ -1262,13 +1132,146 @@ export default function DealCommandCenter() {
                                 </AnimatePresence>
                             </div>
 
-                            {/* Deal observations chip */}
+                            {/* Deal observations */}
                             {deal.notes && (
-                                <div className="bg-card/60 rounded-2xl p-4 border border-border">
-                                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-2">Observações do Deal</p>
+                                <div className="bg-card/40 rounded-2xl p-4 border border-border">
+                                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-2">Observações</p>
                                     <p className="text-sm text-foreground leading-relaxed">{deal.notes}</p>
                                 </div>
                             )}
+                        </div>
+
+                        {/* â"€â"€ RIGHT SIDEBAR (properties) â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
+                        <div className="col-span-12 lg:col-span-4 order-1 lg:order-2 min-w-0">
+                            <div className="lg:sticky lg:top-[148px] space-y-4">
+
+                                {/* Quick actions */}
+                                <TooltipProvider delayDuration={80}>
+                                    <div className="grid grid-cols-4 gap-2">
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <button
+                                                    onClick={() => setShowCallModal(true)}
+                                                    disabled={!canUseCalls}
+                                                    className="flex flex-col items-center justify-center gap-1 h-14 rounded-xl bg-card border border-border hover:border-emerald-500/40 hover:bg-emerald-500/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                                >
+                                                    <Phone className="h-4 w-4 text-emerald-400" />
+                                                    <span className="text-[10px] font-medium text-muted-foreground">Ligar</span>
+                                                </button>
+                                            </TooltipTrigger>
+                                            <TooltipContent side="bottom" className="bg-card text-foreground text-xs border border-border">
+                                                {canUseCalls ? "Iniciar chamada" : (hasCallsPlanAccess ? "Ativar add-on" : "Upgrade Plus/Pro")}
+                                            </TooltipContent>
+                                        </Tooltip>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <button
+                                                    onClick={() => deal.customer_phone && window.open(`https://wa.me/${deal.customer_phone.replace(/\D/g, "")}`, "_blank")}
+                                                    disabled={!deal.customer_phone}
+                                                    className="flex flex-col items-center justify-center gap-1 h-14 rounded-xl bg-card border border-border hover:border-green-500/40 hover:bg-green-500/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                                >
+                                                    <MessageSquare className="h-4 w-4 text-green-400" />
+                                                    <span className="text-[10px] font-medium text-muted-foreground">WhatsApp</span>
+                                                </button>
+                                            </TooltipTrigger>
+                                            <TooltipContent side="bottom" className="bg-card text-foreground text-xs border border-border">WhatsApp</TooltipContent>
+                                        </Tooltip>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <button
+                                                    onClick={() => deal.customer_email && window.open(`mailto:${deal.customer_email}`, "_blank")}
+                                                    disabled={!deal.customer_email}
+                                                    className="flex flex-col items-center justify-center gap-1 h-14 rounded-xl bg-card border border-border hover:border-blue-500/40 hover:bg-blue-500/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                                >
+                                                    <Mail className="h-4 w-4 text-blue-400" />
+                                                    <span className="text-[10px] font-medium text-muted-foreground">Email</span>
+                                                </button>
+                                            </TooltipTrigger>
+                                            <TooltipContent side="bottom" className="bg-card text-foreground text-xs border border-border">Enviar email</TooltipContent>
+                                        </Tooltip>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <button
+                                                    onClick={() => setShowTaskModal(true)}
+                                                    className="flex flex-col items-center justify-center gap-1 h-14 rounded-xl bg-card border border-border hover:border-violet-500/40 hover:bg-violet-500/5 transition-colors"
+                                                >
+                                                    <Plus className="h-4 w-4 text-violet-400" />
+                                                    <span className="text-[10px] font-medium text-muted-foreground">Tarefa</span>
+                                                </button>
+                                            </TooltipTrigger>
+                                            <TooltipContent side="bottom" className="bg-card text-foreground text-xs border border-border">Nova tarefa</TooltipContent>
+                                        </Tooltip>
+                                    </div>
+                                </TooltipProvider>
+
+                                {/* Health inline */}
+                                <div className={`flex items-center gap-2.5 px-3 py-2 rounded-lg border ${health.bg} ${health.border}`}>
+                                    <HealthIcon className={`h-3.5 w-3.5 ${health.color} flex-shrink-0`} />
+                                    <div className="flex-1 min-w-0">
+                                        <p className={`text-xs font-semibold ${health.color} leading-tight`}>{health.label}</p>
+                                        <p className="text-[11px] text-muted-foreground leading-tight">{health.subtitle}</p>
+                                    </div>
+                                </div>
+
+                                {/* Properties panel */}
+                                <div className="bg-card/50 rounded-2xl border border-border px-4">
+
+                                    <PropertiesSection title="Contato">
+                                        <PropertyRow label="Nome" icon={User}>
+                                            <span className="font-medium">{deal.customer_name || "—"}</span>
+                                        </PropertyRow>
+                                        <PropertyRow label="Email" icon={Mail}>
+                                            {deal.customer_email
+                                                ? <a href={`mailto:${deal.customer_email}`} className="text-emerald-400 hover:text-emerald-300 hover:underline truncate block">{deal.customer_email}</a>
+                                                : <span className="text-muted-foreground">—</span>}
+                                        </PropertyRow>
+                                        <PropertyRow label="Telefone" icon={Phone}>
+                                            {deal.customer_phone
+                                                ? <span className="font-medium tabular-nums">{formatPhone(deal.customer_phone)}</span>
+                                                : <span className="text-muted-foreground">—</span>}
+                                        </PropertyRow>
+                                    </PropertiesSection>
+
+                                    <PropertiesSection title="Detalhes">
+                                        <PropertyRow label="Valor" icon={DollarSign}>
+                                            <span className="font-semibold text-emerald-400 tabular-nums">{formatCurrency(deal.value || 0)}</span>
+                                        </PropertyRow>
+                                        <PropertyRow label="Fonte" icon={Target}>
+                                            <span className="font-medium">{(deal as any).source || "Manual"}</span>
+                                        </PropertyRow>
+                                        <PropertyRow label="Criado" icon={Calendar}>
+                                            <span className="font-medium">{format(new Date(deal.created_at), "dd MMM yyyy", { locale: ptBR })}</span>
+                                        </PropertyRow>
+                                        <PropertyRow label="Atualizado" icon={Clock}>
+                                            <span className="font-medium">{formatDistanceToNow(new Date(deal.updated_at), { locale: ptBR, addSuffix: true })}</span>
+                                        </PropertyRow>
+
+                                        {/* Probability with inline bar */}
+                                        <div className="pt-1.5 space-y-1.5">
+                                            <div className="flex items-center justify-between text-xs">
+                                                <span className="text-muted-foreground flex items-center gap-1.5">
+                                                    <TrendingUp className="h-3.5 w-3.5" />
+                                                    Probabilidade
+                                                </span>
+                                                <span className="text-foreground font-semibold tabular-nums">{deal.probability}%</span>
+                                            </div>
+                                            <div className="h-1 bg-muted rounded-full overflow-hidden">
+                                                <motion.div
+                                                    className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-cyan-400"
+                                                    initial={{ width: 0 }}
+                                                    animate={{ width: `${deal.probability}%` }}
+                                                    transition={{ duration: 0.8, ease: "easeOut" }}
+                                                />
+                                            </div>
+                                        </div>
+                                    </PropertiesSection>
+
+                                    <PropertiesSection title="Campos customizados" defaultOpen={false}>
+                                        <CustomFieldsSection dealId={id!} compact />
+                                    </PropertiesSection>
+
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
