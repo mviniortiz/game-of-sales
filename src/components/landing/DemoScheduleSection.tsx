@@ -122,6 +122,15 @@ export const DemoScheduleSection = ({
             logStep("tracking_failed", { err: String(err).slice(0, 120) });
         }
 
+        // Server-side Google Ads conversion upload (imune a adblocker/DNT).
+        // Só faz sentido se tiver lead_id; gclid check é feito na edge function.
+        if (id) {
+            void supabase.functions
+                .invoke("upload-ads-conversion", { body: { lead_id: id } })
+                .then((r) => logStep("ads_upload_result", { ok: !r.error, skipped: (r.data as any)?.skipped }))
+                .catch((err) => logStep("ads_upload_failed", { err: String(err).slice(0, 120) }));
+        }
+
         setStep("schedule");
         setIsSubmitting(false);
     };
