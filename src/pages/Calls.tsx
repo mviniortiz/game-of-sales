@@ -53,7 +53,7 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-// Compact KPI Card Component
+// Compact KPI Card — Vyzon Identity (alinhado ao Dashboard)
 interface KPICardProps {
   title: string;
   value: string | number;
@@ -61,29 +61,9 @@ interface KPICardProps {
   icon: React.ElementType;
   trend?: number;
   trendLabel?: string;
-  highlight?: boolean;
-  highlightColor?: "emerald" | "cyan" | "amber";
+  iconColor?: string;
+  iconBg?: string;
 }
-
-// Static Tailwind classes map to ensure proper CSS generation
-const highlightColorClasses = {
-  emerald: {
-    ring: "ring-2 ring-emerald-500/50",
-    text: "text-emerald-600 dark:text-emerald-400",
-    bg: "bg-emerald-100 dark:bg-emerald-500/20",
-  },
-
-  cyan: {
-    ring: "ring-2 ring-cyan-500/50",
-    text: "text-cyan-600 dark:text-cyan-400",
-    bg: "bg-cyan-100 dark:bg-cyan-500/20",
-  },
-  amber: {
-    ring: "ring-2 ring-amber-500/50",
-    text: "text-amber-600 dark:text-amber-400",
-    bg: "bg-amber-100 dark:bg-amber-500/20",
-  },
-};
 
 const KPICard = ({
   title,
@@ -92,48 +72,52 @@ const KPICard = ({
   icon: Icon,
   trend,
   trendLabel,
-  highlight = false,
-  highlightColor = "emerald"
+  iconColor = "text-emerald-600 dark:text-emerald-400",
+  iconBg = "bg-emerald-50 dark:bg-emerald-500/10",
 }: KPICardProps) => {
-  const isPositive = trend && trend > 0;
+  const isPositive = trend !== undefined && trend >= 0;
   const TrendIcon = isPositive ? ArrowUpRight : ArrowDownRight;
-  const colorClasses = highlightColorClasses[highlightColor];
 
   return (
-    <Card className={`border bg-card shadow-sm hover:shadow-md transition-all duration-300 ${highlight ? colorClasses.ring : 'border-border'}`}>
-      <CardContent className="p-3 sm:p-5">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1 sm:mb-2 truncate">
-              {title}
-            </p>
-            <p className={`text-xl sm:text-3xl font-bold tabular-nums tracking-tight ${highlight ? colorClasses.text : 'text-foreground'}`}>
-              {value}
-            </p>
-
-            {/* Trend or Subtitle */}
-            <div className="flex items-center gap-2 mt-1 sm:mt-2">
-              {trend !== undefined && (
-                <span className={`flex items-center text-[10px] sm:text-xs font-medium ${isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                  <TrendIcon className="h-3 w-3 mr-0.5" />
-                  {Math.abs(trend).toFixed(1)}%
-                </span>
-              )}
-              {(trendLabel || subtitle) && (
-                <span className="text-[10px] sm:text-xs text-muted-foreground truncate">
-                  {trendLabel || subtitle}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Icon */}
-          <div className={`p-2 sm:p-3 rounded-xl flex-shrink-0 ${highlight ? colorClasses.bg : 'bg-emerald-50 dark:bg-emerald-500/10'}`}>
-            <Icon className={`h-5 w-5 sm:h-6 sm:w-6 ${highlight ? colorClasses.text : 'text-emerald-600 dark:text-emerald-400'}`} />
+    <div
+      className="relative overflow-hidden rounded-xl border border-border bg-card hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group cursor-default"
+      style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
+    >
+      <div className="p-3 sm:p-4">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.1em]">
+            {title}
+          </p>
+          <div className={`p-1.5 rounded-lg ${iconBg} group-hover:scale-110 transition-transform duration-200`}>
+            <Icon className={`h-3.5 w-3.5 ${iconColor}`} />
           </div>
         </div>
-      </CardContent>
-    </Card>
+
+        <p className="text-xl sm:text-2xl font-bold text-foreground tabular-nums tracking-tight leading-none mb-2">
+          {value}
+        </p>
+
+        <div className="flex items-center gap-1.5">
+          {trend !== undefined && (
+            <span
+              className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                isPositive
+                  ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
+                  : "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400"
+              }`}
+            >
+              <TrendIcon className="h-3 w-3" />
+              {Math.abs(trend).toFixed(1)}%
+            </span>
+          )}
+          {(trendLabel || subtitle) && (
+            <span className="text-[10px] text-muted-foreground truncate">
+              {trendLabel || subtitle}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -154,7 +138,7 @@ const VerticalFunnel = ({ agendamentos, compareceram, vendas }: FunnelProps) => 
       value: agendamentos,
       percentage: 100,
       width: "100%",
-      color: "bg-emerald-500",
+      color: "bg-gradient-to-r from-emerald-500 to-emerald-400",
       textColor: "text-emerald-600 dark:text-emerald-400"
     },
     {
@@ -162,7 +146,7 @@ const VerticalFunnel = ({ agendamentos, compareceram, vendas }: FunnelProps) => 
       value: compareceram,
       percentage: showRate,
       width: `${Math.max(showRate, 20)}%`,
-      color: "bg-cyan-500",
+      color: "bg-gradient-to-r from-cyan-500 to-cyan-400",
       textColor: "text-cyan-600 dark:text-cyan-400"
     },
     {
@@ -170,47 +154,47 @@ const VerticalFunnel = ({ agendamentos, compareceram, vendas }: FunnelProps) => 
       value: vendas,
       percentage: conversionRate,
       width: `${Math.max(conversionRate, 15)}%`,
-      color: "bg-emerald-500",
+      color: "bg-gradient-to-r from-emerald-600 to-emerald-400",
       textColor: "text-emerald-600 dark:text-emerald-400"
     },
   ];
 
   return (
-    <Card className="border border-border bg-card shadow-sm h-full">
+    <Card className="relative overflow-hidden bg-card border-border h-full" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
-          <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+        <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/10">
+            <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-300" />
+          </div>
           Funil de Conversão
         </CardTitle>
+        <p className="text-[11px] text-muted-foreground mt-1 ml-8">Agendados → Compareceram → Vendas</p>
       </CardHeader>
       <CardContent className="pt-4">
         <div className="space-y-4">
           {steps.map((step, index) => (
             <div key={step.label} className="relative">
-              {/* Connector line */}
               {index > 0 && (
                 <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  <ChevronDown className="h-4 w-4 text-muted-foreground/60" />
                 </div>
               )}
 
-              {/* Step bar */}
               <div className="flex items-center gap-3">
                 <div className="flex-1">
                   <div
-                    className={`h-12 ${step.color} rounded-lg flex items-center justify-center transition-all duration-500 mx-auto`}
+                    className={`h-11 ${step.color} rounded-lg flex items-center justify-center transition-all duration-700 mx-auto shadow-sm`}
                     style={{ width: step.width }}
                   >
-                    <span className="text-white font-bold text-lg">{step.value}</span>
+                    <span className="text-white font-bold text-base tabular-nums">{step.value}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Label and percentage */}
-              <div className="flex items-center justify-between mt-1 px-1">
-                <span className="text-xs text-muted-foreground">{step.label}</span>
+              <div className="flex items-center justify-between mt-1.5 px-1">
+                <span className="text-[11px] text-muted-foreground font-medium">{step.label}</span>
                 {index > 0 && (
-                  <span className={`text-xs font-semibold ${step.textColor}`}>
+                  <span className={`text-[11px] font-bold tabular-nums ${step.textColor}`}>
                     {step.percentage.toFixed(1)}%
                   </span>
                 )}
@@ -219,15 +203,14 @@ const VerticalFunnel = ({ agendamentos, compareceram, vendas }: FunnelProps) => 
           ))}
         </div>
 
-        {/* Summary Stats */}
         <div className="mt-6 pt-4 border-t border-border grid grid-cols-2 gap-3">
-          <div className="text-center p-3 rounded-lg bg-cyan-50 dark:bg-cyan-500/10 border border-cyan-100 dark:border-cyan-500/20">
-            <p className="text-xl font-bold text-cyan-700 dark:text-cyan-400 tabular-nums">{showRate.toFixed(1)}%</p>
-            <p className="text-[10px] text-muted-foreground">Show Rate</p>
+          <div className="text-center p-3 rounded-lg bg-cyan-50/60 dark:bg-cyan-500/10 border border-cyan-100 dark:border-cyan-500/20">
+            <p className="text-lg font-bold text-cyan-700 dark:text-cyan-300 tabular-nums leading-none">{showRate.toFixed(1)}%</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">Show Rate</p>
           </div>
-          <div className="text-center p-3 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20">
-            <p className="text-xl font-bold text-emerald-700 dark:text-emerald-400 tabular-nums">{conversionRate.toFixed(1)}%</p>
-            <p className="text-[10px] text-muted-foreground">Conversão</p>
+          <div className="text-center p-3 rounded-lg bg-emerald-50/60 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20">
+            <p className="text-lg font-bold text-emerald-700 dark:text-emerald-300 tabular-nums leading-none">{conversionRate.toFixed(1)}%</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">Conversão</p>
           </div>
         </div>
       </CardContent>
@@ -246,13 +229,15 @@ interface StackedChartData {
 
 const OutcomeStackedChart = ({ data }: { data: StackedChartData[] }) => {
   return (
-    <Card className="border border-border bg-card shadow-sm h-full">
+    <Card className="relative overflow-hidden bg-card border-border h-full" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+        <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/10">
+            <Calendar className="h-4 w-4 text-emerald-600 dark:text-emerald-300" />
+          </div>
           Volume por Resultado
         </CardTitle>
-        <p className="text-xs text-muted-foreground">Últimos 7 dias</p>
+        <p className="text-[11px] text-muted-foreground mt-1 ml-8">Últimos 7 dias</p>
       </CardHeader>
       <CardContent className="pt-0">
         <ResponsiveContainer width="100%" height={280}>
@@ -261,30 +246,34 @@ const OutcomeStackedChart = ({ data }: { data: StackedChartData[] }) => {
             <XAxis
               dataKey="data"
               stroke="rgba(100,116,139,0.6)"
-              fontSize={11}
+              fontSize={10}
               tickLine={false}
               axisLine={false}
             />
             <YAxis
               stroke="rgba(100,116,139,0.6)"
-              fontSize={11}
+              fontSize={10}
               tickLine={false}
               axisLine={false}
               width={25}
             />
             <Tooltip
+              cursor={{ fill: "rgba(148,163,184,0.08)" }}
               contentStyle={{
-                backgroundColor: "rgba(255,255,255,0.96)",
-                border: "1px solid rgba(226,232,240,0.8)",
-                borderRadius: "10px",
-                boxShadow: "0 12px 30px rgba(15,23,42,0.16)"
+                backgroundColor: "hsl(var(--card))",
+                border: "1px solid hsl(var(--border))",
+                borderRadius: "12px",
+                boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+                padding: "10px 14px",
+                color: "hsl(var(--foreground))",
               }}
-              labelStyle={{ color: "#475569" }}
+              labelStyle={{ color: "hsl(var(--muted-foreground))", fontSize: 11, marginBottom: 4 }}
+              itemStyle={{ color: "hsl(var(--foreground))", fontSize: 12 }}
             />
             <Legend
               iconType="circle"
               iconSize={8}
-              wrapperStyle={{ fontSize: '11px' }}
+              wrapperStyle={{ fontSize: "11px", color: "hsl(var(--muted-foreground))" }}
             />
             <Bar dataKey="sale" stackId="a" fill="#10B981" name="Venda" radius={[0, 0, 0, 0]} />
             <Bar dataKey="followup" stackId="a" fill="#3B82F6" name="Follow-up" />
@@ -327,13 +316,15 @@ const CallHistoryTable = ({ data }: { data: CallHistory[] }) => {
   };
 
   return (
-    <Card className="border border-border bg-card shadow-sm">
+    <Card className="relative overflow-hidden bg-card border-border" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
-          <Clock className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+        <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/10">
+            <Clock className="h-4 w-4 text-emerald-600 dark:text-emerald-300" />
+          </div>
           Histórico Recente
         </CardTitle>
-        <p className="text-xs text-muted-foreground">Últimas 10 calls registradas</p>
+        <p className="text-[11px] text-muted-foreground mt-1 ml-8">Últimas 10 calls registradas</p>
       </CardHeader>
       <CardContent className="p-0 overflow-x-auto">
         <Table className="min-w-[600px]">
@@ -583,13 +574,19 @@ const Calls = () => {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 px-1">
+    <div className="space-y-4 sm:space-y-6 p-1">
       {/* Header with Action Buttons */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Performance de Calls</h1>
-          <p className="text-sm text-muted-foreground">
-            Analytics e métricas • {format(new Date(), "MMMM 'de' yyyy", { locale: ptBR })}
+          <div className="flex items-center gap-3 mb-1">
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Performance de Calls</h1>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-200 text-[10px] font-semibold uppercase tracking-wider ring-1 ring-emerald-200/70 dark:ring-emerald-500/20">
+              <Phone className="h-3 w-3" />
+              Analytics
+            </span>
+          </div>
+          <p className="text-sm text-muted-foreground font-medium">
+            Acompanhe show rate, conversão e receita • {format(new Date(), "MMMM 'de' yyyy", { locale: ptBR })}
           </p>
         </div>
 
@@ -650,20 +647,22 @@ const Calls = () => {
       />
 
       {/* KPI Cards - Row 1: 4 columns */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <KPICard
           title="Calls Realizadas"
           value={metricas?.callsRealizadas || 0}
           icon={Phone}
           subtitle="no período"
+          iconColor="text-emerald-600 dark:text-emerald-400"
+          iconBg="bg-emerald-50 dark:bg-emerald-500/10"
         />
         <KPICard
           title="Show Rate"
           value={`${(metricas?.showRate || 0).toFixed(0)}%`}
           icon={UserCheck}
-          highlight={(metricas?.showRate || 0) > 70}
-          highlightColor="emerald"
           subtitle="compareceram"
+          iconColor="text-cyan-600 dark:text-cyan-400"
+          iconBg="bg-cyan-50 dark:bg-cyan-500/10"
         />
         <KPICard
           title="Taxa de Conversão"
@@ -671,12 +670,16 @@ const Calls = () => {
           icon={TrendingUp}
           trend={(metricas?.taxaConversao || 0) - 25}
           trendLabel="vs média"
+          iconColor="text-amber-600 dark:text-amber-400"
+          iconBg="bg-amber-50 dark:bg-amber-500/10"
         />
         <KPICard
           title="Receita Gerada"
           value={formatCurrency(metricas?.totalRevenue || 0)}
           icon={DollarSign}
           subtitle="em vendas"
+          iconColor="text-emerald-600 dark:text-emerald-400"
+          iconBg="bg-emerald-50 dark:bg-emerald-500/10"
         />
       </div>
 

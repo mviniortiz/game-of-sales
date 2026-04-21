@@ -3,7 +3,7 @@ import { AnimatedCounter } from "./AnimatedCounter";
 const METRICS = [
     { prefix: "<", value: 5, suffix: "min", label: "Para configurar", delayClass: "" },
     { prefix: "", value: 24, suffix: "/7", label: "Ranking ao vivo", delayClass: "landing-delay-100" },
-    { prefix: "", value: 8, suffix: "+", label: "Módulos completos", delayClass: "landing-delay-200" },
+    { prefix: "", value: 8, suffix: "+", label: "Integrações nativas", delayClass: "landing-delay-200" },
     { prefix: "", value: 0, suffix: "", label: "Planilhas manuais", isZero: true, delayClass: "landing-delay-300" },
 ] as const;
 
@@ -22,10 +22,10 @@ export const ImpactMetrics = () => {
                                 <div
                                     className="flex items-baseline justify-center gap-0.5 mb-1.5 tabular-nums"
                                     style={{
-                                        fontSize: "clamp(2rem, 4vw, 2.75rem)",
-                                        fontWeight: 700,
-                                        letterSpacing: "-0.03em",
-                                        color: "rgba(255,255,255,0.95)",
+                                        fontSize: isZero ? "clamp(2.3rem, 4.6vw, 3.15rem)" : "clamp(2rem, 4vw, 2.75rem)",
+                                        fontWeight: isZero ? 800 : 700,
+                                        letterSpacing: "-0.035em",
+                                        color: isZero ? "#34d399" : "rgba(255,255,255,0.95)",
                                     }}
                                 >
                                     {m.prefix && (

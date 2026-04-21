@@ -5,7 +5,7 @@ import { ChevronDown } from "lucide-react";
 const FAQS = [
     {
         q: "O que é o Vyzon?",
-        a: "Um CRM de vendas completo com pipeline Kanban, ranking gamificado, metas em tempo real, funil de calls, calendário integrado com Google Calendar, hub WhatsApp com IA e integrações automáticas com Hotmart, Kiwify e Greenn.",
+        a: "Um CRM de vendas completo com pipeline Kanban, ranking gamificado, metas em tempo real, funil de calls, calendário integrado com Google Calendar, hub WhatsApp com IA e integrações automáticas com os principais checkouts e plataformas do mercado brasileiro.",
     },
     {
         q: "Quanto tempo leva pra configurar?",
@@ -17,7 +17,7 @@ const FAQS = [
     },
     {
         q: "Quais plataformas integram?",
-        a: "Hotmart, Kiwify e Greenn com sincronização automática via webhook. Google Calendar pra agendamentos. WhatsApp via Evolution API. Novas integrações entram por votação da comunidade.",
+        a: "Dezenas de checkouts e plataformas de pagamento com sincronização automática via webhook — os principais do mercado BR e globais. Google Calendar pra agendamentos. WhatsApp via Evolution API. Qualquer plataforma que dispare webhook funciona. Veja a lista completa na página de integrações.",
     },
     {
         q: "Tem ligação dentro da plataforma?",

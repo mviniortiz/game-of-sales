@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, BarChart3, TrendingUp, Users, Zap, ArrowRight } from "lucide-react";
+import { Lightbulb, BarChart3, TrendingUp, Users, Zap, ArrowRight } from "lucide-react";
 
 // ─── Typing animation for the mockup ──────────────────────────────
 
@@ -273,7 +273,7 @@ const FEATURES = [
   { icon: BarChart3, label: "Gráficos gerados por IA na hora" },
   { icon: Users, label: "Ranking e performance do time" },
   { icon: TrendingUp, label: "Tendências e previsões" },
-  { icon: Sparkles, label: "Insights automáticos" },
+  { icon: Lightbulb, label: "Insights automáticos" },
 ];
 
 // ─── Fade-in ──────────────────────────────────────────────────────
@@ -316,7 +316,6 @@ export function EvaAISection({ onCTAClick }: { onCTAClick?: () => void }) {
               border: "1px solid rgba(139,92,246,0.2)",
             }}
           >
-            <Sparkles className="h-3 w-3" />
             SUA ANALISTA COM IA
           </span>
 

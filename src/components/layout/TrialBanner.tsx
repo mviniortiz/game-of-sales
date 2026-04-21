@@ -29,18 +29,18 @@ const getUrgencyStage = (daysRemaining: number): UrgencyStage => {
 
 const urgencyConfigs: Record<UrgencyStage, UrgencyConfig> = {
     comfortable: {
-        bgClass: 'bg-[#0a0f1a]',
+        bgClass: 'bg-card',
         borderClass: 'border-b border-emerald-500/20',
         icon: Trophy,
         iconClass: 'text-emerald-400',
-        textClass: 'text-slate-200',
+        textClass: 'text-foreground',
         getMessage: (days) => (
             <>
                 Você está no{' '}
                 <span className="font-bold text-emerald-400">Vyzon PRO Trial</span>
-                <span className="hidden sm:inline text-slate-400">
+                <span className="hidden sm:inline text-muted-foreground">
                     {' '}— Acesso completo por{' '}
-                    <span className="font-bold text-white">{days} dias</span>
+                    <span className="font-bold text-foreground">{days} dias</span>
                 </span>
             </>
         ),
@@ -50,17 +50,17 @@ const urgencyConfigs: Record<UrgencyStage, UrgencyConfig> = {
         chipClass: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30',
     },
     warning: {
-        bgClass: 'bg-[#0a0f1a]',
+        bgClass: 'bg-card',
         borderClass: 'border-b border-amber-500/30',
         icon: AlertTriangle,
         iconClass: 'text-amber-400',
-        textClass: 'text-slate-200',
+        textClass: 'text-foreground',
         getMessage: (days) => (
             <>
-                <span className="hidden sm:inline text-slate-400">⚡ Atenção: </span>
+                <span className="hidden sm:inline text-muted-foreground">⚡ Atenção: </span>
                 Seu trial expira em{' '}
                 <span className="font-bold text-amber-400">{days} {days === 1 ? 'dia' : 'dias'}</span>
-                <span className="hidden sm:inline text-slate-400"> — não perca seus dados!</span>
+                <span className="hidden sm:inline text-muted-foreground"> — não perca seus dados!</span>
             </>
         ),
         buttonText: 'Garantir Acesso',
@@ -69,11 +69,11 @@ const urgencyConfigs: Record<UrgencyStage, UrgencyConfig> = {
         chipClass: 'bg-amber-500/15 text-amber-400 border border-amber-500/30',
     },
     critical: {
-        bgClass: 'bg-[#0a0f1a]',
+        bgClass: 'bg-card',
         borderClass: 'border-b border-rose-500/40',
         icon: Timer,
         iconClass: 'text-rose-400 animate-pulse',
-        textClass: 'text-slate-200',
+        textClass: 'text-foreground',
         getMessage: (days) => (
             <span>
                 ⚠️{' '}
@@ -92,9 +92,9 @@ const urgencyConfigs: Record<UrgencyStage, UrgencyConfig> = {
 
 // Mini countdown block
 const DayBlock = ({ value, label }: { value: number; label: string }) => (
-    <div className="flex flex-col items-center justify-center bg-white/5 rounded-lg px-2.5 py-1 min-w-[2.5rem] border border-white/10">
-        <span className="text-sm font-bold tabular-nums text-white leading-none">{String(value).padStart(2, '0')}</span>
-        <span className="text-[9px] text-slate-500 uppercase tracking-wide leading-none mt-0.5">{label}</span>
+    <div className="flex flex-col items-center justify-center bg-muted rounded-lg px-2.5 py-1 min-w-[2.5rem] border border-border">
+        <span className="text-sm font-bold tabular-nums text-foreground leading-none">{String(value).padStart(2, '0')}</span>
+        <span className="text-[9px] text-muted-foreground uppercase tracking-wide leading-none mt-0.5">{label}</span>
     </div>
 );
 
@@ -129,7 +129,7 @@ export const TrialBanner = () => {
                     {/* Left: Status chip + Icon + Message */}
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                         {/* Status chip */}
-                        <span className={`hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold tracking-widest flex-shrink-0 ${config.chipClass || 'bg-white/10 text-white'}`}>
+                        <span className={`hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold tracking-widest flex-shrink-0 ${config.chipClass || 'bg-muted text-foreground'}`}>
                             <span className="h-1.5 w-1.5 rounded-full bg-current opacity-80 inline-block" />
                             {chipLabel}
                         </span>
@@ -155,13 +155,13 @@ export const TrialBanner = () => {
                         {/* Trial progress mini-bar — comfortable only */}
                         {stage === 'comfortable' && (
                             <div className="hidden md:flex items-center gap-2">
-                                <div className="w-20 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                <div className="w-20 h-1.5 bg-muted rounded-full overflow-hidden">
                                     <div
                                         className="h-full bg-emerald-500 rounded-full"
                                         style={{ width: `${Math.round(((14 - daysRemaining) / 14) * 100)}%` }}
                                     />
                                 </div>
-                                <span className="text-[10px] text-slate-500 whitespace-nowrap">
+                                <span className="text-[10px] text-muted-foreground whitespace-nowrap">
                                     {daysRemaining}d restantes
                                 </span>
                             </div>
@@ -181,10 +181,10 @@ export const TrialBanner = () => {
                         {stage !== 'critical' && (
                             <button
                                 onClick={() => setIsDismissed(true)}
-                                className="p-1 hover:bg-white/10 rounded-full transition-colors flex-shrink-0"
+                                className="p-1 hover:bg-muted rounded-full transition-colors flex-shrink-0"
                                 aria-label="Fechar banner"
                             >
-                                <X className="h-3.5 w-3.5 text-slate-500" />
+                                <X className="h-3.5 w-3.5 text-muted-foreground" />
                             </button>
                         )}
                     </div>

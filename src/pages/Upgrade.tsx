@@ -227,7 +227,7 @@ export default function Upgrade() {
         .eq("id", activeCompanyId);
 
       toast.success(`Upgrade para ${PLANS_INFO[targetPlan as PlanType].label} realizado!`);
-      navigate("/profile");
+      navigate("/configuracoes/faturamento");
     } catch (err: any) {
       const msg = getMpErrorMessage(err);
       setError(msg);
@@ -249,8 +249,8 @@ export default function Upgrade() {
           Você já está no plano máximo
         </h1>
         <p className="text-sm text-muted-foreground mb-6">Você tem acesso a todos os recursos do Vyzon.</p>
-        <Button variant="outline" onClick={() => navigate("/profile")}>
-          <ArrowLeft className="h-4 w-4 mr-2" />Voltar ao perfil
+        <Button variant="outline" onClick={() => navigate("/configuracoes/faturamento")}>
+          <ArrowLeft className="h-4 w-4 mr-2" />Voltar para faturamento
         </Button>
       </div>
     );
@@ -261,7 +261,7 @@ export default function Upgrade() {
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
         <h1 className="text-xl font-bold text-foreground mb-2">Plano inválido</h1>
         <p className="text-sm text-muted-foreground mb-6">Selecione um plano superior ao seu plano atual.</p>
-        <Button variant="outline" onClick={() => navigate("/profile")}>
+        <Button variant="outline" onClick={() => navigate("/configuracoes/faturamento")}>
           <ArrowLeft className="h-4 w-4 mr-2" />Voltar
         </Button>
       </div>
@@ -278,10 +278,10 @@ export default function Upgrade() {
       {/* Header */}
       <div>
         <button
-          onClick={() => navigate("/profile")}
+          onClick={() => navigate("/configuracoes/faturamento")}
           className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
         >
-          <ArrowLeft className="h-3.5 w-3.5" />Voltar ao perfil
+          <ArrowLeft className="h-3.5 w-3.5" />Voltar para faturamento
         </button>
         <h1 className="text-xl font-bold text-foreground" style={{ fontFamily: "var(--font-heading)" }}>
           Fazer upgrade

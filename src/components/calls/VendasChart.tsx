@@ -34,17 +34,17 @@ export const VendasChart = ({ data }: VendasChartProps) => {
                 <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
             <XAxis
               dataKey="data"
-              stroke="rgba(255,255,255,0.3)"
+              stroke="hsl(var(--muted-foreground))"
               fontSize={11}
               tickLine={false}
               axisLine={false}
               interval={data.length > 10 ? Math.floor(data.length / 7) : 0}
             />
-            <YAxis 
-              stroke="rgba(255,255,255,0.3)" 
+            <YAxis
+              stroke="hsl(var(--muted-foreground))"
               fontSize={11}
               tickLine={false}
               axisLine={false}
@@ -54,12 +54,12 @@ export const VendasChart = ({ data }: VendasChartProps) => {
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: "rgba(15, 23, 42, 0.95)",
-                border: "1px solid rgba(255,255,255,0.1)",
+                backgroundColor: "hsl(var(--card))",
+                border: "1px solid hsl(var(--border))",
                 borderRadius: "8px",
                 boxShadow: "0 4px 20px rgba(0,0,0,0.3)"
               }}
-              labelStyle={{ color: "#94a3b8" }}
+              labelStyle={{ color: "hsl(var(--muted-foreground))" }}
               formatter={(value: number) => [value, "Vendas"]}
             />
             <Area

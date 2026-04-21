@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
 import {
   Copy,
   Check,
@@ -34,13 +33,13 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { IntegrationSpec } from "@/config/integrationsConfig";
+import { formatError } from "@/lib/utils";
 
 type Tab = "overview" | "setup" | "webhook" | "make" | "events";
 
 interface IntegrationConfig {
   id: string;
   company_id: string;
-  user_id: string;
   platform: string;
   hottok: string | null;
   is_active: boolean;
@@ -65,7 +64,7 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
   const { user, companyId } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [token, setToken] = useState("");
-  const [isActive, setIsActive] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
@@ -94,11 +93,11 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
       if (data) {
         const config = data as IntegrationConfig;
         setToken(config.hottok || "");
-        setIsActive(config.is_active || false);
+        setIsConnected(Boolean(config.is_active && config.hottok));
         setConfigId(config.id);
       } else {
         setToken("");
-        setIsActive(false);
+        setIsConnected(false);
         setConfigId(null);
       }
     } finally {
@@ -120,10 +119,9 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
     try {
       const configData = {
         company_id: companyId,
-        user_id: user.id,
         platform: spec.platform,
         hottok: token.trim(),
-        is_active: isActive,
+        is_active: true,
       };
 
       if (configId) {
@@ -143,8 +141,8 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
       onSaved?.();
       onClose();
     } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      toast.error(`Erro ao salvar: ${msg}`);
+      console.error("[IntegrationConfigModal] save error:", error);
+      toast.error(`Erro ao salvar: ${formatError(error)}`);
     } finally {
       setIsSaving(false);
     }
@@ -159,11 +157,14 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
         .update({ is_active: false, hottok: null })
         .eq("id", configId);
       if (error) throw error;
-      setIsActive(false);
+      setIsConnected(false);
       setToken("");
       toast.success(`${spec.name} desconectada`);
       onSaved?.();
       onClose();
+    } catch (error) {
+      console.error("[IntegrationConfigModal] disconnect error:", error);
+      toast.error(`Erro ao desconectar: ${formatError(error)}`);
     } finally {
       setIsDisconnecting(false);
     }
@@ -213,7 +214,7 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
                   <DialogTitle className="text-xl font-bold text-foreground tracking-tight">
                     {spec.name}
                   </DialogTitle>
-                  {isActive && (
+                  {isConnected && (
                     <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px] font-semibold">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1 animate-pulse" />
                       ATIVA
@@ -223,12 +224,6 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
                 <DialogDescription className="text-xs text-muted-foreground mt-0.5">
                   {spec.tagline}
                 </DialogDescription>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold hidden sm:inline">
-                  {isActive ? "Ligada" : "Desligada"}
-                </span>
-                <Switch checked={isActive} onCheckedChange={setIsActive} />
               </div>
             </div>
           </DialogHeader>

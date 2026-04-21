@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Sparkles, Play, TrendingUp, Users, Target, Trophy, Star, Flame, Crown, Zap } from "lucide-react";
+import { ArrowRight, Play, TrendingUp, Users, Target, Trophy, Star, Flame, Crown, Zap } from "lucide-react";
 import brandLogoLight from "@/assets/logo-light.svg";
 
 interface HeroDarkProps {
@@ -125,7 +125,6 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                     {/* Left: Text */}
                     <div>
                         <Badge className="mb-6 bg-emerald-50 text-emerald-600 border-emerald-300 hover:bg-emerald-100">
-                            <Sparkles className="h-3 w-3 mr-1" />
                             TECNOLOGIA GAME SALES + GAMIFICAÇÃO
                         </Badge>
 

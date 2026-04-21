@@ -10,30 +10,17 @@ import {
     TrendingUp,
     ChevronRight,
     Check,
-    Sparkles,
     Bot,
-    Flame,
     Clock,
-    Webhook,
-    Plus,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 import hotmartLogo from "@/assets/integrations/hotmart-logo-png_seeklogo-485917.webp";
 import kiwifyLogo from "@/assets/integrations/kiwify-logo-png_seeklogo-537186.webp";
-import greennLogo from "@/assets/integrations/greenn.webp";
-import caktoLogo from "@/assets/integrations/cakto.webp";
-import celetusLogo from "@/assets/integrations/celetus.webp";
-import rdstationLogo from "@/assets/integrations/rdstation.svg";
 import stripeLogo from "@/assets/integrations/stripe.svg";
 import mercadopagoLogo from "@/assets/integrations/mercadopago.webp";
 import pagarmeLogo from "@/assets/integrations/pagarme.svg";
 import eduzzLogo from "@/assets/integrations/eduzz.webp";
-import monetizzeLogo from "@/assets/integrations/monetizze.webp";
-import braipLogo from "@/assets/integrations/braip.webp";
-import asaasLogo from "@/assets/integrations/asaas.svg";
-import zapierLogo from "@/assets/integrations/zapier.svg";
-import notazzLogo from "@/assets/integrations/notazz.png";
 
 // ─── Mockups ─────────────────────────────────────────────────────────────────
 
@@ -137,103 +124,61 @@ function PipelineMockup() {
     const columns = [
         {
             title: "Lead",
-            count: 24,
-            total: "R$ 48.2k",
-            color: "#3b82f6",
-            accent: "rgba(59,130,246,0.12)",
-            border: "rgba(59,130,246,0.25)",
+            total: "R$ 7.2k",
+            count: 8,
+            color: "#60a5fa",
+            accent: "rgba(96,165,250,0.1)",
+            border: "rgba(96,165,250,0.2)",
             deals: [
-                {
-                    name: "Juliana Ribeiro",
-                    company: "Bolt Academy",
-                    value: "R$ 2.4k",
-                    avatar: "JR",
-                    avatarBg: "linear-gradient(135deg,#60a5fa,#3b82f6)",
-                    days: "2d",
-                },
-                {
-                    name: "Pedro Martins",
-                    company: "Marketing Pro",
-                    value: "R$ 997",
-                    avatar: "PM",
-                    avatarBg: "linear-gradient(135deg,#818cf8,#6366f1)",
-                    days: "4d",
-                },
+                { name: "Ana Silva", value: "R$ 2.4k", avatar: "AS", avatarBg: "linear-gradient(135deg,#60a5fa,#3b82f6)", days: "2d" },
+                { name: "Rafael Torres", value: "R$ 3.2k", avatar: "RT", avatarBg: "linear-gradient(135deg,#818cf8,#6366f1)", days: "4d" },
+                { name: "Marina Dias", value: "R$ 1.6k", avatar: "MD", avatarBg: "linear-gradient(135deg,#93c5fd,#60a5fa)", days: "6d" },
             ],
         },
         {
             title: "Proposta",
-            count: 12,
-            total: "R$ 62.8k",
-            color: "#a78bfa",
-            accent: "rgba(167,139,250,0.12)",
-            border: "rgba(167,139,250,0.28)",
+            total: "R$ 11.4k",
+            count: 5,
+            color: "#fbbf24",
+            accent: "rgba(251,191,36,0.1)",
+            border: "rgba(251,191,36,0.22)",
             deals: [
-                {
-                    name: "Fernanda Alves",
-                    company: "Solar Up",
-                    value: "R$ 4.8k",
-                    avatar: "FA",
-                    avatarBg: "linear-gradient(135deg,#f472b6,#ec4899)",
-                    days: "5d",
-                    hot: true,
-                    dragging: true,
-                },
-                {
-                    name: "Rafael Tavares",
-                    company: "Fit Method",
-                    value: "R$ 1.2k",
-                    avatar: "RT",
-                    avatarBg: "linear-gradient(135deg,#c084fc,#a855f7)",
-                    days: "1d",
-                },
+                { name: "Carlos Mendes", value: "R$ 4.8k", avatar: "CM", avatarBg: "linear-gradient(135deg,#fbbf24,#f59e0b)", days: "5d", moving: true },
+                { name: "Luiza Ferreira", value: "R$ 3.9k", avatar: "LF", avatarBg: "linear-gradient(135deg,#fde68a,#fbbf24)", days: "3d" },
+                { name: "Tiago Rocha", value: "R$ 2.7k", avatar: "TR", avatarBg: "linear-gradient(135deg,#fcd34d,#f59e0b)", days: "1d" },
             ],
         },
         {
-            title: "Fechado",
-            count: 7,
-            total: "R$ 28.1k",
+            title: "Ganho",
+            total: "R$ 12.3k",
+            count: 4,
             color: "#10b981",
-            accent: "rgba(16,185,129,0.12)",
-            border: "rgba(16,185,129,0.28)",
+            accent: "rgba(16,185,129,0.1)",
+            border: "rgba(16,185,129,0.25)",
             deals: [
-                {
-                    name: "Ana Lima",
-                    company: "Design Lab",
-                    value: "R$ 5.9k",
-                    avatar: "AL",
-                    avatarBg: "linear-gradient(135deg,#34d399,#10b981)",
-                    won: true,
-                },
-                {
-                    name: "Diego Pereira",
-                    company: "Tech Course",
-                    value: "R$ 2.1k",
-                    avatar: "DP",
-                    avatarBg: "linear-gradient(135deg,#6ee7b7,#10b981)",
-                    won: true,
-                },
+                { name: "Paula Costa", value: "R$ 5.9k", avatar: "PC", avatarBg: "linear-gradient(135deg,#34d399,#10b981)", won: true },
+                { name: "Bruno Almeida", value: "R$ 4.2k", avatar: "BA", avatarBg: "linear-gradient(135deg,#6ee7b7,#10b981)", won: true },
+                { name: "Sofia Lima", value: "R$ 2.2k", avatar: "SL", avatarBg: "linear-gradient(135deg,#a7f3d0,#34d399)", won: true },
             ],
         },
     ];
 
+    const totalValue = columns.reduce((sum, c) => sum + parseFloat(c.total.replace(/[^\d.,]/g, "").replace(",", ".")), 0);
+    const totalDeals = columns.reduce((sum, c) => sum + c.count, 0);
+
     return (
         <div className="p-4 sm:p-6 md:p-8 h-full flex flex-col">
-            <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center justify-between mb-4 md:mb-5">
                 <div>
                     <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: "rgba(255,255,255,0.35)", fontWeight: 600 }}>
-                        Pipeline de vendas
+                        Seu pipeline
                     </p>
                     <div className="flex items-center gap-2">
-                        <p className="text-sm" style={{ color: "rgba(255,255,255,0.85)", fontWeight: 600 }}>
-                            43 deals
+                        <p className="text-sm tabular-nums" style={{ color: "rgba(255,255,255,0.9)", fontWeight: 700 }}>
+                            R$ {totalValue.toFixed(1)}k
                         </p>
-                        <span style={{ color: "rgba(255,255,255,0.2)" }}>•</span>
-                        <p className="text-sm tabular-nums" style={{ color: "rgba(255,255,255,0.85)", fontWeight: 600 }}>
-                            R$ 139.1k
-                        </p>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded-md tabular-nums" style={{ background: "rgba(16,185,129,0.1)", color: "#34d399", fontWeight: 700 }}>
-                            +18%
+                        <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.4)", fontWeight: 500 }}>
+                            · {totalDeals} deals ativos
                         </span>
                     </div>
                 </div>
@@ -243,15 +188,15 @@ function PipelineMockup() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5 flex-1">
+            <div className="grid grid-cols-3 gap-1.5 sm:gap-2 flex-1 content-start">
                 {columns.map((col, colIdx) => (
                     <div key={col.title} className="flex flex-col min-w-0">
-                        {/* Column header */}
+                        {/* Column header with total */}
                         <div
-                            className="rounded-lg px-2.5 py-2 mb-2"
+                            className="rounded-lg px-2.5 py-1.5 md:py-2 mb-2"
                             style={{ background: col.accent, border: `1px solid ${col.border}` }}
                         >
-                            <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center justify-between gap-1">
                                 <div className="flex items-center gap-1.5 min-w-0">
                                     <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: col.color, boxShadow: `0 0 8px ${col.color}` }} />
                                     <span className="text-[11px] truncate" style={{ color: "rgba(255,255,255,0.9)", fontWeight: 600 }}>
@@ -259,18 +204,18 @@ function PipelineMockup() {
                                     </span>
                                 </div>
                                 <span
-                                    className="text-[9px] tabular-nums px-1.5 py-0.5 rounded-md"
+                                    className="text-[9px] tabular-nums px-1 py-0.5 rounded shrink-0"
                                     style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.75)", fontWeight: 700 }}
                                 >
                                     {col.count}
                                 </span>
                             </div>
-                            <p className="text-[10px] tabular-nums" style={{ color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>
+                            <p className="hidden md:block text-[10px] tabular-nums mt-0.5" style={{ color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>
                                 {col.total}
                             </p>
                         </div>
 
-                        {/* Deal cards */}
+                        {/* Deals — mobile shows 1, desktop shows 3 */}
                         <div className="space-y-1.5">
                             {col.deals.map((deal, i) => (
                                 <motion.div
@@ -279,43 +224,29 @@ function PipelineMockup() {
                                     animate={{
                                         opacity: 1,
                                         y: 0,
-                                        rotate: deal.dragging ? -2 : 0,
-                                        scale: deal.dragging ? 1.02 : 1,
+                                        rotate: deal.moving ? -2 : 0,
+                                        scale: deal.moving ? 1.03 : 1,
                                     }}
-                                    transition={{ delay: colIdx * 0.08 + i * 0.06 }}
-                                    className="rounded-xl p-2.5 relative"
+                                    transition={{ delay: colIdx * 0.08 + i * 0.05 }}
+                                    className={`rounded-xl p-2.5 relative ${i > 0 ? "hidden md:block" : ""}`}
                                     style={{
-                                        background: deal.dragging
-                                            ? "rgba(167,139,250,0.1)"
-                                            : deal.won
-                                                ? "rgba(16,185,129,0.04)"
+                                        background: deal.won
+                                            ? "rgba(16,185,129,0.05)"
+                                            : deal.moving
+                                                ? "rgba(251,191,36,0.08)"
                                                 : "rgba(255,255,255,0.025)",
                                         border: `1px solid ${
-                                            deal.dragging
-                                                ? "rgba(167,139,250,0.35)"
-                                                : deal.won
-                                                    ? "rgba(16,185,129,0.15)"
+                                            deal.won
+                                                ? "rgba(16,185,129,0.2)"
+                                                : deal.moving
+                                                    ? "rgba(251,191,36,0.3)"
                                                     : "rgba(255,255,255,0.06)"
                                         }`,
-                                        boxShadow: deal.dragging
-                                            ? "0 8px 24px -8px rgba(167,139,250,0.35)"
+                                        boxShadow: deal.moving
+                                            ? "0 8px 24px -8px rgba(251,191,36,0.3)"
                                             : "none",
                                     }}
                                 >
-                                    {/* Hot tag */}
-                                    {deal.hot && (
-                                        <div
-                                            className="absolute -top-1.5 -right-1.5 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full"
-                                            style={{ background: "#ef4444", boxShadow: "0 2px 8px rgba(239,68,68,0.4)" }}
-                                        >
-                                            <Flame className="h-2 w-2 text-white" fill="currentColor" />
-                                            <span className="text-[8px] text-white" style={{ fontWeight: 700, letterSpacing: "0.03em" }}>
-                                                HOT
-                                            </span>
-                                        </div>
-                                    )}
-
-                                    {/* Avatar + name */}
                                     <div className="flex items-center gap-1.5 mb-1.5">
                                         <div
                                             className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
@@ -327,11 +258,7 @@ function PipelineMockup() {
                                             {deal.name}
                                         </p>
                                     </div>
-                                    <p className="text-[9px] truncate mb-1.5" style={{ color: "rgba(255,255,255,0.4)" }}>
-                                        {deal.company}
-                                    </p>
 
-                                    {/* Footer: value + time/status */}
                                     <div className="flex items-center justify-between">
                                         <p
                                             className="text-[11px] tabular-nums"
@@ -344,8 +271,8 @@ function PipelineMockup() {
                                             {deal.value}
                                         </p>
                                         {deal.won ? (
-                                            <span className="text-[9px] uppercase tracking-wider" style={{ color: "#10b981", fontWeight: 700 }}>
-                                                Won
+                                            <span className="text-[8px] uppercase tracking-wider" style={{ color: "#10b981", fontWeight: 700 }}>
+                                                Ganho
                                             </span>
                                         ) : (
                                             <div className="flex items-center gap-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>
@@ -358,21 +285,15 @@ function PipelineMockup() {
                                     </div>
                                 </motion.div>
                             ))}
-
-                            {/* Add deal ghost */}
-                            <div
-                                className="rounded-xl h-8 flex items-center justify-center gap-1"
-                                style={{ border: "1px dashed rgba(255,255,255,0.06)" }}
-                            >
-                                <Plus className="h-3 w-3" style={{ color: "rgba(255,255,255,0.2)" }} />
-                                <span className="text-[9px]" style={{ color: "rgba(255,255,255,0.25)", fontWeight: 500 }}>
-                                    Adicionar
-                                </span>
-                            </div>
                         </div>
                     </div>
                 ))}
             </div>
+
+            {/* Caption */}
+            <p className="text-[10px] text-center mt-5" style={{ color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>
+                Arrasta o card pra próxima etapa. Só isso.
+            </p>
         </div>
     );
 }
@@ -381,156 +302,163 @@ function SalesMockup() {
     const platforms = [
         { logo: hotmartLogo, name: "Hotmart" },
         { logo: kiwifyLogo, name: "Kiwify" },
-        { logo: greennLogo, name: "Greenn" },
-        { logo: caktoLogo, name: "Cakto" },
-        { logo: celetusLogo, name: "Celetus" },
-        { logo: rdstationLogo, name: "RD Station" },
-        { logo: stripeLogo, name: "Stripe" },
         { logo: mercadopagoLogo, name: "Mercado Pago" },
+        { logo: stripeLogo, name: "Stripe" },
         { logo: pagarmeLogo, name: "Pagar.me" },
         { logo: eduzzLogo, name: "Eduzz" },
-        { logo: monetizzeLogo, name: "Monetizze" },
-        { logo: braipLogo, name: "Braip" },
-        { logo: asaasLogo, name: "Asaas" },
-        { logo: zapierLogo, name: "Zapier" },
-        { logo: notazzLogo, name: "Notazz" },
     ];
 
     return (
         <div className="p-4 sm:p-6 md:p-8 h-full flex flex-col">
-            <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center justify-between mb-4">
                 <div>
                     <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: "rgba(255,255,255,0.35)", fontWeight: 600 }}>
-                        Integrações ativas
+                        Plataformas que você usa
                     </p>
-                    <div className="flex items-center gap-2">
-                        <p className="text-sm" style={{ color: "rgba(255,255,255,0.85)", fontWeight: 600 }}>
-                            15 plataformas
-                        </p>
-                        <span style={{ color: "rgba(255,255,255,0.2)" }}>•</span>
-                        <p className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>
-                            sync em tempo real
-                        </p>
-                    </div>
+                    <p className="text-sm" style={{ color: "rgba(255,255,255,0.85)", fontWeight: 600 }}>
+                        Conectadas em 1 clique
+                    </p>
                 </div>
                 <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full" style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)" }}>
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="text-[10px] text-emerald-400" style={{ fontWeight: 600 }}>Conectado</span>
+                    <span className="text-[10px] text-emerald-400" style={{ fontWeight: 600 }}>Sincronizando</span>
                 </div>
             </div>
 
-            {/* Logo grid - 5 cols × 3 rows */}
-            <div className="grid grid-cols-5 gap-1.5 mb-4">
+            {/* MOBILE: 6 platform logos, 3 cols × 2 rows */}
+            <div className="grid grid-cols-3 gap-2 mb-4 md:hidden">
                 {platforms.map((p, i) => (
                     <motion.div
                         key={p.name}
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: i * 0.03 }}
-                        className="group flex flex-col items-center justify-center gap-1.5 px-2 py-3 rounded-lg transition-colors"
+                        transition={{ delay: i * 0.05 }}
+                        className="flex items-center gap-2 px-2.5 py-2 rounded-lg"
                         style={{
                             background: "rgba(255,255,255,0.03)",
                             border: "1px solid rgba(255,255,255,0.06)",
                         }}
                     >
                         <div
-                            className="w-9 h-9 shrink-0 flex items-center justify-center rounded-md"
+                            className="w-7 h-7 shrink-0 flex items-center justify-center rounded-md"
                             style={{ background: "rgba(255,255,255,0.95)" }}
                         >
-                            <img
-                                src={p.logo}
-                                alt={p.name}
-                                width={25}
-                                height={25}
-                                loading="lazy"
-                                decoding="async"
-                                className="max-w-[70%] max-h-[70%] object-contain"
-                            />
+                            <img src={p.logo} alt={p.name} width={20} height={20} loading="lazy" decoding="async" className="max-w-[72%] max-h-[72%] object-contain" />
                         </div>
-                        <span
-                            className="text-[9px] truncate max-w-full text-center"
-                            style={{ color: "rgba(255,255,255,0.7)", fontWeight: 600 }}
-                        >
+                        <span className="text-[10px] truncate" style={{ color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>
                             {p.name}
                         </span>
                     </motion.div>
                 ))}
             </div>
 
-            {/* Webhook highlight card */}
+            {/* DESKTOP: infinite horizontal ticker (Linear / Folk style) */}
+            <div className="hidden md:block mb-4 relative overflow-hidden" style={{ maskImage: "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)", WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)" }}>
+                <div className="flex gap-2.5 sales-ticker" style={{ width: "max-content" }}>
+                    {[...platforms, ...platforms, ...platforms].map((p, i) => (
+                        <div
+                            key={`${p.name}-${i}`}
+                            className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg shrink-0"
+                            style={{
+                                background: "rgba(255,255,255,0.03)",
+                                border: "1px solid rgba(255,255,255,0.07)",
+                                minWidth: 160,
+                            }}
+                        >
+                            <div className="w-8 h-8 shrink-0 flex items-center justify-center rounded-md" style={{ background: "rgba(255,255,255,0.95)" }}>
+                                <img src={p.logo} alt={p.name} width={22} height={22} loading="lazy" decoding="async" className="max-w-[72%] max-h-[72%] object-contain" />
+                            </div>
+                            <div className="min-w-0">
+                                <span className="block text-[11px] truncate" style={{ color: "rgba(255,255,255,0.9)", fontWeight: 600 }}>
+                                    {p.name}
+                                </span>
+                                <span className="block text-[9px]" style={{ color: "rgba(16,185,129,0.75)", fontWeight: 600 }}>
+                                    • sincronizando
+                                </span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Flow arrow */}
+            <div className="flex flex-col items-center gap-1 mb-3">
+                <div className="w-px h-3" style={{ background: "linear-gradient(to bottom, rgba(16,185,129,0.5), rgba(16,185,129,0.1))" }} />
+                <span className="text-[9px] uppercase tracking-widest" style={{ color: "rgba(16,185,129,0.6)", fontWeight: 700 }}>
+                    Venda aprovada
+                </span>
+            </div>
+
+            {/* Live sale card — the hero of this mockup */}
             <motion.div
-                initial={{ opacity: 0, y: 8 }}
+                initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="rounded-xl p-3 mb-3 relative overflow-hidden"
+                transition={{ delay: 0.4 }}
+                className="rounded-xl p-4 md:p-5 mt-auto relative overflow-hidden"
                 style={{
-                    background: "linear-gradient(135deg, rgba(16,185,129,0.08), rgba(52,211,153,0.04))",
-                    border: "1px solid rgba(16,185,129,0.25)",
+                    background: "linear-gradient(135deg, rgba(16,185,129,0.1), rgba(52,211,153,0.03))",
+                    border: "1px solid rgba(16,185,129,0.3)",
+                    boxShadow: "0 8px 32px -12px rgba(16,185,129,0.3)",
                 }}
             >
                 <div
-                    className="absolute -top-6 -right-6 w-24 h-24 rounded-full pointer-events-none"
-                    style={{ background: "radial-gradient(circle, rgba(16,185,129,0.15) 0%, transparent 70%)" }}
+                    className="absolute -top-8 -right-8 w-32 h-32 rounded-full pointer-events-none"
+                    style={{ background: "radial-gradient(circle, rgba(16,185,129,0.18) 0%, transparent 70%)" }}
                 />
-                <div className="relative flex items-start gap-3">
-                    <div
-                        className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-                        style={{ background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.3)" }}
-                    >
-                        <Webhook className="h-4 w-4 text-emerald-400" strokeWidth={2} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                            <span className="text-[12px]" style={{ color: "rgba(255,255,255,0.95)", fontWeight: 700 }}>
-                                Webhook customizado
-                            </span>
-                            <span
-                                className="text-[8px] px-1.5 py-0.5 rounded uppercase tracking-wider"
-                                style={{ background: "rgba(16,185,129,0.15)", color: "#34d399", fontWeight: 700 }}
-                            >
-                                Any platform
-                            </span>
+
+                <div className="relative">
+                    <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2.5">
+                            <div className="w-7 h-7 md:w-9 md:h-9 rounded-full flex items-center justify-center" style={{ background: "rgba(16,185,129,0.18)", border: "1px solid rgba(16,185,129,0.35)" }}>
+                                <TrendingUp className="h-3.5 w-3.5 md:h-4 md:w-4 text-emerald-400" strokeWidth={2.5} />
+                            </div>
+                            <div>
+                                <div className="flex items-center gap-1.5">
+                                    <p className="text-[11px] md:text-xs" style={{ color: "rgba(255,255,255,0.95)", fontWeight: 700 }}>
+                                        Nova venda
+                                    </p>
+                                    <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
+                                    <span className="text-[9px] md:text-[10px] text-emerald-400" style={{ fontWeight: 600 }}>agora</span>
+                                </div>
+                                <p className="text-[9px] md:text-[10px]" style={{ color: "rgba(255,255,255,0.5)" }}>
+                                    Hotmart · Curso Método V
+                                </p>
+                            </div>
                         </div>
-                        <p className="text-[10px] mb-1.5" style={{ color: "rgba(255,255,255,0.55)" }}>
-                            Conecta qualquer plataforma que dispare webhook
-                        </p>
-                        <div
-                            className="font-mono text-[9px] px-2 py-1 rounded"
-                            style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.05)", color: "rgba(52,211,153,0.9)" }}
-                        >
-                            <span style={{ color: "rgba(255,255,255,0.35)" }}>POST</span> /hooks/vendas/<span style={{ color: "rgba(255,255,255,0.5)" }}>seu-token</span>
+                        <span className="text-base md:text-lg tabular-nums text-emerald-400" style={{ fontWeight: 800 }}>
+                            +R$ 497
+                        </span>
+                    </div>
+
+                    <div className="space-y-1.5 pt-2.5" style={{ borderTop: "1px solid rgba(16,185,129,0.15)" }}>
+                        <div className="flex items-center gap-2">
+                            <Check className="h-3 w-3 text-emerald-400 shrink-0" strokeWidth={3} />
+                            <p className="text-[10px] md:text-[11px]" style={{ color: "rgba(255,255,255,0.75)", fontWeight: 500 }}>
+                                Deal criado no pipeline
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Check className="h-3 w-3 text-emerald-400 shrink-0" strokeWidth={3} />
+                            <p className="text-[10px] md:text-[11px]" style={{ color: "rgba(255,255,255,0.75)", fontWeight: 500 }}>
+                                Ranking do vendedor atualizado
+                            </p>
                         </div>
                     </div>
                 </div>
             </motion.div>
 
-            {/* Live incoming sale */}
-            <motion.div
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.7 }}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg mt-auto"
-                style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.18)" }}
-            >
-                <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.3)" }}>
-                    <TrendingUp className="h-3.5 w-3.5 text-emerald-400" strokeWidth={2.5} />
-                </div>
-                <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                        <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.9)", fontWeight: 600 }}>
-                            Nova venda
-                        </p>
-                        <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
-                        <span className="text-[9px] text-emerald-400" style={{ fontWeight: 600 }}>agora</span>
-                    </div>
-                    <p className="text-[9px]" style={{ color: "rgba(255,255,255,0.45)" }}>
-                        Curso Método V • Hotmart
-                    </p>
-                </div>
-                <span className="text-sm tabular-nums text-emerald-400 shrink-0" style={{ fontWeight: 700 }}>
-                    +R$ 497
-                </span>
-            </motion.div>
+            <style>{`
+                @keyframes sales-ticker-kf {
+                    from { transform: translate3d(0, 0, 0); }
+                    to { transform: translate3d(calc(-100% / 3), 0, 0); }
+                }
+                .sales-ticker {
+                    animation: sales-ticker-kf 28s linear infinite;
+                }
+                @media (prefers-reduced-motion: reduce) {
+                    .sales-ticker { animation: none; }
+                }
+            `}</style>
         </div>
     );
 }
@@ -587,7 +515,7 @@ function GoalsMockup() {
                             className="text-3xl tabular-nums"
                             style={{ color: "rgba(255,255,255,0.95)", fontWeight: 700, letterSpacing: "-0.03em" }}
                         >63%</motion.span>
-                        <span className="text-[10px] uppercase tracking-wider mt-0.5" style={{ color: "rgba(255,255,255,0.4)", fontWeight: 600 }}>Semanal</span>
+                        <span className="text-[11px] uppercase tracking-wider mt-0.5" style={{ color: "rgba(255,255,255,0.55)", fontWeight: 700 }}>Semanal</span>
                     </div>
                 </div>
             </div>
@@ -666,7 +594,6 @@ function WhatsAppMockup() {
                     style={{ background: "rgba(139,92,246,0.08)", border: "1px solid rgba(139,92,246,0.2)" }}
                 >
                     <div className="flex items-center gap-1.5 mb-1.5">
-                        <Sparkles className="h-3 w-3" style={{ color: "#a78bfa" }} />
                         <span className="text-[10px]" style={{ color: "#a78bfa", fontWeight: 600, letterSpacing: "0.05em" }}>OBJEÇÃO: PREÇO</span>
                     </div>
                     <p className="text-[11px] mb-2" style={{ color: "rgba(255,255,255,0.75)", lineHeight: 1.5 }}>
@@ -716,35 +643,35 @@ const FEATURES: readonly Feature[] = [
         id: "ranking",
         icon: Trophy,
         title: "Ranking ao vivo",
-        description: "Pódio em tempo real. Cada venda sobe o placar na hora — seu time compete e vende mais.",
+        description: "Pódio atualiza a cada venda. Vendedor abre o celular, vê a posição e corre atrás. Sem você precisar \"rodar os números\" no fim do mês.",
         Mockup: RankingMockup,
     },
     {
         id: "pipeline",
         icon: Kanban,
-        title: "Pipeline Kanban",
-        description: "Arrasta e solta. Cada deal do lead ao fechamento. Customize as etapas do seu funil.",
+        title: "Pipeline visual",
+        description: "Arrasta, solta, fecha. As etapas são como seu time realmente vende, não como o software acha que deveriam ser.",
         Mockup: PipelineMockup,
     },
     {
         id: "vendas",
         icon: Zap,
-        title: "Integra com tudo",
-        description: "Hotmart, Kiwify, Stripe, Mercado Pago e mais 10+ plataformas. Ou use webhook custom pra conectar qualquer outra.",
+        title: "Venda automática",
+        description: "Qualquer checkout, plataforma de pagamento ou ferramenta que dispare webhook. A venda entra no pipeline e sobe o ranking. Sem planilha, sem importação manual.",
         Mockup: SalesMockup,
     },
     {
         id: "metas",
         icon: Target,
-        title: "Metas com visibilidade",
-        description: "Meta individual e do time. Cada vendedor vê quanto falta e quanto já entregou.",
+        title: "Meta que cada um enxerga",
+        description: "Vendedor abre o app e vê quanto falta. Gestor para de cobrar status no grupo, time para de chutar número no fim do mês.",
         Mockup: GoalsMockup,
     },
     {
         id: "whatsapp",
         icon: MessageCircle,
-        title: "WhatsApp com IA",
-        description: "Copiloto identifica objeção e sugere resposta em tempo real. Hub unificado por vendedor.",
+        title: "WhatsApp com copiloto",
+        description: "IA identifica objeção enquanto o lead responde. Sugere resposta, salva no deal — sem alternar entre WhatsApp Web e planilha.",
         Mockup: WhatsAppMockup,
     },
 ];
@@ -808,7 +735,7 @@ export const ProductBentoGrid = () => {
                         }}
                     >
                         <Zap className="h-3 w-3" />
-                        ARSENAL COMPLETO
+                        O QUE TEM DENTRO
                     </span>
                     <h2
                         className="font-heading mb-4"
@@ -820,8 +747,8 @@ export const ProductBentoGrid = () => {
                             color: "rgba(255,255,255,0.95)",
                         }}
                     >
-                        Tudo que seu time precisa.{" "}
-                        <span className="text-emerald-400">Num lugar só.</span>
+                        Cinco módulos. Zero genérico.{" "}
+                        <span className="text-emerald-400">Cada um resolve uma dor.</span>
                     </h2>
                     <p
                         className="max-w-xl mx-auto"
@@ -831,11 +758,11 @@ export const ProductBentoGrid = () => {
                             color: "rgba(255,255,255,0.45)",
                         }}
                     >
-                        Passa o mouse pra explorar.{" "}
+                        Construído a partir do que{" "}
                         <span style={{ fontWeight: "var(--fw-medium)", color: "rgba(255,255,255,0.85)" }}>
-                            Sem ficar pulando de aba
+                            time comercial faz no dia a dia
                         </span>
-                        .
+                        . Nada aqui é cosmético.
                     </p>
                 </motion.div>
 

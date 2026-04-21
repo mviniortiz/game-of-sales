@@ -33,7 +33,7 @@ const CASES = [
         tag: "Dono de Infoproduto",
         title: "Vendas automáticas, zero trabalho manual",
         description:
-            "Conecta Hotmart, Kiwify ou Greenn via webhook. Cada venda aprovada cai no painel e atualiza o ranking automaticamente. Sem copia-e-cola.",
+            "Conecta seu checkout via webhook. Cada venda aprovada cai no painel e atualiza o ranking automaticamente. Sem copia-e-cola.",
         bullets: [
             "Sincronização automática via webhook",
             "Painel de receita ao vivo",

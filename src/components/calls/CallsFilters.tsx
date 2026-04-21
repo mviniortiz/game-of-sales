@@ -139,7 +139,7 @@ export const CallsFilters = ({
   }
 
   return (
-    <Card className="border border-border bg-card shadow-sm">
+    <Card className="relative overflow-hidden bg-card border-border" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
       <CardContent className="p-4 space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="flex items-center gap-2">

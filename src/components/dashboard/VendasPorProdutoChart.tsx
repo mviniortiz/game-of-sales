@@ -50,10 +50,10 @@ export const VendasPorProdutoChart = ({ data }: VendasPorProdutoChartProps) => {
                 <stop offset="100%" stopColor="#4F46E5" stopOpacity={0.6}/>
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-            <XAxis 
-              dataKey="produto" 
-              stroke="rgba(255,255,255,0.3)"
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+            <XAxis
+              dataKey="produto"
+              stroke="hsl(var(--muted-foreground))"
               fontSize={11}
               tickLine={false}
               axisLine={false}
@@ -62,8 +62,8 @@ export const VendasPorProdutoChart = ({ data }: VendasPorProdutoChartProps) => {
               height={60}
               interval={0}
             />
-            <YAxis 
-              stroke="rgba(255,255,255,0.3)"
+            <YAxis
+              stroke="hsl(var(--muted-foreground))"
               fontSize={11}
               tickLine={false}
               axisLine={false}
@@ -72,12 +72,12 @@ export const VendasPorProdutoChart = ({ data }: VendasPorProdutoChartProps) => {
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: "rgba(15, 23, 42, 0.95)",
-                border: "1px solid rgba(255,255,255,0.1)",
+                backgroundColor: "hsl(var(--card))",
+                border: "1px solid hsl(var(--border))",
                 borderRadius: "8px",
                 boxShadow: "0 4px 20px rgba(0,0,0,0.3)"
               }}
-              labelStyle={{ color: "#94a3b8" }}
+              labelStyle={{ color: "hsl(var(--muted-foreground))" }}
               formatter={(value: number, name: string) => {
                 if (name === "total") return [formatCurrency(value), "Faturamento"];
                 return [value, "Quantidade"];

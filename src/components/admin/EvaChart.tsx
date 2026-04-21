@@ -35,7 +35,7 @@ const formatCurrency = (value: number) => {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-lg border border-border/50 bg-[#0a0c10] px-3 py-2 shadow-xl text-xs">
+    <div className="rounded-lg border border-border/50 bg-card px-3 py-2 shadow-xl text-xs">
       <p className="text-muted-foreground mb-1 font-medium">{label}</p>
       {payload.map((entry: any, i: number) => (
         <p key={i} style={{ color: entry.color }} className="font-semibold tabular-nums">
@@ -55,15 +55,15 @@ function EvaBarChart({ chart }: { chart: ChartPayload }) {
   return (
     <ResponsiveContainer width="100%" height={220}>
       <BarChart data={chart.data} margin={{ top: 5, right: 5, bottom: 5, left: -10 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
         <XAxis
           dataKey={xKey}
-          tick={{ fontSize: 11, fill: "rgba(255,255,255,0.4)" }}
-          axisLine={{ stroke: "rgba(255,255,255,0.06)" }}
+          tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+          axisLine={{ stroke: "hsl(var(--border))" }}
           tickLine={false}
         />
         <YAxis
-          tick={{ fontSize: 10, fill: "rgba(255,255,255,0.3)" }}
+          tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
           axisLine={false}
           tickLine={false}
           tickFormatter={formatCurrency}
@@ -86,15 +86,15 @@ function EvaLineChart({ chart }: { chart: ChartPayload }) {
   return (
     <ResponsiveContainer width="100%" height={220}>
       <LineChart data={chart.data} margin={{ top: 5, right: 5, bottom: 5, left: -10 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
         <XAxis
           dataKey={xKey}
-          tick={{ fontSize: 11, fill: "rgba(255,255,255,0.4)" }}
-          axisLine={{ stroke: "rgba(255,255,255,0.06)" }}
+          tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+          axisLine={{ stroke: "hsl(var(--border))" }}
           tickLine={false}
         />
         <YAxis
-          tick={{ fontSize: 10, fill: "rgba(255,255,255,0.3)" }}
+          tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
           axisLine={false}
           tickLine={false}
           tickFormatter={formatCurrency}
@@ -106,7 +106,7 @@ function EvaLineChart({ chart }: { chart: ChartPayload }) {
           stroke="#8b5cf6"
           strokeWidth={2}
           dot={{ fill: "#8b5cf6", r: 4, strokeWidth: 0 }}
-          activeDot={{ r: 6, fill: "#8b5cf6", stroke: "#0a0c10", strokeWidth: 2 }}
+          activeDot={{ r: 6, fill: "#8b5cf6", stroke: "hsl(var(--card))", strokeWidth: 2 }}
         />
       </LineChart>
     </ResponsiveContainer>
@@ -139,7 +139,7 @@ function EvaPieChart({ chart }: { chart: ChartPayload }) {
             const pct = total > 0 ? ((Number(value) / total) * 100).toFixed(0) : "0";
             return `${name} (${pct}%)`;
           }}
-          labelLine={{ stroke: "rgba(255,255,255,0.15)" }}
+          labelLine={{ stroke: "hsl(var(--border))" }}
         >
           {chart.data.map((_, i) => (
             <Cell key={i} fill={COLORS[i % COLORS.length]} fillOpacity={0.85} />
@@ -153,7 +153,7 @@ function EvaPieChart({ chart }: { chart: ChartPayload }) {
 
 export function EvaChartRenderer({ chart }: { chart: ChartPayload }) {
   return (
-    <div className="mt-3 rounded-xl border border-border/30 bg-[rgba(255,255,255,0.02)] p-3">
+    <div className="mt-3 rounded-xl border border-border/30 bg-muted/50 p-3">
       {chart.title && (
         <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2 pl-1">
           {chart.title}

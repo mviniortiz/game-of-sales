@@ -137,18 +137,18 @@ const Suporte = () => {
   };
 
   return (
-    <div className="min-h-screen" style={{ background: "#06080a" }}>
+    <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1
-              className="text-2xl sm:text-3xl font-bold"
-              style={{ color: "rgba(255,255,255,0.95)", fontFamily: "var(--font-heading)", letterSpacing: "-0.02em" }}
+              className="text-2xl sm:text-3xl font-bold text-foreground"
+              style={{ fontFamily: "var(--font-heading)", letterSpacing: "-0.02em" }}
             >
               Suporte
             </h1>
-            <p className="text-sm mt-1" style={{ color: "rgba(255,255,255,0.4)" }}>
+            <p className="text-sm mt-1 text-muted-foreground">
               Emails recebidos em suporte@vyzon.com.br
             </p>
           </div>
@@ -157,7 +157,7 @@ const Suporte = () => {
             size="sm"
             onClick={() => refetch()}
             disabled={isFetching}
-            className="border-white/10 bg-white/5 hover:bg-white/10 text-white/80"
+            className="border-border bg-muted/50 hover:bg-muted text-foreground/80"
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? "animate-spin" : ""}`} />
             Atualizar
@@ -166,49 +166,42 @@ const Suporte = () => {
 
         {/* Inbox layout */}
         <div
-          className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-4 rounded-2xl overflow-hidden"
-          style={{
-            background: "rgba(255,255,255,0.02)",
-            boxShadow: "0 0 0 1px rgba(255,255,255,0.06)",
-            minHeight: "70vh",
-          }}
+          className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-4 rounded-2xl overflow-hidden bg-card border border-border"
+          style={{ minHeight: "70vh" }}
         >
           {/* Email list */}
-          <div
-            className="border-r"
-            style={{ borderColor: "rgba(255,255,255,0.06)" }}
-          >
+          <div className="border-r border-border">
             {isLoading ? (
               <div className="flex items-center justify-center h-64">
                 <Loader2 className="h-6 w-6 animate-spin text-emerald-400" />
               </div>
             ) : listError ? (
               <div className="flex flex-col items-center justify-center h-64 px-6 text-center">
-                <div className="text-rose-400 text-sm font-medium mb-2">Erro ao carregar</div>
-                <p className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
+                <div className="text-rose-500 dark:text-rose-400 text-sm font-medium mb-2">Erro ao carregar</div>
+                <p className="text-xs text-muted-foreground">
                   {(listError as Error).message}
                 </p>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => refetch()}
-                  className="mt-4 border-white/10 bg-white/5 hover:bg-white/10 text-white/80"
+                  className="mt-4 border-border bg-muted/50 hover:bg-muted text-foreground/80"
                 >
                   Tentar novamente
                 </Button>
               </div>
             ) : emails.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-64 px-6 text-center">
-                <Inbox className="h-12 w-12 mb-3" style={{ color: "rgba(255,255,255,0.2)" }} />
-                <p className="text-sm font-medium" style={{ color: "rgba(255,255,255,0.7)" }}>
+                <Inbox className="h-12 w-12 mb-3 text-muted-foreground/40" />
+                <p className="text-sm font-medium text-foreground/80">
                   Nenhum email ainda
                 </p>
-                <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.4)" }}>
+                <p className="text-xs mt-1 text-muted-foreground">
                   Os emails enviados para suporte@vyzon.com.br aparecerão aqui.
                 </p>
               </div>
             ) : (
-              <div className="divide-y" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+              <div className="divide-y divide-border">
                 {emails.map((email) => {
                   const { name, email: fromEmail } = getFromName(email.from);
                   const isSelected = email.id === selectedId;
@@ -220,7 +213,7 @@ const Suporte = () => {
                         setReplyOpen(false);
                       }}
                       className={`w-full text-left px-4 py-3 transition-colors ${
-                        isSelected ? "bg-emerald-500/10" : "hover:bg-white/[0.03]"
+                        isSelected ? "bg-emerald-500/10" : "hover:bg-muted/60"
                       }`}
                       style={{
                         borderLeft: isSelected ? "2px solid #10b981" : "2px solid transparent",
@@ -228,33 +221,26 @@ const Suporte = () => {
                     >
                       <div className="flex items-start gap-3">
                         <div
-                          className="h-9 w-9 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-semibold"
+                          className="h-9 w-9 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-semibold text-emerald-700 dark:text-emerald-300"
                           style={{
                             background: "linear-gradient(135deg, rgba(16,185,129,0.2), rgba(6,182,212,0.15))",
-                            color: "#6ee7b7",
                           }}
                         >
                           {getInitials(email.from)}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2">
-                            <span
-                              className="text-sm font-medium truncate"
-                              style={{ color: "rgba(255,255,255,0.9)" }}
-                            >
+                            <span className="text-sm font-medium truncate text-foreground">
                               {name}
                             </span>
-                            <span className="text-[10px] flex-shrink-0" style={{ color: "rgba(255,255,255,0.35)" }}>
+                            <span className="text-[10px] flex-shrink-0 text-muted-foreground">
                               {formatDate(email.created_at)}
                             </span>
                           </div>
-                          <p
-                            className="text-xs truncate mt-0.5"
-                            style={{ color: "rgba(255,255,255,0.55)" }}
-                          >
+                          <p className="text-xs truncate mt-0.5 text-muted-foreground">
                             {email.subject || "(sem assunto)"}
                           </p>
-                          <p className="text-[11px] truncate mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>
+                          <p className="text-[11px] truncate mt-0.5 text-muted-foreground/70">
                             {fromEmail}
                           </p>
                         </div>
@@ -270,11 +256,11 @@ const Suporte = () => {
           <div className="relative">
             {!selectedId ? (
               <div className="flex flex-col items-center justify-center h-full min-h-[400px] px-6 text-center">
-                <MailOpen className="h-14 w-14 mb-4" style={{ color: "rgba(255,255,255,0.15)" }} />
-                <p className="text-base font-medium" style={{ color: "rgba(255,255,255,0.6)" }}>
+                <MailOpen className="h-14 w-14 mb-4 text-muted-foreground/40" />
+                <p className="text-base font-medium text-foreground/70">
                   Selecione um email para ler
                 </p>
-                <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.35)" }}>
+                <p className="text-xs mt-1 text-muted-foreground">
                   Lista atualiza automaticamente a cada 30 segundos
                 </p>
               </div>
@@ -285,40 +271,38 @@ const Suporte = () => {
             ) : emailDetail ? (
               <div className="flex flex-col h-full">
                 {/* Header */}
-                <div className="px-6 py-5 border-b" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+                <div className="px-6 py-5 border-b border-border">
                   <button
                     onClick={() => setSelectedId(null)}
-                    className="lg:hidden flex items-center gap-1 text-xs mb-3"
-                    style={{ color: "rgba(255,255,255,0.5)" }}
+                    className="lg:hidden flex items-center gap-1 text-xs mb-3 text-muted-foreground"
                   >
                     <ArrowLeft className="h-3 w-3" /> Voltar
                   </button>
                   <h2
-                    className="text-lg font-bold mb-3"
-                    style={{ color: "rgba(255,255,255,0.95)", fontFamily: "var(--font-heading)" }}
+                    className="text-lg font-bold mb-3 text-foreground"
+                    style={{ fontFamily: "var(--font-heading)" }}
                   >
                     {emailDetail.subject || "(sem assunto)"}
                   </h2>
                   <div className="flex items-start gap-3">
                     <div
-                      className="h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-semibold"
+                      className="h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-semibold text-emerald-700 dark:text-emerald-300"
                       style={{
                         background: "linear-gradient(135deg, rgba(16,185,129,0.2), rgba(6,182,212,0.15))",
-                        color: "#6ee7b7",
                       }}
                     >
                       {getInitials(emailDetail.from)}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm font-medium" style={{ color: "rgba(255,255,255,0.9)" }}>
+                        <span className="text-sm font-medium text-foreground">
                           {getFromName(emailDetail.from).name}
                         </span>
-                        <span className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
+                        <span className="text-xs text-muted-foreground">
                           &lt;{getFromName(emailDetail.from).email}&gt;
                         </span>
                       </div>
-                      <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.4)" }}>
+                      <p className="text-xs mt-1 text-muted-foreground">
                         para {emailDetail.to.join(", ")} · {formatDate(emailDetail.created_at)}
                       </p>
                     </div>
@@ -337,33 +321,28 @@ const Suporte = () => {
                 <div className="flex-1 overflow-auto px-6 py-5">
                   {emailDetail.html ? (
                     <div
-                      className="prose prose-invert max-w-none text-sm"
-                      style={{ color: "rgba(255,255,255,0.85)" }}
+                      className="prose dark:prose-invert max-w-none text-sm text-foreground/85"
                       dangerouslySetInnerHTML={{ __html: emailDetail.html }}
                     />
                   ) : emailDetail.text ? (
-                    <pre
-                      className="whitespace-pre-wrap text-sm font-sans"
-                      style={{ color: "rgba(255,255,255,0.85)" }}
-                    >
+                    <pre className="whitespace-pre-wrap text-sm font-sans text-foreground/85">
                       {emailDetail.text}
                     </pre>
                   ) : (
-                    <p className="text-sm italic" style={{ color: "rgba(255,255,255,0.4)" }}>
+                    <p className="text-sm italic text-muted-foreground">
                       (Email sem conteúdo)
                     </p>
                   )}
 
                   {emailDetail.attachments && emailDetail.attachments.length > 0 && (
-                    <div className="mt-6 pt-4 border-t" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-                      <p className="text-xs mb-2" style={{ color: "rgba(255,255,255,0.5)" }}>
+                    <div className="mt-6 pt-4 border-t border-border">
+                      <p className="text-xs mb-2 text-muted-foreground">
                         {emailDetail.attachments.length} anexo(s)
                       </p>
                       {emailDetail.attachments.map((att: any, i: number) => (
                         <div
                           key={i}
-                          className="flex items-center gap-2 p-2 rounded-lg text-xs"
-                          style={{ background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.7)" }}
+                          className="flex items-center gap-2 p-2 rounded-lg text-xs bg-muted text-foreground/70"
                         >
                           {att.filename} ({att.content_type})
                         </div>
@@ -379,19 +358,18 @@ const Suporte = () => {
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      className="border-t overflow-hidden"
-                      style={{ borderColor: "rgba(255,255,255,0.06)" }}
+                      className="border-t border-border overflow-hidden"
                     >
                       <div className="px-6 py-4">
-                        <p className="text-xs mb-2" style={{ color: "rgba(255,255,255,0.5)" }}>
-                          Respondendo para <strong style={{ color: "rgba(255,255,255,0.8)" }}>{getFromName(emailDetail.from).email}</strong>
+                        <p className="text-xs mb-2 text-muted-foreground">
+                          Respondendo para <strong className="text-foreground/80">{getFromName(emailDetail.from).email}</strong>
                         </p>
                         <Textarea
                           value={replyText}
                           onChange={(e) => setReplyText(e.target.value)}
                           placeholder="Digite sua resposta..."
                           rows={6}
-                          className="bg-white/[0.03] border-white/10 text-white placeholder:text-white/25 focus-visible:ring-1 focus-visible:ring-emerald-500/50 resize-none"
+                          className="bg-muted/50 border-border text-foreground placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-emerald-500/50 resize-none"
                         />
                         <div className="flex items-center justify-end gap-2 mt-3">
                           <Button
@@ -401,7 +379,7 @@ const Suporte = () => {
                               setReplyOpen(false);
                               setReplyText("");
                             }}
-                            className="text-white/60 hover:text-white hover:bg-white/5"
+                            className="text-muted-foreground hover:text-foreground hover:bg-muted"
                           >
                             Cancelar
                           </Button>

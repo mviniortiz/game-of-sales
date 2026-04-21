@@ -9,7 +9,6 @@ import {
     Building2,
     Phone,
     Loader2,
-    Sparkles,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { trackEvent, trackDemoConversion } from "@/lib/analytics";
@@ -229,8 +228,7 @@ export const DemoScheduleSection = ({
                         className="max-w-xl mx-auto"
                         style={{ color: "rgba(255,255,255,0.4)", fontSize: "1rem", lineHeight: 1.7 }}
                     >
-                        Preenche seus dados em 30 segundos e escolhe o horário. A gente prepara a sessão focada no seu contexto —
-                        sem pitch genérico.
+                        Preenche seus dados em 30 segundos e escolhe o horário. A gente prepara a sessão focada no seu contexto. Sem pitch genérico.
                     </p>
                 </div>
 
@@ -255,8 +253,8 @@ export const DemoScheduleSection = ({
                     {step === "contact" && (
                         <div className="p-6 sm:p-10 md:p-12 landing-fade-in">
                             <div className="grid md:grid-cols-2 gap-10 md:gap-14 items-start">
-                                {/* Left — value props */}
-                                <div>
+                                {/* Left on desktop — value props. On mobile: order-2 (below form) */}
+                                <div className="order-2 md:order-1">
                                     <div
                                         className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-5"
                                         style={{
@@ -287,7 +285,7 @@ export const DemoScheduleSection = ({
                                         {[
                                             "Pipeline e painel montados com seus dados",
                                             "Ranking gamificado rodando ao vivo",
-                                            "Eva analisando o seu funil na hora",
+                                            "Eva (nossa IA) analisando seu funil na hora",
                                             "Integrações com o que você já usa",
                                             "Plano ideal pro tamanho do seu time",
                                         ].map((item) => (
@@ -306,15 +304,19 @@ export const DemoScheduleSection = ({
                                     </div>
                                 </div>
 
-                                {/* Right — contact form */}
-                                <form onSubmit={handleContactSubmit} className="flex flex-col gap-3.5" noValidate>
+                                {/* Right on desktop — contact form. On mobile: order-1 (above benefits) */}
+                                <form id="demo-form-start" onSubmit={handleContactSubmit} className="flex flex-col gap-3.5 order-1 md:order-2" noValidate>
+                                    <p className="text-[11px] mb-0.5" style={{ color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>
+                                        Todos os campos são obrigatórios.
+                                    </p>
+
                                     <FormField icon={Mail} error={errors.email}>
                                         <input
                                             type="email"
                                             inputMode="email"
                                             autoComplete="email"
                                             required
-                                            placeholder="Seu e-mail *"
+                                            placeholder="Seu e-mail"
                                             value={form.email}
                                             onChange={(e) => {
                                                 setForm((p) => ({ ...p, email: e.target.value }));
@@ -324,13 +326,13 @@ export const DemoScheduleSection = ({
                                         />
                                     </FormField>
 
-                                    <FormField icon={Phone} error={errors.phone} hint="+55 (DDD) 9XXXX-XXXX">
+                                    <FormField icon={Phone} error={errors.phone} hint="Exemplo: (11) 99999-9999">
                                         <input
                                             type="tel"
                                             inputMode="tel"
                                             autoComplete="tel"
                                             required
-                                            placeholder="WhatsApp · (11) 99999-9999 *"
+                                            placeholder="Seu WhatsApp com DDD"
                                             value={form.phone}
                                             onChange={(e) => {
                                                 const masked = formatBRPhone(e.target.value);
@@ -347,7 +349,7 @@ export const DemoScheduleSection = ({
                                             type="text"
                                             autoComplete="name"
                                             required
-                                            placeholder="Seu nome *"
+                                            placeholder="Seu nome"
                                             value={form.name}
                                             onChange={(e) => {
                                                 setForm((p) => ({ ...p, name: e.target.value }));
@@ -362,7 +364,7 @@ export const DemoScheduleSection = ({
                                             type="text"
                                             autoComplete="organization"
                                             required
-                                            placeholder="Nome da empresa *"
+                                            placeholder="Nome da empresa"
                                             value={form.company}
                                             onChange={(e) => {
                                                 setForm((p) => ({ ...p, company: e.target.value }));
@@ -506,7 +508,6 @@ export const DemoScheduleSection = ({
                                     fontWeight: 600,
                                 }}
                             >
-                                <Sparkles className="h-3 w-3" />
                                 Vamos preparar tudo pro seu contexto
                             </div>
                         </div>
@@ -515,7 +516,7 @@ export const DemoScheduleSection = ({
 
                 {/* Trust signals */}
                 <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-8">
-                    {["Sem compromisso", "Demonstração personalizada", "Tira todas as suas dúvidas"].map((t) => (
+                    {["Sem cartão de crédito", "Demonstração personalizada", "Atendimento humano"].map((t) => (
                         <div
                             key={t}
                             className="flex items-center gap-1.5"

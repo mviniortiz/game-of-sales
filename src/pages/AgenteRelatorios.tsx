@@ -26,8 +26,8 @@ const EvaPaywall = () => {
               )}
               <div className={`max-w-[75%] rounded-2xl px-4 py-3 text-sm ${
                 msg.role === "user"
-                  ? "bg-emerald-500/15 text-emerald-300"
-                  : "bg-[rgba(255,255,255,0.05)] text-zinc-300"
+                  ? "bg-emerald-500/15 text-emerald-500 dark:text-emerald-300"
+                  : "bg-muted text-foreground/80"
               }`}>
                 {msg.text}
               </div>
@@ -36,22 +36,22 @@ const EvaPaywall = () => {
         </div>
 
         {/* Overlay card */}
-        <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="max-w-md w-full mx-4 p-8 rounded-2xl bg-[#0a0c10] border border-[rgba(255,255,255,0.08)] text-center space-y-5">
+        <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-sm">
+          <div className="max-w-md w-full mx-4 p-8 rounded-2xl bg-card border border-border text-center space-y-5">
             <div className="mx-auto w-16 h-16 rounded-2xl bg-violet-500/10 flex items-center justify-center">
               <EvaAvatar size={40} thinking={false} />
             </div>
 
             <div className="space-y-2">
-              <h2 className="text-xl font-bold text-white" style={{ fontFamily: "var(--font-heading)" }}>
+              <h2 className="text-xl font-bold text-foreground" style={{ fontFamily: "var(--font-heading)" }}>
                 Conheça a Eva
               </h2>
-              <p className="text-sm text-zinc-400 leading-relaxed">
+              <p className="text-sm text-muted-foreground leading-relaxed">
                 Sua analista de vendas com IA. Pergunte sobre faturamento, metas, ranking, produtos e tendências — ela consulta seus dados reais e responde em segundos.
               </p>
             </div>
 
-            <div className="flex items-center justify-center gap-2 text-xs text-zinc-500">
+            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
               <Lock className="h-3.5 w-3.5" />
               <span>Disponível nos planos Plus e Pro</span>
             </div>
@@ -65,7 +65,7 @@ const EvaPaywall = () => {
               <ArrowRight className="h-4 w-4" />
             </button>
 
-            <p className="text-[11px] text-zinc-600">
+            <p className="text-[11px] text-muted-foreground/70">
               Plus: 30 consultas/dia · Pro: ilimitado
             </p>
           </div>

@@ -86,10 +86,10 @@ export const HeroDashboardMockup = () => {
                         style={{
                             background: "rgba(255,255,255,0.04)",
                             border: "1px solid rgba(255,255,255,0.08)",
-                            color: "rgba(255,255,255,0.3)",
+                            color: "rgba(255,255,255,0.5)",
                         }}
                     >
-                        <svg className="w-2.5 h-2.5" style={{ color: "rgba(255,255,255,0.2)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-2.5 h-2.5" style={{ color: "rgba(255,255,255,0.4)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                         </svg>
                         vyzon.com.br/dashboard
@@ -103,10 +103,10 @@ export const HeroDashboardMockup = () => {
                     {/* Header */}
                     <div className="flex items-center justify-between landing-fade-in landing-delay-150">
                         <div>
-                            <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.3)" }}>
+                            <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.5)" }}>
                                 Bom dia, Ana
                             </p>
-                            <p className="text-xs font-bold" style={{ color: "rgba(255,255,255,0.85)" }}>
+                            <p className="text-xs font-bold" style={{ color: "rgba(255,255,255,0.9)" }}>
                                 Dashboard
                             </p>
                         </div>
@@ -115,7 +115,7 @@ export const HeroDashboardMockup = () => {
                                 <div className="w-6 h-6 rounded-full flex items-center justify-center text-[8px]" style={{ background: "rgba(255,255,255,0.06)" }}>🔔</div>
                                 <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-rose-500 rounded-full" style={{ border: "2px solid #0d1117" }} />
                             </div>
-                            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-[7px] font-bold text-white">A</div>
+                            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center text-[7px] font-bold text-white">A</div>
                         </div>
                     </div>
 
@@ -141,11 +141,16 @@ export const HeroDashboardMockup = () => {
                                 {
                                     label: "Vendas", value: "142", change: "+18%", icon: Users, iconColor: "text-blue-400",
                                     chart: (
-                                        <div className="flex gap-0.5 mt-1.5">
+                                        <div className="flex items-end gap-0.5 mt-1.5 h-5">
                                             {[65, 45, 80, 55, 90, 70, 85].map((h, i) => (
-                                                <div key={i} className="flex-1 rounded-sm" style={{ height: `${h * 0.18}px`, background: "rgba(96,165,250,0.1)" }}>
-                                                    <div className="w-full rounded-sm" style={{ height: `${h}%`, background: "rgba(96,165,250,0.5)" }} />
-                                                </div>
+                                                <div
+                                                    key={i}
+                                                    className="flex-1 rounded-sm"
+                                                    style={{
+                                                        height: `${h}%`,
+                                                        background: "linear-gradient(to top, rgba(59,130,246,0.35), rgba(96,165,250,0.85))",
+                                                    }}
+                                                />
                                             ))}
                                         </div>
                                     ),
@@ -273,8 +278,8 @@ export const HeroDashboardMockup = () => {
                                                     />
                                                 </div>
                                                 <span
-                                                    className="text-[7px] truncate w-full text-center transition-colors duration-150"
-                                                    style={{ color: isHovered ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.25)" }}
+                                                    className="text-[9px] truncate w-full text-center transition-colors duration-150"
+                                                    style={{ color: isHovered ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.55)", fontWeight: 500 }}
                                                 >
                                                     {bar.name.slice(0, 3)}
                                                 </span>
@@ -308,7 +313,7 @@ export const HeroDashboardMockup = () => {
                                                     <span className="text-[7px] font-bold text-white">{seller.initial}</span>
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-[8px] font-semibold truncate transition-colors duration-150" style={{ color: isHovered ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.65)" }}>{seller.name}</p>
+                                                    <p className="text-[10px] font-semibold truncate transition-colors duration-150" style={{ color: isHovered ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.8)" }}>{seller.name}</p>
                                                     <div className="w-full rounded-full h-1 mt-0.5 overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
                                                         <div
                                                             className="h-1 bg-emerald-400 rounded-full"
@@ -321,7 +326,7 @@ export const HeroDashboardMockup = () => {
                                                         />
                                                     </div>
                                                 </div>
-                                                <span className="text-[7px] font-bold text-emerald-400 shrink-0">{seller.xp}</span>
+                                                <span className="text-[9px] font-bold text-emerald-400 shrink-0">{seller.xp}</span>
                                             </div>
                                         );
                                     })}
@@ -366,7 +371,7 @@ export const HeroDashboardMockup = () => {
                                                     }}
                                                 />
                                                 <p className="text-sm font-bold transition-transform duration-150" style={{ color: s.text, transform: isHovered ? "scale(1.1)" : "scale(1)" }}>{s.count}</p>
-                                                <p className="text-[7px] mt-0.5" style={{ color: isHovered ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.25)" }}>{s.stage}</p>
+                                                <p className="text-[10px] mt-0.5" style={{ color: isHovered ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.6)", fontWeight: 500 }}>{s.stage}</p>
                                             </div>
                                         </div>
                                     );

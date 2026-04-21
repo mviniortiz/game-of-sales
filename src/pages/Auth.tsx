@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Mail, Lock, ArrowRight, ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, ArrowRight, ArrowLeft, Loader2, Eye, EyeOff, Sparkles } from "lucide-react";
 import vyzonLogo from "@/assets/logo-dark.png";
 import { motion } from "framer-motion";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 const authSchema = z.object({
   email: z.string().email("Email inválido").max(255, "Email muito longo"),
@@ -67,23 +68,76 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative selection:bg-emerald-500/30" style={{ background: "#06080a" }}>
-      {/* Background */}
-      <div className="absolute inset-0">
-        <div
-          className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[900px] h-[600px] rounded-full"
-          style={{ background: "radial-gradient(ellipse, rgba(16,185,129,0.06) 0%, transparent 60%)" }}
-        />
-        <div
-          className="absolute inset-0 opacity-[0.02]"
-          style={{
-            backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
-            backgroundSize: "80px 80px",
-          }}
-        />
+    <div className="min-h-screen grid lg:grid-cols-2 relative selection:bg-emerald-500/30" style={{ background: "#06080a" }}>
+      {/* LEFT PANEL — Brand + Lottie (desktop only) */}
+      <div className="hidden lg:flex relative flex-col items-center justify-center overflow-hidden p-12 border-r border-white/5">
+        {/* Ambient background */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div
+            className="absolute top-[15%] left-1/2 -translate-x-1/2 w-[700px] h-[500px] rounded-full"
+            style={{ background: "radial-gradient(ellipse, rgba(16,185,129,0.10) 0%, transparent 60%)" }}
+          />
+          <div
+            className="absolute inset-0 opacity-[0.025]"
+            style={{
+              backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
+              backgroundSize: "80px 80px",
+            }}
+          />
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className="relative z-10 w-full max-w-lg"
+        >
+          {/* Lottie scene */}
+          <div className="w-full aspect-square max-w-[480px] mx-auto mb-8">
+            <DotLottieReact
+              src="/animations/login-scene.lottie"
+              loop
+              autoplay
+            />
+          </div>
+
+          {/* Tagline */}
+          <div className="text-center">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 text-[10px] font-semibold uppercase tracking-wider ring-1 ring-emerald-500/20 mb-4">
+              <Sparkles className="h-3 w-3" />
+              Game of Sales
+            </div>
+            <h2
+              className="text-2xl font-bold mb-3"
+              style={{ color: "rgba(255,255,255,0.95)", letterSpacing: "-0.02em" }}
+            >
+              Sua operação de vendas,<br />jogada como um campeonato.
+            </h2>
+            <p className="text-sm max-w-sm mx-auto" style={{ color: "rgba(255,255,255,0.4)" }}>
+              Ranking, metas, calls e pipeline num único lugar — com a Eva AI lendo seus dados pra você.
+            </p>
+          </div>
+        </motion.div>
       </div>
 
-      <div className="relative z-10 w-full max-w-md mx-auto px-4 sm:px-6">
+      {/* RIGHT PANEL — Form */}
+      <div className="relative flex items-center justify-center">
+        {/* Mobile-only ambient bg */}
+        <div className="absolute inset-0 lg:hidden pointer-events-none">
+          <div
+            className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[900px] h-[600px] rounded-full"
+            style={{ background: "radial-gradient(ellipse, rgba(16,185,129,0.06) 0%, transparent 60%)" }}
+          />
+          <div
+            className="absolute inset-0 opacity-[0.02]"
+            style={{
+              backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
+              backgroundSize: "80px 80px",
+            }}
+          />
+        </div>
+
+        <div className="relative z-10 w-full max-w-md mx-auto px-4 sm:px-6 py-12">
         {/* Back link */}
         <motion.div
           initial={{ opacity: 0, y: -8 }}
@@ -247,6 +301,7 @@ const Auth = () => {
         <p className="text-center mt-6 text-[11px]" style={{ color: "rgba(255,255,255,0.15)" }}>
           © {new Date().getFullYear()} Vyzon. Todos os direitos reservados.
         </p>
+      </div>
       </div>
     </div>
   );

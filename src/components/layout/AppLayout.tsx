@@ -5,6 +5,7 @@ import { AppSidebar } from "./AppSidebar";
 import { TrialBanner } from "./TrialBanner";
 import { useTrial } from "@/hooks/useTrial";
 import UpgradeLock from "@/pages/admin/UpgradeLock";
+import { EvaDock } from "@/components/eva/EvaDock";
 
 const getPageTitle = (pathname: string) => {
   if (pathname === "/") return "Dashboard";
@@ -19,6 +20,7 @@ const getPageTitle = (pathname: string) => {
   if (pathname.startsWith("/agente")) return "Eva";
   if (pathname.startsWith("/admin/suporte")) return "Suporte";
   if (pathname.startsWith("/admin")) return "Administração";
+  if (pathname.startsWith("/configuracoes")) return "Configurações";
   if (pathname.startsWith("/profile")) return "Perfil";
   if (pathname.startsWith("/docs")) return "Central de Ajuda";
   return "Vyzon";
@@ -68,6 +70,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
           </main>
         </div>
       </div>
+      <EvaDock />
     </SidebarProvider>
   );
 };

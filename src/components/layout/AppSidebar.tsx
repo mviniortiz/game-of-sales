@@ -1,5 +1,13 @@
 import { useState, useEffect } from "react";
-import { Home, Trophy, PlusCircle, Target, PhoneCall, Shield, LogOut, User, Calendar, Kanban, Upload, Settings, ChevronRight, Sparkles, HelpCircle, Inbox } from "lucide-react";
+import { Home, Trophy, PlusCircle, Target, PhoneCall, Shield, LogOut, Calendar, Kanban, Settings, ChevronsUpDown, Sparkles, HelpCircle, Inbox, UserCog, Sun, Moon } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useTheme } from "@/components/ThemeToggle";
 import { EvaIcon } from "@/components/icons/EvaAvatar";
 import { ReminderBell } from "@/components/crm/ReminderBell";
 import { NavLink } from "@/components/NavLink";
@@ -12,7 +20,6 @@ import { ThemeLogo } from "@/components/ui/ThemeLogo";
 import { AnimatedIcon } from "@/components/ui/animated-icon";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { NovaVendaModal } from "@/components/vendas/NovaVendaModal";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   Sidebar,
   SidebarContent,
@@ -48,11 +55,107 @@ const gestaoItems = [
 ];
 
 const configItems = [
-  { title: "Integrações", url: "/integracoes", icon: Settings },
-  { title: "Importar Dados", url: "/importar", icon: Upload },
-  { title: "Administração", url: "/admin", icon: Shield },
+  { title: "Gestão", url: "/admin", icon: Shield },
+  { title: "Configurações", url: "/configuracoes", icon: Settings },
   { title: "Suporte", url: "/admin/suporte", icon: Inbox },
 ];
+
+interface UserMenuProps {
+  collapsed: boolean;
+  profile: any;
+  user: any;
+  isAdmin: boolean;
+  isProfileActive: boolean;
+  navigate: (path: string) => void;
+  signOut: () => void;
+  getInitials: (nome: string) => string;
+}
+
+function UserMenu({
+  collapsed, profile, user, isProfileActive,
+  navigate, signOut, getInitials,
+}: UserMenuProps) {
+  const { theme, toggle: toggleTheme } = useTheme();
+
+  const trigger = collapsed ? (
+    <button
+      className={`p-1 rounded-md transition-colors ${
+        isProfileActive ? "bg-muted" : "hover:bg-muted/50"
+      }`}
+    >
+      <Avatar className="h-7 w-7 rounded-md">
+        {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt="Avatar" className="rounded-md" />}
+        <AvatarFallback className="bg-muted text-muted-foreground text-[10px] font-semibold rounded-md">
+          {profile?.nome ? getInitials(profile.nome) : "U"}
+        </AvatarFallback>
+      </Avatar>
+    </button>
+  ) : (
+    <button
+      className={`w-full flex items-center gap-2.5 p-2 rounded-md transition-colors ${
+        isProfileActive ? "bg-muted" : "hover:bg-muted/50"
+      }`}
+    >
+      <Avatar className="h-8 w-8 shrink-0 rounded-md">
+        {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt="Avatar" className="rounded-md" />}
+        <AvatarFallback className="bg-muted text-muted-foreground text-[11px] font-semibold rounded-md">
+          {profile?.nome ? getInitials(profile.nome) : "U"}
+        </AvatarFallback>
+      </Avatar>
+      <div className="flex flex-col items-start text-left flex-1 min-w-0 leading-tight">
+        <span className="text-[12.5px] font-semibold text-foreground truncate w-full tracking-tight">
+          {profile?.nome || "Usuário"}
+        </span>
+        <span className="text-[10.5px] text-muted-foreground/60 truncate w-full mt-0.5">
+          {user?.email || ""}
+        </span>
+      </div>
+      <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" />
+    </button>
+  );
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
+      <DropdownMenuContent
+        side={collapsed ? "right" : "top"}
+        align={collapsed ? "start" : "center"}
+        sideOffset={8}
+        className="w-56 bg-card border-border"
+      >
+        <DropdownMenuItem onClick={() => navigate("/configuracoes/perfil")} className="text-[12.5px]">
+          <UserCog className="h-3.5 w-3.5 mr-2 text-muted-foreground/70" />
+          Minha conta
+        </DropdownMenuItem>
+
+        <DropdownMenuSeparator />
+
+        <DropdownMenuItem onClick={toggleTheme} className="text-[12.5px]">
+          {theme === "dark" ? (
+            <Sun className="h-3.5 w-3.5 mr-2 text-amber-400" />
+          ) : (
+            <Moon className="h-3.5 w-3.5 mr-2 text-emerald-400" />
+          )}
+          {theme === "dark" ? "Tema claro" : "Tema escuro"}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate("/docs")} className="text-[12.5px]">
+          <HelpCircle className="h-3.5 w-3.5 mr-2 text-muted-foreground/70" />
+          Ajuda & docs
+        </DropdownMenuItem>
+
+        <DropdownMenuSeparator />
+
+        <DropdownMenuItem
+          onClick={signOut}
+          className="text-[12.5px] text-rose-400 focus:text-rose-300 focus:bg-rose-500/10"
+        >
+          <LogOut className="h-3.5 w-3.5 mr-2" />
+          Sair
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 export function AppSidebar() {
   const { state } = useSidebar();
@@ -109,8 +212,7 @@ export function AppSidebar() {
   });
 
   const filteredConfigItems = configItems.filter(item => {
-    if (item.url === '/integracoes') return isAdmin && hasFeature('integrations');
-    if (item.url === '/importar') return isAdmin;
+    if (item.url === '/configuracoes') return true;
     if (item.url === '/admin') return isAdmin;
     if (item.url === '/admin/suporte') return isSuperAdmin;
     return true;
@@ -125,8 +227,8 @@ export function AppSidebar() {
       .toUpperCase();
   };
 
-  const activeClass = "bg-white/[0.04] text-foreground font-medium";
-  const inactiveClass = "text-muted-foreground/80 hover:text-foreground hover:bg-white/[0.02] transition-colors";
+  const activeClass = "bg-muted text-foreground font-medium";
+  const inactiveClass = "text-muted-foreground/80 hover:text-foreground hover:bg-muted/50 transition-colors";
 
   const renderNavItem = (item: { title: string; url: string; icon: React.ComponentType<any> }, showBadge = false) => {
     const isActive = location.pathname === item.url || (item.url !== "/dashboard" && location.pathname.startsWith(item.url));
@@ -177,7 +279,7 @@ export function AppSidebar() {
     return <SidebarMenuButton asChild>{linkContent}</SidebarMenuButton>;
   };
 
-  const isProfileActive = location.pathname === "/profile";
+  const isProfileActive = location.pathname.startsWith("/configuracoes");
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -284,153 +386,44 @@ export function AppSidebar() {
           )}
         </SidebarContent>
 
-        {/* Footer — Profile + Theme + Logout */}
+        {/* Footer — Profile dropdown + fixed plan badges */}
         <SidebarFooter className="border-t border-border mt-auto p-0">
-          {/* Profile Card */}
-          {!collapsed ? (
-            <div className="p-2.5">
-              {/* User info card */}
-              <button
-                onClick={() => navigate("/profile")}
-                className={`w-full flex items-center gap-2.5 p-2 rounded-md transition-colors ${
-                  isProfileActive
-                    ? "bg-white/[0.04]"
-                    : "hover:bg-white/[0.02]"
-                }`}
-              >
-                <Avatar className="h-8 w-8 shrink-0 rounded-md">
-                  {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt="Avatar" className="rounded-md" />}
-                  <AvatarFallback className="bg-white/[0.04] text-muted-foreground text-[11px] font-semibold rounded-md">
-                    {profile?.nome ? getInitials(profile.nome) : "U"}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col items-start text-left flex-1 min-w-0 leading-tight">
-                  <span className="text-[12.5px] font-semibold text-foreground truncate w-full tracking-tight">
-                    {profile?.nome || "Usuário"}
+          <div className={collapsed ? "p-2 flex justify-center" : "p-2.5 space-y-1.5"}>
+            <UserMenu
+              collapsed={collapsed}
+              profile={profile}
+              user={user}
+              isAdmin={isAdmin}
+              isProfileActive={isProfileActive}
+              navigate={navigate}
+              signOut={signOut}
+              getInitials={getInitials}
+            />
+            {!collapsed && (isAdmin || planInfo) && (
+              <div className="flex items-center gap-1.5 px-2">
+                {isAdmin && (
+                  <span className="flex items-center gap-1 text-[10px] font-medium text-amber-400/90">
+                    <Shield className="h-2.5 w-2.5" />
+                    Admin
                   </span>
-                  <span className="text-[10.5px] text-muted-foreground/60 truncate w-full mt-0.5">
-                    {user?.email || ""}
-                  </span>
-                </div>
-                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" />
-              </button>
-
-              {/* Role & Plan badges */}
-              {(isAdmin || planInfo) && (
-                <div className="flex items-center gap-1.5 px-2 mt-1.5">
-                  {isAdmin && (
-                    <span className="flex items-center gap-1 text-[10px] font-medium text-amber-400/90">
-                      <Shield className="h-2.5 w-2.5" />
-                      Admin
-                    </span>
-                  )}
-                  {planInfo && (
-                    <span className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                      currentPlan === 'pro' ? 'bg-emerald-500/10 text-emerald-400' :
-                      currentPlan === 'plus' ? 'bg-blue-500/10 text-blue-400' :
-                      'bg-white/[0.04] text-muted-foreground'
-                    }`}>
-                      <Sparkles className="h-2.5 w-2.5" />
-                      {planInfo.label}
-                    </span>
-                  )}
-                </div>
-              )}
-
-              {/* Actions row */}
-              <div className="flex items-center justify-between mt-2 px-0.5">
-                <div className="flex items-center gap-0.5">
+                )}
+                {planInfo && (
                   <button
-                    onClick={() => navigate("/docs")}
-                    className={`flex items-center justify-center h-7 w-7 rounded-md transition-colors ${
-                      location.pathname === "/docs"
-                        ? "text-foreground bg-white/[0.04]"
-                        : "text-muted-foreground/70 hover:text-foreground hover:bg-white/[0.02]"
+                    onClick={() => navigate("/configuracoes/faturamento")}
+                    className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium transition-colors hover:brightness-110 ${
+                      currentPlan === 'pro' ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/15' :
+                      currentPlan === 'plus' ? 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/15' :
+                      'bg-muted text-muted-foreground hover:bg-muted'
                     }`}
-                    title="Ajuda"
+                    title="Ver faturamento"
                   >
-                    <HelpCircle className="h-3.5 w-3.5" />
+                    <Sparkles className="h-2.5 w-2.5" />
+                    {planInfo.label}
                   </button>
-                  <ThemeToggle />
-                </div>
-                <button
-                  onClick={signOut}
-                  className="flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] transition-colors text-muted-foreground/70 hover:text-rose-400 hover:bg-rose-500/[0.06]"
-                >
-                  <LogOut className="h-3 w-3 shrink-0" />
-                  <span>Sair</span>
-                </button>
+                )}
               </div>
-            </div>
-          ) : (
-            <div className="p-2 flex flex-col items-center gap-0.5">
-              {/* Collapsed: avatar → profile */}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => navigate("/profile")}
-                    className={`p-1 rounded-md transition-colors ${
-                      isProfileActive ? "bg-white/[0.04]" : "hover:bg-white/[0.02]"
-                    }`}
-                  >
-                    <Avatar className="h-7 w-7 rounded-md">
-                      {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt="Avatar" className="rounded-md" />}
-                      <AvatarFallback className="bg-white/[0.04] text-muted-foreground text-[10px] font-semibold rounded-md">
-                        {profile?.nome ? getInitials(profile.nome) : "U"}
-                      </AvatarFallback>
-                    </Avatar>
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="right" className="text-[11px]">
-                  {profile?.nome || "Perfil"}
-                </TooltipContent>
-              </Tooltip>
-
-              {/* Collapsed: help */}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => navigate("/docs")}
-                    className={`flex items-center justify-center h-7 w-7 rounded-md transition-colors ${
-                      location.pathname === "/docs"
-                        ? "text-foreground bg-white/[0.04]"
-                        : "text-muted-foreground/70 hover:text-foreground hover:bg-white/[0.02]"
-                    }`}
-                  >
-                    <HelpCircle className="h-3.5 w-3.5" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="right" className="text-[11px]">
-                  Ajuda
-                </TooltipContent>
-              </Tooltip>
-
-              {/* Collapsed: theme toggle */}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div><ThemeToggle collapsed /></div>
-                </TooltipTrigger>
-                <TooltipContent side="right" className="text-[11px]">
-                  Alternar tema
-                </TooltipContent>
-              </Tooltip>
-
-              {/* Collapsed: logout */}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={signOut}
-                    className="flex items-center justify-center h-7 w-7 rounded-md text-muted-foreground/70 hover:text-rose-400 hover:bg-rose-500/[0.06] transition-colors"
-                  >
-                    <LogOut className="h-3.5 w-3.5" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="right" className="text-[11px]">
-                  Sair
-                </TooltipContent>
-              </Tooltip>
-            </div>
-          )}
+            )}
+          </div>
         </SidebarFooter>
       </Sidebar>
 

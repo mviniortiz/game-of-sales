@@ -22,18 +22,23 @@ const Ranking = lazy(() => import("./pages/Ranking"));
 const NovaVenda = lazy(() => import("./pages/NovaVenda"));
 const Calls = lazy(() => import("./pages/Calls"));
 const Metas = lazy(() => import("./pages/Metas"));
-const Profile = lazy(() => import("./pages/Profile"));
 const Admin = lazy(() => import("./pages/Admin"));
 const AdminCompaniesPage = lazy(() => import("./pages/AdminCompaniesPage"));
 const AdminCompanyDetail = lazy(() => import("./pages/AdminCompanyDetail"));
-const Integracoes = lazy(() => import("./pages/Integracoes"));
+const ConfiguracoesLayout = lazy(() => import("./components/configuracoes/ConfiguracoesLayout"));
+const ConfPerfil = lazy(() => import("./pages/configuracoes/Perfil"));
+const ConfSeguranca = lazy(() => import("./pages/configuracoes/Seguranca"));
+const ConfOrganizacao = lazy(() => import("./pages/configuracoes/Organizacao"));
+const ConfTime = lazy(() => import("./pages/configuracoes/Time"));
+const ConfFaturamento = lazy(() => import("./pages/configuracoes/Faturamento"));
+const ConfIntegracoes = lazy(() => import("./pages/configuracoes/Integracoes"));
+const ConfImportar = lazy(() => import("./pages/configuracoes/Importar"));
 const Calendario = lazy(() => import("./pages/Calendario"));
 const CRM = lazy(() => import("./pages/CRM"));
 const DealCommandCenter = lazy(() => import("./pages/DealCommandCenter"));
 const Pulse = lazy(() => import("./pages/Pulse"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 const SalesPerformanceCenter = lazy(() => import("./pages/SalesPerformanceCenter"));
-const ImportarDados = lazy(() => import("./pages/ImportarDados"));
 const AgenteRelatorios = lazy(() => import("./pages/AgenteRelatorios"));
 const Upgrade = lazy(() => import("./pages/Upgrade"));
 const Docs = lazy(() => import("./pages/Docs"));
@@ -41,6 +46,7 @@ const Suporte = lazy(() => import("./pages/admin/Suporte"));
 const PoliticaPrivacidade = lazy(() => import("./pages/PoliticaPrivacidade"));
 const TermosServico = lazy(() => import("./pages/TermosServico"));
 const LogoPreview = lazy(() => import("./pages/LogoPreview"));
+const ScenePreview = lazy(() => import("./pages/ScenePreview"));
 
 const CheckoutRedirect = () => {
   const [params] = useSearchParams();
@@ -88,6 +94,7 @@ const AppShell = () => (
               <Route path="/recuperar-senha" element={<RecuperarSenha />} />
               <Route path="/redefinir-senha" element={<RedefinirSenha />} />
               <Route path="/logo-preview" element={<LogoPreview />} />
+              <Route path="/scene-preview" element={<ScenePreview />} />
               <Route path="/politica-privacidade" element={<PoliticaPrivacidade />} />
               <Route path="/termos-de-servico" element={<TermosServico />} />
 
@@ -202,17 +209,64 @@ const AppShell = () => (
                 }
               />
               <Route
-                path="/integracoes"
+                path="/configuracoes"
                 element={
                   <ProtectedRoute>
-                    <AdminRoute>
-                      <AppLayout>
-                        <Integracoes />
-                      </AppLayout>
-                    </AdminRoute>
+                    <AppLayout>
+                      <ConfiguracoesLayout />
+                    </AppLayout>
                   </ProtectedRoute>
                 }
-              />
+              >
+                <Route index element={<Navigate to="/configuracoes/perfil" replace />} />
+                <Route path="perfil" element={<ConfPerfil />} />
+                <Route path="seguranca" element={<ConfSeguranca />} />
+                <Route
+                  path="organizacao"
+                  element={
+                    <AdminRoute>
+                      <ConfOrganizacao />
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="time"
+                  element={
+                    <AdminRoute>
+                      <ConfTime />
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="faturamento"
+                  element={
+                    <AdminRoute>
+                      <ConfFaturamento />
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="integracoes"
+                  element={
+                    <AdminRoute>
+                      <ConfIntegracoes />
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="importar"
+                  element={
+                    <AdminRoute>
+                      <ConfImportar />
+                    </AdminRoute>
+                  }
+                />
+              </Route>
+
+              {/* Legacy redirects */}
+              <Route path="/profile" element={<Navigate to="/configuracoes/perfil" replace />} />
+              <Route path="/integracoes" element={<Navigate to="/configuracoes/integracoes" replace />} />
+              <Route path="/importar" element={<Navigate to="/configuracoes/importar" replace />} />
               <Route
                 path="/pulse"
                 element={
@@ -253,16 +307,6 @@ const AppShell = () => (
                 }
               />
               <Route
-                path="/profile"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <Profile />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
                 path="/upgrade"
                 element={
                   <ProtectedRoute>
@@ -289,18 +333,6 @@ const AppShell = () => (
                     <AppLayout>
                       <SalesPerformanceCenter />
                     </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/importar"
-                element={
-                  <ProtectedRoute>
-                    <AdminRoute>
-                      <AppLayout>
-                        <ImportarDados />
-                      </AppLayout>
-                    </AdminRoute>
                   </ProtectedRoute>
                 }
               />

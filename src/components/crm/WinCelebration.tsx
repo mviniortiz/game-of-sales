@@ -323,7 +323,7 @@ export const WinCelebration = memo(({
                 animate={{ scale: 3.5, opacity: 0 }}
                 transition={{ duration: 0.7, ease: "easeOut", delay: 0.1 }}
                 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-full"
-                style={{ background: "radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(251,191,36,0.3) 30%, transparent 60%)" }}
+                style={{ background: "radial-gradient(circle, hsl(var(--foreground) / 0.5) 0%, rgba(251,191,36,0.3) 30%, transparent 60%)" }}
               />
             </>
           )}

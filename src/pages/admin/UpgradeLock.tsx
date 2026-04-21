@@ -96,10 +96,10 @@ export default function UpgradeLock() {
                     transition={{ delay: 0.2 }}
                     className="text-center mb-10"
                 >
-                    <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3">
+                    <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-3">
                         Seu período de teste acabou
                     </h1>
-                    <p className="text-white/60 text-lg max-w-md mx-auto">
+                    <p className="text-muted-foreground text-lg max-w-md mx-auto">
                         Escolha um plano para continuar usando o Vyzon e potencializar suas vendas.
                     </p>
                 </motion.div>
@@ -120,8 +120,8 @@ export default function UpgradeLock() {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.4 + index * 0.1 }}
                                 className={`relative rounded-2xl p-6 ${plan.highlight
-                                        ? 'bg-white/15 border-2 border-emerald-400/50 shadow-xl shadow-emerald-500/20'
-                                        : 'bg-white/5 border border-white/10'
+                                        ? 'bg-muted border-2 border-emerald-400/50 shadow-xl shadow-emerald-500/20'
+                                        : 'bg-muted/50 border border-border'
                                     }`}
                             >
                                 {plan.highlight && (
@@ -137,20 +137,20 @@ export default function UpgradeLock() {
                                     <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${plan.color} flex items-center justify-center mx-auto mb-4`}>
                                         <Icon className="h-7 w-7 text-white" />
                                     </div>
-                                    <h3 className="text-xl font-bold text-white mb-1">{plan.name}</h3>
-                                    <p className="text-white/50 text-sm">{plan.description}</p>
+                                    <h3 className="text-xl font-bold text-foreground mb-1">{plan.name}</h3>
+                                    <p className="text-muted-foreground text-sm">{plan.description}</p>
                                 </div>
 
                                 {/* Price */}
                                 <div className="text-center mb-6">
-                                    <span className="text-3xl font-bold text-white">{plan.price}</span>
-                                    <span className="text-white/50">{plan.period}</span>
+                                    <span className="text-3xl font-bold text-foreground">{plan.price}</span>
+                                    <span className="text-muted-foreground">{plan.period}</span>
                                 </div>
 
                                 {/* Features */}
                                 <ul className="space-y-3 mb-6">
                                     {plan.features.map((feature, i) => (
-                                        <li key={i} className="flex items-center gap-2 text-white/80 text-sm">
+                                        <li key={i} className="flex items-center gap-2 text-foreground/80 text-sm">
                                             <Check className={`h-4 w-4 flex-shrink-0 ${plan.highlight ? 'text-emerald-400' : 'text-green-400'}`} />
                                             {feature}
                                         </li>
@@ -162,7 +162,7 @@ export default function UpgradeLock() {
                                     <Button
                                         className={`w-full h-12 font-semibold ${plan.highlight
                                                 ? 'bg-gradient-to-r from-emerald-500 to-emerald-500 hover:opacity-90 text-white'
-                                                : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
+                                                : 'bg-muted hover:bg-muted text-foreground border border-border'
                                             }`}
                                     >
                                         Assinar {plan.name}
@@ -178,7 +178,7 @@ export default function UpgradeLock() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.8 }}
-                    className="text-white/40 text-sm mt-8 text-center"
+                    className="text-muted-foreground/50 text-sm mt-8 text-center"
                 >
                     Dúvidas? Entre em contato com{' '}
                     <a href="mailto:suporte@vyzon.com.br" className="text-emerald-400 hover:underline">

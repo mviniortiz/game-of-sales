@@ -58,7 +58,7 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
                         className="flex items-center gap-2.5 flex-shrink-0"
                     >
-                        <img src={brandLogoDark} alt="Vyzon" width={320} height={60} className="h-8 w-auto" />
+                        <img src={brandLogoDark} alt="Vyzon" width={320} height={60} className="h-6 sm:h-8 w-auto" />
                     </button>
 
                     <nav className="hidden md:flex items-center gap-1">

@@ -20,6 +20,7 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { formatError } from "@/lib/utils";
 import googleCalendarLogo from "@/assets/integrations/google-calendar.webp";
 
 interface GoogleCalendarConfigModalProps {
@@ -77,8 +78,8 @@ export const GoogleCalendarConfigModal = ({ open, onClose, onSaved }: GoogleCale
             toast.loading("Redirecionando para o Google...", { id: "google-connect" });
             window.location.href = response.data.authUrl;
         } catch (error) {
-            console.error(error);
-            toast.error("Erro ao conectar com o Google Calendar", { id: "google-connect" });
+            console.error("[GoogleCalendarConfigModal] connect error:", error);
+            toast.error(`Erro ao conectar: ${formatError(error)}`, { id: "google-connect" });
             setConnecting(false);
         }
     };
@@ -94,8 +95,8 @@ export const GoogleCalendarConfigModal = ({ open, onClose, onSaved }: GoogleCale
             setLastSync(new Date().toISOString());
             toast.success(`${response.data?.synced || 0} eventos sincronizados`, { id: "google-sync" });
         } catch (error) {
-            console.error(error);
-            toast.error("Erro ao sincronizar eventos", { id: "google-sync" });
+            console.error("[GoogleCalendarConfigModal] sync error:", error);
+            toast.error(`Erro ao sincronizar: ${formatError(error)}`, { id: "google-sync" });
         } finally {
             setSyncing(false);
         }
@@ -105,7 +106,7 @@ export const GoogleCalendarConfigModal = ({ open, onClose, onSaved }: GoogleCale
         try {
             setDisconnecting(true);
             toast.loading("Desconectando...", { id: "google-disconnect" });
-            await supabase
+            const { error } = await supabase
                 .from("profiles")
                 .update({
                     google_access_token: null,
@@ -114,12 +115,13 @@ export const GoogleCalendarConfigModal = ({ open, onClose, onSaved }: GoogleCale
                     google_calendar_id: null,
                 })
                 .eq("id", user!.id);
+            if (error) throw error;
             setState("disconnected");
             toast.success("Desconectado do Google Calendar", { id: "google-disconnect" });
             onSaved?.();
         } catch (error) {
-            console.error(error);
-            toast.error("Erro ao desconectar", { id: "google-disconnect" });
+            console.error("[GoogleCalendarConfigModal] disconnect error:", error);
+            toast.error(`Erro ao desconectar: ${formatError(error)}`, { id: "google-disconnect" });
         } finally {
             setDisconnecting(false);
         }

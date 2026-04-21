@@ -18,8 +18,14 @@ import { ImpactMetrics } from "@/components/landing/ImpactMetrics";
 import { PainPoints } from "@/components/landing/PainPoints";
 import { LandingNav } from "@/components/landing/LandingNav";
 
+const FlowSection = lazy(() =>
+    import("@/components/landing/FlowSection").then((m) => ({ default: m.FlowSection }))
+);
 const ProductBentoGrid = lazy(() =>
     import("@/components/landing/ProductBentoGrid").then((m) => ({ default: m.ProductBentoGrid }))
+);
+const ComparisonSection = lazy(() =>
+    import("@/components/landing/ComparisonSection").then((m) => ({ default: m.ComparisonSection }))
 );
 const HowItWorks = lazy(() =>
     import("@/components/landing/HowItWorks").then((m) => ({ default: m.HowItWorks }))
@@ -142,9 +148,26 @@ const LandingPage = () => {
 
     // Scroll pro form de demo + tracking do CTA de origem (Nav, Hero, Pricing, FinalCTA).
     // Necessário pra identificar qual bloco da landing converte — sem isso, Ads fica cego.
+    // Tenta o <form id="demo-form-start"> primeiro (após LazyOnVisible hidratar);
+    // se ainda não existe, rola pro wrapper e re-tenta quando o form aparece.
     const scrollToDemo = (location: string) => {
         trackEvent(FUNNEL_EVENTS.LANDING_CTA_CLICK, { target: "demo", location });
+        const form = document.getElementById("demo-form-start");
+        if (form) {
+            form.scrollIntoView({ behavior: "smooth", block: "start" });
+            return;
+        }
         scrollToSection("agendar-demo");
+        const start = Date.now();
+        const wait = () => {
+            const f = document.getElementById("demo-form-start");
+            if (f) {
+                f.scrollIntoView({ behavior: "smooth", block: "start" });
+                return;
+            }
+            if (Date.now() - start < 2500) requestAnimationFrame(wait);
+        };
+        requestAnimationFrame(wait);
     };
 
     const goToRegister = (planId?: string) => {
@@ -211,11 +234,19 @@ const LandingPage = () => {
 
             <PainPoints />
 
+            <LazyOnVisible minHeight="500px">
+                <FlowSection />
+            </LazyOnVisible>
+
             <LazyOnVisible minHeight="600px">
                 <ProductBentoGrid />
             </LazyOnVisible>
 
-            <LazyOnVisible minHeight="800px" id="agendar-demo">
+            <LazyOnVisible minHeight="800px">
+                <ComparisonSection onCTAClick={() => goToRegister("plus")} />
+            </LazyOnVisible>
+
+            <LazyOnVisible minHeight="320px" id="agendar-demo">
                 <DemoScheduleSection />
             </LazyOnVisible>
 

@@ -322,7 +322,7 @@ export function CalendarTimelineView({
                 ${isNow ? "bg-emerald-500/5" : ""}
               `}
                         >
-                            <p className={`text-[10px] font-semibold uppercase tracking-wider mb-0.5 ${isNow ? "text-emerald-400" : "text-muted-foreground"}`}>
+                            <p className={`text-[10px] font-semibold uppercase tracking-wider mb-0.5 ${isNow ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`}>
                                 {weekDayLabels[day.getDay()]}
                             </p>
                             <div className={`

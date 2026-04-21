@@ -23,6 +23,7 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { formatError } from "@/lib/utils";
 
 // Webhook URL for RD Station
 const WEBHOOK_URL = "https://omsdkjzkphflpwnbaeye.supabase.co/functions/v1/rdstation-webhook";
@@ -138,7 +139,7 @@ export const RDStationConfigModal = ({ open, onClose, onSaved }: RDStationConfig
             onClose();
         } catch (error: any) {
             console.error("Error saving config:", error);
-            toast.error("Erro ao salvar configuração: " + error.message);
+            toast.error(`Erro ao salvar configuração: ${formatError(error)}`);
         } finally {
             setIsSaving(false);
         }
@@ -164,7 +165,7 @@ export const RDStationConfigModal = ({ open, onClose, onSaved }: RDStationConfig
             onClose();
         } catch (error: any) {
             console.error("Error disconnecting:", error);
-            toast.error("Erro ao desconectar: " + error.message);
+            toast.error(`Erro ao desconectar: ${formatError(error)}`);
         } finally {
             setIsDisconnecting(false);
         }

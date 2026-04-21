@@ -5,7 +5,7 @@ const COMPARISONS = [
         icon: Clock,
         before: "Pipeline invisível",
         beforeDesc: "Deal espalhado em planilha, WhatsApp e na cabeça do vendedor. Ninguém sabe onde tá cada coisa.",
-        after: "Pipeline visual Kanban",
+        after: "Pipeline vivo",
         afterDesc: "Arrasta e solta. Cada deal aparece, do lead ao fechamento, em tempo real.",
         delayClass: "",
     },
@@ -13,16 +13,16 @@ const COMPARISONS = [
         icon: TrendingDown,
         before: "Time sem norte",
         beforeDesc: "Vendedor não sabe quanto falta pra bater meta. Gestor cobra todo dia no grupo.",
-        after: "Metas e ranking ao vivo",
+        after: "Time com norte",
         afterDesc: "Cada vendedor enxerga a meta, o progresso e a posição no ranking. Motivação sem precisar cobrar.",
         delayClass: "landing-delay-100",
     },
     {
         icon: AlertTriangle,
         before: "Venda caindo no vácuo",
-        beforeDesc: "Hotmart aprovou e ninguém registrou. Kiwify vendeu e o painel nem ficou sabendo.",
-        after: "Sincronização automática",
-        afterDesc: "Webhook com Hotmart, Kiwify e Greenn. Caiu venda, ranking atualiza e o painel reflete na hora.",
+        beforeDesc: "Checkout aprovou e ninguém registrou. Vendeu e o painel nem ficou sabendo.",
+        after: "Venda que não escapa",
+        afterDesc: "Webhook conecta o seu checkout ao CRM. Caiu venda, ranking atualiza e o painel reflete na hora.",
         delayClass: "landing-delay-200",
     },
 ];
@@ -42,7 +42,7 @@ export const PainPoints = () => {
                         className="text-xs uppercase mb-4 tracking-widest"
                         style={{ fontWeight: "var(--fw-medium)", color: "rgba(255,255,255,0.35)" }}
                     >
-                        Soa familiar?
+                        Parece familiar?
                     </p>
                     <h2
                         className="font-heading"
@@ -70,10 +70,10 @@ export const PainPoints = () => {
                                 style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)" }}
                             >
                                 <div
-                                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+                                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
                                     style={{ background: "rgba(239,68,68,0.15)" }}
                                 >
-                                    <Icon className="h-[18px] w-[18px] text-red-400" strokeWidth={1.8} />
+                                    <Icon className="h-[22px] w-[22px] text-red-400" strokeWidth={1.8} />
                                 </div>
                                 <div className="min-w-0">
                                     <div className="flex items-center gap-1.5 mb-1">
@@ -85,14 +85,14 @@ export const PainPoints = () => {
                                             {before}
                                         </p>
                                     </div>
-                                    <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>
+                                    <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.75)" }}>
                                         {beforeDesc}
                                     </p>
                                 </div>
                             </div>
 
                             <div className="hidden md:flex items-center justify-center px-1">
-                                <ArrowRight className="h-4 w-4" style={{ color: "rgba(255,255,255,0.2)" }} strokeWidth={1.5} />
+                                <ArrowRight className="h-5 w-5 text-emerald-400" strokeWidth={2.25} />
                             </div>
 
                             <div
@@ -100,10 +100,10 @@ export const PainPoints = () => {
                                 style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)" }}
                             >
                                 <div
-                                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+                                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
                                     style={{ background: "rgba(16,185,129,0.15)" }}
                                 >
-                                    <Icon className="h-[18px] w-[18px] text-emerald-400" strokeWidth={1.8} />
+                                    <Icon className="h-[22px] w-[22px] text-emerald-400" strokeWidth={1.8} />
                                 </div>
                                 <div className="min-w-0">
                                     <div className="flex items-center gap-1.5 mb-1">
@@ -115,7 +115,7 @@ export const PainPoints = () => {
                                             {after}
                                         </p>
                                     </div>
-                                    <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>
+                                    <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.75)" }}>
                                         {afterDesc}
                                     </p>
                                 </div>
@@ -134,7 +134,7 @@ export const PainPoints = () => {
                         </span>
                     </p>
                     <p className="text-xs mt-1 mb-8" style={{ color: "rgba(255,255,255,0.35)" }}>
-                        Um CRM que resolve tudo isso — e fica no ar em 5 minutos.
+                        Um CRM que resolve tudo isso. E fica no ar em 5 minutos.
                     </p>
                     <div className="h-12 w-px" style={{ background: "rgba(255,255,255,0.08)" }} />
                 </div>

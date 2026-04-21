@@ -19,8 +19,8 @@ const STEPS: readonly Step[] = [
         badge: "Conecte",
         title: "Integre sua plataforma",
         description:
-            "Cola o webhook da Kiwify, Greenn ou Hotmart. As vendas começam a cair automaticamente em segundos.",
-        bullets: ["Kiwify", "Greenn", "Hotmart"],
+            "Cola o webhook do seu checkout. As vendas começam a cair automaticamente em segundos — qualquer plataforma que dispare webhook.",
+        bullets: ["Webhook em 30s", "Sync em tempo real", "Zero planilha"],
     },
     {
         number: "02",

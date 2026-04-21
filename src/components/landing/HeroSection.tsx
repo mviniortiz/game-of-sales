@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { ArrowRight, Play, Calendar } from "lucide-react";
+import { ArrowRight, MonitorPlay, Calendar } from "lucide-react";
 
 const HeroDashboardMockup = lazy(() =>
     import("./HeroDashboardMockup").then((m) => ({ default: m.HeroDashboardMockup }))
@@ -67,7 +67,7 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
                         }}
                     >
                         <span style={{ fontWeight: 700, color: "rgba(255,255,255,0.95)" }}>
-                            Seu time bate meta quando{" "}
+                            O primeiro CRM que seu time abre{" "}
                         </span>
                         <span
                             style={{
@@ -77,7 +77,7 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
                                 WebkitTextFillColor: "transparent",
                             }}
                         >
-                            enxerga o placar.
+                            sem reclamar.
                         </span>
                     </h1>
 
@@ -90,44 +90,44 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
                             color: "rgba(255,255,255,0.7)",
                         }}
                     >
-                        Vyzon conecta os seus checkouts ao time de vendas e mostra em tempo real
-                        quem tá fechando, quem tá travado e onde o time precisa de ajuda.
-                        Ranking ao vivo, pipeline visual e pronto em 5 minutos.
+                        Cada venda do seu checkout cai no pipeline, o ranking sobe e cada vendedor
+                        enxerga quanto falta pra bater meta. Em 5 minutos no ar. Sem planilha,
+                        sem cobrar atualização no grupo.
                     </p>
 
                     {/* CTAs */}
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 mt-10 w-full max-w-md mx-auto sm:max-w-none landing-fade-in-up landing-delay-300">
                         <button
                             onClick={onScheduleDemoClick || onCTAClick}
-                            className="hero-cta-primary group relative inline-flex items-center justify-center gap-2.5 px-5 sm:px-7 py-3.5 text-sm sm:text-[15px] font-bold text-white rounded-xl overflow-hidden"
+                            className="hero-cta-primary group relative inline-flex h-12 items-center justify-center gap-2 px-6 sm:px-7 text-sm sm:text-[15px] font-bold text-white rounded-xl overflow-hidden"
                             style={{
                                 background: "linear-gradient(135deg, #10b981, #059669)",
                                 boxShadow: "0 0 0 1px rgba(16,185,129,0.3), 0 4px 24px rgba(16,185,129,0.3)",
                             }}
                         >
                             <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                            <Calendar className="relative h-4 w-4" />
+                            <Calendar className="relative h-4 w-4" strokeWidth={2} />
                             <span className="relative">Agendar demonstração</span>
-                            <ArrowRight className="relative h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                            <ArrowRight className="relative h-4 w-4 group-hover:translate-x-1 transition-transform" strokeWidth={2} />
                         </button>
 
                         <button
                             onClick={onDemoClick}
-                            className="hero-cta-secondary flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm sm:text-[15px]"
+                            className="hero-cta-secondary group inline-flex h-12 items-center justify-center gap-2 px-6 sm:px-7 rounded-xl text-sm sm:text-[15px]"
                             style={{
-                                color: "rgba(255,255,255,0.55)",
+                                color: "rgba(255,255,255,0.85)",
                                 background: "rgba(255,255,255,0.04)",
-                                boxShadow: "0 0 0 1px rgba(255,255,255,0.08)",
-                                fontWeight: 500,
+                                boxShadow: "0 0 0 1px rgba(255,255,255,0.16)",
+                                fontWeight: 600,
                             }}
                         >
-                            <Play className="h-4 w-4" fill="currentColor" />
+                            <MonitorPlay className="h-4 w-4 transition-colors group-hover:text-emerald-300" strokeWidth={2} />
                             Ver como funciona
                         </button>
                     </div>
 
                     {/* Trust row */}
-                    <div className="flex flex-wrap items-center justify-center gap-x-4 sm:gap-x-6 gap-y-2 mt-8 landing-fade-in landing-delay-400">
+                    <div className="flex flex-wrap items-center justify-center gap-x-4 sm:gap-x-6 gap-y-2 mt-12 landing-fade-in landing-delay-400">
                         {["14 dias grátis pra testar", "Pronto em 5 minutos", "Suporte humano no WhatsApp"].map((t) => (
                             <span key={t} className="flex items-center gap-1.5 text-[13px]" style={{ color: "rgba(255,255,255,0.6)" }}>
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />

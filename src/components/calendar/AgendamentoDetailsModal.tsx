@@ -213,10 +213,10 @@ export const AgendamentoDetailsModal = ({
   return (
     <>
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="max-w-[95vw] sm:max-w-[420px] bg-[#121214] border-white/[0.05] p-0 overflow-hidden shadow-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-[420px] bg-card border-border p-0 overflow-hidden shadow-2xl">
           <DialogHeader className="p-4 md:p-6 pb-0">
             <div className="flex items-center justify-between gap-2">
-              <DialogTitle className="text-lg md:text-xl font-semibold text-white truncate">
+              <DialogTitle className="text-lg md:text-xl font-semibold text-foreground truncate">
                 {isEditing ? "Editar Agendamento" : "Detalhes do Agendamento"}
               </DialogTitle>
               {!isEditing && getStatusBadge(agendamento.status)}
@@ -228,13 +228,13 @@ export const AgendamentoDetailsModal = ({
               // View Mode
               <div className="space-y-3">
                 {/* Cliente Card */}
-                <div className="flex items-start gap-4 p-4 bg-white/[0.02] rounded-xl border border-white/[0.05] hover:bg-white/[0.04] transition-colors">
+                <div className="flex items-start gap-4 p-4 bg-muted/50 rounded-xl border border-border hover:bg-muted transition-colors">
                   <div className="p-2 bg-primary/10 rounded-lg shrink-0 mt-0.5">
                     <User className="h-4 w-4 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-medium text-slate-400 mb-0.5">Cliente</p>
-                    <p className="text-base font-semibold text-slate-100 truncate">
+                    <p className="text-[13px] font-medium text-muted-foreground mb-0.5">Cliente</p>
+                    <p className="text-base font-semibold text-foreground truncate">
                       {agendamento.cliente_nome}
                     </p>
                   </div>
@@ -242,25 +242,25 @@ export const AgendamentoDetailsModal = ({
 
                 {/* Data e Hora Row */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="flex items-start gap-3 p-4 bg-white/[0.02] rounded-xl border border-white/[0.05] hover:bg-white/[0.04] transition-colors">
+                  <div className="flex items-start gap-3 p-4 bg-muted/50 rounded-xl border border-border hover:bg-muted transition-colors">
                     <div className="p-2 bg-primary/10 rounded-lg shrink-0 mt-0.5">
                       <Calendar className="h-4 w-4 text-primary" />
                     </div>
                     <div>
-                      <p className="text-[13px] font-medium text-slate-400 mb-0.5">Data</p>
-                      <p className="font-semibold text-slate-100">
+                      <p className="text-[13px] font-medium text-muted-foreground mb-0.5">Data</p>
+                      <p className="font-semibold text-foreground">
                         {format(new Date(agendamento.data_agendamento), "dd/MM/yyyy", { locale: ptBR })}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-3 p-4 bg-white/[0.02] rounded-xl border border-white/[0.05] hover:bg-white/[0.04] transition-colors">
+                  <div className="flex items-start gap-3 p-4 bg-muted/50 rounded-xl border border-border hover:bg-muted transition-colors">
                     <div className="p-2 bg-primary/10 rounded-lg shrink-0 mt-0.5">
                       <Clock className="h-4 w-4 text-primary" />
                     </div>
                     <div>
-                      <p className="text-[13px] font-medium text-slate-400 mb-0.5">Horário</p>
-                      <p className="font-semibold text-slate-100">
+                      <p className="text-[13px] font-medium text-muted-foreground mb-0.5">Horário</p>
+                      <p className="font-semibold text-foreground">
                         {format(new Date(agendamento.data_agendamento), "HH:mm", { locale: ptBR })}
                       </p>
                     </div>
@@ -269,13 +269,13 @@ export const AgendamentoDetailsModal = ({
 
                 {/* Observações Card */}
                 {agendamento.observacoes && (
-                  <div className="flex items-start gap-4 p-4 bg-white/[0.02] rounded-xl border border-white/[0.05] hover:bg-white/[0.04] transition-colors">
+                  <div className="flex items-start gap-4 p-4 bg-muted/50 rounded-xl border border-border hover:bg-muted transition-colors">
                     <div className="p-2 bg-primary/10 rounded-lg shrink-0 mt-0.5">
                       <FileText className="h-4 w-4 text-primary" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-[13px] font-medium text-slate-400 mb-1">Observações</p>
-                      <p className="text-sm text-slate-200 whitespace-pre-wrap leading-relaxed">
+                      <p className="text-[13px] font-medium text-muted-foreground mb-1">Observações</p>
+                      <p className="text-sm text-foreground/80 whitespace-pre-wrap leading-relaxed">
                         {agendamento.observacoes}
                       </p>
                     </div>
@@ -286,26 +286,26 @@ export const AgendamentoDetailsModal = ({
               // Edit Mode
               <div className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="cliente_nome" className="text-slate-300">Cliente <span className="text-destructive">*</span></Label>
+                  <Label htmlFor="cliente_nome" className="text-foreground/80">Cliente <span className="text-destructive">*</span></Label>
                   <Input
                     id="cliente_nome"
                     value={editedData.cliente_nome}
                     onChange={(e) => setEditedData({ ...editedData, cliente_nome: e.target.value })}
                     placeholder="Nome do cliente"
-                    className="bg-white/[0.03] border-white/10 text-white focus-visible:ring-primary/50"
+                    className="bg-muted/50 border-border text-foreground focus-visible:ring-primary/50"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-slate-300">Data <span className="text-destructive">*</span></Label>
+                    <Label className="text-foreground/80">Data <span className="text-destructive">*</span></Label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
                           className={cn(
-                            "w-full justify-start text-left font-normal bg-white/[0.03] border-white/10 text-white hover:bg-white/[0.05] hover:text-white",
-                            !editedData.data_agendamento && "text-slate-400"
+                            "w-full justify-start text-left font-normal bg-muted/50 border-border text-foreground hover:bg-muted hover:text-foreground",
+                            !editedData.data_agendamento && "text-muted-foreground"
                           )}
                         >
                           <Calendar className="mr-2 h-4 w-4" />
@@ -314,7 +314,7 @@ export const AgendamentoDetailsModal = ({
                             : <span>Selecione a data</span>}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 bg-[#1C1C20] border-white/10" align="start">
+                      <PopoverContent className="w-auto p-0 bg-card border-border" align="start">
                         <CalendarComponent
                           mode="single"
                           selected={editedData.data_agendamento ? new Date(editedData.data_agendamento + 'T00:00:00') : undefined}
@@ -331,24 +331,24 @@ export const AgendamentoDetailsModal = ({
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="hora" className="text-slate-300">Horário <span className="text-destructive">*</span></Label>
+                    <Label htmlFor="hora" className="text-foreground/80">Horário <span className="text-destructive">*</span></Label>
                     <Input
                       id="hora"
                       type="time"
                       value={editedData.hora_agendamento}
                       onChange={(e) => setEditedData({ ...editedData, hora_agendamento: e.target.value })}
-                      className="bg-white/[0.03] border-white/10 text-white focus-visible:ring-primary/50 [&::-webkit-calendar-picker-indicator]:invert"
+                      className="bg-muted/50 border-border text-foreground focus-visible:ring-primary/50 [&::-webkit-calendar-picker-indicator]:invert"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="status" className="text-slate-300">Status <span className="text-destructive">*</span></Label>
+                  <Label htmlFor="status" className="text-foreground/80">Status <span className="text-destructive">*</span></Label>
                   <Select value={editedData.status} onValueChange={(value) => setEditedData({ ...editedData, status: value })}>
-                    <SelectTrigger className="bg-white/[0.03] border-white/10 text-white focus:ring-primary/50">
+                    <SelectTrigger className="bg-muted/50 border-border text-foreground focus:ring-primary/50">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-[#1C1C20] border-white/10">
+                    <SelectContent className="bg-card border-border">
                       <SelectItem value="agendado">Pendente</SelectItem>
                       <SelectItem value="realizado">Compareceu</SelectItem>
                       <SelectItem value="nao_compareceu">Não Compareceu</SelectItem>
@@ -358,21 +358,21 @@ export const AgendamentoDetailsModal = ({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="observacoes" className="text-slate-300">Observações</Label>
+                  <Label htmlFor="observacoes" className="text-foreground/80">Observações</Label>
                   <Textarea
                     id="observacoes"
                     value={editedData.observacoes}
                     onChange={(e) => setEditedData({ ...editedData, observacoes: e.target.value })}
                     placeholder="Adicione observações sobre o agendamento"
                     rows={4}
-                    className="bg-white/[0.03] border-white/10 text-white focus-visible:ring-primary/50 resize-none"
+                    className="bg-muted/50 border-border text-foreground focus-visible:ring-primary/50 resize-none"
                   />
                 </div>
               </div>
             )}
           </div>
 
-          <DialogFooter className="px-4 md:px-6 py-3 md:py-4 bg-black/20 border-t border-white/[0.05] gap-2 sm:justify-between">
+          <DialogFooter className="px-4 md:px-6 py-3 md:py-4 bg-background/40 border-t border-border gap-2 sm:justify-between">
             {!isEditing ? (
               <>
                 <Button
@@ -384,7 +384,7 @@ export const AgendamentoDetailsModal = ({
                   Excluir
                 </Button>
                 <div className="flex gap-2">
-                  <Button onClick={onClose} variant="ghost" className="text-slate-300 hover:text-white hover:bg-white/5">
+                  <Button onClick={onClose} variant="ghost" className="text-foreground/80 hover:text-foreground hover:bg-muted">
                     Fechar
                   </Button>
                   <Button onClick={handleEdit} className="gap-2 shadow-lg shadow-primary/20">
@@ -399,7 +399,7 @@ export const AgendamentoDetailsModal = ({
                   variant="ghost"
                   onClick={() => setIsEditing(false)}
                   disabled={loading}
-                  className="text-slate-300 hover:text-white hover:bg-white/5"
+                  className="text-foreground/80 hover:text-foreground hover:bg-muted"
                 >
                   Cancelar
                 </Button>

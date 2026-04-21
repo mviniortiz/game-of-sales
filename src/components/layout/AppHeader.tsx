@@ -113,9 +113,9 @@ export const AppHeader = () => {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => navigate("/profile")}>
+            <DropdownMenuItem onClick={() => navigate("/configuracoes/perfil")}>
               <UserCog className="mr-2 h-4 w-4" />
-              <span>Meu Perfil</span>
+              <span>Configurações</span>
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => fileInputRef.current?.click()}

@@ -78,7 +78,7 @@ export const EvaAvatar = ({ size = 32, className = "", thinking = false }: EvaAv
             }}
             animate={{
               x: [16 * scale, 0, -16 * scale, 0, 16 * scale].map(v => v - 3 * scale),
-              y: [-1 * scale, -6 * scale, 1 * scale, 6 * scale, -1 * scale].map(v => v - 3 * scale),
+              y: [0, -6 * scale, 0, 6 * scale, 0].map(v => v - 3 * scale),
             }}
             transition={{ duration: 1.8, repeat: Infinity, ease: "linear" }}
           >
@@ -100,8 +100,9 @@ export const EvaAvatar = ({ size = 32, className = "", thinking = false }: EvaAv
               left: "50%",
             }}
             animate={{
-              x: [5 * scale, -10 * scale, -5 * scale, 10 * scale, 5 * scale].map(v => v - 2 * scale),
-              y: [-14 * scale, -3 * scale, 14 * scale, 3 * scale, -14 * scale].map(v => v - 2 * scale),
+              // Cardinais da elipse (rx=6, ry=16) após rotação de -30°
+              x: [5.2 * scale, -8 * scale, -5.2 * scale, 8 * scale, 5.2 * scale].map(v => v - 2 * scale),
+              y: [-3 * scale, -13.86 * scale, 3 * scale, 13.86 * scale, -3 * scale].map(v => v - 2 * scale),
             }}
             transition={{ duration: 2.2, repeat: Infinity, ease: "linear" }}
           >
