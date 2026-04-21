@@ -366,8 +366,8 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
                                 return (
                                     <motion.div
                                         key={row.feature}
-                                        initial={{ opacity: 0, y: 10 }}
-                                        whileInView={{ opacity: 1, y: 0 }}
+                                        initial={{ y: 10 }}
+                                        whileInView={{ y: 0 }}
                                         viewport={{ once: true, margin: "-50px" }}
                                         transition={{
                                             duration: 0.4,
@@ -440,8 +440,8 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
                         return (
                             <motion.div
                                 key={row.feature}
-                                initial={{ opacity: 0, y: 8 }}
-                                whileInView={{ opacity: 1, y: 0 }}
+                                initial={{ y: 8 }}
+                                whileInView={{ y: 0 }}
                                 viewport={{ once: true, margin: "-30px" }}
                                 transition={{ duration: 0.35, delay: i * 0.03 }}
                                 className="rounded-2xl p-4"
@@ -567,8 +567,8 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
                 {/* Footer CTA */}
                 <div className="mt-12 text-center">
                     <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        whileInView={{ opacity: 1, y: 0 }}
+                        initial={{ y: 10 }}
+                        whileInView={{ y: 0 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.5, delay: 0.2 }}
                         className="inline-flex flex-col items-center gap-5"

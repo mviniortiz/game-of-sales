@@ -533,11 +533,10 @@ export const FlowDiagram = () => {
                                     stroke="#34d399"
                                     strokeWidth="1.4"
                                     strokeLinecap="round"
-                                    initial={{ pathLength: 0, opacity: 0 }}
+                                    initial={{ pathLength: 0, opacity: 0.6 }}
                                     whileInView={{
                                         pathLength: 1,
-                                        opacity: [0, 0.9, 0],
-                                        transition: { duration: 1.2, times: [0, 0.45, 1], ease: [0.22, 1, 0.36, 1] },
+                                        transition: { duration: 1.2, ease: [0.22, 1, 0.36, 1] },
                                     }}
                                     viewport={{ once: true, margin: "-40px" }}
                                 />
@@ -587,11 +586,10 @@ export const FlowDiagram = () => {
                                     stroke="#34d399"
                                     strokeWidth="1.4"
                                     strokeLinecap="round"
-                                    initial={{ pathLength: 0, opacity: 0 }}
+                                    initial={{ pathLength: 0, opacity: 0.6 }}
                                     whileInView={{
                                         pathLength: 1,
-                                        opacity: [0, 0.9, 0],
-                                        transition: { duration: 1.2, delay: 0.15, times: [0, 0.45, 1], ease: [0.22, 1, 0.36, 1] },
+                                        transition: { duration: 1.2, delay: 0.15, ease: [0.22, 1, 0.36, 1] },
                                     }}
                                     viewport={{ once: true, margin: "-40px" }}
                                 />
@@ -673,13 +671,7 @@ export const FlowDiagram = () => {
                 </div>
 
                 {/* Footnote */}
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: 0.3 }}
-                    className="mt-8 text-center"
-                >
+                <div className="mt-8 text-center">
                     <p
                         className="text-sm"
                         style={{ color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}
@@ -690,7 +682,7 @@ export const FlowDiagram = () => {
                         </span>
                         .
                     </p>
-                </motion.div>
+                </div>
             </div>
         </section>
     );
