@@ -27,9 +27,6 @@ const ProductBentoGrid = lazy(() =>
 const ComparisonSection = lazy(() =>
     import("@/components/landing/ComparisonSection").then((m) => ({ default: m.ComparisonSection }))
 );
-const HowItWorks = lazy(() =>
-    import("@/components/landing/HowItWorks").then((m) => ({ default: m.HowItWorks }))
-);
 const DemoVideoPlayer = lazy(() =>
     import("@/components/landing/DemoVideoPlayer").then((m) => ({ default: m.DemoVideoPlayer }))
 );
@@ -234,7 +231,7 @@ const LandingPage = () => {
 
             <PainPoints />
 
-            <LazyOnVisible minHeight="500px">
+            <LazyOnVisible minHeight="500px" id="how-it-works">
                 <FlowSection />
             </LazyOnVisible>
 
@@ -248,12 +245,6 @@ const LandingPage = () => {
 
             <LazyOnVisible minHeight="320px" id="agendar-demo">
                 <DemoScheduleSection />
-            </LazyOnVisible>
-
-            <LazyOnVisible minHeight="600px">
-                <div id="how-it-works">
-                    <HowItWorks />
-                </div>
             </LazyOnVisible>
 
             <LazyOnVisible minHeight="500px">
