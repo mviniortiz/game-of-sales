@@ -18,7 +18,12 @@ const NAV_LINKS = [
 
 const scrollTo = (anchor: string) => {
     const el = document.getElementById(anchor);
-    if (el) el.scrollIntoView({ behavior: "smooth" });
+    if (el) {
+        el.scrollIntoView({ behavior: "smooth" });
+        return;
+    }
+    // Âncora não existe na página atual (ex.: /para-infoprodutores) → volta pra landing.
+    window.location.href = `/#${anchor}`;
 };
 
 export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
