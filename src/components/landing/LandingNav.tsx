@@ -23,9 +23,10 @@ type NavItem =
       };
 
 const NAV_LINKS: NavItem[] = [
+    { kind: "anchor", label: "Como funciona", anchor: "how-it-works" },
     { kind: "anchor", label: "Funcionalidades", anchor: "features" },
     { kind: "anchor", label: "Eva", anchor: "eva" },
-    { kind: "anchor", label: "Como funciona", anchor: "how-it-works" },
+    { kind: "anchor", label: "Preços", anchor: "pricing" },
     {
         kind: "dropdown",
         label: "Soluções",
@@ -52,8 +53,6 @@ const NAV_LINKS: NavItem[] = [
             },
         ],
     },
-    { kind: "anchor", label: "Agendar demo", anchor: "agendar-demo" },
-    { kind: "anchor", label: "FAQ", anchor: "faq" },
 ];
 
 // Cross-page: quem clica em navbar fora da landing (ex.: /para-infoprodutores)
