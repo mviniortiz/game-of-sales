@@ -198,6 +198,16 @@ const INTEGRATIONS: Integration[] = [
     features: ["NF-e / NFS-e", "Callback de status", "PDF/XML no deal"],
   },
   {
+    id: "mercadopago",
+    name: "Mercado Pago",
+    description: "Receba pagamentos aprovados, PIX, reembolsos e cancelamentos do MP",
+    logo: mercadopagoLogo,
+    logoBg: "bg-white",
+    status: "available",
+    category: "sales",
+    features: ["PIX & cartão", "Reembolsos", "Webhook nativo"],
+  },
+  {
     id: "celetus",
     name: "Celetus",
     description: "Sincronize transações e leads da plataforma Celetus",
@@ -206,16 +216,6 @@ const INTEGRATIONS: Integration[] = [
     status: "roadmap",
     category: "sales",
     votes: 23,
-  },
-  {
-    id: "mercadopago",
-    name: "Mercado Pago",
-    description: "Receba webhooks de pagamentos aprovados, estornos e assinaturas",
-    logo: mercadopagoLogo,
-    logoBg: "bg-white",
-    status: "roadmap",
-    category: "sales",
-    votes: 19,
   },
   {
     id: "stripe",
@@ -258,6 +258,7 @@ const PLATFORM_NAMES: Record<string, string> = {
   asaas: "Asaas",
   zapier: "Zapier",
   notazz: "Notazz",
+  mercadopago: "Mercado Pago",
 };
 
 const EVENT_LABELS: Record<string, string> = {
@@ -311,6 +312,12 @@ const EVENT_LABELS: Record<string, string> = {
   "WEBHOOK.MARKED_OPPORTUNITY": "Oportunidade marcada",
   crm_deal_created: "Deal criado no CRM",
   crm_deal_updated: "Deal atualizado no CRM",
+  "payment.created": "Pagamento criado (MP)",
+  "payment.updated": "Pagamento atualizado (MP)",
+  approved: "Pagamento aprovado",
+  refunded: "Reembolso",
+  cancelled: "Cancelamento",
+  rejected: "Pagamento rejeitado",
 };
 
 // ── Status helpers ──────────────────────────────────────────────────

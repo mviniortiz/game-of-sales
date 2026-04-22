@@ -65,6 +65,9 @@ import braipLogo from "@/assets/integrations/braip.webp";
 import monetizzeLogo from "@/assets/integrations/monetizze.webp";
 import eduzzLogo from "@/assets/integrations/eduzz.webp";
 import asaasLogo from "@/assets/integrations/asaas.svg";
+import mercadopagoLogo from "@/assets/integrations/mercadopago.webp";
+import stripeLogo from "@/assets/integrations/stripe.svg";
+import pagarmeLogo from "@/assets/integrations/pagarme.svg";
 import zapierLogo from "@/assets/integrations/zapier.svg";
 import notazzLogo from "@/assets/integrations/notazz.png";
 
@@ -611,6 +614,80 @@ export const INTEGRATIONS_CONFIG: Record<string, IntegrationSpec> = {
       "API Key validada em cada request no header asaas-access-token",
       "A mesma chave é usada para buscar dados completos do cliente via API v3",
       "Asaas garante entrega at-least-once — a idempotência do Vyzon previne duplicatas",
+    ],
+  },
+
+  mercadopago: {
+    id: "mercadopago",
+    platform: "mercadopago",
+    name: "Mercado Pago",
+    logo: mercadopagoLogo,
+    accentClass: "sky",
+    tagline: "Pagamentos, PIX e checkouts do Mercado Pago",
+    description:
+      "Recebe notificações de pagamentos aprovados, reembolsados e cancelados do Mercado Pago. Cada transação vira deal no CRM e venda no dashboard automaticamente. A integração usa seu Access Token do MP para buscar detalhes completos de cada pagamento.",
+    category: "sales",
+    webhook: {
+      url: `${SUPABASE_FUNCTIONS_URL}/mercadopago-sales-webhook`,
+      method: "POST",
+      authType: "token",
+      authHeader: "x-mp-access-token",
+      authFieldLabel: "Access Token (Mercado Pago)",
+      authFieldPlaceholder: "APP_USR-... ou TEST-...",
+      authFieldHelp:
+        "Gere em Mercado Pago → Suas integrações → Credenciais de produção. É o mesmo token usado para chamar a API v1.",
+    },
+    dashboardUrl: "https://www.mercadopago.com.br/developers/panel/webhooks",
+    dashboardLabel: "Abrir painel do Mercado Pago → Webhooks",
+    events: [
+      { label: "payment.created", description: "Pagamento criado — deal em 'em_negociacao' se pendente" },
+      { label: "payment.updated", description: "Pagamento atualizado — promove pra closed_won se aprovado" },
+      { label: "approved", description: "Pagamento aprovado — cria deal closed_won + venda" },
+      { label: "refunded", description: "Reembolso — marca deal como closed_lost" },
+      { label: "cancelled", description: "Cancelamento — marca deal como closed_lost" },
+      { label: "rejected", description: "Rejeitado — marca deal como closed_lost" },
+    ],
+    setupSteps: [
+      {
+        title: "Copie a URL do webhook",
+        description: "A URL abaixo é exclusiva da sua empresa — cada evento é associado automaticamente.",
+      },
+      {
+        title: "Acesse Webhooks no painel do MP",
+        description:
+          "Entre em mercadopago.com.br/developers → Suas integrações → selecione sua aplicação → Webhooks → Configurar notificações.",
+      },
+      {
+        title: "Cole a URL e marque os eventos",
+        description:
+          "Em URL de produção, cole a URL do webhook. Marque: Pagamentos (payment). O MP envia payment.created e payment.updated em cada mudança de status.",
+        note: "O topic precisa ser 'payment'. Outros tópicos (merchant_order, subscription) são ignorados por este endpoint.",
+      },
+      {
+        title: "Copie o Access Token de produção",
+        description:
+          "Ainda no painel, em Credenciais de produção copie o Access Token (começa com APP_USR-). Cole no campo ao lado.",
+        note: "O mesmo token é usado para autenticar o webhook (header x-mp-access-token) e para buscar detalhes do pagamento na API v1.",
+      },
+      {
+        title: "Salve e teste",
+        description:
+          "Clique em Salvar no painel MP. Use a opção 'Simular evento' para enviar um payment de teste e confira em Integrações → Atividade.",
+      },
+    ],
+    make: {
+      enabled: true,
+      description:
+        "Se precisar consolidar múltiplas contas MP ou transformar o payload, use Make com módulo Mercado Pago → Watch Payments apontando HTTP POST para a URL acima.",
+      trigger_module: "Mercado Pago > Watch Payments",
+      action_module: "HTTP > POST para URL do webhook",
+    },
+    features: ["PIX & cartão", "Reembolsos automáticos", "Webhook nativo MP", "Sincroniza deals + vendas"],
+    securityNotes: [
+      "Access Token validado a cada request no header x-mp-access-token",
+      "O Vyzon faz fetch da API v1 do MP pra buscar dados completos do pagador (nome, email, telefone)",
+      "Idempotência por payment_id + action — eventos duplicados não criam deals duplicados",
+      "Não confunda este webhook com o MP de assinatura do Vyzon — este é só para suas vendas",
     ],
   },
 

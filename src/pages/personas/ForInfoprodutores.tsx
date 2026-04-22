@@ -199,11 +199,11 @@ const INTEGRATIONS = [
     { name: "Hotmart", highlight: true, note: "webhook nativo" },
     { name: "Kiwify", highlight: true, note: "webhook nativo" },
     { name: "Greenn", highlight: true, note: "webhook nativo" },
-    { name: "Eduzz", highlight: false, note: "webhook genérico" },
-    { name: "Mercado Pago", highlight: false, note: "webhook genérico" },
-    { name: "Stripe", highlight: false, note: "API + webhook" },
+    { name: "Eduzz", highlight: true, note: "webhook nativo" },
+    { name: "Mercado Pago", highlight: true, note: "webhook nativo" },
+    { name: "Stripe", highlight: true, note: "webhook nativo" },
+    { name: "Pagar.me", highlight: true, note: "webhook nativo" },
     { name: "WhatsApp", highlight: false, note: "Evolution API" },
-    { name: "Outros", highlight: false, note: "via webhook HTTP" },
 ] as const;
 
 const FAQ = [
