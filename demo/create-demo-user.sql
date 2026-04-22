@@ -71,7 +71,7 @@ BEGIN
 
   -- 4) Cria company
   INSERT INTO companies (id, name, plan, team_size, referral_source, main_challenge)
-  VALUES (v_company_id, 'Vyzon Demo', 'plus', '2-5', 'demonstracao', 'gravacao_video')
+  VALUES (v_company_id, 'Vyzon Demo', 'pro', '2-5', 'demonstracao', 'gravacao_video')
   ON CONFLICT (id) DO NOTHING;
 
   -- 5) Cria profile

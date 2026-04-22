@@ -110,7 +110,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
     isDragging: isSortableDragging,
   } = useSortable({
     id: deal.id,
-    transition: { duration: 220, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
+    transition: { duration: 160, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
     disabled: isMobile,
   });
 
@@ -449,17 +449,17 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
       }}
       className={`
         group relative
-        bg-card/60 backdrop-blur-sm border border-border/60
+        bg-card/80 border border-border/60
         ${rotting.severity !== "ok" ? `border-l-[3px] ${rotting.border}` : ""}
         rounded-lg p-3
         ${selectionMode ? "cursor-pointer" : "cursor-grab active:cursor-grabbing"}
-        transition-all duration-150 will-change-transform
+        transition-[border-color,background-color,transform,box-shadow] duration-150 will-change-transform
         ${rotting.severity === "high" ? "rotting-pulse" : ""}
         ${isBeingDragged
-          ? "scale-[1.02] rotate-[0.4deg] shadow-2xl shadow-black/50 border-emerald-500/60 z-50 !opacity-100"
-          : "hover:border-border hover:bg-card/80 hover:-translate-y-px"
+          ? "scale-[1.025] -translate-y-0.5 shadow-[0_12px_32px_-6px_rgba(0,0,0,0.6)] border-emerald-500/70 ring-1 ring-emerald-500/30 z-50 !opacity-100"
+          : "hover:border-border hover:bg-card"
         }
-        ${isSortableDragging ? "opacity-40" : "opacity-100"}
+        ${isSortableDragging ? "opacity-30" : "opacity-100"}
         ${isSelected ? "!border-emerald-500 ring-2 ring-emerald-500/40" : ""}
       `}
       onMouseDown={handleMouseDown}

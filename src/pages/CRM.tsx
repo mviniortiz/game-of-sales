@@ -6,6 +6,7 @@ import {
   DragOverlay,
   closestCorners,
   pointerWithin,
+  rectIntersection,
   PointerSensor,
   useSensor,
   useSensors,
@@ -758,7 +759,10 @@ export default function CRM() {
         .update({ stage: stage as any, position })
         .eq("id", id);
 
-      if (error) throw error;
+      if (error) {
+        logger.error("[DnD] PATCH deals ERROR", error);
+        throw error;
+      }
 
       if (stage === "closed_won" && deal) {
         // Trigger celebration
@@ -910,10 +914,15 @@ export default function CRM() {
     updateDealMutation.mutate({ id: deal.id, stage: targetStageId as StageId, position: 0, deal, previousDeals });
   }, [updateDealMutation, localDeals]);
 
-  // Prefer the actual pointer location; fallback to geometric matching for gaps
+  // Collision detection: rectIntersection cobre gaps entre colunas (FunnelConnector + flex gap)
+  // pois usa o rect do card arrastado (~280px) ao invés do pointer pontual.
+  // Ordem: pointerWithin (mais preciso quando pointer está dentro) → rectIntersection
+  // (cobre zona intermediária entre colunas) → closestCorners (último recurso geométrico).
   const collisionDetectionStrategy: CollisionDetection = useCallback((args) => {
     const pointerHits = pointerWithin(args);
     if (pointerHits.length > 0) return pointerHits;
+    const rectHits = rectIntersection(args);
+    if (rectHits.length > 0) return rectHits;
     return closestCorners(args);
   }, []);
 

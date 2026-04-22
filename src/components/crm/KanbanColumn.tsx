@@ -72,7 +72,7 @@ export const KanbanColumn = memo(({
   const dotBg = stage.color.replace("text-", "bg-").replace("-400", "-500");
 
   return (
-    <div className="flex items-start gap-0">
+    <div className="flex items-stretch gap-0 h-full">
       {/* Funnel connector BEFORE this column (left side) - hidden on mobile for snap-scroll */}
       {showConversionRate && conversionRate !== null && (
         <div className="hidden sm:flex">
@@ -80,18 +80,23 @@ export const KanbanColumn = memo(({
         </div>
       )}
 
-      {/* ── Main Column ─────────────────────────────────────── */}
+      {/* ── Main Column (droppable shell inteiro — cobre header + track) ─ */}
       <div
+        ref={setNodeRef}
         className={`
-          flex flex-col w-[85vw] sm:w-[280px] flex-shrink-0 h-full rounded-xl
-          border transition-all duration-200 snap-center
+          relative flex flex-col w-[85vw] sm:w-[280px] flex-shrink-0 h-full rounded-xl
+          border transition-colors duration-150 snap-center overflow-hidden
           ${isOver
-            ? "ring-2 ring-emerald-500/50 ring-offset-2 ring-offset-background border-dashed border-emerald-400/50 bg-emerald-500/[0.03]"
+            ? "border-emerald-400/70 bg-emerald-500/[0.05]"
             : "border-border/60 bg-card/30"
           }
         `}
-        style={isOver ? { animation: "kanban-pulse 1.5s ease-in-out infinite" } : undefined}
       >
+        {/* Top accent bar quando isOver (GPU-friendly: scale-x) */}
+        <div
+          className={`absolute top-0 left-0 right-0 h-[2px] origin-left transition-transform duration-200 ${isOver ? "scale-x-100" : "scale-x-0"}`}
+          style={{ background: "linear-gradient(90deg, transparent, #10b981, transparent)" }}
+        />
         {/* ── Column Header ────────────────────────────────── */}
         <div className="px-3.5 pt-3.5 pb-3">
           {/* Row 1: stage dot + title + count */}
@@ -118,27 +123,19 @@ export const KanbanColumn = memo(({
         <div className="h-px bg-border/40 mx-3" />
 
         {/* ── Cards Track ──────────────────────────────────── */}
-        <div
-          ref={setNodeRef}
-          className={`
-            flex-1 p-2.5 overflow-hidden
-            max-h-[calc(100vh-240px)]
-            transition-colors duration-100
-            ${isOver ? "bg-emerald-500/[0.04]" : "bg-transparent"}
-          `}
-        >
+        <div className="flex-1 p-2.5 overflow-hidden max-h-[calc(100vh-240px)]">
           <ScrollArea className="h-full max-h-[calc(100vh-260px)] pr-1">
             <SortableContext items={dealIds} strategy={verticalListSortingStrategy}>
               <div className="space-y-2 pt-1 pb-2">
                 {deals.length === 0 ? (
                   <div className={`
-                    flex flex-col items-center justify-center h-24
-                    transition-all duration-150
-                    ${isOver ? "opacity-100" : "opacity-40"}
+                    flex flex-col items-center justify-center h-40 rounded-lg border border-dashed
+                    transition-colors duration-150
+                    ${isOver ? "border-emerald-400/60 bg-emerald-500/[0.04]" : "border-border/40"}
                   `}>
-                    <Inbox className={`h-4 w-4 mb-1.5 ${isOver ? "text-emerald-400" : "text-muted-foreground"}`} strokeWidth={1.5} />
-                    <p className={`text-[10.5px] font-medium ${isOver ? "text-emerald-400" : "text-muted-foreground"}`}>
-                      {isOver ? "Solte aqui" : "Vazio"}
+                    <Inbox className={`h-4 w-4 mb-1.5 ${isOver ? "text-emerald-400" : "text-muted-foreground/60"}`} strokeWidth={1.5} />
+                    <p className={`text-[10.5px] font-medium ${isOver ? "text-emerald-400" : "text-muted-foreground/60"}`}>
+                      {isOver ? "Solte aqui" : "Arraste um card"}
                     </p>
                   </div>
                 ) : (
