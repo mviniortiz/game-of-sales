@@ -35,9 +35,11 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
                     }}
                 />
                 <div
-                    className="absolute top-[15%] left-1/2 -translate-x-1/2 w-[1400px] h-[900px] rounded-full pointer-events-none"
+                    className="absolute left-1/2 -translate-x-1/2 w-[1400px] h-[900px] rounded-full pointer-events-none"
                     style={{
+                        top: "120px",
                         background: "radial-gradient(ellipse, rgba(16,185,129,0.14) 0%, rgba(16,185,129,0.04) 35%, transparent 60%)",
+                        contain: "layout paint",
                     }}
                 />
                 <div

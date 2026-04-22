@@ -18,7 +18,7 @@ export const PricingSection = ({ onPlanSelect, onScheduleDemo }: Props) => {
     const [isAnnual, setIsAnnual] = useState(true);
 
     return (
-        <section id="pricing" className="py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden" style={{ background: "var(--vyz-bg)" }}>
+        <section className="py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden" style={{ background: "var(--vyz-bg)" }}>
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full pointer-events-none"
                 style={{ background: "radial-gradient(ellipse, var(--vyz-accent-soft-10) 0%, transparent 60%)", filter: "blur(80px)" }} />
             <div className="absolute inset-0 opacity-[0.02] pointer-events-none"
@@ -46,7 +46,7 @@ export const PricingSection = ({ onPlanSelect, onScheduleDemo }: Props) => {
                         style={{ background: "var(--vyz-surface-2)", boxShadow: "0 0 0 1px var(--vyz-border-strong)" }}>
                         {([false, true] as const).map((annual) => (
                             <button key={String(annual)} onClick={() => setIsAnnual(annual)}
-                                className="relative flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm transition-all duration-200"
+                                className="relative flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm"
                                 style={{ fontWeight: "var(--fw-semibold)", color: isAnnual === annual ? "var(--vyz-text-primary)" : "var(--vyz-text-soft)" }}>
                                 {isAnnual === annual && (
                                     <span
@@ -207,7 +207,7 @@ export const PricingSection = ({ onPlanSelect, onScheduleDemo }: Props) => {
                                             <div className="space-y-2">
                                                 <button
                                                     onClick={() => onPlanSelect(plan.name.toLowerCase())}
-                                                    className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm transition-all duration-200 cursor-pointer"
+                                                    className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm cursor-pointer"
                                                     style={{
                                                         background: "var(--vyz-surface-2)",
                                                         border: "none",

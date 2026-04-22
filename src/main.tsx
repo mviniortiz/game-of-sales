@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import { initAnalytics } from "./lib/analytics";
 
 const THEME_STORAGE_KEY = "vyzon-theme";
 
@@ -39,7 +40,7 @@ if (typeof window !== "undefined") {
     if (analyticsBooted) return;
     analyticsBooted = true;
     cleanupAnalytics();
-    import("./lib/analytics").then((m) => m.initAnalytics());
+    initAnalytics();
   };
   const analyticsEvents: Array<keyof WindowEventMap> = [
     "pointerdown",

@@ -100,7 +100,7 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
     return (
         <>
             <header
-                className="fixed top-0 inset-x-0 z-50 transition-all duration-300 landing-fade-in"
+                className="fixed top-0 inset-x-0 z-50 landing-fade-in"
                 style={{
                     background: scrolled ? "rgba(6,8,10,0.85)" : "transparent",
                     backdropFilter: scrolled ? "blur(12px)" : "none",
@@ -386,10 +386,11 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                                     />
                                 </button>
                                 <div
-                                    className="overflow-hidden transition-all duration-200"
+                                    className="overflow-hidden"
                                     style={{
                                         maxHeight: mobileSolutionsOpen ? "400px" : "0",
                                         opacity: mobileSolutionsOpen ? 1 : 0,
+                                        transition: "opacity 0.2s ease-out",
                                     }}
                                 >
                                     <div className="pl-4 pr-1 py-1 flex flex-col gap-1">

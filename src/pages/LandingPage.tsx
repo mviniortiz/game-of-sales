@@ -7,9 +7,6 @@ import { ImpactMetrics } from "@/components/landing/ImpactMetrics";
 import { PainPoints } from "@/components/landing/PainPoints";
 import { LandingNav } from "@/components/landing/LandingNav";
 import { NavigatingOverlay } from "@/components/landing/sections/NavigatingOverlay";
-import { LigacoesSection } from "@/components/landing/sections/LigacoesSection";
-import { PricingSection } from "@/components/landing/sections/PricingSection";
-import { LandingFooter } from "@/components/landing/sections/LandingFooter";
 import { scrollToLazyAnchor, smoothScrollToId, useHashScrollOnMount } from "@/hooks/useLandingAnchor";
 
 const FlowSection = lazy(() =>
@@ -38,6 +35,15 @@ const DemoScheduleSection = lazy(() =>
 );
 const FinalCTA = lazy(() =>
     import("@/components/landing/FinalCTA").then((m) => ({ default: m.FinalCTA }))
+);
+const LigacoesSection = lazy(() =>
+    import("@/components/landing/sections/LigacoesSection").then((m) => ({ default: m.LigacoesSection }))
+);
+const PricingSection = lazy(() =>
+    import("@/components/landing/sections/PricingSection").then((m) => ({ default: m.PricingSection }))
+);
+const LandingFooter = lazy(() =>
+    import("@/components/landing/sections/LandingFooter").then((m) => ({ default: m.LandingFooter }))
 );
 
 const preloadOnboarding = () => import("@/pages/Onboarding");
@@ -129,16 +135,20 @@ const LandingPage = () => {
                 </div>
             </LazyOnVisible>
 
-            <LigacoesSection onSeePlansClick={() => smoothScrollToId("pricing")} />
+            <LazyOnVisible minHeight="500px">
+                <LigacoesSection onSeePlansClick={() => smoothScrollToId("pricing")} />
+            </LazyOnVisible>
 
             <LazyOnVisible minHeight="700px">
                 <EvaAISection onCTAClick={() => smoothScrollToId("pricing")} />
             </LazyOnVisible>
 
-            <PricingSection
-                onPlanSelect={goToRegister}
-                onScheduleDemo={scrollToDemo}
-            />
+            <LazyOnVisible minHeight="900px" id="pricing">
+                <PricingSection
+                    onPlanSelect={goToRegister}
+                    onScheduleDemo={scrollToDemo}
+                />
+            </LazyOnVisible>
 
             <LazyOnVisible minHeight="600px">
                 <div id="faq">
@@ -150,11 +160,13 @@ const LandingPage = () => {
                 <FinalCTA onCTAClick={() => goToRegister("pro")} onScheduleDemoClick={() => scrollToDemo("final_cta")} />
             </LazyOnVisible>
 
-            <LandingFooter
-                onNavClick={(id) => scrollToLazyAnchor(id)}
-                onLoginClick={() => navigate("/auth")}
-                onRegisterClick={() => goToRegister("plus")}
-            />
+            <LazyOnVisible minHeight="300px">
+                <LandingFooter
+                    onNavClick={(id) => scrollToLazyAnchor(id)}
+                    onLoginClick={() => navigate("/auth")}
+                    onRegisterClick={() => goToRegister("plus")}
+                />
+            </LazyOnVisible>
         </div>
     );
 };
