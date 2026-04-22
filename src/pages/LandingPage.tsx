@@ -63,6 +63,30 @@ const LandingPage = () => {
         };
     }, []);
 
+    // Tráfego pago (gclid/fbclid/utm_source=google|facebook): pre-hidrata TODO
+    // o lazy content pra não renderizar "demo-form-start" só depois do scroll.
+    // Sem isso, visitantes de ad scrollam para um placeholder vazio (minHeight 320px)
+    // e saem antes do form carregar — causa do drop-off 157 CTA → 30 form_rendered.
+    useEffect(() => {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const isAdTraffic =
+                params.has("gclid") ||
+                params.has("fbclid") ||
+                params.get("utm_source") === "google" ||
+                params.get("utm_source") === "facebook";
+            if (isAdTraffic) {
+                // Delay curto pra não bloquear LCP; rIC preferencial.
+                const dispatch = () => window.dispatchEvent(new CustomEvent("vyzon:hydrate-all"));
+                const idle = (window as typeof window & { requestIdleCallback?: (cb: () => void, opts?: { timeout?: number }) => number }).requestIdleCallback;
+                if (idle) idle(dispatch, { timeout: 2000 });
+                else setTimeout(dispatch, 600);
+            }
+        } catch {
+            /* ignore */
+        }
+    }, []);
+
     useHashScrollOnMount();
 
     // Scroll pro form de demo + tracking do CTA de origem (Nav, Hero, Pricing, FinalCTA).
@@ -99,8 +123,8 @@ const LandingPage = () => {
             />
 
             <HeroSection
-                onCTAClick={() => smoothScrollToId("pricing")}
-                onDemoClick={() => smoothScrollToId("demo")}
+                onCTAClick={() => scrollToLazyAnchor("pricing")}
+                onDemoClick={() => scrollToLazyAnchor("how-it-works")}
                 onScheduleDemoClick={() => scrollToDemo("hero")}
                 onLoginClick={() => navigate("/auth")}
             />

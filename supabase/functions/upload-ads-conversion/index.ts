@@ -110,6 +110,21 @@ serve(async (req) => {
       });
     }
 
+    // gclid real do Google Ads tem 30+ chars, alfanumérico + `_` + `-`.
+    // Rejeita localmente valores de teste (ex: TESTE123) pra não poluir
+    // `ads_conversion_error` com "gclid could not be decoded" da API.
+    const GCLID_SHAPE = /^[A-Za-z0-9_-]{20,}$/;
+    if (!GCLID_SHAPE.test(lead.gclid)) {
+      await supabase
+        .from("demo_requests")
+        .update({ ads_conversion_error: `invalid gclid shape: ${lead.gclid.slice(0, 50)}` })
+        .eq("id", lead_id);
+      return new Response(
+        JSON.stringify({ ok: true, skipped: "invalid gclid shape (likely test value)" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     if (!GADS_CLIENT_ID || !GADS_CLIENT_SECRET || !GADS_REFRESH_TOKEN || !GADS_DEVELOPER_TOKEN) {
       return new Response(JSON.stringify({ error: "Google Ads secrets not configured" }), {
         status: 500,
