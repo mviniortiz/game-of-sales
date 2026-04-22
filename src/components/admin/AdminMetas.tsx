@@ -1,3 +1,4 @@
+import * as React from "react";
 import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -50,6 +51,94 @@ import { ptBR } from "date-fns/locale";
 import { useTenant } from "@/contexts/TenantContext";
 import { useAuth } from "@/contexts/AuthContext";
 
+const MonthPicker = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+  <Popover>
+    <PopoverTrigger asChild>
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full justify-between bg-transparent border-border/50 text-foreground"
+      >
+        <div className="flex items-center gap-2">
+          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm">
+            {value
+              ? format(new Date(`${value}-01T12:00:00`), "MMMM yyyy", { locale: ptBR })
+              : "Selecione o mês"}
+          </span>
+        </div>
+      </Button>
+    </PopoverTrigger>
+    <PopoverContent className="p-0 bg-card border-border" align="start">
+      <CalendarPicker
+        mode="single"
+        selected={value ? new Date(`${value}-01T12:00:00`) : undefined}
+        onSelect={(date) => {
+          if (!date) return;
+          const y = date.getFullYear();
+          const m = String(date.getMonth() + 1).padStart(2, "0");
+          onChange(`${y}-${m}`);
+        }}
+        locale={ptBR}
+        initialFocus
+      />
+    </PopoverContent>
+  </Popover>
+);
+
+const parseBRLInput = (s: string): number => {
+  if (!s) return 0;
+  const cleaned = s.replace(/[^\d.,]/g, "");
+  if (cleaned.includes(",")) {
+    return Number(cleaned.replace(/\./g, "").replace(",", ".")) || 0;
+  }
+  return Number(cleaned) || 0;
+};
+
+const CurrencyInput = ({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (raw: string) => void;
+}) => {
+  const [focused, setFocused] = React.useState(false);
+  const [draft, setDraft] = React.useState(value);
+
+  React.useEffect(() => {
+    if (!focused) setDraft(value);
+  }, [value, focused]);
+
+  const numeric = parseBRLInput(value);
+  const formatted = numeric > 0
+    ? numeric.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    : "";
+  const display = focused ? draft : formatted;
+
+  return (
+    <div className="relative">
+      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground pointer-events-none">
+        R$
+      </span>
+      <Input
+        type="text"
+        inputMode="decimal"
+        value={display}
+        onFocus={() => { setDraft(value); setFocused(true); }}
+        onBlur={() => setFocused(false)}
+        onChange={(e) => {
+          const cleaned = e.target.value.replace(/[^\d.,]/g, "");
+          setDraft(cleaned);
+          onChange(String(parseBRLInput(cleaned)));
+        }}
+        placeholder="0,00"
+        className="pl-9 bg-transparent border-border/50"
+        required
+      />
+    </div>
+  );
+};
+
 export const AdminMetas = () => {
   const queryClient = useQueryClient();
   const { activeCompanyId, isSuperAdmin } = useTenant();
@@ -61,35 +150,16 @@ export const AdminMetas = () => {
   const [userId, setUserId] = useState("");
   const [mesReferencia, setMesReferencia] = useState(mesAtual);
   const [valorMeta, setValorMeta] = useState("");
-  const [valorMetaFormatado, setValorMetaFormatado] = useState("");
 
   // Estados para Meta Consolidada
   const [mesReferenciaConsolidada, setMesReferenciaConsolidada] = useState(mesAtual);
   const [valorMetaConsolidada, setValorMetaConsolidada] = useState("");
-  const [valorMetaConsolidadaFormatado, setValorMetaConsolidadaFormatado] = useState("");
   const [descricaoConsolidada, setDescricaoConsolidada] = useState("");
   const [produtoAlvo, setProdutoAlvo] = useState("");
 
   useEffect(() => {
     setUserId("");
   }, [activeCompanyId]);
-
-  const formatarMoeda = (value: string, setValor: (v: string) => void, setFormatado: (v: string) => void) => {
-    const numero = value.replace(/\D/g, "");
-    if (!numero) {
-      setValor("");
-      setFormatado("");
-      return;
-    }
-    const valorNumerico = parseFloat(numero) / 100;
-    setValor(valorNumerico.toString());
-    setFormatado(valorNumerico.toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }));
-  };
 
   const applyCompanyFilter = (query: any) => {
     if (!activeCompanyId) {
@@ -286,7 +356,6 @@ export const AdminMetas = () => {
       setUserId("");
       setMesReferencia(mesAtual);
       setValorMeta("");
-      setValorMetaFormatado("");
     },
     onError: (error: any) => toast.error(`Erro ao definir meta: ${error.message}`),
   });
@@ -339,7 +408,6 @@ export const AdminMetas = () => {
       toast.success(result?.updated ? "Meta consolidada atualizada!" : "Meta consolidada definida com sucesso!");
       setMesReferenciaConsolidada(mesAtual);
       setValorMetaConsolidada("");
-      setValorMetaConsolidadaFormatado("");
       setDescricaoConsolidada("");
       setProdutoAlvo("");
     },
@@ -441,64 +509,6 @@ export const AdminMetas = () => {
       teamProgress: totalTarget > 0 ? (totalRealized / totalTarget) * 100 : 0,
     };
   }, [metas, todasVendas]);
-
-  // ─── Shared form components ───────────────────────────────────────
-
-  const MonthPicker = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full justify-between bg-transparent border-border/50 text-foreground"
-        >
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm">
-              {value
-                ? format(new Date(`${value}-01T12:00:00`), "MMMM yyyy", { locale: ptBR })
-                : "Selecione o mês"}
-            </span>
-          </div>
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="p-0 bg-card border-border" align="start">
-        <CalendarPicker
-          mode="single"
-          selected={value ? new Date(`${value}-01T12:00:00`) : undefined}
-          onSelect={(date) => {
-            if (!date) return;
-            const y = date.getFullYear();
-            const m = String(date.getMonth() + 1).padStart(2, "0");
-            onChange(`${y}-${m}`);
-          }}
-          locale={ptBR}
-          initialFocus
-        />
-      </PopoverContent>
-    </Popover>
-  );
-
-  const CurrencyInput = ({
-    value,
-    onChange,
-  }: {
-    value: string;
-    onChange: (raw: string) => void;
-  }) => (
-    <div className="relative">
-      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-      <Input
-        type="text"
-        inputMode="numeric"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="R$ 0,00"
-        className="pl-10 bg-transparent border-border/50"
-        required
-      />
-    </div>
-  );
 
   // ─── Meta card (individual) ──────────────────────────────────────
 
@@ -862,10 +872,7 @@ export const AdminMetas = () => {
                   {/* Value */}
                   <div className="space-y-1.5">
                     <Label className="text-sm text-muted-foreground">Valor da Meta</Label>
-                    <CurrencyInput
-                      value={valorMetaFormatado}
-                      onChange={(v) => formatarMoeda(v, setValorMeta, setValorMetaFormatado)}
-                    />
+                    <CurrencyInput value={valorMeta} onChange={setValorMeta} />
                   </div>
 
                   <Button
@@ -992,8 +999,8 @@ export const AdminMetas = () => {
                   <div className="space-y-1.5">
                     <Label className="text-sm text-muted-foreground">Valor da Meta *</Label>
                     <CurrencyInput
-                      value={valorMetaConsolidadaFormatado}
-                      onChange={(v) => formatarMoeda(v, setValorMetaConsolidada, setValorMetaConsolidadaFormatado)}
+                      value={valorMetaConsolidada}
+                      onChange={setValorMetaConsolidada}
                     />
                     {metas && metas.length > 0 && (
                       <p className="text-[11px] text-emerald-400 mt-1.5 flex items-center gap-1">

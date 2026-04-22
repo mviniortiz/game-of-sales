@@ -206,7 +206,7 @@ export function AppSidebar() {
 
   const filteredGestaoItems = gestaoItems.filter(item => {
     if (item.url === '/metas') return hasFeature('metas');
-    if (item.url === '/ranking') return hasFeature('ranking');
+    if (item.url === '/ranking') return hasFeature('gamification');
     // Eva: show for all admins (paywall is on the page itself)
     if ('adminOnly' in item && item.adminOnly) return isAdmin;
     return true;
