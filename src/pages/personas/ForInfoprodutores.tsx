@@ -16,8 +16,11 @@ import {
     Infinity as InfinityIcon,
     Trophy,
     MessageSquare,
-    PlayCircle,
     User,
+    Plug,
+    TrendingUp,
+    Users,
+    DollarSign,
 } from "lucide-react";
 import { LandingNav } from "@/components/landing/LandingNav";
 import { LazyOnVisible } from "@/components/LazyOnVisible";
@@ -31,12 +34,13 @@ const FinalCTA = lazy(() =>
 // Data
 // ═══════════════════════════════════════════════════════════════════════════
 
-type PipelineKind = "lancamento" | "perpetuo" | "esteira";
+type PanelKind = "lancamento" | "perpetuo" | "esteira" | "integracoes";
 
 const PIPELINES: Record<
-    PipelineKind,
+    Exclude<PanelKind, "integracoes">,
     {
         label: string;
+        sub: string;
         tagline: string;
         icon: typeof Rocket;
         columns: Array<{ title: string; badge?: string; deals: Array<{ name: string; value: string; tag?: string; hot?: boolean }> }>;
@@ -44,7 +48,8 @@ const PIPELINES: Record<
 > = {
     lancamento: {
         label: "Lançamento",
-        tagline: "Janela curta, pipeline cheio. Etapas refletem o funil do lançamento.",
+        sub: "Janela curta, alta conversão",
+        tagline: "Funil do lançamento em quatro etapas: inscrito → carrinho → pago → boleto aberto. Pipeline nasce pronto, você só conecta a plataforma.",
         icon: Rocket,
         columns: [
             {
@@ -86,7 +91,8 @@ const PIPELINES: Record<
     },
     perpetuo: {
         label: "Perpétuo High-Ticket",
-        tagline: "Lead frio → call → proposta. Pipeline por temperatura.",
+        sub: "Lead frio → call → proposta",
+        tagline: "Pipeline por temperatura: frio, aquecido, call, proposta. Ideal pra ticket alto vendido no 1-a-1 pelo WhatsApp.",
         icon: Flame,
         columns: [
             {
@@ -126,7 +132,8 @@ const PIPELINES: Record<
     },
     esteira: {
         label: "Esteira de Recorrência",
-        tagline: "Assinante entra, sobe de produto. Churn vira deal de retenção.",
+        sub: "Assinante sobe de produto",
+        tagline: "Pipeline orientado a ciclo: ativos, upsell disparado, renovação, retenção. Cartão vai falhar? Vira deal antes do churn.",
         icon: InfinityIcon,
         columns: [
             {
@@ -164,6 +171,13 @@ const PIPELINES: Record<
         ],
     },
 };
+
+const PANEL_NAV: Array<{ key: PanelKind; label: string; sub: string; icon: typeof Rocket }> = [
+    { key: "lancamento", label: "Lançamento", sub: "Janela curta", icon: Rocket },
+    { key: "perpetuo", label: "Perpétuo", sub: "High-ticket 1-a-1", icon: Flame },
+    { key: "esteira", label: "Esteira", sub: "Recorrência", icon: InfinityIcon },
+    { key: "integracoes", label: "Integrações", sub: "Hotmart · Kiwify · Greenn", icon: Plug },
+];
 
 const WHATSAPP_THREAD = [
     { from: "eva", text: "Oi Marcos! Aqui é a Luana do time Vyzon 👋 vi que seu boleto do Curso Pro venceu hoje." },
@@ -220,7 +234,7 @@ const FAQ = [
 ] as const;
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Sub-components (mockups visuais)
+// Reusable atoms
 // ═══════════════════════════════════════════════════════════════════════════
 
 const SectionEyebrow = ({ children }: { children: React.ReactNode }) => (
@@ -229,8 +243,8 @@ const SectionEyebrow = ({ children }: { children: React.ReactNode }) => (
         style={{
             fontWeight: 600,
             letterSpacing: "0.08em",
-            background: "rgba(16,185,129,0.1)",
-            border: "1px solid rgba(16,185,129,0.2)",
+            background: "var(--vyz-accent-soft-10)",
+            border: "1px solid var(--vyz-accent-border)",
         }}
     >
         {children}
@@ -252,49 +266,31 @@ const SectionHeading = ({ children }: { children: React.ReactNode }) => (
 );
 
 const SectionSub = ({ children }: { children: React.ReactNode }) => (
-    <p className="mt-4 max-w-xl mx-auto" style={{ fontSize: "1.0625rem", color: "rgba(255,255,255,0.45)" }}>
+    <p className="mt-4 max-w-xl mx-auto" style={{ fontSize: "1.0625rem", color: "var(--vyz-text-soft)" }}>
         {children}
     </p>
 );
 
-const KanbanMock = ({ pipeline }: { pipeline: typeof PIPELINES[PipelineKind] }) => (
-    <div
-        className="rounded-2xl p-4 sm:p-5 overflow-hidden"
-        style={{
-            background: "rgba(11,14,18,0.9)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            boxShadow: "0 24px 60px -20px rgba(0,0,0,0.6)",
-        }}
-    >
-        {/* Toolbar */}
-        <div className="flex items-center justify-between mb-4 pb-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-            <div className="flex items-center gap-2">
-                <pipeline.icon className="h-4 w-4 text-emerald-400" strokeWidth={2} />
-                <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "rgba(255,255,255,0.85)" }}>
-                    Pipeline · {pipeline.label}
-                </span>
-            </div>
-            <div className="hidden sm:flex items-center gap-2 text-[11px]" style={{ color: "rgba(255,255,255,0.4)" }}>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Ao vivo
-            </div>
-        </div>
+// ═══════════════════════════════════════════════════════════════════════════
+// The single interactive panel (replaces hero mockup + 3-pipeline tabs)
+// ═══════════════════════════════════════════════════════════════════════════
 
-        {/* Columns */}
+const KanbanBoard = ({ pipeline }: { pipeline: typeof PIPELINES[Exclude<PanelKind, "integracoes">] }) => (
+    <div className="p-4 sm:p-5">
         <div className="grid grid-cols-4 gap-2 sm:gap-3">
             {pipeline.columns.map((col) => (
                 <div key={col.title} className="min-w-0">
                     <div className="flex items-center justify-between mb-2 px-1">
                         <span
                             className="truncate"
-                            style={{ fontSize: "0.7rem", fontWeight: 600, color: "rgba(255,255,255,0.55)", letterSpacing: "0.04em" }}
+                            style={{ fontSize: "0.7rem", fontWeight: 600, color: "var(--vyz-text-muted)", letterSpacing: "0.04em" }}
                         >
                             {col.title.toUpperCase()}
                         </span>
                         {col.badge && (
                             <span
                                 className="px-1.5 rounded text-[10px] flex-shrink-0"
-                                style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.5)", fontWeight: 600 }}
+                                style={{ background: "var(--vyz-border-subtle)", color: "var(--vyz-text-soft)", fontWeight: 600 }}
                             >
                                 {col.badge}
                             </span>
@@ -304,28 +300,28 @@ const KanbanMock = ({ pipeline }: { pipeline: typeof PIPELINES[PipelineKind] }) 
                         {col.deals.map((d, i) => (
                             <div
                                 key={i}
-                                className="rounded-lg px-2 py-2"
+                                className="rounded-lg px-2.5 py-2"
                                 style={{
                                     background: d.hot ? "rgba(16,185,129,0.07)" : "rgba(255,255,255,0.025)",
-                                    border: `1px solid ${d.hot ? "rgba(16,185,129,0.2)" : "rgba(255,255,255,0.05)"}`,
+                                    border: `1px solid ${d.hot ? "var(--vyz-accent-border)" : "var(--vyz-border-subtle)"}`,
                                 }}
                             >
                                 <div
                                     className="truncate"
-                                    style={{ fontSize: "0.7rem", fontWeight: 600, color: "rgba(255,255,255,0.8)" }}
+                                    style={{ fontSize: "0.72rem", fontWeight: 600, color: "var(--vyz-text-strong)" }}
                                 >
                                     {d.name}
                                 </div>
                                 {d.tag && (
                                     <div
                                         className="truncate mt-0.5"
-                                        style={{ fontSize: "0.625rem", color: d.hot ? "#34d399" : "rgba(255,255,255,0.4)" }}
+                                        style={{ fontSize: "0.625rem", color: d.hot ? "var(--vyz-accent-light)" : "var(--vyz-text-dim)" }}
                                     >
                                         {d.tag}
                                     </div>
                                 )}
                                 {d.value && !d.tag && (
-                                    <div className="truncate mt-0.5" style={{ fontSize: "0.625rem", color: "rgba(255,255,255,0.4)" }}>
+                                    <div className="truncate mt-0.5" style={{ fontSize: "0.625rem", color: "var(--vyz-text-dim)" }}>
                                         {d.value}
                                     </div>
                                 )}
@@ -338,61 +334,86 @@ const KanbanMock = ({ pipeline }: { pipeline: typeof PIPELINES[PipelineKind] }) 
     </div>
 );
 
-const WebhookSetupMock = () => (
-    <div
-        className="rounded-2xl p-5 space-y-3"
-        style={{ background: "rgba(11,14,18,0.9)", border: "1px solid rgba(255,255,255,0.08)" }}
-    >
-        <div className="flex items-center gap-2 pb-2" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-            <LinkIcon className="h-4 w-4 text-emerald-400" strokeWidth={2} />
-            <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "rgba(255,255,255,0.85)" }}>
-                Integrações · Hotmart
-            </span>
-        </div>
-        <div className="space-y-2">
-            <div style={{ fontSize: "0.7rem", fontWeight: 600, color: "rgba(255,255,255,0.55)", letterSpacing: "0.04em" }}>
-                URL DO WEBHOOK
-            </div>
-            <div
-                className="flex items-center gap-2 rounded-lg px-3 py-2.5 font-mono"
-                style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.06)" }}
-            >
-                <span className="truncate flex-1" style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.7)" }}>
-                    https://api.vyzon.com.br/wh/hotmart/3f2a…
-                </span>
-                <Copy className="h-3.5 w-3.5 flex-shrink-0" style={{ color: "rgba(255,255,255,0.4)" }} strokeWidth={2} />
-            </div>
-        </div>
-        <div className="space-y-2">
-            <div style={{ fontSize: "0.7rem", fontWeight: 600, color: "rgba(255,255,255,0.55)", letterSpacing: "0.04em" }}>
-                EVENTOS CAPTURADOS
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-                {["Venda aprovada", "Boleto gerado", "Cartão recusado", "Chargeback", "Reembolso"].map((e) => (
-                    <span
-                        key={e}
-                        className="inline-flex items-center gap-1 px-2 py-1 rounded-md"
-                        style={{
-                            fontSize: "0.7rem",
-                            background: "rgba(16,185,129,0.08)",
-                            color: "#34d399",
-                            border: "1px solid rgba(16,185,129,0.15)",
-                        }}
-                    >
-                        <Check className="h-2.5 w-2.5" strokeWidth={3} />
-                        {e}
+const IntegrationsPanel = () => (
+    <div className="p-5 sm:p-6">
+        <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+                <div style={{ fontSize: "0.7rem", fontWeight: 600, color: "var(--vyz-text-muted)", letterSpacing: "0.04em" }}>
+                    URL DO WEBHOOK · HOTMART
+                </div>
+                <div
+                    className="mt-2 flex items-center gap-2 rounded-lg px-3 py-2.5 font-mono"
+                    style={{ background: "rgba(0,0,0,0.3)", border: "1px solid var(--vyz-border)" }}
+                >
+                    <span className="truncate flex-1" style={{ fontSize: "0.75rem", color: "var(--vyz-text)" }}>
+                        https://api.vyzon.com.br/wh/hotmart/3f2a…
                     </span>
-                ))}
+                    <Copy className="h-3.5 w-3.5 flex-shrink-0" style={{ color: "var(--vyz-text-dim)" }} strokeWidth={2} />
+                </div>
+
+                <div className="mt-4" style={{ fontSize: "0.7rem", fontWeight: 600, color: "var(--vyz-text-muted)", letterSpacing: "0.04em" }}>
+                    EVENTOS CAPTURADOS
+                </div>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                    {["Venda aprovada", "Boleto gerado", "Cartão recusado", "Chargeback", "Reembolso"].map((e) => (
+                        <span
+                            key={e}
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-md"
+                            style={{
+                                fontSize: "0.7rem",
+                                background: "var(--vyz-accent-soft-8)",
+                                color: "var(--vyz-accent-light)",
+                                border: "1px solid rgba(16,185,129,0.15)",
+                            }}
+                        >
+                            <Check className="h-2.5 w-2.5" strokeWidth={3} />
+                            {e}
+                        </span>
+                    ))}
+                </div>
+
+                <div
+                    className="mt-4 flex items-center gap-2 rounded-lg px-3 py-2.5"
+                    style={{ background: "var(--vyz-accent-soft-8)", border: "1px solid var(--vyz-accent-border)" }}
+                >
+                    <CircleCheck className="h-4 w-4 text-emerald-400" strokeWidth={2} />
+                    <span style={{ fontSize: "0.8rem", color: "var(--vyz-accent-text)", fontWeight: 600 }}>
+                        Conectado · última venda há 2min
+                    </span>
+                </div>
             </div>
-        </div>
-        <div
-            className="flex items-center gap-2 rounded-lg px-3 py-2.5"
-            style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.2)" }}
-        >
-            <CircleCheck className="h-4 w-4 text-emerald-400" strokeWidth={2} />
-            <span style={{ fontSize: "0.8rem", color: "rgba(16,185,129,0.95)", fontWeight: 600 }}>
-                Conectado · última venda há 2min
-            </span>
+
+            <div>
+                <div style={{ fontSize: "0.7rem", fontWeight: 600, color: "var(--vyz-text-muted)", letterSpacing: "0.04em" }}>
+                    PLATAFORMAS ATIVAS
+                </div>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                    {INTEGRATIONS.slice(0, 6).map((i) => (
+                        <div
+                            key={i.name}
+                            className="rounded-lg px-3 py-2.5"
+                            style={{
+                                background: i.highlight ? "var(--vyz-accent-soft-6)" : "var(--vyz-surface-1)",
+                                border: `1px solid ${i.highlight ? "var(--vyz-accent-border)" : "var(--vyz-border)"}`,
+                            }}
+                        >
+                            <div className="flex items-center gap-2">
+                                {i.highlight && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />}
+                                <span
+                                    style={{
+                                        fontSize: "0.82rem",
+                                        fontWeight: 700,
+                                        color: i.highlight ? "var(--vyz-accent-text)" : "var(--vyz-text-strong)",
+                                    }}
+                                >
+                                    {i.name}
+                                </span>
+                            </div>
+                            <div style={{ fontSize: "0.68rem", color: "var(--vyz-text-dim)", marginTop: 2 }}>{i.note}</div>
+                        </div>
+                    ))}
+                </div>
+            </div>
         </div>
     </div>
 );
@@ -400,28 +421,26 @@ const WebhookSetupMock = () => (
 const WhatsAppMock = () => (
     <div
         className="rounded-2xl overflow-hidden"
-        style={{ background: "#0b1014", border: "1px solid rgba(255,255,255,0.08)" }}
+        style={{ background: "#0b1014", border: "1px solid var(--vyz-border-strong)" }}
     >
-        {/* Chat header */}
         <div
             className="flex items-center gap-3 px-4 py-3"
-            style={{ background: "rgba(16,185,129,0.05)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}
+            style={{ background: "rgba(16,185,129,0.05)", borderBottom: "1px solid var(--vyz-border-subtle)" }}
         >
             <div
                 className="w-9 h-9 rounded-full flex items-center justify-center"
-                style={{ background: "linear-gradient(135deg, #10b981, #059669)" }}
+                style={{ background: "var(--vyz-gradient-accent)" }}
             >
                 <User className="h-4 w-4 text-white" strokeWidth={2} />
             </div>
             <div>
-                <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>
-                    Marcos A. (Lead — boleto vencido)
+                <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--vyz-text-strong)" }}>
+                    Marcos A. (Lead · boleto vencido)
                 </div>
-                <div style={{ fontSize: "0.7rem", color: "#34d399" }}>Eva está escrevendo…</div>
+                <div style={{ fontSize: "0.7rem", color: "var(--vyz-accent-light)" }}>Eva está escrevendo…</div>
             </div>
         </div>
 
-        {/* Thread */}
         <div className="p-4 space-y-2.5 min-h-[380px]">
             {WHATSAPP_THREAD.map((m, i) => {
                 if (m.from === "system") {
@@ -430,9 +449,9 @@ const WhatsAppMock = () => (
                             <span
                                 className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px]"
                                 style={{
-                                    background: "rgba(16,185,129,0.1)",
-                                    color: "#34d399",
-                                    border: "1px solid rgba(16,185,129,0.2)",
+                                    background: "var(--vyz-accent-soft-10)",
+                                    color: "var(--vyz-accent-light)",
+                                    border: "1px solid var(--vyz-accent-border)",
                                     fontWeight: 600,
                                 }}
                             >
@@ -448,8 +467,8 @@ const WhatsAppMock = () => (
                         <div
                             className="max-w-[80%] rounded-2xl px-3.5 py-2"
                             style={{
-                                background: isEva ? "rgba(255,255,255,0.04)" : "rgba(16,185,129,0.12)",
-                                border: `1px solid ${isEva ? "rgba(255,255,255,0.05)" : "rgba(16,185,129,0.2)"}`,
+                                background: isEva ? "var(--vyz-surface-2)" : "var(--vyz-accent-soft-12)",
+                                border: `1px solid ${isEva ? "var(--vyz-border-subtle)" : "var(--vyz-accent-border)"}`,
                                 borderTopLeftRadius: isEva ? 4 : undefined,
                                 borderTopRightRadius: !isEva ? 4 : undefined,
                             }}
@@ -458,7 +477,7 @@ const WhatsAppMock = () => (
                                 style={{
                                     fontSize: "0.825rem",
                                     lineHeight: 1.5,
-                                    color: isEva ? "rgba(255,255,255,0.88)" : "rgba(255,255,255,0.95)",
+                                    color: isEva ? "var(--vyz-text-strong)" : "var(--vyz-text-primary)",
                                 }}
                             >
                                 {m.text}
@@ -474,16 +493,16 @@ const WhatsAppMock = () => (
 const RankingMock = () => (
     <div
         className="rounded-2xl p-5"
-        style={{ background: "rgba(11,14,18,0.9)", border: "1px solid rgba(255,255,255,0.08)" }}
+        style={{ background: "var(--vyz-surface-elevated)", border: "1px solid var(--vyz-border-strong)" }}
     >
-        <div className="flex items-center justify-between mb-5 pb-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+        <div className="flex items-center justify-between mb-5 pb-3" style={{ borderBottom: "1px solid var(--vyz-border-subtle)" }}>
             <div className="flex items-center gap-2">
                 <Trophy className="h-4 w-4 text-emerald-400" strokeWidth={2} />
-                <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "rgba(255,255,255,0.85)" }}>
+                <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--vyz-text-strong)" }}>
                     Ranking · Abril · Lançamento Pro
                 </span>
             </div>
-            <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.4)" }}>
+            <span className="text-[11px]" style={{ color: "var(--vyz-text-dim)" }}>
                 atualiza a cada venda
             </span>
         </div>
@@ -494,8 +513,8 @@ const RankingMock = () => (
                     key={r.pos}
                     className="flex items-center gap-3 rounded-xl px-3 py-2.5"
                     style={{
-                        background: r.pos <= 3 ? "rgba(16,185,129,0.04)" : "rgba(255,255,255,0.02)",
-                        border: `1px solid ${r.pos <= 3 ? "rgba(16,185,129,0.12)" : "rgba(255,255,255,0.05)"}`,
+                        background: r.pos <= 3 ? "var(--vyz-accent-soft-4)" : "rgba(255,255,255,0.02)",
+                        border: `1px solid ${r.pos <= 3 ? "var(--vyz-accent-soft-12)" : "var(--vyz-border-subtle)"}`,
                     }}
                 >
                     <div
@@ -508,8 +527,8 @@ const RankingMock = () => (
                                     ? "linear-gradient(135deg, #e5e7eb, #9ca3af)"
                                     : r.pos === 3
                                     ? "linear-gradient(135deg, #fb923c, #ea580c)"
-                                    : "rgba(255,255,255,0.05)",
-                            color: r.pos <= 3 ? "#0b0f13" : "rgba(255,255,255,0.5)",
+                                    : "var(--vyz-border-subtle)",
+                            color: r.pos <= 3 ? "#0b0f13" : "var(--vyz-text-soft)",
                             fontSize: "0.8rem",
                             fontWeight: 800,
                         }}
@@ -518,16 +537,16 @@ const RankingMock = () => (
                     </div>
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1.5">
-                            <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>
+                            <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--vyz-text-strong)" }}>
                                 {r.name}
                             </span>
-                            <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)" }}>
+                            <span style={{ fontSize: "0.75rem", color: "var(--vyz-text-soft)" }}>
                                 {r.sales} vendas · {r.revenue}
                             </span>
                         </div>
                         <div
                             className="h-1 rounded-full overflow-hidden"
-                            style={{ background: "rgba(255,255,255,0.05)" }}
+                            style={{ background: "var(--vyz-border-subtle)" }}
                         >
                             <motion.div
                                 className="h-full rounded-full"
@@ -550,13 +569,13 @@ const RankingMock = () => (
 
         <div
             className="mt-5 pt-4 flex items-center justify-between"
-            style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}
+            style={{ borderTop: "1px solid var(--vyz-border-subtle)" }}
         >
-            <span className="text-[12px]" style={{ color: "rgba(255,255,255,0.5)" }}>
+            <span className="text-[12px]" style={{ color: "var(--vyz-text-soft)" }}>
                 Meta da turma:
             </span>
-            <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "rgba(255,255,255,0.85)" }}>
-                R$ 146.220 / R$ 180.000 <span style={{ color: "#34d399" }}>(81%)</span>
+            <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--vyz-text-strong)" }}>
+                R$ 146.220 / R$ 180.000 <span style={{ color: "var(--vyz-accent-light)" }}>(81%)</span>
             </span>
         </div>
     </div>
@@ -568,7 +587,7 @@ const RankingMock = () => (
 
 export default function ForInfoprodutores() {
     const navigate = useNavigate();
-    const [pipelineTab, setPipelineTab] = useState<PipelineKind>("lancamento");
+    const [panel, setPanel] = useState<PanelKind>("lancamento");
 
     useEffect(() => {
         document.title = "Vyzon para Infoprodutores | CRM com Hotmart, Kiwify e Greenn nativo";
@@ -592,20 +611,21 @@ export default function ForInfoprodutores() {
     };
     const handleLogin = () => navigate("/auth");
 
-    const currentPipeline = PIPELINES[pipelineTab];
+    const activePipeline = panel !== "integracoes" ? PIPELINES[panel] : null;
+    const activeNavItem = PANEL_NAV.find((n) => n.key === panel)!;
 
     return (
-        <div className="min-h-screen" style={{ background: "#06080a", color: "rgba(255,255,255,0.95)" }}>
+        <div className="min-h-screen" style={{ background: "var(--vyz-bg)", color: "var(--vyz-text-primary)" }}>
             <LandingNav onCTAClick={handleSecondary} onLoginClick={handleLogin} />
 
-            {/* ═══ HERO ═══════════════════════════════════════════════════ */}
-            <section className="relative overflow-hidden" style={{ background: "#06080a" }}>
+            {/* ═══ HERO (sem mockup — stats cards) ══════════════════════════ */}
+            <section className="relative overflow-hidden" style={{ background: "var(--vyz-bg)" }}>
                 <div className="absolute inset-0 pointer-events-none">
                     <div
                         className="absolute inset-x-0 top-0 h-[700px]"
                         style={{
                             background:
-                                "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(16,185,129,0.22) 0%, rgba(16,185,129,0.08) 30%, transparent 65%)",
+                                "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(16,185,129,0.22) 0%, var(--vyz-accent-soft-8) 30%, transparent 65%)",
                         }}
                     />
                     <div
@@ -618,8 +638,8 @@ export default function ForInfoprodutores() {
                     />
                 </div>
 
-                <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="pt-32 sm:pt-40 pb-10 text-center">
+                <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="pt-32 sm:pt-40 pb-16 sm:pb-24 text-center">
                         <SectionEyebrow>PARA INFOPRODUTORES</SectionEyebrow>
 
                         <h1
@@ -631,13 +651,13 @@ export default function ForInfoprodutores() {
                                 maxWidth: "880px",
                             }}
                         >
-                            <span style={{ fontWeight: 700, color: "rgba(255,255,255,0.95)" }}>
+                            <span style={{ fontWeight: 700, color: "var(--vyz-text-primary)" }}>
                                 Cada venda da Hotmart vira um{" "}
                             </span>
                             <span
                                 style={{
                                     fontWeight: 900,
-                                    background: "linear-gradient(135deg, #34d399, #10b981, #14b8a6)",
+                                    background: "var(--vyz-gradient-hero-text)",
                                     WebkitBackgroundClip: "text",
                                     WebkitTextFillColor: "transparent",
                                 }}
@@ -648,10 +668,10 @@ export default function ForInfoprodutores() {
 
                         <p
                             className="mt-6 mx-auto max-w-2xl"
-                            style={{ fontSize: "clamp(1rem, 2vw, 1.2rem)", lineHeight: 1.7, color: "rgba(255,255,255,0.7)" }}
+                            style={{ fontSize: "clamp(1rem, 2vw, 1.2rem)", lineHeight: 1.7, color: "var(--vyz-text)" }}
                         >
-                            Aprovada, boleto, cartão recusado. Tudo entra no painel na hora. O vendedor vê a posição subir,
-                            a Eva manda o follow-up no WhatsApp e você para de abrir planilha da Hotmart, Kiwify e Greenn
+                            Aprovada, boleto, cartão recusado — tudo entra no painel na hora. O vendedor vê a posição subir,
+                            a Eva manda follow-up no WhatsApp e você para de abrir planilha da Hotmart, Kiwify e Greenn
                             pra saber quanto fechou hoje.
                         </p>
 
@@ -661,8 +681,8 @@ export default function ForInfoprodutores() {
                                 onClick={(e) => { e.preventDefault(); handlePrimary(); }}
                                 className="group relative inline-flex h-12 items-center justify-center gap-2 px-7 text-[15px] font-bold text-white rounded-xl overflow-hidden no-underline"
                                 style={{
-                                    background: "linear-gradient(135deg, #10b981, #059669)",
-                                    boxShadow: "0 0 0 1px rgba(16,185,129,0.3), 0 4px 24px rgba(16,185,129,0.3)",
+                                    background: "var(--vyz-gradient-accent)",
+                                    boxShadow: "var(--vyz-shadow-cta)",
                                 }}
                             >
                                 <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
@@ -675,8 +695,8 @@ export default function ForInfoprodutores() {
                                 onClick={(e) => { e.preventDefault(); handleSecondary(); }}
                                 className="group inline-flex h-12 items-center justify-center gap-2 px-7 rounded-xl text-[15px] no-underline"
                                 style={{
-                                    color: "rgba(255,255,255,0.85)",
-                                    background: "rgba(255,255,255,0.04)",
+                                    color: "var(--vyz-text-strong)",
+                                    background: "var(--vyz-surface-2)",
                                     boxShadow: "0 0 0 1px rgba(255,255,255,0.16)",
                                     fontWeight: 600,
                                 }}
@@ -686,205 +706,208 @@ export default function ForInfoprodutores() {
                             </a>
                         </div>
 
-                        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-10">
-                            {["Hotmart, Kiwify e Greenn nativos", "Primeira venda em 5 min", "Sem cartão pra testar"].map((t) => (
-                                <span
-                                    key={t}
-                                    className="flex items-center gap-1.5 text-[13px]"
-                                    style={{ color: "rgba(255,255,255,0.6)" }}
+                        {/* Stat strip: números que aparecem "ao vivo" */}
+                        <div className="mt-14 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl mx-auto">
+                            {[
+                                { icon: Users, label: "Inscritos hoje", value: "428" },
+                                { icon: CreditCard, label: "Boletos em aberto", value: "9" },
+                                { icon: DollarSign, label: "Aprovado hoje", value: "R$42k" },
+                                { icon: TrendingUp, label: "Conversão", value: "7,2%" },
+                            ].map((s) => (
+                                <div
+                                    key={s.label}
+                                    className="rounded-xl px-4 py-3.5 text-left"
+                                    style={{
+                                        background: "var(--vyz-surface-1)",
+                                        border: "1px solid var(--vyz-border)",
+                                    }}
                                 >
-                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                                    {t}
-                                </span>
+                                    <div className="flex items-center gap-2 mb-1.5">
+                                        <s.icon className="h-3.5 w-3.5 text-emerald-400" strokeWidth={2} />
+                                        <span style={{ fontSize: "0.7rem", color: "var(--vyz-text-soft)", fontWeight: 600, letterSpacing: "0.03em" }}>
+                                            {s.label.toUpperCase()}
+                                        </span>
+                                    </div>
+                                    <div className="font-heading" style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--vyz-text-primary)", letterSpacing: "-0.02em" }}>
+                                        {s.value}
+                                    </div>
+                                </div>
                             ))}
                         </div>
                     </div>
-
-                    {/* Hero mockup */}
-                    <motion.div
-                        className="relative mt-4 max-w-5xl mx-auto"
-                        initial={{ y: 16 }}
-                        animate={{ y: 0 }}
-                        transition={{ duration: 0.5, delay: 0.2 }}
-                    >
-                        <div
-                            className="absolute -inset-6 -z-10 rounded-3xl"
-                            style={{
-                                background: "radial-gradient(ellipse at center, rgba(16,185,129,0.12) 0%, transparent 60%)",
-                            }}
-                        />
-                        <KanbanMock pipeline={PIPELINES.lancamento} />
-                    </motion.div>
                 </div>
 
                 <div
                     className="absolute bottom-0 inset-x-0 h-32 pointer-events-none"
-                    style={{ background: "linear-gradient(to bottom, transparent, #06080a)" }}
+                    style={{ background: "linear-gradient(to bottom, transparent, var(--vyz-bg))" }}
                 />
             </section>
 
-            {/* ═══ SETUP STEP-BY-STEP ═════════════════════════════════════ */}
-            <section className="relative py-28 px-4 sm:px-6 lg:px-8" style={{ background: "#06080a" }}>
-                <div className="max-w-6xl mx-auto">
-                    <div className="text-center mb-14">
-                        <SectionEyebrow>SETUP EM 5 MINUTOS</SectionEyebrow>
-                        <SectionHeading>
-                            Conecta uma vez, <span className="text-emerald-400">nunca mais mexe</span>.
-                        </SectionHeading>
-                        <SectionSub>
-                            Webhook copiado do Vyzon, colado no produtor da Hotmart (ou Kiwify, ou Greenn).
-                            Pronto — a próxima venda já cai no pipeline.
-                        </SectionSub>
-                    </div>
-
-                    <div className="grid md:grid-cols-[1fr_1fr] gap-8 items-start">
-                        {/* Steps left */}
-                        <ol className="space-y-4">
-                            {[
-                                {
-                                    n: "1",
-                                    title: "Abre a tela de integrações no Vyzon",
-                                    body: "Escolhe Hotmart, Kiwify, Greenn ou webhook genérico. Cada plataforma tem uma URL própria — você não mistura as vendas.",
-                                },
-                                {
-                                    n: "2",
-                                    title: "Copia a URL, cola na plataforma",
-                                    body: "Na Hotmart: Ferramentas → Notificação por URL → cola a URL do Vyzon. Marca os eventos (venda, boleto, cartão recusado, chargeback).",
-                                },
-                                {
-                                    n: "3",
-                                    title: "Primeira venda aprova e o deal aparece",
-                                    body: "Em segundos o card cai na etapa certa do pipeline. Ranking sobe. Se você configurou Eva, follow-up de boleto já dispara sozinho.",
-                                },
-                            ].map((s) => (
-                                <motion.li
-                                    key={s.n}
-                                    initial={{ y: 12 }}
-                                    whileInView={{ y: 0 }}
-                                    viewport={{ once: true }}
-                                    transition={{ duration: 0.4, delay: Number(s.n) * 0.1 }}
-                                    className="flex gap-4 rounded-2xl p-5"
-                                    style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
-                                >
-                                    <div
-                                        className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center font-heading"
-                                        style={{
-                                            background: "linear-gradient(135deg, #10b981, #059669)",
-                                            boxShadow: "0 4px 14px rgba(16,185,129,0.3)",
-                                            fontWeight: 800,
-                                        }}
-                                    >
-                                        {s.n}
-                                    </div>
-                                    <div>
-                                        <h3
-                                            className="font-heading mb-1.5"
-                                            style={{ fontWeight: 700, fontSize: "1.05rem", letterSpacing: "-0.02em" }}
-                                        >
-                                            {s.title}
-                                        </h3>
-                                        <p style={{ fontSize: "0.925rem", lineHeight: 1.6, color: "rgba(255,255,255,0.55)" }}>
-                                            {s.body}
-                                        </p>
-                                    </div>
-                                </motion.li>
-                            ))}
-                        </ol>
-
-                        {/* Mockup right */}
-                        <div className="relative md:sticky md:top-24">
-                            <WebhookSetupMock />
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* ═══ 3 PIPELINES (TABS) ═════════════════════════════════════ */}
-            <section className="relative py-28 px-4 sm:px-6 lg:px-8 overflow-hidden" style={{ background: "#06080a" }}>
+            {/* ═══ PAINEL ÚNICO INTERATIVO ═════════════════════════════════ */}
+            <section className="relative py-20 sm:py-28 px-4 sm:px-6 lg:px-8 overflow-hidden" style={{ background: "var(--vyz-bg)" }}>
                 <div
-                    className="absolute inset-x-0 top-0 h-[400px] pointer-events-none"
+                    className="absolute inset-x-0 top-0 h-[500px] pointer-events-none"
                     style={{
-                        background:
-                            "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(16,185,129,0.08) 0%, transparent 70%)",
+                        background: "radial-gradient(ellipse 70% 50% at 50% 0%, var(--vyz-accent-soft-8) 0%, transparent 70%)",
                     }}
                 />
                 <div className="relative max-w-6xl mx-auto">
-                    <div className="text-center mb-10">
-                        <SectionEyebrow>TRÊS MODELOS, UM PAINEL</SectionEyebrow>
+                    <div className="text-center mb-12">
+                        <SectionEyebrow>VEJA FUNCIONANDO</SectionEyebrow>
                         <SectionHeading>
-                            Cada jeito de vender tem <span className="text-emerald-400">seu pipeline</span>.
+                            Um painel, <span className="text-emerald-400">três jeitos de vender</span>.
                         </SectionHeading>
                         <SectionSub>
-                            Lançamento tem etapas de funil. Perpétuo roda por temperatura. Esteira trabalha recorrência
-                            e churn. Os três rodam no mesmo Vyzon, separados por produto.
+                            Clique nas abas: lançamento, perpétuo, esteira ou integrações. O Vyzon roda os três
+                            pipelines lado a lado, alimentados pelos mesmos webhooks.
                         </SectionSub>
                     </div>
 
-                    {/* Tab selector */}
-                    <div className="flex justify-center mb-8 px-2">
-                        <div
-                            className="inline-flex gap-1 p-1 rounded-xl"
-                            style={{
-                                background: "rgba(255,255,255,0.04)",
-                                boxShadow: "0 0 0 1px rgba(255,255,255,0.06)",
-                            }}
-                        >
-                            {(Object.keys(PIPELINES) as PipelineKind[]).map((k) => {
-                                const p = PIPELINES[k];
-                                const isActive = pipelineTab === k;
-                                const Icon = p.icon;
-                                return (
-                                    <button
-                                        key={k}
-                                        onClick={() => setPipelineTab(k)}
-                                        className="relative flex items-center gap-2 px-3 sm:px-4 py-2.5 rounded-lg text-xs sm:text-sm whitespace-nowrap transition-colors"
-                                        style={{
-                                            fontWeight: 600,
-                                            color: isActive ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.4)",
-                                        }}
-                                    >
-                                        {isActive && (
-                                            <motion.div
-                                                layoutId="pipeline-pill"
-                                                className="absolute inset-0 rounded-lg"
-                                                style={{
-                                                    background: "rgba(255,255,255,0.08)",
-                                                    boxShadow: "0 0 0 1px rgba(255,255,255,0.1)",
-                                                }}
-                                                transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
-                                            />
-                                        )}
-                                        <Icon className={`relative h-4 w-4 ${isActive ? "text-emerald-400" : ""}`} strokeWidth={2} />
-                                        <span className="relative">{p.label}</span>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    <p
-                        className="text-center mb-8 max-w-2xl mx-auto"
-                        style={{ fontSize: "0.95rem", color: "rgba(255,255,255,0.5)" }}
+                    {/* Unified panel — sidebar + content */}
+                    <motion.div
+                        className="relative rounded-3xl overflow-hidden"
+                        initial={{ y: 20 }}
+                        whileInView={{ y: 0 }}
+                        viewport={{ once: true, margin: "-10%" }}
+                        transition={{ duration: 0.5 }}
+                        style={{
+                            background: "rgba(11,14,18,0.85)",
+                            border: "1px solid var(--vyz-border-strong)",
+                            boxShadow: "var(--vyz-shadow-panel)",
+                        }}
                     >
-                        {currentPipeline.tagline}
-                    </p>
-
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={pipelineTab}
-                            initial={{ y: 12 }}
-                            animate={{ y: 0 }}
-                            exit={{ y: -12 }}
-                            transition={{ duration: 0.25 }}
+                        {/* Toolbar */}
+                        <div
+                            className="flex items-center justify-between px-4 sm:px-5 py-3"
+                            style={{ borderBottom: "1px solid var(--vyz-border)", background: "rgba(255,255,255,0.015)" }}
                         >
-                            <KanbanMock pipeline={currentPipeline} />
-                        </motion.div>
-                    </AnimatePresence>
+                            <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1.5">
+                                    <span className="w-2.5 h-2.5 rounded-full" style={{ background: "rgba(239,68,68,0.6)" }} />
+                                    <span className="w-2.5 h-2.5 rounded-full" style={{ background: "rgba(251,191,36,0.6)" }} />
+                                    <span className="w-2.5 h-2.5 rounded-full" style={{ background: "rgba(16,185,129,0.6)" }} />
+                                </div>
+                                <span className="ml-3 font-mono" style={{ fontSize: "0.7rem", color: "var(--vyz-text-dim)" }}>
+                                    vyzon.com.br/painel · {activeNavItem.label.toLowerCase()}
+                                </span>
+                            </div>
+                            <div className="hidden sm:flex items-center gap-1.5 text-[11px]" style={{ color: "var(--vyz-text-dim)" }}>
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                Ao vivo
+                            </div>
+                        </div>
+
+                        {/* Sidebar + content */}
+                        <div className="grid md:grid-cols-[220px_1fr]">
+                            {/* Sidebar */}
+                            <nav
+                                className="p-3 flex md:flex-col gap-1 overflow-x-auto md:overflow-visible"
+                                style={{ borderRight: "1px solid var(--vyz-border-subtle)" }}
+                            >
+                                {PANEL_NAV.map((item) => {
+                                    const Icon = item.icon;
+                                    const isActive = panel === item.key;
+                                    return (
+                                        <button
+                                            key={item.key}
+                                            onClick={() => setPanel(item.key)}
+                                            className="relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-left whitespace-nowrap md:whitespace-normal transition-colors flex-shrink-0 md:flex-shrink md:w-full"
+                                            style={{
+                                                color: isActive ? "var(--vyz-text-primary)" : "var(--vyz-text-soft)",
+                                            }}
+                                        >
+                                            {isActive && (
+                                                <motion.span
+                                                    layoutId="panel-pill"
+                                                    className="absolute inset-0 rounded-lg"
+                                                    style={{
+                                                        background: "var(--vyz-accent-soft-8)",
+                                                        border: "1px solid var(--vyz-accent-border)",
+                                                    }}
+                                                    transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
+                                                />
+                                            )}
+                                            <Icon
+                                                className={`relative h-4 w-4 flex-shrink-0 ${isActive ? "text-emerald-400" : ""}`}
+                                                strokeWidth={2}
+                                            />
+                                            <div className="relative min-w-0">
+                                                <div style={{ fontSize: "0.82rem", fontWeight: 600 }}>{item.label}</div>
+                                                <div className="hidden md:block truncate" style={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>
+                                                    {item.sub}
+                                                </div>
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </nav>
+
+                            {/* Content */}
+                            <div className="min-w-0">
+                                <AnimatePresence mode="wait">
+                                    <motion.div
+                                        key={panel}
+                                        initial={{ opacity: 0, y: 8 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -8 }}
+                                        transition={{ duration: 0.2 }}
+                                    >
+                                        {activePipeline ? (
+                                            <>
+                                                <div
+                                                    className="px-5 py-4"
+                                                    style={{ borderBottom: "1px solid var(--vyz-border-subtle)" }}
+                                                >
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <activePipeline.icon className="h-4 w-4 text-emerald-400" strokeWidth={2} />
+                                                        <span style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--vyz-text-strong)" }}>
+                                                            Pipeline · {activePipeline.label}
+                                                        </span>
+                                                    </div>
+                                                    <p style={{ fontSize: "0.82rem", color: "var(--vyz-text-soft)", lineHeight: 1.5 }}>
+                                                        {activePipeline.tagline}
+                                                    </p>
+                                                </div>
+                                                <KanbanBoard pipeline={activePipeline} />
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div
+                                                    className="px-5 py-4"
+                                                    style={{ borderBottom: "1px solid var(--vyz-border-subtle)" }}
+                                                >
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <Plug className="h-4 w-4 text-emerald-400" strokeWidth={2} />
+                                                        <span style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--vyz-text-strong)" }}>
+                                                            Integrações
+                                                        </span>
+                                                    </div>
+                                                    <p style={{ fontSize: "0.82rem", color: "var(--vyz-text-soft)", lineHeight: 1.5 }}>
+                                                        Copia a URL de webhook do Vyzon, cola no produtor da Hotmart (ou Kiwify, Greenn).
+                                                        Cada evento vira um deal na etapa certa do pipeline.
+                                                    </p>
+                                                </div>
+                                                <IntegrationsPanel />
+                                            </>
+                                        )}
+                                    </motion.div>
+                                </AnimatePresence>
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    {/* Hint abaixo do painel */}
+                    <p
+                        className="text-center mt-8"
+                        style={{ fontSize: "0.875rem", color: "var(--vyz-text-dim)" }}
+                    >
+                        Setup em 5 minutos · webhook nativo nas 3 plataformas · funciona no mesmo painel
+                    </p>
                 </div>
             </section>
 
             {/* ═══ RECUPERAÇÃO BOLETO (WhatsApp) ══════════════════════════ */}
-            <section className="relative py-28 px-4 sm:px-6 lg:px-8" style={{ background: "#06080a" }}>
+            <section className="relative py-24 px-4 sm:px-6 lg:px-8" style={{ background: "var(--vyz-bg)" }}>
                 <div className="max-w-6xl mx-auto">
                     <div className="grid lg:grid-cols-[1.1fr_1fr] gap-10 lg:gap-14 items-center">
                         <div>
@@ -901,10 +924,10 @@ export default function ForInfoprodutores() {
                                 Boleto vencido virou{" "}
                                 <span className="text-emerald-400">deal ativo</span>, não relatório esquecido.
                             </h2>
-                            <p className="mb-6" style={{ fontSize: "1.0625rem", lineHeight: 1.7, color: "rgba(255,255,255,0.6)" }}>
+                            <p className="mb-6" style={{ fontSize: "1.0625rem", lineHeight: 1.7, color: "var(--vyz-text-muted)" }}>
                                 Webhook da Hotmart dispara "boleto gerado" → deal entra na etapa "Boleto aberto" com
                                 SLA de 48h. Se não pagou, a Eva identifica, escreve a mensagem no seu tom e sugere o
-                                horário de envio. Vendedor aprova com um toque — nada escapa porque ninguém lembrou.
+                                horário de envio. Vendedor aprova com um toque, nada escapa porque ninguém lembrou.
                             </p>
 
                             <ul className="space-y-3">
@@ -930,15 +953,15 @@ export default function ForInfoprodutores() {
                                         <li key={item.title} className="flex items-start gap-3">
                                             <div
                                                 className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center"
-                                                style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)" }}
+                                                style={{ background: "var(--vyz-accent-soft-10)", border: "1px solid var(--vyz-accent-border)" }}
                                             >
                                                 <Icon className="h-4 w-4 text-emerald-400" strokeWidth={2} />
                                             </div>
                                             <div>
-                                                <div style={{ fontSize: "0.95rem", fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>
+                                                <div style={{ fontSize: "0.95rem", fontWeight: 600, color: "var(--vyz-text-strong)" }}>
                                                     {item.title}
                                                 </div>
-                                                <div style={{ fontSize: "0.875rem", color: "rgba(255,255,255,0.55)" }}>
+                                                <div style={{ fontSize: "0.875rem", color: "var(--vyz-text-muted)" }}>
                                                     {item.body}
                                                 </div>
                                             </div>
@@ -961,12 +984,11 @@ export default function ForInfoprodutores() {
             </section>
 
             {/* ═══ RANKING AO VIVO ════════════════════════════════════════ */}
-            <section className="relative py-28 px-4 sm:px-6 lg:px-8 overflow-hidden" style={{ background: "#06080a" }}>
+            <section className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden" style={{ background: "var(--vyz-bg)" }}>
                 <div
                     className="absolute inset-x-0 top-0 h-[400px] pointer-events-none"
                     style={{
-                        background:
-                            "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(16,185,129,0.06) 0%, transparent 70%)",
+                        background: "radial-gradient(ellipse 70% 50% at 50% 0%, var(--vyz-accent-soft-6) 0%, transparent 70%)",
                     }}
                 />
                 <div className="relative max-w-6xl mx-auto">
@@ -995,8 +1017,8 @@ export default function ForInfoprodutores() {
                                 O time abre o celular e{" "}
                                 <span className="text-emerald-400">vê a posição antes do café</span>.
                             </h2>
-                            <p className="mb-6" style={{ fontSize: "1.0625rem", lineHeight: 1.7, color: "rgba(255,255,255,0.6)" }}>
-                                Cada venda aprovada sobe o ranking em segundos. Gestor não "roda os números" no fim do mês —
+                            <p className="mb-6" style={{ fontSize: "1.0625rem", lineHeight: 1.7, color: "var(--vyz-text-muted)" }}>
+                                Cada venda aprovada sobe o ranking em segundos. Gestor não "roda os números" no fim do mês,
                                 a meta da turma e a posição individual ficam visíveis no painel. E você filtra por produto,
                                 por esteira ou por origem (Hotmart vs Kiwify vs Greenn).
                             </p>
@@ -1006,16 +1028,16 @@ export default function ForInfoprodutores() {
                                     "Pódio ao vivo com meta da turma + meta individual",
                                     "Ranking separado por produto, esteira ou campanha",
                                     "Comissão calculada automática no deal fechado",
-                                    "Histórico mensal sem planilha — export pronto",
+                                    "Histórico mensal sem planilha, export pronto",
                                 ].map((b) => (
                                     <li key={b} className="flex items-start gap-3">
                                         <div
                                             className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5"
-                                            style={{ background: "rgba(16,185,129,0.12)" }}
+                                            style={{ background: "var(--vyz-accent-soft-12)" }}
                                         >
                                             <Check className="h-3 w-3 text-emerald-400" strokeWidth={3} />
                                         </div>
-                                        <span style={{ fontSize: "0.95rem", color: "rgba(255,255,255,0.7)" }}>{b}</span>
+                                        <span style={{ fontSize: "0.95rem", color: "var(--vyz-text)" }}>{b}</span>
                                     </li>
                                 ))}
                             </ul>
@@ -1024,49 +1046,8 @@ export default function ForInfoprodutores() {
                 </div>
             </section>
 
-            {/* ═══ INTEGRAÇÕES ═════════════════════════════════════════════ */}
-            <section className="relative py-24 px-4 sm:px-6 lg:px-8" style={{ background: "#06080a" }}>
-                <div className="max-w-5xl mx-auto text-center">
-                    <SectionEyebrow>PLATAFORMAS SUPORTADAS</SectionEyebrow>
-                    <SectionHeading>
-                        Conecta com <span className="text-emerald-400">tudo que você já usa</span>.
-                    </SectionHeading>
-                    <SectionSub>
-                        Webhook nativo nas três plataformas que dominam o mercado BR. O resto roda via webhook
-                        genérico ou API — sem Zapier no meio cobrando assinatura.
-                    </SectionSub>
-
-                    <div className="mt-12 grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        {INTEGRATIONS.map((i) => (
-                            <div
-                                key={i.name}
-                                className="rounded-xl p-4 text-left"
-                                style={{
-                                    background: i.highlight ? "rgba(16,185,129,0.06)" : "rgba(255,255,255,0.03)",
-                                    border: `1px solid ${i.highlight ? "rgba(16,185,129,0.2)" : "rgba(255,255,255,0.06)"}`,
-                                }}
-                            >
-                                <div className="flex items-center gap-2 mb-1.5">
-                                    {i.highlight && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />}
-                                    <span
-                                        style={{
-                                            fontSize: "0.9rem",
-                                            fontWeight: 700,
-                                            color: i.highlight ? "rgba(16,185,129,0.95)" : "rgba(255,255,255,0.9)",
-                                        }}
-                                    >
-                                        {i.name}
-                                    </span>
-                                </div>
-                                <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)" }}>{i.note}</div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
             {/* ═══ FAQ ═══════════════════════════════════════════════════ */}
-            <section className="relative py-24 px-4 sm:px-6 lg:px-8" style={{ background: "#06080a" }}>
+            <section className="relative py-24 px-4 sm:px-6 lg:px-8" style={{ background: "var(--vyz-bg)" }}>
                 <div className="max-w-3xl mx-auto">
                     <div className="text-center mb-12">
                         <SectionEyebrow>PERGUNTAS COMUNS</SectionEyebrow>
@@ -1080,23 +1061,23 @@ export default function ForInfoprodutores() {
                             <details
                                 key={item.q}
                                 className="group rounded-2xl px-6 py-5"
-                                style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
+                                style={{ background: "var(--vyz-surface-1)", border: "1px solid var(--vyz-border)" }}
                             >
                                 <summary
                                     className="cursor-pointer list-none flex items-start justify-between gap-4"
-                                    style={{ fontWeight: 600, fontSize: "1.0125rem", color: "rgba(255,255,255,0.9)" }}
+                                    style={{ fontWeight: 600, fontSize: "1.0125rem", color: "var(--vyz-text-strong)" }}
                                 >
                                     {item.q}
                                     <span
                                         className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-transform group-open:rotate-45"
-                                        style={{ background: "rgba(16,185,129,0.12)", color: "#34d399", fontWeight: 700 }}
+                                        style={{ background: "var(--vyz-accent-soft-12)", color: "var(--vyz-accent-light)", fontWeight: 700 }}
                                     >
                                         +
                                     </span>
                                 </summary>
                                 <p
                                     className="mt-4 pr-10"
-                                    style={{ fontSize: "0.95rem", lineHeight: 1.7, color: "rgba(255,255,255,0.6)" }}
+                                    style={{ fontSize: "0.95rem", lineHeight: 1.7, color: "var(--vyz-text-muted)" }}
                                 >
                                     {item.a}
                                 </p>
@@ -1114,10 +1095,10 @@ export default function ForInfoprodutores() {
             </LazyOnVisible>
 
             {/* ═══ FOOTER ════════════════════════════════════════════════ */}
-            <footer className="py-12 px-4 sm:px-6 lg:px-8 border-t" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+            <footer className="py-12 px-4 sm:px-6 lg:px-8 border-t" style={{ borderColor: "var(--vyz-border)" }}>
                 <div
                     className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm"
-                    style={{ color: "rgba(255,255,255,0.4)" }}
+                    style={{ color: "var(--vyz-text-dim)" }}
                 >
                     <span>© {new Date().getFullYear()} Vyzon. CRM feito no Brasil, pra quem vende online.</span>
                     <div className="flex items-center gap-6">

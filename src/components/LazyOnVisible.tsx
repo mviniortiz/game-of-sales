@@ -25,6 +25,13 @@ export const LazyOnVisible = ({
 
   useEffect(() => {
     if (visible) return;
+    const onHydrateAll = () => setVisible(true);
+    window.addEventListener("vyzon:hydrate-all", onHydrateAll);
+    return () => window.removeEventListener("vyzon:hydrate-all", onHydrateAll);
+  }, [visible]);
+
+  useEffect(() => {
+    if (visible) return;
     const node = ref.current;
     if (!node) return;
     if (typeof IntersectionObserver === "undefined") {

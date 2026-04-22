@@ -53,6 +53,49 @@
 
   /* Nav shadow */
   --shadow-nav: 0 0 0 1px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.04), 0 8px 24px -4px rgba(0,0,0,0.03);
+
+  /* ─── Vyzon landing tokens (full-dark, fora do modo app light/dark) ──────
+     Prefixo --vyz-* pra não colidir com tokens Radix/shadcn do app.
+     Mudou o brand? Troca aqui, propaga em LandingPage + personas.
+  ──────────────────────────────────────────────────────────────────────── */
+  --vyz-bg: #06080a;
+  --vyz-surface-1: rgba(255,255,255,0.03);
+  --vyz-surface-2: rgba(255,255,255,0.04);
+  --vyz-surface-3: rgba(255,255,255,0.05);
+  --vyz-surface-elevated: rgba(11,14,18,0.9);
+
+  --vyz-border-subtle: rgba(255,255,255,0.05);
+  --vyz-border: rgba(255,255,255,0.06);
+  --vyz-border-strong: rgba(255,255,255,0.08);
+
+  --vyz-text-primary: rgba(255,255,255,0.95);
+  --vyz-text-strong: rgba(255,255,255,0.85);
+  --vyz-text: rgba(255,255,255,0.7);
+  --vyz-text-muted: rgba(255,255,255,0.6);
+  --vyz-text-soft: rgba(255,255,255,0.5);
+  --vyz-text-dim: rgba(255,255,255,0.4);
+
+  --vyz-accent: #10b981;
+  --vyz-accent-light: #34d399;
+  --vyz-accent-dark: #059669;
+  --vyz-accent-soft-4: rgba(16,185,129,0.04);
+  --vyz-accent-soft-6: rgba(16,185,129,0.06);
+  --vyz-accent-soft-8: rgba(16,185,129,0.08);
+  --vyz-accent-soft-10: rgba(16,185,129,0.10);
+  --vyz-accent-soft-12: rgba(16,185,129,0.12);
+  --vyz-accent-border: rgba(16,185,129,0.20);
+  --vyz-accent-border-strong: rgba(16,185,129,0.30);
+  --vyz-accent-text: rgba(16,185,129,0.95);
+
+  --vyz-gradient-accent: linear-gradient(135deg, #10b981, #059669);
+  --vyz-gradient-hero-text: linear-gradient(135deg, #34d399, #10b981, #14b8a6);
+  --vyz-gradient-top-glow: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(16,185,129,0.22) 0%, rgba(16,185,129,0.08) 30%, transparent 65%);
+  --vyz-gradient-section-glow: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(16,185,129,0.08) 0%, transparent 70%);
+
+  --vyz-shadow-cta: 0 0 0 1px rgba(16,185,129,0.30), 0 4px 24px rgba(16,185,129,0.30);
+  --vyz-shadow-cta-sm: 0 4px 18px rgba(16,185,129,0.30);
+  --vyz-shadow-panel: 0 30px 80px -20px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04) inset;
+  --vyz-shadow-mock: 0 24px 60px -20px rgba(0,0,0,0.6);
 }
 
 html {

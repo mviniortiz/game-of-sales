@@ -132,6 +132,35 @@ const LandingPage = () => {
         };
     }, []);
 
+    // Hash handling no mount (ex.: /#features vindo de /para-infoprodutores).
+    // Anchors vivem dentro de LazyOnVisible — força hidratação + espera o nó aparecer.
+    useEffect(() => {
+        const hash = window.location.hash.replace("#", "");
+        if (!hash) return;
+        const HEADER_OFFSET = 72;
+        window.dispatchEvent(new CustomEvent("vyzon:hydrate-all"));
+        let settled = false;
+        const tryScroll = () => {
+            if (settled) return;
+            const el = document.getElementById(hash);
+            if (!el) return;
+            settled = true;
+            observer.disconnect();
+            const top = el.getBoundingClientRect().top + window.scrollY - HEADER_OFFSET;
+            window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+        };
+        const observer = new MutationObserver(tryScroll);
+        observer.observe(document.body, { childList: true, subtree: true });
+        requestAnimationFrame(tryScroll);
+        const timeout = setTimeout(() => {
+            if (!settled) observer.disconnect();
+        }, 2500);
+        return () => {
+            observer.disconnect();
+            clearTimeout(timeout);
+        };
+    }, []);
+
     const [isAnnual, setIsAnnual] = useState(true);
     const [isNavigating, setIsNavigating] = useState(false);
     const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
