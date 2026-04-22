@@ -1,290 +1,268 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Shield, Lock, Eye, Database, UserCheck } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { ArrowLeft, Shield, Lock, Eye, Database, UserCheck, Share2, CalendarCheck, UserCog, Clock, RefreshCw, Mail } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+
+type SectionProps = {
+  number: string;
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  title: string;
+  children: React.ReactNode;
+};
+
+const Section = ({ number, icon: Icon, title, children }: SectionProps) => (
+  <section
+    className="rounded-2xl p-6 sm:p-8"
+    style={{
+      background: "rgba(255,255,255,0.02)",
+      border: "1px solid rgba(255,255,255,0.06)",
+    }}
+  >
+    <header className="flex items-center gap-3 mb-4">
+      <div
+        className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+        style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)" }}
+      >
+        <Icon className="h-4 w-4 text-emerald-400" strokeWidth={2} />
+      </div>
+      <div className="flex items-baseline gap-2 min-w-0">
+        <span className="text-xs font-mono tracking-wider text-[rgba(255,255,255,0.3)]">{number}</span>
+        <h2 className="font-heading text-lg sm:text-xl font-bold text-white tracking-tight truncate">
+          {title}
+        </h2>
+      </div>
+    </header>
+    <div className="space-y-4 text-[15px] leading-relaxed" style={{ color: "rgba(255,255,255,0.7)" }}>
+      {children}
+    </div>
+  </section>
+);
+
+const Bullet = ({ children }: { children: React.ReactNode }) => (
+  <li className="flex items-start gap-3">
+    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-2 shrink-0" />
+    <span>{children}</span>
+  </li>
+);
+
+const SubHeading = ({ children }: { children: React.ReactNode }) => (
+  <h3 className="font-heading text-white/90 font-semibold text-[15px] mt-2">{children}</h3>
+);
 
 const PoliticaPrivacidade = () => {
   const navigate = useNavigate();
+  const today = new Date().toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container max-w-4xl mx-auto px-4 py-8">
-        <Button
-          variant="ghost"
+    <div className="min-h-screen relative overflow-hidden" style={{ background: "#06080a" }}>
+      <div
+        className="absolute inset-x-0 top-0 h-[500px] pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse 70% 55% at 50% 0%, rgba(16,185,129,0.14) 0%, rgba(16,185,129,0.04) 35%, transparent 65%)",
+        }}
+      />
+      <div
+        className="absolute inset-0 opacity-[0.025] pointer-events-none"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
+          backgroundSize: "80px 80px",
+        }}
+      />
+
+      <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-20">
+        <button
           onClick={() => navigate(-1)}
-          className="mb-6"
+          className="inline-flex items-center gap-2 text-sm text-[rgba(255,255,255,0.5)] hover:text-white mb-10 transition-colors"
         >
-          <ArrowLeft className="mr-2 h-4 w-4" />
+          <ArrowLeft className="h-4 w-4" strokeWidth={2} />
           Voltar
-        </Button>
+        </button>
 
-        <div className="space-y-6">
-          <div className="text-center space-y-4 mb-8">
-            <Shield className="h-16 w-16 mx-auto text-primary" />
-            <h1 className="text-4xl font-bold">Política de Privacidade</h1>
-            <p className="text-muted-foreground">
-              Última atualização: {new Date().toLocaleDateString('pt-BR')}
+        <div className="mb-12">
+          <p className="text-xs font-mono tracking-[0.2em] uppercase text-emerald-400/80 mb-3">
+            Legal / Vyzon
+          </p>
+          <h1
+            className="font-heading font-bold text-white tracking-tight leading-[1.05]"
+            style={{ fontSize: "clamp(2rem, 5vw, 3rem)", letterSpacing: "-0.03em" }}
+          >
+            Política de Privacidade
+          </h1>
+          <p className="mt-3 text-sm text-[rgba(255,255,255,0.45)]">
+            Última atualização: {today}
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          <Section number="01" icon={Eye} title="Introdução">
+            <p>
+              Esta Política de Privacidade descreve como coletamos, usamos e protegemos suas
+              informações pessoais quando você utiliza nossa plataforma de gestão de vendas.
             </p>
-          </div>
+            <p>
+              Ao usar nossos serviços, você concorda com a coleta e uso de informações de acordo
+              com esta política.
+            </p>
+          </Section>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Eye className="h-5 w-5" />
-                1. Introdução
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p>
-                Esta Política de Privacidade descreve como coletamos, usamos e protegemos suas informações pessoais quando você utiliza nossa plataforma de gestão de vendas.
+          <Section number="02" icon={Database} title="Informações que Coletamos">
+            <SubHeading>2.1 Informações de Cadastro</SubHeading>
+            <ul className="space-y-2.5">
+              <Bullet>Nome completo</Bullet>
+              <Bullet>Endereço de e-mail</Bullet>
+              <Bullet>Foto de perfil (opcional)</Bullet>
+            </ul>
+            <SubHeading>2.2 Dados de Vendas e Atividades</SubHeading>
+            <ul className="space-y-2.5">
+              <Bullet>Registros de vendas e transações</Bullet>
+              <Bullet>Informações de clientes (nomes e dados de contato)</Bullet>
+              <Bullet>Histórico de calls e agendamentos</Bullet>
+              <Bullet>Metas e desempenho</Bullet>
+            </ul>
+            <SubHeading>2.3 Integração com Google Calendar</SubHeading>
+            <ul className="space-y-2.5">
+              <Bullet>Acesso aos seus eventos de calendário</Bullet>
+              <Bullet>Permissão para criar, editar e deletar eventos</Bullet>
+              <Bullet>Sincronização bidirecional de agendamentos</Bullet>
+            </ul>
+            <div
+              className="rounded-xl p-4 mt-4"
+              style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.2)" }}
+            >
+              <p className="text-sm text-[rgba(255,255,255,0.85)]">
+                <strong className="text-emerald-400">Importante:</strong> Só acessamos e
+                modificamos eventos relacionados aos agendamentos criados através da nossa
+                plataforma. Não lemos, modificamos ou compartilhamos outros eventos do seu
+                calendário.
               </p>
-              <p>
-                Ao usar nossos serviços, você concorda com a coleta e uso de informações de acordo com esta política.
+            </div>
+          </Section>
+
+          <Section number="03" icon={UserCheck} title="Como Usamos suas Informações">
+            <ul className="space-y-2.5">
+              <Bullet>Fornecer e manter nossos serviços de gestão de vendas</Bullet>
+              <Bullet>Sincronizar agendamentos com seu Google Calendar</Bullet>
+              <Bullet>Gerar relatórios e análises de desempenho</Bullet>
+              <Bullet>Melhorar e personalizar sua experiência</Bullet>
+              <Bullet>Enviar notificações importantes sobre sua conta</Bullet>
+            </ul>
+          </Section>
+
+          <Section number="04" icon={Lock} title="Segurança dos Dados">
+            <p>
+              A segurança dos seus dados é extremamente importante para nós. Implementamos
+              medidas de segurança técnicas e organizacionais para proteger suas informações:
+            </p>
+            <ul className="space-y-2.5">
+              <Bullet>Criptografia de dados em trânsito e em repouso</Bullet>
+              <Bullet>Autenticação segura com tokens de acesso</Bullet>
+              <Bullet>Controle de acesso baseado em função (RBAC)</Bullet>
+              <Bullet>Backups regulares dos dados</Bullet>
+              <Bullet>Monitoramento contínuo de segurança</Bullet>
+            </ul>
+          </Section>
+
+          <Section number="05" icon={Share2} title="Compartilhamento de Dados">
+            <p>
+              Não vendemos, alugamos ou compartilhamos suas informações pessoais com terceiros,
+              exceto:
+            </p>
+            <ul className="space-y-2.5">
+              <Bullet>Com seu consentimento explícito</Bullet>
+              <Bullet>Para cumprir obrigações legais</Bullet>
+              <Bullet>Com provedores de serviços essenciais (ex: hospedagem)</Bullet>
+            </ul>
+          </Section>
+
+          <Section number="06" icon={CalendarCheck} title="Google Calendar — Uso Limitado">
+            <p>
+              O uso que fazemos das informações recebidas das APIs do Google está em
+              conformidade com a{" "}
+              <a
+                href="https://developers.google.com/terms/api-services-user-data-policy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2 transition-colors"
+              >
+                Política de Dados do Usuário dos Serviços de API do Google
+              </a>
+              , incluindo os requisitos de Uso Limitado.
+            </p>
+            <div
+              className="rounded-xl p-4 mt-2"
+              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
+            >
+              <p className="font-heading text-white/90 font-semibold text-sm mb-3">
+                Compromissos específicos:
               </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Database className="h-5 w-5" />
-                2. Informações que Coletamos
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <h3 className="font-semibold mb-2">2.1 Informações de Cadastro</h3>
-                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                  <li>Nome completo</li>
-                  <li>Endereço de e-mail</li>
-                  <li>Foto de perfil (opcional)</li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-2">2.2 Dados de Vendas e Atividades</h3>
-                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                  <li>Registros de vendas e transações</li>
-                  <li>Informações de clientes (nomes e dados de contato)</li>
-                  <li>Histórico de calls e agendamentos</li>
-                  <li>Metas e desempenho</li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-2">2.3 Integração com Google Calendar</h3>
-                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                  <li>Acesso aos seus eventos de calendário</li>
-                  <li>Permissão para criar, editar e deletar eventos</li>
-                  <li>Sincronização bidirecional de agendamentos</li>
-                </ul>
-                <p className="text-sm text-muted-foreground mt-2">
-                  <strong>Importante:</strong> Só acessamos e modificamos eventos relacionados aos agendamentos criados através da nossa plataforma. Não lemos, modificamos ou compartilhamos outros eventos do seu calendário.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <UserCheck className="h-5 w-5" />
-                3. Como Usamos suas Informações
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2">
-                <li className="flex items-start gap-2">
-                  <span className="text-primary mt-1">•</span>
-                  <span>Fornecer e manter nossos serviços de gestão de vendas</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary mt-1">•</span>
-                  <span>Sincronizar agendamentos com seu Google Calendar</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary mt-1">•</span>
-                  <span>Gerar relatórios e análises de desempenho</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary mt-1">•</span>
-                  <span>Melhorar e personalizar sua experiência</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary mt-1">•</span>
-                  <span>Enviar notificações importantes sobre sua conta</span>
-                </li>
+              <ul className="space-y-2.5 text-sm">
+                <Bullet>Só acessamos os dados mínimos necessários para sincronizar agendamentos</Bullet>
+                <Bullet>Não armazenamos dados do Google Calendar além do necessário</Bullet>
+                <Bullet>Não compartilhamos dados do seu calendário com terceiros</Bullet>
+                <Bullet>Você pode revogar o acesso a qualquer momento</Bullet>
               </ul>
-            </CardContent>
-          </Card>
+            </div>
+          </Section>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Lock className="h-5 w-5" />
-                4. Segurança dos Dados
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p>
-                A segurança dos seus dados é extremamente importante para nós. Implementamos medidas de segurança técnicas e organizacionais para proteger suas informações:
-              </p>
-              <ul className="space-y-2">
-                <li className="flex items-start gap-2">
-                  <span className="text-primary mt-1">•</span>
-                  <span>Criptografia de dados em trânsito e em repouso</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary mt-1">•</span>
-                  <span>Autenticação segura com tokens de acesso</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary mt-1">•</span>
-                  <span>Controle de acesso baseado em função (RBAC)</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary mt-1">•</span>
-                  <span>Backups regulares dos dados</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary mt-1">•</span>
-                  <span>Monitoramento contínuo de segurança</span>
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
+          <Section number="07" icon={UserCog} title="Seus Direitos">
+            <p>Você tem direito a:</p>
+            <ul className="space-y-2.5">
+              <Bullet>Acessar seus dados pessoais</Bullet>
+              <Bullet>Corrigir dados incorretos ou incompletos</Bullet>
+              <Bullet>Solicitar a exclusão de seus dados</Bullet>
+              <Bullet>Revogar permissões de integração com Google Calendar</Bullet>
+              <Bullet>Exportar seus dados em formato legível</Bullet>
+            </ul>
+          </Section>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>5. Compartilhamento de Dados</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="mb-4">
-                Não vendemos, alugamos ou compartilhamos suas informações pessoais com terceiros, exceto:
-              </p>
-              <ul className="space-y-2">
-                <li className="flex items-start gap-2">
-                  <span className="text-primary mt-1">•</span>
-                  <span>Com seu consentimento explícito</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary mt-1">•</span>
-                  <span>Para cumprir obrigações legais</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary mt-1">•</span>
-                  <span>Com provedores de serviços essenciais (ex: hospedagem)</span>
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
+          <Section number="08" icon={Clock} title="Retenção de Dados">
+            <p>
+              Mantemos suas informações pessoais apenas pelo tempo necessário para os fins
+              descritos nesta política, ou conforme exigido por lei. Você pode solicitar a
+              exclusão de sua conta e dados associados a qualquer momento.
+            </p>
+          </Section>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>6. Google Calendar - Uso Limitado</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p>
-                O uso que fazemos das informações recebidas das APIs do Google está em conformidade com a{" "}
-                <a
-                  href="https://developers.google.com/terms/api-services-user-data-policy"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  Política de Dados do Usuário dos Serviços de API do Google
-                </a>
-                , incluindo os requisitos de Uso Limitado.
-              </p>
-              <div className="bg-muted p-4 rounded-lg">
-                <p className="font-semibold mb-2">Compromissos específicos:</p>
-                <ul className="space-y-2 text-sm">
-                  <li className="flex items-start gap-2">
-                    <span className="text-primary mt-1">•</span>
-                    <span>Só acessamos os dados mínimos necessários para sincronizar agendamentos</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-primary mt-1">•</span>
-                    <span>Não armazenamos dados do Google Calendar além do necessário</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-primary mt-1">•</span>
-                    <span>Não compartilhamos dados do seu calendário com terceiros</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-primary mt-1">•</span>
-                    <span>Você pode revogar o acesso a qualquer momento</span>
-                  </li>
-                </ul>
-              </div>
-            </CardContent>
-          </Card>
+          <Section number="09" icon={RefreshCw} title="Alterações nesta Política">
+            <p>
+              Podemos atualizar esta Política de Privacidade periodicamente. Notificaremos você
+              sobre alterações significativas por e-mail ou através de um aviso em destaque na
+              plataforma.
+            </p>
+          </Section>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>7. Seus Direitos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="mb-4">Você tem direito a:</p>
-              <ul className="space-y-2">
-                <li className="flex items-start gap-2">
-                  <span className="text-primary mt-1">•</span>
-                  <span>Acessar seus dados pessoais</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary mt-1">•</span>
-                  <span>Corrigir dados incorretos ou incompletos</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary mt-1">•</span>
-                  <span>Solicitar a exclusão de seus dados</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary mt-1">•</span>
-                  <span>Revogar permissões de integração com Google Calendar</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary mt-1">•</span>
-                  <span>Exportar seus dados em formato legível</span>
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>8. Retenção de Dados</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>
-                Mantemos suas informações pessoais apenas pelo tempo necessário para os fins descritos nesta política, ou conforme exigido por lei. Você pode solicitar a exclusão de sua conta e dados associados a qualquer momento.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>9. Alterações nesta Política</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>
-                Podemos atualizar esta Política de Privacidade periodicamente. Notificaremos você sobre alterações significativas por e-mail ou através de um aviso em destaque na plataforma.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>10. Contato</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="mb-4">
-                Se você tiver dúvidas sobre esta Política de Privacidade ou sobre como tratamos seus dados, entre em contato conosco:
-              </p>
-              <div className="bg-muted p-4 rounded-lg space-y-2">
-                <p><strong>E-mail:</strong> privacidade@suaempresa.com</p>
-                <p><strong>Telefone:</strong> +55 (11) 1234-5678</p>
-              </div>
-            </CardContent>
-          </Card>
+          <Section number="10" icon={Mail} title="Contato">
+            <p>
+              Se você tiver dúvidas sobre esta Política de Privacidade ou sobre como tratamos
+              seus dados, entre em contato:
+            </p>
+            <div
+              className="rounded-xl p-4 flex items-center gap-3"
+              style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.2)" }}
+            >
+              <Mail className="h-4 w-4 text-emerald-400 shrink-0" strokeWidth={2} />
+              <a
+                href="mailto:contato@vyzon.com.br"
+                className="text-emerald-400 hover:text-emerald-300 font-medium transition-colors"
+              >
+                contato@vyzon.com.br
+              </a>
+            </div>
+            <p className="text-sm text-[rgba(255,255,255,0.45)]">
+              Consulte também nossos{" "}
+              <Link
+                to="/termos-de-servico"
+                className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2 transition-colors"
+              >
+                Termos de Serviço
+              </Link>
+              .
+            </p>
+          </Section>
         </div>
       </div>
     </div>

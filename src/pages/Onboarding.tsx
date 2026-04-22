@@ -33,6 +33,8 @@ import {
     Crown,
     Zap,
     Shield,
+    Lock,
+    Calendar,
     type LucideIcon
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -115,6 +117,30 @@ const formatExpiration = (value: string): string => {
     const digits = value.replace(/\D/g, "").slice(0, 4);
     if (digits.length > 2) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
     return digits;
+};
+
+type CardBrand = "visa" | "mastercard" | "amex" | "elo" | "hipercard" | "diners" | "unknown";
+
+const detectCardBrand = (cardNumber: string): CardBrand => {
+    const d = cardNumber.replace(/\D/g, "");
+    if (!d) return "unknown";
+    if (/^3[47]/.test(d)) return "amex";
+    if (/^(4011(78|79)|431274|438935|45(1416|7393|763[12])|504175|627780|636297|636368|65(003[1-3]|003[5-9]|004[0-9]|005[0-1])|6504(0[5-9]|[1-3][0-9])|6550[0-1]|65506[4-9]|65507[0-9]|65508[0-9])/.test(d)) return "elo";
+    if (/^(606282|3841)/.test(d)) return "hipercard";
+    if (/^(30[0-5]|36|38)/.test(d)) return "diners";
+    if (/^(5[1-5]|2(2[2-9][1-9]|2[3-9][0-9]|[3-6][0-9]|7[01][0-9]|720))/.test(d)) return "mastercard";
+    if (/^4/.test(d)) return "visa";
+    return "unknown";
+};
+
+const CARD_BRAND_META: Record<CardBrand, { label: string; bg: string; fg: string }> = {
+    visa: { label: "VISA", bg: "#1a1f71", fg: "#ffffff" },
+    mastercard: { label: "MASTER", bg: "#eb001b", fg: "#ffffff" },
+    amex: { label: "AMEX", bg: "#006fcf", fg: "#ffffff" },
+    elo: { label: "ELO", bg: "#000000", fg: "#ffff00" },
+    hipercard: { label: "HIPER", bg: "#c00000", fg: "#ffffff" },
+    diners: { label: "DINERS", bg: "#0079be", fg: "#ffffff" },
+    unknown: { label: "", bg: "transparent", fg: "transparent" },
 };
 
 // ── Pipeline stage config type (matches CRM.tsx StageConfig) ──
@@ -1396,7 +1422,16 @@ export default function Onboarding() {
                 );
 
             // ────────────── Step 5: Plan + Payment ──────────────
-            case 5:
+            case 5: {
+                const currentPlan = PLANS[selectedPlan];
+                const chargeAmount = currentPlan && billingCycle === "annual"
+                    ? getAnnualMonthlyEquivalent(currentPlan)
+                    : currentPlan?.monthlyPrice ?? 0;
+                const trialEndDate = new Date(Date.now() + 14 * 86400000)
+                    .toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+                const brand = detectCardBrand(cardNumber);
+                const brandMeta = CARD_BRAND_META[brand];
+
                 return (
                     <div>
                         <motion.div
@@ -1407,7 +1442,7 @@ export default function Onboarding() {
                         >
                             <CreditCard className="h-8 w-8 text-emerald-500" />
                         </motion.div>
-                        <h2 className="text-2xl font-bold text-white tracking-tight mb-2 text-center">
+                        <h2 className="font-heading text-2xl font-bold text-white tracking-tight mb-2 text-center">
                             Escolha seu Plano
                         </h2>
                         <p className="text-[rgba(255,255,255,0.45)] mb-6 text-sm text-center">
@@ -1415,23 +1450,23 @@ export default function Onboarding() {
                         </p>
 
                         {/* Billing toggle */}
-                        <div className="flex items-center justify-center gap-3 mb-6">
+                        <div className="inline-flex items-center gap-1 p-1 rounded-xl mx-auto mb-6 w-full max-w-[260px]" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
                             <button
                                 onClick={() => setBillingCycle("monthly")}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium ${
                                     billingCycle === "monthly"
                                         ? "bg-[rgba(255,255,255,0.08)] text-white"
-                                        : "text-[rgba(255,255,255,0.3)] hover:text-[rgba(255,255,255,0.6)]"
+                                        : "text-[rgba(255,255,255,0.4)] hover:text-[rgba(255,255,255,0.7)]"
                                 }`}
                             >
                                 Mensal
                             </button>
                             <button
                                 onClick={() => setBillingCycle("annual")}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
+                                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-1.5 ${
                                     billingCycle === "annual"
-                                        ? "bg-emerald-600/20 text-emerald-400 border border-emerald-500/30"
-                                        : "text-[rgba(255,255,255,0.3)] hover:text-[rgba(255,255,255,0.6)]"
+                                        ? "bg-emerald-500/15 text-emerald-400 shadow-[0_0_0_1px_rgba(16,185,129,0.3)]"
+                                        : "text-[rgba(255,255,255,0.4)] hover:text-[rgba(255,255,255,0.7)]"
                                 }`}
                             >
                                 Anual
@@ -1441,12 +1476,13 @@ export default function Onboarding() {
                             </button>
                         </div>
 
-                        {/* Plan cards */}
+                        {/* Plan cards com hierarquia — popular destacado */}
                         <div className="grid gap-2.5 mb-6">
                             {["starter", "plus", "pro"].map((planId) => {
                                 const plan = PLANS[planId];
                                 const PlanIcon = PLAN_ICONS[planId];
                                 const isSelected = selectedPlan === planId;
+                                const isPopular = plan.highlight;
                                 const monthlyDisplay = billingCycle === "annual"
                                     ? Math.round(getAnnualMonthlyEquivalent(plan))
                                     : plan.monthlyPrice;
@@ -1456,66 +1492,148 @@ export default function Onboarding() {
                                         key={planId}
                                         type="button"
                                         onClick={() => setSelectedPlan(planId)}
-                                        className={`relative flex items-center gap-4 px-4 py-3.5 rounded-xl border transition-all duration-200 text-left ${
+                                        whileHover={{ y: -1 }}
+                                        className={`relative flex items-center gap-4 px-4 rounded-2xl border text-left overflow-visible ${
+                                            isPopular ? "py-4" : "py-3.5"
+                                        } ${
                                             isSelected
-                                                ? "bg-emerald-500/10 border-emerald-500/50 shadow-[0_0_15px_-5px_rgba(16,185,129,0.3)]"
-                                                : "bg-[rgba(255,255,255,0.03)] border-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.12)]"
+                                                ? isPopular
+                                                    ? "bg-gradient-to-br from-emerald-500/15 to-emerald-500/5 border-emerald-500/60 shadow-[0_0_24px_-4px_rgba(16,185,129,0.4)]"
+                                                    : "bg-emerald-500/10 border-emerald-500/50 shadow-[0_0_15px_-5px_rgba(16,185,129,0.3)]"
+                                                : isPopular
+                                                    ? "bg-[rgba(16,185,129,0.04)] border-[rgba(16,185,129,0.2)] hover:border-emerald-500/40"
+                                                    : "bg-[rgba(255,255,255,0.03)] border-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.12)]"
                                         }`}
                                     >
-                                        <div className={`p-2 rounded-lg ${isSelected ? "bg-emerald-500/20" : "bg-[rgba(255,255,255,0.06)]"}`}>
-                                            <PlanIcon className={`h-4 w-4 ${isSelected ? "text-emerald-400" : "text-[rgba(255,255,255,0.45)]"}`} />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2">
-                                                <p className={`font-bold text-sm ${isSelected ? "text-emerald-400" : "text-white"}`}>
-                                                    {plan.name}
-                                                </p>
-                                                {plan.highlight && (
-                                                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold uppercase">
-                                                        Popular
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <p className="text-xs text-[rgba(255,255,255,0.3)] mt-0.5">{plan.description}</p>
-                                        </div>
-                                        <div className="text-right shrink-0">
-                                            <p className={`font-bold text-lg ${isSelected ? "text-emerald-400" : "text-white"}`}>
-                                                R$ {monthlyDisplay}
-                                            </p>
-                                            <p className="text-[10px] text-[rgba(255,255,255,0.3)]">/mes</p>
-                                        </div>
-                                        {isSelected && (
-                                            <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center shrink-0">
-                                                <Check className="w-3 h-3 text-white" />
+                                        {isPopular && (
+                                            <div className="absolute -top-2 right-4 px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[9px] font-bold uppercase tracking-wider shadow-[0_0_10px_rgba(16,185,129,0.4)]">
+                                                Popular
                                             </div>
                                         )}
+                                        <div className={`p-2 rounded-lg shrink-0 ${
+                                            isSelected
+                                                ? "bg-emerald-500/20"
+                                                : isPopular
+                                                    ? "bg-emerald-500/10"
+                                                    : "bg-[rgba(255,255,255,0.06)]"
+                                        }`}>
+                                            <PlanIcon className={`h-4 w-4 ${
+                                                isSelected
+                                                    ? "text-emerald-400"
+                                                    : isPopular
+                                                        ? "text-emerald-400/80"
+                                                        : "text-[rgba(255,255,255,0.45)]"
+                                            }`} />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className={`font-bold text-sm ${
+                                                isSelected ? "text-emerald-400" : "text-white"
+                                            }`}>
+                                                {plan.name}
+                                            </p>
+                                            <p className="text-xs text-[rgba(255,255,255,0.35)] mt-0.5">
+                                                {plan.description}
+                                            </p>
+                                        </div>
+                                        <div className="text-right shrink-0">
+                                            <p className={`font-bold ${isPopular ? "text-xl" : "text-lg"} ${
+                                                isSelected ? "text-emerald-400" : "text-white"
+                                            }`}>
+                                                R$ {monthlyDisplay}
+                                            </p>
+                                            <p className="text-[10px] text-[rgba(255,255,255,0.3)]">/mês</p>
+                                        </div>
+                                        <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-opacity ${
+                                            isSelected
+                                                ? "bg-emerald-500 opacity-100"
+                                                : "bg-[rgba(255,255,255,0.06)] opacity-60"
+                                        }`}>
+                                            {isSelected && <Check className="w-3 h-3 text-white" />}
+                                        </div>
                                     </motion.button>
                                 );
                             })}
                         </div>
 
-                        {/* Trial info */}
-                        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/20 mb-6">
-                            <Shield className="h-4 w-4 text-amber-400 shrink-0" />
-                            <p className="text-xs text-amber-300">
-                                <strong>14 dias grátis.</strong> Você só será cobrado após o período de teste. Cancele a qualquer momento.
-                            </p>
-                        </div>
+                        {/* Resumo + timeline trial */}
+                        {currentPlan && (
+                            <div
+                                className="rounded-2xl p-4 mb-6"
+                                style={{
+                                    background: "linear-gradient(135deg, rgba(16,185,129,0.08), rgba(16,185,129,0.02))",
+                                    border: "1px solid rgba(16,185,129,0.2)",
+                                }}
+                            >
+                                <div className="flex items-center gap-2 mb-3">
+                                    <Shield className="h-4 w-4 text-emerald-400 shrink-0" />
+                                    <p className="font-heading font-bold text-sm text-white">
+                                        Como funciona
+                                    </p>
+                                </div>
+                                <div className="space-y-2.5">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <div className="flex items-center gap-2.5 min-w-0">
+                                            <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0">
+                                                <Check className="h-3 w-3 text-emerald-400" strokeWidth={3} />
+                                            </div>
+                                            <span className="text-sm text-white/85">
+                                                Hoje — acesso total liberado
+                                            </span>
+                                        </div>
+                                        <span className="text-sm font-bold text-emerald-400 shrink-0">R$ 0</span>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-3">
+                                        <div className="flex items-center gap-2.5 min-w-0">
+                                            <div className="w-6 h-6 rounded-full bg-[rgba(255,255,255,0.06)] border border-white/10 flex items-center justify-center shrink-0">
+                                                <Calendar className="h-3 w-3 text-white/60" strokeWidth={2} />
+                                            </div>
+                                            <span className="text-sm text-white/85 truncate">
+                                                A partir de {trialEndDate}
+                                            </span>
+                                        </div>
+                                        <span className="text-sm font-bold text-white shrink-0">
+                                            {formatPrice(chargeAmount)}/mês
+                                        </span>
+                                    </div>
+                                </div>
+                                <p className="text-[11px] text-white/50 mt-3 pt-3 border-t border-white/5">
+                                    Cancele quando quiser pelo painel, sem multa.
+                                </p>
+                            </div>
+                        )}
 
-                        {/* Card form */}
+                        {/* Card form com preview da bandeira */}
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <Label className="text-[rgba(255,255,255,0.6)] text-sm font-medium">
                                     Número do cartão <span className="text-rose-400">*</span>
                                 </Label>
-                                <Input
-                                    placeholder="0000 0000 0000 0000"
-                                    className={inputClasses}
-                                    maxLength={19}
-                                    value={cardNumber}
-                                    onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
-                                    inputMode="numeric"
-                                />
+                                <div className="relative">
+                                    <Input
+                                        placeholder="0000 0000 0000 0000"
+                                        className={`${inputClasses} pr-24`}
+                                        maxLength={19}
+                                        value={cardNumber}
+                                        onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
+                                        inputMode="numeric"
+                                        autoComplete="cc-number"
+                                    />
+                                    {brand !== "unknown" && (
+                                        <motion.div
+                                            initial={{ opacity: 0, scale: 0.9 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            transition={{ duration: 0.2 }}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2"
+                                        >
+                                            <div
+                                                className="px-2 py-1 rounded-md text-[10px] font-bold tracking-wider leading-none"
+                                                style={{ background: brandMeta.bg, color: brandMeta.fg }}
+                                            >
+                                                {brandMeta.label}
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-3">
@@ -1530,6 +1648,7 @@ export default function Onboarding() {
                                         value={cardExpiration}
                                         onChange={(e) => setCardExpiration(formatExpiration(e.target.value))}
                                         inputMode="numeric"
+                                        autoComplete="cc-exp"
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -1544,6 +1663,7 @@ export default function Onboarding() {
                                         onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
                                         inputMode="numeric"
                                         type="password"
+                                        autoComplete="cc-csc"
                                     />
                                 </div>
                             </div>
@@ -1556,6 +1676,7 @@ export default function Onboarding() {
                                     id="cardholder-name"
                                     placeholder="Nome como está no cartão"
                                     className={inputClasses}
+                                    autoComplete="cc-name"
                                 />
                             </div>
 
@@ -1584,7 +1705,7 @@ export default function Onboarding() {
                         )}
 
                         {/* Payment CTA */}
-                        <div className="mt-6 flex items-center gap-4">
+                        <div className="mt-6 flex items-center gap-3">
                             <Button
                                 variant="outline"
                                 onClick={handleBack}
@@ -1596,7 +1717,11 @@ export default function Onboarding() {
                             <Button
                                 onClick={handlePayment}
                                 disabled={paymentLoading || !selectedPlan}
-                                className="flex-1 h-12 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-base rounded-xl shadow-lg shadow-emerald-500/20 border-none transition-all hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:hover:translate-y-0"
+                                className="relative flex-1 h-12 text-white font-bold text-base rounded-xl border-none transition-transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:hover:translate-y-0 overflow-hidden"
+                                style={{
+                                    background: "linear-gradient(135deg, #10b981, #059669)",
+                                    boxShadow: "0 0 0 1px rgba(16,185,129,0.3), 0 4px 24px rgba(16,185,129,0.3)",
+                                }}
                             >
                                 {paymentLoading ? (
                                     <>
@@ -1611,8 +1736,25 @@ export default function Onboarding() {
                                 )}
                             </Button>
                         </div>
+
+                        {/* Trust row */}
+                        <div className="mt-5 pt-5 border-t border-white/5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] text-white/40">
+                            <div className="flex items-center gap-1.5">
+                                <Lock className="h-3 w-3" strokeWidth={2} />
+                                <span>Conexão SSL</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <CreditCard className="h-3 w-3" strokeWidth={2} />
+                                <span>Mercado Pago</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <Shield className="h-3 w-3" strokeWidth={2} />
+                                <span>LGPD</span>
+                            </div>
+                        </div>
                     </div>
                 );
+            }
 
             // ────────────── Step 6: Invite Team ──────────────
             case 6:
