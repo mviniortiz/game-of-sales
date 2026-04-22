@@ -44,6 +44,9 @@ export const ThemeLogo = ({
         ? "currentColor"
         : undefined;
 
+  // Fallback automático: shadcn `--foreground` inverte entre light/dark.
+  // Em light mode → slate quase preto (contrasta com bg branco).
+  // Em dark mode → branco (contrasta com bg escuro).
   return (
     <span className={`inline-flex items-center gap-2 ${className}`} aria-label={alt}>
       <img
@@ -62,7 +65,7 @@ export const ThemeLogo = ({
             fontWeight: 700,
             fontSize: "0.95em",
             letterSpacing: "-0.035em",
-            color: wordmarkColor ?? "var(--vyz-text-primary, hsl(var(--foreground)))",
+            color: wordmarkColor ?? "hsl(var(--foreground))",
           }}
         >
           Vyzon
@@ -81,7 +84,7 @@ export const ThemeLogo = ({
                   ? "rgba(255,255,255,0.8)"
                   : resolvedVariant === "monochrome"
                     ? "currentColor"
-                    : "var(--vyz-text-muted, #A0AEC0)",
+                    : "hsl(var(--muted-foreground))",
             }}
           >
             CRM de Vendas Gamificado
