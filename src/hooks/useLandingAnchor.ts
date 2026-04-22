@@ -16,22 +16,22 @@ export const scrollToLazyAnchor = (id: string) => {
     if (smoothScrollToId(id)) return;
     window.dispatchEvent(new CustomEvent("vyzon:hydrate-all"));
     let settled = false;
+    let timeoutHandle: ReturnType<typeof setTimeout> | null = null;
+    const cleanup = () => {
+        settled = true;
+        observer.disconnect();
+        if (timeoutHandle) clearTimeout(timeoutHandle);
+    };
     const observer = new MutationObserver(() => {
         if (settled) return;
-        if (smoothScrollToId(id)) {
-            settled = true;
-            observer.disconnect();
-        }
+        if (smoothScrollToId(id)) cleanup();
     });
     observer.observe(document.body, { childList: true, subtree: true });
     requestAnimationFrame(() => {
-        if (!settled && smoothScrollToId(id)) {
-            settled = true;
-            observer.disconnect();
-        }
+        if (!settled && smoothScrollToId(id)) cleanup();
     });
-    setTimeout(() => {
-        if (!settled) observer.disconnect();
+    timeoutHandle = setTimeout(() => {
+        if (!settled) cleanup();
     }, 2500);
 };
 
