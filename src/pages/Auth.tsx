@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Mail, Lock, ArrowRight, ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react";
-import vyzonLogo from "@/assets/logo-dark.png";
+import { ThemeLogo } from "@/components/ui/ThemeLogo";
 import { motion } from "framer-motion";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
@@ -75,7 +75,7 @@ const Auth = () => {
         <div className="absolute inset-0 pointer-events-none">
           <div
             className="absolute top-[15%] left-1/2 -translate-x-1/2 w-[700px] h-[500px] rounded-full"
-            style={{ background: "radial-gradient(ellipse, rgba(16,185,129,0.10) 0%, transparent 60%)" }}
+            style={{ background: "radial-gradient(ellipse, rgba(0,227,122,0.10) 0%, transparent 60%)" }}
           />
           <div
             className="absolute inset-0 opacity-[0.025]"
@@ -122,7 +122,7 @@ const Auth = () => {
         <div className="absolute inset-0 lg:hidden pointer-events-none">
           <div
             className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[900px] h-[600px] rounded-full"
-            style={{ background: "radial-gradient(ellipse, rgba(16,185,129,0.06) 0%, transparent 60%)" }}
+            style={{ background: "radial-gradient(ellipse, rgba(0,227,122,0.06) 0%, transparent 60%)" }}
           />
           <div
             className="absolute inset-0 opacity-[0.02]"
@@ -167,12 +167,12 @@ const Auth = () => {
           {/* Top accent line */}
           <div
             className="absolute top-0 left-0 right-0 h-px"
-            style={{ background: "linear-gradient(90deg, transparent, rgba(16,185,129,0.3) 50%, transparent)" }}
+            style={{ background: "linear-gradient(90deg, transparent, rgba(0,227,122,0.3) 50%, transparent)" }}
           />
 
           {/* Logo */}
           <div className="flex justify-center mb-8">
-            <img src={vyzonLogo} alt="Vyzon" className="h-10" />
+            <ThemeLogo className="h-10" />
           </div>
 
           {/* Header */}
@@ -253,10 +253,10 @@ const Auth = () => {
               disabled={loading || authLoading}
               className="w-full h-12 rounded-xl text-white font-bold text-[15px] relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
-                background: "linear-gradient(135deg, #10b981, #059669)",
-                boxShadow: "0 0 0 1px rgba(16,185,129,0.3), 0 4px 20px rgba(16,185,129,0.25)",
+                background: "linear-gradient(135deg, #00E37A, #00B289)",
+                boxShadow: "0 0 0 1px rgba(0,227,122,0.3), 0 4px 20px rgba(0,227,122,0.25)",
               }}
-              whileHover={!loading ? { scale: 1.02, boxShadow: "0 0 0 1px rgba(16,185,129,0.4), 0 8px 32px rgba(16,185,129,0.35)" } : undefined}
+              whileHover={!loading ? { scale: 1.02, boxShadow: "0 0 0 1px rgba(0,227,122,0.4), 0 8px 32px rgba(0,227,122,0.35)" } : undefined}
               whileTap={!loading ? { scale: 0.98 } : undefined}
             >
               <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />

@@ -171,8 +171,8 @@ export default function NativeScheduler({
         const readable = `${formatDayHeader(formatBRTDate(bookedInfo.startIso).dayKey)} às ${formatBRTTime(bookedInfo.startIso)}`;
         void brt;
         return (
-            <div className="flex flex-col items-center justify-center gap-4 py-16 px-6 rounded-2xl text-center" style={{ background: "rgba(16,185,129,0.05)", boxShadow: "0 0 0 1px rgba(16,185,129,0.2)" }}>
-                <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: "rgba(16,185,129,0.15)" }}>
+            <div className="flex flex-col items-center justify-center gap-4 py-16 px-6 rounded-2xl text-center" style={{ background: "rgba(0,227,122,0.05)", boxShadow: "0 0 0 1px rgba(0,227,122,0.2)" }}>
+                <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: "rgba(0,227,122,0.15)" }}>
                     <CheckCircle2 className="h-7 w-7 text-emerald-400" />
                 </div>
                 <div>
@@ -185,7 +185,7 @@ export default function NativeScheduler({
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 text-xs px-4 py-2 rounded-full mt-1"
-                        style={{ background: "#10b981", color: "#06080a", fontWeight: 700 }}
+                        style={{ background: "#00E37A", color: "#06080a", fontWeight: 700 }}
                     >
                         Abrir Google Meet
                     </a>
@@ -221,7 +221,7 @@ export default function NativeScheduler({
                         <span className="sm:hidden">Horário de Brasília</span>
                     </p>
                 </div>
-                <span className="text-[10px] uppercase tracking-wider px-2 py-1 rounded-full flex-shrink-0" style={{ background: "rgba(16,185,129,0.1)", color: "#10b981", fontWeight: 700 }}>30 MIN</span>
+                <span className="text-[10px] uppercase tracking-wider px-2 py-1 rounded-full flex-shrink-0" style={{ background: "rgba(0,227,122,0.1)", color: "#00E37A", fontWeight: 700 }}>30 MIN</span>
             </div>
 
             <div className="flex flex-col md:grid md:grid-cols-[240px_minmax(0,1fr)] min-w-0">
@@ -242,9 +242,9 @@ export default function NativeScheduler({
                                     }}
                                     className="flex-shrink-0 flex flex-col items-center justify-center px-3 py-2 rounded-xl transition-all"
                                     style={{
-                                        background: isActive ? "rgba(16,185,129,0.12)" : "rgba(255,255,255,0.03)",
-                                        boxShadow: isActive ? "0 0 0 1.5px rgba(16,185,129,0.45)" : "0 0 0 1px rgba(255,255,255,0.06)",
-                                        color: isActive ? "#34d399" : "rgba(255,255,255,0.7)",
+                                        background: isActive ? "rgba(0,227,122,0.12)" : "rgba(255,255,255,0.03)",
+                                        boxShadow: isActive ? "0 0 0 1.5px rgba(0,227,122,0.45)" : "0 0 0 1px rgba(255,255,255,0.06)",
+                                        color: isActive ? "#33FF9E" : "rgba(255,255,255,0.7)",
                                         minWidth: 58,
                                     }}
                                 >
@@ -269,13 +269,13 @@ export default function NativeScheduler({
                                     }}
                                     className="text-left px-3 py-2.5 rounded-lg transition-colors"
                                     style={{
-                                        background: isActive ? "rgba(16,185,129,0.12)" : "transparent",
-                                        boxShadow: isActive ? "0 0 0 1px rgba(16,185,129,0.3)" : "none",
+                                        background: isActive ? "rgba(0,227,122,0.12)" : "transparent",
+                                        boxShadow: isActive ? "0 0 0 1px rgba(0,227,122,0.3)" : "none",
                                         color: isActive ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.55)",
                                     }}
                                 >
                                     <div className="text-xs" style={{ fontWeight: 600 }}>{formatDayHeader(dk)}</div>
-                                    <div className="text-[10px] mt-0.5" style={{ color: isActive ? "rgba(16,185,129,0.9)" : "rgba(255,255,255,0.35)" }}>{slotsCount} horário{slotsCount !== 1 ? "s" : ""}</div>
+                                    <div className="text-[10px] mt-0.5" style={{ color: isActive ? "rgba(0,227,122,0.9)" : "rgba(255,255,255,0.35)" }}>{slotsCount} horário{slotsCount !== 1 ? "s" : ""}</div>
                                 </button>
                             );
                         })}
@@ -293,8 +293,8 @@ export default function NativeScheduler({
                                     onClick={() => setSelectedSlot(s)}
                                     className="px-2 sm:px-3 py-2.5 rounded-lg text-sm transition-colors tabular-nums"
                                     style={{
-                                        background: isActive ? "linear-gradient(135deg, #10b981, #059669)" : "rgba(255,255,255,0.04)",
-                                        boxShadow: isActive ? "0 4px 16px rgba(16,185,129,0.3)" : "0 0 0 1px rgba(255,255,255,0.06)",
+                                        background: isActive ? "linear-gradient(135deg, #00E37A, #00B289)" : "rgba(255,255,255,0.04)",
+                                        boxShadow: isActive ? "0 4px 16px rgba(0,227,122,0.3)" : "0 0 0 1px rgba(255,255,255,0.06)",
                                         color: isActive ? "#ffffff" : "rgba(255,255,255,0.85)",
                                         fontWeight: isActive ? 700 : 500,
                                     }}
@@ -324,11 +324,11 @@ export default function NativeScheduler({
                             disabled={!selectedSlot || phase === "booking"}
                             className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-3 rounded-xl text-sm sm:flex-shrink-0 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                             style={{
-                                background: "linear-gradient(135deg, #10b981, #059669)",
+                                background: "linear-gradient(135deg, #00E37A, #00B289)",
                                 color: "#ffffff",
                                 fontWeight: 700,
                                 fontSize: "0.95rem",
-                                boxShadow: "0 0 0 1px rgba(16,185,129,0.4), 0 4px 16px rgba(16,185,129,0.25)",
+                                boxShadow: "0 0 0 1px rgba(0,227,122,0.4), 0 4px 16px rgba(0,227,122,0.25)",
                             }}
                         >
                             {phase === "booking" ? (

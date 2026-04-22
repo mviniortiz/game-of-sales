@@ -43,7 +43,7 @@ function RankingMockup() {
                         Agosto 2026
                     </p>
                 </div>
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full" style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)" }}>
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full" style={{ background: "rgba(0,227,122,0.1)", border: "1px solid rgba(0,227,122,0.2)" }}>
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                     <span className="text-[10px] text-emerald-400" style={{ fontWeight: 600 }}>AO VIVO</span>
                 </div>
@@ -152,13 +152,13 @@ function PipelineMockup() {
             title: "Ganho",
             total: "R$ 12.3k",
             count: 4,
-            color: "#10b981",
-            accent: "rgba(16,185,129,0.1)",
-            border: "rgba(16,185,129,0.25)",
+            color: "#00E37A",
+            accent: "rgba(0,227,122,0.1)",
+            border: "rgba(0,227,122,0.25)",
             deals: [
-                { name: "Paula Costa", value: "R$ 5.9k", avatar: "PC", avatarBg: "linear-gradient(135deg,#34d399,#10b981)", won: true },
-                { name: "Bruno Almeida", value: "R$ 4.2k", avatar: "BA", avatarBg: "linear-gradient(135deg,#6ee7b7,#10b981)", won: true },
-                { name: "Sofia Lima", value: "R$ 2.2k", avatar: "SL", avatarBg: "linear-gradient(135deg,#a7f3d0,#34d399)", won: true },
+                { name: "Paula Costa", value: "R$ 5.9k", avatar: "PC", avatarBg: "linear-gradient(135deg,#33FF9E,#00E37A)", won: true },
+                { name: "Bruno Almeida", value: "R$ 4.2k", avatar: "BA", avatarBg: "linear-gradient(135deg,#66FFB3,#00E37A)", won: true },
+                { name: "Sofia Lima", value: "R$ 2.2k", avatar: "SL", avatarBg: "linear-gradient(135deg,#a7f3d0,#33FF9E)", won: true },
             ],
         },
     ];
@@ -231,13 +231,13 @@ function PipelineMockup() {
                                     className={`rounded-xl p-2.5 relative ${i > 0 ? "hidden md:block" : ""}`}
                                     style={{
                                         background: deal.won
-                                            ? "rgba(16,185,129,0.05)"
+                                            ? "rgba(0,227,122,0.05)"
                                             : deal.moving
                                                 ? "rgba(251,191,36,0.08)"
                                                 : "rgba(255,255,255,0.025)",
                                         border: `1px solid ${
                                             deal.won
-                                                ? "rgba(16,185,129,0.2)"
+                                                ? "rgba(0,227,122,0.2)"
                                                 : deal.moving
                                                     ? "rgba(251,191,36,0.3)"
                                                     : "rgba(255,255,255,0.06)"
@@ -263,7 +263,7 @@ function PipelineMockup() {
                                         <p
                                             className="text-[11px] tabular-nums"
                                             style={{
-                                                color: deal.won ? "#34d399" : "rgba(255,255,255,0.85)",
+                                                color: deal.won ? "#33FF9E" : "rgba(255,255,255,0.85)",
                                                 fontWeight: 700,
                                             }}
                                         >
@@ -271,7 +271,7 @@ function PipelineMockup() {
                                             {deal.value}
                                         </p>
                                         {deal.won ? (
-                                            <span className="text-[8px] uppercase tracking-wider" style={{ color: "#10b981", fontWeight: 700 }}>
+                                            <span className="text-[8px] uppercase tracking-wider" style={{ color: "#00E37A", fontWeight: 700 }}>
                                                 Ganho
                                             </span>
                                         ) : (
@@ -319,7 +319,7 @@ function SalesMockup() {
                         Conectadas em 1 clique
                     </p>
                 </div>
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full" style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)" }}>
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full" style={{ background: "rgba(0,227,122,0.1)", border: "1px solid rgba(0,227,122,0.2)" }}>
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                     <span className="text-[10px] text-emerald-400" style={{ fontWeight: 600 }}>Sincronizando</span>
                 </div>
@@ -372,7 +372,7 @@ function SalesMockup() {
                                 <span className="block text-[11px] truncate" style={{ color: "rgba(255,255,255,0.9)", fontWeight: 600 }}>
                                     {p.name}
                                 </span>
-                                <span className="block text-[9px]" style={{ color: "rgba(16,185,129,0.75)", fontWeight: 600 }}>
+                                <span className="block text-[9px]" style={{ color: "rgba(0,227,122,0.75)", fontWeight: 600 }}>
                                     • sincronizando
                                 </span>
                             </div>
@@ -383,8 +383,8 @@ function SalesMockup() {
 
             {/* Flow arrow */}
             <div className="flex flex-col items-center gap-1 mb-3">
-                <div className="w-px h-3" style={{ background: "linear-gradient(to bottom, rgba(16,185,129,0.5), rgba(16,185,129,0.1))" }} />
-                <span className="text-[9px] uppercase tracking-widest" style={{ color: "rgba(16,185,129,0.6)", fontWeight: 700 }}>
+                <div className="w-px h-3" style={{ background: "linear-gradient(to bottom, rgba(0,227,122,0.5), rgba(0,227,122,0.1))" }} />
+                <span className="text-[9px] uppercase tracking-widest" style={{ color: "rgba(0,227,122,0.6)", fontWeight: 700 }}>
                     Venda aprovada
                 </span>
             </div>
@@ -396,20 +396,20 @@ function SalesMockup() {
                 transition={{ delay: 0.4 }}
                 className="rounded-xl p-4 md:p-5 mt-auto relative overflow-hidden"
                 style={{
-                    background: "linear-gradient(135deg, rgba(16,185,129,0.1), rgba(52,211,153,0.03))",
-                    border: "1px solid rgba(16,185,129,0.3)",
-                    boxShadow: "0 8px 32px -12px rgba(16,185,129,0.3)",
+                    background: "linear-gradient(135deg, rgba(0,227,122,0.1), rgba(52,211,153,0.03))",
+                    border: "1px solid rgba(0,227,122,0.3)",
+                    boxShadow: "0 8px 32px -12px rgba(0,227,122,0.3)",
                 }}
             >
                 <div
                     className="absolute -top-8 -right-8 w-32 h-32 rounded-full pointer-events-none"
-                    style={{ background: "radial-gradient(circle, rgba(16,185,129,0.18) 0%, transparent 70%)" }}
+                    style={{ background: "radial-gradient(circle, rgba(0,227,122,0.18) 0%, transparent 70%)" }}
                 />
 
                 <div className="relative">
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2.5">
-                            <div className="w-7 h-7 md:w-9 md:h-9 rounded-full flex items-center justify-center" style={{ background: "rgba(16,185,129,0.18)", border: "1px solid rgba(16,185,129,0.35)" }}>
+                            <div className="w-7 h-7 md:w-9 md:h-9 rounded-full flex items-center justify-center" style={{ background: "rgba(0,227,122,0.18)", border: "1px solid rgba(0,227,122,0.35)" }}>
                                 <TrendingUp className="h-3.5 w-3.5 md:h-4 md:w-4 text-emerald-400" strokeWidth={2.5} />
                             </div>
                             <div>
@@ -430,7 +430,7 @@ function SalesMockup() {
                         </span>
                     </div>
 
-                    <div className="space-y-1.5 pt-2.5" style={{ borderTop: "1px solid rgba(16,185,129,0.15)" }}>
+                    <div className="space-y-1.5 pt-2.5" style={{ borderTop: "1px solid rgba(0,227,122,0.15)" }}>
                         <div className="flex items-center gap-2">
                             <Check className="h-3 w-3 text-emerald-400 shrink-0" strokeWidth={3} />
                             <p className="text-[10px] md:text-[11px]" style={{ color: "rgba(255,255,255,0.75)", fontWeight: 500 }}>
@@ -465,8 +465,8 @@ function SalesMockup() {
 
 function GoalsMockup() {
     const goals = [
-        { label: "Meta diária", value: "R$ 4.200", target: "R$ 5.000", pct: 84, color: "#10b981" },
-        { label: "Meta semanal", value: "R$ 22.100", target: "R$ 35.000", pct: 63, color: "#34d399" },
+        { label: "Meta diária", value: "R$ 4.200", target: "R$ 5.000", pct: 84, color: "#00E37A" },
+        { label: "Meta semanal", value: "R$ 22.100", target: "R$ 35.000", pct: 63, color: "#33FF9E" },
         { label: "Meta mensal", value: "R$ 68.400", target: "R$ 150.000", pct: 46, color: "#a7f3d0" },
     ];
 
@@ -481,7 +481,7 @@ function GoalsMockup() {
                         Progresso em tempo real
                     </p>
                 </div>
-                <div className="px-2.5 py-1 rounded-full" style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)" }}>
+                <div className="px-2.5 py-1 rounded-full" style={{ background: "rgba(0,227,122,0.1)", border: "1px solid rgba(0,227,122,0.2)" }}>
                     <span className="text-[10px] text-emerald-400" style={{ fontWeight: 600 }}>+12% vs ontem</span>
                 </div>
             </div>
@@ -502,8 +502,8 @@ function GoalsMockup() {
                         />
                         <defs>
                             <linearGradient id="goal-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stopColor="#10b981" />
-                                <stop offset="100%" stopColor="#34d399" />
+                                <stop offset="0%" stopColor="#00E37A" />
+                                <stop offset="100%" stopColor="#33FF9E" />
                             </linearGradient>
                         </defs>
                     </svg>
@@ -556,7 +556,7 @@ function WhatsAppMockup() {
         <div className="p-6 sm:p-8 h-full flex flex-col">
             <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, #10b981, #059669)" }}>
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, #00E37A, #00B289)" }}>
                         <span className="text-xs" style={{ color: "white", fontWeight: 700 }}>JR</span>
                     </div>
                     <div>
@@ -611,7 +611,7 @@ function WhatsAppMockup() {
                     transition={{ delay: 0.7 }}
                     className="flex justify-end"
                 >
-                    <div className="rounded-2xl rounded-tr-sm px-3.5 py-2.5 max-w-[78%]" style={{ background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.25)" }}>
+                    <div className="rounded-2xl rounded-tr-sm px-3.5 py-2.5 max-w-[78%]" style={{ background: "rgba(0,227,122,0.15)", border: "1px solid rgba(0,227,122,0.25)" }}>
                         <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.95)" }}>
                             Juliana, entendo! Nossos alunos recuperam o investimento em ~3 semanas. Além disso, você tem 7 dias de garantia pra testar sem risco.
                         </p>
@@ -712,7 +712,7 @@ export const ProductBentoGrid = () => {
                 className="absolute inset-x-0 top-0 h-[400px] pointer-events-none"
                 style={{
                     background:
-                        "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(16,185,129,0.08) 0%, transparent 70%)",
+                        "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(0,227,122,0.08) 0%, transparent 70%)",
                 }}
             />
 
@@ -730,8 +730,8 @@ export const ProductBentoGrid = () => {
                         style={{
                             fontWeight: "var(--fw-medium)",
                             letterSpacing: "0.06em",
-                            background: "rgba(16,185,129,0.1)",
-                            border: "1px solid rgba(16,185,129,0.2)",
+                            background: "rgba(0,227,122,0.1)",
+                            border: "1px solid rgba(0,227,122,0.2)",
                         }}
                     >
                         <Zap className="h-3 w-3" />
@@ -780,8 +780,8 @@ export const ProductBentoGrid = () => {
                                     onClick={() => handleSelect(i)}
                                     className="group text-left rounded-xl p-4 transition-all duration-300 relative overflow-hidden"
                                     style={{
-                                        background: isActive ? "rgba(16,185,129,0.06)" : "rgba(255,255,255,0.02)",
-                                        border: `1px solid ${isActive ? "rgba(16,185,129,0.25)" : "rgba(255,255,255,0.05)"}`,
+                                        background: isActive ? "rgba(0,227,122,0.06)" : "rgba(255,255,255,0.02)",
+                                        border: `1px solid ${isActive ? "rgba(0,227,122,0.25)" : "rgba(255,255,255,0.05)"}`,
                                     }}
                                 >
                                     {/* Active side bar */}
@@ -789,7 +789,7 @@ export const ProductBentoGrid = () => {
                                         <motion.span
                                             layoutId="feature-bar"
                                             className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full"
-                                            style={{ background: "linear-gradient(to bottom, #10b981, #34d399)" }}
+                                            style={{ background: "linear-gradient(to bottom, #00E37A, #33FF9E)" }}
                                             transition={{ type: "spring", stiffness: 380, damping: 32 }}
                                         />
                                     )}
@@ -798,13 +798,13 @@ export const ProductBentoGrid = () => {
                                         <div
                                             className="flex h-9 w-9 items-center justify-center rounded-lg shrink-0 transition-colors duration-300"
                                             style={{
-                                                background: isActive ? "rgba(16,185,129,0.15)" : "rgba(255,255,255,0.04)",
-                                                border: `1px solid ${isActive ? "rgba(16,185,129,0.3)" : "rgba(255,255,255,0.08)"}`,
+                                                background: isActive ? "rgba(0,227,122,0.15)" : "rgba(255,255,255,0.04)",
+                                                border: `1px solid ${isActive ? "rgba(0,227,122,0.3)" : "rgba(255,255,255,0.08)"}`,
                                             }}
                                         >
                                             <Icon
                                                 className="h-4 w-4 transition-colors"
-                                                style={{ color: isActive ? "#34d399" : "rgba(255,255,255,0.55)" }}
+                                                style={{ color: isActive ? "#33FF9E" : "rgba(255,255,255,0.55)" }}
                                                 strokeWidth={1.8}
                                             />
                                         </div>
@@ -825,7 +825,7 @@ export const ProductBentoGrid = () => {
                                                 <ChevronRight
                                                     className="h-3.5 w-3.5 transition-all duration-300"
                                                     style={{
-                                                        color: isActive ? "#34d399" : "rgba(255,255,255,0.2)",
+                                                        color: isActive ? "#33FF9E" : "rgba(255,255,255,0.2)",
                                                         transform: isActive ? "translateX(2px)" : "translateX(0)",
                                                     }}
                                                     strokeWidth={2.5}
@@ -857,7 +857,7 @@ export const ProductBentoGrid = () => {
                         <div
                             className="absolute -top-20 -right-20 w-64 h-64 pointer-events-none"
                             style={{
-                                background: "radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 70%)",
+                                background: "radial-gradient(circle, rgba(0,227,122,0.08) 0%, transparent 70%)",
                             }}
                         />
 
@@ -893,7 +893,7 @@ export const ProductBentoGrid = () => {
                                 <div className="p-5 flex items-start gap-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
                                     <div
                                         className="flex h-9 w-9 items-center justify-center rounded-lg shrink-0"
-                                        style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)" }}
+                                        style={{ background: "rgba(0,227,122,0.1)", border: "1px solid rgba(0,227,122,0.2)" }}
                                     >
                                         <Icon className="h-4 w-4 text-emerald-400" strokeWidth={1.8} />
                                     </div>

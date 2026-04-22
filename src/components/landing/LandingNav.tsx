@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Menu, X, ArrowRight, LogIn, ChevronDown, Rocket, Megaphone, Building2 } from "lucide-react";
-import brandLogoDark from "@/assets/logo-dark.png";
+import { ThemeLogo } from "@/components/ui/ThemeLogo";
 import { scrollToLazyAnchor } from "@/hooks/useLandingAnchor";
 
 interface LandingNavProps {
@@ -113,7 +113,7 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
                         className="flex items-center gap-2.5 flex-shrink-0"
                     >
-                        <img src={brandLogoDark} alt="Vyzon" width={320} height={60} className="h-6 sm:h-8 w-auto" />
+                        <ThemeLogo className="h-6 sm:h-8 w-auto" />
                     </button>
 
                     <nav className="hidden md:flex items-center gap-1">
@@ -335,7 +335,7 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                     className="flex items-center justify-between px-5 h-16 border-b"
                     style={{ borderColor: "var(--vyz-border)" }}
                 >
-                    <img src={brandLogoDark} alt="Vyzon" width={320} height={60} className="h-7 w-auto" />
+                    <ThemeLogo className="h-7 w-auto" />
                     <button
                         onClick={() => setMobileOpen(false)}
                         aria-label="Fechar menu"
@@ -358,7 +358,7 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                                 >
                                     <span
                                         className="w-1 h-1 rounded-full flex-shrink-0"
-                                        style={{ background: "rgba(16,185,129,0.5)" }}
+                                        style={{ background: "rgba(0,227,122,0.5)" }}
                                     />
                                     {link.label}
                                 </button>
@@ -375,7 +375,7 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                                     <span className="flex items-center gap-3">
                                         <span
                                             className="w-1 h-1 rounded-full flex-shrink-0"
-                                            style={{ background: "rgba(16,185,129,0.5)" }}
+                                            style={{ background: "rgba(0,227,122,0.5)" }}
                                         />
                                         {link.label}
                                     </span>
@@ -488,7 +488,7 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                         className="relative overflow-hidden flex items-center justify-center gap-2 w-full py-3.5 rounded-xl text-sm text-white transition-transform duration-150 active:scale-[0.97] no-underline"
                         style={{
                             background: "linear-gradient(135deg, var(--vyz-accent) 0%, var(--vyz-accent-dark) 100%)",
-                            boxShadow: "0 4px 20px rgba(16,185,129,0.32)",
+                            boxShadow: "0 4px 20px rgba(0,227,122,0.32)",
                             fontWeight: 700,
                         }}
                     >

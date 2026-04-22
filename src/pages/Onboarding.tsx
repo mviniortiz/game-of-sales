@@ -40,7 +40,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import vyzonLogo from "@/assets/logo-dark.png";
+import { ThemeLogo } from "@/components/ui/ThemeLogo";
 import { Confetti } from "@/components/crm/Confetti";
 import { PLANS, formatPrice, getAnnualMonthlyEquivalent, getAnnualPrice, getBillingConfig, type BillingCycle } from "@/config/plans";
 import { initMercadoPago } from "@mercadopago/sdk-react";
@@ -993,7 +993,7 @@ export default function Onboarding() {
                     <div className="flex items-center gap-2">
                         <span
                             className="text-[11px] font-bold px-2 py-0.5 rounded-md"
-                            style={{ background: "rgba(16,185,129,0.1)", color: "#34d399" }}
+                            style={{ background: "rgba(0,227,122,0.1)", color: "#33FF9E" }}
                         >
                             {displayStep}/{displayTotalSteps}
                         </span>
@@ -1019,7 +1019,7 @@ export default function Onboarding() {
                 <div className="h-1 w-full rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
                     <motion.div
                         className="h-full rounded-full"
-                        style={{ background: "linear-gradient(90deg, #10b981, #34d399)" }}
+                        style={{ background: "linear-gradient(90deg, #00E37A, #33FF9E)" }}
                         initial={false}
                         animate={{ width: `${pct}%` }}
                         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
@@ -1045,7 +1045,7 @@ export default function Onboarding() {
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.2)" }}
+                            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: "rgba(0,227,122,0.08)", border: "1px solid rgba(0,227,122,0.2)" }}
                         >
                             <Rocket className="h-8 w-8 text-emerald-500" />
                         </motion.div>
@@ -1368,7 +1368,7 @@ export default function Onboarding() {
                                         onClick={() => setSelectedTemplate(key)}
                                         className={`group relative flex items-start gap-4 px-5 py-4 rounded-2xl border transition-all duration-300 text-left overflow-hidden ${
                                             isSelected
-                                                ? "bg-emerald-500/10 border-emerald-500/50 shadow-[0_0_20px_-5px_rgba(16,185,129,0.2)]"
+                                                ? "bg-emerald-500/10 border-emerald-500/50 shadow-[0_0_20px_-5px_rgba(0,227,122,0.2)]"
                                                 : "bg-[rgba(255,255,255,0.03)] backdrop-blur-sm border-[rgba(255,255,255,0.06)] hover:bg-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.12)] hover:shadow-lg"
                                         }`}
                                     >
@@ -1409,7 +1409,7 @@ export default function Onboarding() {
                                         </div>
                                         {isSelected && (
                                             <motion.div layoutId="templateCheck" className="shrink-0 self-center">
-                                                <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center shadow-[0_0_10px_rgba(16,185,129,0.5)]">
+                                                <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center shadow-[0_0_10px_rgba(0,227,122,0.5)]">
                                                     <Check className="w-3.5 h-3.5 text-white" />
                                                 </div>
                                             </motion.div>
@@ -1438,7 +1438,7 @@ export default function Onboarding() {
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.2)" }}
+                            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: "rgba(0,227,122,0.08)", border: "1px solid rgba(0,227,122,0.2)" }}
                         >
                             <CreditCard className="h-8 w-8 text-emerald-500" />
                         </motion.div>
@@ -1465,7 +1465,7 @@ export default function Onboarding() {
                                 onClick={() => setBillingCycle("annual")}
                                 className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-1.5 ${
                                     billingCycle === "annual"
-                                        ? "bg-emerald-500/15 text-emerald-400 shadow-[0_0_0_1px_rgba(16,185,129,0.3)]"
+                                        ? "bg-emerald-500/15 text-emerald-400 shadow-[0_0_0_1px_rgba(0,227,122,0.3)]"
                                         : "text-[rgba(255,255,255,0.4)] hover:text-[rgba(255,255,255,0.7)]"
                                 }`}
                             >
@@ -1498,15 +1498,15 @@ export default function Onboarding() {
                                         } ${
                                             isSelected
                                                 ? isPopular
-                                                    ? "bg-gradient-to-br from-emerald-500/15 to-emerald-500/5 border-emerald-500/60 shadow-[0_0_24px_-4px_rgba(16,185,129,0.4)]"
-                                                    : "bg-emerald-500/10 border-emerald-500/50 shadow-[0_0_15px_-5px_rgba(16,185,129,0.3)]"
+                                                    ? "bg-gradient-to-br from-emerald-500/15 to-emerald-500/5 border-emerald-500/60 shadow-[0_0_24px_-4px_rgba(0,227,122,0.4)]"
+                                                    : "bg-emerald-500/10 border-emerald-500/50 shadow-[0_0_15px_-5px_rgba(0,227,122,0.3)]"
                                                 : isPopular
-                                                    ? "bg-[rgba(16,185,129,0.04)] border-[rgba(16,185,129,0.2)] hover:border-emerald-500/40"
+                                                    ? "bg-[rgba(0,227,122,0.04)] border-[rgba(0,227,122,0.2)] hover:border-emerald-500/40"
                                                     : "bg-[rgba(255,255,255,0.03)] border-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.12)]"
                                         }`}
                                     >
                                         {isPopular && (
-                                            <div className="absolute -top-2 right-4 px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[9px] font-bold uppercase tracking-wider shadow-[0_0_10px_rgba(16,185,129,0.4)]">
+                                            <div className="absolute -top-2 right-4 px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[9px] font-bold uppercase tracking-wider shadow-[0_0_10px_rgba(0,227,122,0.4)]">
                                                 Popular
                                             </div>
                                         )}
@@ -1560,8 +1560,8 @@ export default function Onboarding() {
                             <div
                                 className="rounded-2xl p-4 mb-6"
                                 style={{
-                                    background: "linear-gradient(135deg, rgba(16,185,129,0.08), rgba(16,185,129,0.02))",
-                                    border: "1px solid rgba(16,185,129,0.2)",
+                                    background: "linear-gradient(135deg, rgba(0,227,122,0.08), rgba(0,227,122,0.02))",
+                                    border: "1px solid rgba(0,227,122,0.2)",
                                 }}
                             >
                                 <div className="flex items-center gap-2 mb-3">
@@ -1719,8 +1719,8 @@ export default function Onboarding() {
                                 disabled={paymentLoading || !selectedPlan}
                                 className="relative flex-1 h-12 text-white font-bold text-base rounded-xl border-none transition-transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:hover:translate-y-0 overflow-hidden"
                                 style={{
-                                    background: "linear-gradient(135deg, #10b981, #059669)",
-                                    boxShadow: "0 0 0 1px rgba(16,185,129,0.3), 0 4px 24px rgba(16,185,129,0.3)",
+                                    background: "linear-gradient(135deg, #00E37A, #00B289)",
+                                    boxShadow: "0 0 0 1px rgba(0,227,122,0.3), 0 4px 24px rgba(0,227,122,0.3)",
                                 }}
                             >
                                 {paymentLoading ? (
@@ -1849,7 +1849,7 @@ export default function Onboarding() {
                             animate={{ scale: 1, rotate: 0 }}
                             transition={{ type: "spring", stiffness: 200, damping: 15 }}
                             className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
-                            style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.25)" }}
+                            style={{ background: "rgba(0,227,122,0.1)", border: "1px solid rgba(0,227,122,0.25)" }}
                         >
                             <Trophy className="h-10 w-10 text-emerald-400" />
                         </motion.div>
@@ -1957,7 +1957,7 @@ export default function Onboarding() {
 
                 {/* Top — Logo + Dynamic headline */}
                 <div className="relative z-10">
-                    <img src={vyzonLogo} alt="Vyzon" className="h-12 mb-10" />
+                    <ThemeLogo className="h-12 mb-10" />
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={`left-${currentStep}`}
@@ -2107,7 +2107,7 @@ export default function Onboarding() {
                 >
                     {/* Mobile Logo */}
                     <div className="lg:hidden text-center mb-10">
-                        <img src={vyzonLogo} alt="Vyzon" className="h-10 mx-auto" />
+                        <ThemeLogo className="h-10 mx-auto" />
                     </div>
 
                     {/* Stepper */}
@@ -2116,7 +2116,7 @@ export default function Onboarding() {
                     {/* Step Card */}
                     <div className="rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 relative overflow-hidden" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)" }}>
                         {/* Top border accent */}
-                        <div className="absolute top-0 left-0 right-0 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(16,185,129,0.3) 50%, transparent)" }} />
+                        <div className="absolute top-0 left-0 right-0 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(0,227,122,0.3) 50%, transparent)" }} />
 
                         {/* Step content */}
                         <AnimatePresence mode="wait" custom={direction}>

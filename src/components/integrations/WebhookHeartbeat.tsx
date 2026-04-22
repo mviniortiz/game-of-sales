@@ -27,7 +27,7 @@ interface Props {
 
 const WINDOW_MS = 60_000; // últimos 60s
 const STATUS_COLOR = {
-    success: "#10b981",
+    success: "#00E37A",
     error: "#f43f5e",
     processing: "#f59e0b",
     default: "#64748b",
@@ -97,7 +97,7 @@ export function WebhookHeartbeat({ logs, stats, platformNames, eventLabels }: Pr
           animation: ekg-scroll 3s linear infinite;
         }
         .ekg-glow {
-          filter: drop-shadow(0 0 3px rgba(16,185,129,0.6));
+          filter: drop-shadow(0 0 3px rgba(0,227,122,0.6));
         }
       `}</style>
 
@@ -154,7 +154,7 @@ export function WebhookHeartbeat({ logs, stats, platformNames, eventLabels }: Pr
                         className="relative h-24 overflow-hidden rounded-xl border border-emerald-500/10"
                         style={{
                             background:
-                                "radial-gradient(ellipse at center, rgba(16,185,129,0.06) 0%, rgba(0,0,0,0.4) 70%)",
+                                "radial-gradient(ellipse at center, rgba(0,227,122,0.06) 0%, rgba(0,0,0,0.4) 70%)",
                         }}
                     >
                         {/* Grid lines */}
@@ -165,7 +165,7 @@ export function WebhookHeartbeat({ logs, stats, platformNames, eventLabels }: Pr
                         >
                             <defs>
                                 <pattern id="grid" width="40" height="20" patternUnits="userSpaceOnUse">
-                                    <path d="M 40 0 L 0 0 0 20" fill="none" stroke="rgba(16,185,129,0.08)" strokeWidth="0.5" />
+                                    <path d="M 40 0 L 0 0 0 20" fill="none" stroke="rgba(0,227,122,0.08)" strokeWidth="0.5" />
                                 </pattern>
                             </defs>
                             <rect width="800" height="100" fill="url(#grid)" />
@@ -179,10 +179,10 @@ export function WebhookHeartbeat({ logs, stats, platformNames, eventLabels }: Pr
                         >
                             <defs>
                                 <linearGradient id="ekgGrad" x1="0" y1="0" x2="1" y2="0">
-                                    <stop offset="0%" stopColor="#10b981" stopOpacity="0.1" />
-                                    <stop offset="50%" stopColor="#10b981" stopOpacity="0.6" />
-                                    <stop offset="90%" stopColor="#10b981" stopOpacity="1" />
-                                    <stop offset="100%" stopColor="#34d399" stopOpacity="1" />
+                                    <stop offset="0%" stopColor="#00E37A" stopOpacity="0.1" />
+                                    <stop offset="50%" stopColor="#00E37A" stopOpacity="0.6" />
+                                    <stop offset="90%" stopColor="#00E37A" stopOpacity="1" />
+                                    <stop offset="100%" stopColor="#33FF9E" stopOpacity="1" />
                                 </linearGradient>
                             </defs>
                             <g className="ekg-path ekg-glow">

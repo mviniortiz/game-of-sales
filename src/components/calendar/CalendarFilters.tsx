@@ -1,6 +1,6 @@
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Filter } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Users, CheckCircle2 } from "lucide-react";
+import { FilterBar, FilterSelect, type ActiveFilter } from "@/components/filters";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Profile {
@@ -16,6 +16,14 @@ interface CalendarFiltersProps {
   hideVendedorFilter?: boolean;
 }
 
+const STATUS_OPTIONS = [
+  { value: "all", label: "Todos status" },
+  { value: "agendado", label: "Pendente" },
+  { value: "realizado", label: "Compareceu" },
+  { value: "nao_compareceu", label: "Não compareceu" },
+  { value: "cancelado", label: "Cancelado" },
+];
+
 export const CalendarFilters = ({
   selectedVendedor,
   selectedStatus,
@@ -26,57 +34,67 @@ export const CalendarFilters = ({
   const [vendedores, setVendedores] = useState<Profile[]>([]);
 
   useEffect(() => {
-    if (!hideVendedorFilter) {
-      loadVendedores();
-    }
-  }, [hideVendedorFilter]);
-
-  const loadVendedores = async () => {
-    const { data, error } = await supabase
+    if (hideVendedorFilter) return;
+    supabase
       .from("profiles")
       .select("id, nome")
-      .order("nome");
+      .order("nome")
+      .then(({ data, error }) => {
+        if (!error && data) setVendedores(data);
+      });
+  }, [hideVendedorFilter]);
 
-    if (!error && data) {
-      setVendedores(data);
-    }
+  const vendedorOptions = [
+    { value: "all", label: "Todos vendedores" },
+    ...vendedores.map((v) => ({ value: v.id, label: v.nome })),
+  ];
+
+  const activeFilters: ActiveFilter[] = [];
+  if (!hideVendedorFilter && selectedVendedor !== "all") {
+    activeFilters.push({
+      key: "vendedor",
+      label: "Vendedor",
+      value: vendedores.find((v) => v.id === selectedVendedor)?.nome,
+      onRemove: () => onVendedorChange("all"),
+    });
+  }
+  if (selectedStatus !== "all") {
+    activeFilters.push({
+      key: "status",
+      label: "Status",
+      value: STATUS_OPTIONS.find((s) => s.value === selectedStatus)?.label,
+      onRemove: () => onStatusChange("all"),
+    });
+  }
+
+  const handleClearAll = () => {
+    if (!hideVendedorFilter) onVendedorChange("all");
+    onStatusChange("all");
   };
 
   return (
-    <div className="flex flex-wrap gap-2 md:gap-3 items-center p-3 md:p-4 bg-card/30 backdrop-blur-sm border border-border/50 rounded-xl">
-      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground w-full md:w-auto">
-        <Filter className="h-4 w-4" />
-        Filtros:
-      </div>
-
+    <FilterBar
+      activeFilters={activeFilters}
+      onClearAll={activeFilters.length > 0 ? handleClearAll : undefined}
+    >
       {!hideVendedorFilter && (
-        <Select value={selectedVendedor} onValueChange={onVendedorChange}>
-          <SelectTrigger className="w-full sm:w-[200px] bg-background/50 border-border/50">
-            <SelectValue placeholder="Vendedores" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Vendedores</SelectItem>
-            {vendedores.map((v) => (
-              <SelectItem key={v.id} value={v.id}>
-                {v.nome}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <FilterSelect
+          value={selectedVendedor}
+          onChange={onVendedorChange}
+          options={vendedorOptions}
+          icon={Users}
+          neutralValue="all"
+          minWidth="160px"
+        />
       )}
-
-      <Select value={selectedStatus} onValueChange={onStatusChange}>
-        <SelectTrigger className="w-full sm:w-[180px] bg-background/50 border-border/50">
-          <SelectValue placeholder="Todos os status" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Todos os status</SelectItem>
-          <SelectItem value="agendado">Pendente</SelectItem>
-          <SelectItem value="realizado">Compareceu</SelectItem>
-          <SelectItem value="nao_compareceu">Não Compareceu</SelectItem>
-          <SelectItem value="cancelado">Cancelado</SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
+      <FilterSelect
+        value={selectedStatus}
+        onChange={onStatusChange}
+        options={STATUS_OPTIONS}
+        icon={CheckCircle2}
+        neutralValue="all"
+        minWidth="150px"
+      />
+    </FilterBar>
   );
 };

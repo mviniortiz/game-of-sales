@@ -32,13 +32,13 @@ const DataFlowBackground = () => {
 
     // Branding colors: Emerald/Cyan/Blue
     const colors = [
-      'rgba(16, 185, 129, 0.85)',   // Emerald
+      'rgba(0, 227, 122, 0.85)',   // Emerald
       'rgba(34, 211, 238, 0.85)',   // Cyan
       'rgba(59, 130, 246, 0.75)',   // Blue
       'rgba(168, 85, 247, 0.7)',    // Violet
     ];
     const connectionColors = [
-      'rgba(16, 185, 129, VAR)',
+      'rgba(0, 227, 122, VAR)',
       'rgba(34, 211, 238, VAR)',
       'rgba(59, 130, 246, VAR)',
     ];
@@ -78,8 +78,8 @@ const DataFlowBackground = () => {
         canvas.height * 0.4,
         canvas.width * 0.6
       );
-      gradient1.addColorStop(0, 'rgba(16, 185, 129, 0.18)');
-      gradient1.addColorStop(1, 'rgba(16, 185, 129, 0)');
+      gradient1.addColorStop(0, 'rgba(0, 227, 122, 0.18)');
+      gradient1.addColorStop(1, 'rgba(0, 227, 122, 0)');
       ctx.fillStyle = gradient1;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 

@@ -58,33 +58,65 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
+      const errorMessage = this.state.error?.message || "";
+      const isDev = typeof import.meta !== "undefined" && import.meta.env?.DEV;
+
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
-          <div className="max-w-md w-full text-center space-y-6">
-            <div className="mx-auto w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
-              <AlertTriangle className="h-8 w-8 text-red-600" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Algo deu errado</h1>
-              <p className="text-gray-500 mt-2">
-                Ocorreu um erro inesperado. Tente recarregar a pagina.
+        <div className="min-h-screen flex items-center justify-center bg-[#0D1421] px-4 py-6 relative overflow-hidden">
+          {/* Subtle radial glow */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-emerald-500/[0.04] blur-3xl" />
+          </div>
+
+          <div className="relative w-full max-w-md">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-sm p-6 sm:p-8 text-center">
+              {/* Icon */}
+              <div className="mx-auto mb-5 w-12 h-12 rounded-full border border-white/10 bg-white/[0.03] flex items-center justify-center">
+                <AlertTriangle className="h-5 w-5 text-amber-400" strokeWidth={2} />
+              </div>
+
+              {/* Title + description */}
+              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-white mb-2">
+                Algo deu errado
+              </h1>
+              <p className="text-sm text-white/60 leading-relaxed mb-6">
+                Ocorreu um erro inesperado. Você pode tentar novamente ou recarregar a página.
               </p>
+
+              {/* Dev error details */}
+              {isDev && errorMessage && (
+                <div className="mb-6 rounded-lg border border-red-500/20 bg-red-500/[0.04] px-3 py-2 text-left">
+                  <p className="text-[10px] uppercase tracking-wider text-red-400/80 font-medium mb-1">
+                    Detalhes (dev)
+                  </p>
+                  <p className="text-[11px] text-red-300/90 font-mono break-words">
+                    {errorMessage}
+                  </p>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                <button
+                  onClick={this.handleRetry}
+                  className="inline-flex h-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] px-5 text-sm font-medium text-white/80 hover:bg-white/[0.06] hover:text-white transition-colors flex-1"
+                >
+                  Tentar novamente
+                </button>
+                <button
+                  onClick={this.handleReload}
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-emerald-500 px-5 text-sm font-semibold text-emerald-950 hover:bg-emerald-400 transition-colors shadow-lg shadow-emerald-500/20 flex-1"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" strokeWidth={2.5} />
+                  Recarregar
+                </button>
+              </div>
             </div>
-            <div className="flex gap-3 justify-center">
-              <button
-                onClick={this.handleRetry}
-                className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                Tentar novamente
-              </button>
-              <button
-                onClick={this.handleReload}
-                className="inline-flex items-center justify-center rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Recarregar
-              </button>
-            </div>
+
+            {/* Support hint */}
+            <p className="mt-4 text-center text-[11px] text-white/40">
+              Se o problema persistir, contate o suporte.
+            </p>
           </div>
         </div>
       );

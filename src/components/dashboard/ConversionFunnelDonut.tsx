@@ -28,7 +28,7 @@ const STAGE_CONFIG: Record<string, { color: string; gradient: string; label: str
         label: "Qualificado"
     },
     proposal: {
-        color: "#10b981",
+        color: "#00E37A",
         gradient: "from-emerald-500 to-emerald-600",
         label: "Proposta"
     },
@@ -38,7 +38,7 @@ const STAGE_CONFIG: Record<string, { color: string; gradient: string; label: str
         label: "Negociação"
     },
     closed_won: {
-        color: "#10b981",
+        color: "#00E37A",
         gradient: "from-emerald-500 to-green-600",
         label: "Ganho",
         icon: "✓"

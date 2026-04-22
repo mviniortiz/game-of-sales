@@ -10,7 +10,7 @@ interface DistribuicaoProdutosChartProps {
   }>;
 }
 
-const BAR_COLORS = ["#10b981", "#059669", "#34d399", "#6ee7b7", "#0891b2", "#64748b"];
+const BAR_COLORS = ["#00E37A", "#00B289", "#33FF9E", "#66FFB3", "#0891b2", "#64748b"];
 
 export const DistribuicaoProdutosChart = ({ data }: DistribuicaoProdutosChartProps) => {
   const chartData = useMemo(() => {

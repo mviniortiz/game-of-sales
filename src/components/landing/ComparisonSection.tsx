@@ -104,11 +104,11 @@ const LevelIcon = ({ level, size = 14 }: { level: Level; size?: number }) => {
                 style={{
                     width: size + 6,
                     height: size + 6,
-                    background: "rgba(16,185,129,0.15)",
-                    border: "1px solid rgba(16,185,129,0.3)",
+                    background: "rgba(0,227,122,0.15)",
+                    border: "1px solid rgba(0,227,122,0.3)",
                 }}
             >
-                <Check style={{ width: size - 2, height: size - 2, color: "#34d399" }} strokeWidth={3} />
+                <Check style={{ width: size - 2, height: size - 2, color: "#33FF9E" }} strokeWidth={3} />
             </span>
         );
     }
@@ -165,7 +165,7 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
                 className="absolute inset-x-0 top-0 h-[500px] pointer-events-none"
                 style={{
                     background:
-                        "radial-gradient(ellipse 60% 50% at 50% 0%, rgba(16,185,129,0.07) 0%, transparent 70%)",
+                        "radial-gradient(ellipse 60% 50% at 50% 0%, rgba(0,227,122,0.07) 0%, transparent 70%)",
                 }}
             />
             {/* Subtle grid */}
@@ -192,8 +192,8 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
                         style={{
                             fontWeight: "var(--fw-medium)",
                             letterSpacing: "0.06em",
-                            background: "rgba(16,185,129,0.1)",
-                            border: "1px solid rgba(16,185,129,0.2)",
+                            background: "rgba(0,227,122,0.1)",
+                            border: "1px solid rgba(0,227,122,0.2)",
                         }}
                     >
                         <Scale className="h-3 w-3" />
@@ -251,11 +251,11 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
                             <div
                                 className="inline-flex items-center gap-1.5 text-[10px] px-3 py-1.5 rounded-full"
                                 style={{
-                                    background: "linear-gradient(135deg, #10b981, #059669)",
+                                    background: "linear-gradient(135deg, #00E37A, #00B289)",
                                     color: "white",
                                     fontWeight: 800,
                                     letterSpacing: "0.1em",
-                                    boxShadow: "0 6px 20px rgba(16,185,129,0.35), 0 0 0 3px rgba(6,8,10,1)",
+                                    boxShadow: "0 6px 20px rgba(0,227,122,0.35), 0 0 0 3px rgba(6,8,10,1)",
                                 }}
                             >
                                 RECOMENDADO PRA VOCÊ
@@ -288,7 +288,7 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
                                     className="font-heading text-lg"
                                     style={{
                                         fontWeight: 800,
-                                        background: "linear-gradient(135deg, #34d399, #10b981)",
+                                        background: "linear-gradient(135deg, #33FF9E, #00E37A)",
                                         WebkitBackgroundClip: "text",
                                         WebkitTextFillColor: "transparent",
                                         letterSpacing: "-0.02em",
@@ -335,9 +335,9 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
                                     left: "calc(1.2/4.2 * 100%)",
                                     width: "calc(1/4.2 * 100%)",
                                     background:
-                                        "linear-gradient(to bottom, rgba(16,185,129,0.09), rgba(16,185,129,0.02))",
-                                    borderLeft: "1px solid rgba(16,185,129,0.32)",
-                                    borderRight: "1px solid rgba(16,185,129,0.32)",
+                                        "linear-gradient(to bottom, rgba(0,227,122,0.09), rgba(0,227,122,0.02))",
+                                    borderLeft: "1px solid rgba(0,227,122,0.32)",
+                                    borderRight: "1px solid rgba(0,227,122,0.32)",
                                 }}
                             />
                         </div>
@@ -351,10 +351,10 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
                                     left: "calc(1.2/4.2 * 100%)",
                                     width: "calc(1/4.2 * 100%)",
                                     background:
-                                        "linear-gradient(to bottom, rgba(16,185,129,0.06) 0%, rgba(16,185,129,0.03) 50%, rgba(16,185,129,0.06) 100%)",
-                                    borderLeft: "1px solid rgba(16,185,129,0.32)",
-                                    borderRight: "1px solid rgba(16,185,129,0.32)",
-                                    borderBottom: "1px solid rgba(16,185,129,0.32)",
+                                        "linear-gradient(to bottom, rgba(0,227,122,0.06) 0%, rgba(0,227,122,0.03) 50%, rgba(0,227,122,0.06) 100%)",
+                                    borderLeft: "1px solid rgba(0,227,122,0.32)",
+                                    borderRight: "1px solid rgba(0,227,122,0.32)",
+                                    borderBottom: "1px solid rgba(0,227,122,0.32)",
                                     borderBottomLeftRadius: "16px",
                                     borderBottomRightRadius: "16px",
                                 }}
@@ -481,8 +481,8 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
                                     className="flex items-center justify-between rounded-lg px-3 py-2.5 mb-1.5"
                                     style={{
                                         background:
-                                            "linear-gradient(135deg, rgba(16,185,129,0.08), rgba(16,185,129,0.02))",
-                                        border: "1px solid rgba(16,185,129,0.22)",
+                                            "linear-gradient(135deg, rgba(0,227,122,0.08), rgba(0,227,122,0.02))",
+                                        border: "1px solid rgba(0,227,122,0.22)",
                                     }}
                                 >
                                     <div className="flex items-center gap-2">
@@ -491,7 +491,7 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
                                             className="text-[11px]"
                                             style={{
                                                 fontWeight: 700,
-                                                background: "linear-gradient(135deg, #34d399, #10b981)",
+                                                background: "linear-gradient(135deg, #33FF9E, #00E37A)",
                                                 WebkitBackgroundClip: "text",
                                                 WebkitTextFillColor: "transparent",
                                                 letterSpacing: "-0.01em",
@@ -577,15 +577,15 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
                         <div
                             className="inline-flex items-center gap-2.5 rounded-full px-4 py-2"
                             style={{
-                                background: "rgba(16,185,129,0.08)",
-                                border: "1px solid rgba(16,185,129,0.22)",
+                                background: "rgba(0,227,122,0.08)",
+                                border: "1px solid rgba(0,227,122,0.22)",
                             }}
                         >
                             <div
                                 className="inline-flex h-6 w-6 items-center justify-center rounded-full shrink-0"
                                 style={{
-                                    background: "linear-gradient(135deg, #10b981, #059669)",
-                                    boxShadow: "0 2px 8px rgba(16,185,129,0.4)",
+                                    background: "linear-gradient(135deg, #00E37A, #00B289)",
+                                    boxShadow: "0 2px 8px rgba(0,227,122,0.4)",
                                 }}
                             >
                                 <PiggyBank className="h-3.5 w-3.5 text-white" strokeWidth={2.5} />
@@ -616,9 +616,9 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
                             onClick={onCTAClick}
                             className="group relative inline-flex items-center justify-center gap-2 px-6 py-3.5 text-sm text-white rounded-xl overflow-hidden"
                             style={{
-                                background: "linear-gradient(135deg, #10b981, #059669)",
+                                background: "linear-gradient(135deg, #00E37A, #00B289)",
                                 boxShadow:
-                                    "0 0 0 1px rgba(16,185,129,0.3), 0 4px 20px rgba(16,185,129,0.28)",
+                                    "0 0 0 1px rgba(0,227,122,0.3), 0 4px 20px rgba(0,227,122,0.28)",
                                 fontWeight: 600,
                             }}
                         >

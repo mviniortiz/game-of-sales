@@ -189,7 +189,7 @@ export const DemoScheduleSection = ({
             <div
                 className="absolute top-[-15%] left-[10%] w-[60%] h-[80%] rounded-full pointer-events-none"
                 style={{
-                    background: "radial-gradient(circle, rgba(16,185,129,0.05) 0%, transparent 55%)",
+                    background: "radial-gradient(circle, rgba(0,227,122,0.05) 0%, transparent 55%)",
                 }}
             />
             <div
@@ -229,7 +229,7 @@ export const DemoScheduleSection = ({
                         Vamos montar uma demo{" "}
                         <span
                             style={{
-                                background: "linear-gradient(135deg, #10b981, #34d399)",
+                                background: "linear-gradient(135deg, #00E37A, #33FF9E)",
                                 WebkitBackgroundClip: "text",
                                 WebkitTextFillColor: "transparent",
                             }}
@@ -260,7 +260,7 @@ export const DemoScheduleSection = ({
                         className="absolute top-0 inset-x-0 h-px"
                         style={{
                             background:
-                                "linear-gradient(90deg, transparent, rgba(16,185,129,0.5) 30%, rgba(20,184,166,0.4) 70%, transparent)",
+                                "linear-gradient(90deg, transparent, rgba(0,227,122,0.5) 30%, rgba(20,184,166,0.4) 70%, transparent)",
                         }}
                     />
 
@@ -273,8 +273,8 @@ export const DemoScheduleSection = ({
                                     <div
                                         className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-5"
                                         style={{
-                                            background: "rgba(16,185,129,0.08)",
-                                            border: "1px solid rgba(16,185,129,0.15)",
+                                            background: "rgba(0,227,122,0.08)",
+                                            border: "1px solid rgba(0,227,122,0.15)",
                                         }}
                                     >
                                         <Calendar className="h-3.5 w-3.5 text-emerald-400" />
@@ -307,7 +307,7 @@ export const DemoScheduleSection = ({
                                             <div key={item} className="flex items-start gap-2.5">
                                                 <div
                                                     className="mt-0.5 flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center"
-                                                    style={{ background: "rgba(16,185,129,0.12)" }}
+                                                    style={{ background: "rgba(0,227,122,0.12)" }}
                                                 >
                                                     <Check className="h-2.5 w-2.5 text-emerald-400" strokeWidth={3} />
                                                 </div>
@@ -394,9 +394,9 @@ export const DemoScheduleSection = ({
                                         disabled={!canSubmit || isSubmitting}
                                         className="demo-submit-btn relative overflow-hidden flex items-center justify-center gap-2.5 w-full px-6 py-3.5 rounded-xl text-white group mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                         style={{
-                                            background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                                            background: "linear-gradient(135deg, #00E37A 0%, #00B289 100%)",
                                             boxShadow:
-                                                "0 0 0 1px rgba(16,185,129,0.3), 0 4px 24px rgba(16,185,129,0.3)",
+                                                "0 0 0 1px rgba(0,227,122,0.3), 0 4px 24px rgba(0,227,122,0.3)",
                                             fontWeight: 700,
                                             fontSize: "0.95rem",
                                         }}
@@ -487,8 +487,8 @@ export const DemoScheduleSection = ({
                             <div
                                 className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-6"
                                 style={{
-                                    background: "rgba(16,185,129,0.12)",
-                                    boxShadow: "0 0 0 1px rgba(16,185,129,0.2), 0 8px 24px rgba(16,185,129,0.15)",
+                                    background: "rgba(0,227,122,0.12)",
+                                    boxShadow: "0 0 0 1px rgba(0,227,122,0.2), 0 8px 24px rgba(0,227,122,0.15)",
                                 }}
                             >
                                 <Check className="h-6 w-6 text-emerald-400" strokeWidth={2.5} />
@@ -518,8 +518,8 @@ export const DemoScheduleSection = ({
                                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs"
                                 style={{
                                     color: "rgba(52,211,153,0.9)",
-                                    background: "rgba(16,185,129,0.08)",
-                                    boxShadow: "0 0 0 1px rgba(16,185,129,0.2)",
+                                    background: "rgba(0,227,122,0.08)",
+                                    boxShadow: "0 0 0 1px rgba(0,227,122,0.2)",
                                     fontWeight: 600,
                                 }}
                             >
@@ -560,7 +560,7 @@ export const DemoScheduleSection = ({
                 }
                 .demo-input:focus {
                     background: rgba(255,255,255,0.05);
-                    box-shadow: 0 0 0 1.5px rgba(16,185,129,0.4), 0 0 0 4px rgba(16,185,129,0.08);
+                    box-shadow: 0 0 0 1.5px rgba(0,227,122,0.4), 0 0 0 4px rgba(0,227,122,0.08);
                 }
                 .demo-input.demo-input-error {
                     box-shadow: 0 0 0 1.5px rgba(244,63,94,0.45), 0 0 0 4px rgba(244,63,94,0.08);

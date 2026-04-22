@@ -19,7 +19,7 @@ const Section = ({ number, icon: Icon, title, children }: SectionProps) => (
     <header className="flex items-center gap-3 mb-4">
       <div
         className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-        style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)" }}
+        style={{ background: "rgba(0,227,122,0.1)", border: "1px solid rgba(0,227,122,0.2)" }}
       >
         <Icon className="h-4 w-4 text-emerald-400" strokeWidth={2} />
       </div>
@@ -62,7 +62,7 @@ const TermosServico = () => {
         className="absolute inset-x-0 top-0 h-[500px] pointer-events-none"
         style={{
           background:
-            "radial-gradient(ellipse 70% 55% at 50% 0%, rgba(16,185,129,0.14) 0%, rgba(16,185,129,0.04) 35%, transparent 65%)",
+            "radial-gradient(ellipse 70% 55% at 50% 0%, rgba(0,227,122,0.14) 0%, rgba(0,227,122,0.04) 35%, transparent 65%)",
         }}
       />
       <div
@@ -280,7 +280,7 @@ const TermosServico = () => {
             <p>Para dúvidas sobre estes Termos de Serviço, entre em contato:</p>
             <div
               className="rounded-xl p-4 flex items-center gap-3"
-              style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.2)" }}
+              style={{ background: "rgba(0,227,122,0.06)", border: "1px solid rgba(0,227,122,0.2)" }}
             >
               <Mail className="h-4 w-4 text-emerald-400 shrink-0" strokeWidth={2} />
               <a

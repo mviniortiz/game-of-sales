@@ -249,7 +249,7 @@ const OutcomeStackedChart = ({ data }: { data: StackedChartData[] }) => (
             iconSize={7}
             wrapperStyle={{ fontSize: "11px", color: "hsl(var(--muted-foreground))", paddingTop: 8 }}
           />
-          <Bar dataKey="sale" stackId="a" fill="#10B981" name="Venda" />
+          <Bar dataKey="sale" stackId="a" fill="#00E37A" name="Venda" />
           <Bar dataKey="followup" stackId="a" fill="#3B82F6" name="Follow-up" />
           <Bar dataKey="lost" stackId="a" fill="#F43F5E" name="Perdido" />
           <Bar dataKey="noshow" stackId="a" fill="#64748B" name="No-show" radius={[4, 4, 0, 0]} />

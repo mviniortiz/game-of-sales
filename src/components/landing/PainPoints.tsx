@@ -33,7 +33,7 @@ export const PainPoints = () => {
             <div
                 className="absolute inset-x-0 top-0 h-[400px] pointer-events-none"
                 style={{
-                    background: "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(16,185,129,0.08) 0%, transparent 70%)",
+                    background: "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(0,227,122,0.08) 0%, transparent 70%)",
                 }}
             />
             <div className="relative max-w-3xl mx-auto">
@@ -97,11 +97,11 @@ export const PainPoints = () => {
 
                             <div
                                 className="flex items-start gap-3.5 rounded-xl p-5"
-                                style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)" }}
+                                style={{ background: "rgba(0,227,122,0.1)", border: "1px solid rgba(0,227,122,0.2)" }}
                             >
                                 <div
                                     className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
-                                    style={{ background: "rgba(16,185,129,0.15)" }}
+                                    style={{ background: "rgba(0,227,122,0.15)" }}
                                 >
                                     <Icon className="h-[22px] w-[22px] text-emerald-400" strokeWidth={1.8} />
                                 </div>

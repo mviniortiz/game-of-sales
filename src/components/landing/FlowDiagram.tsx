@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
-import brandLogoDark from "@/assets/logo-dark.png";
+import logoIcon from "@/assets/logo-icon.png";
+import { ThemeLogo } from "@/components/ui/ThemeLogo";
 import hotmartLogo from "@/assets/integrations/hotmart-logo-png_seeklogo-485917.webp";
 import kiwifyLogo from "@/assets/integrations/kiwify-logo-png_seeklogo-537186.webp";
 import caktoLogo from "@/assets/integrations/cakto.webp";
@@ -70,7 +71,7 @@ const ChartIcon = (
 const DESTINATIONS: Destination[] = [
     { id: "pipeline", name: "Pipeline", caption: "Novo deal criado", accent: "#60a5fa", iconPath: PipelineIcon, cy: 120 },
     { id: "ranking", name: "Ranking", caption: "Vendedor sobe no pódio", accent: "#fbbf24", iconPath: TrophyIcon, cy: 240 },
-    { id: "meta", name: "Meta", caption: "Progresso avança", accent: "#34d399", iconPath: TargetIcon, cy: 360 },
+    { id: "meta", name: "Meta", caption: "Progresso avança", accent: "#33FF9E", iconPath: TargetIcon, cy: 360 },
     { id: "dashboard", name: "Dashboard", caption: "Receita ao vivo", accent: "#a78bfa", iconPath: ChartIcon, cy: 480 },
 ];
 
@@ -116,7 +117,7 @@ export const FlowDiagram = () => {
                 className="absolute inset-x-0 top-0 h-[500px] pointer-events-none"
                 style={{
                     background:
-                        "radial-gradient(ellipse 60% 50% at 50% 0%, rgba(16,185,129,0.08) 0%, transparent 70%)",
+                        "radial-gradient(ellipse 60% 50% at 50% 0%, rgba(0,227,122,0.08) 0%, transparent 70%)",
                 }}
             />
             {/* Subtle grid */}
@@ -143,8 +144,8 @@ export const FlowDiagram = () => {
                         style={{
                             fontWeight: "var(--fw-medium)",
                             letterSpacing: "0.06em",
-                            background: "rgba(16,185,129,0.1)",
-                            border: "1px solid rgba(16,185,129,0.2)",
+                            background: "rgba(0,227,122,0.1)",
+                            border: "1px solid rgba(0,227,122,0.2)",
                         }}
                     >
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -207,9 +208,9 @@ export const FlowDiagram = () => {
 
                             {/* Hub gradient */}
                             <radialGradient id="hubFill" cx="50%" cy="50%" r="50%">
-                                <stop offset="0%" stopColor="rgba(16,185,129,0.22)" />
-                                <stop offset="60%" stopColor="rgba(16,185,129,0.1)" />
-                                <stop offset="100%" stopColor="rgba(16,185,129,0.02)" />
+                                <stop offset="0%" stopColor="rgba(0,227,122,0.22)" />
+                                <stop offset="60%" stopColor="rgba(0,227,122,0.1)" />
+                                <stop offset="100%" stopColor="rgba(0,227,122,0.02)" />
                             </radialGradient>
 
                             {/* Source paths — registered with ids so particles can reference them */}
@@ -228,7 +229,7 @@ export const FlowDiagram = () => {
                                     key={`src-stroke-${i}`}
                                     d={d}
                                     fill="none"
-                                    stroke="rgba(16,185,129,0.16)"
+                                    stroke="rgba(0,227,122,0.16)"
                                     strokeWidth="1.2"
                                     strokeDasharray="2 5"
                                 />
@@ -238,7 +239,7 @@ export const FlowDiagram = () => {
                                     key={`dest-stroke-${i}`}
                                     d={d}
                                     fill="none"
-                                    stroke="rgba(16,185,129,0.16)"
+                                    stroke="rgba(0,227,122,0.16)"
                                     strokeWidth="1.2"
                                     strokeDasharray="2 5"
                                 />
@@ -260,7 +261,7 @@ export const FlowDiagram = () => {
                                     key={`trace-${i}`}
                                     d={d}
                                     fill="none"
-                                    stroke="#34d399"
+                                    stroke="#33FF9E"
                                     strokeWidth="1.4"
                                     strokeLinecap="round"
                                     variants={{
@@ -304,11 +305,11 @@ export const FlowDiagram = () => {
                         {/* Vyzon hub */}
                         <g>
                             {/* Radar ping — expanding outward (no bounce) */}
-                            <circle cx={HUB_CENTER.x} cy={HUB_CENTER.y} r="75" fill="none" stroke="rgba(16,185,129,0.4)" strokeWidth="1">
+                            <circle cx={HUB_CENTER.x} cy={HUB_CENTER.y} r="75" fill="none" stroke="rgba(0,227,122,0.4)" strokeWidth="1">
                                 <animate attributeName="r" from="75" to="108" dur="3.6s" repeatCount="indefinite" />
                                 <animate attributeName="opacity" values="0.5;0" dur="3.6s" repeatCount="indefinite" />
                             </circle>
-                            <circle cx={HUB_CENTER.x} cy={HUB_CENTER.y} r="75" fill="none" stroke="rgba(16,185,129,0.4)" strokeWidth="1">
+                            <circle cx={HUB_CENTER.x} cy={HUB_CENTER.y} r="75" fill="none" stroke="rgba(0,227,122,0.4)" strokeWidth="1">
                                 <animate attributeName="r" from="75" to="108" dur="3.6s" begin="1.8s" repeatCount="indefinite" />
                                 <animate attributeName="opacity" values="0.5;0" dur="3.6s" begin="1.8s" repeatCount="indefinite" />
                             </circle>
@@ -320,7 +321,7 @@ export const FlowDiagram = () => {
                                 cy={HUB_CENTER.y}
                                 r="65"
                                 fill="#0b0f14"
-                                stroke="rgba(16,185,129,0.45)"
+                                stroke="rgba(0,227,122,0.45)"
                                 strokeWidth="1.5"
                             />
                             {/* Inner highlight ring */}
@@ -329,23 +330,23 @@ export const FlowDiagram = () => {
                                 cy={HUB_CENTER.y}
                                 r="60"
                                 fill="none"
-                                stroke="rgba(16,185,129,0.15)"
+                                stroke="rgba(0,227,122,0.15)"
                                 strokeWidth="0.8"
                             />
                             {/* Vyzon logo */}
                             <image
-                                href={brandLogoDark}
-                                x={HUB_CENTER.x - 48}
-                                y={HUB_CENTER.y - 14}
-                                width="96"
-                                height="28"
+                                href={logoIcon}
+                                x={HUB_CENTER.x - 28}
+                                y={HUB_CENTER.y - 28}
+                                width="56"
+                                height="56"
                                 preserveAspectRatio="xMidYMid meet"
                             />
                             <text
                                 x={HUB_CENTER.x}
                                 y={HUB_CENTER.y + 32}
                                 textAnchor="middle"
-                                fill="rgba(16,185,129,0.9)"
+                                fill="rgba(0,227,122,0.9)"
                                 fontSize="9"
                                 fontWeight="700"
                                 style={{ letterSpacing: "0.2em" }}
@@ -418,7 +419,7 @@ export const FlowDiagram = () => {
                         {SOURCES.map((_, i) => (
                             <g key={`src-particle-${i}`}>
                                 {/* Trailing glow */}
-                                <circle r="6" fill="#34d399" opacity="0.35" filter="url(#particleGlow)">
+                                <circle r="6" fill="#33FF9E" opacity="0.35" filter="url(#particleGlow)">
                                     <animateMotion
                                         dur={`${LOOP_DURATION}s`}
                                         repeatCount="indefinite"
@@ -429,7 +430,7 @@ export const FlowDiagram = () => {
                                     </animateMotion>
                                 </circle>
                                 {/* Core dot */}
-                                <circle r="3.2" fill="#34d399">
+                                <circle r="3.2" fill="#33FF9E">
                                     <animateMotion
                                         dur={`${LOOP_DURATION}s`}
                                         repeatCount="indefinite"
@@ -523,14 +524,14 @@ export const FlowDiagram = () => {
                                     id="mobile-flow-path-1"
                                     d="M 12 4 L 12 68"
                                     fill="none"
-                                    stroke="rgba(16,185,129,0.22)"
+                                    stroke="rgba(0,227,122,0.22)"
                                     strokeWidth="1.2"
                                     strokeDasharray="2 4"
                                 />
                                 <motion.path
                                     d="M 12 4 L 12 68"
                                     fill="none"
-                                    stroke="#34d399"
+                                    stroke="#33FF9E"
                                     strokeWidth="1.4"
                                     strokeLinecap="round"
                                     initial={{ pathLength: 0, opacity: 0.6 }}
@@ -540,7 +541,7 @@ export const FlowDiagram = () => {
                                     }}
                                     viewport={{ once: true, margin: "-40px" }}
                                 />
-                                <circle r="2.5" fill="#34d399">
+                                <circle r="2.5" fill="#33FF9E">
                                     <animateMotion dur="2.4s" repeatCount="indefinite">
                                         <mpath href="#mobile-flow-path-1" />
                                     </animateMotion>
@@ -552,16 +553,16 @@ export const FlowDiagram = () => {
                             <div
                                 className="relative rounded-2xl py-6 px-4 text-center"
                                 style={{
-                                    background: "linear-gradient(135deg, rgba(16,185,129,0.14), rgba(16,185,129,0.04))",
-                                    border: "1px solid rgba(16,185,129,0.35)",
-                                    boxShadow: "0 0 0 1px rgba(16,185,129,0.1), 0 20px 48px -20px rgba(16,185,129,0.35)",
+                                    background: "linear-gradient(135deg, rgba(0,227,122,0.14), rgba(0,227,122,0.04))",
+                                    border: "1px solid rgba(0,227,122,0.35)",
+                                    boxShadow: "0 0 0 1px rgba(0,227,122,0.1), 0 20px 48px -20px rgba(0,227,122,0.35)",
                                 }}
                             >
-                                <img src={brandLogoDark} alt="Vyzon" className="h-7 w-auto mx-auto mb-2" />
+                                <ThemeLogo iconOnly className="h-10 w-auto mx-auto mb-2" />
                                 <p
                                     className="text-[10px]"
                                     style={{
-                                        color: "rgba(16,185,129,0.9)",
+                                        color: "rgba(0,227,122,0.9)",
                                         fontWeight: 700,
                                         letterSpacing: "0.2em",
                                     }}
@@ -576,14 +577,14 @@ export const FlowDiagram = () => {
                                     id="mobile-flow-path-2"
                                     d="M 12 4 L 12 68"
                                     fill="none"
-                                    stroke="rgba(16,185,129,0.22)"
+                                    stroke="rgba(0,227,122,0.22)"
                                     strokeWidth="1.2"
                                     strokeDasharray="2 4"
                                 />
                                 <motion.path
                                     d="M 12 4 L 12 68"
                                     fill="none"
-                                    stroke="#34d399"
+                                    stroke="#33FF9E"
                                     strokeWidth="1.4"
                                     strokeLinecap="round"
                                     initial={{ pathLength: 0, opacity: 0.6 }}
@@ -593,7 +594,7 @@ export const FlowDiagram = () => {
                                     }}
                                     viewport={{ once: true, margin: "-40px" }}
                                 />
-                                <circle r="2.5" fill="#34d399">
+                                <circle r="2.5" fill="#33FF9E">
                                     <animateMotion dur="2.4s" repeatCount="indefinite" begin="1.2s">
                                         <mpath href="#mobile-flow-path-2" />
                                     </animateMotion>

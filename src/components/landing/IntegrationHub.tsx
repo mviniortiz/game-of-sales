@@ -10,7 +10,7 @@ import {
 import kiwifyLogo from "@/assets/integrations/kiwify-logo-png_seeklogo-537186.webp";
 import greennLogo from "@/assets/integrations/greenn.webp";
 import hotmartLogo from "@/assets/integrations/hotmart-logo-png_seeklogo-485917.webp";
-import vyzonLogo from "@/assets/logo-light.svg";
+import { ThemeLogo } from "@/components/ui/ThemeLogo";
 
 interface ItemCardProps {
     item: {
@@ -52,8 +52,8 @@ export const IntegrationHub = () => {
 
     const rightItems = [
         { name: "Hotmart", logo: hotmartLogo, hasLogo: true },
-        { name: "Stripe", icon: CreditCard, color: "#10b981", hasLogo: false },
-        { name: "Website", icon: Globe, color: "#10b981", hasLogo: false },
+        { name: "Stripe", icon: CreditCard, color: "#00E37A", hasLogo: false },
+        { name: "Website", icon: Globe, color: "#00E37A", hasLogo: false },
     ];
 
     const bottomItems = [
@@ -86,9 +86,9 @@ export const IntegrationHub = () => {
                         <div className="flex items-center justify-center gap-3 mb-3">
                             <div
                                 className="w-12 h-12 rounded-full flex items-center justify-center bg-white border border-gray-200"
-                                style={{ boxShadow: "0 0 20px rgba(16, 185, 129, 0.18)" }}
+                                style={{ boxShadow: "0 0 20px rgba(0, 227, 122, 0.18)" }}
                             >
-                                <img src={vyzonLogo} alt="Vyzon" className="w-7 h-7 object-contain" />
+                                <ThemeLogo iconOnly className="w-7 h-7" />
                             </div>
                             <div className="text-left">
                                 <p className="text-gray-900 text-sm font-semibold">Vyzon</p>
@@ -201,9 +201,9 @@ export const IntegrationHub = () => {
                             <div className="absolute inset-[-28px] rounded-full border border-emerald-500/20" />
                             <div
                                 className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center bg-white border border-gray-200"
-                                style={{ boxShadow: "0 0 30px rgba(16, 185, 129, 0.25)" }}
+                                style={{ boxShadow: "0 0 30px rgba(0, 227, 122, 0.25)" }}
                             >
-                                <img src={vyzonLogo} alt="Vyzon" className="w-12 h-12 sm:w-14 sm:h-14 object-contain" />
+                                <ThemeLogo iconOnly className="w-12 h-12 sm:w-14 sm:h-14" />
                             </div>
                         </motion.div>
                     </div>

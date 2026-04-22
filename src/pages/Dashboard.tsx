@@ -78,7 +78,7 @@ const KPICard = ({
   trendLabel,
   iconColor = "text-emerald-600 dark:text-emerald-400",
   iconBg = "bg-emerald-50 dark:bg-emerald-500/10",
-  accentColor = "#10b981",
+  accentColor = "#00E37A",
 }: KPICardProps) => {
   const isPositive = trend !== undefined && trend >= 0;
   const TrendIcon = isPositive ? ArrowUpRight : ArrowDownRight;
@@ -399,7 +399,7 @@ const SellerDashboard = () => {
           trendLabel="vs mês anterior"
           iconColor="text-emerald-400"
           iconBg="bg-emerald-500/10"
-          accentColor="#10b981"
+          accentColor="#00E37A"
         />
         <KPICard
           title="Ticket Médio"
@@ -502,7 +502,7 @@ const SellerDashboard = () => {
                 <defs>
                   <linearGradient id="barGradient" x1="0" y1="0" x2="1" y2="0">
                     <stop offset="0%" stopColor="#4F46E5" />
-                    <stop offset="100%" stopColor="#10b981" />
+                    <stop offset="100%" stopColor="#00E37A" />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.25)" horizontal={false} />

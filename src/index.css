@@ -14,8 +14,8 @@
 ──────────────────────────────────────────────────────────────────────────── */
 
 :root {
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-heading: 'Satoshi', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans: 'Sora', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-heading: 'Sora', 'Satoshi', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
 
   --fw-light: 300;
@@ -48,8 +48,8 @@
   --shadow-md: 0 0 0 1px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.06), 0 12px 28px -4px rgba(0,0,0,0.06);
   --shadow-lg: 0 0 0 1px rgba(0,0,0,0.06), 0 8px 20px rgba(0,0,0,0.06), 0 24px 48px -8px rgba(0,0,0,0.08);
   --shadow-xl: 0 0 0 1px rgba(0,0,0,0.06), 0 16px 40px rgba(0,0,0,0.06), 0 32px 80px -12px rgba(0,0,0,0.1);
-  --shadow-brand: 0 0 0 1px rgba(16,185,129,0.08), 0 8px 24px rgba(16,185,129,0.12), 0 24px 56px -8px rgba(16,185,129,0.08);
-  --shadow-brand-lg: 0 0 0 1px rgba(16,185,129,0.1), 0 16px 40px rgba(16,185,129,0.15), 0 40px 80px -12px rgba(16,185,129,0.1);
+  --shadow-brand: 0 0 0 1px rgba(0,227,122,0.08), 0 8px 24px rgba(0,227,122,0.12), 0 24px 56px -8px rgba(0,227,122,0.08);
+  --shadow-brand-lg: 0 0 0 1px rgba(0,227,122,0.1), 0 16px 40px rgba(0,227,122,0.15), 0 40px 80px -12px rgba(0,227,122,0.1);
 
   /* Nav shadow */
   --shadow-nav: 0 0 0 1px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.04), 0 8px 24px -4px rgba(0,0,0,0.03);
@@ -58,11 +58,11 @@
      Prefixo --vyz-* pra não colidir com tokens Radix/shadcn do app.
      Mudou o brand? Troca aqui, propaga em LandingPage + personas.
   ──────────────────────────────────────────────────────────────────────── */
-  --vyz-bg: #06080a;
+  --vyz-bg: #0D1421;
   --vyz-surface-1: rgba(255,255,255,0.03);
   --vyz-surface-2: rgba(255,255,255,0.04);
   --vyz-surface-3: rgba(255,255,255,0.05);
-  --vyz-surface-elevated: rgba(11,14,18,0.9);
+  --vyz-surface-elevated: rgba(15,22,37,0.9);
 
   --vyz-border-subtle: rgba(255,255,255,0.05);
   --vyz-border: rgba(255,255,255,0.06);
@@ -71,29 +71,32 @@
   --vyz-text-primary: rgba(255,255,255,0.95);
   --vyz-text-strong: rgba(255,255,255,0.85);
   --vyz-text: rgba(255,255,255,0.7);
-  --vyz-text-muted: rgba(255,255,255,0.6);
-  --vyz-text-soft: rgba(255,255,255,0.5);
-  --vyz-text-dim: rgba(255,255,255,0.4);
+  --vyz-text-muted: #A0AEC0;
+  --vyz-text-soft: rgba(160,174,192,0.75);
+  --vyz-text-dim: rgba(160,174,192,0.55);
 
-  --vyz-accent: #10b981;
-  --vyz-accent-light: #34d399;
-  --vyz-accent-dark: #059669;
-  --vyz-accent-soft-4: rgba(16,185,129,0.04);
-  --vyz-accent-soft-6: rgba(16,185,129,0.06);
-  --vyz-accent-soft-8: rgba(16,185,129,0.08);
-  --vyz-accent-soft-10: rgba(16,185,129,0.10);
-  --vyz-accent-soft-12: rgba(16,185,129,0.12);
-  --vyz-accent-border: rgba(16,185,129,0.20);
-  --vyz-accent-border-strong: rgba(16,185,129,0.30);
-  --vyz-accent-text: rgba(16,185,129,0.95);
+  --vyz-accent: #00E37A;
+  --vyz-accent-light: #33FF9E;
+  --vyz-accent-dark: #00B289;
+  --vyz-brand-blue: #1556C0;
+  --vyz-brand-blue-light: #2E78E0;
+  --vyz-accent-soft-4: rgba(0,227,122,0.04);
+  --vyz-accent-soft-6: rgba(0,227,122,0.06);
+  --vyz-accent-soft-8: rgba(0,227,122,0.08);
+  --vyz-accent-soft-10: rgba(0,227,122,0.10);
+  --vyz-accent-soft-12: rgba(0,227,122,0.12);
+  --vyz-accent-border: rgba(0,227,122,0.22);
+  --vyz-accent-border-strong: rgba(0,227,122,0.32);
+  --vyz-accent-text: rgba(0,227,122,0.95);
 
-  --vyz-gradient-accent: linear-gradient(135deg, #10b981, #059669);
-  --vyz-gradient-hero-text: linear-gradient(135deg, #34d399, #10b981, #14b8a6);
-  --vyz-gradient-top-glow: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(16,185,129,0.22) 0%, rgba(16,185,129,0.08) 30%, transparent 65%);
-  --vyz-gradient-section-glow: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(16,185,129,0.08) 0%, transparent 70%);
+  --vyz-gradient-accent: linear-gradient(135deg, #00E37A, #00B289);
+  --vyz-gradient-hero-text: linear-gradient(135deg, #33FF9E, #00E37A, #00B289);
+  --vyz-gradient-dual: linear-gradient(135deg, #00E37A 0%, #00B289 55%, #1556C0 100%);
+  --vyz-gradient-top-glow: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0,227,122,0.22) 0%, rgba(0,227,122,0.08) 30%, transparent 65%);
+  --vyz-gradient-section-glow: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(0,227,122,0.08) 0%, transparent 70%);
 
-  --vyz-shadow-cta: 0 0 0 1px rgba(16,185,129,0.30), 0 4px 24px rgba(16,185,129,0.30);
-  --vyz-shadow-cta-sm: 0 4px 18px rgba(16,185,129,0.30);
+  --vyz-shadow-cta: 0 0 0 1px rgba(0,227,122,0.32), 0 4px 24px rgba(0,227,122,0.32);
+  --vyz-shadow-cta-sm: 0 4px 18px rgba(0,227,122,0.32);
   --vyz-shadow-panel: 0 30px 80px -20px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04) inset;
   --vyz-shadow-mock: 0 24px 60px -20px rgba(0,0,0,0.6);
 }
@@ -118,7 +121,7 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 160 84% 39%;
+    --primary: 152 100% 45%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 220 14% 96%;
@@ -127,8 +130,8 @@ All colors MUST be HSL.
     --muted: 220 14% 96%;
     --muted-foreground: 220 9% 46%;
 
-    --accent: 160 84% 95%;
-    --accent-foreground: 160 84% 30%;
+    --accent: 152 100% 95%;
+    --accent-foreground: 152 100% 30%;
 
     --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
@@ -141,49 +144,49 @@ All colors MUST be HSL.
 
     --border: 220 13% 90%;
     --input: 220 13% 90%;
-    --ring: 160 84% 39%;
+    --ring: 152 100% 45%;
 
     --radius: 0.75rem;
 
-    --gradient-primary: linear-gradient(135deg, hsl(160 84% 39%), hsl(160 84% 32%));
-    --gradient-accent: linear-gradient(135deg, hsl(160 84% 39%), hsl(172 66% 30%));
+    --gradient-primary: linear-gradient(135deg, hsl(152 100% 45%), hsl(166 100% 35%));
+    --gradient-accent: linear-gradient(135deg, hsl(152 100% 45%), hsl(219 80% 42%));
     --gradient-success: linear-gradient(135deg, hsl(142 76% 36%), hsl(142 76% 28%));
 
-    --shadow-glow: 0 0 40px hsl(160 84% 39% / 0.1);
+    --shadow-glow: 0 0 40px hsl(152 100% 45% / 0.1);
     --shadow-card: 0 1px 3px hsl(220 10% 30% / 0.08), 0 4px 12px hsl(220 10% 30% / 0.06);
 
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 160 84% 39%;
+    --sidebar-primary: 152 100% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 160 84% 96%;
-    --sidebar-accent-foreground: 160 84% 30%;
+    --sidebar-accent: 152 100% 96%;
+    --sidebar-accent-foreground: 152 100% 30%;
     --sidebar-border: 220 13% 90%;
-    --sidebar-ring: 160 84% 39%;
+    --sidebar-ring: 152 100% 45%;
   }
 
   .dark {
-    --background: 220 20% 5%;
+    --background: 219 43% 9%;
     --foreground: 0 0% 93%;
 
-    --card: 220 18% 8%;
+    --card: 219 38% 12%;
     --card-foreground: 0 0% 93%;
 
-    --popover: 220 18% 8%;
+    --popover: 219 38% 12%;
     --popover-foreground: 0 0% 93%;
 
-    --primary: 160 84% 39%;
+    --primary: 152 100% 45%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 16% 12%;
+    --secondary: 219 28% 15%;
     --secondary-foreground: 0 0% 85%;
 
-    --muted: 220 14% 14%;
-    --muted-foreground: 0 0% 55%;
+    --muted: 219 20% 16%;
+    --muted-foreground: 214 15% 68%;
 
-    --accent: 160 84% 39%;
+    --accent: 152 100% 45%;
     --accent-foreground: 0 0% 100%;
 
     --success: 142 76% 45%;
@@ -195,21 +198,21 @@ All colors MUST be HSL.
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 220 12% 14%;
-    --input: 220 12% 12%;
-    --ring: 160 84% 39%;
+    --border: 219 22% 18%;
+    --input: 219 22% 14%;
+    --ring: 152 100% 45%;
 
-    --shadow-glow: 0 0 40px hsl(160 84% 39% / 0.15);
+    --shadow-glow: 0 0 40px hsl(152 100% 45% / 0.15);
     --shadow-card: 0 1px 3px hsl(0 0% 0% / 0.3), 0 8px 24px -4px hsl(0 0% 0% / 0.4);
 
-    --sidebar-background: 220 18% 6%;
+    --sidebar-background: 219 43% 8%;
     --sidebar-foreground: 0 0% 93%;
-    --sidebar-primary: 160 84% 39%;
+    --sidebar-primary: 152 100% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 14% 12%;
+    --sidebar-accent: 219 28% 14%;
     --sidebar-accent-foreground: 0 0% 85%;
-    --sidebar-border: 220 12% 14%;
-    --sidebar-ring: 160 84% 39%;
+    --sidebar-border: 219 22% 18%;
+    --sidebar-ring: 152 100% 45%;
   }
 }
 

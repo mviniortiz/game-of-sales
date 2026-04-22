@@ -52,7 +52,7 @@ export const UseCasesSection = () => {
             <div
                 className="absolute inset-x-0 top-0 h-[400px] pointer-events-none"
                 style={{
-                    background: "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(16,185,129,0.08) 0%, transparent 70%)",
+                    background: "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(0,227,122,0.08) 0%, transparent 70%)",
                 }}
             />
             <div className="relative max-w-4xl mx-auto">
@@ -66,7 +66,7 @@ export const UseCasesSection = () => {
                 >
                     <span
                         className="inline-block text-xs text-emerald-400 rounded-full px-4 py-1.5 mb-5"
-                        style={{ fontWeight: 600, letterSpacing: "0.08em", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)" }}
+                        style={{ fontWeight: 600, letterSpacing: "0.08em", background: "rgba(0,227,122,0.1)", border: "1px solid rgba(0,227,122,0.2)" }}
                     >
                         PARA QUEM É
                     </span>
@@ -147,7 +147,7 @@ export const UseCasesSection = () => {
                                             className="flex items-start gap-3 rounded-xl p-4"
                                             style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)" }}
                                         >
-                                            <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: "rgba(16,185,129,0.1)" }}>
+                                            <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: "rgba(0,227,122,0.1)" }}>
                                                 <Check className="h-3 w-3 text-emerald-400" strokeWidth={3} />
                                             </div>
                                             <span className="text-sm" style={{ fontWeight: 500, color: "rgba(255,255,255,0.55)" }}>{b}</span>

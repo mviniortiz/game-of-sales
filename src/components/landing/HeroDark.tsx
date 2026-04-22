@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Play, TrendingUp, Users, Target, Trophy, Star, Flame, Crown, Zap } from "lucide-react";
-import brandLogoLight from "@/assets/logo-light.svg";
+import { ThemeLogo } from "@/components/ui/ThemeLogo";
 
 interface HeroDarkProps {
     onCTAClick: () => void;
@@ -78,11 +78,7 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
             <nav className="relative z-50 px-4 sm:px-6 lg:px-8 py-5">
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
                     {/* Logo */}
-                    <img
-                        src={brandLogoLight}
-                        alt="Vyzon"
-                        className="h-9 w-auto"
-                    />
+                    <ThemeLogo className="h-9 w-auto" />
 
                     {/* Menu */}
                     <div className="hidden md:flex items-center gap-8">
@@ -146,7 +142,7 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                                 onClick={onCTAClick}
                                 className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-semibold text-white rounded-xl overflow-hidden transition-all duration-300"
                                 style={{
-                                    background: "linear-gradient(135deg, #10b981 0%, #ec4899 50%, #10b981 100%)",
+                                    background: "linear-gradient(135deg, #00E37A 0%, #ec4899 50%, #00E37A 100%)",
                                     backgroundSize: "200% 200%",
                                 }}
                                 whileHover={{
@@ -396,7 +392,7 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                                 className="absolute -right-12 bottom-40 bg-white/95 backdrop-blur-sm rounded-xl p-3 border border-emerald-300 shadow-lg"
                                 animate={{ y: [0, 8, 0] }}
                                 transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                                style={{ boxShadow: "0 20px 40px -10px rgba(16, 185, 129, 0.2)" }}
+                                style={{ boxShadow: "0 20px 40px -10px rgba(0, 227, 122, 0.2)" }}
                             >
                                 <div className="flex items-center gap-3">
                                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg">

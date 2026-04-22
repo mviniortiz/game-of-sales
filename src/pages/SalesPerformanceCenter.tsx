@@ -22,7 +22,7 @@ import {
     Tooltip,
     ResponsiveContainer,
 } from "recharts";
-import { format, subDays, startOfMonth, endOfMonth, differenceInDays, startOfWeek, isSameDay, differenceInCalendarDays } from "date-fns";
+import { format, subDays, startOfMonth, endOfMonth, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useTenant } from "@/contexts/TenantContext";
 import { GoldenHoursHeatmap } from "@/components/dashboard/GoldenHoursHeatmap";
@@ -34,6 +34,7 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { PeriodToggle, DateRangePicker } from "@/components/filters";
 
 // Currency formatters
 const formatCurrencyCompact = (value: number) => {
@@ -131,14 +132,14 @@ const KPICard = ({
                             <AreaChart data={sparklineData.map((v, i) => ({ v, i }))}>
                                 <defs>
                                     <linearGradient id={`spark-${title}`} x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stopColor={iconColor.includes("emerald") ? "#10b981" : "#10b981"} stopOpacity={0.3} />
-                                        <stop offset="100%" stopColor={iconColor.includes("emerald") ? "#10b981" : "#10b981"} stopOpacity={0} />
+                                        <stop offset="0%" stopColor={iconColor.includes("emerald") ? "#00E37A" : "#00E37A"} stopOpacity={0.3} />
+                                        <stop offset="100%" stopColor={iconColor.includes("emerald") ? "#00E37A" : "#00E37A"} stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
                                 <Area
                                     type="monotone"
                                     dataKey="v"
-                                    stroke={iconColor.includes("emerald") ? "#10b981" : "#10b981"}
+                                    stroke={iconColor.includes("emerald") ? "#00E37A" : "#00E37A"}
                                     strokeWidth={1.5}
                                     fill={`url(#spark-${title})`}
                                 />
@@ -298,69 +299,9 @@ const SalesPerformanceCenter = () => {
                     </div>
 
                     {/* Quick Date Filters */}
-                    <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-                        {[
-                            { id: "hoje", label: "Hoje" },
-                            { id: "semana", label: "Esta Semana" },
-                            { id: "mes", label: "Este Mês" },
-                            { id: "30dias", label: "30 dias" },
-                        ].map((range) => {
-                            const isActive = (() => {
-                                if (!dateRange.from || !dateRange.to) return false;
-                                const today = new Date();
-                                switch (range.id) {
-                                    case "hoje":
-                                        return isSameDay(dateRange.from, today) && isSameDay(dateRange.to, today);
-                                    case "semana":
-                                        return isSameDay(dateRange.to, today) && isSameDay(dateRange.from, startOfWeek(today));
-                                    case "mes":
-                                        return isSameDay(dateRange.to, today) && isSameDay(dateRange.from, startOfMonth(today));
-                                    case "30dias":
-                                        return isSameDay(dateRange.to, today) && differenceInCalendarDays(today, dateRange.from) === 30;
-                                    default:
-                                        return false;
-                                }
-                            })();
-
-                            const handleClick = () => {
-                                const today = new Date();
-                                const from = new Date();
-                                switch (range.id) {
-                                    case "hoje":
-                                        setDateRange({ from: today, to: today });
-                                        break;
-                                    case "semana":
-                                        from.setDate(today.getDate() - today.getDay());
-                                        setDateRange({ from, to: today });
-                                        break;
-                                    case "mes":
-                                        from.setDate(1);
-                                        setDateRange({ from, to: today });
-                                        break;
-                                    case "30dias":
-                                        from.setDate(today.getDate() - 30);
-                                        setDateRange({ from, to: today });
-                                        break;
-                                }
-                            };
-
-                            return (
-                                <Button
-                                    key={range.id}
-                                    variant={isActive ? "default" : "outline"}
-                                    size="sm"
-                                    className={cn(
-                                        "h-8 text-xs",
-                                        isActive
-                                            ? "bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700"
-                                            : "bg-muted/50 border-border text-muted-foreground hover:bg-secondary hover:text-foreground"
-                                    )}
-                                    onClick={handleClick}
-                                >
-                                    {range.label}
-                                </Button>
-                            );
-                        })}
+                    <div className="flex flex-wrap items-center gap-2">
+                        <PeriodToggle value={dateRange} onChange={setDateRange} longLabels />
+                        <DateRangePicker value={dateRange} onChange={setDateRange} placeholder="Custom" />
                     </div>
                 </div>
             </div>
@@ -430,7 +371,7 @@ const SalesPerformanceCenter = () => {
                             <AreaChart data={salesEvolution || []} margin={{ top: 20, right: 10, left: 0, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="colorValorSPC" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stopColor="#10b981" stopOpacity={0.5} />
+                                        <stop offset="0%" stopColor="#00E37A" stopOpacity={0.5} />
                                         <stop offset="50%" stopColor="#4F46E5" stopOpacity={0.2} />
                                         <stop offset="100%" stopColor="#4F46E5" stopOpacity={0} />
                                     </linearGradient>
@@ -470,16 +411,16 @@ const SalesPerformanceCenter = () => {
                                 <Area
                                     type="monotone"
                                     dataKey="valor"
-                                    stroke="#10b981"
+                                    stroke="#00E37A"
                                     strokeWidth={2.5}
                                     fill="url(#colorValorSPC)"
                                     dot={false}
                                     activeDot={{
                                         r: 6,
-                                        fill: "#10b981",
+                                        fill: "#00E37A",
                                         stroke: "#fff",
                                         strokeWidth: 2,
-                                        filter: "drop-shadow(0 0 8px rgba(16, 185, 129, 0.5))"
+                                        filter: "drop-shadow(0 0 8px rgba(0, 227, 122, 0.5))"
                                     }}
                                 />
                             </AreaChart>

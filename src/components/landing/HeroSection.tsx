@@ -31,14 +31,14 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
                 <div
                     className="absolute inset-x-0 top-0 h-[700px] pointer-events-none"
                     style={{
-                        background: "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(16,185,129,0.22) 0%, rgba(16,185,129,0.08) 30%, transparent 65%)",
+                        background: "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0,227,122,0.22) 0%, rgba(0,227,122,0.08) 30%, transparent 65%)",
                     }}
                 />
                 <div
                     className="absolute left-1/2 -translate-x-1/2 w-[1400px] h-[900px] rounded-full pointer-events-none"
                     style={{
                         top: "120px",
-                        background: "radial-gradient(ellipse, rgba(16,185,129,0.14) 0%, rgba(16,185,129,0.04) 35%, transparent 60%)",
+                        background: "radial-gradient(ellipse, rgba(0,227,122,0.14) 0%, rgba(0,227,122,0.04) 35%, transparent 60%)",
                         contain: "layout paint",
                     }}
                 />
@@ -74,7 +74,7 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
                         <span
                             style={{
                                 fontWeight: 900,
-                                background: "linear-gradient(135deg, #34d399, #10b981, #14b8a6)",
+                                background: "linear-gradient(135deg, #33FF9E, #00E37A, #14b8a6)",
                                 WebkitBackgroundClip: "text",
                                 WebkitTextFillColor: "transparent",
                             }}
@@ -109,8 +109,8 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
                             }}
                             className="hero-cta-primary group relative inline-flex h-12 items-center justify-center gap-2 px-6 sm:px-7 text-sm sm:text-[15px] font-bold text-white rounded-xl overflow-hidden no-underline"
                             style={{
-                                background: "linear-gradient(135deg, #10b981, #059669)",
-                                boxShadow: "0 0 0 1px rgba(16,185,129,0.3), 0 4px 24px rgba(16,185,129,0.3)",
+                                background: "linear-gradient(135deg, #00E37A, #00B289)",
+                                boxShadow: "0 0 0 1px rgba(0,227,122,0.3), 0 4px 24px rgba(0,227,122,0.3)",
                             }}
                         >
                             <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
@@ -156,7 +156,7 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
                     <div
                         className="absolute -inset-16 -z-10 rounded-3xl"
                         style={{
-                            background: "radial-gradient(ellipse at center, rgba(16,185,129,0.1) 0%, transparent 55%)",
+                            background: "radial-gradient(ellipse at center, rgba(0,227,122,0.1) 0%, transparent 55%)",
                         }}
                     />
                     <Suspense fallback={<MockupFallback />}>

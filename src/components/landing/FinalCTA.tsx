@@ -24,7 +24,7 @@ export const FinalCTA = ({ onCTAClick, onScheduleDemoClick }: FinalCTAProps) => 
             <div
                 className="absolute inset-x-0 top-0 h-[500px] pointer-events-none"
                 style={{
-                    background: "radial-gradient(ellipse 60% 60% at 50% 0%, rgba(16,185,129,0.12) 0%, transparent 70%)",
+                    background: "radial-gradient(ellipse 60% 60% at 50% 0%, rgba(0,227,122,0.12) 0%, transparent 70%)",
                 }}
             />
 
@@ -84,12 +84,12 @@ export const FinalCTA = ({ onCTAClick, onScheduleDemoClick }: FinalCTAProps) => 
                             onClick={(e) => { e.preventDefault(); onCTAClick(); }}
                             className="relative overflow-hidden flex items-center gap-2.5 px-6 sm:px-8 py-4 rounded-xl text-white group w-full sm:w-auto justify-center no-underline"
                             style={{
-                                background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-                                boxShadow: "0 0 0 1px rgba(16,185,129,0.3), 0 4px 24px rgba(16,185,129,0.35), 0 16px 48px -8px rgba(16,185,129,0.2)",
+                                background: "linear-gradient(135deg, #00E37A 0%, #00B289 100%)",
+                                boxShadow: "0 0 0 1px rgba(0,227,122,0.3), 0 4px 24px rgba(0,227,122,0.35), 0 16px 48px -8px rgba(0,227,122,0.2)",
                                 fontWeight: 700,
                                 fontSize: "0.95rem",
                             }}
-                            whileHover={{ scale: 1.03, boxShadow: "0 0 0 1px rgba(16,185,129,0.4), 0 8px 32px rgba(16,185,129,0.5), 0 24px 56px -8px rgba(16,185,129,0.3)" }}
+                            whileHover={{ scale: 1.03, boxShadow: "0 0 0 1px rgba(0,227,122,0.4), 0 8px 32px rgba(0,227,122,0.5), 0 24px 56px -8px rgba(0,227,122,0.3)" }}
                             whileTap={{ scale: 0.97 }}
                         >
                             {/* Shimmer */}
@@ -116,18 +116,18 @@ export const FinalCTA = ({ onCTAClick, onScheduleDemoClick }: FinalCTAProps) => 
                             href="#agendar-demo"
                             className="flex items-center gap-2 px-6 py-4 rounded-xl text-sm transition-all duration-200 w-full sm:w-auto justify-center"
                             style={{
-                                color: "rgba(16,185,129,0.8)",
-                                background: "rgba(16,185,129,0.06)",
-                                boxShadow: "0 0 0 1px rgba(16,185,129,0.15)",
+                                color: "rgba(0,227,122,0.8)",
+                                background: "rgba(0,227,122,0.06)",
+                                boxShadow: "0 0 0 1px rgba(0,227,122,0.15)",
                                 fontWeight: 600,
                             }}
                             onMouseEnter={(e) => {
-                                (e.currentTarget as HTMLAnchorElement).style.color = "rgba(16,185,129,1)";
-                                (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 0 0 1px rgba(16,185,129,0.35)";
+                                (e.currentTarget as HTMLAnchorElement).style.color = "rgba(0,227,122,1)";
+                                (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 0 0 1px rgba(0,227,122,0.35)";
                             }}
                             onMouseLeave={(e) => {
-                                (e.currentTarget as HTMLAnchorElement).style.color = "rgba(16,185,129,0.8)";
-                                (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 0 0 1px rgba(16,185,129,0.15)";
+                                (e.currentTarget as HTMLAnchorElement).style.color = "rgba(0,227,122,0.8)";
+                                (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 0 0 1px rgba(0,227,122,0.15)";
                             }}
                             onClick={(e) => {
                                 if (onScheduleDemoClick) {

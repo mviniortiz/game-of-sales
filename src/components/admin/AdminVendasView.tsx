@@ -308,7 +308,7 @@ export const AdminVendasView = ({
     { id: "qualification", label: "Qualificação", color: "#3B82F6", bgColor: "bg-blue-100 dark:bg-blue-500/10" },
     { id: "proposal", label: "Proposta", color: "#6366F1", bgColor: "bg-indigo-100 dark:bg-indigo-500/10" },
     { id: "negotiation", label: "Negociação", color: "#F59E0B", bgColor: "bg-amber-100 dark:bg-amber-500/10" },
-    { id: "closed_won", label: "Fechado (Ganho)", color: "#10B981", bgColor: "bg-emerald-100 dark:bg-emerald-500/10" },
+    { id: "closed_won", label: "Fechado (Ganho)", color: "#00E37A", bgColor: "bg-emerald-100 dark:bg-emerald-500/10" },
     { id: "closed_lost", label: "Perdido", color: "#EF4444", bgColor: "bg-rose-100 dark:bg-rose-500/10" },
   ];
 
@@ -477,8 +477,8 @@ export const AdminVendasView = ({
                 <svg className="w-full h-8" viewBox="0 0 120 24" preserveAspectRatio="none">
                   <defs>
                     <linearGradient id="kpiSparkFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#10b981" stopOpacity="0.15" />
-                      <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+                      <stop offset="0%" stopColor="#00E37A" stopOpacity="0.15" />
+                      <stop offset="100%" stopColor="#00E37A" stopOpacity="0" />
                     </linearGradient>
                   </defs>
                   {(() => {
@@ -489,7 +489,7 @@ export const AdminVendasView = ({
                     return (
                       <>
                         <path d={`M${pts} L120,24 L0,24 Z`} fill="url(#kpiSparkFill)" />
-                        <path d={`M${pts}`} fill="none" stroke="#10b981" strokeOpacity="0.6" strokeWidth="1.5" strokeLinecap="round" />
+                        <path d={`M${pts}`} fill="none" stroke="#00E37A" strokeOpacity="0.6" strokeWidth="1.5" strokeLinecap="round" />
                       </>
                     );
                   })()}
@@ -735,7 +735,7 @@ export const AdminVendasView = ({
                   <defs>
                     <linearGradient id="prodBarGrad" x1="0" y1="0" x2="1" y2="0">
                       <stop offset="0%" stopColor="#6366f1" stopOpacity={0.6} />
-                      <stop offset="100%" stopColor="#10b981" stopOpacity={0.6} />
+                      <stop offset="100%" stopColor="#00E37A" stopOpacity={0.6} />
                     </linearGradient>
                   </defs>
                   <Bar dataKey="total" fill="url(#prodBarGrad)" radius={[0, 4, 4, 0]} />

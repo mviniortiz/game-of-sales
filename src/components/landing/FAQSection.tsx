@@ -61,7 +61,7 @@ function FAQItem({
                     animate={{ rotate: isOpen ? 180 : 0 }}
                     transition={{ duration: 0.25, ease: "easeInOut" }}
                     className="flex-shrink-0"
-                    style={{ color: isOpen ? "#34d399" : "rgba(255,255,255,0.25)" }}
+                    style={{ color: isOpen ? "#33FF9E" : "rgba(255,255,255,0.25)" }}
                 >
                     <ChevronDown className="h-4 w-4" strokeWidth={2} />
                 </motion.span>

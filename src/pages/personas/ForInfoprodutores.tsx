@@ -302,7 +302,7 @@ const KanbanBoard = ({ pipeline }: { pipeline: typeof PIPELINES[Exclude<PanelKin
                                 key={i}
                                 className="rounded-lg px-2.5 py-2"
                                 style={{
-                                    background: d.hot ? "rgba(16,185,129,0.07)" : "rgba(255,255,255,0.025)",
+                                    background: d.hot ? "rgba(0,227,122,0.07)" : "rgba(255,255,255,0.025)",
                                     border: `1px solid ${d.hot ? "var(--vyz-accent-border)" : "var(--vyz-border-subtle)"}`,
                                 }}
                             >
@@ -363,7 +363,7 @@ const IntegrationsPanel = () => (
                                 fontSize: "0.7rem",
                                 background: "var(--vyz-accent-soft-8)",
                                 color: "var(--vyz-accent-light)",
-                                border: "1px solid rgba(16,185,129,0.15)",
+                                border: "1px solid rgba(0,227,122,0.15)",
                             }}
                         >
                             <Check className="h-2.5 w-2.5" strokeWidth={3} />
@@ -425,7 +425,7 @@ const WhatsAppMock = () => (
     >
         <div
             className="flex items-center gap-3 px-4 py-3"
-            style={{ background: "rgba(16,185,129,0.05)", borderBottom: "1px solid var(--vyz-border-subtle)" }}
+            style={{ background: "rgba(0,227,122,0.05)", borderBottom: "1px solid var(--vyz-border-subtle)" }}
         >
             <div
                 className="w-9 h-9 rounded-full flex items-center justify-center"
@@ -558,7 +558,7 @@ const RankingMock = () => (
                                     background:
                                         r.pos === 1
                                             ? "linear-gradient(90deg, #fbbf24, #f59e0b)"
-                                            : "linear-gradient(90deg, #34d399, #10b981)",
+                                            : "linear-gradient(90deg, #33FF9E, #00E37A)",
                                 }}
                             />
                         </div>
@@ -625,7 +625,7 @@ export default function ForInfoprodutores() {
                         className="absolute inset-x-0 top-0 h-[700px]"
                         style={{
                             background:
-                                "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(16,185,129,0.22) 0%, var(--vyz-accent-soft-8) 30%, transparent 65%)",
+                                "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0,227,122,0.22) 0%, var(--vyz-accent-soft-8) 30%, transparent 65%)",
                         }}
                     />
                     <div
@@ -785,7 +785,7 @@ export default function ForInfoprodutores() {
                                 <div className="flex items-center gap-1.5">
                                     <span className="w-2.5 h-2.5 rounded-full" style={{ background: "rgba(239,68,68,0.6)" }} />
                                     <span className="w-2.5 h-2.5 rounded-full" style={{ background: "rgba(251,191,36,0.6)" }} />
-                                    <span className="w-2.5 h-2.5 rounded-full" style={{ background: "rgba(16,185,129,0.6)" }} />
+                                    <span className="w-2.5 h-2.5 rounded-full" style={{ background: "rgba(0,227,122,0.6)" }} />
                                 </div>
                                 <span className="ml-3 font-mono" style={{ fontSize: "0.7rem", color: "var(--vyz-text-dim)" }}>
                                     vyzon.com.br/painel · {activeNavItem.label.toLowerCase()}

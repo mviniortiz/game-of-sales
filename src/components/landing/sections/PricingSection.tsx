@@ -104,7 +104,7 @@ export const PricingSection = ({ onPlanSelect, onScheduleDemo }: Props) => {
                                     }}>
                                     {isPopular && (
                                         <div className="absolute top-0 inset-x-0 h-px"
-                                            style={{ background: "linear-gradient(90deg, transparent, rgba(16,185,129,0.55) 35%, rgba(20,184,166,0.45) 65%, transparent)" }} />
+                                            style={{ background: "linear-gradient(90deg, transparent, rgba(0,227,122,0.55) 35%, rgba(20,184,166,0.45) 65%, transparent)" }} />
                                     )}
                                     <div className="p-5 sm:p-7 flex flex-col flex-1">
 

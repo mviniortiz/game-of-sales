@@ -104,7 +104,7 @@ export const DemoVideoPlayer = () => {
                 <motion.div {...fadeInUp} className="text-center mb-12">
                     <span
                         className="inline-block text-xs text-emerald-400 rounded-full px-4 py-1.5 mb-5"
-                        style={{ letterSpacing: "0.08em", fontWeight: 600, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)" }}
+                        style={{ letterSpacing: "0.08em", fontWeight: 600, background: "rgba(0,227,122,0.1)", border: "1px solid rgba(0,227,122,0.2)" }}
                     >
                         VEJA EM AÇÃO
                     </span>
@@ -157,7 +157,7 @@ export const DemoVideoPlayer = () => {
                                             whileHover={{ scale: 1.08 }}
                                             whileTap={{ scale: 0.95 }}
                                             className="w-20 h-20 rounded-full flex items-center justify-center"
-                                            style={{ background: "linear-gradient(135deg, #10b981, #059669)", boxShadow: "0 0 60px rgba(16,185,129,0.4), 0 8px 32px rgba(0,0,0,0.4)" }}
+                                            style={{ background: "linear-gradient(135deg, #00E37A, #00B289)", boxShadow: "0 0 60px rgba(0,227,122,0.4), 0 8px 32px rgba(0,0,0,0.4)" }}
                                         >
                                             <Play className="h-8 w-8 text-white ml-1" fill="currentColor" />
                                         </motion.div>
@@ -178,7 +178,7 @@ export const DemoVideoPlayer = () => {
                                     <div
                                         ref={progressFillRef}
                                         className="absolute top-0 left-0 h-full rounded-full"
-                                        style={{ width: "0%", background: "linear-gradient(90deg, #10b981, #34d399)" }}
+                                        style={{ width: "0%", background: "linear-gradient(90deg, #00E37A, #33FF9E)" }}
                                     />
                                     <div
                                         ref={progressThumbRef}

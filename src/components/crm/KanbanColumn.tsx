@@ -95,7 +95,7 @@ export const KanbanColumn = memo(({
         {/* Top accent bar quando isOver (GPU-friendly: scale-x) */}
         <div
           className={`absolute top-0 left-0 right-0 h-[2px] origin-left transition-transform duration-200 ${isOver ? "scale-x-100" : "scale-x-0"}`}
-          style={{ background: "linear-gradient(90deg, transparent, #10b981, transparent)" }}
+          style={{ background: "linear-gradient(90deg, transparent, #00E37A, transparent)" }}
         />
         {/* ── Column Header ────────────────────────────────── */}
         <div className="px-3.5 pt-3.5 pb-3">

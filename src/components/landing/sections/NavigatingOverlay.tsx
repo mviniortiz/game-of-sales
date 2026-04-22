@@ -1,4 +1,4 @@
-import brandLogoDark from "@/assets/logo-dark.png";
+import { ThemeLogo } from "@/components/ui/ThemeLogo";
 
 type Props = { plan: string | null };
 
@@ -8,13 +8,7 @@ export const NavigatingOverlay = ({ plan }: Props) => (
         style={{ background: "var(--vyz-bg)" }}
     >
         <div className="flex flex-col items-center gap-8 px-4">
-            <img
-                src={brandLogoDark}
-                alt="Vyzon"
-                width={320}
-                height={60}
-                className="h-10 w-auto landing-fade-in"
-            />
+            <ThemeLogo className="h-10 w-auto landing-fade-in" />
             <div className="text-center landing-fade-in-up landing-delay-150">
                 <p
                     className="font-heading text-lg mb-1"

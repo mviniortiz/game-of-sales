@@ -30,8 +30,8 @@ export const VendasChart = ({ data }: VendasChartProps) => {
           >
             <defs>
               <linearGradient id="colorVendas" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#10B981" stopOpacity={0.4}/>
-                <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
+                <stop offset="5%" stopColor="#00E37A" stopOpacity={0.4}/>
+                <stop offset="95%" stopColor="#00E37A" stopOpacity={0}/>
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
@@ -65,11 +65,11 @@ export const VendasChart = ({ data }: VendasChartProps) => {
             <Area
               type="monotone"
               dataKey="vendas"
-              stroke="#10B981"
+              stroke="#00E37A"
               strokeWidth={3}
               fill="url(#colorVendas)"
               dot={{ r: 0 }}
-              activeDot={{ r: 6, fill: "#10B981", stroke: "#fff", strokeWidth: 2 }}
+              activeDot={{ r: 6, fill: "#00E37A", stroke: "#fff", strokeWidth: 2 }}
             />
           </AreaChart>
         </ResponsiveContainer>

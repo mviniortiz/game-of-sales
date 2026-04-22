@@ -226,7 +226,7 @@ function ChatMockup({ onCTAClick }: { onCTAClick?: () => void }) {
 
 const DEMO_CHART_DATA = [
   { name: "Carlos M.", value: 28400, color: "#8b5cf6" },
-  { name: "Ana L.", value: 21800, color: "#10b981" },
+  { name: "Ana L.", value: 21800, color: "#00E37A" },
   { name: "Rafael S.", value: 18200, color: "#f59e0b" },
   { name: "Julia P.", value: 12600, color: "#06b6d4" },
 ];

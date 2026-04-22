@@ -516,37 +516,9 @@ export const AdminVendedores = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div>
-        <h3 className="text-xl font-bold text-foreground">
-          Gestão de Vendedores
-        </h3>
-        <p className="text-sm text-muted-foreground mt-1">
-          Command Center • {vendedores?.length || 0} vendedores ativos
-        </p>
-      </div>
-
-      {/* Summary Bar */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex items-center gap-6 flex-1">
-          <div>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Vendedores</p>
-            <p className="text-xl font-bold text-foreground tabular-nums">{kpiData.total}</p>
-          </div>
-          <div className="w-px h-8 bg-border/50" />
-          <div>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Vendas (mês)</p>
-            <p className="text-xl font-bold text-foreground tabular-nums">{kpiData.vendasMes}</p>
-          </div>
-          <div className="w-px h-8 bg-border/50" />
-          <div>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Faturamento</p>
-            <p className="text-xl font-bold text-foreground tabular-nums">{formatCurrency(kpiData.faturamentoMes)}</p>
-          </div>
-        </div>
-        <TopPerformerCard vendedor={kpiData.topPerformer} />
-      </div>
+    <div className="space-y-4 sm:space-y-5">
+      {/* Top Performer */}
+      {kpiData.topPerformer && <TopPerformerCard vendedor={kpiData.topPerformer} />}
 
       {/* Action Bar */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -652,16 +624,153 @@ export const AdminVendedores = () => {
 
         {/* Add Button */}
         <Button
-          className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/40 transition-all"
+          className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/40 transition-all w-full sm:w-auto"
           onClick={() => setShowAdd(true)}
         >
           <Plus className="h-4 w-4 mr-2" />
-          Adicionar Vendedor
+          <span className="sm:hidden">Adicionar</span>
+          <span className="hidden sm:inline">Adicionar Vendedor</span>
         </Button>
       </div>
 
-      {/* Table */}
-      <div className="rounded-xl border border-border overflow-hidden bg-card">
+      {/* Mobile Card List */}
+      <div className="sm:hidden space-y-2">
+        {filteredVendedores?.map((vendedor) => {
+          const { progress, nextLevel } = getLevelProgress(vendedor.nivel, vendedor.pontos);
+          return (
+            <div
+              key={vendedor.id}
+              className="rounded-xl border border-border bg-card p-3 space-y-3"
+            >
+              <div className="flex items-start gap-3">
+                <div className="relative shrink-0">
+                  <Avatar className="h-10 w-10 ring-2 ring-border">
+                    <AvatarImage src={vendedor.avatar_url || ""} />
+                    <AvatarFallback className="bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200 font-semibold text-xs">
+                      {getInitials(vendedor.nome)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span
+                    className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-card ${
+                      vendedor.isOnline ? "bg-emerald-500" : "bg-muted-foreground/50"
+                    }`}
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-foreground text-sm truncate">{vendedor.nome}</p>
+                      <p className="text-[11px] text-muted-foreground truncate">{vendedor.email}</p>
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0 -mr-1 -mt-1 text-muted-foreground hover:text-foreground shrink-0"
+                          aria-label="Mais opções"
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="bg-card border-border">
+                        <DropdownMenuItem
+                          onClick={() => setStatsVendedor(vendedor)}
+                          className="cursor-pointer text-muted-foreground hover:text-foreground"
+                        >
+                          <BarChart2 className="h-4 w-4 mr-2" />
+                          Estatísticas
+                        </DropdownMenuItem>
+                        {isSuperAdmin && (
+                          <DropdownMenuItem
+                            onClick={() => openTransferModal(vendedor)}
+                            className="cursor-pointer text-emerald-600 dark:text-emerald-400"
+                          >
+                            <ArrowRightLeft className="h-4 w-4 mr-2" />
+                            Transferir Empresa
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSellerToDelete({ id: vendedor.id, nome: vendedor.nome });
+                            setShowDeleteConfirm(true);
+                          }}
+                          className="cursor-pointer text-rose-600 dark:text-rose-400"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Remover
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                    <Badge variant="outline" className={`${getNivelBadgeClass(vendedor.nivel)} text-[10px] h-5`}>
+                      {vendedor.nivel}
+                    </Badge>
+                    {vendedor.companyName && (
+                      <span className="text-[10px] text-muted-foreground truncate">
+                        {vendedor.companyName}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 pt-2 border-t border-border/60">
+                <div>
+                  <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-semibold">Vendas</p>
+                  <p className="text-sm font-bold text-foreground tabular-nums">{vendedor.totalVendasMes}</p>
+                </div>
+                <div>
+                  <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-semibold">Faturamento</p>
+                  <div className="flex items-center gap-1">
+                    <p className="text-sm font-bold text-foreground tabular-nums">
+                      {formatCurrency(vendedor.faturamentoMes)}
+                    </p>
+                    {vendedor.trend !== 0 && (
+                      <span
+                        className={`flex items-center text-[10px] font-medium ${
+                          vendedor.trend > 0
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : "text-rose-600 dark:text-rose-400"
+                        }`}
+                      >
+                        {vendedor.trend > 0 ? (
+                          <TrendingUp className="h-2.5 w-2.5" />
+                        ) : (
+                          <TrendingDown className="h-2.5 w-2.5" />
+                        )}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-semibold">Pontos</p>
+                  <p className="text-sm font-bold text-foreground tabular-nums">
+                    {vendedor.pontos.toLocaleString("pt-BR")}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] text-muted-foreground">Progresso → {nextLevel}</span>
+                  <span className="text-[10px] text-muted-foreground tabular-nums">{progress.toFixed(0)}%</span>
+                </div>
+                <Progress value={progress} className="h-1" />
+              </div>
+            </div>
+          );
+        })}
+        {filteredVendedores?.length === 0 && (
+          <div className="rounded-xl border border-border bg-card text-center py-12 text-sm text-muted-foreground">
+            Nenhum vendedor encontrado.
+          </div>
+        )}
+      </div>
+
+      {/* Table (desktop only) */}
+      <div className="hidden sm:block rounded-xl border border-border overflow-hidden bg-card">
         <div className="overflow-x-auto">
         <Table className="min-w-[800px]">
           <TableHeader>
@@ -858,7 +967,7 @@ export const AdminVendedores = () => {
         </div>
 
         {filteredVendedores?.length === 0 && (
-          <div className="text-center py-12 text-muted-foreground">
+          <div className="hidden sm:block text-center py-12 text-muted-foreground">
             Nenhum vendedor encontrado.
           </div>
         )}

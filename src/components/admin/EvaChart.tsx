@@ -18,7 +18,7 @@ import type { ChartPayload } from "@/hooks/useReportAgent";
 
 const COLORS = [
   "#8b5cf6", // violet-500
-  "#10b981", // emerald-500
+  "#00E37A", // emerald-500
   "#f59e0b", // amber-500
   "#06b6d4", // cyan-500
   "#ec4899", // pink-500

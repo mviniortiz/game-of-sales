@@ -23,6 +23,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FilterSelect, FilterChip } from "@/components/filters";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
@@ -1138,53 +1139,54 @@ export default function CRM() {
 
           {/* Row 2: Search bar (full width on mobile, always visible) */}
           <div className="relative w-full sm:max-w-xs">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/70" />
             <Input
               type="text"
               placeholder="Buscar negociações..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 h-11 sm:h-9 bg-card border-border text-foreground placeholder:text-muted-foreground focus:ring-emerald-500"
+              className="w-full pl-9 h-10 sm:h-8 rounded-full border border-white/10 bg-white/[0.03] backdrop-blur-sm text-foreground placeholder:text-muted-foreground/70 transition-colors hover:border-white/15 focus:border-emerald-500/40 focus:ring-1 focus:ring-emerald-500/40 focus-visible:ring-1 focus-visible:ring-emerald-500/40"
             />
           </div>
 
           {/* Row 3: Filter pills (seller, view toggle) - horizontal scroll on mobile */}
           <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-0.5 -mb-0.5">
-            {/* View Toggle */}
-            <div className="flex items-center gap-1 bg-muted px-1 py-1 rounded-lg border border-border flex-shrink-0">
-              <Button
-                variant={viewMode === "kanban" ? "default" : "ghost"}
-                size="sm"
-                className="min-h-[44px] sm:min-h-0 h-8 min-w-[44px] sm:min-w-0"
-                onClick={() => setViewMode("kanban")}
-              >
-                Kanban
-              </Button>
-              <Button
-                variant={viewMode === "list" ? "default" : "ghost"}
-                size="sm"
-                className="min-h-[44px] sm:min-h-0 h-8 min-w-[44px] sm:min-w-0"
-                onClick={() => setViewMode("list")}
-              >
-                Lista
-              </Button>
+            {/* View Toggle — glass segmented */}
+            <div className="inline-flex items-center gap-0.5 rounded-full border border-white/10 bg-white/[0.03] p-0.5 backdrop-blur-sm flex-shrink-0">
+              {[
+                { id: "kanban", label: "Kanban" },
+                { id: "list", label: "Lista" },
+              ].map((v) => {
+                const active = viewMode === v.id;
+                return (
+                  <button
+                    key={v.id}
+                    type="button"
+                    onClick={() => setViewMode(v.id as "kanban" | "list")}
+                    className={`h-7 rounded-full px-3 text-[11.5px] font-medium transition-colors ${
+                      active
+                        ? "bg-white/10 text-foreground shadow-sm ring-1 ring-white/15"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {v.label}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Seller Filter */}
-            <Select value={selectedSeller} onValueChange={setSelectedSeller}>
-              <SelectTrigger className="w-40 flex-shrink-0 min-h-[44px] sm:min-h-0 h-9 bg-card border-border text-foreground">
-                <User className="h-4 w-4 mr-2 text-muted-foreground" />
-                <SelectValue placeholder="Vendedor" />
-              </SelectTrigger>
-              <SelectContent className="bg-card border-border">
-                <SelectItem value="all">Vendedores</SelectItem>
-                {vendors.map((vendor: any) => (
-                  <SelectItem key={vendor.id} value={vendor.id}>
-                    {vendor.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <FilterSelect
+              value={selectedSeller}
+              onChange={setSelectedSeller}
+              options={[
+                { value: "all", label: "Todos vendedores" },
+                ...vendors.map((v: any) => ({ value: v.id, label: v.nome })),
+              ]}
+              icon={User}
+              neutralValue="all"
+              minWidth="160px"
+            />
           </div>
         </div>
 
@@ -1194,10 +1196,10 @@ export default function CRM() {
             {/* Toggle filters button */}
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+              className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[11.5px] font-medium backdrop-blur-sm transition-colors ${
                 activeFilterCount > 0
-                  ? "bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30"
-                  : "bg-muted text-muted-foreground hover:text-foreground"
+                  ? "bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/30"
+                  : "border border-white/10 bg-white/[0.03] text-muted-foreground hover:border-white/15 hover:bg-white/[0.06] hover:text-foreground"
               }`}
             >
               <Filter className="h-3 w-3" />
@@ -1263,42 +1265,42 @@ export default function CRM() {
                 {/* Hot Deals */}
                 <button
                   onClick={() => setFilterHotDeals(!filterHotDeals)}
-                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                  className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[11.5px] font-medium backdrop-blur-sm transition-colors ${
                     filterHotDeals
-                      ? "bg-orange-500/15 text-orange-400 ring-1 ring-orange-500/30"
-                      : "bg-muted text-muted-foreground hover:text-foreground"
+                      ? "bg-orange-500/10 text-orange-300 ring-1 ring-orange-500/30"
+                      : "border border-white/10 bg-white/[0.03] text-muted-foreground hover:border-white/15 hover:bg-white/[0.06] hover:text-foreground"
                   }`}
                 >
-                  <Flame className="h-3 w-3" /> Hot Deals
+                  <Flame className="h-3 w-3" /> Hot
                 </button>
 
                 {/* Rotting Deals */}
                 <button
                   onClick={() => setFilterRottingDeals(!filterRottingDeals)}
-                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                  className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[11.5px] font-medium backdrop-blur-sm transition-colors ${
                     filterRottingDeals
-                      ? "bg-rose-500/15 text-rose-400 ring-1 ring-rose-500/30"
-                      : "bg-muted text-muted-foreground hover:text-foreground"
+                      ? "bg-rose-500/10 text-rose-300 ring-1 ring-rose-500/30"
+                      : "border border-white/10 bg-white/[0.03] text-muted-foreground hover:border-white/15 hover:bg-white/[0.06] hover:text-foreground"
                   }`}
                 >
                   <Clock className="h-3 w-3" /> Parados 3+ dias
                 </button>
 
                 {/* Separator */}
-                <div className="w-px h-5 bg-border" />
+                <div className="w-px h-5 bg-white/10" />
 
                 {/* Probability quick buttons */}
                 {(["high", "medium", "low"] as const).map((level) => {
-                  const labels = { high: "Alta (70%+)", medium: "Média (30-69%)", low: "Baixa (<30%)" };
+                  const labels = { high: "Prob. alta", medium: "Prob. média", low: "Prob. baixa" };
                   const isActive = filterProbability === level;
                   return (
                     <button
                       key={level}
                       onClick={() => setFilterProbability(isActive ? "all" : level)}
-                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                      className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[11.5px] font-medium backdrop-blur-sm transition-colors ${
                         isActive
-                          ? "bg-blue-500/15 text-blue-400 ring-1 ring-blue-500/30"
-                          : "bg-muted text-muted-foreground hover:text-foreground"
+                          ? "bg-sky-500/10 text-sky-300 ring-1 ring-sky-500/30"
+                          : "border border-white/10 bg-white/[0.03] text-muted-foreground hover:border-white/15 hover:bg-white/[0.06] hover:text-foreground"
                       }`}
                     >
                       {labels[level]}
@@ -1307,7 +1309,7 @@ export default function CRM() {
                 })}
 
                 {/* Separator */}
-                <div className="w-px h-5 bg-border" />
+                <div className="w-px h-5 bg-white/10" />
 
                 {/* Date range quick buttons */}
                 {(["this_week", "this_month", "overdue"] as const).map((range) => {
@@ -1317,10 +1319,10 @@ export default function CRM() {
                     <button
                       key={range}
                       onClick={() => setFilterDateRange(isActive ? "all" : range)}
-                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                      className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[11.5px] font-medium backdrop-blur-sm transition-colors ${
                         isActive
-                          ? "bg-purple-500/15 text-purple-400 ring-1 ring-purple-500/30"
-                          : "bg-muted text-muted-foreground hover:text-foreground"
+                          ? "bg-violet-500/10 text-violet-300 ring-1 ring-violet-500/30"
+                          : "border border-white/10 bg-white/[0.03] text-muted-foreground hover:border-white/15 hover:bg-white/[0.06] hover:text-foreground"
                       }`}
                     >
                       <CalendarDays className="h-3 w-3" /> {labels[range]}
@@ -1331,7 +1333,7 @@ export default function CRM() {
                 {/* Tags */}
                 {companyTags.length > 0 && (
                   <>
-                    <div className="w-px h-5 bg-border" />
+                    <div className="w-px h-5 bg-white/10" />
                     {companyTags.map((tag: any) => {
                       const isActive = filterTagIds.includes(tag.id);
                       return (
@@ -1342,10 +1344,14 @@ export default function CRM() {
                               isActive ? prev.filter((id) => id !== tag.id) : [...prev, tag.id]
                             )
                           }
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-colors"
+                          className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[11.5px] font-medium backdrop-blur-sm transition-colors ${
+                            isActive
+                              ? ""
+                              : "border border-white/10 bg-white/[0.03] text-muted-foreground hover:border-white/15 hover:bg-white/[0.06] hover:text-foreground"
+                          }`}
                           style={
                             isActive
-                              ? { backgroundColor: `${tag.color}22`, color: tag.color, boxShadow: `inset 0 0 0 1px ${tag.color}55` }
+                              ? { backgroundColor: `${tag.color}1a`, color: tag.color, boxShadow: `inset 0 0 0 1px ${tag.color}55` }
                               : undefined
                           }
                         >
@@ -1360,10 +1366,10 @@ export default function CRM() {
                 {/* Clear all */}
                 {activeFilterCount > 0 && (
                   <>
-                    <div className="w-px h-5 bg-border" />
+                    <div className="w-px h-5 bg-white/10" />
                     <button
                       onClick={clearAllFilters}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium text-rose-400 hover:bg-rose-500/10 transition-colors"
+                      className="inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[11.5px] font-medium text-rose-400 transition-colors hover:bg-rose-500/10"
                     >
                       <X className="h-3 w-3" /> Limpar filtros
                     </button>

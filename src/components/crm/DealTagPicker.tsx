@@ -11,7 +11,7 @@ const PRESET_COLORS = [
   { name: "Laranja", value: "#f97316" },
   { name: "Amarelo", value: "#f59e0b" },
   { name: "Verde", value: "#22c55e" },
-  { name: "Esmeralda", value: "#10b981" },
+  { name: "Esmeralda", value: "#00E37A" },
   { name: "Azul", value: "#3b82f6" },
   { name: "Violeta", value: "#8b5cf6" },
   { name: "Rosa", value: "#ec4899" },

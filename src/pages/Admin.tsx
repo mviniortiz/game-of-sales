@@ -174,22 +174,23 @@ const Admin = () => {
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      {/* KPI Strip */}
+      <div className="rounded-xl border border-border/50 bg-card grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-border/40">
         {kpiCards.map((kpi) => (
-          <div
-            key={kpi.label}
-            className="flex items-center gap-3 p-4 rounded-xl border border-border/50 bg-card"
-          >
-            <div className="flex items-center justify-center h-9 w-9 rounded-lg bg-muted shrink-0">
-              <kpi.icon className="h-4 w-4 text-muted-foreground" />
+          <div key={kpi.label} className="flex items-center gap-2.5 px-3 py-3 sm:px-4 sm:py-4 min-w-0">
+            <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-muted shrink-0">
+              <kpi.icon className="h-3.5 w-3.5 text-muted-foreground" />
             </div>
-            <div className="min-w-0">
-              <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider truncate">{kpi.label}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-[9px] sm:text-[10px] text-muted-foreground font-semibold uppercase tracking-wider truncate">
+                {kpi.label}
+              </p>
               {kpiLoading ? (
-                <div className="h-6 w-16 rounded bg-muted animate-pulse mt-0.5" />
+                <div className="h-5 w-14 rounded bg-muted animate-pulse mt-0.5" />
               ) : (
-                <p className="text-lg font-bold text-foreground truncate">{formatValue(kpi.value, kpi.format)}</p>
+                <p className="text-sm sm:text-base font-bold text-foreground tabular-nums truncate">
+                  {formatValue(kpi.value, kpi.format)}
+                </p>
               )}
             </div>
           </div>

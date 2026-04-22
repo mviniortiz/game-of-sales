@@ -25,7 +25,7 @@ export const ImpactMetrics = () => {
                                         fontSize: isZero ? "clamp(2.3rem, 4.6vw, 3.15rem)" : "clamp(2rem, 4vw, 2.75rem)",
                                         fontWeight: isZero ? 800 : 700,
                                         letterSpacing: "-0.035em",
-                                        color: isZero ? "#34d399" : "rgba(255,255,255,0.95)",
+                                        color: isZero ? "#33FF9E" : "rgba(255,255,255,0.95)",
                                     }}
                                 >
                                     {m.prefix && (

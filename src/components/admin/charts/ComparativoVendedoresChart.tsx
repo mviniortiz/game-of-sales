@@ -84,7 +84,7 @@ export const ComparativoVendedoresChart = ({ data }: ComparativoVendedoresChartP
             )}
           />
           <Bar yAxisId="left" dataKey="vendas" fill="#6366f1" name="Vendas" radius={[4, 4, 0, 0]} barSize={16} />
-          <Bar yAxisId="right" dataKey="faturamento" fill="#10b981" name="Faturamento" radius={[4, 4, 0, 0]} barSize={16} />
+          <Bar yAxisId="right" dataKey="faturamento" fill="#00E37A" name="Faturamento" radius={[4, 4, 0, 0]} barSize={16} />
         </BarChart>
       </ResponsiveContainer>
     </div>

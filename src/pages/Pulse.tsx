@@ -1250,13 +1250,13 @@ const WhatsApp = () => {
                 {canViewOthers && (
                     <div className="px-3 pt-2.5 pb-1 shrink-0">
                         <Select value={targetUserId || "mine"} onValueChange={handleSellerChange}>
-                            <SelectTrigger className="h-8 bg-muted/30 border-border text-[12px] font-medium rounded-md">
+                            <SelectTrigger className="h-8 gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 text-[12px] font-medium backdrop-blur-sm transition-colors hover:border-white/15 hover:bg-white/[0.06] data-[state=open]:border-white/20 data-[state=open]:bg-white/[0.08]">
                                 <div className="flex items-center gap-2">
                                     <Users className="h-3 w-3 text-muted-foreground" />
                                     <SelectValue placeholder="Minha caixa" />
                                 </div>
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="border border-white/10 bg-card/95 shadow-xl backdrop-blur-xl">
                                 <SelectItem value="mine">Minha caixa</SelectItem>
                                 {sellerInstances
                                     .filter(s => s.userId !== user?.id)
@@ -1451,7 +1451,7 @@ const WhatsApp = () => {
                             </div>
                         ) : (
                             <div className="flex flex-col items-center relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                <div className="h-24 w-24 rounded-[2rem] bg-emerald-500/10 flex items-center justify-center mb-8 border border-emerald-500/20 shadow-[0_0_60px_rgba(16,185,129,0.15)] relative overflow-hidden group">
+                                <div className="h-24 w-24 rounded-[2rem] bg-emerald-500/10 flex items-center justify-center mb-8 border border-emerald-500/20 shadow-[0_0_60px_rgba(0,227,122,0.15)] relative overflow-hidden group">
                                     <WhatsAppIcon className="h-12 w-12 text-emerald-500 relative z-10" />
                                 </div>
                                 <h3 className="text-xl sm:text-2xl font-extrabold mb-3 tracking-tight">Conectar WhatsApp</h3>

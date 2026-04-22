@@ -151,7 +151,7 @@ export const CalendarioAgendamentos = () => {
     // - no_show (nao_compareceu): Red - Client didn't show up
     // - pending (agendado/future): Gray - Waiting/Scheduled
     const attendanceColors: Record<AttendanceStatus, { border: string; bg: string }> = {
-      show: { border: "#10B981", bg: "rgba(16, 185, 129, 0.15)" },        // Green for show
+      show: { border: "#00E37A", bg: "rgba(0, 227, 122, 0.15)" },        // Green for show
       no_show: { border: "#EF4444", bg: "rgba(239, 68, 68, 0.15)" },      // Red for no_show
       pending: { border: "#6B7280", bg: "rgba(107, 114, 128, 0.15)" },    // Gray for pending
     };

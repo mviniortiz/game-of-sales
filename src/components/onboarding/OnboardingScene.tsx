@@ -158,7 +158,7 @@ function DashedPath({ step }: { step: number }) {
           strokeDashoffset: { duration: 1.8, repeat: Infinity, ease: "linear" },
           pathLength: { duration: 0.8, ease: "easeOut" },
         }}
-        style={{ filter: "drop-shadow(0 0 4px rgba(16,185,129,0.35))" }}
+        style={{ filter: "drop-shadow(0 0 4px rgba(0,227,122,0.35))" }}
       />
     </>
   );
@@ -227,7 +227,7 @@ function NumberGlyph({
         fillOpacity={active ? 1 : 0.18}
         style={{
           fontFamily: "var(--font-heading), sans-serif",
-          filter: active ? "drop-shadow(0 0 14px rgba(16,185,129,0.45))" : "none",
+          filter: active ? "drop-shadow(0 0 14px rgba(0,227,122,0.45))" : "none",
           letterSpacing: "-0.05em",
         }}
       >

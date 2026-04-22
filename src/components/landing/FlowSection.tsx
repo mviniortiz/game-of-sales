@@ -112,7 +112,7 @@ export const FlowSection = () => {
                 className="absolute inset-x-0 top-0 h-[400px] pointer-events-none"
                 style={{
                     background:
-                        "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(16,185,129,0.08) 0%, transparent 70%)",
+                        "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(0,227,122,0.08) 0%, transparent 70%)",
                 }}
             />
 
@@ -154,14 +154,14 @@ export const FlowSection = () => {
                     >
                         <defs>
                             <linearGradient id="flowStroke" x1="0" y1="0" x2="1" y2="0">
-                                <stop offset="0%" stopColor="rgba(16,185,129,0.15)" />
-                                <stop offset="50%" stopColor="rgba(16,185,129,0.55)" />
-                                <stop offset="100%" stopColor="rgba(16,185,129,0.15)" />
+                                <stop offset="0%" stopColor="rgba(0,227,122,0.15)" />
+                                <stop offset="50%" stopColor="rgba(0,227,122,0.55)" />
+                                <stop offset="100%" stopColor="rgba(0,227,122,0.15)" />
                             </linearGradient>
                             <radialGradient id="flowParticle" cx="50%" cy="50%" r="50%">
                                 <stop offset="0%" stopColor="rgba(255,255,255,1)" />
                                 <stop offset="40%" stopColor="rgba(110,231,183,0.9)" />
-                                <stop offset="100%" stopColor="rgba(16,185,129,0)" />
+                                <stop offset="100%" stopColor="rgba(0,227,122,0)" />
                             </radialGradient>
                         </defs>
                         <path
@@ -194,7 +194,7 @@ export const FlowSection = () => {
                                     style={{
                                         background: "rgba(255,255,255,0.03)",
                                         boxShadow: pulsing
-                                            ? "0 0 0 1px rgba(16,185,129,0.45), 0 0 48px rgba(16,185,129,0.25)"
+                                            ? "0 0 0 1px rgba(0,227,122,0.45), 0 0 48px rgba(0,227,122,0.25)"
                                             : "0 0 0 1px rgba(255,255,255,0.08)",
                                         transition: "box-shadow 300ms ease",
                                     }}
@@ -209,8 +209,8 @@ export const FlowSection = () => {
                                         <div
                                             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
                                             style={{
-                                                background: "rgba(16,185,129,0.12)",
-                                                boxShadow: "inset 0 0 0 1px rgba(16,185,129,0.2)",
+                                                background: "rgba(0,227,122,0.12)",
+                                                boxShadow: "inset 0 0 0 1px rgba(0,227,122,0.2)",
                                             }}
                                         >
                                             <Icon
@@ -223,7 +223,7 @@ export const FlowSection = () => {
                                                 className="text-[10px] uppercase tracking-widest"
                                                 style={{
                                                     fontWeight: 700,
-                                                    color: "rgba(16,185,129,0.9)",
+                                                    color: "rgba(0,227,122,0.9)",
                                                 }}
                                             >
                                                 Etapa {idx + 1}
@@ -271,8 +271,8 @@ export const FlowSection = () => {
 
             <style>{`
                 @keyframes flow-shockwave-kf {
-                    0% { box-shadow: 0 0 0 0 rgba(16,185,129,0.35); }
-                    100% { box-shadow: 0 0 0 22px rgba(16,185,129,0); }
+                    0% { box-shadow: 0 0 0 0 rgba(0,227,122,0.35); }
+                    100% { box-shadow: 0 0 0 22px rgba(0,227,122,0); }
                 }
                 .flow-shockwave {
                     border-radius: 1rem;

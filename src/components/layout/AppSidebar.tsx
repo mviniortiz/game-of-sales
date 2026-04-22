@@ -17,6 +17,7 @@ import { useTenant } from "@/contexts/TenantContext";
 import { usePlan } from "@/hooks/usePlan";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
+import logoIcon from "@/assets/logo-icon.png";
 import { AnimatedIcon } from "@/components/ui/animated-icon";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 // Lazy: só carrega ao clicar em "Nova venda"
@@ -199,6 +200,13 @@ export function AppSidebar() {
     return () => clearInterval(interval);
   }, [effectiveCompanyId]);
 
+  // Command Palette → "Registrar nova venda" dispara este evento.
+  useEffect(() => {
+    const open = () => setIsNovaVendaOpen(true);
+    window.addEventListener("vyzon:open-nova-venda", open);
+    return () => window.removeEventListener("vyzon:open-nova-venda", open);
+  }, []);
+
   const filteredVisaoGeralItems = visaoGeralItems.filter(item => {
     if (item.url === '/calls') return hasFeature('calls');
     return true;
@@ -228,33 +236,53 @@ export function AppSidebar() {
       .toUpperCase();
   };
 
-  const activeClass = "bg-muted text-foreground font-medium";
-  const inactiveClass = "text-muted-foreground/80 hover:text-foreground hover:bg-muted/50 transition-colors";
+  // Estilo novo: active = pill glass emerald + dot indicator (sem bg-muted chato)
+  const baseItem = "relative flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg text-[13px] transition-colors duration-150";
+  const inactiveClass = `${baseItem} text-muted-foreground/75 hover:text-foreground hover:bg-white/[0.035]`;
+  const activeClass = `${baseItem} text-emerald-400 font-medium`;
 
-  const renderNavItem = (item: { title: string; url: string; icon: React.ComponentType<any> }, showBadge = false) => {
+  const renderNavItem = (item: { title: string; url: string; icon: React.ComponentType<{ isActive?: boolean; className?: string }> }, showBadge = false) => {
     const isActive = location.pathname === item.url || (item.url !== "/dashboard" && location.pathname.startsWith(item.url));
 
     const linkContent = (
       <NavLink
         to={item.url}
         end={item.url === "/dashboard"}
-        className={`relative flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[13px] ${inactiveClass}`}
-        activeClassName={`relative flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[13px] ${activeClass}`}
+        className={inactiveClass}
+        activeClassName={activeClass}
       >
-        {isActive && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-[2px] rounded-r-full bg-emerald-500" />}
+        {isActive && (
+          <>
+            {/* Pill glass emerald de fundo */}
+            <span
+              className="absolute inset-0 rounded-lg pointer-events-none"
+              style={{
+                background: "linear-gradient(90deg, rgba(0,227,122,0.12) 0%, rgba(0,227,122,0.04) 100%)",
+                border: "1px solid rgba(0,227,122,0.18)",
+              }}
+              aria-hidden
+            />
+            {/* Dot indicator à esquerda (substitui barrinha retangular) */}
+            <span
+              className="absolute left-[-6px] top-1/2 -translate-y-1/2 h-1.5 w-1.5 rounded-full bg-emerald-400 pointer-events-none"
+              style={{ boxShadow: "0 0 8px rgba(0,227,122,0.6)" }}
+              aria-hidden
+            />
+          </>
+        )}
         <span className="relative shrink-0">
           <AnimatedIcon icon={item.icon} isActive={isActive} />
           {showBadge && rottingDealsCount > 0 && (
-            <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[14px] h-3.5 px-1 rounded-full bg-rose-500 text-white text-[9px] font-semibold leading-none">
+            <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[14px] h-3.5 px-1 rounded-full bg-rose-500 text-white text-[9px] font-semibold leading-none shadow-[0_0_6px_rgba(244,63,94,0.45)]">
               {rottingDealsCount > 99 ? "99+" : rottingDealsCount}
             </span>
           )}
         </span>
         {!collapsed && (
           <>
-            <span className="flex-1 truncate tracking-tight">{item.title}</span>
+            <span className="relative flex-1 truncate tracking-tight">{item.title}</span>
             {showBadge && rottingDealsCount > 0 && (
-              <span className="flex items-center justify-center min-w-[18px] h-4 px-1 rounded text-[10px] font-medium bg-rose-500/10 text-rose-400">
+              <span className="relative flex items-center justify-center min-w-[18px] h-4 px-1 rounded text-[10px] font-medium bg-rose-500/10 text-rose-400">
                 {rottingDealsCount}
               </span>
             )}
@@ -284,23 +312,37 @@ export function AppSidebar() {
 
   return (
     <TooltipProvider delayDuration={300}>
-      <Sidebar collapsible="offcanvas" className="border-r border-border bg-sidebar text-sidebar-foreground">
+      <Sidebar
+        collapsible="icon"
+        className="text-sidebar-foreground"
+        style={{
+          background: "linear-gradient(180deg, rgba(8,10,13,0.98) 0%, rgba(6,8,10,0.98) 100%)",
+          borderRight: "1px solid rgba(255,255,255,0.05)",
+        }}
+      >
         <SidebarContent className="gap-0">
-          {/* Logo */}
-          <div className="px-4 pt-5 pb-4">
-            <div className="flex items-center justify-center">
-              <ThemeLogo className={collapsed ? "h-7 w-auto" : "h-9 w-auto"} />
-            </div>
+          {/* Logo + Reminder Bell na mesma linha (mais enxuto) */}
+          <div className={`pt-4 pb-3 ${collapsed ? "px-2" : "px-4"} flex items-center ${collapsed ? "justify-center" : "justify-between"} gap-2`}>
+            {collapsed ? (
+              <img src={logoIcon} alt="Vyzon" className="h-7 w-7 object-contain" />
+            ) : (
+              <ThemeLogo className="h-8 w-auto" />
+            )}
+            {!collapsed && <ReminderBell />}
           </div>
 
-          {/* CTA - Registrar Venda */}
-          <div className="px-3 pb-2.5" data-tour="register-sale-btn">
+          {/* CTA - Registrar Venda com glow emerald */}
+          <div className="px-3 pb-3" data-tour="register-sale-btn">
             {collapsed ? (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
                     onClick={() => setIsNovaVendaOpen(true)}
-                    className="w-full flex items-center justify-center h-8 rounded-md bg-emerald-500 hover:bg-emerald-400 text-white transition-colors"
+                    className="relative w-full flex items-center justify-center h-9 rounded-lg text-white transition-all duration-200 active:scale-[0.97]"
+                    style={{
+                      background: "linear-gradient(135deg, #00E37A 0%, #00B289 100%)",
+                      boxShadow: "0 4px 16px rgba(0,227,122,0.28), 0 1px 0 rgba(255,255,255,0.15) inset",
+                    }}
                   >
                     <PlusCircle className="h-3.5 w-3.5" />
                   </button>
@@ -312,7 +354,11 @@ export function AppSidebar() {
             ) : (
               <button
                 onClick={() => setIsNovaVendaOpen(true)}
-                className="w-full flex items-center justify-center gap-1.5 h-8 rounded-md bg-emerald-500 hover:bg-emerald-400 text-white text-[12.5px] font-medium transition-colors"
+                className="relative w-full flex items-center justify-center gap-1.5 h-9 rounded-lg text-white text-[12.5px] font-semibold tracking-tight transition-all duration-200 active:scale-[0.98] hover:brightness-110"
+                style={{
+                  background: "linear-gradient(135deg, #00E37A 0%, #00B289 100%)",
+                  boxShadow: "0 4px 16px rgba(0,227,122,0.28), 0 1px 0 rgba(255,255,255,0.15) inset",
+                }}
               >
                 <PlusCircle className="h-3.5 w-3.5" />
                 <span>Registrar Venda</span>
@@ -320,16 +366,23 @@ export function AppSidebar() {
             )}
           </div>
 
-          {/* Reminder Bell */}
-          <div className="px-3 pb-2 flex items-center justify-center">
-            <ReminderBell />
-          </div>
+          {/* Reminder Bell (standalone só quando collapsed — quando expandido já está no header) */}
+          {collapsed && (
+            <div className="px-3 pb-2 flex items-center justify-center">
+              <ReminderBell />
+            </div>
+          )}
 
-          {/* Separator */}
-          <div className="mx-3 h-px bg-border mb-2" />
+          {/* Separator com fade gradient */}
+          <div
+            className="mx-3 h-px mb-3"
+            style={{
+              background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)",
+            }}
+          />
 
           {/* Visão Geral */}
-          <SidebarGroup className="py-1 px-1.5">
+          <SidebarGroup className="py-0.5 px-2">
             {!collapsed && (
               <SidebarGroupLabel className="text-[10px] uppercase text-muted-foreground/50 font-medium tracking-wider px-2.5 mb-1">
                 Visão Geral
@@ -346,11 +399,14 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
 
+          {/* Subtle spacer entre grupos */}
+          {filteredGestaoItems.length > 0 && !collapsed && <div className="h-2" />}
+
           {/* Gestão */}
           {filteredGestaoItems.length > 0 && (
-            <SidebarGroup className="py-1 px-1.5">
+            <SidebarGroup className="py-0.5 px-2">
               {!collapsed && (
-                <SidebarGroupLabel className="text-[10px] uppercase text-muted-foreground/50 font-medium tracking-wider px-2.5 mb-1">
+                <SidebarGroupLabel className="text-[9.5px] uppercase text-muted-foreground/35 font-semibold tracking-[0.14em] px-2.5 mb-1.5 mt-1">
                   Gestão
                 </SidebarGroupLabel>
               )}
@@ -366,11 +422,14 @@ export function AppSidebar() {
             </SidebarGroup>
           )}
 
+          {/* Subtle spacer entre grupos */}
+          {filteredConfigItems.length > 0 && !collapsed && <div className="h-2" />}
+
           {/* Configurações */}
           {filteredConfigItems.length > 0 && (
-            <SidebarGroup className="py-1 px-1.5">
+            <SidebarGroup className="py-0.5 px-2">
               {!collapsed && (
-                <SidebarGroupLabel className="text-[10px] uppercase text-muted-foreground/50 font-medium tracking-wider px-2.5 mb-1">
+                <SidebarGroupLabel className="text-[9.5px] uppercase text-muted-foreground/35 font-semibold tracking-[0.14em] px-2.5 mb-1.5 mt-1">
                   Configurações
                 </SidebarGroupLabel>
               )}
@@ -388,7 +447,13 @@ export function AppSidebar() {
         </SidebarContent>
 
         {/* Footer — Profile dropdown + fixed plan badges */}
-        <SidebarFooter className="border-t border-border mt-auto p-0">
+        <SidebarFooter
+          className="mt-auto p-0"
+          style={{
+            borderTop: "1px solid rgba(255,255,255,0.05)",
+            background: "linear-gradient(180deg, rgba(255,255,255,0.01) 0%, rgba(255,255,255,0.025) 100%)",
+          }}
+        >
           <div className={collapsed ? "p-2 flex justify-center" : "p-2.5 space-y-1.5"}>
             <UserMenu
               collapsed={collapsed}

@@ -1,25 +1,19 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MetaConsolidadaCard } from "@/components/metas/MetaConsolidadaCard";
-import { RankingPodium } from "@/components/metas/RankingPodium";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Target, Loader2, Trophy, TrendingUp, TrendingDown, Minus,
-  RefreshCw, Users, DollarSign, Award, BarChart3, ChevronUp,
-  Flame, Crown, Medal, Star, Gem, Shield
+  Target, Loader2, Minus,
+  RefreshCw, ChevronUp,
+  Crown, Medal, Star, Gem, Shield
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { logger } from "@/utils/logger";
 import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 // ============================================
 // Hoisted utilities
@@ -308,186 +302,199 @@ const Ranking = () => {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="flex items-center justify-center py-12">
+      <div className="container mx-auto px-4 sm:px-6 py-12">
+        <div className="flex items-center justify-center">
           <div className="text-center">
-            <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-            <p className="text-muted-foreground">Carregando ranking...</p>
+            <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto mb-4" />
+            <p className="text-sm text-muted-foreground">Carregando ranking...</p>
           </div>
         </div>
       </div>
     );
   }
 
+  const metaValor = metaAtual ? Number(metaAtual.valor_meta) : 0;
+  const metaPercent = metaValor > 0 ? Math.min((kpis.total / metaValor) * 100, 100) : 0;
+  const top3 = vendedoresRanking.slice(0, 3);
+  const rest = vendedoresRanking.slice(3);
+  const [first, second, third] = top3;
+
   return (
     <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-5">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-3xl font-bold text-foreground flex items-center gap-2 sm:gap-3">
-            <Trophy className="h-6 sm:h-8 w-6 sm:w-8 text-yellow-500" />
-            <span className="hidden sm:inline">Ranking de Vendedores</span>
-            <span className="sm:hidden">Ranking</span>
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
+            Ranking
           </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
             {format(hoje, "MMMM 'de' yyyy", { locale: ptBR })}
-            <span className="hidden sm:inline"> · Atualização automática a cada 30s</span>
+            <span className="hidden sm:inline"> · atualiza a cada 30s</span>
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Period tabs */}
-          <Tabs value={periodo} onValueChange={(v) => setPeriodo(v as PeriodoTab)}>
-            <TabsList className="h-9">
-              <TabsTrigger value="semanal" className="text-xs sm:text-sm px-3">
-                Semanal
-              </TabsTrigger>
-              <TabsTrigger value="mensal" className="text-xs sm:text-sm px-3">
-                Mensal
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+          {/* Period pill */}
+          <div className="inline-flex items-center gap-0.5 rounded-full border border-border/60 bg-muted/40 p-0.5 backdrop-blur-sm">
+            {([
+              { id: "semanal", label: "Semanal" },
+              { id: "mensal", label: "Mensal" },
+            ] as const).map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => setPeriodo(opt.id)}
+                className={cn(
+                  "h-7 rounded-full px-3 text-[11px] font-medium transition-all",
+                  periodo === opt.id
+                    ? "bg-background text-foreground ring-1 ring-border shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
 
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={handleRefresh}
             aria-label="Atualizar"
-            className="gap-2"
+            className="h-8 rounded-full border border-border/60 bg-muted/40 px-3 text-[11px] font-medium hover:bg-muted/60 backdrop-blur-sm"
           >
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw className="h-3.5 w-3.5 sm:mr-1.5" />
             <span className="hidden sm:inline">Atualizar</span>
           </Button>
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }}>
-          <Card className="border-border/50 bg-gradient-to-br from-emerald-500/10 to-transparent">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground font-medium">Total Vendido</p>
-                  <p className="text-lg sm:text-2xl font-bold text-emerald-500 mt-1">
-                    {formatCurrencyCompact(kpis.total)}
-                  </p>
-                </div>
-                <div className="h-10 w-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-                  <DollarSign className="h-5 w-5 text-emerald-500" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+      {/* KPI Strip */}
+      <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-sm">
+        <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-border/40">
+          <KpiCell label="Total vendido" value={formatCurrencyCompact(kpis.total)} accent />
+          <KpiCell label="Maior venda" value={formatCurrencyCompact(kpis.maiorVenda)} />
+          <KpiCell label="Média / vendedor" value={formatCurrencyCompact(kpis.media)} />
+          <KpiCell
+            label="Vendedores ativos"
+            value={
+              <>
+                {kpis.ativos}
+                <span className="text-sm font-normal text-muted-foreground">
+                  /{kpis.totalVendedores}
+                </span>
+              </>
+            }
+          />
+        </div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-          <Card className="border-border/50 bg-gradient-to-br from-yellow-500/10 to-transparent">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground font-medium">Maior Venda</p>
-                  <p className="text-lg sm:text-2xl font-bold text-yellow-500 mt-1">
-                    {formatCurrencyCompact(kpis.maiorVenda)}
-                  </p>
-                </div>
-                <div className="h-10 w-10 rounded-xl bg-yellow-500/20 flex items-center justify-center">
-                  <Award className="h-5 w-5 text-yellow-500" />
-                </div>
+        {/* Meta consolidada inline */}
+        {periodo === "mensal" && metaAtual && (
+          <div className="border-t border-border/60 px-4 py-3">
+            <div className="flex items-center justify-between gap-3 mb-1.5">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">
+                  Meta do time
+                </span>
+                {metaAtual.descricao && (
+                  <span className="text-[11px] text-muted-foreground/70 truncate">
+                    · {metaAtual.descricao}
+                  </span>
+                )}
               </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <Card className="border-border/50 bg-gradient-to-br from-blue-500/10 to-transparent">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground font-medium">Média/Vendedor</p>
-                  <p className="text-lg sm:text-2xl font-bold text-blue-500 mt-1">
-                    {formatCurrencyCompact(kpis.media)}
-                  </p>
-                </div>
-                <div className="h-10 w-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
-                  <BarChart3 className="h-5 w-5 text-blue-500" />
-                </div>
+              <div className="flex items-center gap-2 flex-shrink-0 text-[11px]">
+                <span className="text-muted-foreground tabular-nums">
+                  {formatCurrencyCompact(kpis.total)} / {formatCurrencyCompact(metaValor)}
+                </span>
+                <span className="text-emerald-400 font-semibold tabular-nums">
+                  {metaPercent.toFixed(0)}%
+                </span>
+                <span className="hidden sm:inline text-muted-foreground/60">
+                  · {diasRestantes}d restantes
+                </span>
               </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-          <Card className="border-border/50 bg-gradient-to-br from-purple-500/10 to-transparent">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground font-medium">Vendedores Ativos</p>
-                  <p className="text-lg sm:text-2xl font-bold text-purple-500 mt-1">
-                    {kpis.ativos}
-                    <span className="text-sm font-normal text-muted-foreground">
-                      /{kpis.totalVendedores}
-                    </span>
-                  </p>
-                </div>
-                <div className="h-10 w-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
-                  <Users className="h-5 w-5 text-purple-500" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+            </div>
+            <div className="h-1 rounded-full bg-muted overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${metaPercent}%` }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full"
+              />
+            </div>
+          </div>
+        )}
       </div>
-
-      {/* Meta Consolidada - only for mensal */}
-      {periodo === "mensal" && metaAtual && (
-        <MetaConsolidadaCard
-          metaTotal={Number(metaAtual.valor_meta)}
-          valorAtingido={kpis.total}
-          diasRestantes={diasRestantes}
-          descricao={metaAtual.descricao || undefined}
-        />
-      )}
 
       {/* Content */}
       {vendedoresRanking.length === 0 ? (
-        <Card className="border-border/50">
-          <CardContent className="py-12">
-            <div className="text-center">
-              <Users className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-foreground mb-2">Nenhum Vendedor Encontrado</h2>
-              <p className="text-muted-foreground">
-                Não há vendedores cadastrados ou nenhuma venda foi registrada{" "}
-                {periodo === "mensal" ? "este mês" : "esta semana"}.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="rounded-2xl border border-border/60 bg-card/40 py-16 px-6 text-center backdrop-blur-sm">
+          <div className="mx-auto w-12 h-12 rounded-full border border-border/60 bg-muted/40 flex items-center justify-center mb-4">
+            <Target className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <h2 className="text-base font-semibold text-foreground mb-1">
+            Sem movimentação {periodo === "mensal" ? "este mês" : "esta semana"}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Nenhuma venda registrada no período selecionado.
+          </p>
+        </div>
       ) : (
         <>
           {/* Podium */}
-          {vendedoresRanking.length > 0 && (
-            <div data-tour="ranking-section">
-              <RankingPodium vendedores={contribuicoesForPodium} />
+          {top3.length > 0 && (
+            <div
+              data-tour="ranking-section"
+              className="grid grid-cols-3 gap-2 sm:gap-3 items-end"
+            >
+              {/* 2nd */}
+              <div className="pt-4 sm:pt-6">
+                <PodiumCard
+                  vendedor={second}
+                  rank={2}
+                  isCurrentUser={second?.user_id === currentUserId}
+                  metaAtual={metaValor}
+                  delay={0.1}
+                />
+              </div>
+              {/* 1st */}
+              <PodiumCard
+                vendedor={first}
+                rank={1}
+                isCurrentUser={first?.user_id === currentUserId}
+                metaAtual={metaValor}
+                delay={0}
+              />
+              {/* 3rd */}
+              <div className="pt-8 sm:pt-12">
+                <PodiumCard
+                  vendedor={third}
+                  rank={3}
+                  isCurrentUser={third?.user_id === currentUserId}
+                  metaAtual={metaValor}
+                  delay={0.2}
+                />
+              </div>
             </div>
           )}
 
           {/* Full Ranking List */}
-          <Card className="border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                <TrendingUp className="h-5 w-5 text-primary" />
-                Classificação Completa
-                <Badge variant="secondary" className="ml-auto text-xs font-normal">
-                  {periodo === "mensal" ? "Mensal" : "Semanal"}
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-2 sm:p-4">
-              <div className="space-y-1.5 sm:space-y-2">
+          {rest.length > 0 && (
+            <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-sm overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-border/40">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">
+                    Classificação
+                  </span>
+                  <span className="text-[11px] text-muted-foreground/60">
+                    · {rest.length} {rest.length === 1 ? "vendedor" : "vendedores"}
+                  </span>
+                </div>
+              </div>
+              <div className="divide-y divide-border/40">
                 <AnimatePresence>
-                  {vendedoresRanking.map((vendedor, index) => {
-                    const posicao = index + 1;
+                  {rest.map((vendedor, idx) => {
+                    const posicao = idx + 4;
                     const isCurrentUser = vendedor.user_id === currentUserId;
                     const hasIndividualMeta =
                       vendedor.meta_individual && vendedor.meta_individual > 0;
@@ -498,12 +505,11 @@ const Ranking = () => {
                         )
                       : 0;
 
-                    // Delta from previous period
                     const prevPos = previousRankMap[vendedor.user_id];
                     const delta = prevPos ? prevPos - posicao : 0;
 
-                    // Gap to next person above
-                    const pessoaAcima = index > 0 ? vendedoresRanking[index - 1] : null;
+                    const pessoaAcima =
+                      idx === 0 ? top3[top3.length - 1] : rest[idx - 1];
                     const gapParaUltrapassar = pessoaAcima
                       ? pessoaAcima.valor_vendido - vendedor.valor_vendido
                       : 0;
@@ -514,188 +520,285 @@ const Ranking = () => {
                     return (
                       <motion.div
                         key={vendedor.user_id}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.03 }}
-                        className={`relative flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 rounded-xl transition-all gap-2 sm:gap-3 ${
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.02 }}
+                        className={cn(
+                          "relative flex items-center gap-3 sm:gap-4 px-4 py-3 transition-colors",
                           isCurrentUser
-                            ? "bg-primary/10 border-2 border-primary/40 shadow-lg shadow-primary/5"
-                            : posicao <= 3
-                              ? "bg-gradient-to-r from-yellow-500/5 to-transparent border border-yellow-500/10"
-                              : "bg-muted/20 hover:bg-muted/40 border border-transparent"
-                        }`}
+                            ? "bg-emerald-500/[0.06]"
+                            : "hover:bg-card/40",
+                        )}
                       >
-                        {/* Current user indicator */}
                         {isCurrentUser && (
-                          <div className="absolute -left-0.5 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary rounded-full" />
+                          <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-emerald-500" />
                         )}
 
-                        <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
-                          {/* Position + Delta */}
-                          <div className="flex flex-col items-center gap-0.5 flex-shrink-0 w-10">
-                            <div
-                              className={`flex items-center justify-center w-9 h-9 rounded-lg font-bold text-sm ${
-                                posicao === 1
-                                  ? "bg-gradient-to-br from-yellow-400 to-yellow-600 text-yellow-900 shadow-lg shadow-yellow-500/30"
-                                  : posicao === 2
-                                    ? "bg-gradient-to-br from-gray-300 to-gray-500 text-gray-800 shadow-lg shadow-gray-400/20"
-                                    : posicao === 3
-                                      ? "bg-gradient-to-br from-amber-500 to-amber-700 text-amber-100 shadow-lg shadow-amber-500/20"
-                                      : "bg-muted text-muted-foreground"
-                              }`}
-                            >
-                              {posicao}
-                            </div>
-                            {/* Delta arrow */}
-                            {delta !== 0 && (
-                              <div
-                                className={`flex items-center gap-0.5 text-[10px] font-semibold ${
-                                  delta > 0 ? "text-emerald-500" : "text-red-500"
-                                }`}
-                              >
-                                {delta > 0 ? (
-                                  <ChevronUp className="h-3 w-3" />
-                                ) : (
-                                  <ChevronUp className="h-3 w-3 rotate-180" />
-                                )}
-                                {Math.abs(delta)}
-                              </div>
-                            )}
-                            {delta === 0 && prevPos && (
-                              <Minus className="h-3 w-3 text-muted-foreground/50" />
-                            )}
-                          </div>
-
-                          {/* Avatar */}
-                          <div className="relative flex-shrink-0">
-                            <Avatar
-                              className={`h-10 w-10 sm:h-11 sm:w-11 border-2 ${
-                                posicao === 1
-                                  ? "border-yellow-500"
-                                  : posicao === 2
-                                    ? "border-gray-400"
-                                    : posicao === 3
-                                      ? "border-amber-600"
-                                      : "border-border"
-                              }`}
-                            >
-                              <AvatarImage src={vendedor.avatar_url} />
-                              <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
-                                {getInitials(vendedor.nome)}
-                              </AvatarFallback>
-                            </Avatar>
-                            {posicao === 1 && (
-                              <Crown className="absolute -top-2 -right-1 h-4 w-4 text-yellow-500 fill-yellow-500" />
-                            )}
-                          </div>
-
-                          {/* Name, Level, Progress */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <p className="font-semibold text-foreground text-sm sm:text-base truncate">
-                                {vendedor.nome}
-                              </p>
-                              {isCurrentUser && (
-                                <Badge
-                                  variant="outline"
-                                  className="text-[10px] border-primary/40 text-primary h-5"
-                                >
-                                  Você
-                                </Badge>
+                        {/* Position */}
+                        <div className="flex items-center gap-1.5 w-10 sm:w-12 flex-shrink-0">
+                          <span className="text-xs font-medium text-muted-foreground tabular-nums w-5 text-right">
+                            {posicao}
+                          </span>
+                          {delta !== 0 ? (
+                            <span
+                              className={cn(
+                                "flex items-center text-[9px] font-semibold",
+                                delta > 0 ? "text-emerald-400" : "text-red-400",
                               )}
-                              <Badge
-                                variant="outline"
-                                className={`text-[10px] h-5 gap-0.5 border ${nivelConfig.bg} ${nivelConfig.color}`}
-                              >
-                                <NivelIcon className="h-2.5 w-2.5" />
-                                {vendedor.nivel || "Bronze"}
-                              </Badge>
-                            </div>
-
-                            {/* Progress bar - desktop */}
-                            {hasIndividualMeta && (
-                              <div className="hidden sm:flex mt-1.5 items-center gap-2">
-                                <Progress value={progressValue} className="h-1.5 flex-1" />
-                                <span className="text-[11px] text-muted-foreground w-12 text-right tabular-nums">
-                                  {vendedor.percentual_meta?.toFixed(0)}%
-                                </span>
-                              </div>
-                            )}
-
-                            {/* Gap indicator */}
-                            {gapParaUltrapassar > 0 && posicao > 1 && (
-                              <p className="hidden sm:block text-[11px] text-muted-foreground/70 mt-0.5">
-                                <span className="text-primary/70 font-medium">
-                                  {formatCurrencyCompact(gapParaUltrapassar)}
-                                </span>{" "}
-                                para ultrapassar #{posicao - 1}
-                              </p>
-                            )}
-                          </div>
-
-                          {/* Value - Desktop */}
-                          <div className="hidden sm:block text-right flex-shrink-0">
-                            <p className="text-lg font-bold text-emerald-500 tabular-nums">
-                              {formatCurrency(vendedor.valor_vendido)}
-                            </p>
-                            {hasIndividualMeta && (
-                              <p className="text-[11px] text-muted-foreground tabular-nums">
-                                Meta: {formatCurrency(vendedor.meta_individual!)}
-                              </p>
-                            )}
-                          </div>
+                            >
+                              <ChevronUp
+                                className={cn(
+                                  "h-2.5 w-2.5",
+                                  delta < 0 && "rotate-180",
+                                )}
+                              />
+                              {Math.abs(delta)}
+                            </span>
+                          ) : prevPos ? (
+                            <Minus className="h-2.5 w-2.5 text-muted-foreground/40" />
+                          ) : (
+                            <span className="w-2.5" />
+                          )}
                         </div>
 
-                        {/* Mobile: Value + Progress */}
-                        <div className="sm:hidden flex items-center justify-between pl-[3.25rem]">
-                          <div className="flex items-center gap-2 flex-1 mr-3">
-                            {hasIndividualMeta && (
-                              <>
-                                <Progress value={progressValue} className="h-1.5 flex-1" />
-                                <span className="text-[10px] text-muted-foreground tabular-nums">
-                                  {vendedor.percentual_meta?.toFixed(0)}%
-                                </span>
-                              </>
+                        {/* Avatar */}
+                        <Avatar className="h-8 w-8 sm:h-9 sm:w-9 border border-border/60 flex-shrink-0">
+                          <AvatarImage src={vendedor.avatar_url} />
+                          <AvatarFallback className="bg-muted text-foreground text-[10px] font-semibold">
+                            {getInitials(vendedor.nome)}
+                          </AvatarFallback>
+                        </Avatar>
+
+                        {/* Name + Level + Meta progress */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <p className="font-medium text-foreground text-sm truncate">
+                              {vendedor.nome}
+                            </p>
+                            {isCurrentUser && (
+                              <span className="text-[9px] font-semibold text-emerald-400 uppercase tracking-wider">
+                                você
+                              </span>
                             )}
-                            {gapParaUltrapassar > 0 && posicao > 1 && !hasIndividualMeta && (
-                              <p className="text-[10px] text-muted-foreground/70">
-                                <span className="text-primary/70 font-medium">
-                                  {formatCurrencyCompact(gapParaUltrapassar)}
-                                </span>{" "}
-                                p/ #{posicao - 1}
-                              </p>
-                            )}
+                            <span
+                              className={cn(
+                                "inline-flex items-center gap-0.5 text-[10px] font-medium",
+                                nivelConfig.color,
+                              )}
+                            >
+                              <NivelIcon className="h-2.5 w-2.5" />
+                              {vendedor.nivel || "Bronze"}
+                            </span>
                           </div>
-                          <p className="text-sm font-bold text-emerald-500 flex-shrink-0 tabular-nums">
-                            {formatCurrency(vendedor.valor_vendido)}
+
+                          {hasIndividualMeta ? (
+                            <div className="flex items-center gap-2 mt-1">
+                              <div className="h-0.5 flex-1 rounded-full bg-muted overflow-hidden max-w-[200px]">
+                                <div
+                                  className="h-full bg-emerald-500/80 rounded-full"
+                                  style={{ width: `${progressValue}%` }}
+                                />
+                              </div>
+                              <span className="text-[10px] text-muted-foreground tabular-nums">
+                                {vendedor.percentual_meta?.toFixed(0)}%
+                              </span>
+                            </div>
+                          ) : gapParaUltrapassar > 0 ? (
+                            <p className="text-[10px] text-muted-foreground/70 mt-0.5">
+                              +{formatCurrencyCompact(gapParaUltrapassar)} p/ #{posicao - 1}
+                            </p>
+                          ) : null}
+                        </div>
+
+                        {/* Value */}
+                        <div className="text-right flex-shrink-0">
+                          <p className="text-sm sm:text-base font-semibold text-foreground tabular-nums">
+                            {formatCurrencyCompact(vendedor.valor_vendido)}
                           </p>
+                          {hasIndividualMeta && (
+                            <p className="hidden sm:block text-[10px] text-muted-foreground/70 tabular-nums">
+                              de {formatCurrencyCompact(vendedor.meta_individual!)}
+                            </p>
+                          )}
                         </div>
                       </motion.div>
                     );
                   })}
                 </AnimatePresence>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          )}
         </>
       )}
 
       {/* No consolidated goal warning */}
       {periodo === "mensal" && !metaAtual && vendedoresRanking.length > 0 && (
-        <Card className="border-amber-500/30 bg-amber-500/5">
-          <CardContent className="py-4">
-            <div className="flex items-center gap-3 text-amber-400">
-              <Target className="h-5 w-5 flex-shrink-0" />
-              <p className="text-sm">
-                {isAdmin
-                  ? "Nenhuma meta consolidada definida para este mês. Defina uma meta na página de Metas para acompanhar o progresso global."
-                  : "Aguardando definição da meta consolidada do mês pelo administrador."}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="rounded-xl border border-amber-500/20 bg-amber-500/[0.04] px-4 py-3 flex items-center gap-3">
+          <Target className="h-4 w-4 text-amber-400 flex-shrink-0" />
+          <p className="text-xs sm:text-sm text-amber-200/90">
+            {isAdmin
+              ? "Nenhuma meta consolidada definida para este mês. Defina uma meta na página de Metas para acompanhar o progresso global."
+              : "Aguardando definição da meta consolidada do mês pelo administrador."}
+          </p>
+        </div>
       )}
     </div>
+  );
+};
+
+// ============================================
+// Subcomponents
+// ============================================
+
+interface KpiCellProps {
+  label: string;
+  value: ReactNode;
+  accent?: boolean;
+}
+
+const KpiCell = ({ label, value, accent }: KpiCellProps) => (
+  <div className="px-4 py-3 sm:py-3.5">
+    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-0.5">
+      {label}
+    </p>
+    <p
+      className={cn(
+        "text-lg sm:text-xl font-semibold tabular-nums",
+        accent ? "text-emerald-400" : "text-foreground",
+      )}
+    >
+      {value}
+    </p>
+  </div>
+);
+
+interface PodiumCardProps {
+  vendedor?: VendedorRanking;
+  rank: 1 | 2 | 3;
+  isCurrentUser: boolean;
+  metaAtual: number;
+  delay: number;
+}
+
+const PODIUM_STYLES: Record<1 | 2 | 3, { glow: string; ring: string; badge: string; icon: string }> = {
+  1: {
+    glow: "from-yellow-400/20 via-yellow-500/5 to-transparent",
+    ring: "ring-yellow-400/40",
+    badge: "bg-gradient-to-br from-yellow-300 to-yellow-500 text-yellow-950",
+    icon: "text-yellow-400",
+  },
+  2: {
+    glow: "from-slate-300/15 via-slate-400/5 to-transparent",
+    ring: "ring-slate-300/30",
+    badge: "bg-gradient-to-br from-slate-200 to-slate-400 text-slate-900",
+    icon: "text-slate-300",
+  },
+  3: {
+    glow: "from-amber-600/15 via-amber-700/5 to-transparent",
+    ring: "ring-amber-600/30",
+    badge: "bg-gradient-to-br from-amber-500 to-amber-700 text-amber-50",
+    icon: "text-amber-500",
+  },
+};
+
+const PodiumCard = ({ vendedor, rank, isCurrentUser, metaAtual, delay }: PodiumCardProps) => {
+  if (!vendedor) {
+    return <div className="rounded-2xl border border-border/40 bg-muted/20 h-32" />;
+  }
+
+  const style = PODIUM_STYLES[rank];
+  const nivelConfig = getNivelConfig(vendedor.nivel || "Bronze");
+  const NivelIcon = nivelConfig.icon;
+  const percentContrib = metaAtual > 0 ? (vendedor.valor_vendido / metaAtual) * 100 : 0;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, duration: 0.4, ease: "easeOut" }}
+      className={cn(
+        "relative rounded-2xl border border-border/60 bg-card/40 backdrop-blur-sm overflow-hidden flex flex-col",
+        rank === 1 && "ring-1 ring-yellow-400/30",
+      )}
+    >
+      {/* Radial glow */}
+      <div
+        className={cn(
+          "absolute inset-0 bg-gradient-to-b opacity-80 pointer-events-none",
+          style.glow,
+        )}
+      />
+
+      {/* Current user stripe */}
+      {isCurrentUser && (
+        <div className="absolute top-0 left-0 right-0 h-0.5 bg-emerald-500" />
+      )}
+
+      {/* Crown for rank 1 */}
+      {rank === 1 && (
+        <Crown
+          className={cn(
+            "absolute top-2 right-2 h-4 w-4 sm:h-5 sm:w-5 fill-current",
+            style.icon,
+          )}
+        />
+      )}
+
+      <div className="relative z-10 p-3 sm:p-4 flex flex-col items-center text-center gap-2">
+        {/* Avatar */}
+        <div className="relative">
+          <Avatar
+            className={cn(
+              "h-10 w-10 sm:h-14 sm:w-14 ring-2 ring-offset-2 ring-offset-background",
+              style.ring,
+            )}
+          >
+            <AvatarImage src={vendedor.avatar_url} />
+            <AvatarFallback className="bg-muted text-foreground text-xs font-semibold">
+              {getInitials(vendedor.nome)}
+            </AvatarFallback>
+          </Avatar>
+          <div
+            className={cn(
+              "absolute -bottom-1 -right-1 h-5 w-5 sm:h-6 sm:w-6 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold shadow-lg",
+              style.badge,
+            )}
+          >
+            {rank}
+          </div>
+        </div>
+
+        {/* Name */}
+        <div className="w-full px-1">
+          <p className="text-[11px] sm:text-sm font-semibold text-foreground truncate">
+            {vendedor.nome}
+          </p>
+          <div className="flex items-center justify-center gap-1 mt-0.5">
+            <NivelIcon className={cn("h-2.5 w-2.5", nivelConfig.color)} />
+            <span className={cn("text-[9px] font-medium", nivelConfig.color)}>
+              {vendedor.nivel || "Bronze"}
+            </span>
+          </div>
+        </div>
+
+        {/* Value */}
+        <p className="text-sm sm:text-lg font-bold tabular-nums text-foreground">
+          {formatCurrencyCompact(vendedor.valor_vendido)}
+        </p>
+
+        {metaAtual > 0 && (
+          <p className="text-[9px] sm:text-[10px] text-muted-foreground tabular-nums -mt-1">
+            {percentContrib.toFixed(0)}% da meta
+          </p>
+        )}
+
+        {isCurrentUser && (
+          <span className="text-[9px] font-semibold text-emerald-400 uppercase tracking-wider -mt-0.5">
+            você
+          </span>
+        )}
+      </div>
+    </motion.div>
   );
 };
 

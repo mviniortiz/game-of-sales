@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { z } from "zod";
-import brandLogoDark from "@/assets/logo-dark.png";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
 import {
     Mail,
@@ -172,7 +171,7 @@ const Register = () => {
                 <div className="relative z-10 flex flex-col justify-between p-12 text-white w-full">
                     {/* Logo */}
                     <div>
-                        <img src={brandLogoDark} alt="Vyzon" className="h-12 w-auto" />
+                        <ThemeLogo className="h-12 w-auto" />
                     </div>
 
                     {/* Testimonial */}

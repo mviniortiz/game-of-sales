@@ -35,8 +35,8 @@ export const EvolucaoVendasChart = ({ data }: EvolucaoVendasChartProps) => {
               <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
             </linearGradient>
             <linearGradient id="colorFaturamento" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+              <stop offset="5%" stopColor="#00E37A" stopOpacity={0.3} />
+              <stop offset="95%" stopColor="#00E37A" stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(128,128,128,0.1)" vertical={false} />
@@ -67,7 +67,7 @@ export const EvolucaoVendasChart = ({ data }: EvolucaoVendasChartProps) => {
             )}
           />
           <Area yAxisId="left" type="monotone" dataKey="vendas" stroke="#6366f1" strokeWidth={2} fill="url(#colorVendas)" name="vendas" dot={false} activeDot={{ r: 4, fill: "#6366f1", stroke: "hsl(var(--card))", strokeWidth: 2 }} />
-          <Area yAxisId="right" type="monotone" dataKey="faturamento" stroke="#10b981" strokeWidth={2} fill="url(#colorFaturamento)" name="Faturamento" dot={false} activeDot={{ r: 4, fill: "#10b981", stroke: "hsl(var(--card))", strokeWidth: 2 }} />
+          <Area yAxisId="right" type="monotone" dataKey="faturamento" stroke="#00E37A" strokeWidth={2} fill="url(#colorFaturamento)" name="Faturamento" dot={false} activeDot={{ r: 4, fill: "#00E37A", stroke: "hsl(var(--card))", strokeWidth: 2 }} />
         </AreaChart>
       </ResponsiveContainer>
     </div>

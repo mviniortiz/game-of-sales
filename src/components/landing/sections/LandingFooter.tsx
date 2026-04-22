@@ -1,4 +1,4 @@
-import brandLogoDark from "@/assets/logo-dark.png";
+import { ThemeLogo } from "@/components/ui/ThemeLogo";
 
 type Props = {
     onNavClick: (id: string) => void;
@@ -11,7 +11,7 @@ export const LandingFooter = ({ onNavClick, onLoginClick, onRegisterClick }: Pro
         <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 md:gap-10 mb-12">
                 <div className="col-span-2 md:col-span-1">
-                    <img src={brandLogoDark} alt="Vyzon" width={320} height={60} className="h-8 w-auto mb-4" />
+                    <ThemeLogo className="h-8 w-auto mb-4" />
                     <p className="text-gray-500 text-sm leading-relaxed max-w-[220px]">
                         CRM gamificado para times de vendas que querem bater meta todo mês.
                     </p>

@@ -21,7 +21,7 @@ const PIPELINE_DATA = [
     { stage: "Novo", count: 12, color: "from-blue-500 to-blue-400", bg: "rgba(96,165,250,0.1)", hoverBg: "rgba(96,165,250,0.18)", text: "rgba(147,197,253,0.9)" },
     { stage: "Qualif.", count: 8, color: "from-amber-500 to-amber-400", bg: "rgba(251,191,36,0.1)", hoverBg: "rgba(251,191,36,0.18)", text: "rgba(252,211,77,0.9)" },
     { stage: "Proposta", count: 5, color: "from-purple-500 to-purple-400", bg: "rgba(168,85,247,0.1)", hoverBg: "rgba(168,85,247,0.18)", text: "rgba(196,148,252,0.9)" },
-    { stage: "Fechado", count: 3, color: "from-emerald-500 to-emerald-400", bg: "rgba(16,185,129,0.1)", hoverBg: "rgba(16,185,129,0.18)", text: "rgba(110,231,183,0.9)" },
+    { stage: "Fechado", count: 3, color: "from-emerald-500 to-emerald-400", bg: "rgba(0,227,122,0.1)", hoverBg: "rgba(0,227,122,0.18)", text: "rgba(110,231,183,0.9)" },
 ];
 
 // Pure CSS/React version — no framer-motion. Lazy-loaded to keep it out of the critical path.
@@ -129,12 +129,12 @@ export const HeroDashboardMockup = () => {
                                         <svg className="w-full h-5 mt-1" viewBox="0 0 120 30" preserveAspectRatio="none">
                                             <defs>
                                                 <linearGradient id="sf" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="0%" stopColor="#10b981" stopOpacity="0.25" />
-                                                    <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+                                                    <stop offset="0%" stopColor="#00E37A" stopOpacity="0.25" />
+                                                    <stop offset="100%" stopColor="#00E37A" stopOpacity="0" />
                                                 </linearGradient>
                                             </defs>
                                             <path d={`M0,${30 - SPARKLINE[0] * 0.3} ${SPARKLINE.map((v, i) => `L${(i / (SPARKLINE.length - 1)) * 120},${30 - v * 0.3}`).join(" ")} L120,30 L0,30 Z`} fill="url(#sf)" />
-                                            <path d={`M0,${30 - SPARKLINE[0] * 0.3} ${SPARKLINE.map((v, i) => `L${(i / (SPARKLINE.length - 1)) * 120},${30 - v * 0.3}`).join(" ")}`} fill="none" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round" />
+                                            <path d={`M0,${30 - SPARKLINE[0] * 0.3} ${SPARKLINE.map((v, i) => `L${(i / (SPARKLINE.length - 1)) * 120},${30 - v * 0.3}`).join(" ")}`} fill="none" stroke="#00E37A" strokeWidth="1.5" strokeLinecap="round" />
                                         </svg>
                                     ),
                                 },
@@ -162,7 +162,7 @@ export const HeroDashboardMockup = () => {
                                             <div className="relative w-10 h-10">
                                                 <svg className="w-10 h-10 -rotate-90" viewBox="0 0 36 36">
                                                     <circle cx="18" cy="18" r="14" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="3" />
-                                                    <circle ref={progressRef} cx="18" cy="18" r="14" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeDasharray="88" strokeDashoffset="88" style={{ transition: "stroke-dashoffset 1.5s ease-out" }} />
+                                                    <circle ref={progressRef} cx="18" cy="18" r="14" fill="none" stroke="#00E37A" strokeWidth="3" strokeLinecap="round" strokeDasharray="88" strokeDashoffset="88" style={{ transition: "stroke-dashoffset 1.5s ease-out" }} />
                                                 </svg>
                                                 <div className="absolute inset-0 flex items-center justify-center">
                                                     <span className="text-[9px] font-bold" style={{ color: "rgba(255,255,255,0.9)" }}>87%</span>
@@ -186,7 +186,7 @@ export const HeroDashboardMockup = () => {
                                         style={{
                                             background: isHovered ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.03)",
                                             boxShadow: isHovered
-                                                ? "0 0 0 1px rgba(16,185,129,0.2), 0 4px 12px rgba(0,0,0,0.2)"
+                                                ? "0 0 0 1px rgba(0,227,122,0.2), 0 4px 12px rgba(0,0,0,0.2)"
                                                 : "0 0 0 1px rgba(255,255,255,0.06)",
                                             transform: isHovered ? "translateY(-1px)" : "none",
                                         }}
@@ -201,7 +201,7 @@ export const HeroDashboardMockup = () => {
                                             <>
                                                 <p className="text-sm font-bold mt-0.5" style={{ color: "rgba(255,255,255,0.9)" }}>{kpi.value}</p>
                                                 {kpi.change && (
-                                                    <span className="text-[8px] font-semibold text-emerald-400 px-1 rounded inline-block mt-1" style={{ background: "rgba(16,185,129,0.15)" }}>{kpi.change}</span>
+                                                    <span className="text-[8px] font-semibold text-emerald-400 px-1 rounded inline-block mt-1" style={{ background: "rgba(0,227,122,0.15)" }}>{kpi.change}</span>
                                                 )}
                                             </>
                                         )}
@@ -227,8 +227,8 @@ export const HeroDashboardMockup = () => {
                                                     onClick={() => { setChartPeriod(p); setTimeout(animateBars, 50); }}
                                                     className="text-[7px] px-1.5 py-0.5 transition-all duration-150 capitalize"
                                                     style={{
-                                                        background: chartPeriod === p ? "rgba(16,185,129,0.15)" : "transparent",
-                                                        color: chartPeriod === p ? "#34d399" : "rgba(255,255,255,0.25)",
+                                                        background: chartPeriod === p ? "rgba(0,227,122,0.15)" : "transparent",
+                                                        color: chartPeriod === p ? "#33FF9E" : "rgba(255,255,255,0.25)",
                                                         fontWeight: chartPeriod === p ? 600 : 400,
                                                     }}
                                                 >
@@ -255,7 +255,7 @@ export const HeroDashboardMockup = () => {
                                                 {isHovered && (
                                                     <div
                                                         className="absolute -top-5 z-10 px-1.5 py-0.5 rounded text-[7px] font-bold whitespace-nowrap landing-fade-in"
-                                                        style={{ background: "rgba(16,185,129,0.9)", color: "#fff" }}
+                                                        style={{ background: "rgba(0,227,122,0.9)", color: "#fff" }}
                                                     >
                                                         {bar.name} · {bar.score}
                                                     </div>
@@ -270,7 +270,7 @@ export const HeroDashboardMockup = () => {
                                                             transform: "scaleY(0)",
                                                             opacity: 0,
                                                             background: bar.isWinner || isHovered
-                                                                ? "linear-gradient(to top, #059669, #34d399)"
+                                                                ? "linear-gradient(to top, #00B289, #33FF9E)"
                                                                 : "linear-gradient(to top, rgba(5,150,105,0.4), rgba(52,211,153,0.25))",
                                                             transition: "transform 1.2s ease-out, opacity 1.2s ease-out, background 0.15s",
                                                             willChange: "transform, opacity",

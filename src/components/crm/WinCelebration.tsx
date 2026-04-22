@@ -23,7 +23,7 @@ interface Particle {
 
 // Paleta focada emerald + gold (premium, não cassino)
 const PARTICLE_COLORS = [
-  "#10b981", "#34d399", "#6ee7b7", // emeralds
+  "#00E37A", "#33FF9E", "#66FFB3", // emeralds
   "#fbbf24", "#f59e0b", "#fcd34d", // golds
 ];
 
@@ -176,7 +176,7 @@ export const WinCelebration = memo(({
                 animate={{ scale: 4, opacity: 0 }}
                 transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
                 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full"
-                style={{ background: "radial-gradient(circle, rgba(16,185,129,0.35) 0%, transparent 70%)" }}
+                style={{ background: "radial-gradient(circle, rgba(0,227,122,0.35) 0%, transparent 70%)" }}
               />
             </>
           )}
@@ -234,7 +234,7 @@ export const WinCelebration = memo(({
                 {/* Glow estático atrás */}
                 <div
                   className="absolute -inset-6 rounded-3xl blur-2xl opacity-40 pointer-events-none"
-                  style={{ background: "radial-gradient(circle, rgba(16,185,129,0.6), transparent 70%)" }}
+                  style={{ background: "radial-gradient(circle, rgba(0,227,122,0.6), transparent 70%)" }}
                 />
 
                 {/* Card principal */}

@@ -90,8 +90,11 @@
   <meta name="twitter:image" content="https://vyzon.com.br/og-image.jpg" />
   <meta name="twitter:creator" content="@vyzonapp" />
 
-  <!-- Inter + Satoshi self-hosted em /public/fonts/. Zero render-blocking de 3rd-party.
-       satoshi-900 é usado no highlight "sem reclamar." do hero (LCP candidate) — preload evita CLS do swap. -->
+  <!-- Sora (brand font — Vyzon wordmark) + Inter + Satoshi self-hosted em /public/fonts/.
+       Sora carrega via Google Fonts com preconnect; font-display:swap evita CLS. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="preload" as="font" type="font/woff2" href="/fonts/inter/inter-variable-latin.woff2" crossorigin />
   <link rel="preload" as="font" type="font/woff2" href="/fonts/satoshi/satoshi-700.woff2" crossorigin />
   <link rel="preload" as="font" type="font/woff2" href="/fonts/satoshi/satoshi-900.woff2" crossorigin />
