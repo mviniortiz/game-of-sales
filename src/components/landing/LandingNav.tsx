@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Menu, X, ArrowRight, LogIn, ChevronDown, Rocket, Megaphone, Building2 } from "lucide-react";
 import brandLogoDark from "@/assets/logo-dark.png";
+import { scrollToLazyAnchor } from "@/hooks/useLandingAnchor";
 
 interface LandingNavProps {
     onLoginClick: () => void;
@@ -55,47 +56,14 @@ const NAV_LINKS: NavItem[] = [
     { kind: "anchor", label: "FAQ", anchor: "faq" },
 ];
 
-const HEADER_OFFSET = 72;
-
-const smoothScrollTo = (el: Element) => {
-    const top = el.getBoundingClientRect().top + window.scrollY - HEADER_OFFSET;
-    window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
-};
-
+// Cross-page: quem clica em navbar fora da landing (ex.: /para-infoprodutores)
+// vai pro hash da landing — LandingPage reprocessa o hash no mount.
 const scrollTo = (anchor: string) => {
-    // Cross-page: quem clica em navbar fora da landing (ex.: /para-infoprodutores)
-    // vai pro hash da landing — LandingPage reprocessa o hash no mount.
     if (window.location.pathname !== "/" && window.location.pathname !== "/landing") {
         window.location.href = `/#${anchor}`;
         return;
     }
-
-    const direct = document.getElementById(anchor);
-    if (direct) {
-        smoothScrollTo(direct);
-        return;
-    }
-
-    // Anchor vive dentro de um LazyOnVisible que ainda não hidratou
-    // (ex.: #features, #eva, #faq — só montam quando IntersectionObserver dispara).
-    // Força hidratação global + observa o DOM até o anchor aparecer.
-    window.dispatchEvent(new CustomEvent("vyzon:hydrate-all"));
-
-    let settled = false;
-    const finish = () => {
-        if (settled) return;
-        const el = document.getElementById(anchor);
-        if (!el) return;
-        settled = true;
-        observer.disconnect();
-        smoothScrollTo(el);
-    };
-    const observer = new MutationObserver(finish);
-    observer.observe(document.body, { childList: true, subtree: true });
-    requestAnimationFrame(finish);
-    setTimeout(() => {
-        if (!settled) observer.disconnect();
-    }, 2500);
+    scrollToLazyAnchor(anchor);
 };
 
 export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
