@@ -1,0 +1,56 @@
+name: Supabase migrations guard
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/migrations/**'
+      - 'scripts/**.sh'
+      - 'scripts/**.mjs'
+      - 'package.json'
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Block destructive SQL without IF EXISTS
+        shell: bash
+        run: |
+          set -e
+          FAIL=0
+          # DROP TABLE / TRUNCATE / DROP COLUMN sem "IF EXISTS" na mesma linha.
+          # Arquivos existentes podem estar marcados com o comentário
+          # "-- migrations-guard: allow-destructive" logo antes da linha.
+          while IFS= read -r f; do
+            echo "Inspecting: $f"
+            awk '
+              BEGIN { allow=0 }
+              /migrations-guard: allow-destructive/ { allow=1; next }
+              /^[[:space:]]*--/ { next }
+              /DROP[[:space:]]+TABLE(?![^;]*IF EXISTS)/ && !allow { print FILENAME ":" NR ": DROP TABLE sem IF EXISTS"; exit 2 }
+              /TRUNCATE/ && !allow { print FILENAME ":" NR ": TRUNCATE não permitido"; exit 2 }
+              /DROP[[:space:]]+COLUMN(?![^;]*IF EXISTS)/ && !allow { print FILENAME ":" NR ": DROP COLUMN sem IF EXISTS"; exit 2 }
+              { allow=0 }
+            ' "$f" || FAIL=1
+          done < <(find supabase/migrations -name '*.sql' 2>/dev/null)
+          if [ "$FAIL" -ne 0 ]; then
+            echo "::error::Migration guard falhou. Use CREATE/DROP ... IF EXISTS, ou adicione"
+            echo "::error::o comentário '-- migrations-guard: allow-destructive' na linha anterior"
+            echo "::error::justificando (backup feito, migration já aplicada manualmente, etc)."
+            exit 1
+          fi
+
+      - name: Block `supabase db push` in scripts and package.json
+        shell: bash
+        run: |
+          set -e
+          MATCHES=$(grep -rlE "supabase[[:space:]]+db[[:space:]]+push" \
+            --include='*.mjs' --include='*.sh' --include='*.yml' --include='*.yaml' --include='package.json' \
+            . 2>/dev/null | grep -v node_modules || true)
+          if [ -n "$MATCHES" ]; then
+            echo "::error::Encontrado 'supabase db push' em: $MATCHES"
+            echo "::error::Vyzon nunca usa db push (drift 30+ migrations). Use"
+            echo "::error::'supabase db query --linked -f <arquivo>' pra aplicar uma a uma."
+            exit 1
+          fi
