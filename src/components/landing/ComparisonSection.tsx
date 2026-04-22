@@ -283,7 +283,13 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
                                 </span>
                             </div>
                             {/* Vyzon header */}
-                            <div className="flex items-center justify-center relative z-10">
+                            <div className="flex items-center justify-center gap-2 relative z-10">
+                                <img
+                                    src="/favicon-32.png"
+                                    alt=""
+                                    className="h-5 w-5 rounded"
+                                    loading="lazy"
+                                />
                                 <span
                                     className="font-heading text-lg"
                                     style={{
@@ -487,6 +493,12 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
                                 >
                                     <div className="flex items-center gap-2">
                                         <LevelIcon level={row.vyzon.level} size={13} />
+                                        <img
+                                            src="/favicon-32.png"
+                                            alt=""
+                                            className="h-4 w-4 rounded"
+                                            loading="lazy"
+                                        />
                                         <span
                                             className="text-[11px]"
                                             style={{
