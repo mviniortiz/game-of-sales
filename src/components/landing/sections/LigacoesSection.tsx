@@ -1,10 +1,10 @@
-import { PhoneCall, MessageCircle, Target, Sparkles, ArrowRight } from "lucide-react";
+import { PhoneCall, MessageCircle, Target, Lightbulb, ArrowRight } from "lucide-react";
 
 const LIGACOES_FEATURES = [
     { icon: PhoneCall, title: "Clique para ligar", desc: "Chamada direto do card do lead ou deal." },
     { icon: MessageCircle, title: "Transcrição no histórico", desc: "Conversa salva no deal para follow-up." },
     { icon: Target, title: "Mais previsibilidade", desc: "Gestor acompanha volume e qualidade." },
-    { icon: Sparkles, title: "Insights sob demanda", desc: "Opcional por botão, sem travar o fluxo." },
+    { icon: Lightbulb, title: "Insights sob demanda", desc: "Opcional por botão, sem travar o fluxo." },
 ] as const;
 
 type Props = { onSeePlansClick: () => void };

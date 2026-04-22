@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Trophy,
-    Zap,
+    Webhook,
     Kanban,
     Target,
     MessageCircle,
@@ -12,6 +12,7 @@ import {
     Check,
     Bot,
     Clock,
+    Package,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -655,7 +656,7 @@ const FEATURES: readonly Feature[] = [
     },
     {
         id: "vendas",
-        icon: Zap,
+        icon: Webhook,
         title: "Venda automática",
         description: "Qualquer checkout, plataforma de pagamento ou ferramenta que dispare webhook. A venda entra no pipeline e sobe o ranking. Sem planilha, sem importação manual.",
         Mockup: SalesMockup,
@@ -705,7 +706,7 @@ export const ProductBentoGrid = () => {
         <section
             id="features"
             className="relative py-28 px-4 sm:px-6 lg:px-8 overflow-hidden"
-            style={{ background: "#06080a" }}
+            style={{ background: "var(--vyz-bg)" }}
         >
             {/* Green spotlight from top */}
             <div
@@ -734,7 +735,7 @@ export const ProductBentoGrid = () => {
                             border: "1px solid rgba(0,227,122,0.2)",
                         }}
                     >
-                        <Zap className="h-3 w-3" />
+                        <Package className="h-3 w-3" />
                         O QUE TEM DENTRO
                     </span>
                     <h2

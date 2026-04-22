@@ -81,7 +81,7 @@ const RedefinirSenha = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative selection:bg-emerald-500/30" style={{ background: "#06080a" }}>
+    <div className="min-h-screen flex items-center justify-center relative selection:bg-emerald-500/30" style={{ background: "var(--vyz-bg)" }}>
       {/* Background */}
       <div className="absolute inset-0">
         <div

@@ -1,9 +1,51 @@
-import { lazy, Suspense } from "react";
-import { ArrowRight, MonitorPlay, Calendar } from "lucide-react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { MonitorPlay, Calendar } from "lucide-react";
+import { LandingButton } from "./LandingButton";
+import { trackEvent } from "@/lib/analytics";
 
 const HeroDashboardMockup = lazy(() =>
     import("./HeroDashboardMockup").then((m) => ({ default: m.HeroDashboardMockup }))
 );
+
+// Headline adapta a intenção do tráfego. Em CPC a pessoa já está em modo
+// comparação transacional, então mostramos features/comparação em vez de
+// benefício abstrato de adoção. Ver docs/landing-experiments.md para contexto.
+type HeroVariant = "default" | "crm" | "alternativa";
+
+const HERO_COPY: Record<HeroVariant, { pre: string; highlights: string[]; subtitle: string }> = {
+    default: {
+        pre: "O primeiro CRM que seu time abre ",
+        highlights: ["sem reclamar.", "sem cobrar.", "todo dia útil."],
+        subtitle:
+            "Cada venda do seu checkout cai no pipeline, o ranking sobe e cada vendedor enxerga quanto falta pra bater meta. Em 5 minutos no ar. Sem planilha, sem cobrar atualização no grupo.",
+    },
+    crm: {
+        pre: "CRM de vendas com ",
+        highlights: ["ranking ao vivo.", "IA integrada.", "WhatsApp nativo.", "checkout conectado."],
+        subtitle:
+            "Pipeline que atualiza sozinho pelo checkout, ranking ao vivo, IA que analisa seu funil e mensagens caindo no Pulse. Em 5 minutos no ar, 14 dias grátis.",
+    },
+    alternativa: {
+        pre: "A alternativa nacional ao ",
+        highlights: ["RD Station CRM.", "Pipedrive.", "Ploomes."],
+        subtitle:
+            "Mesmo pipeline e relatórios, com ranking gamificado, IA que responde no Pulse e checkout já integrado. Preço em real, suporte humano no WhatsApp, sem planilha paralela.",
+    },
+};
+
+function pickHeroVariant(): HeroVariant {
+    if (typeof window === "undefined") return "default";
+    try {
+        const params = new URLSearchParams(window.location.search);
+        const isPaidGoogle = params.has("gclid") || params.get("utm_source") === "google";
+        if (!isPaidGoogle) return "default";
+        const term = (params.get("utm_term") || "").toLowerCase();
+        if (/rd\s?station|alternativ|pipedrive|hubspot|ploomes|agendor/.test(term)) return "alternativa";
+        return "crm";
+    } catch {
+        return "default";
+    }
+}
 
 const MockupFallback = () => (
     <div
@@ -24,8 +66,50 @@ interface HeroSectionProps {
 }
 
 export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: HeroSectionProps) => {
+    const variant = useMemo(pickHeroVariant, []);
+    const copy = HERO_COPY[variant];
+    const [typed, setTyped] = useState<string>(() => copy.highlights[0] || "");
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [typeIndex, setTypeIndex] = useState(0);
+
+    useEffect(() => {
+        try {
+            trackEvent("hero_variant_shown", { variant });
+        } catch {
+            /* analytics never breaks UX */
+        }
+    }, [variant]);
+
+    useEffect(() => {
+        if (copy.highlights.length <= 1) return;
+        const current = copy.highlights[typeIndex];
+        const fullyTyped = !isDeleting && typed === current;
+        const fullyDeleted = isDeleting && typed === "";
+
+        let delay: number;
+        if (fullyTyped) delay = 1800;
+        else if (fullyDeleted) delay = 220;
+        else if (isDeleting) delay = 32;
+        else delay = 55 + Math.random() * 35;
+
+        const t = window.setTimeout(() => {
+            if (fullyTyped) {
+                setIsDeleting(true);
+            } else if (fullyDeleted) {
+                setIsDeleting(false);
+                setTypeIndex((i) => (i + 1) % copy.highlights.length);
+            } else if (isDeleting) {
+                setTyped((s) => s.slice(0, -1));
+            } else {
+                setTyped(current.slice(0, typed.length + 1));
+            }
+        }, delay);
+
+        return () => clearTimeout(t);
+    }, [typed, isDeleting, typeIndex, copy.highlights]);
+
     return (
-        <section className="relative overflow-hidden" style={{ background: "#06080a" }}>
+        <section className="relative overflow-hidden" style={{ background: "var(--vyz-bg)" }}>
             {/* Background */}
             <div className="absolute inset-0">
                 <div
@@ -69,18 +153,23 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
                         }}
                     >
                         <span style={{ fontWeight: 700, color: "rgba(255,255,255,0.95)" }}>
-                            O primeiro CRM que seu time abre{" "}
+                            {copy.pre}
                         </span>
                         <span
+                            aria-hidden="true"
+                            className="hero-typing-highlight"
                             style={{
                                 fontWeight: 900,
                                 background: "linear-gradient(135deg, #33FF9E, #00E37A, #14b8a6)",
                                 WebkitBackgroundClip: "text",
                                 WebkitTextFillColor: "transparent",
+                                display: "inline-block",
                             }}
                         >
-                            sem reclamar.
+                            {typed}
+                            <span className="hero-typing-cursor">|</span>
                         </span>
+                        <span className="sr-only">{copy.highlights[0]}</span>
                     </h1>
 
                     {/* Subtitle */}
@@ -92,14 +181,12 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
                             color: "rgba(255,255,255,0.7)",
                         }}
                     >
-                        Cada venda do seu checkout cai no pipeline, o ranking sobe e cada vendedor
-                        enxerga quanto falta pra bater meta. Em 5 minutos no ar. Sem planilha,
-                        sem cobrar atualização no grupo.
+                        {copy.subtitle}
                     </p>
 
                     {/* CTAs — anchors, não buttons: clique antes da hidratação ainda navega via href nativo */}
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 mt-10 w-full max-w-md mx-auto sm:max-w-none landing-fade-in-up landing-delay-300">
-                        <a
+                        <LandingButton
                             href="#agendar-demo"
                             onClick={(e) => {
                                 if (onScheduleDemoClick || onCTAClick) {
@@ -107,19 +194,15 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
                                     (onScheduleDemoClick || onCTAClick)();
                                 }
                             }}
-                            className="hero-cta-primary group relative inline-flex h-12 items-center justify-center gap-2 px-6 sm:px-7 text-sm sm:text-[15px] font-bold text-white rounded-xl overflow-hidden no-underline"
-                            style={{
-                                background: "linear-gradient(135deg, #00E37A, #00B289)",
-                                boxShadow: "0 0 0 1px rgba(0,227,122,0.3), 0 4px 24px rgba(0,227,122,0.3)",
-                            }}
+                            variant="primary"
+                            size="lg"
+                            icon={<Calendar className="h-4 w-4" strokeWidth={2} />}
+                            showArrow
                         >
-                            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                            <Calendar className="relative h-4 w-4" strokeWidth={2} />
-                            <span className="relative">Agendar demonstração</span>
-                            <ArrowRight className="relative h-4 w-4 group-hover:translate-x-1 transition-transform" strokeWidth={2} />
-                        </a>
+                            Agendar demonstração
+                        </LandingButton>
 
-                        <a
+                        <LandingButton
                             href="#how-it-works"
                             onClick={(e) => {
                                 if (onDemoClick) {
@@ -127,17 +210,12 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
                                     onDemoClick();
                                 }
                             }}
-                            className="hero-cta-secondary group inline-flex h-12 items-center justify-center gap-2 px-6 sm:px-7 rounded-xl text-sm sm:text-[15px] no-underline"
-                            style={{
-                                color: "rgba(255,255,255,0.85)",
-                                background: "rgba(255,255,255,0.04)",
-                                boxShadow: "0 0 0 1px rgba(255,255,255,0.16)",
-                                fontWeight: 600,
-                            }}
+                            variant="secondary"
+                            size="lg"
+                            icon={<MonitorPlay className="h-4 w-4" strokeWidth={2} />}
                         >
-                            <MonitorPlay className="h-4 w-4 transition-colors group-hover:text-emerald-300" strokeWidth={2} />
                             Ver como funciona
-                        </a>
+                        </LandingButton>
                     </div>
 
                     {/* Trust row */}
@@ -168,8 +246,24 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
             {/* Bottom fade */}
             <div
                 className="absolute bottom-0 inset-x-0 h-32 pointer-events-none"
-                style={{ background: "linear-gradient(to bottom, transparent, #06080a)" }}
+                style={{ background: "linear-gradient(to bottom, transparent, var(--vyz-bg))" }}
             />
+
+            <style>{`
+                .hero-typing-cursor {
+                    display: inline-block;
+                    margin-left: 0.04em;
+                    font-weight: 400;
+                    animation: heroTypingBlink 0.85s step-end infinite;
+                }
+                @keyframes heroTypingBlink {
+                    0%, 55% { opacity: 1; }
+                    56%, 100% { opacity: 0; }
+                }
+                @media (prefers-reduced-motion: reduce) {
+                    .hero-typing-cursor { animation: none; opacity: 1; }
+                }
+            `}</style>
         </section>
     );
 };

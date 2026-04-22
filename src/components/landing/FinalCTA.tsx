@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
-import { ArrowRight, Check, Zap, Calendar } from "lucide-react";
+import { Check, Rocket, Calendar } from "lucide-react";
+import { LandingButton } from "./LandingButton";
 
 interface FinalCTAProps {
     onCTAClick: () => void;
@@ -8,7 +9,7 @@ interface FinalCTAProps {
 
 export const FinalCTA = ({ onCTAClick, onScheduleDemoClick }: FinalCTAProps) => {
     return (
-        <section className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden" style={{ background: "#06080a" }}>
+        <section className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden" style={{ background: "var(--vyz-bg)" }}>
             {/* Fine grid overlay */}
             <div
                 className="absolute inset-0 opacity-[0.02] pointer-events-none"
@@ -78,67 +79,31 @@ export const FinalCTA = ({ onCTAClick, onScheduleDemoClick }: FinalCTAProps) => 
 
                     {/* CTA buttons */}
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-                        {/* Primary CTA — anchor pro onboarding, JS intercepta quando hidratado */}
-                        <motion.a
+                        <LandingButton
                             href="/onboarding?plan=pro"
                             onClick={(e) => { e.preventDefault(); onCTAClick(); }}
-                            className="relative overflow-hidden flex items-center gap-2.5 px-6 sm:px-8 py-4 rounded-xl text-white group w-full sm:w-auto justify-center no-underline"
-                            style={{
-                                background: "linear-gradient(135deg, #00E37A 0%, #00B289 100%)",
-                                boxShadow: "0 0 0 1px rgba(0,227,122,0.3), 0 4px 24px rgba(0,227,122,0.35), 0 16px 48px -8px rgba(0,227,122,0.2)",
-                                fontWeight: 700,
-                                fontSize: "0.95rem",
-                            }}
-                            whileHover={{ scale: 1.03, boxShadow: "0 0 0 1px rgba(0,227,122,0.4), 0 8px 32px rgba(0,227,122,0.5), 0 24px 56px -8px rgba(0,227,122,0.3)" }}
-                            whileTap={{ scale: 0.97 }}
+                            variant="primary"
+                            size="lg"
+                            icon={<Rocket className="h-4 w-4" />}
+                            showArrow
                         >
-                            {/* Shimmer */}
-                            <motion.span
-                                className="absolute inset-0 rounded-xl"
-                                style={{
-                                    background: "linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.16) 50%, transparent 70%)",
-                                }}
-                                animate={{ x: ["-120%", "220%"] }}
-                                transition={{
-                                    duration: 2.2,
-                                    repeat: Infinity,
-                                    repeatDelay: 2,
-                                    ease: "easeInOut",
-                                }}
-                            />
-                            <Zap className="relative h-4 w-4" fill="currentColor" />
-                            <span className="relative">Testar grátis por 14 dias</span>
-                            <ArrowRight className="relative h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
-                        </motion.a>
+                            Testar grátis por 14 dias
+                        </LandingButton>
 
-                        {/* Secondary — schedule demo */}
-                        <a
+                        <LandingButton
                             href="#agendar-demo"
-                            className="flex items-center gap-2 px-6 py-4 rounded-xl text-sm transition-all duration-200 w-full sm:w-auto justify-center"
-                            style={{
-                                color: "rgba(0,227,122,0.8)",
-                                background: "rgba(0,227,122,0.06)",
-                                boxShadow: "0 0 0 1px rgba(0,227,122,0.15)",
-                                fontWeight: 600,
-                            }}
-                            onMouseEnter={(e) => {
-                                (e.currentTarget as HTMLAnchorElement).style.color = "rgba(0,227,122,1)";
-                                (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 0 0 1px rgba(0,227,122,0.35)";
-                            }}
-                            onMouseLeave={(e) => {
-                                (e.currentTarget as HTMLAnchorElement).style.color = "rgba(0,227,122,0.8)";
-                                (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 0 0 1px rgba(0,227,122,0.15)";
-                            }}
                             onClick={(e) => {
                                 if (onScheduleDemoClick) {
                                     e.preventDefault();
                                     onScheduleDemoClick();
                                 }
                             }}
+                            variant="secondary"
+                            size="lg"
+                            icon={<Calendar className="h-4 w-4" />}
                         >
-                            <Calendar className="h-4 w-4" />
                             Agendar demonstração
-                        </a>
+                        </LandingButton>
                     </div>
 
                     {/* Trust signals */}

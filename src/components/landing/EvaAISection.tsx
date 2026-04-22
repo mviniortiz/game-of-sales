@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Lightbulb, BarChart3, TrendingUp, Users, Zap, ArrowRight } from "lucide-react";
+import { Lightbulb, BarChart3, TrendingUp, Users, Dot, ArrowRight } from "lucide-react";
 
 // ─── Typing animation for the mockup ──────────────────────────────
 
@@ -200,7 +200,7 @@ function ChatMockup({ onCTAClick }: { onCTAClick?: () => void }) {
                   className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px]"
                   style={{ background: "rgba(139,92,246,0.08)", border: "1px solid rgba(139,92,246,0.12)", color: "rgba(255,255,255,0.5)", fontWeight: "var(--fw-medium)" }}
                 >
-                  <Zap className="h-2.5 w-2.5" style={{ color: "#a78bfa" }} />
+                  <Dot className="h-2.5 w-2.5" style={{ color: "#a78bfa" }} />
                   {h}
                 </span>
               ))}
@@ -289,7 +289,7 @@ const fadeIn = {
 
 export function EvaAISection({ onCTAClick }: { onCTAClick?: () => void }) {
   return (
-    <section id="eva" className="py-28 px-4 sm:px-6 lg:px-8 relative overflow-hidden" style={{ background: "#06080a" }}>
+    <section id="eva" className="py-28 px-4 sm:px-6 lg:px-8 relative overflow-hidden" style={{ background: "var(--vyz-bg)" }}>
       {/* Violet aurora spotlight from top */}
       <div
         className="absolute inset-x-0 top-0 h-[500px] pointer-events-none"

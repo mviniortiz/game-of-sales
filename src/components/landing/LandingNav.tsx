@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Menu, X, ArrowRight, LogIn, ChevronDown, Rocket, Megaphone, Building2 } from "lucide-react";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
 import { scrollToLazyAnchor } from "@/hooks/useLandingAnchor";
+import { LandingButton } from "./LandingButton";
 
 interface LandingNavProps {
     onLoginClick: () => void;
@@ -277,19 +278,15 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                             Entrar
                         </button>
 
-                        <a
+                        <LandingButton
                             href="#agendar-demo"
                             onClick={(e) => { e.preventDefault(); onCTAClick(); }}
-                            className="relative overflow-hidden flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm text-white transition-transform duration-150 hover:scale-[1.03] active:scale-[0.97] no-underline"
-                            style={{
-                                background: "linear-gradient(135deg, var(--vyz-accent) 0%, var(--vyz-accent-dark) 100%)",
-                                boxShadow: "var(--vyz-shadow-cta-sm)",
-                                fontWeight: 600,
-                            }}
+                            variant="primary"
+                            size="sm"
+                            showArrow
                         >
-                            <span className="relative">Agendar demo</span>
-                            <ArrowRight className="relative h-3.5 w-3.5" />
-                        </a>
+                            Agendar demo
+                        </LandingButton>
                     </div>
 
                     <div className="flex md:hidden items-center gap-2">
@@ -482,19 +479,16 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                         Entrar na minha conta
                     </button>
 
-                    <a
+                    <LandingButton
                         href="#agendar-demo"
                         onClick={(e) => { e.preventDefault(); onCTAClick(); setMobileOpen(false); }}
-                        className="relative overflow-hidden flex items-center justify-center gap-2 w-full py-3.5 rounded-xl text-sm text-white transition-transform duration-150 active:scale-[0.97] no-underline"
-                        style={{
-                            background: "linear-gradient(135deg, var(--vyz-accent) 0%, var(--vyz-accent-dark) 100%)",
-                            boxShadow: "0 4px 20px rgba(0,227,122,0.32)",
-                            fontWeight: 700,
-                        }}
+                        variant="primary"
+                        size="lg"
+                        fullWidth
+                        showArrow
                     >
-                        <span className="relative">Agendar demo</span>
-                        <ArrowRight className="relative h-4 w-4" />
-                    </a>
+                        Agendar demo
+                    </LandingButton>
                 </div>
             </div>
         </>

@@ -90,10 +90,12 @@ const LandingPage = () => {
     useHashScrollOnMount();
 
     // Scroll pro form de demo + tracking do CTA de origem (Nav, Hero, Pricing, FinalCTA).
-    // Tenta #demo-form-start primeiro; se ainda não existe (LazyOnVisible), vai pro wrapper
-    // #agendar-demo e re-tenta o form quando aparecer.
+    // Força hydrate de TODO lazy content imediatamente — sem isso o scroll caía em
+    // placeholder 320px vazio e usuários clicavam 6,59x/user achando que travou.
+    // Fallback wait loop (2,5s) ainda fica de rede pra casos de import lento.
     const scrollToDemo = (location: string) => {
         trackEvent(FUNNEL_EVENTS.LANDING_CTA_CLICK, { target: "demo", location });
+        window.dispatchEvent(new CustomEvent("vyzon:hydrate-all"));
         if (smoothScrollToId("demo-form-start")) return;
         scrollToLazyAnchor("agendar-demo");
         const start = Date.now();

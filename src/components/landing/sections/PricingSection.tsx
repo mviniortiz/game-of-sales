@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Check, ArrowRight, Zap, Award, PhoneCall } from "lucide-react";
+import { Check, Timer, Star, Tag, Award, PhoneCall } from "lucide-react";
 import { PLANS } from "@/data/landing/pricing";
+import { LandingButton } from "../LandingButton";
 
 const TRUST_ITEMS = [
     { icon: <Check className="h-3.5 w-3.5" />, label: "Cancele quando quiser" },
-    { icon: <Zap className="h-3.5 w-3.5" />, label: "Setup em 5 minutos" },
+    { icon: <Timer className="h-3.5 w-3.5" />, label: "Setup em 5 minutos" },
     { icon: <PhoneCall className="h-3.5 w-3.5" />, label: "Ligações (Plus e Pro)" },
     { icon: <Award className="h-3.5 w-3.5" />, label: "Suporte via WhatsApp" },
 ];
@@ -28,7 +29,7 @@ export const PricingSection = ({ onPlanSelect, onScheduleDemo }: Props) => {
                 <div className="text-center mb-14 landing-fade-in-up">
                     <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400 rounded-full px-4 py-1.5 mb-5"
                         style={{ letterSpacing: "var(--ls-widest)", fontWeight: "var(--fw-semibold)", background: "var(--vyz-accent-soft-10)", border: "1px solid var(--vyz-accent-border)" }}>
-                        <Zap className="h-3 w-3" />
+                        <Tag className="h-3 w-3" />
                         PLANOS E PREÇOS
                     </span>
 
@@ -86,7 +87,7 @@ export const PricingSection = ({ onPlanSelect, onScheduleDemo }: Props) => {
                                                 fontWeight: "var(--fw-bold)",
                                                 letterSpacing: "var(--ls-wide)"
                                             }}>
-                                            <Zap className="h-2.5 w-2.5" fill="currentColor" />
+                                            <Star className="h-2.5 w-2.5" fill="currentColor" />
                                             MAIS POPULAR
                                         </span>
                                     </div>
@@ -178,55 +179,25 @@ export const PricingSection = ({ onPlanSelect, onScheduleDemo }: Props) => {
                                             ))}
                                         </ul>
 
-                                        {isPopular ? (
-                                            <div className="space-y-2">
-                                                <button
-                                                    onClick={() => onPlanSelect(plan.name.toLowerCase())}
-                                                    className="relative w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm text-white overflow-hidden cursor-pointer"
-                                                    style={{
-                                                        background: "var(--vyz-gradient-accent)",
-                                                        boxShadow: "var(--vyz-shadow-cta)",
-                                                        fontWeight: "var(--fw-semibold)"
-                                                    }}>
-                                                    <span
-                                                        className="absolute inset-0 rounded-xl landing-shine"
-                                                        style={{ background: "linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.14) 50%, transparent 70%)" }}
-                                                    />
-                                                    <span className="relative">Começar teste de 14 dias</span>
-                                                    <ArrowRight className="relative h-4 w-4" />
-                                                </button>
-                                                <button
-                                                    onClick={() => onScheduleDemo("pricing_popular")}
-                                                    className="w-full text-xs cursor-pointer transition-colors"
-                                                    style={{ color: "var(--vyz-text-dim)", fontWeight: "var(--fw-medium)" }}
-                                                >
-                                                    ou agende uma demo antes
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <div className="space-y-2">
-                                                <button
-                                                    onClick={() => onPlanSelect(plan.name.toLowerCase())}
-                                                    className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm cursor-pointer"
-                                                    style={{
-                                                        background: "var(--vyz-surface-2)",
-                                                        border: "none",
-                                                        boxShadow: "0 0 0 1px var(--vyz-border-strong)",
-                                                        color: "var(--vyz-text-strong)",
-                                                        fontWeight: "var(--fw-semibold)"
-                                                    }}>
-                                                    Começar teste de 14 dias
-                                                    <ArrowRight className="h-4 w-4" />
-                                                </button>
-                                                <button
-                                                    onClick={() => onScheduleDemo("pricing_other")}
-                                                    className="w-full text-xs cursor-pointer transition-colors"
-                                                    style={{ color: "var(--vyz-text-soft)", fontWeight: "var(--fw-medium)" }}
-                                                >
-                                                    ou agende uma demo antes
-                                                </button>
-                                            </div>
-                                        )}
+                                        <div className="space-y-2">
+                                            <LandingButton
+                                                as="button"
+                                                onClick={() => onPlanSelect(plan.name.toLowerCase())}
+                                                variant={isPopular ? "primary" : "secondary"}
+                                                size="lg"
+                                                fullWidth
+                                                showArrow
+                                            >
+                                                Começar teste de 14 dias
+                                            </LandingButton>
+                                            <button
+                                                onClick={() => onScheduleDemo(isPopular ? "pricing_popular" : "pricing_other")}
+                                                className="w-full text-xs cursor-pointer transition-colors"
+                                                style={{ color: isPopular ? "var(--vyz-text-dim)" : "var(--vyz-text-soft)", fontWeight: "var(--fw-medium)" }}
+                                            >
+                                                ou agende uma demo antes
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

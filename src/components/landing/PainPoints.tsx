@@ -29,7 +29,7 @@ const COMPARISONS = [
 
 export const PainPoints = () => {
     return (
-        <section className="relative py-28 px-4 sm:px-6 lg:px-8 overflow-hidden" style={{ background: "#06080a" }}>
+        <section className="relative py-28 px-4 sm:px-6 lg:px-8 overflow-hidden" style={{ background: "var(--vyz-bg)" }}>
             <div
                 className="absolute inset-x-0 top-0 h-[400px] pointer-events-none"
                 style={{

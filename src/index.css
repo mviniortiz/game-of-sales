@@ -482,6 +482,29 @@ All colors MUST be HSL.
   transform: translateY(0);
 }
 
+/* Landing Button — A+C mix (emerald solid + arrow shift) */
+.lbtn-primary:hover {
+  filter: brightness(1.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 0 24px rgba(0, 227, 122, 0.28),
+    0 2px 4px rgba(0, 227, 122, 0.2);
+}
+.lbtn-primary:active {
+  filter: brightness(0.96);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 1px 2px rgba(0, 227, 122, 0.15);
+}
+.lbtn-secondary:hover {
+  background: rgba(255, 255, 255, 0.04) !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18) !important;
+  color: #ffffff !important;
+}
+.lbtn-secondary:active {
+  background: rgba(255, 255, 255, 0.02) !important;
+}
+
 /* Pricing card hover lift */
 .pricing-card {
   transition: transform 0.2s ease-out;
@@ -531,9 +554,14 @@ All colors MUST be HSL.
   }
   .hero-cta-primary,
   .hero-cta-secondary,
+  .lbtn-primary,
+  .lbtn-secondary,
   .hero-eyebrow,
   .pricing-card,
   .demo-submit-btn {
     transition: none;
+  }
+  .lbtn:hover svg {
+    transform: none !important;
   }
 }

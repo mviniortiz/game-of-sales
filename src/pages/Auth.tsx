@@ -68,7 +68,7 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2 relative selection:bg-emerald-500/30" style={{ background: "#06080a" }}>
+    <div className="min-h-screen grid lg:grid-cols-2 relative selection:bg-emerald-500/30" style={{ background: "var(--vyz-bg)" }}>
       {/* LEFT PANEL — Brand + Lottie (desktop only) */}
       <div className="hidden lg:flex relative flex-col items-center justify-center overflow-hidden p-12 border-r border-white/5">
         {/* Ambient background */}

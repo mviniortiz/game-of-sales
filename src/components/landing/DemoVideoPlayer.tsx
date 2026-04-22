@@ -99,7 +99,7 @@ export const DemoVideoPlayer = () => {
     };
 
     return (
-        <section id="demo" className="py-28 px-4 sm:px-6 lg:px-8" style={{ background: "#06080a" }}>
+        <section id="demo" className="py-28 px-4 sm:px-6 lg:px-8" style={{ background: "var(--vyz-bg)" }}>
             <div className="max-w-4xl mx-auto">
                 <motion.div {...fadeInUp} className="text-center mb-12">
                     <span

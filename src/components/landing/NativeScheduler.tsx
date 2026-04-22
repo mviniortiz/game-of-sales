@@ -8,10 +8,19 @@ interface Slot {
 }
 
 interface NativeSchedulerProps {
-    demoRequestId: string;
-    leadName: string;
-    leadEmail: string;
-    onScheduled: (info: { startIso: string; meetLink: string | null }) => void;
+    /** ID do lead já salvo. Quando presente, o componente confirma o booking
+     * direto via edge function. Quando ausente, opera em modo "select-only"
+     * (só seleciona o slot, parent assume responsabilidade de confirmar). */
+    demoRequestId?: string;
+    leadName?: string;
+    leadEmail?: string;
+    /** Chamado quando booking é confirmado pelo próprio scheduler (modo legacy). */
+    onScheduled?: (info: { startIso: string; meetLink: string | null }) => void;
+    /** Chamado quando user escolhe um slot em modo select-only.
+     * Parent deve coletar contato + persistir lead + chamar calendar-book. */
+    onSlotConfirm?: (slot: Slot) => void;
+    /** Label customizado do botão de confirmação (ex: "Continuar"). */
+    confirmLabel?: string;
 }
 
 type Phase = "loading" | "ready" | "booking" | "booked" | "error";
@@ -64,7 +73,10 @@ export default function NativeScheduler({
     leadName,
     leadEmail,
     onScheduled,
+    onSlotConfirm,
+    confirmLabel,
 }: NativeSchedulerProps) {
+    const isSelectOnly = !demoRequestId && !!onSlotConfirm;
     const [phase, setPhase] = useState<Phase>("loading");
     const [slots, setSlots] = useState<Slot[]>([]);
     const [selectedDay, setSelectedDay] = useState<string | null>(null);
@@ -116,6 +128,14 @@ export default function NativeScheduler({
 
     async function handleBook() {
         if (!selectedSlot) return;
+
+        // Modo select-only: delega ao parent (ex: DemoScheduleSection flipped)
+        if (isSelectOnly) {
+            onSlotConfirm?.(selectedSlot);
+            return;
+        }
+
+        if (!demoRequestId) return;
         setPhase("booking");
         setErrorMsg("");
         try {
@@ -131,7 +151,7 @@ export default function NativeScheduler({
             const info = { startIso: selectedSlot.startIso, meetLink: data?.meet_link || null };
             setBookedInfo(info);
             setPhase("booked");
-            onScheduled(info);
+            onScheduled?.(info);
         } catch (err) {
             console.error("[scheduler] book error", err);
             setErrorMsg(err instanceof Error ? err.message : "Erro ao confirmar agendamento");
@@ -185,7 +205,7 @@ export default function NativeScheduler({
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 text-xs px-4 py-2 rounded-full mt-1"
-                        style={{ background: "#00E37A", color: "#06080a", fontWeight: 700 }}
+                        style={{ background: "#00E37A", color: "var(--vyz-bg)", fontWeight: 700 }}
                     >
                         Abrir Google Meet
                     </a>
@@ -339,7 +359,7 @@ export default function NativeScheduler({
                             ) : (
                                 <>
                                     <Check className="h-4 w-4" strokeWidth={3} />
-                                    Confirmar agendamento
+                                    {confirmLabel || "Confirmar agendamento"}
                                 </>
                             )}
                         </button>

@@ -49,14 +49,16 @@
     })();
   </script>
 
-  <!-- Favicon & App Icons -->
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png" />
-  <link rel="shortcut icon" href="/favicon.png" />
-  <meta name="msapplication-TileImage" content="/favicon.png" />
-  <meta name="msapplication-TileColor" content="#06080a" />
-  <meta name="theme-color" content="#06080a" />
+  <!-- Favicon & App Icons (PNG wins over SVG — o render 3D do V não dá pra
+       replicar vetorial sem perda, então priorizamos os PNGs otimizados) -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="shortcut icon" href="/favicon-32.png" />
+  <meta name="msapplication-TileImage" content="/icon-192.png" />
+  <meta name="msapplication-TileColor" content="#0D1421" />
+  <meta name="theme-color" content="#0D1421" />
 
   <!-- SEO Primary Meta Tags -->
   <title>Vyzon | CRM Gamificado — Seu Time Batendo Meta Todo Mês</title>
@@ -75,7 +77,7 @@
   <meta property="og:title" content="Vyzon | CRM Gamificado — Seu Time Batendo Meta Todo Mês" />
   <meta property="og:description"
     content="Pipeline visual, ranking ao vivo e metas em tempo real. Integra Hotmart, Kiwify e Greenn em 5 min. 14 dias grátis." />
-  <meta property="og:image" content="https://vyzon.com.br/og-image.jpg" />
+  <meta property="og:image" content="https://vyzon.com.br/og-image.jpg?v=3" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:locale" content="pt_BR" />
@@ -87,7 +89,7 @@
   <meta name="twitter:title" content="Vyzon | CRM Gamificado — Seu Time Batendo Meta Todo Mês" />
   <meta name="twitter:description"
     content="Pipeline visual, ranking ao vivo e metas em tempo real. Integra Hotmart, Kiwify e Greenn em 5 min. 14 dias grátis." />
-  <meta name="twitter:image" content="https://vyzon.com.br/og-image.jpg" />
+  <meta name="twitter:image" content="https://vyzon.com.br/og-image.jpg?v=3" />
   <meta name="twitter:creator" content="@vyzonapp" />
 
   <!-- Sora (brand font — Vyzon wordmark) + Inter + Satoshi self-hosted em /public/fonts/.
@@ -155,7 +157,7 @@
       "Dashboard de performance",
       "Gestão de equipe comercial"
     ],
-    "screenshot": "https://vyzon.com.br/og-image.jpg"
+    "screenshot": "https://vyzon.com.br/og-image.jpg?v=3"
   }
   </script>
   <script type="application/ld+json">
@@ -164,7 +166,7 @@
     "@type": "Organization",
     "name": "Vyzon",
     "url": "https://vyzon.com.br",
-    "logo": "https://vyzon.com.br/favicon.png",
+    "logo": "https://vyzon.com.br/icon-512.png",
     "sameAs": []
   }
   </script>

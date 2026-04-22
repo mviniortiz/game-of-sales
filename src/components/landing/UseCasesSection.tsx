@@ -47,7 +47,7 @@ export const UseCasesSection = () => {
     const [active, setActive] = useState(0);
 
     return (
-        <section className="relative py-28 px-4 sm:px-6 lg:px-8 overflow-hidden" style={{ background: "#06080a" }}>
+        <section className="relative py-28 px-4 sm:px-6 lg:px-8 overflow-hidden" style={{ background: "var(--vyz-bg)" }}>
             {/* Green spotlight from top */}
             <div
                 className="absolute inset-x-0 top-0 h-[400px] pointer-events-none"

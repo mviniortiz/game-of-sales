@@ -11,11 +11,11 @@ import {
     Bot,
     HeartHandshake,
     Target,
-    ArrowRight,
     Scale,
     PiggyBank,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { LandingButton } from "./LandingButton";
 
 const FAVICON = {
     pipedrive: "https://www.google.com/s2/favicons?domain=pipedrive.com&sz=64",
@@ -158,7 +158,7 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
         <section
             id="comparacao"
             className="relative py-28 px-4 sm:px-6 lg:px-8 overflow-hidden"
-            style={{ background: "#06080a" }}
+            style={{ background: "var(--vyz-bg)" }}
         >
             {/* Top spotlight */}
             <div
@@ -612,20 +612,15 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
                             Se o seu time já usa Pipedrive ou HubSpot e tá funcionando, ótimo. Continua. <span style={{ color: "rgba(255,255,255,0.85)", fontWeight: 500 }}>Mas se você tem um time comercial no Brasil e ainda tá forçando um CRM que não foi feito pra cá</span>, vale testar.
                         </p>
 
-                        <button
+                        <LandingButton
+                            as="button"
                             onClick={onCTAClick}
-                            className="group relative inline-flex items-center justify-center gap-2 px-6 py-3.5 text-sm text-white rounded-xl overflow-hidden"
-                            style={{
-                                background: "linear-gradient(135deg, #00E37A, #00B289)",
-                                boxShadow:
-                                    "0 0 0 1px rgba(0,227,122,0.3), 0 4px 20px rgba(0,227,122,0.28)",
-                                fontWeight: 600,
-                            }}
+                            variant="primary"
+                            size="lg"
+                            showArrow
                         >
-                            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                            <span className="relative">Testar 14 dias grátis</span>
-                            <ArrowRight className="relative h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                        </button>
+                            Testar 14 dias grátis
+                        </LandingButton>
 
                         <p
                             className="text-[11px] max-w-xl leading-relaxed"

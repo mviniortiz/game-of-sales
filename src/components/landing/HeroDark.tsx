@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Play, TrendingUp, Users, Target, Trophy, Star, Flame, Crown, Zap } from "lucide-react";
+import { ArrowRight, Play, TrendingUp, Users, Target, Trophy, Star, Flame, Crown, Bell } from "lucide-react";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
 
 interface HeroDarkProps {
@@ -350,7 +350,7 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                                         transition={{ duration: 1.5, repeat: Infinity }}
                                     >
                                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white shadow-lg">
-                                            <Zap className="w-5 h-5" />
+                                            <Bell className="w-5 h-5" />
                                         </div>
                                         <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full flex items-center justify-center">
                                             <span className="text-[8px] text-white font-bold">!</span>

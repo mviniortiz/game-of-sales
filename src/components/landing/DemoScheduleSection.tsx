@@ -6,7 +6,6 @@ import {
     Check,
     User,
     Mail,
-    Building2,
     Phone,
     Loader2,
 } from "lucide-react";
@@ -20,13 +19,20 @@ interface DemoScheduleSectionProps {
     calendlyUrl?: string;
 }
 
-type Step = "contact" | "schedule" | "done";
+// Flow flipado (calendar-first): user escolhe horário ANTES de preencher dados.
+// Reduz atrito (67% drop rendered→form_start no flow antigo) e segue padrão
+// Calendly/Cal.com onde commitment escalona (slot < email < WhatsApp).
+type Step = "schedule" | "contact" | "done";
 
 interface FormState {
     name: string;
     email: string;
-    company: string;
     phone: string;
+}
+
+interface PickedSlot {
+    startIso: string;
+    endIso: string;
 }
 
 // Máscara BR: (11) 99999-9999 · aceita 10 ou 11 dígitos
@@ -56,33 +62,37 @@ export const DemoScheduleSection = ({
     const [form, setForm] = useState<FormState>({
         name: "",
         email: "",
-        company: "",
         phone: "",
     });
-    const [step, setStep] = useState<Step>("contact");
+    const [step, setStep] = useState<Step>("schedule");
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [errors, setErrors] = useState<Partial<Record<"email" | "phone" | "name" | "company", string>>>({});
-    const [leadId, setLeadId] = useState<string | null>(null);
+    const [errors, setErrors] = useState<Partial<Record<"email" | "phone" | "name", string>>>({});
+    const [pickedSlot, setPickedSlot] = useState<PickedSlot | null>(null);
+    const [bookError, setBookError] = useState<string | null>(null);
 
     useEffect(() => {
-        logStep("rendered", { path: window.location.pathname });
+        logStep("rendered", { path: window.location.pathname, variant: "schedule_first" });
     }, []);
 
     const phoneDigits = form.phone.replace(/\D/g, "");
     const isPhoneValid = phoneDigits.length === 10 || phoneDigits.length === 11;
     const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim());
     const isNameValid = form.name.trim().length >= 2;
-    const isCompanyValid = form.company.trim().length >= 2;
-    const canSubmit = isEmailValid && isPhoneValid && isNameValid && isCompanyValid;
+    const canSubmit = isEmailValid && isPhoneValid && isNameValid;
 
     const validateContact = () => {
         const next: typeof errors = {};
         if (!isEmailValid) next.email = "Informe um e-mail válido";
         if (!isPhoneValid) next.phone = "Informe seu WhatsApp com DDD (10 ou 11 dígitos)";
         if (!isNameValid) next.name = "Informe seu nome";
-        if (!isCompanyValid) next.company = "Informe o nome da empresa";
         setErrors(next);
         return Object.keys(next).length === 0;
+    };
+
+    const handleSlotConfirm = (slot: { startIso: string; endIso: string }) => {
+        setPickedSlot(slot);
+        logStep("slot_picked", { start: slot.startIso });
+        setStep("contact");
     };
 
     const handleContactSubmit = async (e: React.FormEvent) => {
@@ -91,21 +101,26 @@ export const DemoScheduleSection = ({
             has_email: !!form.email,
             has_phone: !!form.phone,
             has_name: !!form.name,
-            has_company: !!form.company,
+            has_slot: !!pickedSlot,
         });
         if (!validateContact()) {
             logStep("contact_blocked_validation");
             return;
         }
+        if (!pickedSlot) {
+            logStep("contact_missing_slot");
+            setStep("schedule");
+            return;
+        }
 
         setIsSubmitting(true);
+        setBookError(null);
 
         const id = await saveLead();
 
         try {
             trackEvent("demo_request_submit", {
                 source: "landing",
-                has_company: !!form.company,
                 lead_id: id || undefined,
             });
             void trackDemoConversion({
@@ -122,8 +137,6 @@ export const DemoScheduleSection = ({
             logStep("tracking_failed", { err: String(err).slice(0, 120) });
         }
 
-        // Server-side Google Ads conversion upload (imune a adblocker/DNT).
-        // Só faz sentido se tiver lead_id; gclid check é feito na edge function.
         if (id) {
             void supabase.functions
                 .invoke("upload-ads-conversion", { body: { lead_id: id } })
@@ -131,18 +144,42 @@ export const DemoScheduleSection = ({
                 .catch((err) => logStep("ads_upload_failed", { err: String(err).slice(0, 120) }));
         }
 
-        setStep("schedule");
-        setIsSubmitting(false);
-    };
-
-    const handleEventScheduled = () => {
-        logStep("demo_scheduled");
-        try {
-            trackEvent("demo_scheduled", { source: "landing_native" });
-        } catch {
-            /* analytics never breaks UX */
+        if (!id) {
+            setBookError("Não conseguimos salvar seus dados. Tente novamente ou fale pelo WhatsApp.");
+            setIsSubmitting(false);
+            return;
         }
-        setStep("done");
+
+        // Com lead salvo, agora confirma o slot previamente escolhido
+        try {
+            const { data, error } = await supabase.functions.invoke("calendar-book", {
+                body: {
+                    demo_request_id: id,
+                    start_iso: pickedSlot.startIso,
+                    end_iso: pickedSlot.endIso,
+                },
+            });
+            if (error) throw error;
+            if (data?.error) throw new Error(data.error);
+            logStep("demo_scheduled");
+            try {
+                trackEvent("demo_scheduled", { source: "landing_native" });
+            } catch {
+                /* analytics never breaks UX */
+            }
+            setStep("done");
+        } catch (err) {
+            logStep("book_failed", { err: String(err).slice(0, 120) });
+            setBookError(
+                err instanceof Error
+                    ? `${err.message}. O horário pode ter sido preenchido — escolha outro.`
+                    : "Não foi possível confirmar o horário. Escolha outro."
+            );
+            setStep("schedule");
+            setPickedSlot(null);
+        }
+
+        setIsSubmitting(false);
     };
 
     const saveLead = async (): Promise<string | null> => {
@@ -154,7 +191,7 @@ export const DemoScheduleSection = ({
                 .insert({
                     name: form.name.trim() || "Lead",
                     email: form.email.trim().toLowerCase(),
-                    company: form.company.trim() || null,
+                    company: null,
                     phone: phoneE164,
                     source: "landing_page",
                     status: "pending",
@@ -172,7 +209,6 @@ export const DemoScheduleSection = ({
             }
 
             const id = (data as { id: string } | null)?.id || null;
-            if (id) setLeadId(id);
             logStep("insert_success", { id: id ? "ok" : "null" });
             return id;
         } catch (err) {
@@ -184,7 +220,7 @@ export const DemoScheduleSection = ({
     return (
         <section
             className="relative py-24 sm:py-32 px-4 sm:px-6 lg:px-8 overflow-hidden"
-            style={{ background: "#06080a" }}
+            style={{ background: "var(--vyz-bg)" }}
         >
             <div
                 className="absolute top-[-15%] left-[10%] w-[60%] h-[80%] rounded-full pointer-events-none"
@@ -243,12 +279,13 @@ export const DemoScheduleSection = ({
                         className="max-w-xl mx-auto"
                         style={{ color: "rgba(255,255,255,0.4)", fontSize: "1rem", lineHeight: 1.7 }}
                     >
-                        Preenche seus dados em 30 segundos e escolhe o horário. A gente prepara a sessão focada no seu contexto. Sem pitch genérico.
+                        Escolhe um horário livre, deixa seu contato e a gente prepara a sessão focada no seu contexto. Sem pitch genérico.
                     </p>
                 </div>
 
                 {/* Card container */}
                 <div
+                    id="demo-form-start"
                     className="relative rounded-2xl overflow-hidden landing-fade-in-up landing-delay-100"
                     style={{
                         background: "rgba(255,255,255,0.03)",
@@ -264,9 +301,97 @@ export const DemoScheduleSection = ({
                         }}
                     />
 
-                    {/* ── STEP 1: CONTACT ─────────────────────── */}
+                    {/* ── STEP 1: SCHEDULE (calendar-first) ─────── */}
+                    {step === "schedule" && (
+                        <div className="p-3 sm:p-6 md:p-8 landing-fade-in">
+                            <div className="flex items-center gap-2 mb-1 px-1 sm:px-2">
+                                <Calendar className="h-3.5 w-3.5 text-emerald-400 flex-shrink-0" />
+                                <span
+                                    className="text-[10px] sm:text-xs uppercase tracking-wider text-emerald-400"
+                                    style={{ fontWeight: 600, letterSpacing: "0.1em" }}
+                                >
+                                    Escolha seu horário
+                                </span>
+                            </div>
+                            <p
+                                className="text-xs sm:text-sm mb-4 px-1 sm:px-2"
+                                style={{ color: "rgba(255,255,255,0.45)" }}
+                            >
+                                30 minutos, 100% gratuito. Depois você confirma seus dados em 20 segundos.
+                            </p>
+
+                            {bookError && (
+                                <div
+                                    className="mb-3 px-3 py-2 rounded-lg text-xs"
+                                    style={{
+                                        background: "rgba(244,63,94,0.08)",
+                                        boxShadow: "0 0 0 1px rgba(244,63,94,0.2)",
+                                        color: "rgba(252,165,165,0.9)",
+                                        fontWeight: 500,
+                                    }}
+                                >
+                                    {bookError}
+                                </div>
+                            )}
+
+                            <NativeScheduler
+                                onSlotConfirm={handleSlotConfirm}
+                                confirmLabel="Continuar"
+                            />
+                        </div>
+                    )}
+
+                    {/* ── STEP 2: CONTACT (confirm lead data) ─────────────────────── */}
                     {step === "contact" && (
                         <div className="p-6 sm:p-10 md:p-12 landing-fade-in">
+                            {pickedSlot && (
+                                <div
+                                    className="flex items-center justify-between gap-3 mb-6 px-4 py-3 rounded-xl flex-wrap"
+                                    style={{
+                                        background: "rgba(0,227,122,0.06)",
+                                        boxShadow: "0 0 0 1px rgba(0,227,122,0.15)",
+                                    }}
+                                >
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div
+                                            className="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center"
+                                            style={{ background: "rgba(0,227,122,0.14)" }}
+                                        >
+                                            <Calendar className="h-4 w-4 text-emerald-400" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p
+                                                className="text-[10px] uppercase tracking-wider"
+                                                style={{ color: "rgba(0,227,122,0.75)", fontWeight: 600, letterSpacing: "0.1em" }}
+                                            >
+                                                Horário escolhido
+                                            </p>
+                                            <p className="text-sm" style={{ color: "rgba(255,255,255,0.88)", fontWeight: 600 }}>
+                                                {formatSlotLabel(pickedSlot.startIso)}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setStep("schedule");
+                                            setPickedSlot(null);
+                                            setBookError(null);
+                                        }}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs flex-shrink-0 transition-all duration-150"
+                                        style={{
+                                            background: "rgba(255,255,255,0.04)",
+                                            boxShadow: "0 0 0 1px rgba(255,255,255,0.08)",
+                                            color: "rgba(255,255,255,0.6)",
+                                            fontWeight: 600,
+                                        }}
+                                    >
+                                        <ArrowLeft className="h-3 w-3" />
+                                        Trocar
+                                    </button>
+                                </div>
+                            )}
+
                             <div className="grid md:grid-cols-2 gap-10 md:gap-14 items-start">
                                 {/* Left on desktop — value props. On mobile: order-2 (below form) */}
                                 <div className="order-2 md:order-1">
@@ -320,9 +445,9 @@ export const DemoScheduleSection = ({
                                 </div>
 
                                 {/* Right on desktop — contact form. On mobile: order-1 (above benefits) */}
-                                <form id="demo-form-start" onSubmit={handleContactSubmit} className="flex flex-col gap-3.5 order-1 md:order-2" noValidate>
+                                <form onSubmit={handleContactSubmit} className="flex flex-col gap-3.5 order-1 md:order-2" noValidate>
                                     <p className="text-[11px] mb-0.5" style={{ color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>
-                                        Todos os campos são obrigatórios.
+                                        Só mais 3 campos pra confirmar seu horário.
                                     </p>
 
                                     <FormField icon={Mail} error={errors.email}>
@@ -338,6 +463,21 @@ export const DemoScheduleSection = ({
                                                 if (errors.email) setErrors((p) => ({ ...p, email: undefined }));
                                             }}
                                             className={`demo-input ${errors.email ? "demo-input-error" : ""}`}
+                                        />
+                                    </FormField>
+
+                                    <FormField icon={User} error={errors.name}>
+                                        <input
+                                            type="text"
+                                            autoComplete="name"
+                                            required
+                                            placeholder="Seu nome"
+                                            value={form.name}
+                                            onChange={(e) => {
+                                                setForm((p) => ({ ...p, name: e.target.value }));
+                                                if (errors.name) setErrors((p) => ({ ...p, name: undefined }));
+                                            }}
+                                            className={`demo-input ${errors.name ? "demo-input-error" : ""}`}
                                         />
                                     </FormField>
 
@@ -359,35 +499,11 @@ export const DemoScheduleSection = ({
                                         />
                                     </FormField>
 
-                                    <FormField icon={User} error={errors.name}>
-                                        <input
-                                            type="text"
-                                            autoComplete="name"
-                                            required
-                                            placeholder="Seu nome"
-                                            value={form.name}
-                                            onChange={(e) => {
-                                                setForm((p) => ({ ...p, name: e.target.value }));
-                                                if (errors.name) setErrors((p) => ({ ...p, name: undefined }));
-                                            }}
-                                            className={`demo-input ${errors.name ? "demo-input-error" : ""}`}
-                                        />
-                                    </FormField>
-
-                                    <FormField icon={Building2} error={errors.company}>
-                                        <input
-                                            type="text"
-                                            autoComplete="organization"
-                                            required
-                                            placeholder="Nome da empresa"
-                                            value={form.company}
-                                            onChange={(e) => {
-                                                setForm((p) => ({ ...p, company: e.target.value }));
-                                                if (errors.company) setErrors((p) => ({ ...p, company: undefined }));
-                                            }}
-                                            className={`demo-input ${errors.company ? "demo-input-error" : ""}`}
-                                        />
-                                    </FormField>
+                                    {bookError && (
+                                        <p className="text-[11px] mt-0.5 ml-1" style={{ color: "rgba(244,63,94,0.85)", fontWeight: 500 }}>
+                                            {bookError}
+                                        </p>
+                                    )}
 
                                     <button
                                         type="submit"
@@ -412,8 +528,8 @@ export const DemoScheduleSection = ({
                                             <Loader2 className="relative h-4 w-4 animate-spin" />
                                         ) : (
                                             <>
-                                                <Calendar className="relative h-4 w-4" />
-                                                <span className="relative">Escolher horário</span>
+                                                <Check className="relative h-4 w-4" />
+                                                <span className="relative">Confirmar demo</span>
                                                 <ArrowRight className="relative h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
                                             </>
                                         )}
@@ -424,60 +540,6 @@ export const DemoScheduleSection = ({
                                     </p>
                                 </form>
                             </div>
-                        </div>
-                    )}
-
-                    {/* ── STEP 2: SCHEDULE ─────── */}
-                    {step === "schedule" && (
-                        <div className="p-3 sm:p-6 md:p-8 landing-fade-in">
-                            <div className="flex items-start justify-between mb-3 sm:mb-4 gap-3">
-                                <div className="min-w-0 flex-1">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <Calendar className="h-3.5 w-3.5 text-emerald-400 flex-shrink-0" />
-                                        <span
-                                            className="text-[10px] sm:text-xs uppercase tracking-wider text-emerald-400"
-                                            style={{ fontWeight: 600, letterSpacing: "0.1em" }}
-                                        >
-                                            Escolha seu horário
-                                        </span>
-                                    </div>
-                                    <p
-                                        className="text-xs sm:text-sm truncate"
-                                        style={{ color: "rgba(255,255,255,0.45)" }}
-                                    >
-                                        Confirmação pro{" "}
-                                        <span style={{ color: "rgba(255,255,255,0.75)" }}>{form.email}</span>
-                                    </p>
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={() => setStep("contact")}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs flex-shrink-0 transition-all duration-150"
-                                    style={{
-                                        background: "rgba(255,255,255,0.04)",
-                                        boxShadow: "0 0 0 1px rgba(255,255,255,0.08)",
-                                        color: "rgba(255,255,255,0.6)",
-                                        fontWeight: 600,
-                                    }}
-                                >
-                                    <ArrowLeft className="h-3 w-3" />
-                                    Voltar
-                                </button>
-                            </div>
-
-                            {leadId ? (
-                                <NativeScheduler
-                                    demoRequestId={leadId}
-                                    leadName={form.name}
-                                    leadEmail={form.email}
-                                    onScheduled={handleEventScheduled}
-                                />
-                            ) : (
-                                <div className="flex flex-col items-center justify-center gap-3 py-20 rounded-2xl" style={{ background: "rgba(255,255,255,0.02)", boxShadow: "0 0 0 1px rgba(255,255,255,0.06)" }}>
-                                    <Loader2 className="h-5 w-5 animate-spin text-emerald-400" />
-                                    <span className="text-xs" style={{ color: "rgba(255,255,255,0.45)" }}>Preparando agenda...</span>
-                                </div>
-                            )}
                         </div>
                     )}
 
@@ -580,6 +642,28 @@ export const DemoScheduleSection = ({
 };
 
 // ── Helpers ───────────────────────────────────────────────
+
+// "Ter, 23 abr · 14:00" em pt-BR no fuso America/Sao_Paulo
+function formatSlotLabel(startIso: string): string {
+    try {
+        const d = new Date(startIso);
+        const datePart = new Intl.DateTimeFormat("pt-BR", {
+            weekday: "short",
+            day: "2-digit",
+            month: "short",
+            timeZone: "America/Sao_Paulo",
+        }).format(d);
+        const timePart = new Intl.DateTimeFormat("pt-BR", {
+            hour: "2-digit",
+            minute: "2-digit",
+            timeZone: "America/Sao_Paulo",
+        }).format(d);
+        const clean = datePart.replace(/\./g, "").replace(/-feira/, "");
+        return `${clean} · ${timePart}`;
+    } catch {
+        return startIso;
+    }
+}
 
 function FormField({
     icon: Icon,

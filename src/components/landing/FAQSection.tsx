@@ -90,7 +90,7 @@ export const FAQSection = () => {
     const [open, setOpen] = useState<number | null>(null);
 
     return (
-        <section className="py-24 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: "#06080a" }}>
+        <section className="py-24 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: "var(--vyz-bg)" }}>
             <div className="mx-auto max-w-2xl">
                 {/* Header */}
                 <motion.div
