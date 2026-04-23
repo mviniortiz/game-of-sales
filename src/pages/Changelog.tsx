@@ -81,9 +81,184 @@ export default function Changelog() {
 
   return (
     <div
-      className="min-h-screen"
+      className="min-h-screen relative"
       style={{ background: "var(--vyz-bg, #06080a)", color: "var(--vyz-text-primary, #e6e9ef)" }}
     >
+      <style>{`
+        @keyframes vyz-pulse-dot {
+          0%, 100% { opacity: 0.35; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.4); }
+        }
+        @keyframes vyz-shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        @keyframes vyz-float-slow {
+          0%, 100% { transform: translateY(0) rotate(0deg); }
+          50% { transform: translateY(-12px) rotate(0.3deg); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .vyz-animate-pulse-dot,
+          .vyz-animate-shimmer,
+          .vyz-animate-float { animation: none !important; }
+        }
+      `}</style>
+
+      {/* Full-page dot grid */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle, rgba(255,255,255,0.09) 1px, transparent 1px)",
+          backgroundSize: "24px 24px",
+          maskImage:
+            "radial-gradient(ellipse 80% 60% at 50% 30%, rgba(0,0,0,1) 0%, rgba(0,0,0,0.7) 50%, rgba(0,0,0,0.15) 100%)",
+          WebkitMaskImage:
+            "radial-gradient(ellipse 80% 60% at 50% 30%, rgba(0,0,0,1) 0%, rgba(0,0,0,0.7) 50%, rgba(0,0,0,0.15) 100%)",
+        }}
+      />
+
+      {/* Top accent line with shimmer */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-px overflow-hidden"
+      >
+        <div
+          className="vyz-animate-shimmer absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(90deg, transparent 0%, rgba(0,227,122,0.15) 20%, rgba(0,227,122,0.9) 50%, rgba(0,227,122,0.15) 80%, transparent 100%)",
+            backgroundSize: "200% 100%",
+            animation: "vyz-shimmer 6s linear infinite",
+          }}
+        />
+      </div>
+
+      {/* Ambient green radial at top */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-0 w-[1100px] h-[600px]"
+        style={{
+          background:
+            "radial-gradient(ellipse at 50% 0%, rgba(0,227,122,0.14) 0%, rgba(0,227,122,0.06) 30%, rgba(0,227,122,0) 65%)",
+        }}
+      />
+
+      {/* Secondary blue radial bottom-left */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -left-40 top-[700px] w-[600px] h-[600px]"
+        style={{
+          background:
+            "radial-gradient(circle at 30% 50%, rgba(21,86,192,0.10) 0%, rgba(21,86,192,0.04) 40%, transparent 70%)",
+        }}
+      />
+
+      {/* Secondary green radial bottom-right */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-40 top-[1400px] w-[600px] h-[600px]"
+        style={{
+          background:
+            "radial-gradient(circle at 70% 50%, rgba(0,227,122,0.08) 0%, rgba(0,227,122,0.03) 40%, transparent 70%)",
+        }}
+      />
+
+      {/* Vertical rules grid (multiple columns) */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 hidden md:block"
+      >
+        {[18, 34, 66, 82].map((pct, i) => (
+          <div
+            key={i}
+            className="absolute top-0 bottom-0 w-px"
+            style={{
+              left: `${pct}%`,
+              background:
+                "linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.06) 15%, rgba(255,255,255,0.06) 85%, transparent 100%)",
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Floating pulse dots scattered */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 hidden lg:block">
+        {[
+          { top: 180, left: "14%", delay: "0s", color: "rgba(0,227,122,0.9)" },
+          { top: 420, left: "86%", delay: "1.2s", color: "rgba(0,227,122,0.8)" },
+          { top: 780, left: "10%", delay: "0.4s", color: "rgba(110,166,255,0.9)" },
+          { top: 1120, left: "88%", delay: "2.0s", color: "rgba(0,227,122,0.8)" },
+          { top: 1520, left: "12%", delay: "0.9s", color: "rgba(110,166,255,0.7)" },
+          { top: 1880, left: "84%", delay: "1.6s", color: "rgba(0,227,122,0.9)" },
+        ].map((d, i) => (
+          <span
+            key={i}
+            className="vyz-animate-pulse-dot absolute block"
+            style={{
+              top: d.top,
+              left: d.left,
+              width: 6,
+              height: 6,
+              borderRadius: 9999,
+              background: d.color,
+              boxShadow: `0 0 12px ${d.color}`,
+              animation: `vyz-pulse-dot 3.2s ease-in-out ${d.delay} infinite`,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Diagonal accent lines top-right corner */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute top-0 right-0 w-[360px] h-[360px] hidden md:block overflow-hidden"
+        style={{
+          background:
+            "repeating-linear-gradient(135deg, transparent 0px, transparent 14px, rgba(255,255,255,0.035) 14px, rgba(255,255,255,0.035) 15px)",
+          maskImage:
+            "radial-gradient(circle at 100% 0%, rgba(0,0,0,0.9) 0%, transparent 70%)",
+          WebkitMaskImage:
+            "radial-gradient(circle at 100% 0%, rgba(0,0,0,0.9) 0%, transparent 70%)",
+        }}
+      />
+
+      {/* Vertical version markers on the right */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute right-6 top-32 text-[10px] tracking-[0.35em] uppercase hidden xl:flex flex-col gap-12"
+        style={{ color: "rgba(255,255,255,0.22)", fontWeight: 700, writingMode: "vertical-rl" }}
+      >
+        <span style={{ color: "rgba(0,227,122,0.45)" }}>v.2026.04</span>
+        <span>v.2026.03</span>
+        <span style={{ color: "rgba(255,255,255,0.12)" }}>v.2026.02</span>
+      </div>
+
+      {/* Corner bracket top-left */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute top-20 left-6 hidden lg:block"
+        style={{
+          width: 40,
+          height: 40,
+          borderTop: "1px solid rgba(0,227,122,0.35)",
+          borderLeft: "1px solid rgba(0,227,122,0.35)",
+        }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute top-20 right-6 hidden lg:block"
+        style={{
+          width: 40,
+          height: 40,
+          borderTop: "1px solid rgba(0,227,122,0.35)",
+          borderRight: "1px solid rgba(0,227,122,0.35)",
+        }}
+      />
+
+      {/* Content wrapper above the background */}
+      <div className="relative z-10">
       {/* Nav minimal */}
       <header
         className="sticky top-0 z-40 border-b"
@@ -248,6 +423,7 @@ export default function Changelog() {
           </Link>
         </div>
       </section>
+      </div>
     </div>
   );
 }
