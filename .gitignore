@@ -29,3 +29,17 @@ dist-ssr
 
 # Local MCP config (contains machine-specific paths)
 .mcp.json
+
+# Remotion render output
+out/
+
+# Mobile audit output (screenshots + reports)
+scripts/mobile-audit-out/
+
+# Prospecting data (contém leads — nunca versionar)
+prospecting/
+
+# Ad creative exports (Reels / Square / Vertical 4:5 — muito pesados)
+public/videos/sales-video-reels.mp4
+public/videos/sales-video-square.mp4
+public/videos/sales-video-vertical45.mp4
