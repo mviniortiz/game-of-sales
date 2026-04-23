@@ -18,9 +18,14 @@ import {
   BarChart3,
   Shield,
   Plug,
+  Inbox,
+  ShoppingCart,
+  CreditCard,
+  Calendar,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import { IntegrationConfigModal } from "@/components/integrations/IntegrationConfigModal";
 import { GoogleCalendarConfigModal } from "@/components/integrations/GoogleCalendarConfigModal";
 import { WebhookHeartbeat } from "@/components/integrations/WebhookHeartbeat";
@@ -47,10 +52,16 @@ import stripeLogo from "@/assets/integrations/stripe.svg";
 import asaasLogo from "@/assets/integrations/asaas.svg";
 import zapierLogo from "@/assets/integrations/zapier.svg";
 import notazzLogo from "@/assets/integrations/notazz.png";
+import googleSheetsLogo from "@/assets/integrations/google-sheets.svg";
 
 // ── Types ──────────────────────────────────────────────────────────
 type IntegrationStatus = "active" | "available" | "roadmap";
-type IntegrationCategory = "all" | "sales" | "productivity";
+type IntegrationCategory =
+  | "all"
+  | "lead_capture"
+  | "checkout"
+  | "payment"
+  | "productivity";
 
 interface Integration {
   id: string;
@@ -77,6 +88,163 @@ interface WebhookLog {
 
 // ── Integration Data ───────────────────────────────────────────────
 const INTEGRATIONS: Integration[] = [
+  // ── Captura de leads ────────────────────────────────────
+  {
+    id: "google-sheets",
+    name: "Google Sheets",
+    description: "Cada linha nova na planilha vira um deal no pipeline em tempo real via Apps Script",
+    logo: googleSheetsLogo,
+    logoBg: "bg-white",
+    status: "available",
+    category: "lead_capture",
+    features: ["onEdit real-time", "Snippet pronto", "Sem Zapier"],
+  },
+  {
+    id: "zapier",
+    name: "Zapier",
+    description: "Conecte 7.000+ apps — Typeform, Mailchimp, Calendly, Sheets",
+    logo: zapierLogo,
+    logoBg: "bg-white",
+    status: "available",
+    category: "lead_capture",
+    features: ["7.000+ apps", "No-code", "Payload custom"],
+  },
+  {
+    id: "rdstation",
+    name: "RD Station",
+    description: "Sincronize leads, conversões e oportunidades do RD Station Marketing e CRM",
+    logo: rdstationLogo,
+    logoBg: "bg-white",
+    status: "available",
+    category: "lead_capture",
+    features: ["Conversões", "Oportunidades", "Leads", "CRM Sync"],
+  },
+
+  // ── Checkouts de infoproduto ────────────────────────────
+  {
+    id: "hotmart",
+    name: "Hotmart",
+    description: "Importe vendas e comissões automaticamente via webhook",
+    logo: hotmartLogo,
+    logoBg: "bg-white",
+    status: "available",
+    category: "checkout",
+    features: ["Vendas", "Reembolsos", "Chargebacks"],
+  },
+  {
+    id: "kiwify",
+    name: "Kiwify",
+    description: "Webhooks em tempo real para vendas e reembolsos",
+    logo: kiwifyLogo,
+    logoBg: "bg-white",
+    status: "available",
+    category: "checkout",
+    features: ["Vendas", "Assinaturas", "HMAC-SHA256"],
+  },
+  {
+    id: "greenn",
+    name: "Greenn",
+    description: "Importe recorrências e assinaturas automaticamente",
+    logo: greennLogo,
+    logoBg: "bg-white",
+    status: "available",
+    category: "checkout",
+    features: ["Recorrências", "Transações", "Webhooks"],
+  },
+  {
+    id: "cakto",
+    name: "Cakto",
+    description: "Conecte vendas e relatórios financeiros via webhook",
+    logo: caktoLogo,
+    logoBg: "bg-white",
+    status: "available",
+    category: "checkout",
+    features: ["Vendas", "Reembolsos", "Chargebacks"],
+  },
+  {
+    id: "braip",
+    name: "Braip",
+    description: "Sincronize vendas de produtores e afiliados via postback",
+    logo: braipLogo,
+    logoBg: "bg-white",
+    status: "available",
+    category: "checkout",
+    features: ["Pedidos", "Afiliados", "Postbacks"],
+  },
+  {
+    id: "monetizze",
+    name: "Monetizze",
+    description: "Importe vendas, reembolsos e boletos da Monetizze",
+    logo: monetizzeLogo,
+    logoBg: "bg-white",
+    status: "available",
+    category: "checkout",
+    features: ["Vendas", "Boletos", "Reembolsos"],
+  },
+  {
+    id: "eduzz",
+    name: "Eduzz",
+    description: "Conecte vendas de cursos e produtos digitais da Eduzz",
+    logo: eduzzLogo,
+    logoBg: "bg-white",
+    status: "available",
+    category: "checkout",
+    features: ["Faturas", "Assinaturas", "Reembolsos"],
+  },
+
+  // ── Gateways de pagamento ───────────────────────────────
+  {
+    id: "asaas",
+    name: "Asaas",
+    description: "Cobrança recorrente, PIX, boleto e cartão em tempo real",
+    logo: asaasLogo,
+    logoBg: "bg-white",
+    status: "available",
+    category: "payment",
+    features: ["PIX / Boleto / Cartão", "Assinaturas", "Chargebacks"],
+  },
+  {
+    id: "mercadopago",
+    name: "Mercado Pago",
+    description: "Receba pagamentos aprovados, PIX, reembolsos e cancelamentos do MP",
+    logo: mercadopagoLogo,
+    logoBg: "bg-white",
+    status: "available",
+    category: "payment",
+    features: ["PIX & cartão", "Reembolsos", "Webhook nativo"],
+  },
+  {
+    id: "celetus",
+    name: "Celetus",
+    description: "Sincronize transações e leads da plataforma Celetus",
+    logo: celetusLogo,
+    logoBg: "bg-white",
+    status: "roadmap",
+    category: "payment",
+    votes: 23,
+  },
+  {
+    id: "stripe",
+    name: "Stripe",
+    description: "Integre pagamentos internacionais e assinaturas recorrentes",
+    logo: stripeLogo,
+    logoBg: "bg-white",
+    status: "roadmap",
+    category: "payment",
+    votes: 15,
+  },
+  {
+    id: "pagarme",
+    name: "Pagar.me",
+    description: "Sincronize transações e pagamentos da Pagar.me",
+    logo: pagarmeLogo,
+    logoBg: "bg-white",
+    status: "roadmap",
+    category: "payment",
+    votes: 12,
+  },
+
+  // ── Produtividade ───────────────────────────────────────
   {
     id: "google-calendar",
     name: "Google Calendar",
@@ -88,106 +256,6 @@ const INTEGRATIONS: Integration[] = [
     features: ["Sync automático", "Bidirecional", "15min refresh"],
   },
   {
-    id: "hotmart",
-    name: "Hotmart",
-    description: "Importe vendas e comissões automaticamente via webhook",
-    logo: hotmartLogo,
-    logoBg: "bg-white",
-    status: "available",
-    category: "sales",
-    features: ["Vendas", "Reembolsos", "Chargebacks"],
-  },
-  {
-    id: "kiwify",
-    name: "Kiwify",
-    description: "Webhooks em tempo real para vendas e reembolsos",
-    logo: kiwifyLogo,
-    logoBg: "bg-white",
-    status: "available",
-    category: "sales",
-    features: ["Vendas", "Assinaturas", "HMAC-SHA256"],
-  },
-  {
-    id: "greenn",
-    name: "Greenn",
-    description: "Importe recorrências e assinaturas automaticamente",
-    logo: greennLogo,
-    logoBg: "bg-white",
-    status: "available",
-    category: "sales",
-    features: ["Recorrências", "Transações", "Webhooks"],
-  },
-  {
-    id: "rdstation",
-    name: "RD Station",
-    description: "Sincronize leads, conversões e oportunidades do RD Station Marketing e CRM",
-    logo: rdstationLogo,
-    logoBg: "bg-white",
-    status: "available",
-    category: "sales",
-    features: ["Conversões", "Oportunidades", "Leads", "CRM Sync"],
-  },
-  {
-    id: "cakto",
-    name: "Cakto",
-    description: "Conecte vendas e relatórios financeiros via webhook",
-    logo: caktoLogo,
-    logoBg: "bg-white",
-    status: "available",
-    category: "sales",
-    features: ["Vendas", "Reembolsos", "Chargebacks"],
-  },
-  {
-    id: "braip",
-    name: "Braip",
-    description: "Sincronize vendas de produtores e afiliados via postback",
-    logo: braipLogo,
-    logoBg: "bg-white",
-    status: "available",
-    category: "sales",
-    features: ["Pedidos", "Afiliados", "Postbacks"],
-  },
-  {
-    id: "monetizze",
-    name: "Monetizze",
-    description: "Importe vendas, reembolsos e boletos da Monetizze",
-    logo: monetizzeLogo,
-    logoBg: "bg-white",
-    status: "available",
-    category: "sales",
-    features: ["Vendas", "Boletos", "Reembolsos"],
-  },
-  {
-    id: "eduzz",
-    name: "Eduzz",
-    description: "Conecte vendas de cursos e produtos digitais da Eduzz",
-    logo: eduzzLogo,
-    logoBg: "bg-white",
-    status: "available",
-    category: "sales",
-    features: ["Faturas", "Assinaturas", "Reembolsos"],
-  },
-  {
-    id: "asaas",
-    name: "Asaas",
-    description: "Cobrança recorrente, PIX, boleto e cartão em tempo real",
-    logo: asaasLogo,
-    logoBg: "bg-white",
-    status: "available",
-    category: "sales",
-    features: ["PIX / Boleto / Cartão", "Assinaturas", "Chargebacks"],
-  },
-  {
-    id: "zapier",
-    name: "Zapier",
-    description: "Conecte 7.000+ apps — Typeform, Mailchimp, Calendly, Sheets",
-    logo: zapierLogo,
-    logoBg: "bg-white",
-    status: "available",
-    category: "productivity",
-    features: ["7.000+ apps", "No-code", "Payload custom"],
-  },
-  {
     id: "notazz",
     name: "Notazz",
     description: "Emissão automática de NF-e e NFS-e com callback de status",
@@ -197,53 +265,45 @@ const INTEGRATIONS: Integration[] = [
     category: "productivity",
     features: ["NF-e / NFS-e", "Callback de status", "PDF/XML no deal"],
   },
-  {
-    id: "mercadopago",
-    name: "Mercado Pago",
-    description: "Receba pagamentos aprovados, PIX, reembolsos e cancelamentos do MP",
-    logo: mercadopagoLogo,
-    logoBg: "bg-white",
-    status: "available",
-    category: "sales",
-    features: ["PIX & cartão", "Reembolsos", "Webhook nativo"],
-  },
-  {
-    id: "celetus",
-    name: "Celetus",
-    description: "Sincronize transações e leads da plataforma Celetus",
-    logo: celetusLogo,
-    logoBg: "bg-white",
-    status: "roadmap",
-    category: "sales",
-    votes: 23,
-  },
-  {
-    id: "stripe",
-    name: "Stripe",
-    description: "Integre pagamentos internacionais e assinaturas recorrentes",
-    logo: stripeLogo,
-    logoBg: "bg-white",
-    status: "roadmap",
-    category: "sales",
-    votes: 15,
-  },
-  {
-    id: "pagarme",
-    name: "Pagar.me",
-    description: "Sincronize transações e pagamentos da Pagar.me",
-    logo: pagarmeLogo,
-    logoBg: "bg-white",
-    status: "roadmap",
-    category: "sales",
-    votes: 12,
-  },
 ];
 
 const FILTER_TABS: { id: IntegrationCategory; label: string; icon: React.ElementType }[] = [
   { id: "all", label: "Todas", icon: Puzzle },
-  { id: "sales", label: "Vendas", icon: Zap },
-  { id: "productivity", label: "Produtividade", icon: Activity },
+  { id: "lead_capture", label: "Captura de leads", icon: Inbox },
+  { id: "checkout", label: "Checkouts", icon: ShoppingCart },
+  { id: "payment", label: "Pagamentos", icon: CreditCard },
+  { id: "productivity", label: "Produtividade", icon: Calendar },
 ];
+
+const GROUP_ORDER: Exclude<IntegrationCategory, "all">[] = [
+  "lead_capture",
+  "checkout",
+  "payment",
+  "productivity",
+];
+
+const GROUP_META: Record<Exclude<IntegrationCategory, "all">, { label: string; sub: string; icon: React.ElementType }> = {
+  lead_capture: {
+    label: "Captura de leads",
+    sub: "Planilhas, formulários e CRMs que alimentam seu pipeline",
+    icon: Inbox,
+  },
+  checkout: {
+    label: "Checkouts de infoproduto",
+    sub: "Hotmart, Kiwify e afins — vendas entram como deal",
+    icon: ShoppingCart,
+  },
+  payment: {
+    label: "Gateways de pagamento",
+    sub: "Cobrança recorrente, PIX e cartão com webhook",
+    icon: CreditCard,
+  },
+  productivity: {
+    label: "Produtividade",
+    sub: "Agenda, fiscal e rotina do time comercial",
+    icon: Calendar,
+  },
+};
 
 const PLATFORM_NAMES: Record<string, string> = {
   hotmart: "Hotmart",
@@ -520,12 +580,40 @@ interface IntegrationConfig {
 const Integracoes = () => {
   const { needsUpgrade } = usePlan();
   const { companyId } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<IntegrationCategory>("all");
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
   const [googleCalendarModalOpen, setGoogleCalendarModalOpen] = useState(false);
   const [activeIntegrationIds, setActiveIntegrationIds] = useState<Set<string>>(new Set());
   const [googleCalendarConnected, setGoogleCalendarConnected] = useState(false);
+
+  useEffect(() => {
+    const success = searchParams.get("success");
+    const errorCode = searchParams.get("error");
+    if (!success && !errorCode) return;
+
+    if (success === "true") {
+      toast.success("Google Calendar conectado com sucesso");
+    } else if (errorCode) {
+      const messages: Record<string, string> = {
+        auth_failed: "Autorização do Google cancelada",
+        invalid_state: "Sessão OAuth inválida, tente novamente",
+        state_expired: "Sessão OAuth expirou, tente novamente",
+        invalid_state_signature: "Assinatura OAuth inválida, tente novamente",
+        token_failed: "Falha ao trocar código por token",
+        db_failed: "Falha ao salvar tokens no perfil",
+        connection_failed: "Erro inesperado na conexão",
+      };
+      toast.error(messages[errorCode] || `Erro: ${errorCode}`);
+    }
+
+    const next = new URLSearchParams(searchParams);
+    next.delete("success");
+    next.delete("error");
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   // Check Google Calendar status
   const checkGoogleCalendarStatus = useCallback(async (userId: string) => {
@@ -624,6 +712,10 @@ const Integracoes = () => {
   const handleManageIntegration = (id: string) => {
     if (id === "google-calendar") {
       setGoogleCalendarModalOpen(true);
+      return;
+    }
+    if (id === "google-sheets") {
+      navigate("/configuracoes/webhooks-leads?create=google_sheets");
       return;
     }
     if (INTEGRATIONS_CONFIG[id]) {
@@ -782,28 +874,67 @@ const Integracoes = () => {
 
           {/* ── Available Integrations ─────────────────────── */}
           {availableIntegrations.length > 0 && (
-            <section>
-              <div className="flex items-end justify-between mb-5">
-                <div>
-                  <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                    Disponíveis
-                  </h2>
-                  <p className="text-sm text-muted-foreground">
-                    {availableIntegrations.length} plataformas prontas para conectar
-                  </p>
+            activeFilter === "all" ? (
+              <div className="space-y-10">
+                {GROUP_ORDER.map((groupKey) => {
+                  const groupItems = availableIntegrations.filter((i) => i.category === groupKey);
+                  if (groupItems.length === 0) return null;
+                  const meta = GROUP_META[groupKey];
+                  const GroupIcon = meta.icon;
+                  return (
+                    <section key={groupKey}>
+                      <div className="flex items-end justify-between mb-5">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <GroupIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                              {meta.label}
+                            </h2>
+                            <span className="text-[10px] font-mono text-muted-foreground/60 tabular-nums">
+                              {groupItems.length}
+                            </span>
+                          </div>
+                          <p className="text-sm text-muted-foreground">{meta.sub}</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {groupItems.map((integration) => (
+                          <IntegrationCard
+                            key={integration.id}
+                            integration={integration}
+                            effectiveStatus="available"
+                            onConnect={() => handleConnect(integration.id)}
+                          />
+                        ))}
+                      </div>
+                    </section>
+                  );
+                })}
+              </div>
+            ) : (
+              <section>
+                <div className="flex items-end justify-between mb-5">
+                  <div>
+                    <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                      {GROUP_META[activeFilter as Exclude<IntegrationCategory, "all">]?.label ?? "Disponíveis"}
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      {availableIntegrations.length} {availableIntegrations.length === 1 ? "plataforma pronta" : "plataformas prontas"} para conectar
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {availableIntegrations.map(integration => (
-                  <IntegrationCard
-                    key={integration.id}
-                    integration={integration}
-                    effectiveStatus="available"
-                    onConnect={() => handleConnect(integration.id)}
-                  />
-                ))}
-              </div>
-            </section>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {availableIntegrations.map((integration) => (
+                    <IntegrationCard
+                      key={integration.id}
+                      integration={integration}
+                      effectiveStatus="available"
+                      onConnect={() => handleConnect(integration.id)}
+                    />
+                  ))}
+                </div>
+              </section>
+            )
           )}
 
           {/* ── Webhook Heartbeat Monitor ─────────────────── */}

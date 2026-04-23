@@ -1,3 +1,4 @@
+Initialising login role...
 export type Json =
   | string
   | number
@@ -39,48 +40,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      demo_requests: {
-        Row: {
-          id: string
-          name: string
-          email: string
-          company: string | null
-          phone: string | null
-          source: string | null
-          status: string | null
-          calendly_event_uri: string | null
-          notes: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          name: string
-          email: string
-          company?: string | null
-          phone?: string | null
-          source?: string | null
-          status?: string | null
-          calendly_event_uri?: string | null
-          notes?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          name?: string
-          email?: string
-          company?: string | null
-          phone?: string | null
-          source?: string | null
-          status?: string | null
-          calendly_event_uri?: string | null
-          notes?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       agendamentos: {
         Row: {
           cliente_nome: string
@@ -245,52 +204,97 @@ export type Database = {
       }
       companies: {
         Row: {
+          cancellation_reason: string | null
           cnpj: string | null
           created_at: string | null
+          fbclid: string | null
+          gclid: string | null
           id: string
+          landing_page: string | null
           logo_url: string | null
           main_challenge: string | null
           mp_customer_id: string | null
           mp_plan_id: string | null
           mp_subscription_id: string | null
           name: string
+          phone: string | null
           plan: string | null
           referral_source: string | null
+          referrer: string | null
+          segment: string | null
+          subscription_cancelled_at: string | null
+          subscription_ends_at: string | null
           subscription_status: string | null
           team_size: string | null
           trial_ends_at: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+          website: string | null
         }
         Insert: {
+          cancellation_reason?: string | null
           cnpj?: string | null
           created_at?: string | null
+          fbclid?: string | null
+          gclid?: string | null
           id?: string
+          landing_page?: string | null
           logo_url?: string | null
           main_challenge?: string | null
           mp_customer_id?: string | null
           mp_plan_id?: string | null
           mp_subscription_id?: string | null
           name: string
+          phone?: string | null
           plan?: string | null
           referral_source?: string | null
+          referrer?: string | null
+          segment?: string | null
+          subscription_cancelled_at?: string | null
+          subscription_ends_at?: string | null
           subscription_status?: string | null
           team_size?: string | null
           trial_ends_at?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+          website?: string | null
         }
         Update: {
+          cancellation_reason?: string | null
           cnpj?: string | null
           created_at?: string | null
+          fbclid?: string | null
+          gclid?: string | null
           id?: string
+          landing_page?: string | null
           logo_url?: string | null
           main_challenge?: string | null
           mp_customer_id?: string | null
           mp_plan_id?: string | null
           mp_subscription_id?: string | null
           name?: string
+          phone?: string | null
           plan?: string | null
           referral_source?: string | null
+          referrer?: string | null
+          segment?: string | null
+          subscription_cancelled_at?: string | null
+          subscription_ends_at?: string | null
           subscription_status?: string | null
           team_size?: string | null
           trial_ends_at?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+          website?: string | null
         }
         Relationships: []
       }
@@ -358,6 +362,165 @@ export type Database = {
           pontos_bonus?: number
         }
         Relationships: []
+      }
+      contracts: {
+        Row: {
+          auto_renew: boolean
+          billing_cycle: string
+          client_name: string
+          company_id: string
+          contact_email: string | null
+          created_at: string
+          created_by: string | null
+          deal_id: string | null
+          end_date: string | null
+          id: string
+          notes: string | null
+          notify_days_before: number
+          start_date: string
+          status: string
+          updated_at: string
+          value: number
+        }
+        Insert: {
+          auto_renew?: boolean
+          billing_cycle?: string
+          client_name: string
+          company_id: string
+          contact_email?: string | null
+          created_at?: string
+          created_by?: string | null
+          deal_id?: string | null
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          notify_days_before?: number
+          start_date?: string
+          status?: string
+          updated_at?: string
+          value?: number
+        }
+        Update: {
+          auto_renew?: boolean
+          billing_cycle?: string
+          client_name?: string
+          company_id?: string
+          contact_email?: string | null
+          created_at?: string
+          created_by?: string | null
+          deal_id?: string | null
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          notify_days_before?: number
+          start_date?: string
+          status?: string
+          updated_at?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contracts_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversation_summaries: {
+        Row: {
+          analyzed_at: string
+          cached_analysis: Json | null
+          chat_name: string | null
+          chat_phone: string
+          company_id: string
+          created_at: string
+          deal_id: string | null
+          id: string
+          last_draft: string | null
+          last_message_at: string | null
+          message_count: number
+          messages_hash: string | null
+          next_action: string | null
+          objections: string[] | null
+          sentiment: string | null
+          stage_suggestion: string | null
+          strategy: string[] | null
+          summary: string
+          temperature: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          analyzed_at?: string
+          cached_analysis?: Json | null
+          chat_name?: string | null
+          chat_phone: string
+          company_id: string
+          created_at?: string
+          deal_id?: string | null
+          id?: string
+          last_draft?: string | null
+          last_message_at?: string | null
+          message_count?: number
+          messages_hash?: string | null
+          next_action?: string | null
+          objections?: string[] | null
+          sentiment?: string | null
+          stage_suggestion?: string | null
+          strategy?: string[] | null
+          summary: string
+          temperature?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          analyzed_at?: string
+          cached_analysis?: Json | null
+          chat_name?: string | null
+          chat_phone?: string
+          company_id?: string
+          created_at?: string
+          deal_id?: string | null
+          id?: string
+          last_draft?: string | null
+          last_message_at?: string | null
+          message_count?: number
+          messages_hash?: string | null
+          next_action?: string | null
+          objections?: string[] | null
+          sentiment?: string | null
+          stage_suggestion?: string | null
+          strategy?: string[] | null
+          summary?: string
+          temperature?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_summaries_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_summaries_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       deal_activities: {
         Row: {
@@ -570,6 +733,92 @@ export type Database = {
           },
         ]
       }
+      deal_custom_field_definitions: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          field_name: string
+          field_type: string
+          id: string
+          is_required: boolean
+          options: Json | null
+          position: number
+          updated_at: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          field_name: string
+          field_type: string
+          id?: string
+          is_required?: boolean
+          options?: Json | null
+          position?: number
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          field_name?: string
+          field_type?: string
+          id?: string
+          is_required?: boolean
+          options?: Json | null
+          position?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_custom_field_definitions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deal_custom_field_values: {
+        Row: {
+          created_at: string | null
+          deal_id: string
+          field_definition_id: string
+          id: string
+          updated_at: string | null
+          value: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          deal_id: string
+          field_definition_id: string
+          id?: string
+          updated_at?: string | null
+          value?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          deal_id?: string
+          field_definition_id?: string
+          id?: string
+          updated_at?: string | null
+          value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_custom_field_values_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_custom_field_values_field_definition_id_fkey"
+            columns: ["field_definition_id"]
+            isOneToOne: false
+            referencedRelation: "deal_custom_field_definitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       deal_notes: {
         Row: {
           company_id: string | null
@@ -662,6 +911,71 @@ export type Database = {
           },
         ]
       }
+      deal_tag_assignments: {
+        Row: {
+          created_at: string
+          deal_id: string
+          tag_id: string
+        }
+        Insert: {
+          created_at?: string
+          deal_id: string
+          tag_id: string
+        }
+        Update: {
+          created_at?: string
+          deal_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_tag_assignments_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_tag_assignments_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "deal_tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deal_tags: {
+        Row: {
+          color: string
+          company_id: string
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          color?: string
+          company_id: string
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          color?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_tags_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       deals: {
         Row: {
           company_id: string | null
@@ -672,11 +986,13 @@ export type Database = {
           expected_close_date: string | null
           id: string
           is_hot: boolean | null
+          lead_source: string | null
           loss_reason: string | null
           notes: string | null
           position: number | null
           probability: number | null
           product_id: string | null
+          source_data: Json | null
           stage: string
           title: string
           updated_at: string | null
@@ -692,11 +1008,13 @@ export type Database = {
           expected_close_date?: string | null
           id?: string
           is_hot?: boolean | null
+          lead_source?: string | null
           loss_reason?: string | null
           notes?: string | null
           position?: number | null
           probability?: number | null
           product_id?: string | null
+          source_data?: Json | null
           stage?: string
           title: string
           updated_at?: string | null
@@ -712,11 +1030,13 @@ export type Database = {
           expected_close_date?: string | null
           id?: string
           is_hot?: boolean | null
+          lead_source?: string | null
           loss_reason?: string | null
           notes?: string | null
           position?: number | null
           probability?: number | null
           product_id?: string | null
+          source_data?: Json | null
           stage?: string
           title?: string
           updated_at?: string | null
@@ -724,6 +1044,209 @@ export type Database = {
           value?: number | null
         }
         Relationships: []
+      }
+      demo_requests: {
+        Row: {
+          ads_conversion_error: string | null
+          ads_conversion_uploaded_at: string | null
+          biggest_pain: string | null
+          calendly_event_uri: string | null
+          company: string | null
+          created_at: string | null
+          email: string
+          fbclid: string | null
+          gclid: string | null
+          google_event_id: string | null
+          google_meet_link: string | null
+          id: string
+          improvement_goal: string | null
+          landing_page: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          referrer: string | null
+          scheduled_at: string | null
+          source: string | null
+          status: string | null
+          team_size: string | null
+          updated_at: string | null
+          uses_spreadsheets: boolean | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+        }
+        Insert: {
+          ads_conversion_error?: string | null
+          ads_conversion_uploaded_at?: string | null
+          biggest_pain?: string | null
+          calendly_event_uri?: string | null
+          company?: string | null
+          created_at?: string | null
+          email: string
+          fbclid?: string | null
+          gclid?: string | null
+          google_event_id?: string | null
+          google_meet_link?: string | null
+          id?: string
+          improvement_goal?: string | null
+          landing_page?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          referrer?: string | null
+          scheduled_at?: string | null
+          source?: string | null
+          status?: string | null
+          team_size?: string | null
+          updated_at?: string | null
+          uses_spreadsheets?: boolean | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Update: {
+          ads_conversion_error?: string | null
+          ads_conversion_uploaded_at?: string | null
+          biggest_pain?: string | null
+          calendly_event_uri?: string | null
+          company?: string | null
+          created_at?: string | null
+          email?: string
+          fbclid?: string | null
+          gclid?: string | null
+          google_event_id?: string | null
+          google_meet_link?: string | null
+          id?: string
+          improvement_goal?: string | null
+          landing_page?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          referrer?: string | null
+          scheduled_at?: string | null
+          source?: string | null
+          status?: string | null
+          team_size?: string | null
+          updated_at?: string | null
+          uses_spreadsheets?: boolean | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Relationships: []
+      }
+      eva_memory: {
+        Row: {
+          company_id: string
+          confidence: number
+          content: string
+          created_at: string
+          id: string
+          last_used_at: string | null
+          metadata: Json
+          source: string
+          type: string
+          updated_at: string
+          usage_count: number
+          user_id: string | null
+        }
+        Insert: {
+          company_id: string
+          confidence?: number
+          content: string
+          created_at?: string
+          id?: string
+          last_used_at?: string | null
+          metadata?: Json
+          source?: string
+          type: string
+          updated_at?: string
+          usage_count?: number
+          user_id?: string | null
+        }
+        Update: {
+          company_id?: string
+          confidence?: number
+          content?: string
+          created_at?: string
+          id?: string
+          last_used_at?: string | null
+          metadata?: Json
+          source?: string
+          type?: string
+          updated_at?: string
+          usage_count?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eva_memory_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      follow_up_reminders: {
+        Row: {
+          company_id: string
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          deal_id: string
+          description: string | null
+          id: string
+          remind_at: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          deal_id: string
+          description?: string | null
+          id?: string
+          remind_at: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          deal_id?: string
+          description?: string | null
+          id?: string
+          remind_at?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follow_up_reminders_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follow_up_reminders_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       formas_pagamento: {
         Row: {
@@ -771,6 +1294,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           platform: string
+          updated_at: string
           webhook_url: string | null
         }
         Insert: {
@@ -780,6 +1304,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           platform: string
+          updated_at?: string
           webhook_url?: string | null
         }
         Update: {
@@ -789,6 +1314,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           platform?: string
+          updated_at?: string
           webhook_url?: string | null
         }
         Relationships: [
@@ -797,6 +1323,81 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_webhooks: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          default_owner_id: string | null
+          default_product_id: string | null
+          enabled: boolean
+          field_mapping: Json
+          id: string
+          label: string
+          last_error: string | null
+          last_seen_at: string | null
+          secret: string
+          slug: string
+          source_kind: string
+          total_received: number
+          total_rejected: number
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          default_owner_id?: string | null
+          default_product_id?: string | null
+          enabled?: boolean
+          field_mapping?: Json
+          id?: string
+          label?: string
+          last_error?: string | null
+          last_seen_at?: string | null
+          secret: string
+          slug: string
+          source_kind?: string
+          total_received?: number
+          total_rejected?: number
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          default_owner_id?: string | null
+          default_product_id?: string | null
+          enabled?: boolean
+          field_mapping?: Json
+          id?: string
+          label?: string
+          last_error?: string | null
+          last_seen_at?: string | null
+          secret?: string
+          slug?: string
+          source_kind?: string
+          total_received?: number
+          total_rejected?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_webhooks_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_webhooks_default_product_id_fkey"
+            columns: ["default_product_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
             referencedColumns: ["id"]
           },
         ]
@@ -944,6 +1545,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          cargo: string | null
           company_id: string | null
           created_at: string
           email: string
@@ -953,14 +1555,18 @@ export type Database = {
           google_token_expires_at: string | null
           id: string
           is_super_admin: boolean | null
+          last_sign_in_at: string | null
           nivel: Database["public"]["Enums"]["user_level"]
           nome: string
+          onboarding_completed: boolean | null
+          phone: string | null
           pontos: number
           role: string | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
+          cargo?: string | null
           company_id?: string | null
           created_at?: string
           email: string
@@ -970,14 +1576,18 @@ export type Database = {
           google_token_expires_at?: string | null
           id: string
           is_super_admin?: boolean | null
+          last_sign_in_at?: string | null
           nivel?: Database["public"]["Enums"]["user_level"]
           nome: string
+          onboarding_completed?: boolean | null
+          phone?: string | null
           pontos?: number
           role?: string | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
+          cargo?: string | null
           company_id?: string | null
           created_at?: string
           email?: string
@@ -987,8 +1597,11 @@ export type Database = {
           google_token_expires_at?: string | null
           id?: string
           is_super_admin?: boolean | null
+          last_sign_in_at?: string | null
           nivel?: Database["public"]["Enums"]["user_level"]
           nome?: string
+          onboarding_completed?: boolean | null
+          phone?: string | null
           pontos?: number
           role?: string | null
           updated_at?: string
@@ -996,6 +1609,68 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "profiles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      public_reports: {
+        Row: {
+          client_name: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          enabled_metrics: Json
+          expires_at: string | null
+          id: string
+          last_viewed_at: string | null
+          logo_url: string | null
+          period_days: number
+          revoked_at: string | null
+          share_token: string
+          title: string
+          updated_at: string
+          view_count: number
+        }
+        Insert: {
+          client_name?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          enabled_metrics?: Json
+          expires_at?: string | null
+          id?: string
+          last_viewed_at?: string | null
+          logo_url?: string | null
+          period_days?: number
+          revoked_at?: string | null
+          share_token: string
+          title?: string
+          updated_at?: string
+          view_count?: number
+        }
+        Update: {
+          client_name?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          enabled_metrics?: Json
+          expires_at?: string | null
+          id?: string
+          last_viewed_at?: string | null
+          logo_url?: string | null
+          period_days?: number
+          revoked_at?: string | null
+          share_token?: string
+          title?: string
+          updated_at?: string
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "public_reports_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
@@ -1258,6 +1933,134 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_messages: {
+        Row: {
+          audio_duration: number | null
+          body: string | null
+          chat_jid: string
+          chat_phone: string
+          company_id: string | null
+          contact_name: string | null
+          deal_id: string | null
+          direction: string
+          external_id: string
+          id: string
+          instance_name: string
+          is_group: boolean
+          media_caption: string | null
+          media_mimetype: string | null
+          media_url: string | null
+          message_timestamp: string
+          message_type: string
+          phone_e164_tail: string
+          raw_payload: Json | null
+          received_at: string
+          user_id: string | null
+        }
+        Insert: {
+          audio_duration?: number | null
+          body?: string | null
+          chat_jid: string
+          chat_phone: string
+          company_id?: string | null
+          contact_name?: string | null
+          deal_id?: string | null
+          direction: string
+          external_id: string
+          id?: string
+          instance_name: string
+          is_group?: boolean
+          media_caption?: string | null
+          media_mimetype?: string | null
+          media_url?: string | null
+          message_timestamp: string
+          message_type?: string
+          phone_e164_tail: string
+          raw_payload?: Json | null
+          received_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          audio_duration?: number | null
+          body?: string | null
+          chat_jid?: string
+          chat_phone?: string
+          company_id?: string | null
+          contact_name?: string | null
+          deal_id?: string | null
+          direction?: string
+          external_id?: string
+          id?: string
+          instance_name?: string
+          is_group?: boolean
+          media_caption?: string | null
+          media_mimetype?: string | null
+          media_url?: string | null
+          message_timestamp?: string
+          message_type?: string
+          phone_e164_tail?: string
+          raw_payload?: Json | null
+          received_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_messages_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_messages_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_templates: {
+        Row: {
+          category: string
+          company_id: string
+          content: string
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          company_id: string
+          content: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          company_id?: string
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_templates_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       contribuicao_vendedores: {
@@ -1306,7 +2109,55 @@ export type Database = {
           reset_at: string
         }[]
       }
+      contract_mrr_value: {
+        Args: { p_cycle: string; p_value: number }
+        Returns: number
+      }
+      contracts_due_for_renewal: {
+        Args: { p_company_id: string; p_days_ahead?: number }
+        Returns: {
+          auto_renew: boolean
+          billing_cycle: string
+          client_name: string
+          contact_email: string
+          days_remaining: number
+          end_date: string
+          id: string
+          notify_days_before: number
+          start_date: string
+          value: number
+        }[]
+      }
+      contracts_summary: { Args: { p_company_id: string }; Returns: Json }
       current_company_id: { Args: never; Returns: string }
+      delete_company_cascade: {
+        Args: { target_company_id: string }
+        Returns: Json
+      }
+      eva_daily_cleanup: { Args: never; Returns: Json }
+      eva_smart_insert_memory: {
+        Args: {
+          p_company_id: string
+          p_confidence?: number
+          p_content: string
+          p_metadata?: Json
+          p_source?: string
+          p_type: string
+          p_user_id: string
+        }
+        Returns: string
+      }
+      eva_touch_memories: { Args: { p_ids: string[] }; Returns: undefined }
+      forecast_by_month: {
+        Args: { p_company_id: string; p_months_ahead?: number }
+        Returns: {
+          deal_count: number
+          month_start: string
+          pipeline_value: number
+          weighted_value: number
+          won_value: number
+        }[]
+      }
       get_my_company_id: { Args: never; Returns: string }
       get_public_profiles: {
         Args: never
@@ -1320,12 +2171,17 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_public_report: { Args: { p_token: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      ingest_lead_webhook: {
+        Args: { p_payload: Json; p_secret: string; p_slug: string }
+        Returns: Json
       }
       initialize_all_metas_current_value: { Args: never; Returns: undefined }
       is_admin: { Args: { user_id: string }; Returns: boolean }
@@ -1342,6 +2198,14 @@ export type Database = {
           p_status: string
         }
         Returns: undefined
+      }
+      onboarding_assign_company: {
+        Args: { target_company_id: string }
+        Returns: undefined
+      }
+      pick_field: {
+        Args: { p_aliases: Json; p_payload: Json }
+        Returns: string
       }
       recalculate_consolidated_meta: {
         Args: { p_month_start: string }

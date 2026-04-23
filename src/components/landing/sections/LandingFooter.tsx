@@ -24,6 +24,7 @@ export const LandingFooter = ({ onNavClick, onLoginClick, onRegisterClick }: Pro
                         <button onClick={() => onNavClick("how-it-works")} className="text-gray-500 text-sm hover:text-gray-300 transition-colors text-left">Como funciona</button>
                         <button onClick={() => onNavClick("pricing")} className="text-gray-500 text-sm hover:text-gray-300 transition-colors text-left">Preços</button>
                         <button onClick={() => onNavClick("faq")} className="text-gray-500 text-sm hover:text-gray-300 transition-colors text-left">FAQ</button>
+                        <a href="/changelog" className="text-gray-500 text-sm hover:text-gray-300 transition-colors text-left">Changelog</a>
                     </div>
                 </div>
 

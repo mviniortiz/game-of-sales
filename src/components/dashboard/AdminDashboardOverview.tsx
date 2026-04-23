@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminFilters } from "@/components/admin/AdminFilters";
 import { AdminVendasView } from "@/components/admin/AdminVendasView";
+import { ForecastPanel } from "@/components/dashboard/ForecastPanel";
 import { startOfMonth, endOfMonth } from "date-fns";
 import { useVisibleSellers } from "@/hooks/useVisibleSellers";
 import { useTenant } from "@/contexts/TenantContext";
@@ -82,6 +83,9 @@ export const AdminDashboardOverview = () => {
         vendedores={vendedores}
         produtos={produtos}
       />
+
+      {/* Forecast — pipeline ponderado por mês */}
+      <ForecastPanel companyId={activeCompanyId} monthsAhead={6} />
     </div>
   );
 };

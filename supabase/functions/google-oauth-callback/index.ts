@@ -22,7 +22,7 @@ serve(async (req) => {
     if (error || !code || !state) {
       console.error("[Google OAuth Callback] Error:", error || "Missing code/state");
       return Response.redirect(
-        `${FRONTEND_URL}/integracoes?error=auth_failed`,
+        `${FRONTEND_URL}/configuracoes/integracoes?error=auth_failed`,
         302
       );
     }
@@ -30,7 +30,7 @@ serve(async (req) => {
     // Processar validação do State CSRF
     if (!state.includes('.')) {
       console.error("[Google OAuth Callback] Invalid state format");
-      return Response.redirect(`${FRONTEND_URL}/integracoes?error=invalid_state`, 302);
+      return Response.redirect(`${FRONTEND_URL}/configuracoes/integracoes?error=invalid_state`, 302);
     }
 
     const [encodedPayload, signatureHex] = state.split('.');
@@ -39,7 +39,7 @@ serve(async (req) => {
 
     if (Date.now() > exp) {
       console.error("[Google OAuth Callback] State expired");
-      return Response.redirect(`${FRONTEND_URL}/integracoes?error=state_expired`, 302);
+      return Response.redirect(`${FRONTEND_URL}/configuracoes/integracoes?error=state_expired`, 302);
     }
 
     const secret = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -57,7 +57,7 @@ serve(async (req) => {
 
     if (signatureHex !== expectedSignatureHex) {
       console.error("[Google OAuth Callback] Invalid state signature");
-      return Response.redirect(`${FRONTEND_URL}/integracoes?error=invalid_state_signature`, 302);
+      return Response.redirect(`${FRONTEND_URL}/configuracoes/integracoes?error=invalid_state_signature`, 302);
     }
 
     const redirectUri = `${SUPABASE_URL}/functions/v1/google-oauth-callback`;
@@ -83,7 +83,7 @@ serve(async (req) => {
       const errorData = await tokenResponse.text();
       console.error("[Google OAuth Callback] Token exchange failed:", errorData);
       return Response.redirect(
-        `${FRONTEND_URL}/integracoes?error=token_failed`,
+        `${FRONTEND_URL}/configuracoes/integracoes?error=token_failed`,
         302
       );
     }
@@ -133,7 +133,7 @@ serve(async (req) => {
     if (updateError) {
       console.error("[Google OAuth Callback] Database update failed:", updateError);
       return Response.redirect(
-        `${FRONTEND_URL}/integracoes?error=db_failed`,
+        `${FRONTEND_URL}/configuracoes/integracoes?error=db_failed`,
         302
       );
     }
@@ -142,13 +142,13 @@ serve(async (req) => {
 
     // Redirecionar de volta para a página de integrações
     return Response.redirect(
-      `${FRONTEND_URL}/integracoes?success=true`,
+      `${FRONTEND_URL}/configuracoes/integracoes?success=true`,
       302
     );
   } catch (error) {
     console.error("[Google OAuth Callback] Unexpected error:", error);
     return Response.redirect(
-      `${FRONTEND_URL}/integracoes?error=connection_failed`,
+      `${FRONTEND_URL}/configuracoes/integracoes?error=connection_failed`,
       302
     );
   }

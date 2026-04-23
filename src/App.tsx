@@ -6,6 +6,8 @@ import LandingPage from "./pages/LandingPage";
 
 const AppShell = lazy(() => import("./AppShell"));
 const ForInfoprodutores = lazy(() => import("./pages/personas/ForInfoprodutores"));
+const ForAgencias = lazy(() => import("./pages/personas/ForAgencias"));
+const PublicReport = lazy(() => import("./pages/PublicReport"));
 
 const LazyFallback = () => (
   <div className="flex items-center justify-center min-h-screen">
@@ -24,6 +26,22 @@ const App = () => (
           element={
             <Suspense fallback={<LazyFallback />}>
               <ForInfoprodutores />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/para-agencias"
+          element={
+            <Suspense fallback={<LazyFallback />}>
+              <ForAgencias />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/r/:token"
+          element={
+            <Suspense fallback={<LazyFallback />}>
+              <PublicReport />
             </Suspense>
           }
         />

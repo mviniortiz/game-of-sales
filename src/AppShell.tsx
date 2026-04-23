@@ -33,6 +33,9 @@ const ConfTime = lazy(() => import("./pages/configuracoes/Time"));
 const ConfFaturamento = lazy(() => import("./pages/configuracoes/Faturamento"));
 const ConfIntegracoes = lazy(() => import("./pages/configuracoes/Integracoes"));
 const ConfImportar = lazy(() => import("./pages/configuracoes/Importar"));
+const ConfRelatoriosPublicos = lazy(() => import("./pages/configuracoes/RelatoriosPublicos"));
+const ConfContratos = lazy(() => import("./pages/configuracoes/Contratos"));
+const ConfWebhooksLeads = lazy(() => import("./pages/configuracoes/WebhooksLeads"));
 const Calendario = lazy(() => import("./pages/Calendario"));
 const CRM = lazy(() => import("./pages/CRM"));
 const DealCommandCenter = lazy(() => import("./pages/DealCommandCenter"));
@@ -47,6 +50,7 @@ const PoliticaPrivacidade = lazy(() => import("./pages/PoliticaPrivacidade"));
 const TermosServico = lazy(() => import("./pages/TermosServico"));
 const LogoPreview = lazy(() => import("./pages/LogoPreview"));
 const ScenePreview = lazy(() => import("./pages/ScenePreview"));
+const Changelog = lazy(() => import("./pages/Changelog"));
 
 const CheckoutRedirect = () => {
   const [params] = useSearchParams();
@@ -97,6 +101,7 @@ const AppShell = () => (
               <Route path="/scene-preview" element={<ScenePreview />} />
               <Route path="/politica-privacidade" element={<PoliticaPrivacidade />} />
               <Route path="/termos-de-servico" element={<TermosServico />} />
+              <Route path="/changelog" element={<Changelog />} />
 
               <Route
                 path="/dashboard"
@@ -258,6 +263,30 @@ const AppShell = () => (
                   element={
                     <AdminRoute>
                       <ConfImportar />
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="relatorios-publicos"
+                  element={
+                    <AdminRoute>
+                      <ConfRelatoriosPublicos />
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="contratos"
+                  element={
+                    <AdminRoute>
+                      <ConfContratos />
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="webhooks-leads"
+                  element={
+                    <AdminRoute>
+                      <ConfWebhooksLeads />
                     </AdminRoute>
                   }
                 />

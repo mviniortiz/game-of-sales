@@ -43,7 +43,6 @@ const NAV_LINKS: NavItem[] = [
                 sub: "Multi-cliente, multi-pipeline",
                 href: "/para-agencias",
                 icon: Megaphone,
-                soon: true,
             },
             {
                 label: "Para Imobiliárias",

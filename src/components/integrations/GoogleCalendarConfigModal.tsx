@@ -106,7 +106,8 @@ export const GoogleCalendarConfigModal = ({ open, onClose, onSaved }: GoogleCale
         try {
             setDisconnecting(true);
             toast.loading("Desconectando...", { id: "google-disconnect" });
-            const { error } = await supabase
+
+            const { error: tokenError } = await supabase
                 .from("profiles")
                 .update({
                     google_access_token: null,
@@ -115,9 +116,23 @@ export const GoogleCalendarConfigModal = ({ open, onClose, onSaved }: GoogleCale
                     google_calendar_id: null,
                 })
                 .eq("id", user!.id);
-            if (error) throw error;
+            if (tokenError) throw tokenError;
+
+            const { error: eventsError, count } = await supabase
+                .from("agendamentos")
+                .delete({ count: "exact" })
+                .eq("user_id", user!.id)
+                .eq("synced_with_google", true);
+            if (eventsError) throw eventsError;
+
             setState("disconnected");
-            toast.success("Desconectado do Google Calendar", { id: "google-disconnect" });
+            const removed = count ?? 0;
+            toast.success(
+                removed > 0
+                    ? `Desconectado · ${removed} evento${removed > 1 ? "s" : ""} do Google removido${removed > 1 ? "s" : ""}`
+                    : "Desconectado do Google Calendar",
+                { id: "google-disconnect" },
+            );
             onSaved?.();
         } catch (error) {
             console.error("[GoogleCalendarConfigModal] disconnect error:", error);

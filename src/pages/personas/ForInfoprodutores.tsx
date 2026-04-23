@@ -133,7 +133,7 @@ const PIPELINES: Record<
     esteira: {
         label: "Esteira de Recorrência",
         sub: "Assinante sobe de produto",
-        tagline: "Pipeline orientado a ciclo: ativos, upsell disparado, renovação, retenção. Cartão vai falhar? Vira deal antes do churn.",
+        tagline: "Pipeline orientado a ciclo: ativos, upsell disparado, renovação próxima, retenção. Contrato recorrente com aviso antes do vencimento.",
         icon: InfinityIcon,
         columns: [
             {
@@ -196,20 +196,20 @@ const RANKING = [
 ] as const;
 
 const INTEGRATIONS = [
-    { name: "Hotmart", highlight: true, note: "webhook nativo" },
-    { name: "Kiwify", highlight: true, note: "webhook nativo" },
-    { name: "Greenn", highlight: true, note: "webhook nativo" },
-    { name: "Eduzz", highlight: true, note: "webhook nativo" },
-    { name: "Mercado Pago", highlight: true, note: "webhook nativo" },
-    { name: "Stripe", highlight: true, note: "webhook nativo" },
-    { name: "Pagar.me", highlight: true, note: "webhook nativo" },
+    { name: "Hotmart", highlight: true, note: "via webhook" },
+    { name: "Kiwify", highlight: true, note: "via webhook" },
+    { name: "Greenn", highlight: true, note: "via webhook" },
+    { name: "Eduzz", highlight: true, note: "via webhook" },
+    { name: "Mercado Pago", highlight: true, note: "via webhook" },
+    { name: "Stripe", highlight: true, note: "via webhook" },
+    { name: "Pagar.me", highlight: true, note: "via webhook" },
     { name: "WhatsApp", highlight: false, note: "Evolution API" },
 ] as const;
 
 const FAQ = [
     {
         q: "Como conecto uma venda da Hotmart no Vyzon?",
-        a: "Em 3 cliques: no Vyzon você copia uma URL de webhook, abre o produtor na Hotmart em Ferramentas → Webhook, cola a URL e escolhe o evento (venda aprovada, boleto gerado, cartão recusado). Na próxima venda, o deal cai direto no pipeline do produto certo. Kiwify e Greenn seguem o mesmo padrão.",
+        a: "Em poucos cliques: no Vyzon você gera uma URL de webhook com secret próprio, abre o produtor na Hotmart em Ferramentas → Webhook e cola a URL. Na próxima venda, o payload cai no Vyzon, o deal nasce com nome, email, telefone e origem marcada. Kiwify, Greenn e Eduzz seguem o mesmo padrão.",
     },
     {
         q: "E se eu vendo o mesmo produto em 3 plataformas ao mesmo tempo?",
@@ -925,9 +925,9 @@ export default function ForInfoprodutores() {
                                 <span className="text-emerald-400">deal ativo</span>, não relatório esquecido.
                             </h2>
                             <p className="mb-6" style={{ fontSize: "1.0625rem", lineHeight: 1.7, color: "var(--vyz-text-muted)" }}>
-                                Webhook da Hotmart dispara "boleto gerado" → deal entra na etapa "Boleto aberto" com
-                                SLA de 48h. Se não pagou, a Eva identifica, escreve a mensagem no seu tom e sugere o
-                                horário de envio. Vendedor aprova com um toque, nada escapa porque ninguém lembrou.
+                                O webhook do checkout dispara → deal entra na etapa "Boleto aberto" com SLA de 48h.
+                                Se não pagou, a Eva sugere mensagem escrita no seu tom e o horário de envio.
+                                Vendedor aprova com um toque, nada escapa porque ninguém lembrou.
                             </p>
 
                             <ul className="space-y-3">
