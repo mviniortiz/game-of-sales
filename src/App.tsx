@@ -7,6 +7,7 @@ import LandingPage from "./pages/LandingPage";
 const AppShell = lazy(() => import("./AppShell"));
 const ForInfoprodutores = lazy(() => import("./pages/personas/ForInfoprodutores"));
 const ForAgencias = lazy(() => import("./pages/personas/ForAgencias"));
+const ForSaasB2B = lazy(() => import("./pages/personas/ForSaasB2B"));
 const PublicReport = lazy(() => import("./pages/PublicReport"));
 const VsHubspot = lazy(() => import("./pages/alternativas/VsHubspot"));
 const VsPloomes = lazy(() => import("./pages/alternativas/VsPloomes"));
@@ -41,6 +42,14 @@ const App = () => (
           element={
             <Suspense fallback={<LazyFallback />}>
               <ForAgencias />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/para-saas-b2b"
+          element={
+            <Suspense fallback={<LazyFallback />}>
+              <ForSaasB2B />
             </Suspense>
           }
         />
