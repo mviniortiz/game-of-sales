@@ -8,6 +8,13 @@ const AppShell = lazy(() => import("./AppShell"));
 const ForInfoprodutores = lazy(() => import("./pages/personas/ForInfoprodutores"));
 const ForAgencias = lazy(() => import("./pages/personas/ForAgencias"));
 const PublicReport = lazy(() => import("./pages/PublicReport"));
+const VsHubspot = lazy(() => import("./pages/alternativas/VsHubspot"));
+const VsPloomes = lazy(() => import("./pages/alternativas/VsPloomes"));
+const VsRDStation = lazy(() => import("./pages/alternativas/VsRDStation"));
+const VsKommo = lazy(() => import("./pages/alternativas/VsKommo"));
+const VsPipedrive = lazy(() => import("./pages/alternativas/VsPipedrive"));
+const VsAgendor = lazy(() => import("./pages/alternativas/VsAgendor"));
+const AlternativasHub = lazy(() => import("./pages/alternativas/AlternativasHub"));
 
 const LazyFallback = () => (
   <div className="flex items-center justify-center min-h-screen">
@@ -34,6 +41,62 @@ const App = () => (
           element={
             <Suspense fallback={<LazyFallback />}>
               <ForAgencias />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/alternativa-hubspot"
+          element={
+            <Suspense fallback={<LazyFallback />}>
+              <VsHubspot />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/alternativa-ploomes"
+          element={
+            <Suspense fallback={<LazyFallback />}>
+              <VsPloomes />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/alternativa-rd-station"
+          element={
+            <Suspense fallback={<LazyFallback />}>
+              <VsRDStation />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/alternativa-kommo"
+          element={
+            <Suspense fallback={<LazyFallback />}>
+              <VsKommo />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/alternativa-pipedrive"
+          element={
+            <Suspense fallback={<LazyFallback />}>
+              <VsPipedrive />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/alternativa-agendor"
+          element={
+            <Suspense fallback={<LazyFallback />}>
+              <VsAgendor />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/alternativas"
+          element={
+            <Suspense fallback={<LazyFallback />}>
+              <AlternativasHub />
             </Suspense>
           }
         />

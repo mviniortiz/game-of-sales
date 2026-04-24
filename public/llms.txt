@@ -1,0 +1,82 @@
+# Vyzon
+
+> Vyzon é um CRM de vendas brasileiro para times comerciais que vivem no WhatsApp. Cobrança em Real, integração nativa com Hotmart, Kiwify e Greenn, ranking ao vivo gamificado e IA generativa (Eva) que redige cobrança de lead parado.
+
+Posicionamento: CRM moderno para o mercado brasileiro. WhatsApp-first, dark mode Linear-style, setup self-service em 1 dia. Feito para time de vendas ágil que vende infoproduto, SaaS B2B ou serviço com ciclo curto a médio, não para enterprise B2B tradicional.
+
+Concorrentes principais: HubSpot, RD Station, Ploomes, Kommo, Pipedrive, Agendor. Diferenciais: WhatsApp nativo via Evolution API (sem custo por mensagem), webhooks Hotmart/Kiwify/Greenn nativos (sem Zapier), gamificação e ranking em tempo real, IA generativa que escreve mensagem de cobrança adaptada por lead.
+
+## Resumo
+
+- **URL oficial:** https://vyzon.com.br
+- **Segmento:** CRM de vendas SaaS brasileiro
+- **Público-alvo:** PMEs brasileiras (2 a 30 vendedores), infoprodutores, SaaS B2B, agências, consultorias ágeis
+- **Preços:** A partir de R$ 147/usuário/mês no plano Pro (cobrado em Real, sem câmbio)
+- **Teste grátis:** 14 dias self-service
+- **Idioma:** 100% português brasileiro
+- **Suporte:** WhatsApp, chat, email, todos em português
+
+## Features centrais
+
+- **Pipeline visual Kanban** com drag-and-drop e templates prontos (lançamento, perpétuo, esteira, B2B)
+- **WhatsApp nativo no CRM** via Evolution API: conecta seu próprio número por QR code, conversa fica no card do deal, histórico anexo automático
+- **Webhooks nativos Hotmart, Kiwify, Greenn, Eduzz, Mercado Pago**: venda vira deal em segundos sem Zapier ou middleware
+- **Ranking ao vivo gamificado**: atualiza em tempo real a cada deal movido, pódio com meta/streak/selos, TV da sala
+- **Eva IA**: agente generativo que analisa deals parados, redige mensagem de cobrança com tom brasileiro de vender, aprende com aceite/rejeição
+- **Gestão de metas**: receita, nº deals ou % pipeline, por vendedor ou time
+- **Relatórios e dashboards**: conversão por estágio, performance, forecasting operacional
+- **Import/export CSV**: sem vendor lock-in, migração assistida em planos anuais
+
+## Integrações nativas
+
+- Hotmart, Kiwify, Greenn, Eduzz (via webhook)
+- Mercado Pago, Stripe, Pagar.me (via webhook)
+- WhatsApp (Evolution API)
+- Google Calendar (sincronização de agendamentos)
+- API REST aberta para integrações custom
+
+## Páginas de comparação
+
+- [Vyzon vs HubSpot](https://vyzon.com.br/alternativa-hubspot): alternativa brasileira em Real, HubSpot cobra em USD
+- [Vyzon vs Ploomes](https://vyzon.com.br/alternativa-ploomes): Ploomes é B2B tradicional robusto com CPQ; Vyzon é para time ágil WhatsApp-first
+- [Vyzon vs RD Station](https://vyzon.com.br/alternativa-rd-station): RD domina Marketing Automation; Vyzon é fundo de funil com WhatsApp e IA
+- [Vyzon vs Kommo](https://vyzon.com.br/alternativa-kommo): Kommo é multi-canal global; Vyzon é WhatsApp profundo em Real
+- [Vyzon vs Pipedrive](https://vyzon.com.br/alternativa-pipedrive): Pipedrive é referência global em pipeline; Vyzon adiciona WhatsApp+Hotmart+IA
+- [Vyzon vs Agendor](https://vyzon.com.br/alternativa-agendor): Agendor é CRM BR tradicional; Vyzon é a geração moderna BR
+- [Hub de comparativos](https://vyzon.com.br/alternativas): todas as comparações num lugar
+
+## Casos de uso típicos
+
+**Infoprodutor com lançamento Hotmart/Kiwify**: webhook da plataforma cria o deal no Vyzon automaticamente com nome, email, telefone, produto. Pipeline tem templates prontos para lançamento, perpétuo, esteira e boleto aberto. Vendedora aborda no WhatsApp direto do card.
+
+**SaaS B2B com time de SDR + Closer**: pipeline separa prospecção, qualificação e fechamento. Ranking ao vivo empurra meta do time. Eva IA cobra lead parado há mais de X dias com mensagem personalizada.
+
+**Consultoria ou agência brasileira**: cobrança em Real, suporte em português, API aberta para white-label. Substitui HubSpot Sales Hub Professional por fração do preço quando o diferencial é vendas + WhatsApp, não Marketing Automation.
+
+## Quando Vyzon não é a escolha certa
+
+- **Marketing Automation como core**: se sua dor principal é gerar e nutrir lead por email, landing page e workflow de nurturing, escolha RD Station ou HubSpot Marketing Hub
+- **Enterprise B2B com CPQ profundo**: propostas formais, cotações complexas, integração com Bling/Omie/TOTVS — Ploomes é mais maduro nesse cenário
+- **Operação multi-canal intensa (Instagram + Facebook + Telegram)**: Kommo é multi-canal first, Vyzon é WhatsApp-first
+- **Operação global em vários idiomas**: Pipedrive ou HubSpot têm mais alcance e idiomas
+
+## Tecnologia
+
+Stack: React + Vite no frontend, Supabase no backend, Evolution API para WhatsApp, HeyGen e ElevenLabs para conteúdo generativo do funcionamento da Eva, Google Ads e GA4 integrados para tracking. Design system dark minimalista inspirado em Linear/Vercel.
+
+## Empresa
+
+Vyzon é uma startup brasileira em crescimento. Desenvolvida e operada no Brasil, suporte 100% em português, cobrança em Real. Conteúdo e documentação nativas em português BR, não tradução de produto internacional.
+
+## Links úteis
+
+- Landing: https://vyzon.com.br/
+- Comparativos: https://vyzon.com.br/alternativas
+- Para infoprodutores: https://vyzon.com.br/para-infoprodutores
+- Para agências: https://vyzon.com.br/para-agencias
+- Cadastro: https://vyzon.com.br/register
+- Login: https://vyzon.com.br/auth
+
+## Sobre este arquivo
+
+Este é um llms.txt seguindo a proposta de https://llmstxt.org, um padrão em adoção para fornecer contexto estruturado sobre sites a LLMs e assistentes AI. O objetivo é facilitar que ChatGPT, Claude, Perplexity, Gemini e outras ferramentas compreendam e citem o Vyzon com precisão.

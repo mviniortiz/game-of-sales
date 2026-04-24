@@ -20,6 +20,36 @@ import { SalesVideoV2Composition } from "./scenes/SalesVideoV2";
 import { SalesVideoV2BumperComposition } from "./scenes/SalesVideoV2Bumper";
 import { SalesVideoV2AvatarHostComposition } from "./scenes/SalesVideoV2AvatarHost";
 import { fontStyles as v2FontStyles } from "./scenes/salesV2/lib";
+import { Slide01Hook } from "./scenes/igCarousel/Slide01Hook";
+import { Slide02Reveal } from "./scenes/igCarousel/Slide02Reveal";
+import { Slide03Cost } from "./scenes/igCarousel/Slide03Cost";
+import { Slide04Diagnosis } from "./scenes/igCarousel/Slide04Diagnosis";
+import { Slide05Reveal } from "./scenes/igCarousel/Slide05Reveal";
+import { Slide06Pulse } from "./scenes/igCarousel/Slide06Pulse";
+import { Slide07PipelineEva } from "./scenes/igCarousel/Slide07PipelineEva";
+import { Slide08CTA } from "./scenes/igCarousel/Slide08CTA";
+import { SlideFounderHero } from "./scenes/igCarousel/SlideFounderHero";
+import {
+    FounderHeroGreen,
+    FounderHeroBlue,
+    FounderHeroDuotone,
+    FounderHeroBlock,
+    FounderHeroViolet,
+} from "./scenes/igCarousel/FounderHeroVariants";
+
+const ASPECTS = [
+    { key: "4x5", label: "4x5", w: 1080, h: 1350 },
+    { key: "1x1", label: "1x1", w: 1200, h: 1200 },
+    { key: "1_91x1", label: "191x1", w: 1200, h: 628 },
+] as const;
+
+const HERO_VARIANTS = [
+    { key: "Green", C: FounderHeroGreen },
+    { key: "Blue", C: FounderHeroBlue },
+    { key: "Block", C: FounderHeroBlock },
+    { key: "Violet", C: FounderHeroViolet },
+    { key: "Duotone", C: FounderHeroDuotone },
+] as const;
 
 const withV2Fonts = (Component: React.FC) => () =>
     (
@@ -407,6 +437,96 @@ export const RemotionRoot: React.FC = () => {
                 width={1920}
                 height={1080}
             />
+
+            {/* =====================================================
+                INSTAGRAM CAROUSEL — 8 slides 1080×1350 (still PNG)
+                Render: npx remotion still IG-Slide-01 out/ig/01.png
+                ===================================================== */}
+            <Composition
+                id="IG-Slide-01-Hook"
+                component={withV2Fonts(Slide01Hook)}
+                durationInFrames={1}
+                fps={30}
+                width={1080}
+                height={1350}
+            />
+            <Composition
+                id="IG-Slide-02-Reveal"
+                component={withV2Fonts(Slide02Reveal)}
+                durationInFrames={1}
+                fps={30}
+                width={1080}
+                height={1350}
+            />
+            <Composition
+                id="IG-Slide-03-Cost"
+                component={withV2Fonts(Slide03Cost)}
+                durationInFrames={1}
+                fps={30}
+                width={1080}
+                height={1350}
+            />
+            <Composition
+                id="IG-Slide-04-Diagnosis"
+                component={withV2Fonts(Slide04Diagnosis)}
+                durationInFrames={1}
+                fps={30}
+                width={1080}
+                height={1350}
+            />
+            <Composition
+                id="IG-Slide-05-Reveal"
+                component={withV2Fonts(Slide05Reveal)}
+                durationInFrames={1}
+                fps={30}
+                width={1080}
+                height={1350}
+            />
+            <Composition
+                id="IG-Slide-06-Pulse"
+                component={withV2Fonts(Slide06Pulse)}
+                durationInFrames={1}
+                fps={30}
+                width={1080}
+                height={1350}
+            />
+            <Composition
+                id="IG-Slide-07-PipelineEva"
+                component={withV2Fonts(Slide07PipelineEva)}
+                durationInFrames={1}
+                fps={30}
+                width={1080}
+                height={1350}
+            />
+            <Composition
+                id="IG-Slide-08-CTA"
+                component={withV2Fonts(Slide08CTA)}
+                durationInFrames={1}
+                fps={30}
+                width={1080}
+                height={1350}
+            />
+            <Composition
+                id="IG-FounderHero"
+                component={withV2Fonts(SlideFounderHero)}
+                durationInFrames={1}
+                fps={30}
+                width={1080}
+                height={1350}
+            />
+            {HERO_VARIANTS.flatMap((variant) =>
+                ASPECTS.map((a) => (
+                    <Composition
+                        key={`${variant.key}-${a.key}`}
+                        id={`IG-FounderHero-${variant.key}-${a.label}`}
+                        component={withV2Fonts(() => <variant.C aspect={a.key} />)}
+                        durationInFrames={1}
+                        fps={30}
+                        width={a.w}
+                        height={a.h}
+                    />
+                )),
+            )}
         </>
     );
 };
