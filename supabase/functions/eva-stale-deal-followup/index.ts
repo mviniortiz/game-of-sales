@@ -15,6 +15,11 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+// Shared secret entre pg_cron e esta função. Sem isso, qualquer um na internet
+// poderia invocar a função drenando créditos LLM. Configurado via:
+//   npx supabase secrets set EVA_CRON_SECRET=<random>
+//   + mesmo valor armazenado em vault.secrets name='eva_cron_secret' pro cron ler.
+const EVA_CRON_SECRET = Deno.env.get("EVA_CRON_SECRET");
 
 const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
@@ -269,6 +274,24 @@ async function enrichDealContext(deal: Deal): Promise<Deal> {
 
 serve(async (req) => {
     if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+    // Autenticação: exige x-cron-secret header válido OU Authorization Bearer
+    // com service_role_key (pra invocação manual em debug).
+    const providedCronSecret = req.headers.get("x-cron-secret");
+    const providedAuth = req.headers.get("authorization") || "";
+    const providedBearer = providedAuth.toLowerCase().startsWith("bearer ")
+        ? providedAuth.slice(7).trim()
+        : "";
+
+    const cronSecretValid = EVA_CRON_SECRET && providedCronSecret === EVA_CRON_SECRET;
+    const serviceRoleValid = providedBearer && providedBearer === SERVICE_ROLE_KEY;
+
+    if (!cronSecretValid && !serviceRoleValid) {
+        return new Response(
+            JSON.stringify({ error: "unauthorized — requires x-cron-secret header or service_role bearer" }),
+            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+    }
 
     let filterCompanyId: string | undefined;
     let force = false;

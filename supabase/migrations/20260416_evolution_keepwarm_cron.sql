@@ -1,32 +1,24 @@
 -- Keep-warm cron: mantém a edge function evolution-whatsapp com isolate Deno quente.
 -- Sem isso, a edge sofre cold start de ~500-1000ms quando fica ociosa.
 -- Ping a cada 4min cobre o timeout típico de ~5min de ociosidade do Deno Deploy.
+--
+-- ⚠️ ATENÇÃO: esta migration foi superada pela 20260424_evolution_keepwarm_vault.sql
+-- que lê o anon_key do Vault em vez de hardcode (fix C-04 do security audit 2026-04-24).
+-- Mantida vazia pra preservar ordem de migrations. Não aplica nada.
+--
+-- Git history desta migration ANTES do fix continha o JWT anon_key em plaintext.
+-- O anon_key é público (aparece no bundle SPA) mas commitá-lo em migration é
+-- hygiene ruim (scanners de bot trigueram alerta de leak).
+--
+-- Se tu precisar recuperar a funcionalidade keepwarm, roda:
+--   supabase db query --linked -f supabase/migrations/20260424_evolution_keepwarm_vault.sql
 
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 CREATE EXTENSION IF NOT EXISTS pg_net;
 
--- Remove job antigo se existir (idempotente)
+-- No-op: unschedule caso o job antigo ainda esteja rodando (v2 recria com mesmo nome)
 DO $$
 BEGIN
   PERFORM cron.unschedule('evolution-whatsapp-keepwarm');
 EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
-
--- A cada 4min, POST ?ping=1 na edge. A função curto-circuita antes de auth/DB
--- quando detecta ?ping=1 e retorna em <50ms, mantendo o isolate quente.
--- A anon key no header é necessária só pra passar pelo gateway do Supabase
--- (a edge faz validação real de user no handler principal).
-SELECT cron.schedule(
-  'evolution-whatsapp-keepwarm',
-  '*/4 * * * *',
-  $cmd$
-  SELECT net.http_post(
-    url := 'https://omsdkjzkphflpwnbaeye.supabase.co/functions/v1/evolution-whatsapp?ping=1',
-    headers := jsonb_build_object(
-      'Content-Type', 'application/json',
-      'Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tc2RranprcGhmbHB3bmJhZXllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyMTQ1MDAsImV4cCI6MjA3OTc5MDUwMH0.8M9FPjljtS10tF5EVAZRHXIVczK4qiWhPvrOMp0PavA'
-    ),
-    body := '{}'::jsonb
-  );
-  $cmd$
-);
