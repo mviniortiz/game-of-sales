@@ -341,7 +341,7 @@ const VsHubspot = () => {
                 }}
             />
 
-            <LandingNav />
+            <LandingNav onCTAClick={() => { window.location.href = "/#agendar-demo"; }} onLoginClick={() => navigate("/auth")} />
 
             {/* HERO */}
             <section className="pt-28 md:pt-36 pb-20 px-6 max-w-5xl mx-auto relative">
@@ -386,7 +386,7 @@ const VsHubspot = () => {
 
                 <div className="mt-10 flex flex-wrap gap-3">
                     <button
-                        onClick={() => navigate("/")}
+                        onClick={() => { window.location.href = "/#agendar-demo"; }}
                         className="group inline-flex items-center gap-2 px-6 py-3.5 rounded-xl font-semibold transition"
                         style={{
                             background: `linear-gradient(135deg, ${C.brand}, ${C.brandDim})`,
@@ -1224,7 +1224,7 @@ const VsHubspot = () => {
                         Zero vendor lock-in.
                     </p>
                     <button
-                        onClick={() => navigate("/")}
+                        onClick={() => { window.location.href = "/#agendar-demo"; }}
                         className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-bold transition group"
                         style={{
                             background: `linear-gradient(135deg, ${C.brand}, ${C.brandDim})`,

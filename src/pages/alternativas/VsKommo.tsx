@@ -307,7 +307,7 @@ const VsKommo = () => {
 
             <div aria-hidden className="pointer-events-none fixed inset-0 -z-10" style={{ background: `radial-gradient(1000px 500px at 10% -10%, rgba(0,227,122,0.06), transparent 60%), radial-gradient(900px 500px at 90% 10%, rgba(239,68,68,0.05), transparent 60%)` }} />
 
-            <LandingNav />
+            <LandingNav onCTAClick={() => { window.location.href = "/#agendar-demo"; }} onLoginClick={() => navigate("/auth")} />
 
             <section className="pt-28 md:pt-36 pb-20 px-6 max-w-5xl mx-auto relative">
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-7 text-[11px] font-semibold uppercase tracking-[0.25em]" style={{ background: "rgba(0,227,122,0.08)", border: `1px solid ${C.brand}33`, color: C.brand }}>
@@ -330,7 +330,7 @@ const VsKommo = () => {
                 </p>
 
                 <div className="mt-10 flex flex-wrap gap-3">
-                    <button onClick={() => navigate("/")} className="group inline-flex items-center gap-2 px-6 py-3.5 rounded-xl font-semibold transition" style={{ background: `linear-gradient(135deg, ${C.brand}, ${C.brandDim})`, color: "#06080a", boxShadow: `0 16px 40px -12px ${C.brand}55` }}>
+                    <button onClick={() => { window.location.href = "/#agendar-demo"; }} className="group inline-flex items-center gap-2 px-6 py-3.5 rounded-xl font-semibold transition" style={{ background: `linear-gradient(135deg, ${C.brand}, ${C.brandDim})`, color: "#06080a", boxShadow: `0 16px 40px -12px ${C.brand}55` }}>
                         Testar 14 dias grátis
                         <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition" />
                     </button>
@@ -688,7 +688,7 @@ const VsKommo = () => {
                     <div aria-hidden className="absolute inset-0 -z-10 opacity-40" style={{ background: `radial-gradient(500px 250px at 20% 20%, ${C.brand}22, transparent 60%), radial-gradient(500px 250px at 80% 80%, ${C.gold}22, transparent 60%)` }} />
                     <h2 className="text-3xl md:text-5xl font-bold tracking-[-0.03em] leading-[1.05] mb-5">Testa 14 dias.<br /><span style={{ background: `linear-gradient(90deg, ${C.brand}, ${C.gold})`, WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}>Decide depois</span>.</h2>
                     <p className="text-white/65 mb-8 max-w-xl mx-auto text-[15px] md:text-base leading-relaxed">Se o Kommo fizer mais sentido no fim, tu leva teus dados em CSV e segue vida. Zero vendor lock-in.</p>
-                    <button onClick={() => navigate("/")} className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-bold transition group" style={{ background: `linear-gradient(135deg, ${C.brand}, ${C.brandDim})`, color: "#06080a", boxShadow: `0 24px 60px -20px ${C.brand}88` }}>
+                    <button onClick={() => { window.location.href = "/#agendar-demo"; }} className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-bold transition group" style={{ background: `linear-gradient(135deg, ${C.brand}, ${C.brandDim})`, color: "#06080a", boxShadow: `0 24px 60px -20px ${C.brand}88` }}>
                         Começar agora
                         <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition" />
                     </button>

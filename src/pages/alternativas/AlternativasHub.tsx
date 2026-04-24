@@ -97,7 +97,7 @@ const AlternativasHub = () => {
                 }}
             />
 
-            <LandingNav />
+            <LandingNav onCTAClick={() => { window.location.href = "/#agendar-demo"; }} onLoginClick={() => navigate("/auth")} />
 
             {/* HERO */}
             <section className="pt-28 md:pt-36 pb-16 px-6 max-w-5xl mx-auto">
@@ -235,7 +235,7 @@ const AlternativasHub = () => {
                         melhor que decisão com propaganda.
                     </p>
                     <button
-                        onClick={() => navigate("/")}
+                        onClick={() => { window.location.href = "/#agendar-demo"; }}
                         className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-bold transition group"
                         style={{
                             background: `linear-gradient(135deg, ${C.brand}, ${C.brandDim})`,
