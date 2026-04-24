@@ -64,10 +64,10 @@ const FEATURES = [
     {
         icon: TrendingUp,
         title: "Ranking ao vivo que empurra meta",
-        body: "SDR vê em tempo real quantos SQLs entregou vs meta. Closer vê receita fechada vs target. Ranking público, pódio atualiza a cada deal. Funciona como ritual diário, não relatório mensal.",
+        body: "Ranking conectado ao Postgres via Supabase Realtime: cada deal movido dispara update imediato do pódio (badge 'Ao vivo' pulsa). Vendedor vê a própria posição em tempo real, não em refresh manual.",
         stats: [
-            { label: "Atualização", value: "Tempo real" },
-            { label: "Métricas por cargo", value: "SDR, Closer, AM" },
+            { label: "Atualização", value: "Realtime (Supabase channel)" },
+            { label: "Papéis suportados", value: "SDR, Closer, AM, Geral" },
         ],
     },
     {
@@ -95,22 +95,22 @@ const SCENARIOS = [
         title: "SaaS B2B com ciclo de 30-60 dias",
         role: "Head of Sales",
         team: "3 SDRs, 2 Closers",
-        body: "Outbound intenso no LinkedIn, qualificação por WhatsApp, demo online, proposta em PDF, fechamento em 4-8 semanas. Vyzon dá pipeline por conta, handoff transparente SDR→Closer e Eva cobra lead que ficou sem touch depois da demo.",
-        result: "Lead esquecido cai de 28% pra <10%. Ciclo reduz em 5-8 dias.",
+        body: "Outbound intenso no LinkedIn, qualificação por WhatsApp, demo online, proposta em PDF, fechamento em 4-8 semanas. Vyzon dá pipeline por conta, handoff SDR→Closer com SLA e Eva IA cobrando lead que ficou sem touch depois da demo.",
+        result: "Menos deal esquecido no pipeline. Handoff auditável, SLA visível.",
     },
     {
         title: "SaaS self-service com time de Expansion",
         role: "Customer Success Lead",
         team: "2 CSMs, 1 Closer de expansion",
-        body: "Base de 200 clientes, objetivo upsell/cross-sell. Pipeline de expansion separado do pipeline de new business. Gatilhos por uso do produto entram como deals automáticos. Closer aborda no WhatsApp com contexto da conta.",
-        result: "NRR sobe de 102% pra 115% em 2 trimestres.",
+        body: "Base de clientes existentes, objetivo upsell/cross-sell. Pipeline de expansion separado do pipeline de new business. Account Manager vê conta, histórico, stakeholders e movimenta deal quando surge gatilho.",
+        result: "AM tem visão de conta, não só de contato. Expansion vira processo previsível.",
     },
     {
         title: "Vertical SaaS B2B com venda consultiva",
         role: "Founder / CRO",
         team: "1 BDR, 2 founders vendendo",
-        body: "Ciclo 60-120 dias com multiple stakeholders, demo custom pra cada cliente, PoC de 30 dias antes de fechar. Pipeline documenta cada interação, anexos (propostas, termos de uso, PoC reports) ficam no deal, Eva lembra de follow-up crítico.",
-        result: "Win rate sobe de 15% pra 28% pela melhor orquestração de touchpoints.",
+        body: "Ciclo longo com múltiplos stakeholders, demo custom, PoC antes de fechar. Pipeline documenta cada interação, Eva IA lembra dos follow-ups críticos, ranking ao vivo mostra progresso da equipe em tempo real.",
+        result: "Zero deal caindo no esquecimento entre calls. Ritual de vendas.",
     },
 ];
 
@@ -135,7 +135,7 @@ const EARLY_ACCESS = [
 const FAQ = [
     {
         q: "Como o Vyzon lida com pipeline B2B de ciclo longo?",
-        a: "O pipeline é organizado por conta (empresa), não só por contato. Tu adiciona múltiplos stakeholders pro mesmo deal, cada um com conversa própria no WhatsApp, e o deal acumula atividades (ligações, emails, propostas) em timeline. Estágios são customizáveis por pipeline: tu pode ter um pipeline pra new business (MQL → SQL → Demo → Proposta → Ganho) e outro separado pra expansion (Trigger → Discovery → Upsell Proposta → Ganho).",
+        a: "Cada deal pode ter conta-alvo (empresa) identificada separada do contato principal, e múltiplos stakeholders adicionais (nome, email, telefone, role). O deal acumula atividades (ligações, emails, propostas, notas) em timeline e exibe SLA quando SDR faz handoff pro Closer. Estágios são customizáveis: tu pode ter fluxo pra new business e expansion, cada um com meta própria.",
     },
     {
         q: "Tem integração com LinkedIn Sales Navigator e outros outbound tools?",
@@ -143,7 +143,7 @@ const FAQ = [
     },
     {
         q: "Como é o handoff SDR para Closer?",
-        a: "Quando SDR move o deal pra estágio SQL (ou o que equivaler no teu pipeline), notificação automática vai pro Closer. O Closer assume o deal mantendo todo histórico: conversas no WhatsApp, email, notas e atividades. Tu pode configurar SLA (ex: Closer tem 48h pra primeiro touch após handoff) e a Eva IA alerta se o SLA estourar.",
+        a: "Cada deal tem campos sdr_id e closer_id. No perfil (Profile > Papel comercial) tu marca cada pessoa como SDR, Closer, AM ou Geral. Quando handoff acontece (setar handoff_at), o SLA é computado automaticamente (default 48h). O card do deal mostra badge 'SLA vencendo em Xh' em amarelo e 'SLA VENCIDO' em vermelho quando passa. A Eva IA prioriza deals com SLA apertado nas suas sugestões de follow-up.",
     },
     {
         q: "Vyzon tem forecasting e relatórios executivos?",
@@ -155,7 +155,7 @@ const FAQ = [
     },
     {
         q: "Como é o contrato? Tem SSO, SLA, multi-tenant?",
-        a: "Plano mensal sem fidelidade (cancela quando quiser). Anual 10% de desconto. SSO via Google Workspace está nativo. Microsoft/Okta em roadmap. SLA de 99.5% uptime. Pro enterprise real (5k+ contatos, multi-tenant, SSO SAML, white-label), entra em contato comercial pra cotação custom.",
+        a: "Plano mensal sem fidelidade (cancela quando quiser). Anual 10% de desconto. SSO via Google (Entrar com Google no /auth) funciona nativo. Microsoft/Okta SAML em roadmap. SLA de uptime monitorado 24/7. Multi-tenant por empresa (RLS no Postgres) pra total isolamento de dados.",
     },
     {
         q: "Migração do CRM atual (HubSpot, RD, Pipedrive)?",

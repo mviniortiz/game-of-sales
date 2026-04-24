@@ -1,5 +1,5 @@
-import { useState, useMemo, type ReactNode } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useMemo, useEffect, useRef, type ReactNode } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
@@ -65,6 +65,8 @@ type PeriodoTab = "mensal" | "semanal";
 const Ranking = () => {
   const { user, isAdmin, isSuperAdmin, companyId } = useAuth();
   const { activeCompanyId } = useTenant();
+  const queryClient = useQueryClient();
+  const [livePulse, setLivePulse] = useState(false);
   const [periodo, setPeriodo] = useState<PeriodoTab>("mensal");
 
   const effectiveCompanyId = isSuperAdmin ? activeCompanyId : companyId;
@@ -96,6 +98,35 @@ const Ranking = () => {
 
   const inicioPeriodo = periodo === "mensal" ? inicioMes : inicioSemana;
   const fimPeriodo = periodo === "mensal" ? fimMes : fimSemana;
+
+  // Realtime: escuta mudanças em deals (stage change, novo deal, deal ganho)
+  // e invalida queries do ranking pra re-fetch automático.
+  useEffect(() => {
+    if (!effectiveCompanyId) return;
+
+    const channel = supabase
+      .channel(`ranking-deals-${effectiveCompanyId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "deals",
+          filter: `company_id=eq.${effectiveCompanyId}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["vendedores-ranking"] });
+          queryClient.invalidateQueries({ queryKey: ["meta-consolidada-atual"] });
+          setLivePulse(true);
+          setTimeout(() => setLivePulse(false), 1200);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [effectiveCompanyId, queryClient]);
 
   // Fetch meta consolidada
   const { data: metaAtual, isLoading: loadingMeta, refetch: refetchMeta } = useQuery({
@@ -324,12 +355,30 @@ const Ranking = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
-            Ranking
-          </h1>
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
+              Ranking
+            </h1>
+            <span
+              className={cn(
+                "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all",
+                livePulse
+                  ? "bg-emerald-500/25 text-emerald-200 border border-emerald-500/50 scale-110"
+                  : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/25",
+              )}
+            >
+              <span
+                className={cn(
+                  "w-1.5 h-1.5 rounded-full bg-emerald-400",
+                  livePulse ? "animate-ping" : "animate-pulse",
+                )}
+              />
+              Ao vivo
+            </span>
+          </div>
           <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
             {format(hoje, "MMMM 'de' yyyy", { locale: ptBR })}
-            <span className="hidden sm:inline"> · atualiza a cada 30s</span>
+            <span className="hidden sm:inline"> · atualiza em tempo real a cada deal movido</span>
           </p>
         </div>
 

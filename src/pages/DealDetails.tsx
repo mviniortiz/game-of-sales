@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { EvaDealSuggestion } from "@/components/eva/EvaDealSuggestion";
 import { logger } from "@/utils/logger";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -731,6 +732,15 @@ export default function DealDetails() {
             </div>
           </div>
         )}
+
+        {/* ── Eva IA Suggestion (if pending) ─────────────────────── */}
+        <div className="px-4 sm:px-6 pt-4 sm:pt-6">
+          <EvaDealSuggestion
+            dealId={id!}
+            customerPhone={deal.customer_phone ?? null}
+            customerName={deal.customer_name ?? null}
+          />
+        </div>
 
         {/* ── Main Content ──────────────────────────────────────── */}
         <div className="p-4 sm:p-6">

@@ -138,6 +138,7 @@ export default function Profile() {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [salesRole, setSalesRole] = useState<"sdr" | "closer" | "am" | "generic">("generic");
 
   // Company
   const [companyName, setCompanyName] = useState("");
@@ -192,14 +193,21 @@ export default function Profile() {
     // em outra aba, etc) — evita loading infinito no Profile.
     const { data, error } = await supabase
       .from("profiles")
-      .select("nome, email, avatar_url")
+      .select("nome, email, avatar_url, sales_role")
       .eq("id", user.id)
       .maybeSingle();
     if (error) {
       console.warn("[Profile] loadProfile:", error.message);
       return;
     }
-    if (data) { setNome(data.nome); setEmail(data.email); setAvatarUrl(data.avatar_url); }
+    if (data) {
+      setNome(data.nome);
+      setEmail(data.email);
+      setAvatarUrl(data.avatar_url);
+      const rawRole = (data as any).sales_role;
+      const validRole = ["sdr", "closer", "am", "generic"].includes(rawRole) ? rawRole : "generic";
+      setSalesRole(validRole as typeof salesRole);
+    }
   };
 
   const loadCompanyData = async () => {
@@ -316,7 +324,7 @@ export default function Profile() {
   const handleUpdateProfile = async () => {
     if (!user) return;
     setLoading(true);
-    const { error } = await supabase.from("profiles").update({ nome }).eq("id", user.id);
+    const { error } = await supabase.from("profiles").update({ nome, sales_role: salesRole } as any).eq("id", user.id);
     if (error) toast.error("Erro ao atualizar perfil");
     else { await refreshProfile(); toast.success("Perfil atualizado!"); }
     setLoading(false);
@@ -600,6 +608,22 @@ export default function Profile() {
                   <Label className="text-xs text-muted-foreground">Email</Label>
                   <Input value={email} disabled className="h-9 text-sm bg-muted/50" />
                 </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Papel comercial</Label>
+                <select
+                  value={salesRole}
+                  onChange={(e) => setSalesRole(e.target.value as typeof salesRole)}
+                  className="h-9 text-sm w-full bg-background border border-input rounded-md px-3"
+                >
+                  <option value="generic">Geral (vendedor full-cycle)</option>
+                  <option value="sdr">SDR — Qualificação e outbound</option>
+                  <option value="closer">Closer — Fechamento</option>
+                  <option value="am">Account Manager — Retenção e expansão</option>
+                </select>
+                <p className="text-[11px] text-muted-foreground/70">
+                  Usado em ranking, handoff de deals e dashboards por cargo.
+                </p>
               </div>
               <div className="flex justify-end">
                 <Button onClick={handleUpdateProfile} disabled={loading} size="sm">

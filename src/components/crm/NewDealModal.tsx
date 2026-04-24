@@ -60,9 +60,12 @@ const STAGE_PROB: Record<string, number> = {
 const schema = z.object({
   title: z.string().min(1, "Título é obrigatório"),
   value: z.string().min(1, "Valor é obrigatório"),
-  customer_name: z.string().min(1, "Nome do cliente é obrigatório"),
+  customer_name: z.string().min(1, "Nome do contato é obrigatório"),
   customer_email: z.string().email("Email inválido").optional().or(z.literal("")),
   customer_phone: z.string().optional(),
+  account_name: z.string().optional(),
+  account_website: z.string().optional(),
+  account_industry: z.string().optional(),
   stage: z.string().min(1, "Estágio é obrigatório"),
   product_id: z.string().optional(),
   notes: z.string().optional(),
@@ -103,6 +106,9 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
       customer_name: "",
       customer_email: "",
       customer_phone: "",
+      account_name: "",
+      account_website: "",
+      account_industry: "",
       stage: stages[0]?.id || "lead",
       product_id: "",
       notes: "",
@@ -153,6 +159,9 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
         customer_name: data.customer_name,
         customer_email: data.customer_email || null,
         customer_phone: data.customer_phone || null,
+        account_name: data.account_name || null,
+        account_website: data.account_website || null,
+        account_industry: data.account_industry || null,
         stage: data.stage as any,
         product_id: data.product_id || null,
         notes: data.notes || null,
@@ -162,7 +171,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
         position: nextPos,
         user_id: user.id,
         company_id: companyId,
-      });
+      } as any);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -386,6 +395,66 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
                               focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
                           />
                         </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* ── Conta (B2B) ────────────────────────── */}
+            <div className="space-y-3 pt-2 border-t border-border/50">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Conta (opcional · pra B2B)
+              </p>
+              <FormField
+                control={form.control}
+                name="account_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="Nome da empresa (ex: Acme Corp)"
+                        className="h-10 bg-muted border-border text-foreground placeholder:text-muted-foreground
+                          focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="account_website"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="Site (acme.com)"
+                          className="h-10 bg-muted border-border text-foreground placeholder:text-muted-foreground
+                            focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="account_industry"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="Setor (SaaS, Agência, etc)"
+                          className="h-10 bg-muted border-border text-foreground placeholder:text-muted-foreground
+                            focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

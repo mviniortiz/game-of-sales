@@ -3,7 +3,8 @@ import { CSS } from "@dnd-kit/utilities";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Clock, Phone, Calendar, CheckCircle2, Flame, Trash2, Copy,
-  Pencil, MessageSquare, ArrowRight, ChevronLeft, ChevronRight, GripVertical
+  Pencil, MessageSquare, ArrowRight, ChevronLeft, ChevronRight, GripVertical,
+  Building2, AlertTriangle
 } from "lucide-react";
 import { format, differenceInDays, isPast, parseISO, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -624,6 +625,21 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
           </div>
         </div>
 
+        {/* ── Row 1.5: Account (empresa B2B) ─────────────── */}
+        {(deal as any).account_name && (
+          <div className="flex items-center gap-1.5 mb-1.5 min-h-[14px]">
+            <Building2 className="h-3 w-3 text-emerald-400/70 flex-shrink-0" />
+            <span className="text-[11px] font-semibold text-emerald-300/90 truncate max-w-[70%]">
+              {(deal as any).account_name}
+            </span>
+            {Array.isArray((deal as any).additional_contacts) && (deal as any).additional_contacts.length > 0 && (
+              <span className="inline-flex items-center gap-0.5 px-1.5 py-0 rounded-md text-[9px] font-bold bg-emerald-500/10 text-emerald-300/80 border border-emerald-500/20">
+                +{(deal as any).additional_contacts.length} stakeholder{(deal as any).additional_contacts.length > 1 ? "s" : ""}
+              </span>
+            )}
+          </div>
+        )}
+
         {/* ── Row 2: Customer name + tags inline ─────────────── */}
         <div className="flex items-center gap-1.5 mb-3 min-h-[14px]">
           {canInlineEdit && editingField === "customer_name" ? (
@@ -670,6 +686,38 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
             </div>
           )}
         </div>
+
+        {/* ── SLA badge (handoff ativo) ─────────────────────── */}
+        {(deal as any).sla_breach_at && (
+          (() => {
+            const breach = new Date((deal as any).sla_breach_at).getTime();
+            const now = Date.now();
+            const hoursLeft = (breach - now) / 3600000;
+            const expired = hoursLeft < 0;
+            const urgent = hoursLeft < 12 && !expired;
+            if (expired) {
+              return (
+                <div className="flex items-center gap-1.5 mb-2 px-2 py-1 rounded-md bg-red-500/10 border border-red-500/30">
+                  <AlertTriangle className="h-3 w-3 text-red-400 flex-shrink-0" />
+                  <span className="text-[10px] font-bold text-red-300 uppercase tracking-wider">
+                    SLA vencido há {Math.abs(Math.round(hoursLeft))}h
+                  </span>
+                </div>
+              );
+            }
+            if (urgent) {
+              return (
+                <div className="flex items-center gap-1.5 mb-2 px-2 py-1 rounded-md bg-amber-500/10 border border-amber-500/30">
+                  <Clock className="h-3 w-3 text-amber-400 flex-shrink-0" />
+                  <span className="text-[10px] font-bold text-amber-300 uppercase tracking-wider">
+                    SLA em {Math.round(hoursLeft)}h
+                  </span>
+                </div>
+              );
+            }
+            return null;
+          })()
+        )}
 
         {/* ── Value hero ───────────────────────────────────── */}
         <div className="flex items-baseline justify-between gap-2 mb-2">
