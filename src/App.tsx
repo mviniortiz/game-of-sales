@@ -6,7 +6,10 @@ import LandingPage from "./pages/LandingPage";
 
 const AppShell = lazy(() => import("./AppShell"));
 const ForInfoprodutores = lazy(() => import("./pages/personas/ForInfoprodutores"));
-const ForAgencias = lazy(() => import("./pages/personas/ForAgencias"));
+// ForAgencias: despublicada temporariamente (sem redirect), features multi-tenant
+// prometidas não estão implementadas. Reativar quando implementar
+// (tabela clients, role client_user, white-label por client).
+// const ForAgencias = lazy(() => import("./pages/personas/ForAgencias"));
 const ForSaasB2B = lazy(() => import("./pages/personas/ForSaasB2B"));
 const PublicReport = lazy(() => import("./pages/PublicReport"));
 const VsHubspot = lazy(() => import("./pages/alternativas/VsHubspot"));
@@ -37,14 +40,8 @@ const App = () => (
             </Suspense>
           }
         />
-        <Route
-          path="/para-agencias"
-          element={
-            <Suspense fallback={<LazyFallback />}>
-              <ForAgencias />
-            </Suspense>
-          }
-        />
+        {/* /para-agencias despublicada (Opção C) até multi-tenant ser implementado.
+            Rota cai no AppShell (404 → LandingPage ou app). */}
         <Route
           path="/para-saas-b2b"
           element={

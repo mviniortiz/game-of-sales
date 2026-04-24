@@ -39,9 +39,9 @@ const NAV_LINKS: NavItem[] = [
                 icon: Rocket,
             },
             {
-                label: "Para Agências",
-                sub: "Multi-cliente, multi-pipeline",
-                href: "/para-agencias",
+                label: "Para SaaS B2B",
+                sub: "SDR + Closer com WhatsApp e IA",
+                href: "/para-saas-b2b",
                 icon: Megaphone,
             },
             {
