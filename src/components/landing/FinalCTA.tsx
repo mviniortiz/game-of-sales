@@ -46,6 +46,7 @@ export const FinalCTA = ({ onCTAClick, onScheduleDemoClick }: FinalCTAProps) => 
                     <div className="inline-flex items-center gap-2 mb-7">
                         <span
                             className="w-1.5 h-1.5 rounded-full bg-emerald-400"
+                            aria-hidden="true"
                         />
                         <span
                             className="text-xs text-emerald-400"
@@ -66,30 +67,19 @@ export const FinalCTA = ({ onCTAClick, onScheduleDemoClick }: FinalCTAProps) => 
                             color: "rgba(255,255,255,0.95)",
                         }}
                     >
-                        Seu time pode estar vendendo mais amanhã.
+                        Veja como a Vyzon pode organizar sua operação comercial.
                     </h2>
 
                     {/* Sub-copy */}
                     <p
-                        className="mb-10 max-w-xl mx-auto"
-                        style={{ color: "rgba(255,255,255,0.45)", fontSize: "1rem", lineHeight: 1.7 }}
+                        className="mb-10 max-w-2xl mx-auto"
+                        style={{ color: "rgba(255,255,255,0.55)", fontSize: "1rem", lineHeight: 1.7 }}
                     >
-                        Configura em 5 minutos. Cancela quando quiser — sem multa e sem burocracia.
+                        Em uma demonstração rápida, mostramos como metas, ranking, pipeline e automações podem funcionar dentro da sua rotina de vendas.
                     </p>
 
                     {/* CTA buttons */}
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-                        <LandingButton
-                            href="/onboarding?plan=pro"
-                            onClick={(e) => { e.preventDefault(); onCTAClick(); }}
-                            variant="primary"
-                            size="lg"
-                            icon={<Rocket className="h-4 w-4" />}
-                            showArrow
-                        >
-                            Testar grátis por 14 dias
-                        </LandingButton>
-
                         <LandingButton
                             href="#agendar-demo"
                             onClick={(e) => {
@@ -98,11 +88,22 @@ export const FinalCTA = ({ onCTAClick, onScheduleDemoClick }: FinalCTAProps) => 
                                     onScheduleDemoClick();
                                 }
                             }}
-                            variant="secondary"
+                            variant="primary"
                             size="lg"
                             icon={<Calendar className="h-4 w-4" />}
+                            showArrow
                         >
                             Agendar demonstração
+                        </LandingButton>
+
+                        <LandingButton
+                            href="/onboarding?plan=pro"
+                            onClick={(e) => { e.preventDefault(); onCTAClick(); }}
+                            variant="secondary"
+                            size="lg"
+                            icon={<Rocket className="h-4 w-4" />}
+                        >
+                            Começar teste grátis
                         </LandingButton>
                     </div>
 

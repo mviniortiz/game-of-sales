@@ -4,24 +4,28 @@ import { ChevronDown } from "lucide-react";
 
 const FAQS = [
     {
-        q: "O que é o Vyzon?",
-        a: "Um CRM de vendas completo com pipeline Kanban, ranking gamificado, metas em tempo real, funil de calls, calendário integrado com Google Calendar, hub WhatsApp com IA e integrações automáticas com os principais checkouts e plataformas do mercado brasileiro.",
+        q: "A Vyzon é só para infoprodutores?",
+        a: "Não. A Vyzon atende times comerciais que precisam de mais adesão ao CRM, clareza de metas e gestão de pipeline. Infoprodutores, agências, indústrias, distribuidoras e times B2B (SDR/Closer) podem usar a plataforma.",
+    },
+    {
+        q: "O que significa CRM gamificado?",
+        a: "Significa transformar metas, ranking, tarefas e evolução comercial em uma experiência mais visual e engajadora, para que o time acompanhe a própria performance diariamente — em vez de depender de planilha, print e cobrança no WhatsApp.",
+    },
+    {
+        q: "Preciso substituir meu processo comercial atual?",
+        a: "Não necessariamente. A Vyzon organiza pipeline, metas e rotina comercial com integrações e fluxos que podem ser adaptados ao processo existente. A maioria dos times mantém o que já funciona e usa a Vyzon pra dar visibilidade e ritmo.",
     },
     {
         q: "Quanto tempo leva pra configurar?",
-        a: "Menos de 5 minutos. Cria a conta, cola o webhook da sua plataforma de vendas e convida o time. As vendas começam a aparecer automaticamente.",
+        a: "Menos de 5 minutos pra subir o ambiente: cria a conta, convida o time, configura pipeline e metas. Integrações via webhook (checkouts, formulários, planilhas) também são plug-and-play.",
     },
     {
-        q: "Posso testar antes de assinar?",
-        a: "Sim! Todos os planos pagos têm 14 dias grátis com acesso completo. Você só é cobrado depois do período de teste.",
+        q: "A Vyzon integra com quais plataformas?",
+        a: "Sincronização nativa via webhook com Hotmart, Kiwify, Greenn, Eduzz, Cakto, Asaas, Braip, Monetizze, Notazz, Pagar.me, RD Station, Mercado Pago, Stripe e Zapier. Google Calendar pra agendamentos. WhatsApp via Evolution API. Lead webhooks (formulário e Google Sheets) e API/Webhooks abertos pra qualquer plataforma que dispare evento.",
     },
     {
-        q: "Quais plataformas integram?",
-        a: "Dezenas de checkouts e plataformas de pagamento com sincronização automática via webhook — os principais do mercado BR e globais. Google Calendar pra agendamentos. WhatsApp via Evolution API. Qualquer plataforma que dispare webhook funciona. Veja a lista completa na página de integrações.",
-    },
-    {
-        q: "Tem ligação dentro da plataforma?",
-        a: "Tem. Ligações é um add-on dos planos Plus e Pro. Inclui chamadas dentro do CRM, gravação automática, transcrição e insights de cada conversa.",
+        q: "Serve para times pequenos?",
+        a: "Sim. A Vyzon faz mais sentido pra operações com metas claras e pelo menos alguns vendedores, SDRs ou closers — mas também funciona muito bem pra times em crescimento que querem instalar uma rotina antes de escalar.",
     },
     {
         q: "Posso cancelar quando quiser?",

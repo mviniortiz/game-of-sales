@@ -24,6 +24,9 @@ const DemoVideoPlayer = lazy(() =>
 const UseCasesSection = lazy(() =>
     import("@/components/landing/UseCasesSection").then((m) => ({ default: m.UseCasesSection }))
 );
+const IntegrationsSection = lazy(() =>
+    import("@/components/landing/IntegrationsSection").then((m) => ({ default: m.IntegrationsSection }))
+);
 const EvaAISection = lazy(() =>
     import("@/components/landing/EvaAISection").then((m) => ({ default: m.EvaAISection }))
 );
@@ -128,6 +131,7 @@ const LandingPage = () => {
                 onCTAClick={() => scrollToLazyAnchor("pricing")}
                 onDemoClick={() => scrollToLazyAnchor("how-it-works")}
                 onScheduleDemoClick={() => scrollToDemo("hero")}
+                onTrialClick={() => goToRegister("plus")}
                 onLoginClick={() => navigate("/auth")}
             />
 
@@ -159,6 +163,10 @@ const LandingPage = () => {
                 <div id="use-cases">
                     <UseCasesSection />
                 </div>
+            </LazyOnVisible>
+
+            <LazyOnVisible minHeight="700px" id="integracoes">
+                <IntegrationsSection />
             </LazyOnVisible>
 
             <LazyOnVisible minHeight="500px">
