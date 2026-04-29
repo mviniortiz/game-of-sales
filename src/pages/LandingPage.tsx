@@ -27,9 +27,13 @@ const UseCasesSection = lazy(() =>
 const IntegrationsSection = lazy(() =>
     import("@/components/landing/IntegrationsSection").then((m) => ({ default: m.IntegrationsSection }))
 );
-const IdentityImageSection = lazy(() =>
-    import("@/components/landing/IdentityImageSection").then((m) => ({ default: m.IdentityImageSection }))
-);
+// As 4 seções narrativas com imagem (Ritmo Comercial, Segunda-feira, Eva,
+// War Room) estão desativadas até as imagens definitivas subirem em
+// public/images/vyzon/. Para reativar: descomentar este import + os 4
+// <LazyOnVisible> com <IdentityImageSection> mais abaixo.
+// const IdentityImageSection = lazy(() =>
+//     import("@/components/landing/IdentityImageSection").then((m) => ({ default: m.IdentityImageSection }))
+// );
 const EvaAISection = lazy(() =>
     import("@/components/landing/EvaAISection").then((m) => ({ default: m.EvaAISection }))
 );
@@ -142,6 +146,8 @@ const LandingPage = () => {
 
             <PainPoints />
 
+            {/* IdentityImageSection: Ritmo Comercial — desativada até a imagem real subir */}
+            {/*
             <LazyOnVisible minHeight="600px">
                 <IdentityImageSection
                     eyebrow="Ritmo Comercial"
@@ -155,6 +161,7 @@ const LandingPage = () => {
                     accent="emerald"
                 />
             </LazyOnVisible>
+            */}
 
             <LazyOnVisible minHeight="500px" id="how-it-works">
                 <FlowSection />
@@ -176,6 +183,8 @@ const LandingPage = () => {
                 <DemoVideoPlayer />
             </LazyOnVisible>
 
+            {/* IdentityImageSection: Segunda-feira de manhã — desativada até a imagem real subir */}
+            {/*
             <LazyOnVisible minHeight="700px">
                 <IdentityImageSection
                     eyebrow="Segunda-feira de manhã"
@@ -197,6 +206,7 @@ const LandingPage = () => {
                     ]}
                 />
             </LazyOnVisible>
+            */}
 
             <LazyOnVisible minHeight="600px">
                 <div id="use-cases">
@@ -212,6 +222,8 @@ const LandingPage = () => {
                 <LigacoesSection onSeePlansClick={() => smoothScrollToId("pricing")} />
             </LazyOnVisible>
 
+            {/* IdentityImageSection: Eva — desativada até a imagem real subir */}
+            {/*
             <LazyOnVisible minHeight="650px" id="eva">
                 <IdentityImageSection
                     eyebrow="Eva — IA de Próximo Passo"
@@ -232,11 +244,14 @@ const LandingPage = () => {
                     cta={{ label: "Conhecer a Eva em uma demonstração", href: "#agendar-demo" }}
                 />
             </LazyOnVisible>
+            */}
 
             <LazyOnVisible minHeight="700px">
                 <EvaAISection onCTAClick={() => smoothScrollToId("pricing")} />
             </LazyOnVisible>
 
+            {/* IdentityImageSection: War Room — desativada até a imagem real subir */}
+            {/*
             <LazyOnVisible minHeight="650px">
                 <IdentityImageSection
                     eyebrow="War Room Comercial"
@@ -251,6 +266,7 @@ const LandingPage = () => {
                     accent="blue"
                 />
             </LazyOnVisible>
+            */}
 
             <LazyOnVisible minHeight="900px" id="pricing">
                 <PricingSection
