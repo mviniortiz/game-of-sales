@@ -1,6 +1,5 @@
-import type { SeoLandingConfig } from "../types";
-
-export const crmParaTimesConfig: SeoLandingConfig = {
+/** @type {import('../types').SeoLandingConfig} */
+export const crmParaTimesConfig = {
     slug: "crm-para-times-comerciais",
 
     seo: {

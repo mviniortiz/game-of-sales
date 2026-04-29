@@ -21,7 +21,7 @@ const FAQS = [
     },
     {
         q: "A Vyzon integra com quais plataformas?",
-        a: "Sincronização nativa via webhook com Hotmart, Kiwify, Greenn, Eduzz, Cakto, Asaas, Braip, Monetizze, Notazz, Pagar.me, RD Station, Mercado Pago, Stripe e Zapier. Google Calendar pra agendamentos. WhatsApp via Evolution API. Lead webhooks (formulário e Google Sheets) e API/Webhooks abertos pra qualquer plataforma que dispare evento.",
+        a: "Sincronização nativa via webhook com Hotmart, Kiwify, Greenn, Eduzz, Cakto, Asaas, Braip, Monetizze, Notazz, RD Station, Mercado Pago e Zapier. Google Calendar pra agendamentos. WhatsApp via Evolution API. Lead webhooks (formulário e Google Sheets) e API/Webhooks abertos pra qualquer plataforma que dispare evento. Stripe, Pagar.me e Celetus estão no roadmap (sob consulta).",
     },
     {
         q: "Serve para times pequenos?",

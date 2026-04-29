@@ -1,6 +1,9 @@
-import type { SeoLandingConfig } from "../types";
+// Config consumida tanto pelo runtime React quanto pelo script de prerender
+// (scripts/prerender-seo.mjs). Mantenha .js puro para Node ESM importar
+// direto sem TS loader. Tipos checados via JSDoc.
 
-export const crmGamificadoConfig: SeoLandingConfig = {
+/** @type {import('../types').SeoLandingConfig} */
+export const crmGamificadoConfig = {
     slug: "crm-gamificado",
 
     seo: {
