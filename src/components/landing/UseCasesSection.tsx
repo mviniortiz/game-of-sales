@@ -1,163 +1,245 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { BarChart3, Trophy, Link2, Check } from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowRight, Rocket, Megaphone, Factory, Users } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
-// ─── Cases data ──────────────────────────────────────────────────────────────
-const CASES = [
-    {
-        icon: BarChart3,
-        tag: "Gestor Comercial",
-        title: "Visibilidade total, sem ficar cobrando",
-        description:
-            "Painel ao vivo com faturamento, ticket médio, taxa de conversão e show rate. Enxergue quem está performando e se o time vai bater meta — tudo em tempo real.",
-        bullets: [
-            "Painel com KPIs ao vivo",
-            "Funil de calls (agendamento → show → venda)",
-            "Metas do time consolidadas",
-        ],
-    },
-    {
-        icon: Trophy,
-        tag: "Vendedor",
-        title: "Competição que motiva sem pressão",
-        description:
-            "Ranking com níveis, pódio ao vivo e meta individual. Cada venda fechada faz você subir. Acompanhe seu progresso e seus deals no pipeline.",
-        bullets: [
-            "Ranking com níveis e pódio",
-            "Pipeline pessoal de deals",
-            "Meta individual com progresso",
-        ],
-    },
-    {
-        icon: Link2,
-        tag: "Dono de Infoproduto",
-        title: "Vendas automáticas, zero trabalho manual",
-        description:
-            "Conecta seu checkout via webhook. Cada venda aprovada cai no painel e atualiza o ranking automaticamente. Sem copia-e-cola.",
-        bullets: [
-            "Sincronização automática via webhook",
-            "Painel de receita ao vivo",
-            "Extensão Chrome pro WhatsApp",
-        ],
-    },
-] as const;
+type SegmentLink =
+    | { kind: "page"; label: string; href: string }
+    | { kind: "soon"; label: string };
 
-// ─── UseCasesSection ─────────────────────────────────────────────────────────
+type Segment = {
+    icon: LucideIcon;
+    tag: string;
+    title: string;
+    description: string;
+    bullets: string[];
+    link: SegmentLink;
+};
+
+const SEGMENTS: readonly Segment[] = [
+    {
+        icon: Rocket,
+        tag: "Infoprodutores e mentorias",
+        title: "Mais previsibilidade pro time de closers",
+        description:
+            "Controle closers, leads, follow-ups e vendas de produtos digitais com uma rotina comercial mais previsível.",
+        bullets: [
+            "Pipeline por funil de aquisição",
+            "Vendas do checkout caindo direto no painel",
+            "Ranking diário pra manter ritmo",
+        ],
+        link: { kind: "page", label: "Ver aplicação", href: "/para-infoprodutores" },
+    },
+    {
+        icon: Megaphone,
+        tag: "Agências e coprodutoras",
+        title: "Visão de várias operações no mesmo lugar",
+        description:
+            "Acompanhe múltiplas operações, campanhas e times comerciais com metas, ranking e pipeline em tempo real.",
+        bullets: [
+            "Metas por equipe e por operação",
+            "Ranking consolidado e por canal",
+            "Histórico de deal pra cada cliente",
+        ],
+        link: { kind: "soon", label: "Em breve" },
+    },
+    {
+        icon: Factory,
+        tag: "Indústrias e distribuidoras",
+        title: "Visibilidade da carteira e do representante",
+        description:
+            "Dê mais visibilidade para vendedores, representantes, carteiras e oportunidades B2B.",
+        bullets: [
+            "Carteira de cliente por vendedor",
+            "Funil B2B com etapas customizáveis",
+            "Follow-up programado por oportunidade",
+        ],
+        link: { kind: "soon", label: "Em breve" },
+    },
+    {
+        icon: Users,
+        tag: "Times SDR/Closer B2B",
+        title: "Prospecção, qualificação e fechamento conectados",
+        description:
+            "Organize prospecção, qualificação, oportunidades e performance em um fluxo simples para o time usar.",
+        bullets: [
+            "Pipeline SDR → Closer integrado",
+            "WhatsApp, calls e tarefas no mesmo deal",
+            "Painel de show rate e taxa de conversão",
+        ],
+        link: { kind: "page", label: "Ver aplicação", href: "/para-saas-b2b" },
+    },
+];
+
 export const UseCasesSection = () => {
-    const [active, setActive] = useState(0);
-
     return (
-        <section className="relative py-28 px-4 sm:px-6 lg:px-8 overflow-hidden" style={{ background: "var(--vyz-bg)" }}>
-            {/* Green spotlight from top */}
+        <section
+            className="relative py-24 sm:py-28 px-4 sm:px-6 lg:px-8 overflow-hidden"
+            style={{ background: "var(--vyz-bg)" }}
+            aria-labelledby="use-cases-title"
+        >
             <div
                 className="absolute inset-x-0 top-0 h-[400px] pointer-events-none"
+                aria-hidden="true"
                 style={{
                     background: "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(0,227,122,0.08) 0%, transparent 70%)",
                 }}
             />
-            <div className="relative max-w-4xl mx-auto">
-                {/* Header */}
+
+            <div className="relative max-w-6xl mx-auto">
                 <motion.div
-                    className="text-center mb-14"
-                    initial={{ y: 20 }}
-                    whileInView={{ y: 0 }}
+                    className="text-center mb-12 sm:mb-14"
+                    initial={{ y: 20, opacity: 0 }}
+                    whileInView={{ y: 0, opacity: 1 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5 }}
                 >
                     <span
                         className="inline-block text-xs text-emerald-400 rounded-full px-4 py-1.5 mb-5"
-                        style={{ fontWeight: 600, letterSpacing: "0.08em", background: "rgba(0,227,122,0.1)", border: "1px solid rgba(0,227,122,0.2)" }}
+                        style={{
+                            fontWeight: 600,
+                            letterSpacing: "0.08em",
+                            background: "rgba(0,227,122,0.1)",
+                            border: "1px solid rgba(0,227,122,0.2)",
+                            textTransform: "uppercase",
+                        }}
                     >
-                        PARA QUEM É
+                        Para quem é
                     </span>
-
                     <h2
+                        id="use-cases-title"
                         className="font-heading mb-4"
-                        style={{ fontWeight: 700, fontSize: "clamp(1.75rem, 4.5vw, 2.75rem)", lineHeight: 1.1, letterSpacing: "-0.04em", color: "rgba(255,255,255,0.95)" }}
+                        style={{
+                            fontWeight: 700,
+                            fontSize: "clamp(1.75rem, 4.5vw, 2.75rem)",
+                            lineHeight: 1.1,
+                            letterSpacing: "-0.04em",
+                            color: "rgba(255,255,255,0.95)",
+                        }}
                     >
-                        Funciona pro{" "}
-                        <span className="text-emerald-400">seu time</span>
+                        Feito para times comerciais{" "}
+                        <span className="text-emerald-400">que vivem de meta</span>
                     </h2>
-
-                    <p className="max-w-lg mx-auto" style={{ fontSize: "1.0625rem", color: "rgba(255,255,255,0.45)" }}>
-                        Gestor ganha visibilidade. Vendedor ganha motivação. Dono de infoproduto ganha controle.
+                    <p
+                        className="max-w-2xl mx-auto text-[15px] sm:text-base"
+                        style={{ color: "rgba(255,255,255,0.55)", lineHeight: 1.6 }}
+                    >
+                        A Vyzon nasceu pra resolver adesão ao CRM, gestão de meta e ritmo comercial. Times de 3 a 30
+                        vendedores, SDRs, closers ou representantes que vivem de pipeline, follow-up e número no fim do mês.
                     </p>
                 </motion.div>
 
-                {/* Tab selector */}
-                <div className="flex justify-center mb-10 sm:mb-12 px-2">
-                    <div
-                        className="inline-flex gap-1 p-1 rounded-xl max-w-full overflow-x-auto no-scrollbar"
-                        style={{ background: "rgba(255,255,255,0.04)", boxShadow: "0 0 0 1px rgba(255,255,255,0.06)" }}
-                    >
-                        {CASES.map((c, i) => {
-                            const Icon = c.icon;
-                            const isActive = active === i;
-                            return (
-                                <button
-                                    key={c.tag}
-                                    onClick={() => setActive(i)}
-                                    className="relative flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 rounded-lg text-xs sm:text-sm whitespace-nowrap transition-colors"
-                                    style={{ fontWeight: 600, color: isActive ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.35)" }}
-                                >
-                                    {isActive && (
-                                        <motion.div
-                                            layoutId="usecase-pill"
-                                            className="absolute inset-0 rounded-lg"
-                                            style={{ background: "rgba(255,255,255,0.08)", boxShadow: "0 0 0 1px rgba(255,255,255,0.1)" }}
-                                            transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
-                                        />
-                                    )}
-                                    <Icon className={`relative h-4 w-4 ${isActive ? "text-emerald-400" : ""}`} strokeWidth={2} />
-                                    <span className="relative">{c.tag}</span>
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+                    {SEGMENTS.map((seg, i) => {
+                        const Icon = seg.icon;
+                        const delayClass =
+                            i === 0 ? "" : i === 1 ? "landing-delay-100" : i === 2 ? "landing-delay-200" : "landing-delay-300";
 
-                {/* Content */}
-                <AnimatePresence mode="wait">
-                    {CASES.map((c, i) => {
-                        if (i !== active) return null;
-                        return (
-                            <motion.div
-                                key={c.tag}
-                                className="max-w-2xl mx-auto"
-                                initial={{ y: 12 }}
-                                animate={{ y: 0 }}
-                                exit={{ y: -12 }}
-                                transition={{ duration: 0.3 }}
+                        const cardInner = (
+                            <div
+                                className="h-full rounded-2xl p-6 sm:p-7 flex flex-col gap-4 transition-colors group-hover:bg-white/[0.04]"
+                                style={{
+                                    background: "rgba(255,255,255,0.025)",
+                                    border: "1px solid rgba(255,255,255,0.07)",
+                                    boxShadow: "0 0 0 1px rgba(255,255,255,0.04), 0 12px 28px rgba(0,0,0,0.2)",
+                                }}
                             >
-                                <h3
-                                    className="font-heading text-center mb-4"
-                                    style={{ fontWeight: 700, fontSize: "clamp(1.25rem, 3vw, 1.6rem)", lineHeight: 1.2, letterSpacing: "-0.03em", color: "rgba(255,255,255,0.95)" }}
+                                <div
+                                    className="flex h-11 w-11 items-center justify-center rounded-xl"
+                                    style={{
+                                        background: "rgba(0,227,122,0.10)",
+                                        border: "1px solid rgba(0,227,122,0.22)",
+                                    }}
+                                    aria-hidden="true"
                                 >
-                                    {c.title}
-                                </h3>
+                                    <Icon className="h-5 w-5 text-emerald-400" strokeWidth={1.9} />
+                                </div>
 
-                                <p className="text-center mb-8 leading-relaxed" style={{ fontSize: "0.95rem", color: "rgba(255,255,255,0.45)" }}>
-                                    {c.description}
+                                <div>
+                                    <p
+                                        className="text-[11px] mb-2"
+                                        style={{
+                                            fontWeight: 600,
+                                            letterSpacing: "0.10em",
+                                            textTransform: "uppercase",
+                                            color: "rgba(0,227,122,0.85)",
+                                        }}
+                                    >
+                                        {seg.tag}
+                                    </p>
+                                    <h3
+                                        className="font-heading text-[1.1rem] sm:text-[1.2rem]"
+                                        style={{
+                                            fontWeight: 700,
+                                            lineHeight: 1.25,
+                                            letterSpacing: "-0.02em",
+                                            color: "rgba(255,255,255,0.95)",
+                                        }}
+                                    >
+                                        {seg.title}
+                                    </h3>
+                                </div>
+
+                                <p
+                                    className="text-[14px] leading-relaxed"
+                                    style={{ color: "rgba(255,255,255,0.62)" }}
+                                >
+                                    {seg.description}
                                 </p>
 
-                                <ul className="grid sm:grid-cols-3 gap-4">
-                                    {c.bullets.map((b) => (
+                                <ul className="flex flex-col gap-2 mt-1">
+                                    {seg.bullets.map((b) => (
                                         <li
                                             key={b}
-                                            className="flex items-start gap-3 rounded-xl p-4"
-                                            style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)" }}
+                                            className="flex items-start gap-2.5 text-[13.5px]"
+                                            style={{ color: "rgba(255,255,255,0.55)" }}
                                         >
-                                            <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: "rgba(0,227,122,0.1)" }}>
-                                                <Check className="h-3 w-3 text-emerald-400" strokeWidth={3} />
-                                            </div>
-                                            <span className="text-sm" style={{ fontWeight: 500, color: "rgba(255,255,255,0.55)" }}>{b}</span>
+                                            <span
+                                                className="mt-1 w-1.5 h-1.5 rounded-full flex-shrink-0"
+                                                style={{ background: "rgba(0,227,122,0.7)" }}
+                                                aria-hidden="true"
+                                            />
+                                            <span>{b}</span>
                                         </li>
                                     ))}
                                 </ul>
-                            </motion.div>
+
+                                <div
+                                    className="mt-auto pt-2 inline-flex items-center gap-1.5 text-[13px]"
+                                    style={{
+                                        fontWeight: 600,
+                                        color: seg.link.kind === "page" ? "rgba(0,227,122,0.9)" : "rgba(255,255,255,0.4)",
+                                    }}
+                                >
+                                    {seg.link.label}
+                                    {seg.link.kind === "page" && (
+                                        <ArrowRight
+                                            className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5"
+                                            strokeWidth={2}
+                                            aria-hidden="true"
+                                        />
+                                    )}
+                                </div>
+                            </div>
+                        );
+
+                        if (seg.link.kind === "page") {
+                            return (
+                                <a
+                                    key={seg.tag}
+                                    href={seg.link.href}
+                                    className={`group block focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 rounded-2xl landing-fade-in-up ${delayClass}`}
+                                >
+                                    {cardInner}
+                                </a>
+                            );
+                        }
+                        return (
+                            <div key={seg.tag} className={`group landing-fade-in-up ${delayClass}`}>
+                                {cardInner}
+                            </div>
                         );
                     })}
-                </AnimatePresence>
+                </div>
             </div>
         </section>
     );

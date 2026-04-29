@@ -128,6 +128,7 @@ const LandingPage = () => {
                 onCTAClick={() => scrollToLazyAnchor("pricing")}
                 onDemoClick={() => scrollToLazyAnchor("how-it-works")}
                 onScheduleDemoClick={() => scrollToDemo("hero")}
+                onTrialClick={() => goToRegister("plus")}
                 onLoginClick={() => navigate("/auth")}
             />
 

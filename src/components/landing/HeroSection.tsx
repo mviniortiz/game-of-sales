@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
-import { MonitorPlay, Calendar } from "lucide-react";
+import { Rocket, Calendar, Sparkles } from "lucide-react";
 import { LandingButton } from "./LandingButton";
 import { trackEvent } from "@/lib/analytics";
 
@@ -14,10 +14,10 @@ type HeroVariant = "default" | "crm" | "alternativa";
 
 const HERO_COPY: Record<HeroVariant, { pre: string; highlights: string[]; subtitle: string }> = {
     default: {
-        pre: "O primeiro CRM que seu time abre ",
-        highlights: ["sem reclamar.", "sem cobrar.", "todo dia útil."],
+        pre: "O CRM que seu time comercial ",
+        highlights: ["realmente usa."],
         subtitle:
-            "Cada venda do seu checkout cai no pipeline, o ranking sobe e cada vendedor enxerga quanto falta pra bater meta. Em 5 minutos no ar. Sem planilha, sem cobrar atualização no grupo.",
+            "Metas, ranking ao vivo, pipeline visual e automações para gestores que querem mais adesão do time, mais clareza da operação e mais vendas todos os meses.",
     },
     crm: {
         pre: "CRM de vendas com ",
@@ -62,10 +62,11 @@ interface HeroSectionProps {
     onCTAClick: () => void;
     onDemoClick: () => void;
     onScheduleDemoClick?: () => void;
+    onTrialClick?: () => void;
     onLoginClick: () => void;
 }
 
-export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: HeroSectionProps) => {
+export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick, onTrialClick }: HeroSectionProps) => {
     const variant = useMemo(pickHeroVariant, []);
     const copy = HERO_COPY[variant];
     const [typed, setTyped] = useState<string>(() => copy.highlights[0] || "");
@@ -142,9 +143,26 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
             {/* Content */}
             <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="pt-32 sm:pt-40 pb-16 sm:pb-20 text-center">
+                    {/* Badge */}
+                    <div className="flex justify-center landing-fade-in-up">
+                        <span
+                            className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs text-emerald-400 rounded-full px-3.5 py-1.5"
+                            style={{
+                                fontWeight: 600,
+                                letterSpacing: "0.08em",
+                                background: "rgba(0,227,122,0.10)",
+                                border: "1px solid rgba(0,227,122,0.22)",
+                                textTransform: "uppercase",
+                            }}
+                        >
+                            <Sparkles className="h-3 w-3" strokeWidth={2.25} aria-hidden="true" />
+                            CRM de performance comercial com gamificação
+                        </span>
+                    </div>
+
                     {/* Headline */}
                     <h1
-                        className="font-heading mx-auto landing-fade-in-up landing-delay-100"
+                        className="font-heading mx-auto mt-5 landing-fade-in-up landing-delay-100"
                         style={{
                             fontSize: "clamp(2.25rem, 6.5vw, 4.5rem)",
                             lineHeight: 1.05,
@@ -203,26 +221,37 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick }: He
                         </LandingButton>
 
                         <LandingButton
-                            href="#how-it-works"
+                            href={onTrialClick ? "/onboarding?plan=plus" : "#how-it-works"}
                             onClick={(e) => {
-                                if (onDemoClick) {
+                                if (onTrialClick) {
+                                    e.preventDefault();
+                                    onTrialClick();
+                                } else if (onDemoClick) {
                                     e.preventDefault();
                                     onDemoClick();
                                 }
                             }}
                             variant="secondary"
                             size="lg"
-                            icon={<MonitorPlay className="h-4 w-4" strokeWidth={2} />}
+                            icon={<Rocket className="h-4 w-4" strokeWidth={2} />}
                         >
-                            Ver como funciona
+                            Testar grátis por 14 dias
                         </LandingButton>
                     </div>
 
+                    {/* Microcopy abaixo dos CTAs */}
+                    <p
+                        className="mt-5 mx-auto max-w-xl text-[13px] landing-fade-in landing-delay-400"
+                        style={{ color: "rgba(255,255,255,0.55)", lineHeight: 1.55 }}
+                    >
+                        Sem planilhas. Sem ranking manual. Sem vendedor perdido no WhatsApp.
+                    </p>
+
                     {/* Trust row */}
-                    <div className="flex flex-wrap items-center justify-center gap-x-4 sm:gap-x-6 gap-y-2 mt-12 landing-fade-in landing-delay-400">
+                    <div className="flex flex-wrap items-center justify-center gap-x-4 sm:gap-x-6 gap-y-2 mt-7 landing-fade-in landing-delay-400">
                         {["14 dias grátis pra testar", "Pronto em 5 minutos", "Suporte humano no WhatsApp"].map((t) => (
                             <span key={t} className="flex items-center gap-1.5 text-[13px]" style={{ color: "rgba(255,255,255,0.6)" }}>
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
                                 {t}
                             </span>
                         ))}

@@ -12,8 +12,8 @@ export const LandingFooter = ({ onNavClick, onLoginClick, onRegisterClick }: Pro
             <div className="grid grid-cols-2 md:grid-cols-5 gap-6 sm:gap-8 md:gap-10 mb-12">
                 <div className="col-span-2 md:col-span-1">
                     <ThemeLogo className="h-8 w-auto mb-4" />
-                    <p className="text-gray-500 text-sm leading-relaxed max-w-[220px]">
-                        CRM gamificado para times de vendas que querem bater meta todo mês.
+                    <p className="text-gray-500 text-sm leading-relaxed max-w-[240px]">
+                        CRM de performance comercial com metas, ranking ao vivo, pipeline visual e automações.
                     </p>
                 </div>
 
@@ -22,6 +22,7 @@ export const LandingFooter = ({ onNavClick, onLoginClick, onRegisterClick }: Pro
                     <div className="flex flex-col gap-2.5">
                         <button onClick={() => onNavClick("features")} className="text-gray-500 text-sm hover:text-gray-300 transition-colors text-left">Funcionalidades</button>
                         <button onClick={() => onNavClick("how-it-works")} className="text-gray-500 text-sm hover:text-gray-300 transition-colors text-left">Como funciona</button>
+                        <button onClick={() => onNavClick("use-cases")} className="text-gray-500 text-sm hover:text-gray-300 transition-colors text-left">Para quem é</button>
                         <button onClick={() => onNavClick("pricing")} className="text-gray-500 text-sm hover:text-gray-300 transition-colors text-left">Preços</button>
                         <button onClick={() => onNavClick("faq")} className="text-gray-500 text-sm hover:text-gray-300 transition-colors text-left">FAQ</button>
                         <a href="/changelog" className="text-gray-500 text-sm hover:text-gray-300 transition-colors text-left">Changelog</a>
