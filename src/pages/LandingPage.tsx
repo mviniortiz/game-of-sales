@@ -27,6 +27,9 @@ const UseCasesSection = lazy(() =>
 const IntegrationsSection = lazy(() =>
     import("@/components/landing/IntegrationsSection").then((m) => ({ default: m.IntegrationsSection }))
 );
+const IdentityImageSection = lazy(() =>
+    import("@/components/landing/IdentityImageSection").then((m) => ({ default: m.IdentityImageSection }))
+);
 const EvaAISection = lazy(() =>
     import("@/components/landing/EvaAISection").then((m) => ({ default: m.EvaAISection }))
 );
@@ -139,6 +142,20 @@ const LandingPage = () => {
 
             <PainPoints />
 
+            <LazyOnVisible minHeight="600px">
+                <IdentityImageSection
+                    eyebrow="Ritmo Comercial"
+                    title={<>Seu time não precisa de mais uma ferramenta. Precisa de <span className="text-emerald-400">ritmo comercial</span>.</>}
+                    body="A maioria dos CRMs registra o que aconteceu. A Vyzon ajuda o time a decidir o que fazer agora: quem priorizar, onde agir, quanto falta para a meta e quem precisa de ajuda antes do fim do mês."
+                    image={{
+                        src: "/images/vyzon/ritmo-comercial-vyzon.webp",
+                        alt: "Conceitos da Vyzon mostrando Ritmo Comercial, Placar Vivo e Eva como IA de próximo passo.",
+                    }}
+                    imageSide="right"
+                    accent="emerald"
+                />
+            </LazyOnVisible>
+
             <LazyOnVisible minHeight="500px" id="how-it-works">
                 <FlowSection />
             </LazyOnVisible>
@@ -159,6 +176,28 @@ const LandingPage = () => {
                 <DemoVideoPlayer />
             </LazyOnVisible>
 
+            <LazyOnVisible minHeight="700px">
+                <IdentityImageSection
+                    eyebrow="Segunda-feira de manhã"
+                    title={<>O que muda na <span className="text-emerald-400">segunda-feira de manhã</span></>}
+                    body="Quando a rotina comercial fica clara, vendedor, gestor e empresa param de operar no escuro."
+                    image={{
+                        src: "/images/vyzon/segunda-feira-vyzon.webp",
+                        alt: "Cards da Vyzon mostrando como a rotina comercial melhora para vendedor, gestor e empresa.",
+                    }}
+                    imageSide="right"
+                    accent="emerald"
+                    bullets={[
+                        "Vendedor: quanto falta para a meta",
+                        "Vendedor: quais leads priorizar",
+                        "Gestor: quem está acelerando",
+                        "Gestor: onde agir antes do fim do mês",
+                        "Empresa: menos planilha e print",
+                        "Empresa: menos decisão no feeling",
+                    ]}
+                />
+            </LazyOnVisible>
+
             <LazyOnVisible minHeight="600px">
                 <div id="use-cases">
                     <UseCasesSection />
@@ -173,8 +212,44 @@ const LandingPage = () => {
                 <LigacoesSection onSeePlansClick={() => smoothScrollToId("pricing")} />
             </LazyOnVisible>
 
+            <LazyOnVisible minHeight="650px" id="eva">
+                <IdentityImageSection
+                    eyebrow="Eva — IA de Próximo Passo"
+                    title={<>Eva, a <span style={{ color: "#A855F7" }}>IA que orienta</span>, não substitui</>}
+                    body="Eva ajuda vendedores a priorizar ações e gestores a identificar gargalos. Ela não promete vender sozinha; ela dá mais clareza para o time vender melhor."
+                    image={{
+                        src: "/images/vyzon/eva-ia-vyzon.webp",
+                        alt: "Eva, IA da Vyzon, orientando vendedores com próximos passos e alertas comerciais em uma interface roxa.",
+                    }}
+                    imageSide="right"
+                    accent="violet"
+                    bullets={[
+                        "Próximo passo sugerido",
+                        "Oportunidades paradas",
+                        "Gargalos por etapa",
+                        "Clareza para o gestor",
+                    ]}
+                    cta={{ label: "Conhecer a Eva em uma demonstração", href: "#agendar-demo" }}
+                />
+            </LazyOnVisible>
+
             <LazyOnVisible minHeight="700px">
                 <EvaAISection onCTAClick={() => smoothScrollToId("pricing")} />
+            </LazyOnVisible>
+
+            <LazyOnVisible minHeight="650px">
+                <IdentityImageSection
+                    eyebrow="War Room Comercial"
+                    title={<>O <span style={{ color: "#3B82F6" }}>War Room</span> da sua equipe comercial</>}
+                    body="Veja faturamento, negócios ganhos, conversão, performance por vendedor, funil e alertas inteligentes em uma visão preparada para decisões mais rápidas."
+                    extra="Para gestores que precisam sair do feeling e acompanhar o pulso da operação com mais clareza."
+                    image={{
+                        src: "/images/vyzon/war-room-comercial-vyzon.webp",
+                        alt: "War room comercial da Vyzon com painéis de faturamento, performance por vendedor, funil e alertas inteligentes.",
+                    }}
+                    imageSide="left"
+                    accent="blue"
+                />
             </LazyOnVisible>
 
             <LazyOnVisible minHeight="900px" id="pricing">
