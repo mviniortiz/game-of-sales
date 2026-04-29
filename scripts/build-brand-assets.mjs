@@ -78,6 +78,15 @@ async function buildOgImage() {
 
     // Wordmark + tagline + descriptor.
     // Sora como brand font; Arial como fallback se não estiver instalada no sistema.
+    //
+    // Posicionamento: a IA é diferencial, mas atua como camada de inteligência
+    // comercial que ORIENTA vendedor + CLAREIA gestão + ACELERA rotina —
+    // não como ferramenta autônoma que "cuida do resto". Não trocar por
+    // formulações que sugiram autonomia/magia da IA.
+    //
+    // Caso o subtítulo recomendado overflow horizontalmente no asset
+    // renderizado (Sora/Inter podem variar de fallback), trocar pela versão
+    // curta: "IA, ranking, metas e pipeline para vender com mais clareza."
     const typography = Buffer.from(
         `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630">
            <text x="260" y="168" font-family="Sora, Arial, sans-serif"
@@ -95,7 +104,7 @@ async function buildOgImage() {
 
            <text x="80" y="528" font-family="Inter, Arial, sans-serif"
                  font-size="22" font-weight="500"
-                 fill="#ffffff" fill-opacity="0.45" letter-spacing="0.4">Ranking ao vivo · Metas · Pipeline visual · Automações comerciais</text>
+                 fill="#ffffff" fill-opacity="0.5" letter-spacing="0.3">IA para orientar vendedores, clarear a gestão e acelerar a rotina comercial.</text>
          </svg>`
     );
 
