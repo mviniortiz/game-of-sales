@@ -20,6 +20,12 @@ const VsPipedrive = lazy(() => import("./pages/alternativas/VsPipedrive"));
 const VsAgendor = lazy(() => import("./pages/alternativas/VsAgendor"));
 const AlternativasHub = lazy(() => import("./pages/alternativas/AlternativasHub"));
 
+// SEO landing pages (segmentadas por keyword). Renderizam SeoLandingPage
+// com configs em src/pages/seo/configs/. Adicionar novas é só criar config + rota.
+const CrmGamificado = lazy(() => import("./pages/seo/CrmGamificado"));
+const CrmComRanking = lazy(() => import("./pages/seo/CrmComRanking"));
+const CrmParaTimes = lazy(() => import("./pages/seo/CrmParaTimes"));
+
 const LazyFallback = () => (
   <div className="flex items-center justify-center min-h-screen">
     <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
@@ -111,6 +117,30 @@ const App = () => (
           element={
             <Suspense fallback={<LazyFallback />}>
               <PublicReport />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/crm-gamificado"
+          element={
+            <Suspense fallback={<LazyFallback />}>
+              <CrmGamificado />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/crm-com-ranking-de-vendas"
+          element={
+            <Suspense fallback={<LazyFallback />}>
+              <CrmComRanking />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/crm-para-times-comerciais"
+          element={
+            <Suspense fallback={<LazyFallback />}>
+              <CrmParaTimes />
             </Suspense>
           }
         />
