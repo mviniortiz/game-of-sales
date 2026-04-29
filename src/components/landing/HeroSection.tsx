@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
-import { Rocket, Calendar, Sparkles } from "lucide-react";
+import { Rocket, Calendar } from "lucide-react";
 import { LandingButton } from "./LandingButton";
 import { trackEvent } from "@/lib/analytics";
 
@@ -143,26 +143,9 @@ export const HeroSection = ({ onCTAClick, onDemoClick, onScheduleDemoClick, onTr
             {/* Content */}
             <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="pt-32 sm:pt-40 pb-16 sm:pb-20 text-center">
-                    {/* Badge */}
-                    <div className="flex justify-center landing-fade-in-up">
-                        <span
-                            className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs text-emerald-400 rounded-full px-3.5 py-1.5"
-                            style={{
-                                fontWeight: 600,
-                                letterSpacing: "0.08em",
-                                background: "rgba(0,227,122,0.10)",
-                                border: "1px solid rgba(0,227,122,0.22)",
-                                textTransform: "uppercase",
-                            }}
-                        >
-                            <Sparkles className="h-3 w-3" strokeWidth={2.25} aria-hidden="true" />
-                            CRM de performance comercial com gamificação
-                        </span>
-                    </div>
-
                     {/* Headline */}
                     <h1
-                        className="font-heading mx-auto mt-5 landing-fade-in-up landing-delay-100"
+                        className="font-heading mx-auto landing-fade-in-up landing-delay-100"
                         style={{
                             fontSize: "clamp(2.25rem, 6.5vw, 4.5rem)",
                             lineHeight: 1.05,
