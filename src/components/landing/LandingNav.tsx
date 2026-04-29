@@ -27,6 +27,7 @@ const NAV_LINKS: NavItem[] = [
     { kind: "anchor", label: "Como funciona", anchor: "how-it-works" },
     { kind: "anchor", label: "Para quem é", anchor: "use-cases" },
     { kind: "anchor", label: "Funcionalidades", anchor: "features" },
+    { kind: "anchor", label: "Integrações", anchor: "integracoes" },
     { kind: "anchor", label: "Preços", anchor: "pricing" },
     {
         kind: "dropdown",

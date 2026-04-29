@@ -88,14 +88,14 @@ async function buildOgImage() {
 
            <text x="80" y="358" font-family="Sora, Arial, sans-serif"
                  font-size="64" font-weight="700"
-                 fill="#ffffff" letter-spacing="-2.2">Seu time bate meta.</text>
+                 fill="#ffffff" letter-spacing="-2.2">O CRM que seu time</text>
            <text x="80" y="438" font-family="Sora, Arial, sans-serif"
                  font-size="64" font-weight="700"
-                 fill="#ffffff" fill-opacity="0.5" letter-spacing="-2.2">A IA cuida do resto.</text>
+                 fill="#ffffff" fill-opacity="0.6" letter-spacing="-2.2">comercial realmente usa.</text>
 
            <text x="80" y="528" font-family="Inter, Arial, sans-serif"
                  font-size="22" font-weight="500"
-                 fill="#ffffff" fill-opacity="0.45" letter-spacing="0.4">CRM com IA · Pipeline ao vivo · Integra Hotmart, Kiwify, Greenn</text>
+                 fill="#ffffff" fill-opacity="0.45" letter-spacing="0.4">Ranking ao vivo · Metas · Pipeline visual · Automações comerciais</text>
          </svg>`
     );
 

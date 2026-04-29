@@ -35,12 +35,12 @@ export const PricingSection = ({ onPlanSelect, onScheduleDemo }: Props) => {
 
                     <h2 className="font-heading mb-4"
                         style={{ fontWeight: "var(--fw-bold)", fontSize: "clamp(1.75rem, 4.5vw, 2.75rem)", lineHeight: 1.1, letterSpacing: "-0.04em", color: "var(--vyz-text-primary)" }}>
-                        Investimento que se{" "}
-                        <span className="bg-gradient-to-r from-emerald-400 to-emerald-300 bg-clip-text text-transparent">multiplica</span>
+                        Planos que acompanham{" "}
+                        <span className="bg-gradient-to-r from-emerald-400 to-emerald-300 bg-clip-text text-transparent">o seu time</span>
                     </h2>
 
                     <p className="max-w-xl mx-auto mb-8" style={{ fontSize: "1.0625rem", color: "var(--vyz-text-soft)" }}>
-                        Retorno médio de <strong style={{ color: "var(--vyz-text-strong)" }}>12× o valor investido</strong>. Sem surpresas, sem taxas escondidas.
+                        Comece com o essencial e expanda conforme a operação cresce. <strong style={{ color: "var(--vyz-text-strong)" }}>Sem surpresas, sem taxas escondidas.</strong>
                     </p>
 
                     <div className="inline-flex gap-1 p-1 rounded-2xl"
