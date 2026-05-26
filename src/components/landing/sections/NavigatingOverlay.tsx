@@ -24,7 +24,7 @@ export const NavigatingOverlay = ({ plan }: Props) => (
                 className="w-48 h-0.5 rounded-full overflow-hidden landing-fade-in landing-delay-300"
                 style={{ background: "var(--vyz-border-strong)" }}
             >
-                <div className="h-full rounded-full bg-emerald-500 loader-progress" style={{ width: "100%" }} />
+                <div className="h-full rounded-full bg-blue-600 loader-progress" style={{ width: "100%" }} />
             </div>
         </div>
     </div>

@@ -3,14 +3,12 @@ import {
     Check,
     X,
     Minus,
-    Clock,
-    DollarSign,
+    Bot,
+    MessageCircle,
     Link2,
     Trophy,
-    MessageCircle,
-    Bot,
+    DollarSign,
     HeartHandshake,
-    Target,
     Scale,
     PiggyBank,
 } from "lucide-react";
@@ -18,8 +16,9 @@ import type { LucideIcon } from "lucide-react";
 import { LandingButton } from "./LandingButton";
 
 const FAVICON = {
+    kommo: "https://www.google.com/s2/favicons?domain=kommo.com&sz=64",
+    rdstation: "https://www.google.com/s2/favicons?domain=rdstation.com&sz=64",
     pipedrive: "https://www.google.com/s2/favicons?domain=pipedrive.com&sz=64",
-    hubspot: "https://www.google.com/s2/favicons?domain=hubspot.com&sz=64",
 };
 
 type Level = "yes" | "no" | "partial";
@@ -33,66 +32,59 @@ interface Row {
     icon: LucideIcon;
     feature: string;
     vyzon: Cell;
+    kommo: Cell;
+    rdstation: Cell;
     pipedrive: Cell;
-    hubspot: Cell;
 }
 
 const ROWS: readonly Row[] = [
     {
-        icon: Clock,
-        feature: "Setup em produção",
-        vyzon: { level: "yes", text: "5 minutos" },
-        pipedrive: { level: "partial", text: "1 – 3 dias" },
-        hubspot: { level: "no", text: "1 – 4 semanas" },
-    },
-    {
-        icon: DollarSign,
-        feature: "Plano inicial (BR)",
-        vyzon: { level: "yes", text: "R$ 147 / mês" },
-        pipedrive: { level: "partial", text: "US$ 14+/usuário*" },
-        hubspot: { level: "partial", text: "Grátis (Pro US$ 20+)*" },
-    },
-    {
-        icon: Link2,
-        feature: "Integrações BR nativas",
-        vyzon: { level: "yes", text: "Hotmart, Kiwify, MP e +12" },
-        pipedrive: { level: "partial", text: "Via Zapier" },
-        hubspot: { level: "partial", text: "Via Zapier" },
-    },
-    {
-        icon: Trophy,
-        feature: "Ranking e gamificação",
-        vyzon: { level: "yes", text: "Nativo, sem add-on" },
-        pipedrive: { level: "partial", text: "Leaderboard básico" },
-        hubspot: { level: "partial", text: "Só no Sales Pro+" },
-    },
-    {
         icon: MessageCircle,
-        feature: "WhatsApp integrado",
-        vyzon: { level: "yes", text: "Nativo + copiloto" },
-        pipedrive: { level: "partial", text: "Integração paga" },
-        hubspot: { level: "partial", text: "Integração paga" },
+        feature: "EVA atende WhatsApp 24/7",
+        vyzon: { level: "yes", text: "EVA respondendo no chat" },
+        kommo: { level: "partial", text: "Salesbot por add-on" },
+        rdstation: { level: "partial", text: "Conversas com chatbot" },
+        pipedrive: { level: "no", text: "Sem WhatsApp nativo" },
     },
     {
         icon: Bot,
-        feature: "IA de vendas na conversa",
-        vyzon: { level: "yes", text: "Copiloto em tempo real" },
+        feature: "IA conversacional com memória",
+        vyzon: { level: "yes", text: "EVA em produção" },
+        kommo: { level: "partial", text: "AI agents add-on pago" },
+        rdstation: { level: "partial", text: "Chatbot de regras" },
         pipedrive: { level: "partial", text: "AI Assistant (sem WA)" },
-        hubspot: { level: "partial", text: "Breeze por créditos" },
+    },
+    {
+        icon: Link2,
+        feature: "Integrações com checkout BR",
+        vyzon: { level: "yes", text: "Hotmart, Kiwify, MP nativos" },
+        kommo: { level: "partial", text: "Via Zapier" },
+        rdstation: { level: "partial", text: "Catálogo limitado" },
+        pipedrive: { level: "partial", text: "Via Zapier" },
+    },
+    {
+        icon: Trophy,
+        feature: "Ranking gamificado pro time",
+        vyzon: { level: "yes", text: "Ranking ao vivo nativo" },
+        kommo: { level: "partial", text: "Pipeline view básico" },
+        rdstation: { level: "partial", text: "Relatórios estáticos" },
+        pipedrive: { level: "partial", text: "Leaderboard básico" },
+    },
+    {
+        icon: DollarSign,
+        feature: "Pricing em R$ (plano inicial)",
+        vyzon: { level: "yes", text: "R$ 147/mês" },
+        kommo: { level: "partial", text: "US$ 25/usuário*" },
+        rdstation: { level: "partial", text: "R$ 1.349 + carteira*" },
+        pipedrive: { level: "partial", text: "US$ 14/usuário*" },
     },
     {
         icon: HeartHandshake,
-        feature: "Suporte em português",
+        feature: "Suporte humano em PT-BR",
         vyzon: { level: "yes", text: "WhatsApp humano" },
-        pipedrive: { level: "partial", text: "Inglês, fuso EUA/EU" },
-        hubspot: { level: "partial", text: "Inglês, fuso EUA" },
-    },
-    {
-        icon: Target,
-        feature: "Feito pra time comercial BR",
-        vyzon: { level: "yes", text: "Foco total" },
-        pipedrive: { level: "no", text: "Produto global" },
-        hubspot: { level: "no", text: "Produto global" },
+        kommo: { level: "yes", text: "Operação BR" },
+        rdstation: { level: "yes", text: "Time BR" },
+        pipedrive: { level: "no", text: "Inglês, fuso EUA" },
     },
 ];
 
@@ -104,11 +96,11 @@ const LevelIcon = ({ level, size = 14 }: { level: Level; size?: number }) => {
                 style={{
                     width: size + 6,
                     height: size + 6,
-                    background: "rgba(0,227,122,0.15)",
-                    border: "1px solid rgba(0,227,122,0.3)",
+                    background: "rgba(21,86,192,0.15)",
+                    border: "1px solid rgba(21,86,192,0.3)",
                 }}
             >
-                <Check style={{ width: size - 2, height: size - 2, color: "#33FF9E" }} strokeWidth={3} />
+                <Check style={{ width: size - 2, height: size - 2, color: "#2E78E0" }} strokeWidth={3} />
             </span>
         );
     }
@@ -133,20 +125,20 @@ const LevelIcon = ({ level, size = 14 }: { level: Level; size?: number }) => {
             style={{
                 width: size + 6,
                 height: size + 6,
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.08)",
+                background: "rgba(10,10,10,0.04)",
+                border: "1px solid rgba(10,10,10,0.08)",
             }}
         >
-            <X style={{ width: size - 2, height: size - 2, color: "rgba(255,255,255,0.35)" }} strokeWidth={2.5} />
+            <X style={{ width: size - 2, height: size - 2, color: "rgba(10,10,10,0.5)" }} strokeWidth={2.5} />
         </span>
     );
 };
 
 const textColorFor = (level: Level, isVyzon: boolean) => {
-    if (isVyzon) return "rgba(255,255,255,0.95)";
-    if (level === "yes") return "rgba(255,255,255,0.75)";
-    if (level === "partial") return "rgba(255,255,255,0.55)";
-    return "rgba(255,255,255,0.38)";
+    if (isVyzon) return "rgba(10,10,10,0.92)";
+    if (level === "yes") return "rgba(10,10,10,0.72)";
+    if (level === "partial") return "rgba(10,10,10,0.58)";
+    return "rgba(10,10,10,0.4)";
 };
 
 interface ComparisonSectionProps {
@@ -158,14 +150,14 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
         <section
             id="comparacao"
             className="relative py-28 px-4 sm:px-6 lg:px-8 overflow-hidden"
-            style={{ background: "var(--vyz-bg)" }}
+            style={{ background: "#FFFFFF" }}
         >
             {/* Top spotlight */}
             <div
                 className="absolute inset-x-0 top-0 h-[500px] pointer-events-none"
                 style={{
                     background:
-                        "radial-gradient(ellipse 60% 50% at 50% 0%, rgba(0,227,122,0.07) 0%, transparent 70%)",
+                        "radial-gradient(ellipse 60% 50% at 50% 0%, rgba(21,86,192,0.07) 0%, transparent 70%)",
                 }}
             />
             {/* Subtle grid */}
@@ -173,7 +165,7 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
                 className="absolute inset-0 opacity-[0.02] pointer-events-none"
                 style={{
                     backgroundImage:
-                        "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
+                        "linear-gradient(rgba(10,10,10,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(10,10,10,0.08) 1px, transparent 1px)",
                     backgroundSize: "72px 72px",
                 }}
             />
@@ -188,12 +180,12 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
                     transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
                 >
                     <span
-                        className="inline-flex items-center gap-1.5 text-xs text-emerald-400 rounded-full px-4 py-1.5 mb-5"
+                        className="inline-flex items-center gap-1.5 text-xs text-blue-700 rounded-full px-4 py-1.5 mb-5"
                         style={{
                             fontWeight: "var(--fw-medium)",
                             letterSpacing: "0.06em",
-                            background: "rgba(0,227,122,0.1)",
-                            border: "1px solid rgba(0,227,122,0.2)",
+                            background: "rgba(21,86,192,0.1)",
+                            border: "1px solid rgba(21,86,192,0.2)",
                         }}
                     >
                         <Scale className="h-3 w-3" />
@@ -206,24 +198,23 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
                             fontSize: "clamp(1.75rem, 4.5vw, 2.75rem)",
                             lineHeight: 1.1,
                             letterSpacing: "-0.04em",
-                            color: "rgba(255,255,255,0.95)",
+                            color: "rgba(10,10,10,0.92)",
                         }}
                     >
                         Por que não{" "}
-                        <span style={{ color: "rgba(255,255,255,0.55)" }}>Pipedrive</span>?{" "}
+                        <span style={{ color: "rgba(10,10,10,0.58)" }}>Kommo</span>?{" "}
                         Por que não{" "}
-                        <span style={{ color: "rgba(255,255,255,0.55)" }}>HubSpot</span>?
+                        <span style={{ color: "rgba(10,10,10,0.58)" }}>RD CRM</span>?
                     </h2>
                     <p
                         className="max-w-2xl mx-auto"
                         style={{
                             fontSize: "1.0625rem",
                             lineHeight: 1.6,
-                            color: "rgba(255,255,255,0.5)",
+                            color: "rgba(10,10,10,0.55)",
                         }}
                     >
-                        Ferramentas excelentes. Feitas pra outro mercado.
-                        Se seu time comercial vende no Brasil, aqui tá a diferença.
+                        Ferramentas boas. Mas nenhuma resolve sozinha o WhatsApp da agência, o ranking do time e a integração com checkout BR. Aqui está a diferença que importa.
                     </p>
                 </motion.div>
 
@@ -232,9 +223,9 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
                     <div
                         className="relative rounded-2xl overflow-visible"
                         style={{
-                            background: "rgba(255,255,255,0.015)",
-                            border: "1px solid rgba(255,255,255,0.06)",
-                            boxShadow: "0 0 0 1px rgba(255,255,255,0.02), 0 24px 80px -20px rgba(0,0,0,0.6)",
+                            background: "rgba(10,10,10,0.025)",
+                            border: "1px solid rgba(10,10,10,0.08)",
+                            boxShadow: "0 0 0 1px rgba(10,10,10,0.03), 0 24px 80px -20px rgba(0,0,0,0.6)",
                         }}
                     >
                         {/* Recommended badge — floating above Vyzon column */}
@@ -242,8 +233,8 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
                             className="absolute z-20 pointer-events-none"
                             style={{
                                 top: "-14px",
-                                left: "calc(1.2/4.2 * 100%)",
-                                width: "calc(1/4.2 * 100%)",
+                                left: "calc(1.4/5.4 * 100%)",
+                                width: "calc(1/5.4 * 100%)",
                                 display: "flex",
                                 justifyContent: "center",
                             }}
@@ -251,11 +242,11 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
                             <div
                                 className="inline-flex items-center gap-1.5 text-[10px] px-3 py-1.5 rounded-full"
                                 style={{
-                                    background: "linear-gradient(135deg, #00E37A, #00B289)",
+                                    background: "linear-gradient(135deg, #1556C0, #0E3E92)",
                                     color: "white",
                                     fontWeight: 800,
                                     letterSpacing: "0.1em",
-                                    boxShadow: "0 6px 20px rgba(0,227,122,0.35), 0 0 0 3px rgba(6,8,10,1)",
+                                    boxShadow: "0 6px 20px rgba(21,86,192,0.35), 0 0 0 3px rgba(6,8,10,1)",
                                 }}
                             >
                                 RECOMENDADO PRA VOCÊ
@@ -264,10 +255,10 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
 
                         {/* Column headers */}
                         <div
-                            className="grid grid-cols-[1.2fr_1fr_1fr_1fr] px-6 py-6 relative rounded-t-2xl overflow-hidden"
+                            className="grid grid-cols-[1.4fr_1fr_1fr_1fr_1fr] px-6 py-6 relative rounded-t-2xl overflow-hidden"
                             style={{
-                                background: "rgba(255,255,255,0.02)",
-                                borderBottom: "1px solid rgba(255,255,255,0.06)",
+                                background: "rgba(10,10,10,0.03)",
+                                borderBottom: "1px solid rgba(10,10,10,0.08)",
                             }}
                         >
                             <div className="flex items-center">
@@ -275,7 +266,7 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
                                     className="text-[10px] uppercase"
                                     style={{
                                         letterSpacing: "0.12em",
-                                        color: "rgba(255,255,255,0.35)",
+                                        color: "rgba(10,10,10,0.5)",
                                         fontWeight: 700,
                                     }}
                                 >
@@ -293,14 +284,44 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
                                 <span
                                     className="font-heading text-lg"
                                     style={{
-                                        fontWeight: 800,
-                                        background: "linear-gradient(135deg, #33FF9E, #00E37A)",
+                                        fontWeight: 700,
+                                        background: "linear-gradient(135deg, #2E78E0, #1556C0)",
                                         WebkitBackgroundClip: "text",
                                         WebkitTextFillColor: "transparent",
                                         letterSpacing: "-0.02em",
                                     }}
                                 >
                                     Vyzon
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-center gap-2">
+                                <img
+                                    src={FAVICON.kommo}
+                                    alt=""
+                                    className="h-5 w-5 rounded"
+                                    style={{ opacity: 0.85 }}
+                                    loading="lazy"
+                                />
+                                <span
+                                    className="text-base"
+                                    style={{ color: "rgba(10,10,10,0.65)", fontWeight: 600, letterSpacing: "-0.01em" }}
+                                >
+                                    Kommo
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-center gap-2">
+                                <img
+                                    src={FAVICON.rdstation}
+                                    alt=""
+                                    className="h-5 w-5 rounded"
+                                    style={{ opacity: 0.85 }}
+                                    loading="lazy"
+                                />
+                                <span
+                                    className="text-base"
+                                    style={{ color: "rgba(10,10,10,0.65)", fontWeight: 600, letterSpacing: "-0.01em" }}
+                                >
+                                    RD CRM
                                 </span>
                             </div>
                             <div className="flex items-center justify-center gap-2">
@@ -313,24 +334,9 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
                                 />
                                 <span
                                     className="text-base"
-                                    style={{ color: "rgba(255,255,255,0.65)", fontWeight: 600, letterSpacing: "-0.01em" }}
+                                    style={{ color: "rgba(10,10,10,0.65)", fontWeight: 600, letterSpacing: "-0.01em" }}
                                 >
                                     Pipedrive
-                                </span>
-                            </div>
-                            <div className="flex items-center justify-center gap-2">
-                                <img
-                                    src={FAVICON.hubspot}
-                                    alt=""
-                                    className="h-5 w-5 rounded"
-                                    style={{ opacity: 0.85 }}
-                                    loading="lazy"
-                                />
-                                <span
-                                    className="text-base"
-                                    style={{ color: "rgba(255,255,255,0.65)", fontWeight: 600, letterSpacing: "-0.01em" }}
-                                >
-                                    HubSpot
                                 </span>
                             </div>
 
@@ -341,9 +347,9 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
                                     left: "calc(1.2/4.2 * 100%)",
                                     width: "calc(1/4.2 * 100%)",
                                     background:
-                                        "linear-gradient(to bottom, rgba(0,227,122,0.09), rgba(0,227,122,0.02))",
-                                    borderLeft: "1px solid rgba(0,227,122,0.32)",
-                                    borderRight: "1px solid rgba(0,227,122,0.32)",
+                                        "linear-gradient(to bottom, rgba(21,86,192,0.09), rgba(21,86,192,0.02))",
+                                    borderLeft: "1px solid rgba(21,86,192,0.32)",
+                                    borderRight: "1px solid rgba(21,86,192,0.32)",
                                 }}
                             />
                         </div>
@@ -357,10 +363,10 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
                                     left: "calc(1.2/4.2 * 100%)",
                                     width: "calc(1/4.2 * 100%)",
                                     background:
-                                        "linear-gradient(to bottom, rgba(0,227,122,0.06) 0%, rgba(0,227,122,0.03) 50%, rgba(0,227,122,0.06) 100%)",
-                                    borderLeft: "1px solid rgba(0,227,122,0.32)",
-                                    borderRight: "1px solid rgba(0,227,122,0.32)",
-                                    borderBottom: "1px solid rgba(0,227,122,0.32)",
+                                        "linear-gradient(to bottom, rgba(21,86,192,0.06) 0%, rgba(21,86,192,0.03) 50%, rgba(21,86,192,0.06) 100%)",
+                                    borderLeft: "1px solid rgba(21,86,192,0.32)",
+                                    borderRight: "1px solid rgba(21,86,192,0.32)",
+                                    borderBottom: "1px solid rgba(21,86,192,0.32)",
                                     borderBottomLeftRadius: "16px",
                                     borderBottomRightRadius: "16px",
                                 }}
@@ -380,29 +386,29 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
                                             delay: i * 0.04,
                                             ease: [0.22, 1, 0.36, 1],
                                         }}
-                                        className="grid grid-cols-[1.2fr_1fr_1fr_1fr] px-6 py-4 relative"
+                                        className="grid grid-cols-[1.4fr_1fr_1fr_1fr_1fr] px-6 py-4 relative"
                                         style={{
-                                            borderBottom: isLast ? "none" : "1px solid rgba(255,255,255,0.04)",
+                                            borderBottom: isLast ? "none" : "1px solid rgba(10,10,10,0.06)",
                                         }}
                                     >
                                         <div className="flex items-center gap-3">
                                             <div
                                                 className="flex h-8 w-8 items-center justify-center rounded-lg shrink-0"
                                                 style={{
-                                                    background: "rgba(255,255,255,0.03)",
-                                                    border: "1px solid rgba(255,255,255,0.06)",
+                                                    background: "rgba(10,10,10,0.04)",
+                                                    border: "1px solid rgba(10,10,10,0.08)",
                                                 }}
                                             >
                                                 <Icon
                                                     className="h-4 w-4"
-                                                    style={{ color: "rgba(255,255,255,0.55)" }}
+                                                    style={{ color: "rgba(10,10,10,0.58)" }}
                                                     strokeWidth={1.8}
                                                 />
                                             </div>
                                             <span
                                                 className="text-sm"
                                                 style={{
-                                                    color: "rgba(255,255,255,0.88)",
+                                                    color: "rgba(10,10,10,0.85)",
                                                     fontWeight: 600,
                                                     letterSpacing: "-0.01em",
                                                 }}
@@ -411,7 +417,7 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
                                             </span>
                                         </div>
 
-                                        {(["vyzon", "pipedrive", "hubspot"] as const).map((col) => {
+                                        {(["vyzon", "kommo", "rdstation", "pipedrive"] as const).map((col) => {
                                             const cell = row[col];
                                             const isVyzon = col === "vyzon";
                                             return (
@@ -452,28 +458,28 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
                                 transition={{ duration: 0.35, delay: i * 0.03 }}
                                 className="rounded-2xl p-4"
                                 style={{
-                                    background: "rgba(255,255,255,0.02)",
-                                    border: "1px solid rgba(255,255,255,0.06)",
+                                    background: "rgba(10,10,10,0.03)",
+                                    border: "1px solid rgba(10,10,10,0.08)",
                                 }}
                             >
                                 <div className="flex items-center gap-2.5 mb-3">
                                     <div
                                         className="flex h-8 w-8 items-center justify-center rounded-lg shrink-0"
                                         style={{
-                                            background: "rgba(255,255,255,0.03)",
-                                            border: "1px solid rgba(255,255,255,0.06)",
+                                            background: "rgba(10,10,10,0.04)",
+                                            border: "1px solid rgba(10,10,10,0.08)",
                                         }}
                                     >
                                         <Icon
                                             className="h-4 w-4"
-                                            style={{ color: "rgba(255,255,255,0.6)" }}
+                                            style={{ color: "rgba(10,10,10,0.6)" }}
                                             strokeWidth={1.8}
                                         />
                                     </div>
                                     <span
                                         className="text-sm"
                                         style={{
-                                            color: "rgba(255,255,255,0.92)",
+                                            color: "rgba(10,10,10,0.88)",
                                             fontWeight: 600,
                                             letterSpacing: "-0.01em",
                                         }}
@@ -487,8 +493,8 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
                                     className="flex items-center justify-between rounded-lg px-3 py-2.5 mb-1.5"
                                     style={{
                                         background:
-                                            "linear-gradient(135deg, rgba(0,227,122,0.08), rgba(0,227,122,0.02))",
-                                        border: "1px solid rgba(0,227,122,0.22)",
+                                            "linear-gradient(135deg, rgba(21,86,192,0.08), rgba(21,86,192,0.02))",
+                                        border: "1px solid rgba(21,86,192,0.22)",
                                     }}
                                 >
                                     <div className="flex items-center gap-2">
@@ -503,7 +509,7 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
                                             className="text-[11px]"
                                             style={{
                                                 fontWeight: 700,
-                                                background: "linear-gradient(135deg, #33FF9E, #00E37A)",
+                                                background: "linear-gradient(135deg, #2E78E0, #1556C0)",
                                                 WebkitBackgroundClip: "text",
                                                 WebkitTextFillColor: "transparent",
                                                 letterSpacing: "-0.01em",
@@ -514,63 +520,42 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
                                     </div>
                                     <span
                                         className="text-[13px] text-right"
-                                        style={{ color: "rgba(255,255,255,0.95)", fontWeight: 600 }}
+                                        style={{ color: "rgba(10,10,10,0.92)", fontWeight: 600 }}
                                     >
                                         {row.vyzon.text}
                                     </span>
                                 </div>
 
-                                {/* Pipedrive */}
-                                <div className="flex items-center justify-between px-3 py-2">
-                                    <div className="flex items-center gap-2">
-                                        <LevelIcon level={row.pipedrive.level} size={13} />
-                                        <img
-                                            src={FAVICON.pipedrive}
-                                            alt=""
-                                            className="h-4 w-4 rounded"
-                                            style={{ opacity: 0.8 }}
-                                            loading="lazy"
-                                        />
+                                {([
+                                    { key: "kommo" as const, label: "Kommo" },
+                                    { key: "rdstation" as const, label: "RD CRM" },
+                                    { key: "pipedrive" as const, label: "Pipedrive" },
+                                ]).map(({ key, label }) => (
+                                    <div key={key} className="flex items-center justify-between px-3 py-2">
+                                        <div className="flex items-center gap-2">
+                                            <LevelIcon level={row[key].level} size={13} />
+                                            <img
+                                                src={FAVICON[key]}
+                                                alt=""
+                                                className="h-4 w-4 rounded"
+                                                style={{ opacity: 0.8 }}
+                                                loading="lazy"
+                                            />
+                                            <span
+                                                className="text-[11px]"
+                                                style={{ color: "rgba(10,10,10,0.58)", fontWeight: 600 }}
+                                            >
+                                                {label}
+                                            </span>
+                                        </div>
                                         <span
-                                            className="text-[11px]"
-                                            style={{ color: "rgba(255,255,255,0.55)", fontWeight: 600 }}
+                                            className="text-[13px] text-right"
+                                            style={{ color: textColorFor(row[key].level, false) }}
                                         >
-                                            Pipedrive
+                                            {row[key].text}
                                         </span>
                                     </div>
-                                    <span
-                                        className="text-[13px] text-right"
-                                        style={{ color: textColorFor(row.pipedrive.level, false) }}
-                                    >
-                                        {row.pipedrive.text}
-                                    </span>
-                                </div>
-
-                                {/* HubSpot */}
-                                <div className="flex items-center justify-between px-3 py-2">
-                                    <div className="flex items-center gap-2">
-                                        <LevelIcon level={row.hubspot.level} size={13} />
-                                        <img
-                                            src={FAVICON.hubspot}
-                                            alt=""
-                                            className="h-4 w-4 rounded"
-                                            style={{ opacity: 0.8 }}
-                                            loading="lazy"
-                                        />
-                                        <span
-                                            className="text-[11px]"
-                                            style={{ color: "rgba(255,255,255,0.55)", fontWeight: 600 }}
-                                        >
-                                            HubSpot
-                                        </span>
-                                    </div>
-                                    <span
-                                        className="text-[13px] text-right"
-                                        style={{ color: textColorFor(row.hubspot.level, false) }}
-                                    >
-                                        {row.hubspot.text}
-                                    </span>
-                                </div>
+                                ))}
                             </motion.div>
                         );
                     })}
@@ -589,27 +574,26 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
                         <div
                             className="inline-flex items-center gap-2.5 rounded-full px-4 py-2"
                             style={{
-                                background: "rgba(0,227,122,0.08)",
-                                border: "1px solid rgba(0,227,122,0.22)",
+                                background: "rgba(21,86,192,0.08)",
+                                border: "1px solid rgba(21,86,192,0.22)",
                             }}
                         >
                             <div
                                 className="inline-flex h-6 w-6 items-center justify-center rounded-full shrink-0"
                                 style={{
-                                    background: "linear-gradient(135deg, #00E37A, #00B289)",
-                                    boxShadow: "0 2px 8px rgba(0,227,122,0.4)",
+                                    background: "linear-gradient(135deg, #1556C0, #0E3E92)",
+                                    boxShadow: "0 2px 8px rgba(21,86,192,0.4)",
                                 }}
                             >
                                 <PiggyBank className="h-3.5 w-3.5 text-white" strokeWidth={2.5} />
                             </div>
                             <span
                                 className="text-sm"
-                                style={{ color: "rgba(255,255,255,0.85)", fontWeight: 500 }}
+                                style={{ color: "rgba(10,10,10,0.82)", fontWeight: 500 }}
                             >
-                                Em média você economiza{" "}
-                                <span className="text-emerald-300" style={{ fontWeight: 700 }}>R$ 400/mês</span>
-                                {" "}e{" "}
-                                <span className="text-emerald-300" style={{ fontWeight: 700 }}>3 semanas de setup</span>
+                                WhatsApp + EVA + ranking{" "}
+                                <span className="text-blue-800" style={{ fontWeight: 700 }}>no mesmo plano</span>
+                                {", sem add-on pago"}
                             </span>
                         </div>
 
@@ -618,10 +602,10 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
                             style={{
                                 fontSize: "1rem",
                                 lineHeight: 1.6,
-                                color: "rgba(255,255,255,0.5)",
+                                color: "rgba(10,10,10,0.55)",
                             }}
                         >
-                            Se o seu time já usa Pipedrive ou HubSpot e tá funcionando, ótimo. Continua. <span style={{ color: "rgba(255,255,255,0.85)", fontWeight: 500 }}>Mas se você tem um time comercial no Brasil e ainda tá forçando um CRM que não foi feito pra cá</span>, vale testar.
+                            Se a sua agência já roda no Kommo, RD ou Pipedrive e tá funcionando, ótimo. Continua. <span style={{ color: "rgba(10,10,10,0.82)", fontWeight: 500 }}>Mas se você ainda paga add-on por WhatsApp, add-on por IA e ainda assim lead morre no chat</span>, vale testar 14 dias.
                         </p>
 
                         <LandingButton
@@ -636,9 +620,9 @@ export const ComparisonSection = ({ onCTAClick }: ComparisonSectionProps) => {
 
                         <p
                             className="text-[11px] max-w-xl leading-relaxed"
-                            style={{ color: "rgba(255,255,255,0.3)" }}
+                            style={{ color: "rgba(10,10,10,0.45)" }}
                         >
-                            * Valores em USD convertidos à taxa do dia, sujeitos a câmbio. Informações de Pipedrive e HubSpot consultadas nos sites oficiais em abr/2026 e podem mudar. Comparação feita de boa fé, confira as fontes antes de decidir.
+                            * Valores em USD convertidos à taxa do dia, sujeitos a câmbio. Informações de Kommo, RD Station CRM e Pipedrive consultadas nos sites oficiais em mai/2026 e podem mudar. Comparação feita de boa fé, confira as fontes antes de decidir.
                         </p>
                     </motion.div>
                 </div>

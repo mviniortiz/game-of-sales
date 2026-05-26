@@ -3,37 +3,21 @@ import { useNavigate } from "react-router-dom";
 import { trackEvent, FUNNEL_EVENTS } from "@/lib/analytics";
 import { LazyOnVisible } from "@/components/LazyOnVisible";
 import { HeroSection } from "@/components/landing/HeroSection";
-import { ImpactMetrics } from "@/components/landing/ImpactMetrics";
+import { PilaresSection } from "@/components/landing/PilaresSection";
+import { AgentStudioSection } from "@/components/landing/AgentStudioSection";
 import { PainPoints } from "@/components/landing/PainPoints";
+import { ProductShowcase } from "@/components/landing/ProductShowcase";
 import { LandingNav } from "@/components/landing/LandingNav";
 import { NavigatingOverlay } from "@/components/landing/sections/NavigatingOverlay";
 import { scrollToLazyAnchor, smoothScrollToId, useHashScrollOnMount } from "@/hooks/useLandingAnchor";
 
-const FlowSection = lazy(() =>
-    import("@/components/landing/FlowSection").then((m) => ({ default: m.FlowSection }))
+// LP.2 2026-05-25: narrativa simplificada. Removidos do render (e dos imports):
+// FlowSection (Central de Comando standalone), PipelineSection, LigacoesSection
+// (Base de Conhecimento standalone), UseCasesSection (Para cada papel) e
+// DemoVideoPlayer — conteúdo redundante absorvido por Solução/EVA/Fluxo.
+const CentralComercialSection = lazy(() =>
+    import("@/components/landing/CentralComercialSection").then((m) => ({ default: m.CentralComercialSection }))
 );
-const ProductBentoGrid = lazy(() =>
-    import("@/components/landing/ProductBentoGrid").then((m) => ({ default: m.ProductBentoGrid }))
-);
-const ComparisonSection = lazy(() =>
-    import("@/components/landing/ComparisonSection").then((m) => ({ default: m.ComparisonSection }))
-);
-const DemoVideoPlayer = lazy(() =>
-    import("@/components/landing/DemoVideoPlayer").then((m) => ({ default: m.DemoVideoPlayer }))
-);
-const UseCasesSection = lazy(() =>
-    import("@/components/landing/UseCasesSection").then((m) => ({ default: m.UseCasesSection }))
-);
-const IntegrationsSection = lazy(() =>
-    import("@/components/landing/IntegrationsSection").then((m) => ({ default: m.IntegrationsSection }))
-);
-// As 4 seções narrativas com imagem (Ritmo Comercial, Segunda-feira, Eva,
-// War Room) estão desativadas até as imagens definitivas subirem em
-// public/images/vyzon/. Para reativar: descomentar este import + os 4
-// <LazyOnVisible> com <IdentityImageSection> mais abaixo.
-// const IdentityImageSection = lazy(() =>
-//     import("@/components/landing/IdentityImageSection").then((m) => ({ default: m.IdentityImageSection }))
-// );
 const EvaAISection = lazy(() =>
     import("@/components/landing/EvaAISection").then((m) => ({ default: m.EvaAISection }))
 );
@@ -45,9 +29,6 @@ const DemoScheduleSection = lazy(() =>
 );
 const FinalCTA = lazy(() =>
     import("@/components/landing/FinalCTA").then((m) => ({ default: m.FinalCTA }))
-);
-const LigacoesSection = lazy(() =>
-    import("@/components/landing/sections/LigacoesSection").then((m) => ({ default: m.LigacoesSection }))
 );
 const PricingSection = lazy(() =>
     import("@/components/landing/sections/PricingSection").then((m) => ({ default: m.PricingSection }))
@@ -134,140 +115,44 @@ const LandingPage = () => {
                 onLoginClick={() => navigate("/auth")}
             />
 
+            {/* 1 · HERO */}
             <HeroSection
                 onCTAClick={() => scrollToLazyAnchor("pricing")}
                 onDemoClick={() => scrollToLazyAnchor("how-it-works")}
                 onScheduleDemoClick={() => scrollToDemo("hero")}
-                onTrialClick={() => goToRegister("plus")}
                 onLoginClick={() => navigate("/auth")}
             />
 
-            <ImpactMetrics />
-
+            {/* 2 · PROBLEMA */}
             <PainPoints />
 
-            {/* IdentityImageSection: Ritmo Comercial — desativada até a imagem real subir */}
-            {/*
-            <LazyOnVisible minHeight="600px">
-                <IdentityImageSection
-                    eyebrow="Ritmo Comercial"
-                    title={<>Seu time não precisa de mais uma ferramenta. Precisa de <span className="text-emerald-400">ritmo comercial</span>.</>}
-                    body="A maioria dos CRMs registra o que aconteceu. A Vyzon ajuda o time a decidir o que fazer agora: quem priorizar, onde agir, quanto falta para a meta e quem precisa de ajuda antes do fim do mês."
-                    image={{
-                        src: "/images/vyzon/ritmo-comercial-vyzon.webp",
-                        alt: "Conceitos da Vyzon mostrando Ritmo Comercial, Placar Vivo e Eva como IA de próximo passo.",
-                    }}
-                    imageSide="right"
-                    accent="emerald"
-                />
-            </LazyOnVisible>
-            */}
+            {/* 3 · PROVA VISUAL DE PRODUTO (mock CSS) — âncora "Como funciona" */}
+            <div id="how-it-works">
+                <ProductShowcase />
+            </div>
 
-            <LazyOnVisible minHeight="500px" id="how-it-works">
-                <FlowSection />
-            </LazyOnVisible>
+            {/* 4 · COMO O VYZON RESOLVE */}
+            <AgentStudioSection onCTAClick={() => scrollToDemo("solucao")} />
 
-            <LazyOnVisible minHeight="600px">
-                <ProductBentoGrid />
-            </LazyOnVisible>
-
-            <LazyOnVisible minHeight="800px">
-                <ComparisonSection onCTAClick={() => goToRegister("plus")} />
-            </LazyOnVisible>
-
-            <LazyOnVisible minHeight="320px" id="agendar-demo">
-                <DemoScheduleSection />
-            </LazyOnVisible>
-
-            <LazyOnVisible minHeight="500px">
-                <DemoVideoPlayer />
-            </LazyOnVisible>
-
-            {/* IdentityImageSection: Segunda-feira de manhã — desativada até a imagem real subir */}
-            {/*
-            <LazyOnVisible minHeight="700px">
-                <IdentityImageSection
-                    eyebrow="Segunda-feira de manhã"
-                    title={<>O que muda na <span className="text-emerald-400">segunda-feira de manhã</span></>}
-                    body="Quando a rotina comercial fica clara, vendedor, gestor e empresa param de operar no escuro."
-                    image={{
-                        src: "/images/vyzon/segunda-feira-vyzon.webp",
-                        alt: "Cards da Vyzon mostrando como a rotina comercial melhora para vendedor, gestor e empresa.",
-                    }}
-                    imageSide="right"
-                    accent="emerald"
-                    bullets={[
-                        "Vendedor: quanto falta para a meta",
-                        "Vendedor: quais leads priorizar",
-                        "Gestor: quem está acelerando",
-                        "Gestor: onde agir antes do fim do mês",
-                        "Empresa: menos planilha e print",
-                        "Empresa: menos decisão no feeling",
-                    ]}
-                />
-            </LazyOnVisible>
-            */}
-
-            <LazyOnVisible minHeight="600px">
-                <div id="use-cases">
-                    <UseCasesSection />
-                </div>
-            </LazyOnVisible>
-
-            <LazyOnVisible minHeight="700px" id="integracoes">
-                <IntegrationsSection />
-            </LazyOnVisible>
-
-            <LazyOnVisible minHeight="500px">
-                <LigacoesSection onSeePlansClick={() => smoothScrollToId("pricing")} />
-            </LazyOnVisible>
-
-            {/* IdentityImageSection: Eva — desativada até a imagem real subir */}
-            {/*
-            <LazyOnVisible minHeight="650px" id="eva">
-                <IdentityImageSection
-                    eyebrow="Eva — IA de Próximo Passo"
-                    title={<>Eva, a <span style={{ color: "#A855F7" }}>IA que orienta</span>, não substitui</>}
-                    body="Eva ajuda vendedores a priorizar ações e gestores a identificar gargalos. Ela não promete vender sozinha; ela dá mais clareza para o time vender melhor."
-                    image={{
-                        src: "/images/vyzon/eva-ia-vyzon.webp",
-                        alt: "Eva, IA da Vyzon, orientando vendedores com próximos passos e alertas comerciais em uma interface roxa.",
-                    }}
-                    imageSide="right"
-                    accent="violet"
-                    bullets={[
-                        "Próximo passo sugerido",
-                        "Oportunidades paradas",
-                        "Gargalos por etapa",
-                        "Clareza para o gestor",
-                    ]}
-                    cta={{ label: "Conhecer a Eva em uma demonstração", href: "#agendar-demo" }}
-                />
-            </LazyOnVisible>
-            */}
-
+            {/* 5 · EVA */}
             <LazyOnVisible minHeight="700px">
                 <EvaAISection onCTAClick={() => smoothScrollToId("pricing")} />
             </LazyOnVisible>
 
-            {/* IdentityImageSection: War Room — desativada até a imagem real subir */}
-            {/*
-            <LazyOnVisible minHeight="650px">
-                <IdentityImageSection
-                    eyebrow="War Room Comercial"
-                    title={<>O <span style={{ color: "#3B82F6" }}>War Room</span> da sua equipe comercial</>}
-                    body="Veja faturamento, negócios ganhos, conversão, performance por vendedor, funil e alertas inteligentes em uma visão preparada para decisões mais rápidas."
-                    extra="Para gestores que precisam sair do feeling e acompanhar o pulso da operação com mais clareza."
-                    image={{
-                        src: "/images/vyzon/war-room-comercial-vyzon.webp",
-                        alt: "War room comercial da Vyzon com painéis de faturamento, performance por vendedor, funil e alertas inteligentes.",
-                    }}
-                    imageSide="left"
-                    accent="blue"
-                />
+            {/* 6 · CENTRAL COMERCIAL (resumo comercial enxuto) */}
+            <LazyOnVisible minHeight="500px">
+                <CentralComercialSection />
             </LazyOnVisible>
-            */}
 
+            {/* 7 · PARA QUEM É */}
+            <PilaresSection />
+
+            {/* 8 · CTA / DEMO (alvo de todos os CTAs "Agendar") */}
+            <LazyOnVisible minHeight="320px" id="agendar-demo">
+                <DemoScheduleSection />
+            </LazyOnVisible>
+
+            {/* 9 · PRICING */}
             <LazyOnVisible minHeight="900px" id="pricing">
                 <PricingSection
                     onPlanSelect={goToRegister}
@@ -275,14 +160,19 @@ const LandingPage = () => {
                 />
             </LazyOnVisible>
 
+            {/* FAQ */}
             <LazyOnVisible minHeight="600px">
                 <div id="faq">
                     <FAQSection />
                 </div>
             </LazyOnVisible>
 
+            {/* CTA FINAL */}
             <LazyOnVisible minHeight="400px">
-                <FinalCTA onCTAClick={() => goToRegister("pro")} onScheduleDemoClick={() => scrollToDemo("final_cta")} />
+                <FinalCTA
+                    onCTAClick={() => goToRegister("pro")}
+                    onScheduleDemoClick={() => scrollToDemo("final_cta")}
+                />
             </LazyOnVisible>
 
             <LazyOnVisible minHeight="300px">

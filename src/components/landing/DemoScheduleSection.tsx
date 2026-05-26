@@ -220,20 +220,20 @@ export const DemoScheduleSection = ({
     return (
         <section
             className="relative py-24 sm:py-32 px-4 sm:px-6 lg:px-8 overflow-hidden"
-            style={{ background: "var(--vyz-bg)" }}
+            style={{ background: "#FFFFFF" }}
         >
             <div
                 className="absolute top-[-15%] left-[10%] w-[60%] h-[80%] rounded-full pointer-events-none"
                 style={{
-                    background: "radial-gradient(circle, rgba(0,227,122,0.05) 0%, transparent 55%)",
+                    background: "radial-gradient(circle, rgba(21,86,192,0.05) 0%, transparent 55%)",
                 }}
             />
             <div
                 className="absolute inset-0 opacity-[0.02] pointer-events-none"
                 style={{
                     backgroundImage: `
-                        linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-                        linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)
+                        linear-gradient(rgba(10,10,10,0.1) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(10,10,10,0.1) 1px, transparent 1px)
                     `,
                     backgroundSize: "60px 60px",
                 }}
@@ -243,9 +243,9 @@ export const DemoScheduleSection = ({
                 {/* Section header */}
                 <div className="text-center mb-12 landing-fade-in-up">
                     <div className="inline-flex items-center gap-2 mb-6">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
                         <span
-                            className="text-xs text-emerald-400"
+                            className="text-xs text-blue-700"
                             style={{ fontWeight: 600, letterSpacing: "0.12em" }}
                         >
                             DEMONSTRAÇÃO PERSONALIZADA
@@ -253,19 +253,19 @@ export const DemoScheduleSection = ({
                     </div>
 
                     <h2
-                        className="font-heading mb-5 max-w-3xl mx-auto"
+                        className="font-satoshi mb-5 max-w-3xl mx-auto"
                         style={{
                             fontWeight: 700,
                             fontSize: "clamp(1.6rem, 5vw, 3rem)",
                             lineHeight: 1.08,
                             letterSpacing: "-0.04em",
-                            color: "rgba(255,255,255,0.95)",
+                            color: "rgba(10,10,10,0.92)",
                         }}
                     >
                         Vamos montar uma demo{" "}
                         <span
                             style={{
-                                background: "linear-gradient(135deg, #00E37A, #33FF9E)",
+                                background: "linear-gradient(135deg, #1556C0, #2E78E0)",
                                 WebkitBackgroundClip: "text",
                                 WebkitTextFillColor: "transparent",
                             }}
@@ -277,7 +277,7 @@ export const DemoScheduleSection = ({
 
                     <p
                         className="max-w-xl mx-auto"
-                        style={{ color: "rgba(255,255,255,0.4)", fontSize: "1rem", lineHeight: 1.7 }}
+                        style={{ color: "rgba(10,10,10,0.48)", fontSize: "1rem", lineHeight: 1.7 }}
                     >
                         Escolhe um horário livre, deixa seu contato e a gente prepara a sessão focada no seu contexto. Sem pitch genérico.
                     </p>
@@ -288,16 +288,16 @@ export const DemoScheduleSection = ({
                     id="demo-form-start"
                     className="relative rounded-2xl overflow-hidden landing-fade-in-up landing-delay-100"
                     style={{
-                        background: "rgba(255,255,255,0.03)",
+                        background: "rgba(10,10,10,0.04)",
                         boxShadow:
-                            "0 0 0 1px rgba(255,255,255,0.06), 0 8px 24px rgba(0,0,0,0.3), 0 40px 80px -16px rgba(0,0,0,0.4)",
+                            "0 0 0 1px rgba(10,10,10,0.08), 0 8px 24px rgba(0,0,0,0.3), 0 40px 80px -16px rgba(0,0,0,0.4)",
                     }}
                 >
                     <div
                         className="absolute top-0 inset-x-0 h-px"
                         style={{
                             background:
-                                "linear-gradient(90deg, transparent, rgba(0,227,122,0.5) 30%, rgba(20,184,166,0.4) 70%, transparent)",
+                                "linear-gradient(90deg, transparent, rgba(21,86,192,0.5) 30%, rgba(20,184,166,0.4) 70%, transparent)",
                         }}
                     />
 
@@ -305,9 +305,9 @@ export const DemoScheduleSection = ({
                     {step === "schedule" && (
                         <div className="p-3 sm:p-6 md:p-8 landing-fade-in">
                             <div className="flex items-center gap-2 mb-1 px-1 sm:px-2">
-                                <Calendar className="h-3.5 w-3.5 text-emerald-400 flex-shrink-0" />
+                                <Calendar className="h-3.5 w-3.5 text-blue-700 flex-shrink-0" />
                                 <span
-                                    className="text-[10px] sm:text-xs uppercase tracking-wider text-emerald-400"
+                                    className="text-[10px] sm:text-xs uppercase tracking-wider text-blue-700"
                                     style={{ fontWeight: 600, letterSpacing: "0.1em" }}
                                 >
                                     Escolha seu horário
@@ -315,7 +315,7 @@ export const DemoScheduleSection = ({
                             </div>
                             <p
                                 className="text-xs sm:text-sm mb-4 px-1 sm:px-2"
-                                style={{ color: "rgba(255,255,255,0.45)" }}
+                                style={{ color: "rgba(10,10,10,0.52)" }}
                             >
                                 30 minutos, 100% gratuito. Depois você confirma seus dados em 20 segundos.
                             </p>
@@ -348,25 +348,25 @@ export const DemoScheduleSection = ({
                                 <div
                                     className="flex items-center justify-between gap-3 mb-6 px-4 py-3 rounded-xl flex-wrap"
                                     style={{
-                                        background: "rgba(0,227,122,0.06)",
-                                        boxShadow: "0 0 0 1px rgba(0,227,122,0.15)",
+                                        background: "rgba(21,86,192,0.06)",
+                                        boxShadow: "0 0 0 1px rgba(21,86,192,0.15)",
                                     }}
                                 >
                                     <div className="flex items-center gap-3 min-w-0">
                                         <div
                                             className="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center"
-                                            style={{ background: "rgba(0,227,122,0.14)" }}
+                                            style={{ background: "rgba(21,86,192,0.14)" }}
                                         >
-                                            <Calendar className="h-4 w-4 text-emerald-400" />
+                                            <Calendar className="h-4 w-4 text-blue-700" />
                                         </div>
                                         <div className="min-w-0">
                                             <p
                                                 className="text-[10px] uppercase tracking-wider"
-                                                style={{ color: "rgba(0,227,122,0.75)", fontWeight: 600, letterSpacing: "0.1em" }}
+                                                style={{ color: "rgba(21,86,192,0.75)", fontWeight: 600, letterSpacing: "0.1em" }}
                                             >
                                                 Horário escolhido
                                             </p>
-                                            <p className="text-sm" style={{ color: "rgba(255,255,255,0.88)", fontWeight: 600 }}>
+                                            <p className="text-sm" style={{ color: "rgba(10,10,10,0.85)", fontWeight: 600 }}>
                                                 {formatSlotLabel(pickedSlot.startIso)}
                                             </p>
                                         </div>
@@ -380,9 +380,9 @@ export const DemoScheduleSection = ({
                                         }}
                                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs flex-shrink-0 transition-all duration-150"
                                         style={{
-                                            background: "rgba(255,255,255,0.04)",
-                                            boxShadow: "0 0 0 1px rgba(255,255,255,0.08)",
-                                            color: "rgba(255,255,255,0.6)",
+                                            background: "rgba(10,10,10,0.06)",
+                                            boxShadow: "0 0 0 1px rgba(10,10,10,0.08)",
+                                            color: "rgba(10,10,10,0.6)",
                                             fontWeight: 600,
                                         }}
                                     >
@@ -398,12 +398,12 @@ export const DemoScheduleSection = ({
                                     <div
                                         className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-5"
                                         style={{
-                                            background: "rgba(0,227,122,0.08)",
-                                            border: "1px solid rgba(0,227,122,0.15)",
+                                            background: "rgba(21,86,192,0.08)",
+                                            border: "1px solid rgba(21,86,192,0.15)",
                                         }}
                                     >
-                                        <Calendar className="h-3.5 w-3.5 text-emerald-400" />
-                                        <span className="text-xs text-emerald-400" style={{ fontWeight: 600 }}>
+                                        <Calendar className="h-3.5 w-3.5 text-blue-700" />
+                                        <span className="text-xs text-blue-700" style={{ fontWeight: 600 }}>
                                             30 min · 100% gratuito
                                         </span>
                                     </div>
@@ -415,7 +415,7 @@ export const DemoScheduleSection = ({
                                             fontSize: "1.35rem",
                                             lineHeight: 1.2,
                                             letterSpacing: "-0.03em",
-                                            color: "rgba(255,255,255,0.9)",
+                                            color: "rgba(10,10,10,0.85)",
                                         }}
                                     >
                                         O que você vai levar
@@ -423,20 +423,20 @@ export const DemoScheduleSection = ({
 
                                     <div className="flex flex-col gap-3">
                                         {[
-                                            "Pipeline e painel montados com seus dados",
-                                            "Ranking gamificado rodando ao vivo",
-                                            "Eva (nossa IA) analisando seu funil na hora",
+                                            "Inbox e pipeline montados com seu contexto",
+                                            "EVA analisando uma conversa real da sua agência",
+                                            "Próximos passos sugeridos para seu time aprovar",
                                             "Integrações com o que você já usa",
                                             "Plano ideal pro tamanho do seu time",
                                         ].map((item) => (
                                             <div key={item} className="flex items-start gap-2.5">
                                                 <div
                                                     className="mt-0.5 flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center"
-                                                    style={{ background: "rgba(0,227,122,0.12)" }}
+                                                    style={{ background: "rgba(21,86,192,0.12)" }}
                                                 >
-                                                    <Check className="h-2.5 w-2.5 text-emerald-400" strokeWidth={3} />
+                                                    <Check className="h-2.5 w-2.5 text-blue-700" strokeWidth={3} />
                                                 </div>
-                                                <span className="text-sm" style={{ color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>
+                                                <span className="text-sm" style={{ color: "rgba(10,10,10,0.55)", lineHeight: 1.5 }}>
                                                     {item}
                                                 </span>
                                             </div>
@@ -446,7 +446,7 @@ export const DemoScheduleSection = ({
 
                                 {/* Right on desktop — contact form. On mobile: order-1 (above benefits) */}
                                 <form onSubmit={handleContactSubmit} className="flex flex-col gap-3.5 order-1 md:order-2" noValidate>
-                                    <p className="text-[11px] mb-0.5" style={{ color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>
+                                    <p className="text-[11px] mb-0.5" style={{ color: "rgba(10,10,10,0.5)", fontWeight: 500 }}>
                                         Só mais 3 campos pra confirmar seu horário.
                                     </p>
 
@@ -510,9 +510,9 @@ export const DemoScheduleSection = ({
                                         disabled={!canSubmit || isSubmitting}
                                         className="demo-submit-btn relative overflow-hidden flex items-center justify-center gap-2.5 w-full px-6 py-3.5 rounded-xl text-white group mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                         style={{
-                                            background: "linear-gradient(135deg, #00E37A 0%, #00B289 100%)",
+                                            background: "linear-gradient(135deg, #1556C0 0%, #0E3E92 100%)",
                                             boxShadow:
-                                                "0 0 0 1px rgba(0,227,122,0.3), 0 4px 24px rgba(0,227,122,0.3)",
+                                                "0 0 0 1px rgba(21,86,192,0.3), 0 4px 24px rgba(21,86,192,0.3)",
                                             fontWeight: 700,
                                             fontSize: "0.95rem",
                                         }}
@@ -521,7 +521,7 @@ export const DemoScheduleSection = ({
                                             className="absolute inset-0 rounded-xl landing-shine"
                                             style={{
                                                 background:
-                                                    "linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.16) 50%, transparent 70%)",
+                                                    "linear-gradient(105deg, transparent 30%, rgba(10,10,10,0.08) 50%, transparent 70%)",
                                             }}
                                         />
                                         {isSubmitting ? (
@@ -535,7 +535,7 @@ export const DemoScheduleSection = ({
                                         )}
                                     </button>
 
-                                    <p className="text-center text-xs mt-1" style={{ color: "rgba(255,255,255,0.25)" }}>
+                                    <p className="text-center text-xs mt-1" style={{ color: "rgba(10,10,10,0.25)" }}>
                                         Sem compromisso · Cancela ou remarca quando quiser
                                     </p>
                                 </form>
@@ -549,11 +549,11 @@ export const DemoScheduleSection = ({
                             <div
                                 className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-6"
                                 style={{
-                                    background: "rgba(0,227,122,0.12)",
-                                    boxShadow: "0 0 0 1px rgba(0,227,122,0.2), 0 8px 24px rgba(0,227,122,0.15)",
+                                    background: "rgba(21,86,192,0.12)",
+                                    boxShadow: "0 0 0 1px rgba(21,86,192,0.2), 0 8px 24px rgba(21,86,192,0.15)",
                                 }}
                             >
-                                <Check className="h-6 w-6 text-emerald-400" strokeWidth={2.5} />
+                                <Check className="h-6 w-6 text-blue-700" strokeWidth={2.5} />
                             </div>
 
                             <h3
@@ -562,7 +562,7 @@ export const DemoScheduleSection = ({
                                     fontWeight: 700,
                                     fontSize: "1.5rem",
                                     letterSpacing: "-0.03em",
-                                    color: "rgba(255,255,255,0.95)",
+                                    color: "rgba(10,10,10,0.92)",
                                 }}
                             >
                                 Demo confirmada!
@@ -570,18 +570,18 @@ export const DemoScheduleSection = ({
 
                             <p
                                 className="max-w-md mx-auto mb-4"
-                                style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.95rem", lineHeight: 1.6 }}
+                                style={{ color: "rgba(10,10,10,0.52)", fontSize: "0.95rem", lineHeight: 1.6 }}
                             >
                                 Acabamos de enviar os detalhes pro{" "}
-                                <span style={{ color: "rgba(255,255,255,0.7)" }}>{form.email}</span>. Até lá!
+                                <span style={{ color: "rgba(10,10,10,0.68)" }}>{form.email}</span>. Até lá!
                             </p>
 
                             <div
                                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs"
                                 style={{
                                     color: "rgba(52,211,153,0.9)",
-                                    background: "rgba(0,227,122,0.08)",
-                                    boxShadow: "0 0 0 1px rgba(0,227,122,0.2)",
+                                    background: "rgba(21,86,192,0.08)",
+                                    boxShadow: "0 0 0 1px rgba(21,86,192,0.2)",
                                     fontWeight: 600,
                                 }}
                             >
@@ -597,9 +597,9 @@ export const DemoScheduleSection = ({
                         <div
                             key={t}
                             className="flex items-center gap-1.5"
-                            style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.75rem", fontWeight: 500 }}
+                            style={{ color: "rgba(10,10,10,0.45)", fontSize: "0.75rem", fontWeight: 500 }}
                         >
-                            <Check className="h-3 w-3 text-emerald-500/50" strokeWidth={2.5} />
+                            <Check className="h-3 w-3 text-blue-600/50" strokeWidth={2.5} />
                             {t}
                         </div>
                     ))}
@@ -614,15 +614,15 @@ export const DemoScheduleSection = ({
                     border-radius: 12px;
                     font-size: 14px;
                     font-weight: 500;
-                    color: rgba(255,255,255,0.9);
-                    background: rgba(255,255,255,0.04);
-                    box-shadow: 0 0 0 1px rgba(255,255,255,0.08);
+                    color: rgba(10,10,10,0.85);
+                    background: rgba(10,10,10,0.06);
+                    box-shadow: 0 0 0 1px rgba(10,10,10,0.08);
                     outline: none;
                     transition: box-shadow 150ms ease, background 150ms ease;
                 }
                 .demo-input:focus {
-                    background: rgba(255,255,255,0.05);
-                    box-shadow: 0 0 0 1.5px rgba(0,227,122,0.4), 0 0 0 4px rgba(0,227,122,0.08);
+                    background: rgba(10,10,10,0.06);
+                    box-shadow: 0 0 0 1.5px rgba(21,86,192,0.4), 0 0 0 4px rgba(21,86,192,0.08);
                 }
                 .demo-input.demo-input-error {
                     box-shadow: 0 0 0 1.5px rgba(244,63,94,0.45), 0 0 0 4px rgba(244,63,94,0.08);
@@ -631,7 +631,7 @@ export const DemoScheduleSection = ({
                     box-shadow: 0 0 0 1.5px rgba(244,63,94,0.6), 0 0 0 4px rgba(244,63,94,0.1);
                 }
                 .demo-input::placeholder {
-                    color: rgba(255,255,255,0.35);
+                    color: rgba(10,10,10,0.5);
                 }
                 textarea.demo-input {
                     padding-left: 14px !important;
@@ -681,7 +681,7 @@ function FormField({
             <div className="relative">
                 <Icon
                     className="absolute left-3.5 top-[22px] -translate-y-1/2 h-4 w-4 pointer-events-none z-10"
-                    style={{ color: error ? "rgba(244,63,94,0.8)" : "rgba(255,255,255,0.25)" }}
+                    style={{ color: error ? "rgba(244,63,94,0.8)" : "rgba(10,10,10,0.25)" }}
                 />
                 {children}
             </div>
@@ -690,7 +690,7 @@ function FormField({
                     {error}
                 </p>
             ) : hint ? (
-                <p className="text-[10px] mt-1 ml-1" style={{ color: "rgba(255,255,255,0.3)", fontWeight: 500 }}>
+                <p className="text-[10px] mt-1 ml-1" style={{ color: "rgba(10,10,10,0.45)", fontWeight: 500 }}>
                     {hint}
                 </p>
             ) : null}

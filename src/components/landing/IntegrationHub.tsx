@@ -52,8 +52,8 @@ export const IntegrationHub = () => {
 
     const rightItems = [
         { name: "Hotmart", logo: hotmartLogo, hasLogo: true },
-        { name: "Stripe", icon: CreditCard, color: "#00E37A", hasLogo: false },
-        { name: "Website", icon: Globe, color: "#00E37A", hasLogo: false },
+        { name: "Stripe", icon: CreditCard, color: "#1556C0", hasLogo: false },
+        { name: "Website", icon: Globe, color: "#1556C0", hasLogo: false },
     ];
 
     const bottomItems = [
@@ -72,9 +72,9 @@ export const IntegrationHub = () => {
                     viewport={{ once: true }}
                     className="text-center mb-16"
                 >
-                    <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 tracking-tight">
+                    <h2 className="font-satoshi text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 tracking-tight">
                         Uma ferramenta que{" "}
-                        <span className="text-emerald-600">
+                        <span className="text-blue-700">
                             conecta tudo
                         </span>
                     </h2>
@@ -98,8 +98,8 @@ export const IntegrationHub = () => {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3">
-                            <p className="text-xs font-semibold text-emerald-600 mb-2">Vendas</p>
+                        <div className="rounded-xl border border-emerald-500/20 bg-blue-600/5 p-3">
+                            <p className="text-xs font-semibold text-blue-700 mb-2">Vendas</p>
                             <div className="space-y-2">
                                 {leftItems.map((item, i) => (
                                     <ItemCard key={item.name} item={item} delay={0.1 + i * 0.05} />
@@ -133,7 +133,7 @@ export const IntegrationHub = () => {
                     {/* === LEFT COLUMN === */}
                     <div className="flex flex-col items-end gap-4 relative">
                         {/* Branch label */}
-                        <span className="absolute -right-12 top-1/2 -translate-y-1/2 text-xs font-semibold text-emerald-600">
+                        <span className="absolute -right-12 top-1/2 -translate-y-1/2 text-xs font-semibold text-blue-700">
                             Vendas
                         </span>
 
@@ -141,7 +141,7 @@ export const IntegrationHub = () => {
                             <div key={item.name} className="relative">
                                 {/* Line to card */}
                                 <motion.div
-                                    className="absolute right-full top-1/2 h-[2px] bg-gradient-to-r from-emerald-400 to-emerald-500"
+                                    className="absolute right-full top-1/2 h-[2px] bg-gradient-to-r from-blue-500 to-emerald-500"
                                     style={{ width: "60px", marginRight: "-4px" }}
                                     initial={{ scaleX: 0 }}
                                     whileInView={{ scaleX: 1 }}

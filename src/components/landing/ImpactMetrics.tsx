@@ -9,7 +9,7 @@ const METRICS = [
 
 export const ImpactMetrics = () => {
     return (
-        <section className="py-16 px-4 sm:px-6 lg:px-8" style={{ background: "var(--vyz-bg)" }}>
+        <section className="py-16 px-4 sm:px-6 lg:px-8" style={{ background: "#FFFFFF" }}>
             <div className="max-w-4xl mx-auto">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4">
                     {METRICS.map((m) => {
@@ -25,11 +25,11 @@ export const ImpactMetrics = () => {
                                         fontSize: isZero ? "clamp(2.3rem, 4.6vw, 3.15rem)" : "clamp(2rem, 4vw, 2.75rem)",
                                         fontWeight: isZero ? 800 : 700,
                                         letterSpacing: "-0.035em",
-                                        color: isZero ? "#33FF9E" : "rgba(255,255,255,0.95)",
+                                        color: isZero ? "#2E78E0" : "rgba(10,10,10,0.92)",
                                     }}
                                 >
                                     {m.prefix && (
-                                        <span style={{ fontSize: "0.6em", color: "rgba(255,255,255,0.35)", fontWeight: 400 }}>
+                                        <span style={{ fontSize: "0.6em", color: "rgba(10,10,10,0.5)", fontWeight: 400 }}>
                                             {m.prefix}
                                         </span>
                                     )}
@@ -39,12 +39,12 @@ export const ImpactMetrics = () => {
                                         <AnimatedCounter target={m.value} duration={1.6} className="inline" />
                                     )}
                                     {m.suffix && (
-                                        <span className="text-emerald-400" style={{ fontSize: "0.55em", fontWeight: 700 }}>
+                                        <span className="text-blue-700" style={{ fontSize: "0.55em", fontWeight: 700 }}>
                                             {m.suffix}
                                         </span>
                                     )}
                                 </div>
-                                <p className="text-sm" style={{ color: "rgba(255,255,255,0.45)", fontWeight: 500 }}>
+                                <p className="text-sm" style={{ color: "rgba(10,10,10,0.52)", fontWeight: 500 }}>
                                     {m.label}
                                 </p>
                             </div>

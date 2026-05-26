@@ -4,21 +4,18 @@ import App from "./App.tsx";
 import "./index.css";
 import { initAnalytics } from "./lib/analytics";
 
-// Tema por contexto (hotfix 2026-05-26). A landing pública é dark-only
-// (textos brancos hardcoded sobre --vyz-bg escuro); o app logado é light-first
-// (bg-white / text-slate-*). Um tema global único quebrava um dos dois e o
-// "dark" legado no localStorage deixava o app novo ilegível. Decidimos pelo
-// pathname antes do React montar:
-//   - rotas públicas (landing / SEO / comparativos / relatório público) -> dark
-//   - app logado (catch-all do AppShell) -> light
+// Tema por contexto (2026-05-26). A homepage nova ("Central Comercial com EVA")
+// e o app logado são light-first (bg-white / --vyz-* claros em :root). As
+// páginas legadas do origin (SEO /crm-*, comparativos /alternativa*, personas
+// /para-*, relatório público /r/*) são dark-only (bg-[#06080a] / text-white).
+// Decidimos o tema pelo pathname antes do React montar; isso também neutraliza
+// o "dark" legado no localStorage que deixava a home nova e o app ilegíveis.
 if (typeof window !== "undefined") {
   const path = window.location.pathname;
-  const PUBLIC_EXACT = new Set(["/", "/landing"]);
-  const PUBLIC_PREFIX = ["/alternativa", "/para-", "/crm-", "/r/"];
-  const isPublicLanding =
-    PUBLIC_EXACT.has(path) || PUBLIC_PREFIX.some((p) => path.startsWith(p));
+  const LEGACY_DARK = ["/alternativa", "/para-", "/crm-", "/r/"];
+  const isLegacyDark = LEGACY_DARK.some((p) => path.startsWith(p));
 
-  if (isPublicLanding) {
+  if (isLegacyDark) {
     document.documentElement.classList.add("dark");
   } else {
     document.documentElement.classList.remove("dark");

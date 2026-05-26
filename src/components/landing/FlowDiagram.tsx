@@ -71,8 +71,8 @@ const ChartIcon = (
 const DESTINATIONS: Destination[] = [
     { id: "pipeline", name: "Pipeline", caption: "Novo deal criado", accent: "#60a5fa", iconPath: PipelineIcon, cy: 120 },
     { id: "ranking", name: "Ranking", caption: "Vendedor sobe no pódio", accent: "#fbbf24", iconPath: TrophyIcon, cy: 240 },
-    { id: "meta", name: "Meta", caption: "Progresso avança", accent: "#33FF9E", iconPath: TargetIcon, cy: 360 },
-    { id: "dashboard", name: "Dashboard", caption: "Receita ao vivo", accent: "#a78bfa", iconPath: ChartIcon, cy: 480 },
+    { id: "meta", name: "Meta", caption: "Progresso avança", accent: "#2E78E0", iconPath: TargetIcon, cy: 360 },
+    { id: "dashboard", name: "Dashboard", caption: "Receita ao vivo", accent: "#4A8CE8", iconPath: ChartIcon, cy: 480 },
 ];
 
 // ─── Geometry ────────────────────────────────────────────────────────────────
@@ -117,7 +117,7 @@ export const FlowDiagram = () => {
                 className="absolute inset-x-0 top-0 h-[500px] pointer-events-none"
                 style={{
                     background:
-                        "radial-gradient(ellipse 60% 50% at 50% 0%, rgba(0,227,122,0.08) 0%, transparent 70%)",
+                        "radial-gradient(ellipse 60% 50% at 50% 0%, rgba(21,86,192,0.08) 0%, transparent 70%)",
                 }}
             />
             {/* Subtle grid */}
@@ -125,7 +125,7 @@ export const FlowDiagram = () => {
                 className="absolute inset-0 opacity-[0.02] pointer-events-none"
                 style={{
                     backgroundImage:
-                        "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
+                        "linear-gradient(rgba(10,10,10,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(10,10,10,0.1) 1px, transparent 1px)",
                     backgroundSize: "72px 72px",
                 }}
             />
@@ -140,36 +140,36 @@ export const FlowDiagram = () => {
                     transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
                 >
                     <span
-                        className="inline-flex items-center gap-1.5 text-xs text-emerald-400 rounded-full px-4 py-1.5 mb-5"
+                        className="inline-flex items-center gap-1.5 text-xs text-blue-700 rounded-full px-4 py-1.5 mb-5"
                         style={{
                             fontWeight: "var(--fw-medium)",
                             letterSpacing: "0.06em",
-                            background: "rgba(0,227,122,0.1)",
-                            border: "1px solid rgba(0,227,122,0.2)",
+                            background: "rgba(21,86,192,0.1)",
+                            border: "1px solid rgba(21,86,192,0.2)",
                         }}
                     >
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
                         EM TEMPO REAL
                     </span>
                     <h2
-                        className="font-heading mb-4"
+                        className="font-satoshi mb-4"
                         style={{
-                            fontWeight: "var(--fw-bold)",
+                            fontWeight: 700,
                             fontSize: "clamp(1.75rem, 4.5vw, 2.75rem)",
                             lineHeight: 1.1,
                             letterSpacing: "-0.04em",
-                            color: "rgba(255,255,255,0.95)",
+                            color: "rgba(10,10,10,0.92)",
                         }}
                     >
                         O que acontece{" "}
-                        <span className="text-emerald-400">quando cai uma venda</span>
+                        <span className="text-blue-700">quando cai uma venda</span>
                     </h2>
                     <p
                         className="max-w-xl mx-auto"
                         style={{
                             fontSize: "1.0625rem",
                             lineHeight: 1.6,
-                            color: "rgba(255,255,255,0.5)",
+                            color: "rgba(10,10,10,0.55)",
                         }}
                     >
                         Webhook chega, Vyzon processa e o time inteiro fica sabendo — antes do
@@ -180,9 +180,9 @@ export const FlowDiagram = () => {
                 {/* The diagram */}
                 <div className="relative rounded-3xl overflow-hidden"
                     style={{
-                        background: "linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.005))",
-                        border: "1px solid rgba(255,255,255,0.06)",
-                        boxShadow: "0 0 0 1px rgba(255,255,255,0.02), 0 32px 80px -24px rgba(0,0,0,0.6)",
+                        background: "linear-gradient(180deg, rgba(10,10,10,0.025), rgba(10,10,10,0.01))",
+                        border: "1px solid rgba(10,10,10,0.08)",
+                        boxShadow: "0 0 0 1px rgba(10,10,10,0.03), 0 32px 80px -24px rgba(0,0,0,0.6)",
                     }}
                 >
                     {/* Desktop SVG */}
@@ -208,9 +208,9 @@ export const FlowDiagram = () => {
 
                             {/* Hub gradient */}
                             <radialGradient id="hubFill" cx="50%" cy="50%" r="50%">
-                                <stop offset="0%" stopColor="rgba(0,227,122,0.22)" />
-                                <stop offset="60%" stopColor="rgba(0,227,122,0.1)" />
-                                <stop offset="100%" stopColor="rgba(0,227,122,0.02)" />
+                                <stop offset="0%" stopColor="rgba(21,86,192,0.22)" />
+                                <stop offset="60%" stopColor="rgba(21,86,192,0.1)" />
+                                <stop offset="100%" stopColor="rgba(21,86,192,0.02)" />
                             </radialGradient>
 
                             {/* Source paths — registered with ids so particles can reference them */}
@@ -229,7 +229,7 @@ export const FlowDiagram = () => {
                                     key={`src-stroke-${i}`}
                                     d={d}
                                     fill="none"
-                                    stroke="rgba(0,227,122,0.16)"
+                                    stroke="rgba(21,86,192,0.16)"
                                     strokeWidth="1.2"
                                     strokeDasharray="2 5"
                                 />
@@ -239,7 +239,7 @@ export const FlowDiagram = () => {
                                     key={`dest-stroke-${i}`}
                                     d={d}
                                     fill="none"
-                                    stroke="rgba(0,227,122,0.16)"
+                                    stroke="rgba(21,86,192,0.16)"
                                     strokeWidth="1.2"
                                     strokeDasharray="2 5"
                                 />
@@ -261,7 +261,7 @@ export const FlowDiagram = () => {
                                     key={`trace-${i}`}
                                     d={d}
                                     fill="none"
-                                    stroke="#33FF9E"
+                                    stroke="#2E78E0"
                                     strokeWidth="1.4"
                                     strokeLinecap="round"
                                     variants={{
@@ -285,8 +285,8 @@ export const FlowDiagram = () => {
                                     width={LOGO_SIZE}
                                     height={LOGO_SIZE}
                                     rx="12"
-                                    fill="rgba(255,255,255,0.96)"
-                                    stroke="rgba(255,255,255,0.12)"
+                                    fill="#FFFFFF"
+                                    stroke="rgba(10,10,10,0.12)"
                                     strokeWidth="1"
                                 />
                                 <image
@@ -305,11 +305,11 @@ export const FlowDiagram = () => {
                         {/* Vyzon hub */}
                         <g>
                             {/* Radar ping — expanding outward (no bounce) */}
-                            <circle cx={HUB_CENTER.x} cy={HUB_CENTER.y} r="75" fill="none" stroke="rgba(0,227,122,0.4)" strokeWidth="1">
+                            <circle cx={HUB_CENTER.x} cy={HUB_CENTER.y} r="75" fill="none" stroke="rgba(21,86,192,0.4)" strokeWidth="1">
                                 <animate attributeName="r" from="75" to="108" dur="3.6s" repeatCount="indefinite" />
                                 <animate attributeName="opacity" values="0.5;0" dur="3.6s" repeatCount="indefinite" />
                             </circle>
-                            <circle cx={HUB_CENTER.x} cy={HUB_CENTER.y} r="75" fill="none" stroke="rgba(0,227,122,0.4)" strokeWidth="1">
+                            <circle cx={HUB_CENTER.x} cy={HUB_CENTER.y} r="75" fill="none" stroke="rgba(21,86,192,0.4)" strokeWidth="1">
                                 <animate attributeName="r" from="75" to="108" dur="3.6s" begin="1.8s" repeatCount="indefinite" />
                                 <animate attributeName="opacity" values="0.5;0" dur="3.6s" begin="1.8s" repeatCount="indefinite" />
                             </circle>
@@ -321,7 +321,7 @@ export const FlowDiagram = () => {
                                 cy={HUB_CENTER.y}
                                 r="65"
                                 fill="#0b0f14"
-                                stroke="rgba(0,227,122,0.45)"
+                                stroke="rgba(21,86,192,0.45)"
                                 strokeWidth="1.5"
                             />
                             {/* Inner highlight ring */}
@@ -330,7 +330,7 @@ export const FlowDiagram = () => {
                                 cy={HUB_CENTER.y}
                                 r="60"
                                 fill="none"
-                                stroke="rgba(0,227,122,0.15)"
+                                stroke="rgba(21,86,192,0.15)"
                                 strokeWidth="0.8"
                             />
                             {/* Vyzon logo */}
@@ -346,7 +346,7 @@ export const FlowDiagram = () => {
                                 x={HUB_CENTER.x}
                                 y={HUB_CENTER.y + 32}
                                 textAnchor="middle"
-                                fill="rgba(0,227,122,0.9)"
+                                fill="rgba(21,86,192,0.9)"
                                 fontSize="9"
                                 fontWeight="700"
                                 style={{ letterSpacing: "0.2em" }}
@@ -364,8 +364,8 @@ export const FlowDiagram = () => {
                                     width={DEST_CARD.w}
                                     height={DEST_CARD.h}
                                     rx="14"
-                                    fill="rgba(255,255,255,0.025)"
-                                    stroke="rgba(255,255,255,0.07)"
+                                    fill="rgba(10,10,10,0.035)"
+                                    stroke="rgba(10,10,10,0.08)"
                                     strokeWidth="1"
                                 />
                                 {/* Accent bar */}
@@ -380,13 +380,13 @@ export const FlowDiagram = () => {
                                 />
                                 {/* Icon circle */}
                                 <g transform="translate(34, 40)" color={d.accent}>
-                                    <circle cx="0" cy="0" r="18" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
+                                    <circle cx="0" cy="0" r="18" fill="rgba(10,10,10,0.04)" stroke="rgba(10,10,10,0.08)" strokeWidth="1" />
                                     {d.iconPath}
                                 </g>
                                 <text
                                     x="66"
                                     y="32"
-                                    fill="rgba(255,255,255,0.95)"
+                                    fill="rgba(10,10,10,0.92)"
                                     fontSize="15"
                                     fontWeight="600"
                                     style={{ letterSpacing: "-0.01em" }}
@@ -396,7 +396,7 @@ export const FlowDiagram = () => {
                                 <text
                                     x="66"
                                     y="52"
-                                    fill="rgba(255,255,255,0.45)"
+                                    fill="rgba(10,10,10,0.52)"
                                     fontSize="11"
                                     fontWeight="500"
                                 >
@@ -419,7 +419,7 @@ export const FlowDiagram = () => {
                         {SOURCES.map((_, i) => (
                             <g key={`src-particle-${i}`}>
                                 {/* Trailing glow */}
-                                <circle r="6" fill="#33FF9E" opacity="0.35" filter="url(#particleGlow)">
+                                <circle r="6" fill="#2E78E0" opacity="0.35" filter="url(#particleGlow)">
                                     <animateMotion
                                         dur={`${LOOP_DURATION}s`}
                                         repeatCount="indefinite"
@@ -430,7 +430,7 @@ export const FlowDiagram = () => {
                                     </animateMotion>
                                 </circle>
                                 {/* Core dot */}
-                                <circle r="3.2" fill="#33FF9E">
+                                <circle r="3.2" fill="#2E78E0">
                                     <animateMotion
                                         dur={`${LOOP_DURATION}s`}
                                         repeatCount="indefinite"
@@ -477,7 +477,7 @@ export const FlowDiagram = () => {
                                     className="text-[10px] uppercase mb-2 text-center"
                                     style={{
                                         letterSpacing: "0.15em",
-                                        color: "rgba(255,255,255,0.35)",
+                                        color: "rgba(10,10,10,0.5)",
                                         fontWeight: 700,
                                     }}
                                 >
@@ -489,29 +489,29 @@ export const FlowDiagram = () => {
                                             key={s.id}
                                             className="flex items-center gap-2 rounded-xl pl-2 pr-2.5 py-2"
                                             style={{
-                                                background: "rgba(255,255,255,0.03)",
-                                                border: "1px solid rgba(255,255,255,0.07)",
-                                                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.03)",
+                                                background: "rgba(10,10,10,0.04)",
+                                                border: "1px solid rgba(10,10,10,0.08)",
+                                                boxShadow: "inset 0 1px 0 rgba(10,10,10,0.04)",
                                             }}
                                         >
                                             <div
                                                 className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
-                                                style={{ background: "rgba(255,255,255,0.95)" }}
+                                                style={{ background: "rgba(10,10,10,0.92)" }}
                                             >
                                                 <img src={s.logo} alt={s.name} className="max-w-[70%] max-h-[70%] object-contain" />
                                             </div>
                                             <span
                                                 className="text-[11px]"
-                                                style={{ color: "rgba(255,255,255,0.92)", fontWeight: 600 }}
+                                                style={{ color: "rgba(10,10,10,0.88)", fontWeight: 600 }}
                                             >
                                                 {s.name}
                                             </span>
                                             <span className="relative flex w-1.5 h-1.5 ml-0.5" aria-hidden="true">
                                                 <span
-                                                    className="absolute inset-0 rounded-full bg-emerald-400 animate-ping"
+                                                    className="absolute inset-0 rounded-full bg-blue-600 animate-ping"
                                                     style={{ opacity: 0.5, animationDelay: `${idx * 0.2}s` }}
                                                 />
-                                                <span className="relative w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                                                <span className="relative w-1.5 h-1.5 rounded-full bg-blue-600" />
                                             </span>
                                         </div>
                                     ))}
@@ -524,14 +524,14 @@ export const FlowDiagram = () => {
                                     id="mobile-flow-path-1"
                                     d="M 12 4 L 12 68"
                                     fill="none"
-                                    stroke="rgba(0,227,122,0.22)"
+                                    stroke="rgba(21,86,192,0.22)"
                                     strokeWidth="1.2"
                                     strokeDasharray="2 4"
                                 />
                                 <motion.path
                                     d="M 12 4 L 12 68"
                                     fill="none"
-                                    stroke="#33FF9E"
+                                    stroke="#2E78E0"
                                     strokeWidth="1.4"
                                     strokeLinecap="round"
                                     initial={{ pathLength: 0, opacity: 0.6 }}
@@ -541,7 +541,7 @@ export const FlowDiagram = () => {
                                     }}
                                     viewport={{ once: true, margin: "-40px" }}
                                 />
-                                <circle r="2.5" fill="#33FF9E">
+                                <circle r="2.5" fill="#2E78E0">
                                     <animateMotion dur="2.4s" repeatCount="indefinite">
                                         <mpath href="#mobile-flow-path-1" />
                                     </animateMotion>
@@ -553,16 +553,16 @@ export const FlowDiagram = () => {
                             <div
                                 className="relative rounded-2xl py-6 px-4 text-center"
                                 style={{
-                                    background: "linear-gradient(135deg, rgba(0,227,122,0.14), rgba(0,227,122,0.04))",
-                                    border: "1px solid rgba(0,227,122,0.35)",
-                                    boxShadow: "0 0 0 1px rgba(0,227,122,0.1), 0 20px 48px -20px rgba(0,227,122,0.35)",
+                                    background: "linear-gradient(135deg, rgba(21,86,192,0.14), rgba(21,86,192,0.04))",
+                                    border: "1px solid rgba(21,86,192,0.35)",
+                                    boxShadow: "0 0 0 1px rgba(21,86,192,0.1), 0 20px 48px -20px rgba(21,86,192,0.35)",
                                 }}
                             >
                                 <ThemeLogo iconOnly className="h-10 w-auto mx-auto mb-2" />
                                 <p
                                     className="text-[10px]"
                                     style={{
-                                        color: "rgba(0,227,122,0.9)",
+                                        color: "rgba(21,86,192,0.9)",
                                         fontWeight: 700,
                                         letterSpacing: "0.2em",
                                     }}
@@ -577,14 +577,14 @@ export const FlowDiagram = () => {
                                     id="mobile-flow-path-2"
                                     d="M 12 4 L 12 68"
                                     fill="none"
-                                    stroke="rgba(0,227,122,0.22)"
+                                    stroke="rgba(21,86,192,0.22)"
                                     strokeWidth="1.2"
                                     strokeDasharray="2 4"
                                 />
                                 <motion.path
                                     d="M 12 4 L 12 68"
                                     fill="none"
-                                    stroke="#33FF9E"
+                                    stroke="#2E78E0"
                                     strokeWidth="1.4"
                                     strokeLinecap="round"
                                     initial={{ pathLength: 0, opacity: 0.6 }}
@@ -594,7 +594,7 @@ export const FlowDiagram = () => {
                                     }}
                                     viewport={{ once: true, margin: "-40px" }}
                                 />
-                                <circle r="2.5" fill="#33FF9E">
+                                <circle r="2.5" fill="#2E78E0">
                                     <animateMotion dur="2.4s" repeatCount="indefinite" begin="1.2s">
                                         <mpath href="#mobile-flow-path-2" />
                                     </animateMotion>
@@ -608,7 +608,7 @@ export const FlowDiagram = () => {
                                     className="text-[10px] uppercase mb-2 text-center"
                                     style={{
                                         letterSpacing: "0.15em",
-                                        color: "rgba(255,255,255,0.35)",
+                                        color: "rgba(10,10,10,0.5)",
                                         fontWeight: 700,
                                     }}
                                 >
@@ -620,10 +620,10 @@ export const FlowDiagram = () => {
                                             key={d.id}
                                             className="relative rounded-xl p-3 overflow-hidden"
                                             style={{
-                                                background: "rgba(255,255,255,0.03)",
-                                                border: "1px solid rgba(255,255,255,0.07)",
+                                                background: "rgba(10,10,10,0.04)",
+                                                border: "1px solid rgba(10,10,10,0.08)",
                                                 borderLeft: `3px solid ${d.accent}`,
-                                                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.03)",
+                                                boxShadow: "inset 0 1px 0 rgba(10,10,10,0.04)",
                                             }}
                                         >
                                             <div className="flex items-start justify-between mb-1.5">
@@ -643,13 +643,13 @@ export const FlowDiagram = () => {
                                             </div>
                                             <p
                                                 className="text-[13px] mb-0.5"
-                                                style={{ color: "rgba(255,255,255,0.95)", fontWeight: 600 }}
+                                                style={{ color: "rgba(10,10,10,0.92)", fontWeight: 600 }}
                                             >
                                                 {d.name}
                                             </p>
                                             <p
                                                 className="text-[10px] mb-1.5"
-                                                style={{ color: "rgba(255,255,255,0.45)" }}
+                                                style={{ color: "rgba(10,10,10,0.52)" }}
                                             >
                                                 {d.caption}
                                             </p>
@@ -675,10 +675,10 @@ export const FlowDiagram = () => {
                 <div className="mt-8 text-center">
                     <p
                         className="text-sm"
-                        style={{ color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}
+                        style={{ color: "rgba(10,10,10,0.48)", lineHeight: 1.6 }}
                     >
                         Latência média do webhook até o painel:{" "}
-                        <span style={{ color: "rgba(255,255,255,0.85)", fontWeight: 600 }}>
+                        <span style={{ color: "rgba(10,10,10,0.82)", fontWeight: 600 }}>
                             menos de 2 segundos
                         </span>
                         .
