@@ -1,143 +1,146 @@
-import { AlertCircle, Bell, BarChart3, Hourglass, MessageSquareWarning, GitPullRequestClosed } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { AlertCircle, Clock, MessageSquare, TrendingDown, Users } from "lucide-react";
 
-type Pain = {
-    icon: LucideIcon;
-    title: string;
-    description: string;
-};
-
-const PAINS: readonly Pain[] = [
+// LP.2 2026-05-25: PROBLEMA simplificado — só as dores (a solução vive em
+// "Como o Vyzon resolve"), pra cortar redundância dor→solução na mesma seção.
+const PAINS = [
     {
-        icon: AlertCircle,
-        title: "O time não atualiza o CRM",
-        description: "Vendedor entra, faz reunião, fecha proposta — e nada vai pro sistema. Pipeline vira ficção.",
+        n: "01",
+        icon: Clock,
+        title: "Lead quente fica sem resposta.",
     },
     {
-        icon: MessageSquareWarning,
-        title: "O gestor cobra tudo no WhatsApp",
-        description: "Status de deal, follow-up, meta — tudo vira mensagem solta no grupo. Cobrança vira rotina, não gestão.",
+        n: "02",
+        icon: MessageSquare,
+        title: "Follow-up depende de cobrança no grupo.",
     },
     {
-        icon: BarChart3,
-        title: "O ranking é manual",
-        description: "Alguém compila planilha no fim do mês e dispara um print. Quando chega, já não muda comportamento.",
+        n: "03",
+        icon: TrendingDown,
+        title: "Pipeline não acompanha o que aconteceu no WhatsApp.",
     },
     {
-        icon: Hourglass,
-        title: "A meta só aparece no fim do mês",
-        description: "Quando o time descobre que está abaixo do ritmo, faltam 3 dias úteis. Tarde demais pra reagir.",
-    },
-    {
-        icon: Bell,
-        title: "Follow-ups se perdem",
-        description: "Lead esfria, retorno cai pra próxima semana, próxima semana vira nunca. Oportunidade evapora sem aviso.",
-    },
-    {
-        icon: GitPullRequestClosed,
-        title: "O pipeline não mostra a realidade",
-        description: "Deals parados há semanas continuam abertos. O forecast vira ficção e ninguém confia nos números.",
+        n: "04",
+        icon: Users,
+        title: "Cada vendedor responde de um jeito.",
     },
 ];
 
 export const PainPoints = () => {
     return (
-        <section className="relative py-24 sm:py-28 px-4 sm:px-6 lg:px-8 overflow-hidden" style={{ background: "var(--vyz-bg)" }}>
-            <div
-                className="absolute inset-x-0 top-0 h-[400px] pointer-events-none"
-                aria-hidden="true"
-                style={{
-                    background: "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(0,227,122,0.08) 0%, transparent 70%)",
-                }}
-            />
-
+        <section className="relative py-28 sm:py-32 px-4 sm:px-6 lg:px-8 overflow-hidden bg-white">
             <div className="relative max-w-5xl mx-auto">
-                <div className="text-center mb-14 sm:mb-16 landing-fade-in-up">
-                    <p
-                        className="text-xs uppercase mb-4 tracking-widest"
-                        style={{ fontWeight: "var(--fw-medium)", color: "rgba(255,255,255,0.35)" }}
-                    >
-                        O problema
-                    </p>
-                    <h2
-                        className="font-heading"
+                {/* Header */}
+                <div className="text-center mb-16 sm:mb-20 landing-fade-in-up">
+                    <span
+                        className="inline-flex items-center gap-2 text-[11px] rounded-full px-4 py-1.5 mb-6"
                         style={{
-                            fontWeight: "var(--fw-bold)",
-                            fontSize: "clamp(1.75rem, 4vw, 2.5rem)",
-                            lineHeight: 1.1,
-                            letterSpacing: "-0.04em",
-                            color: "rgba(255,255,255,0.95)",
+                            fontWeight: 500,
+                            letterSpacing: "0.04em",
+                            background: "rgba(10,10,10,0.04)",
+                            color: "rgba(10,10,10,0.6)",
+                            border: "1px solid rgba(10,10,10,0.08)",
                         }}
                     >
-                        Seu CRM virou só mais uma ferramenta{" "}
-                        <span className="text-red-400">que o vendedor ignora?</span>
-                    </h2>
-                    <p
-                        className="mt-4 max-w-2xl mx-auto text-[15px]"
-                        style={{ color: "rgba(255,255,255,0.55)", lineHeight: 1.65 }}
+                        <AlertCircle className="h-3 w-3" strokeWidth={2} />
+                        O que trava a operação
+                    </span>
+
+                    <h2
+                        className="font-satoshi mx-auto"
+                        style={{
+                            fontWeight: 700,
+                            fontSize: "clamp(1.9rem, 5vw, 3.25rem)",
+                            lineHeight: 1.05,
+                            letterSpacing: "-0.04em",
+                            color: "#0A0A0A",
+                            maxWidth: "860px",
+                        }}
                     >
-                        Time comercial vive de ritmo, meta e clareza. Quando o CRM não entrega isso, a operação volta pra planilha, print e cobrança no WhatsApp.
+                        Sua agência gera lead.{" "}
+                        <span style={{ color: "rgba(10,10,10,0.5)" }}>
+                            Mas a oportunidade se perde no caminho.
+                        </span>
+                    </h2>
+
+                    <p
+                        className="mt-5 mx-auto text-[15px] sm:text-[17px]"
+                        style={{
+                            lineHeight: 1.6,
+                            color: "rgba(10,10,10,0.55)",
+                            maxWidth: "720px",
+                            fontWeight: 400,
+                        }}
+                    >
+                        O lead chama no WhatsApp, o atendimento acontece na
+                        correria, o follow-up fica na memória do vendedor e o
+                        pipeline não mostra a realidade da conversa.
                     </p>
                 </div>
 
-                <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {PAINS.map(({ icon: Icon, title, description }, i) => {
-                        const delay = i % 3 === 0 ? "" : i % 3 === 1 ? "landing-delay-100" : "landing-delay-200";
-                        return (
-                            <li
-                                key={title}
-                                className={`landing-fade-in-up ${delay}`}
+                {/* Dores — grid 2x2 */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
+                    {PAINS.map(({ n, icon: Icon, title }, i) => (
+                        <div
+                            key={n}
+                            className={`flex items-start gap-5 rounded-2xl p-6 sm:p-7 landing-fade-in-up ${i === 0 ? "" : i === 1 ? "landing-delay-100" : "landing-delay-200"}`}
+                            style={{
+                                background: "rgba(10,10,10,0.025)",
+                                border: "1px solid rgba(10,10,10,0.08)",
+                            }}
+                        >
+                            <span
+                                className="font-heading shrink-0"
+                                style={{
+                                    fontSize: "clamp(1.75rem, 4vw, 2.5rem)",
+                                    lineHeight: 1,
+                                    letterSpacing: "-0.04em",
+                                    color: "rgba(10,10,10,0.14)",
+                                    fontWeight: 700,
+                                    fontVariantNumeric: "tabular-nums",
+                                }}
                             >
+                                {n}
+                            </span>
+                            <div className="flex items-start gap-3.5 pt-1">
                                 <div
-                                    className="h-full rounded-2xl p-5 sm:p-6 flex flex-col gap-3"
+                                    className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
                                     style={{
-                                        background: "rgba(255,255,255,0.02)",
-                                        border: "1px solid rgba(239,68,68,0.18)",
-                                        boxShadow: "0 0 0 1px rgba(255,255,255,0.03), 0 8px 24px rgba(0,0,0,0.18)",
+                                        background: "rgba(10,10,10,0.04)",
+                                        border: "1px solid rgba(10,10,10,0.08)",
                                     }}
                                 >
-                                    <div
-                                        className="flex h-10 w-10 items-center justify-center rounded-lg"
-                                        style={{ background: "rgba(239,68,68,0.12)" }}
-                                        aria-hidden="true"
-                                    >
-                                        <Icon className="h-5 w-5 text-red-400" strokeWidth={1.9} />
-                                    </div>
-                                    <h3
-                                        className="text-[15px] sm:text-base"
-                                        style={{ fontWeight: "var(--fw-semibold)", color: "rgba(255,255,255,0.95)" }}
-                                    >
-                                        {title}
-                                    </h3>
-                                    <p
-                                        className="text-[13.5px] leading-relaxed"
-                                        style={{ color: "rgba(255,255,255,0.6)" }}
-                                    >
-                                        {description}
-                                    </p>
+                                    <Icon className="h-5 w-5" strokeWidth={1.8} style={{ color: "#0A0A0A" }} />
                                 </div>
-                            </li>
-                        );
-                    })}
-                </ul>
+                                <h3
+                                    className="font-heading"
+                                    style={{
+                                        fontSize: "clamp(1.0625rem, 2vw, 1.25rem)",
+                                        lineHeight: 1.3,
+                                        letterSpacing: "-0.02em",
+                                        color: "#0A0A0A",
+                                        fontWeight: 700,
+                                    }}
+                                >
+                                    {title}
+                                </h3>
+                            </div>
+                        </div>
+                    ))}
+                </div>
 
-                <div className="mt-14 sm:mt-16 max-w-2xl mx-auto text-center landing-fade-in-up landing-delay-400">
+                {/* Footer hint */}
+                <div className="mt-16 sm:mt-20 text-center landing-fade-in-up landing-delay-300">
                     <p
                         className="text-base sm:text-lg"
-                        style={{ fontWeight: "var(--fw-medium)", color: "rgba(255,255,255,0.95)", lineHeight: 1.55 }}
+                        style={{
+                            fontWeight: 500,
+                            color: "rgba(10,10,10,0.6)",
+                        }}
                     >
-                        A Vyzon transforma a rotina comercial em uma experiência{" "}
-                        <span className="text-emerald-400" style={{ fontWeight: "var(--fw-bold)" }}>
-                            clara, visual e orientada por metas.
-                        </span>
+                        <span style={{ color: "#0A0A0A", fontWeight: 700 }}>Menos lead perdido.</span>{" "}
+                        <span style={{ color: "#0A0A0A", fontWeight: 700 }}>Menos cobrança manual.</span>{" "}
+                        <span style={{ color: "#0A0A0A", fontWeight: 700 }}>Mais oportunidade andando.</span>
                     </p>
-                    <p
-                        className="text-xs mt-2"
-                        style={{ color: "rgba(255,255,255,0.4)" }}
-                    >
-                        Pipeline vivo, ranking ao vivo, alertas e automações. No ar em 5 minutos.
-                    </p>
-                    <div className="h-12 w-px mx-auto mt-8" style={{ background: "rgba(255,255,255,0.08)" }} aria-hidden="true" />
                 </div>
             </div>
         </section>

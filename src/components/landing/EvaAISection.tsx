@@ -1,282 +1,26 @@
-import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Lightbulb, BarChart3, TrendingUp, Users, Dot, ArrowRight } from "lucide-react";
-
-// ─── Typing animation for the mockup ──────────────────────────────
-
-function useTypingDemo(lines: string[], delay: number) {
-  const [visibleLines, setVisibleLines] = useState<string[]>([]);
-  const [currentLine, setCurrentLine] = useState("");
-  const [lineIdx, setLineIdx] = useState(0);
-  const [charIdx, setCharIdx] = useState(0);
-  const [phase, setPhase] = useState<"waiting" | "typing" | "done">("waiting");
-  const startedRef = useRef(false);
-
-  const start = () => {
-    if (startedRef.current) return;
-    startedRef.current = true;
-    setPhase("typing");
-  };
-
-  useEffect(() => {
-    if (phase !== "typing" || lineIdx >= lines.length) {
-      if (lineIdx >= lines.length) setPhase("done");
-      return;
-    }
-
-    const fullLine = lines[lineIdx];
-
-    if (charIdx <= fullLine.length) {
-      const timeout = setTimeout(() => {
-        setCurrentLine(fullLine.slice(0, charIdx));
-        setCharIdx((c) => c + 1);
-      }, 14 + Math.random() * 12);
-      return () => clearTimeout(timeout);
-    }
-
-    // Line complete — push and move to next
-    const pause = setTimeout(() => {
-      setVisibleLines((prev) => [...prev, fullLine]);
-      setCurrentLine("");
-      setCharIdx(0);
-      setLineIdx((l) => l + 1);
-    }, 300);
-    return () => clearTimeout(pause);
-  }, [phase, lineIdx, charIdx, lines]);
-
-  return { visibleLines, currentLine, phase, start };
-}
-
-// ─── Static Eva Atom (landing-safe, no framer-motion dependency) ──
-
-function EvaAtom({ size = 40, className = "" }: { size?: number; className?: string }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 40 40"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-    >
-      <defs>
-        <linearGradient id="eva-landing-orb" x1="14" y1="10" x2="26" y2="30" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#a78bfa" />
-          <stop offset="100%" stopColor="#7c3aed" />
-        </linearGradient>
-      </defs>
-      <ellipse cx="20" cy="20" rx="16" ry="6" stroke="#8b5cf6" strokeOpacity="0.3" strokeWidth="1" fill="none" />
-      <ellipse cx="20" cy="20" rx="6" ry="16" stroke="#8b5cf6" strokeOpacity="0.18" strokeWidth="0.8" fill="none" transform="rotate(-30 20 20)" />
-      <circle cx="20" cy="20" r="5.5" fill="url(#eva-landing-orb)" />
-      <circle cx="18" cy="18" r="2" fill="white" opacity="0.25" />
-      <circle cx="35" cy="17" r="1.8" fill="#a78bfa" opacity="0.7" />
-      <circle cx="11" cy="7" r="1.2" fill="#a78bfa" opacity="0.4" />
-    </svg>
-  );
-}
-
-// ─── Chat mockup ──────────────────────────────────────────────────
-
-const DEMO_QUESTION = "Quem mais vendeu este mês?";
-
-const DEMO_LINES = [
-  "**Carlos M.** lidera com R$ 28.400 em 14 vendas.",
-  "Logo atrás, **Ana L.** com R$ 21.800 (11 vendas).",
-  "",
-  "O ticket médio do Carlos está 18% acima da média.",
-  "Ana tem a melhor taxa de conversão: 34%.",
-];
-
-function ChatMockup({ onCTAClick }: { onCTAClick?: () => void }) {
-  const { visibleLines, currentLine, phase, start } = useTypingDemo(DEMO_LINES, 800);
-  const [questionVisible, setQuestionVisible] = useState(false);
-  const mockRef = useRef<HTMLDivElement>(null);
-
-  // Trigger animation on scroll into view
-  useEffect(() => {
-    const el = mockRef.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setQuestionVisible(true);
-          setTimeout(start, 1200);
-          obs.disconnect();
-        }
-      },
-      { threshold: 0.4 }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
-
-  const renderLine = (text: string) => {
-    if (!text.trim()) return null;
-    const parts = text.split(/(\*\*[^*]+\*\*)/g);
-    return parts.map((part, i) => {
-      if (part.startsWith("**") && part.endsWith("**")) {
-        return <strong key={i} style={{ color: "rgba(255,255,255,0.95)", fontWeight: 600 }}>{part.slice(2, -2)}</strong>;
-      }
-      return <span key={i}>{part}</span>;
-    });
-  };
-
-  return (
-    <div ref={mockRef} className="relative rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)" }}>
-      {/* Header */}
-      <div className="flex items-center gap-3 px-5 py-3.5" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-        <EvaAtom size={28} />
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm" style={{ fontWeight: "var(--fw-semibold)", color: "rgba(255,255,255,0.9)" }}>Eva</span>
-            <span className="text-[9px] px-1.5 py-0.5 rounded-full" style={{ fontWeight: "var(--fw-semibold)", background: "rgba(139,92,246,0.15)", color: "#a78bfa", border: "1px solid rgba(139,92,246,0.2)" }}>AI</span>
-          </div>
-          <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.3)" }}>
-            {phase === "typing" ? "Analisando..." : "Online agora"}
-          </span>
-        </div>
-      </div>
-
-      {/* Messages */}
-      <div className="px-5 py-5 space-y-4 min-h-[220px]">
-        {/* User question */}
-        <motion.div
-          initial={{ y: 6 }}
-          animate={questionVisible ? { y: 0 } : {}}
-          transition={{ duration: 0.3 }}
-          className="flex justify-end"
-        >
-          <div className="rounded-2xl rounded-tr-sm px-4 py-2.5 text-[13px] text-white leading-relaxed max-w-[75%]" style={{ background: "rgba(139,92,246,0.7)" }}>
-            {DEMO_QUESTION}
-          </div>
-        </motion.div>
-
-        {/* Eva response */}
-        {(visibleLines.length > 0 || currentLine) && (
-          <motion.div
-            initial={{ y: 8 }}
-            animate={{ y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="flex gap-3"
-          >
-            <EvaAtom size={24} className="shrink-0 mt-0.5" />
-            <div className="rounded-2xl rounded-tl-sm px-4 py-3 text-[13px] leading-relaxed max-w-[85%]" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.6)" }}>
-              {visibleLines.map((line, i) => (
-                line.trim() ? (
-                  <p key={i} className="mb-1">{renderLine(line)}</p>
-                ) : (
-                  <div key={i} className="h-2" />
-                )
-              ))}
-              {currentLine && (
-                <p className="mb-0">
-                  {renderLine(currentLine)}
-                  <span
-                    className="inline-block w-[2px] h-3.5 ml-0.5 align-middle rounded-full"
-                    style={{ background: "#a78bfa", animation: "pulse 1s ease-in-out infinite" }}
-                  />
-                </p>
-              )}
-            </div>
-          </motion.div>
-        )}
-
-        {/* Chart + Highlights after done */}
-        {phase === "done" && (
-          <>
-            <motion.div
-              initial={{ y: 8 }}
-              animate={{ y: 0 }}
-              transition={{ delay: 0.2, duration: 0.4 }}
-              className="pl-9"
-            >
-              <DemoBarChart />
-            </motion.div>
-
-            <div className="flex flex-wrap gap-1.5 pl-9">
-              {["#1 Carlos M. — R$ 28.4k", "Melhor conversão: Ana L. (34%)"].map((h, i) => (
-                <span
-                  key={i}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px]"
-                  style={{ background: "rgba(139,92,246,0.08)", border: "1px solid rgba(139,92,246,0.12)", color: "rgba(255,255,255,0.5)", fontWeight: "var(--fw-medium)" }}
-                >
-                  <Dot className="h-2.5 w-2.5" style={{ color: "#a78bfa" }} />
-                  {h}
-                </span>
-              ))}
-            </div>
-          </>
-        )}
-      </div>
-
-      {/* Input mockup */}
-      <div className="px-5 pb-4">
-        <div className="flex items-center gap-2 rounded-xl px-3 py-2" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-          <span className="flex-1 text-sm" style={{ color: "rgba(255,255,255,0.2)" }}>Pergunte algo pra Eva...</span>
-          <div className="h-7 w-7 rounded-lg flex items-center justify-center" style={{ background: "rgba(139,92,246,0.5)" }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Demo chart (pure CSS, no Recharts dep) ─────────────────────
-
-const DEMO_CHART_DATA = [
-  { name: "Carlos M.", value: 28400, color: "#8b5cf6" },
-  { name: "Ana L.", value: 21800, color: "#00E37A" },
-  { name: "Rafael S.", value: 18200, color: "#f59e0b" },
-  { name: "Julia P.", value: 12600, color: "#06b6d4" },
-];
-
-function DemoBarChart() {
-  const maxValue = Math.max(...DEMO_CHART_DATA.map((d) => d.value));
-
-  return (
-    <div
-      className="rounded-xl p-3.5 mt-2"
-      style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}
-    >
-      <p className="text-[10px] uppercase tracking-wider mb-3" style={{ color: "rgba(255,255,255,0.3)", fontWeight: 600 }}>
-        Ranking — Faturamento do mês
-      </p>
-      <div className="space-y-2.5">
-        {DEMO_CHART_DATA.map((item, i) => (
-          <div key={item.name} className="flex items-center gap-2.5">
-            <span className="text-[11px] w-[72px] truncate shrink-0" style={{ color: "rgba(255,255,255,0.5)", fontWeight: 500 }}>
-              {item.name}
-            </span>
-            <div className="flex-1 h-5 rounded-md overflow-hidden" style={{ background: "rgba(255,255,255,0.03)" }}>
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${(item.value / maxValue) * 100}%` }}
-                transition={{ duration: 0.8, delay: i * 0.15, ease: "easeOut" }}
-                className="h-full rounded-md"
-                style={{ background: item.color, opacity: 0.8 }}
-              />
-            </div>
-            <span className="text-[10px] tabular-nums shrink-0" style={{ color: "rgba(255,255,255,0.4)", fontWeight: 500, minWidth: 42 }}>
-              R$ {(item.value / 1000).toFixed(1)}k
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ─── Feature pills ────────────────────────────────────────────────
-
-const FEATURES = [
-  { icon: BarChart3, label: "Gráficos gerados por IA na hora" },
-  { icon: Users, label: "Ranking e performance do time" },
-  { icon: TrendingUp, label: "Tendências e previsões" },
-  { icon: Lightbulb, label: "Insights automáticos" },
-];
-
-// ─── Fade-in ──────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// F2.10.2 (2026-05-20) — EvaAISection v3 (camada operacional, não BI)
+//
+// Redesign completo da seção "Pergunte para a EVA":
+//   - Removida narrativa de chat de BI (gráficos, ranking, tendências)
+//   - Nova tese: EVA é camada de inteligência comercial assistida
+//   - Layout 2 colunas: copy + 3 cards à esquerda, fluxo de 3 cards à direita
+//   - Light premium, sem dashboard. Sem image gen.
+// ─────────────────────────────────────────────────────────────────────────────
+import { motion } from "framer-motion";
+import {
+  ArrowRight,
+  Brain,
+  MessageSquare,
+  Workflow,
+  Check,
+  Sparkle,
+  Calendar,
+  AlertCircle,
+  BookOpen,
+} from "lucide-react";
+import { EvaPhotoAvatar } from "@/components/eva/EvaPhotoAvatar";
+import { Reveal, StaggerContainer } from "./animation/Reveal";
 
 const fadeIn = {
   initial: { y: 20 } as const,
@@ -285,154 +29,513 @@ const fadeIn = {
   transition: { duration: 0.5 },
 };
 
-// ─── Main Section ─────────────────────────────────────────────────
-
 export function EvaAISection({ onCTAClick }: { onCTAClick?: () => void }) {
   return (
-    <section id="eva" className="py-28 px-4 sm:px-6 lg:px-8 relative overflow-hidden" style={{ background: "var(--vyz-bg)" }}>
-      {/* Violet aurora spotlight from top */}
+    <section
+      id="eva"
+      className="py-24 sm:py-28 px-4 sm:px-6 lg:px-8 relative overflow-hidden"
+      style={{ background: "#FFFFFF" }}
+    >
+      {/* Ambient sutil — azul + lilás muito leve, sem cara de BI */}
       <div
         className="absolute inset-x-0 top-0 h-[500px] pointer-events-none"
         style={{
-          background: "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(139,92,246,0.14) 0%, rgba(139,92,246,0.04) 35%, transparent 70%)",
+          background:
+            "radial-gradient(ellipse 60% 45% at 50% 0%, rgba(37,99,235,0.07) 0%, transparent 70%)",
         }}
+        aria-hidden
       />
-      {/* Central violet ambient glow */}
       <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] rounded-full pointer-events-none"
-        style={{ background: "radial-gradient(ellipse, rgba(139,92,246,0.08) 0%, transparent 60%)" }}
+        className="absolute -top-10 -right-20 w-[500px] h-[400px] rounded-full pointer-events-none hidden lg:block"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(124,58,237,0.08) 0%, transparent 65%)",
+        }}
+        aria-hidden
       />
 
-      <div className="max-w-5xl mx-auto relative z-10">
-        {/* Header */}
-        <motion.div className="text-center mb-16" {...fadeIn}>
+      <div className="max-w-[1280px] mx-auto relative z-10">
+        {/* Header de seção */}
+        <motion.div className="text-center mb-12 sm:mb-16 max-w-3xl mx-auto" {...fadeIn}>
           <span
-            className="inline-flex items-center gap-1.5 text-xs rounded-full px-4 py-1.5 mb-5"
+            className="inline-flex items-center gap-2 text-[11px] sm:text-[12px] uppercase rounded-full px-3.5 py-1.5 mb-6"
             style={{
-              fontWeight: "var(--fw-semibold)",
-              letterSpacing: "0.08em",
-              color: "#a78bfa",
-              background: "rgba(139,92,246,0.1)",
-              border: "1px solid rgba(139,92,246,0.2)",
+              background: "rgba(124,58,237,0.08)",
+              border: "1px solid rgba(124,58,237,0.28)",
+              color: "#6D28D9",
+              fontWeight: 700,
+              letterSpacing: "0.15em",
             }}
           >
-            SUA ANALISTA COM IA
+            <Sparkle className="h-3 w-3" strokeWidth={2.5} />
+            EVA Comercial
           </span>
-
           <h2
-            className="font-heading mb-4"
+            className="font-satoshi mx-auto"
             style={{
-              fontWeight: "var(--fw-bold)",
-              fontSize: "clamp(1.75rem, 4.5vw, 2.75rem)",
-              lineHeight: 1.1,
-              letterSpacing: "-0.04em",
-              color: "rgba(255,255,255,0.95)",
+              fontWeight: 700,
+              fontSize: "clamp(1.95rem, 4.6vw, 2.95rem)",
+              lineHeight: 1.08,
+              letterSpacing: "-0.035em",
+              color: "#0B1220",
+              maxWidth: "820px",
             }}
           >
-            Pergunte pra{" "}
+            A EVA entende sua agência
+            <br />
             <span
-              className="bg-clip-text text-transparent"
-              style={{ backgroundImage: "linear-gradient(135deg, #a78bfa, #7c3aed)" }}
+              className="bg-gradient-to-r from-[#2563EB] via-[#4A8CE8] to-[#7C3AED] bg-clip-text"
+              style={{ color: "transparent" }}
             >
-              Eva
+              antes de sugerir qualquer coisa.
             </span>
-            . Ela responde com seus dados.
           </h2>
-
           <p
-            className="max-w-xl mx-auto"
-            style={{ fontSize: "1.0625rem", lineHeight: 1.6, color: "rgba(255,255,255,0.4)" }}
+            className="mt-5 mx-auto text-[15px] sm:text-[17px]"
+            style={{ color: "rgba(10,10,10,0.58)", lineHeight: 1.55, maxWidth: "720px" }}
           >
-            Faturamento, ranking, metas, tendências — é só perguntar.{" "}
-            <span style={{ fontWeight: "var(--fw-medium)", color: "rgba(255,255,255,0.75)" }}>
-              Sem filtro, sem relatório manual.
-            </span>
+            Cadastre serviços, ICP, tom de voz, objeções e playbooks. A EVA usa
+            esse contexto para analisar conversas e sugerir próximos passos mais
+            consistentes.
+          </p>
+          <p
+            className="mt-3.5 mx-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px]"
+            style={{
+              background: "rgba(124,58,237,0.06)",
+              border: "1px solid rgba(124,58,237,0.22)",
+              color: "#6D28D9",
+              fontWeight: 500,
+            }}
+          >
+            <Sparkle className="h-3 w-3" strokeWidth={2.3} />
+            A EVA sugere. Seu time aprova.
           </p>
         </motion.div>
 
-        {/* Two-column layout */}
-        <div className="grid lg:grid-cols-2 gap-10 items-center">
-          {/* Left: Chat mockup */}
-          <motion.div
-            initial={{ x: -20 }}
-            whileInView={{ x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
-            <ChatMockup onCTAClick={onCTAClick} />
-          </motion.div>
-
-          {/* Right: Features + CTA */}
-          <motion.div
-            initial={{ x: 20 }}
-            whileInView={{ x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="space-y-8"
-          >
-            {/* Feature list */}
-            <div className="space-y-4">
-              {FEATURES.map(({ icon: Icon, label }, i) => (
-                <motion.div
-                  key={label}
-                  initial={{ y: 10 }}
-                  whileInView={{ y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.3 + i * 0.08 }}
-                  className="flex items-center gap-4"
-                >
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                    style={{ background: "rgba(139,92,246,0.1)", border: "1px solid rgba(139,92,246,0.15)" }}
+        {/* Body: 2 colunas desktop / 1 col mobile. Em mobile mock vai PRIMEIRO
+            (order-1) e pilares depois (order-2) — segue briefing. */}
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] gap-10 lg:gap-14 items-start">
+          {/* COL ESQUERDA — pilares (mobile order-2, desktop order-1) */}
+          <div className="space-y-8 order-2 lg:order-1">
+            <Reveal>
+              <div className="flex items-center gap-4 pb-2">
+                <EvaPhotoAvatar size="md" ring="subtle" />
+                <div>
+                  <p
+                    className="text-[10.5px] uppercase mb-1"
+                    style={{
+                      letterSpacing: "0.12em",
+                      color: "#6D28D9",
+                      fontWeight: 700,
+                    }}
                   >
-                    <Icon className="h-4.5 w-4.5" style={{ color: "#a78bfa" }} />
-                  </div>
-                  <span className="text-sm" style={{ fontWeight: "var(--fw-medium)", color: "rgba(255,255,255,0.7)" }}>
-                    {label}
-                  </span>
-                </motion.div>
-              ))}
-            </div>
+                    Camada comercial assistida
+                  </p>
+                  <p
+                    className="text-[15px]"
+                    style={{ color: "#0B1220", fontWeight: 600 }}
+                  >
+                    Mais que um chat, uma operação inteira.
+                  </p>
+                </div>
+              </div>
+            </Reveal>
 
-            {/* Value prop */}
-            <div
-              className="rounded-xl p-4"
-              style={{ background: "rgba(139,92,246,0.05)", border: "1px solid rgba(139,92,246,0.1)" }}
+            <StaggerContainer
+              className="space-y-3.5"
+              stagger={0.08}
+              duration={0.5}
             >
-              <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>
-                Disponível nos planos{" "}
-                <span style={{ fontWeight: "var(--fw-semibold)", color: "#a78bfa" }}>Plus</span> e{" "}
-                <span style={{ fontWeight: "var(--fw-semibold)", color: "#a78bfa" }}>Pro</span>.
-                {" "}Consultas ilimitadas no Pro — pergunte sobre faturamento, meta, ranking, produto e tendência.
-              </p>
-            </div>
+              <PillarCard
+                icon={MessageSquare}
+                title="Analisa conversas"
+                body="Identifica intenção, fit, urgência e objeções em cada lead."
+              />
+              <PillarCard
+                icon={Workflow}
+                title="Sugere próximos passos"
+                body="Resposta, follow-up, criação de oportunidade e handoff."
+              />
+              <PillarCard
+                icon={Brain}
+                title="Usa o contexto da agência"
+                body="Serviços, ICP, tom de voz, objeções e playbooks cadastrados."
+              />
+              <PillarCard
+                icon={BookOpen}
+                title="Aprende com materiais aprovados"
+                body="Você adiciona o material. Nada entra no contexto sem aprovação."
+              />
+            </StaggerContainer>
 
             {/* CTA */}
             {onCTAClick && (
-              <button
-                onClick={onCTAClick}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm text-white transition-all"
-                style={{
-                  background: "linear-gradient(135deg, #8b5cf6, #7c3aed)",
-                  fontWeight: "var(--fw-semibold)",
-                  boxShadow: "0 4px 20px rgba(139,92,246,0.25)",
-                }}
-              >
-                Experimentar a Eva
-                <ArrowRight className="h-4 w-4" />
-              </button>
+              <Reveal delay={0.1}>
+                <button
+                  onClick={onCTAClick}
+                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl text-[14px] text-white transition-all hover:brightness-110"
+                  style={{
+                    background: "linear-gradient(135deg, #2563EB, #4A8CE8)",
+                    fontWeight: 600,
+                    boxShadow: "0 8px 22px -4px rgba(37,99,235,0.45)",
+                  }}
+                >
+                  Ver a EVA em ação
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </Reveal>
             )}
-          </motion.div>
+          </div>
+
+          {/* COL DIREITA — fluxo de 3 cards (mobile order-1, desktop order-2) */}
+          <Reveal delay={0.15} duration={0.7} className="order-1 lg:order-2">
+            <FlowMock />
+          </Reveal>
         </div>
       </div>
-
-      {/* CSS for cursor blink */}
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0; }
-        }
-      `}</style>
     </section>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PillarCard — card pequeno na coluna esquerda
+// ─────────────────────────────────────────────────────────────────────────────
+
+function PillarCard({
+  icon: Icon,
+  title,
+  body,
+}: {
+  icon: typeof Brain;
+  title: string;
+  body: string;
+}) {
+  return (
+    <div
+      className="rounded-2xl p-5 sm:p-6 bg-white hover-lift"
+      style={{
+        border: "1px solid #D9E2EC",
+        boxShadow:
+          "0 1px 2px rgba(15,23,42,0.04), 0 10px 30px rgba(15,23,42,0.045)",
+      }}
+    >
+      <div className="flex items-start gap-3.5">
+        <div
+          className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
+          style={{
+            background: "rgba(37,99,235,0.08)",
+            border: "1px solid rgba(37,99,235,0.18)",
+          }}
+        >
+          <Icon className="h-4.5 w-4.5 text-[#2563EB]" strokeWidth={2.1} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p
+            className="text-[15.5px] sm:text-[16px] mb-1.5"
+            style={{
+              color: "#0B1220",
+              fontWeight: 600,
+              letterSpacing: "-0.012em",
+              lineHeight: 1.3,
+            }}
+          >
+            {title}
+          </p>
+          <p
+            className="text-[13.5px] sm:text-[14px]"
+            style={{ color: "rgba(10,10,10,0.55)", lineHeight: 1.5 }}
+          >
+            {body}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FlowMock — 3 cards em sequência: Contexto → Análise → Ação
+// ─────────────────────────────────────────────────────────────────────────────
+
+function FlowMock() {
+  return (
+    <div className="space-y-3">
+      <FlowCard
+        index={1}
+        accent="#2563EB"
+        eyebrow="Contexto da EVA"
+        title="Memória comercial carregada"
+        items={[
+          { label: "Serviços cadastrados", value: "12 ativos" },
+          { label: "ICP da agência", value: "definido" },
+          { label: "Tom de voz", value: "Direto, consultivo" },
+          { label: "Regras de handoff", value: "8 cadastradas" },
+        ]}
+      />
+
+      <Connector />
+
+      <FlowCard
+        index={2}
+        accent="#7C3AED"
+        eyebrow="Conversa analisada"
+        title="Carla R. · Meta Ads"
+        pills={[
+          { label: "Intenção: preço", tone: "blue" },
+          { label: "Urgência: alta", tone: "amber" },
+          { label: "Fit: bom", tone: "green" },
+          { label: "Falta: orçamento", tone: "neutral" },
+        ]}
+        quote="“Oi, vi o anúncio e queria entender os planos.”"
+      />
+
+      <Connector />
+
+      <FlowCard
+        index={3}
+        accent="#10B981"
+        eyebrow="Próxima ação sugerida"
+        title="3 sugestões assistidas"
+        actions={[
+          { icon: MessageSquare, label: "Responder com pergunta de qualificação", primary: true },
+          { icon: Workflow, label: "Criar oportunidade no pipeline" },
+          { icon: Calendar, label: "Agendar demo se houver fit" },
+        ]}
+      />
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FlowCard — card "do produto" pra cada etapa
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface FlowCardProps {
+  index: number;
+  accent: string;
+  eyebrow: string;
+  title: string;
+  items?: { label: string; value: string }[];
+  pills?: { label: string; tone: "blue" | "amber" | "green" | "neutral" }[];
+  quote?: string;
+  actions?: { icon: typeof Brain; label: string; primary?: boolean }[];
+}
+
+function FlowCard({
+  index,
+  accent,
+  eyebrow,
+  title,
+  items,
+  pills,
+  quote,
+  actions,
+}: FlowCardProps) {
+  return (
+    <div
+      className="rounded-2xl p-5 sm:p-6 bg-white relative overflow-hidden"
+      style={{
+        border: "1px solid #D9E2EC",
+        boxShadow:
+          "0 1px 2px rgba(15,23,42,0.04), 0 14px 36px -10px rgba(15,23,42,0.08)",
+      }}
+    >
+      {/* Accent strip à esquerda */}
+      <div
+        className="absolute top-0 left-0 bottom-0 w-[3px]"
+        style={{ background: accent }}
+        aria-hidden
+      />
+
+      <div className="flex items-start gap-4">
+        {/* Número */}
+        <div
+          className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0 text-[13px] font-bold"
+          style={{
+            background: `${accent}14`,
+            border: `1px solid ${accent}40`,
+            color: accent,
+          }}
+        >
+          {index}
+        </div>
+
+        {/* Conteúdo */}
+        <div className="flex-1 min-w-0">
+          <p
+            className="text-[10.5px] uppercase mb-1"
+            style={{
+              letterSpacing: "0.12em",
+              color: accent,
+              fontWeight: 700,
+            }}
+          >
+            {eyebrow}
+          </p>
+          <p
+            className="text-[15px] sm:text-[16px] mb-3"
+            style={{
+              color: "#0B1220",
+              fontWeight: 600,
+              letterSpacing: "-0.012em",
+              lineHeight: 1.3,
+            }}
+          >
+            {title}
+          </p>
+
+          {/* Items (contexto cadastrado) */}
+          {items && (
+            <ul className="space-y-2 mb-1">
+              {items.map((it) => (
+                <li
+                  key={it.label}
+                  className="flex items-center justify-between text-[12.5px]"
+                >
+                  <span
+                    className="inline-flex items-center gap-1.5"
+                    style={{ color: "rgba(10,10,10,0.55)" }}
+                  >
+                    <Check className="h-3 w-3" strokeWidth={3} style={{ color: accent }} />
+                    {it.label}
+                  </span>
+                  <span style={{ color: "#0B1220", fontWeight: 600 }}>
+                    {it.value}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {/* Quote (mensagem analisada) */}
+          {quote && (
+            <div
+              className="rounded-lg px-3 py-2.5 mb-3 text-[13px]"
+              style={{
+                background: "rgba(10,10,10,0.04)",
+                border: "1px solid rgba(10,10,10,0.06)",
+                color: "rgba(10,10,10,0.65)",
+                fontStyle: "italic",
+              }}
+            >
+              {quote}
+            </div>
+          )}
+
+          {/* Pills (análise EVA) */}
+          {pills && (
+            <div className="flex flex-wrap gap-1.5">
+              {pills.map((p) => (
+                <AnalysisPill key={p.label} tone={p.tone}>
+                  {p.label}
+                </AnalysisPill>
+              ))}
+            </div>
+          )}
+
+          {/* Actions (próximos passos) */}
+          {actions && (
+            <ul className="space-y-2">
+              {actions.map(({ icon: ActionIcon, label, primary }) => (
+                <li
+                  key={label}
+                  className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 transition-all"
+                  style={{
+                    background: primary ? "rgba(37,99,235,0.06)" : "rgba(10,10,10,0.03)",
+                    border: `1px solid ${primary ? "rgba(37,99,235,0.22)" : "rgba(10,10,10,0.06)"}`,
+                  }}
+                >
+                  <ActionIcon
+                    className="h-3.5 w-3.5 shrink-0"
+                    strokeWidth={2.2}
+                    style={{ color: primary ? "#2563EB" : "rgba(10,10,10,0.45)" }}
+                  />
+                  <span
+                    className="text-[13px] truncate"
+                    style={{
+                      color: primary ? "#1D4ED8" : "rgba(10,10,10,0.65)",
+                      fontWeight: primary ? 600 : 500,
+                    }}
+                  >
+                    {label}
+                  </span>
+                  {primary && (
+                    <span
+                      className="ml-auto text-[10px] uppercase shrink-0"
+                      style={{
+                        color: "#2563EB",
+                        fontWeight: 700,
+                        letterSpacing: "0.08em",
+                      }}
+                    >
+                      Sugerido
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Connector — linha vertical conectando os 3 FlowCards
+// ─────────────────────────────────────────────────────────────────────────────
+
+function Connector() {
+  return (
+    <div className="flex justify-center" aria-hidden>
+      <div
+        className="h-6 w-[2px]"
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(37,99,235,0.20), rgba(124,58,237,0.30), rgba(16,185,129,0.20))",
+        }}
+      />
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AnalysisPill — pill colorida pra análise da EVA
+// ─────────────────────────────────────────────────────────────────────────────
+
+function AnalysisPill({
+  children,
+  tone,
+}: {
+  children: React.ReactNode;
+  tone: "blue" | "amber" | "green" | "neutral";
+}) {
+  const map = {
+    blue: { bg: "rgba(37,99,235,0.08)", border: "rgba(37,99,235,0.22)", text: "#1D4ED8" },
+    amber: { bg: "rgba(245,158,11,0.10)", border: "rgba(245,158,11,0.28)", text: "#B45309" },
+    green: { bg: "rgba(16,185,129,0.10)", border: "rgba(16,185,129,0.28)", text: "#047857" },
+    neutral: {
+      bg: "rgba(148,163,184,0.10)",
+      border: "rgba(148,163,184,0.28)",
+      text: "rgba(10,10,10,0.55)",
+    },
+  };
+  const c = map[tone];
+  return (
+    <span
+      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px]"
+      style={{
+        background: c.bg,
+        border: `1px solid ${c.border}`,
+        color: c.text,
+        fontWeight: 600,
+        whiteSpace: "nowrap",
+      }}
+    >
+      {tone === "amber" && (
+        <AlertCircle className="h-2.5 w-2.5" strokeWidth={2.5} />
+      )}
+      {children}
+    </span>
   );
 }

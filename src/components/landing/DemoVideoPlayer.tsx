@@ -10,7 +10,7 @@ const fadeInUp = {
     transition: { duration: 0.5 },
 };
 
-const PILLS = ["CRM Visual", "Gamificação", "Ligações", "Integrações"];
+const PILLS = ["Inbox Comercial", "Pipeline", "EVA assistida", "Integrações"];
 
 const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -99,25 +99,25 @@ export const DemoVideoPlayer = () => {
     };
 
     return (
-        <section id="demo" className="py-28 px-4 sm:px-6 lg:px-8" style={{ background: "var(--vyz-bg)" }}>
+        <section id="demo" className="py-28 px-4 sm:px-6 lg:px-8" style={{ background: "#FFFFFF" }}>
             <div className="max-w-4xl mx-auto">
                 <motion.div {...fadeInUp} className="text-center mb-12">
                     <span
-                        className="inline-block text-xs text-emerald-400 rounded-full px-4 py-1.5 mb-5"
-                        style={{ letterSpacing: "0.08em", fontWeight: 600, background: "rgba(0,227,122,0.1)", border: "1px solid rgba(0,227,122,0.2)" }}
+                        className="inline-block text-xs text-blue-700 rounded-full px-4 py-1.5 mb-5"
+                        style={{ letterSpacing: "0.08em", fontWeight: 600, background: "rgba(21,86,192,0.1)", border: "1px solid rgba(21,86,192,0.2)" }}
                     >
                         VEJA EM AÇÃO
                     </span>
 
                     <h2
-                        className="font-heading mb-4"
-                        style={{ fontWeight: "var(--fw-bold)", fontSize: "clamp(1.75rem, 4.5vw, 2.75rem)", lineHeight: 1.1, letterSpacing: "-0.04em", color: "rgba(255,255,255,0.95)" }}
+                        className="font-satoshi mb-4"
+                        style={{ fontWeight: 700, fontSize: "clamp(1.75rem, 4.5vw, 2.75rem)", lineHeight: 1.1, letterSpacing: "-0.04em", color: "rgba(10,10,10,0.92)" }}
                     >
-                        Veja o Vyzon em <span className="text-emerald-400">ação</span>
+                        Veja o Vyzon em <span className="text-blue-700">ação</span>
                     </h2>
 
-                    <p className="max-w-lg mx-auto" style={{ fontSize: "1.0625rem", color: "rgba(255,255,255,0.4)" }}>
-                        Interface simples, resultados extraordinários.
+                    <p className="max-w-lg mx-auto" style={{ fontSize: "1.0625rem", color: "rgba(10,10,10,0.48)" }}>
+                        Conversa, EVA e pipeline conectados em uma central simples.
                     </p>
                 </motion.div>
 
@@ -157,7 +157,7 @@ export const DemoVideoPlayer = () => {
                                             whileHover={{ scale: 1.08 }}
                                             whileTap={{ scale: 0.95 }}
                                             className="w-20 h-20 rounded-full flex items-center justify-center"
-                                            style={{ background: "linear-gradient(135deg, #00E37A, #00B289)", boxShadow: "0 0 60px rgba(0,227,122,0.4), 0 8px 32px rgba(0,0,0,0.4)" }}
+                                            style={{ background: "linear-gradient(135deg, #1556C0, #0E3E92)", boxShadow: "0 0 60px rgba(21,86,192,0.4), 0 8px 32px rgba(0,0,0,0.4)" }}
                                         >
                                             <Play className="h-8 w-8 text-white ml-1" fill="currentColor" />
                                         </motion.div>
@@ -178,7 +178,7 @@ export const DemoVideoPlayer = () => {
                                     <div
                                         ref={progressFillRef}
                                         className="absolute top-0 left-0 h-full rounded-full"
-                                        style={{ width: "0%", background: "linear-gradient(90deg, #00E37A, #33FF9E)" }}
+                                        style={{ width: "0%", background: "linear-gradient(90deg, #1556C0, #2E78E0)" }}
                                     />
                                     <div
                                         ref={progressThumbRef}
@@ -226,7 +226,7 @@ export const DemoVideoPlayer = () => {
                             <span
                                 key={t}
                                 className="text-xs px-3 py-1.5 rounded-full"
-                                style={{ fontWeight: 500, color: "rgba(255,255,255,0.45)", border: "1px solid rgba(255,255,255,0.1)" }}
+                                style={{ fontWeight: 500, color: "rgba(10,10,10,0.52)", border: "1px solid rgba(10,10,10,0.1)" }}
                             >
                                 {t}
                             </span>

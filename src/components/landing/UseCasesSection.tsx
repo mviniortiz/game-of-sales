@@ -1,255 +1,269 @@
-import { motion } from "framer-motion";
-import { ArrowRight, Rocket, Megaphone, Factory, Users, Calendar } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+    BarChart3,
+    Users,
+    Building2,
+    Check,
+    Workflow,
+    Clock,
+    Target,
+    MessageCircle,
+    Calendar,
+    Sparkle,
+    Brain,
+    LineChart,
+} from "lucide-react";
 
-type SegmentLink =
-    | { kind: "page"; label: string; href: string }
-    | { kind: "demo"; label: string };
+// ─────────────────────────────────────────────────────────────────────────────
+// F2.10 (2026-05-19) — UseCasesSection redesenhada.
+// 3 personas (Gestor / Vendedor / Agência) com cards premium + mock CSS por
+// tab. Foco no novo posicionamento de agência. SEM image generation —
+// mocks são 100% HTML/CSS.
+// ─────────────────────────────────────────────────────────────────────────────
 
-type Segment = {
-    icon: LucideIcon;
+type IconCmp = React.ComponentType<{ className?: string; strokeWidth?: number }>;
+
+interface Case {
+    icon: IconCmp;
     tag: string;
     title: string;
     description: string;
-    bullets: string[];
-    link: SegmentLink;
-};
+    cards: { icon: IconCmp; label: string }[];
+}
 
-const SEGMENTS: readonly Segment[] = [
+const CASES: readonly Case[] = [
     {
-        icon: Rocket,
-        tag: "Infoprodutores e mentorias",
-        title: "Mais previsibilidade pro time de closers",
+        icon: BarChart3,
+        tag: "Gestor",
+        title: "Visibilidade sem cobrar no grupo.",
         description:
-            "Controle closers, leads, follow-ups e vendas de produtos digitais com uma rotina comercial mais previsível.",
-        bullets: [
-            "Pipeline por funil de aquisição",
-            "Vendas do checkout caindo direto no painel",
-            "Ranking diário pra manter ritmo",
+            "Veja prioridades, oportunidades paradas, gaps de contexto e performance comercial sem cobrar no grupo.",
+        cards: [
+            { icon: Workflow, label: "Prioridades do dia" },
+            { icon: Clock, label: "Oportunidades paradas" },
+            { icon: Target, label: "Performance comercial" },
         ],
-        link: { kind: "page", label: "Ver aplicação", href: "/para-infoprodutores" },
-    },
-    {
-        icon: Megaphone,
-        tag: "Agências e coprodutoras",
-        title: "Visão de várias operações no mesmo lugar",
-        description:
-            "Acompanhe múltiplas operações, campanhas e times comerciais com metas, ranking e pipeline em tempo real.",
-        bullets: [
-            "Metas por equipe e por operação",
-            "Ranking consolidado e por canal",
-            "Histórico de deal pra cada cliente",
-        ],
-        link: { kind: "demo", label: "Falar com a gente" },
-    },
-    {
-        icon: Factory,
-        tag: "Indústrias e distribuidoras",
-        title: "Visibilidade da carteira e do representante",
-        description:
-            "Dê mais visibilidade para vendedores, representantes, carteiras e oportunidades B2B.",
-        bullets: [
-            "Carteira de cliente por vendedor",
-            "Funil B2B com etapas customizáveis",
-            "Follow-up programado por oportunidade",
-        ],
-        link: { kind: "demo", label: "Falar com a gente" },
     },
     {
         icon: Users,
-        tag: "Times SDR/Closer B2B",
-        title: "Prospecção, qualificação e fechamento conectados",
+        tag: "Vendedor",
+        title: "Próximo passo claro em cada conversa.",
         description:
-            "Organize prospecção, qualificação, oportunidades e performance em um fluxo simples para o time usar.",
-        bullets: [
-            "Pipeline SDR → Closer integrado",
-            "WhatsApp, calls e tarefas no mesmo deal",
-            "Painel de show rate e taxa de conversão",
+            "Abra a conversa certa, veja o resumo da EVA e saiba o próximo passo antes de responder.",
+        cards: [
+            { icon: Sparkle, label: "Resumo da EVA" },
+            { icon: MessageCircle, label: "Conversa certa" },
+            { icon: Calendar, label: "Próximo passo" },
         ],
-        link: { kind: "page", label: "Ver aplicação", href: "/para-saas-b2b" },
     },
-];
+    {
+        icon: Building2,
+        tag: "Agência",
+        title: "Conversa vira pipeline acompanhado.",
+        description:
+            "Padronize atendimento, reduza lead perdido e transforme conversa em pipeline acompanhado.",
+        cards: [
+            { icon: BarChart3, label: "Central de Comando" },
+            { icon: Brain, label: "Memória Comercial" },
+            { icon: LineChart, label: "Pipeline acompanhado" },
+        ],
+    },
+] as const;
 
+// ─── UseCasesSection ─────────────────────────────────────────────────────────
 export const UseCasesSection = () => {
+    const [active, setActive] = useState(0);
+
     return (
         <section
-            className="relative py-24 sm:py-28 px-4 sm:px-6 lg:px-8 overflow-hidden"
-            style={{ background: "var(--vyz-bg)" }}
-            aria-labelledby="use-cases-title"
+            className="relative py-28 sm:py-32 px-4 sm:px-6 lg:px-8 overflow-hidden"
+            style={{ background: "#F8FAFC" }}
         >
+            {/* Glow azul no topo */}
             <div
                 className="absolute inset-x-0 top-0 h-[400px] pointer-events-none"
-                aria-hidden="true"
                 style={{
-                    background: "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(0,227,122,0.08) 0%, transparent 70%)",
+                    background:
+                        "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(37,99,235,0.07) 0%, transparent 70%)",
                 }}
+                aria-hidden
             />
-
-            <div className="relative max-w-6xl mx-auto">
+            <div className="relative max-w-5xl mx-auto">
+                {/* Header */}
                 <motion.div
                     className="text-center mb-12 sm:mb-14"
-                    initial={{ y: 20, opacity: 0 }}
-                    whileInView={{ y: 0, opacity: 1 }}
+                    initial={{ y: 20 }}
+                    whileInView={{ y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5 }}
                 >
                     <span
-                        className="inline-block text-xs text-emerald-400 rounded-full px-4 py-1.5 mb-5"
+                        className="inline-flex items-center text-[10.5px] sm:text-[11px] uppercase rounded-full px-3 py-1 mb-5"
                         style={{
-                            fontWeight: 600,
-                            letterSpacing: "0.08em",
-                            background: "rgba(0,227,122,0.1)",
-                            border: "1px solid rgba(0,227,122,0.2)",
-                            textTransform: "uppercase",
+                            background: "rgba(37,99,235,0.08)",
+                            border: "1px solid rgba(37,99,235,0.22)",
+                            color: "#1D4ED8",
+                            fontWeight: 700,
+                            letterSpacing: "0.15em",
                         }}
                     >
                         Para quem é
                     </span>
                     <h2
-                        id="use-cases-title"
-                        className="font-heading mb-4"
+                        className="font-satoshi mb-4 mx-auto"
                         style={{
                             fontWeight: 700,
-                            fontSize: "clamp(1.75rem, 4.5vw, 2.75rem)",
+                            fontSize: "clamp(1.85rem, 4.5vw, 2.75rem)",
                             lineHeight: 1.1,
                             letterSpacing: "-0.04em",
-                            color: "rgba(255,255,255,0.95)",
+                            color: "#0B1220",
+                            maxWidth: "720px",
                         }}
                     >
-                        Feito para times comerciais{" "}
-                        <span className="text-emerald-400">que vivem de meta</span>
+                        Cada pessoa enxerga{" "}
+                        <span style={{ color: "#1D4ED8" }}>o que precisa fazer.</span>
                     </h2>
                     <p
-                        className="max-w-2xl mx-auto text-[15px] sm:text-base"
-                        style={{ color: "rgba(255,255,255,0.55)", lineHeight: 1.6 }}
+                        className="max-w-xl mx-auto text-[15px] sm:text-[16px]"
+                        style={{ color: "rgba(10,10,10,0.55)", lineHeight: 1.55 }}
                     >
-                        A Vyzon nasceu pra resolver adesão ao CRM, gestão de meta e ritmo comercial. Times de 3 a 30
-                        vendedores, SDRs, closers ou representantes que vivem de pipeline, follow-up e número no fim do mês.
+                        O gestor vê gargalos. O vendedor vê próximos passos. A agência
+                        ganha previsibilidade.
                     </p>
                 </motion.div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                    {SEGMENTS.map((seg, i) => {
-                        const Icon = seg.icon;
-                        const delayClass =
-                            i === 0 ? "" : i === 1 ? "landing-delay-100" : i === 2 ? "landing-delay-200" : "landing-delay-300";
-                        const isPage = seg.link.kind === "page";
-                        const href = isPage ? seg.link.href : "#agendar-demo";
-                        const ariaLabel = isPage
-                            ? `Ver aplicação para ${seg.tag}`
-                            : `Agendar demonstração — ${seg.tag} (em breve)`;
-                        const LinkIcon = isPage ? ArrowRight : Calendar;
-
-                        return (
-                            <a
-                                key={seg.tag}
-                                href={href}
-                                aria-label={ariaLabel}
-                                className={`group block rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 landing-fade-in-up ${delayClass}`}
-                            >
-                                <div
-                                    className="h-full rounded-2xl p-6 sm:p-7 flex flex-col gap-4 transition-colors group-hover:bg-white/[0.04]"
+                {/* Tab selector */}
+                <div className="flex justify-center mb-10 sm:mb-12 px-2">
+                    <div
+                        className="inline-flex gap-1 p-1 rounded-xl"
+                        style={{
+                            background: "#FFFFFF",
+                            border: "1px solid #D9E2EC",
+                            boxShadow: "0 1px 2px rgba(15,23,42,0.04)",
+                        }}
+                    >
+                        {CASES.map((c, i) => {
+                            const Icon = c.icon;
+                            const isActive = active === i;
+                            return (
+                                <button
+                                    key={c.tag}
+                                    type="button"
+                                    onClick={() => setActive(i)}
+                                    className="relative flex items-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-2.5 rounded-lg text-[13px] sm:text-[14px] whitespace-nowrap transition-colors"
                                     style={{
-                                        background: "rgba(255,255,255,0.025)",
-                                        border: "1px solid rgba(255,255,255,0.07)",
-                                        boxShadow: "0 0 0 1px rgba(255,255,255,0.04), 0 12px 28px rgba(0,0,0,0.2)",
+                                        fontWeight: 600,
+                                        color: isActive ? "#FFFFFF" : "#475569",
                                     }}
                                 >
-                                    <div className="flex items-start justify-between gap-3">
-                                        <div
-                                            className="flex h-11 w-11 items-center justify-center rounded-xl"
+                                    {isActive && (
+                                        <motion.div
+                                            layoutId="usecase-pill"
+                                            className="absolute inset-0 rounded-lg"
                                             style={{
-                                                background: "rgba(0,227,122,0.10)",
-                                                border: "1px solid rgba(0,227,122,0.22)",
+                                                background:
+                                                    "linear-gradient(135deg, #2563EB, #4A8CE8)",
+                                                boxShadow:
+                                                    "0 4px 12px -2px rgba(37,99,235,0.35)",
                                             }}
-                                            aria-hidden="true"
+                                            transition={{
+                                                type: "spring",
+                                                bounce: 0.2,
+                                                duration: 0.4,
+                                            }}
+                                        />
+                                    )}
+                                    <Icon
+                                        className="relative h-3.5 w-3.5 sm:h-4 sm:w-4"
+                                        strokeWidth={2.1}
+                                    />
+                                    <span className="relative">{c.tag}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Content */}
+                <AnimatePresence mode="wait">
+                    {CASES.map((c, i) => {
+                        if (i !== active) return null;
+                        return (
+                            <motion.div
+                                key={c.tag}
+                                className="max-w-3xl mx-auto"
+                                initial={{ y: 12, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                exit={{ y: -12, opacity: 0 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <h3
+                                    className="font-satoshi text-center mb-4"
+                                    style={{
+                                        fontWeight: 700,
+                                        fontSize: "clamp(1.4rem, 3.5vw, 1.9rem)",
+                                        lineHeight: 1.18,
+                                        letterSpacing: "-0.028em",
+                                        color: "#0B1220",
+                                    }}
+                                >
+                                    {c.title}
+                                </h3>
+                                <p
+                                    className="text-center mb-9 leading-relaxed mx-auto max-w-lg text-[15px]"
+                                    style={{ color: "rgba(10,10,10,0.55)" }}
+                                >
+                                    {c.description}
+                                </p>
+
+                                <ul className="grid sm:grid-cols-3 gap-4">
+                                    {c.cards.map(({ icon: CardIcon, label }) => (
+                                        <li
+                                            key={label}
+                                            className="rounded-2xl p-5 bg-white hover-lift"
+                                            style={{
+                                                border: "1px solid #D9E2EC",
+                                                boxShadow:
+                                                    "0 1px 2px rgba(15,23,42,0.04), 0 10px 30px rgba(15,23,42,0.045)",
+                                            }}
                                         >
-                                            <Icon className="h-5 w-5 text-emerald-400" strokeWidth={1.9} />
-                                        </div>
-                                        {!isPage && (
-                                            <span
-                                                className="px-2 py-0.5 rounded text-[10px] uppercase"
+                                            <div
+                                                className="h-10 w-10 rounded-xl flex items-center justify-center mb-3"
                                                 style={{
-                                                    background: "rgba(255,255,255,0.06)",
-                                                    color: "rgba(255,255,255,0.55)",
-                                                    fontWeight: 700,
-                                                    letterSpacing: "0.08em",
-                                                    border: "1px solid rgba(255,255,255,0.08)",
+                                                    background: "rgba(37,99,235,0.08)",
+                                                    border: "1px solid rgba(37,99,235,0.16)",
                                                 }}
                                             >
-                                                Em breve
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    <div>
-                                        <p
-                                            className="text-[11px] mb-2"
-                                            style={{
-                                                fontWeight: 600,
-                                                letterSpacing: "0.10em",
-                                                textTransform: "uppercase",
-                                                color: "rgba(0,227,122,0.85)",
-                                            }}
-                                        >
-                                            {seg.tag}
-                                        </p>
-                                        <h3
-                                            className="font-heading text-[1.1rem] sm:text-[1.2rem]"
-                                            style={{
-                                                fontWeight: 700,
-                                                lineHeight: 1.25,
-                                                letterSpacing: "-0.02em",
-                                                color: "rgba(255,255,255,0.95)",
-                                            }}
-                                        >
-                                            {seg.title}
-                                        </h3>
-                                    </div>
-
-                                    <p
-                                        className="text-[14px] leading-relaxed"
-                                        style={{ color: "rgba(255,255,255,0.62)" }}
-                                    >
-                                        {seg.description}
-                                    </p>
-
-                                    <ul className="flex flex-col gap-2 mt-1">
-                                        {seg.bullets.map((b) => (
-                                            <li
-                                                key={b}
-                                                className="flex items-start gap-2.5 text-[13.5px]"
-                                                style={{ color: "rgba(255,255,255,0.55)" }}
-                                            >
-                                                <span
-                                                    className="mt-1 w-1.5 h-1.5 rounded-full flex-shrink-0"
-                                                    style={{ background: "rgba(0,227,122,0.7)" }}
-                                                    aria-hidden="true"
+                                                <CardIcon
+                                                    className="h-4.5 w-4.5 text-[#2563EB]"
+                                                    strokeWidth={2.1}
                                                 />
-                                                <span>{b}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-
-                                    <span
-                                        className="mt-auto pt-2 inline-flex items-center gap-1.5 text-[13px]"
-                                        style={{
-                                            fontWeight: 600,
-                                            color: isPage ? "rgba(0,227,122,0.9)" : "rgba(255,255,255,0.7)",
-                                        }}
-                                    >
-                                        {seg.link.label}
-                                        <LinkIcon
-                                            className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5"
-                                            strokeWidth={2}
-                                            aria-hidden="true"
-                                        />
-                                    </span>
-                                </div>
-                            </a>
+                                            </div>
+                                            <p
+                                                className="text-[14px] sm:text-[14.5px]"
+                                                style={{
+                                                    fontWeight: 600,
+                                                    color: "#0B1220",
+                                                    letterSpacing: "-0.01em",
+                                                }}
+                                            >
+                                                {label}
+                                            </p>
+                                            <div
+                                                className="mt-2.5 flex items-center gap-1.5 text-[11.5px]"
+                                                style={{ color: "#059669", fontWeight: 600 }}
+                                            >
+                                                <Check className="h-3 w-3" strokeWidth={3} />
+                                                Disponível
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </motion.div>
                         );
                     })}
-                </div>
+                </AnimatePresence>
             </div>
         </section>
     );
