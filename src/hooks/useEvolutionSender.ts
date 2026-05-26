@@ -1,0 +1,261 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// F4W.0.1 (2026-05-20) — useEvolutionSender
+//
+// Hook MINIMALISTA: faz só o necessário pra Inbox DB-first conviver com o
+// envio via Evolution. Não busca chats, não busca mensagens, não inicia
+// polling/dbFallback, não toca em selectedChatMessages.
+//
+// O hook completo `useEvolutionIntegration` continua existindo intocado pra
+// telas legadas (Pulse) e pra eventual rollback de F4W.0 — ver INBOX_DB_SOURCE_ENABLED.
+//
+// API exposta:
+//   - connected:        status booleano (1 check inicial; sem polling agressivo)
+//   - connecting:       enquanto faz a primeira checagem
+//   - error:            última falha de envio/status
+//   - sendMessage(jid, text)
+//   - sendAudioMessage(jid, base64)
+//   - sendMediaMessage(jid, base64, mimetype, opts?)
+//   - getAudioMedia(messageId)
+//   - refreshStatus():  re-checa connected sob demanda (ex: depois de erro)
+//
+// Padrão de chamada: idêntico ao `useEvolutionIntegration` pra essas funções,
+// então Inbox.tsx só troca o nome do hook.
+// ─────────────────────────────────────────────────────────────────────────────
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useTenant } from "@/contexts/TenantContext";
+import { supabase } from "@/integrations/supabase/client";
+
+type ProxyAction =
+    | "status"
+    | "send"
+    | "sendAudio"
+    | "sendMedia"
+    | "getMedia";
+
+interface AudioMediaResult {
+    base64?: string;
+    mimetype?: string;
+}
+
+interface SendMediaOpts {
+    caption?: string;
+    fileName?: string;
+}
+
+export interface UseEvolutionSender {
+    connected: boolean;
+    connecting: boolean;
+    error: string | null;
+    /** Última vez que o status da Evolution foi verificado (mount, refresh
+     *  manual, focus). null antes da primeira checagem. */
+    lastStatusCheckedAt: Date | null;
+    sendMessage: (chatJid: string, text: string) => Promise<void>;
+    sendAudioMessage: (chatJid: string, base64: string) => Promise<void>;
+    sendMediaMessage: (
+        chatJid: string,
+        base64: string,
+        mimetype: string,
+        opts?: SendMediaOpts,
+    ) => Promise<void>;
+    getAudioMedia: (messageId: string) => Promise<string | null>;
+    refreshStatus: () => Promise<boolean>;
+    clearError: () => void;
+}
+
+/** Janela mínima entre refreshs on-focus pra evitar abuso (60s) */
+const FOCUS_REFRESH_THROTTLE_MS = 60_000;
+
+export function useEvolutionSender(): UseEvolutionSender {
+    const { user } = useAuth();
+    const { activeCompanyId } = useTenant();
+    const userId = user?.id;
+
+    const [connected, setConnected] = useState(false);
+    const [connecting, setConnecting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [lastStatusCheckedAt, setLastStatusCheckedAt] = useState<Date | null>(null);
+
+    // Cache de áudio: messageId → data URI (espelha o do hook completo)
+    const audioCache = useRef<Map<string, string>>(new Map());
+    const lastFocusRefreshRef = useRef<number>(0);
+
+    // ── Proxy comum pra Evolution edge function ───────────────────────────
+    const invokeProxy = useCallback(
+        async (action: ProxyAction, payload: Record<string, unknown> = {}) => {
+            const response = await supabase.functions.invoke("evolution-whatsapp", {
+                body: {
+                    action,
+                    companyId: activeCompanyId,
+                    ...payload,
+                },
+            });
+            if (response.error) {
+                let detail = response.error.message;
+                try {
+                    const ctx = (response.error as { context?: { json?: () => Promise<unknown> } })
+                        .context;
+                    if (ctx && typeof ctx.json === "function") {
+                        const body = (await ctx.json()) as { error?: string; message?: string };
+                        detail = body?.error || body?.message || JSON.stringify(body);
+                    }
+                } catch {
+                    /* ignore */
+                }
+                throw new Error(detail);
+            }
+            return response.data as unknown;
+        },
+        [activeCompanyId],
+    );
+
+    // ── Status check ───────────────────────────────────────────────────────
+    const refreshStatus = useCallback(async (): Promise<boolean> => {
+        try {
+            const data = (await invokeProxy("status")) as { connected?: boolean } | null;
+            const isOpen = data?.connected === true;
+            setConnected(isOpen);
+            setLastStatusCheckedAt(new Date());
+            return isOpen;
+        } catch (err) {
+            console.warn("[EvolutionSender] status check failed:", err);
+            // Falha no check NÃO seta lastStatusCheckedAt — UI deve sinalizar
+            // "status incerto" em vez de cravar "desconectado".
+            setConnected(false);
+            return false;
+        }
+    }, [invokeProxy]);
+
+    // ── Check inicial (1x) — sem polling. Re-check só sob demanda. ────────
+    useEffect(() => {
+        if (!userId) return;
+        let cancelled = false;
+        setConnecting(true);
+        refreshStatus().finally(() => {
+            if (!cancelled) setConnecting(false);
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [userId, refreshStatus]);
+
+    // ── Refresh on window focus (throttled 60s) ───────────────────────────
+    // Aproveita o user voltando à aba pra reverificar status sem polling.
+    // Se o status não muda em <60s, nada acontece. Falha silenciosa: o catch
+    // dentro de refreshStatus já cuida.
+    useEffect(() => {
+        if (!userId) return;
+        const onFocus = () => {
+            const now = Date.now();
+            if (now - lastFocusRefreshRef.current < FOCUS_REFRESH_THROTTLE_MS) return;
+            lastFocusRefreshRef.current = now;
+            void refreshStatus();
+        };
+        window.addEventListener("focus", onFocus);
+        return () => window.removeEventListener("focus", onFocus);
+    }, [userId, refreshStatus]);
+
+    // ── Send text ──────────────────────────────────────────────────────────
+    const sendMessage = useCallback(
+        async (chatJid: string, text: string) => {
+            if (!chatJid || !text.trim()) return;
+            setError(null);
+            try {
+                await invokeProxy("send", { chatId: chatJid, text: text.trim() });
+            } catch (err) {
+                const msg = err instanceof Error ? err.message : "Falha ao enviar mensagem.";
+                setError(msg);
+                throw err;
+            }
+        },
+        [invokeProxy],
+    );
+
+    // ── Send audio ─────────────────────────────────────────────────────────
+    const sendAudioMessage = useCallback(
+        async (chatJid: string, base64: string) => {
+            if (!chatJid || !base64) return;
+            setError(null);
+            try {
+                await invokeProxy("sendAudio", {
+                    chatId: chatJid,
+                    mediaBase64: base64,
+                    mimetype: "audio/webm",
+                });
+            } catch (err) {
+                const msg = err instanceof Error ? err.message : "Falha ao enviar áudio.";
+                setError(msg);
+                throw err;
+            }
+        },
+        [invokeProxy],
+    );
+
+    // ── Send media (image/video/document) ──────────────────────────────────
+    const sendMediaMessage = useCallback(
+        async (
+            chatJid: string,
+            base64: string,
+            mimetype: string,
+            opts?: SendMediaOpts,
+        ) => {
+            if (!chatJid || !base64) return;
+            setError(null);
+            try {
+                await invokeProxy("sendMedia", {
+                    chatId: chatJid,
+                    mediaBase64: base64,
+                    mimetype,
+                    caption: opts?.caption || undefined,
+                    fileName: opts?.fileName || undefined,
+                });
+            } catch (err) {
+                const msg = err instanceof Error ? err.message : "Falha ao enviar mídia.";
+                setError(msg);
+                throw err;
+            }
+        },
+        [invokeProxy],
+    );
+
+    // ── Get audio media (download via Evolution + cache) ───────────────────
+    const getAudioMedia = useCallback(
+        async (messageId: string): Promise<string | null> => {
+            if (audioCache.current.has(messageId)) {
+                return audioCache.current.get(messageId)!;
+            }
+            try {
+                const data = (await invokeProxy("getMedia", { messageId })) as AudioMediaResult | null;
+                if (data?.base64) {
+                    const rawMime = data.mimetype || "audio/ogg";
+                    const mimetype =
+                        rawMime.includes("opus") || rawMime.includes("ogg")
+                            ? "audio/ogg; codecs=opus"
+                            : rawMime;
+                    const dataUri = `data:${mimetype};base64,${data.base64}`;
+                    audioCache.current.set(messageId, dataUri);
+                    return dataUri;
+                }
+            } catch (err) {
+                console.error("[EvolutionSender.getAudioMedia] error:", err);
+            }
+            return null;
+        },
+        [invokeProxy],
+    );
+
+    const clearError = useCallback(() => setError(null), []);
+
+    return {
+        connected,
+        connecting,
+        error,
+        lastStatusCheckedAt,
+        sendMessage,
+        sendAudioMessage,
+        sendMediaMessage,
+        getAudioMedia,
+        refreshStatus,
+        clearError,
+    };
+}

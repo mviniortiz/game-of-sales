@@ -1,55 +1,76 @@
 import { motion } from "framer-motion";
-import { Check, Rocket, Calendar } from "lucide-react";
+import { Calendar } from "lucide-react";
 import { LandingButton } from "./LandingButton";
+
+// FinalCTA white-first com streaks azuis como bookend visual do Hero
+// (mesma assinatura aurora vertical em dois tons de azul brand).
+const STREAKS = [
+    { left: 3, width: 70, opacity: 0.18, skew: -6, kind: "dark" },
+    { left: 9, width: 40, opacity: 0.10, skew: -3, kind: "dark" },
+    { left: 16, width: 95, opacity: 0.24, skew: -8, kind: "dark" },
+    { left: 24, width: 55, opacity: 0.14, skew: 2, kind: "light" },
+    { left: 31, width: 75, opacity: 0.18, skew: -5, kind: "dark" },
+    { left: 39, width: 35, opacity: 0.08, skew: 4, kind: "dark" },
+    { left: 47, width: 85, opacity: 0.20, skew: -7, kind: "light" },
+    { left: 56, width: 50, opacity: 0.12, skew: 3, kind: "dark" },
+    { left: 63, width: 75, opacity: 0.18, skew: -4, kind: "dark" },
+    { left: 71, width: 45, opacity: 0.10, skew: 5, kind: "light" },
+    { left: 78, width: 100, opacity: 0.24, skew: -9, kind: "dark" },
+    { left: 87, width: 60, opacity: 0.14, skew: -2, kind: "dark" },
+    { left: 94, width: 50, opacity: 0.12, skew: 6, kind: "dark" },
+] as const;
 
 interface FinalCTAProps {
     onCTAClick: () => void;
     onScheduleDemoClick?: () => void;
+    onSeePlansClick?: () => void;
 }
 
 export const FinalCTA = ({ onCTAClick, onScheduleDemoClick }: FinalCTAProps) => {
+    void onCTAClick;
     return (
-        <section className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden" style={{ background: "var(--vyz-bg)" }}>
-            {/* Fine grid overlay */}
-            <div
-                className="absolute inset-0 opacity-[0.02] pointer-events-none"
-                style={{
-                    backgroundImage: `
-                        linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-                        linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)
-                    `,
-                    backgroundSize: "60px 60px",
-                }}
-            />
-            {/* Green aurora glow */}
-            <div
-                className="absolute inset-x-0 top-0 h-[500px] pointer-events-none"
-                style={{
-                    background: "radial-gradient(ellipse 60% 60% at 50% 0%, rgba(0,227,122,0.12) 0%, transparent 70%)",
-                }}
-            />
+        <section className="relative py-28 sm:py-36 px-4 sm:px-6 lg:px-8 overflow-hidden bg-white">
+            {/* Streaks layer — bookend do Hero */}
+            <div className="absolute inset-x-0 top-0 h-full pointer-events-none overflow-hidden" aria-hidden="true">
+                {STREAKS.map((s, i) => (
+                    <div
+                        key={i}
+                        className="absolute top-0 origin-top"
+                        style={{
+                            left: `${s.left}%`,
+                            width: `${s.width}px`,
+                            height: "120%",
+                            transform: `skewX(${s.skew}deg) translateY(-10%)`,
+                            background: s.kind === "light"
+                                ? `linear-gradient(180deg, rgba(74,140,232,${s.opacity * 0.95}) 0%, rgba(74,140,232,${s.opacity * 0.3}) 40%, transparent 78%)`
+                                : `linear-gradient(180deg, rgba(21,86,192,${s.opacity}) 0%, rgba(21,86,192,${s.opacity * 0.35}) 45%, transparent 82%)`,
+                            filter: "blur(14px)",
+                        }}
+                    />
+                ))}
+            </div>
 
             <motion.div
-                className="relative max-w-5xl mx-auto rounded-3xl overflow-hidden"
+                className="relative max-w-4xl mx-auto"
                 initial={{ y: 32 }}
                 whileInView={{ y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                style={{
-                    background: "rgba(255,255,255,0.03)",
-                    boxShadow: "0 0 0 1px rgba(255,255,255,0.06), 0 8px 24px rgba(0,0,0,0.3), 0 40px 80px -16px rgba(0,0,0,0.4)",
-                }}
             >
-                {/* Content */}
-                <div className="relative z-10 py-12 sm:py-20 px-5 sm:px-8 md:px-16 text-center">
+                <div className="relative z-10 text-center">
                     {/* Eyebrow */}
                     <div className="inline-flex items-center gap-2 mb-7">
                         <span
-                            className="w-1.5 h-1.5 rounded-full bg-emerald-400"
+                            className="w-1.5 h-1.5 rounded-full"
+                            style={{ background: "#1556C0" }}
                         />
                         <span
-                            className="text-xs text-emerald-400"
-                            style={{ fontWeight: 600, letterSpacing: "0.12em" }}
+                            className="text-xs"
+                            style={{
+                                fontWeight: 600,
+                                letterSpacing: "0.12em",
+                                color: "rgba(10,10,10,0.55)",
+                            }}
                         >
                             COMECE AGORA
                         </span>
@@ -57,39 +78,43 @@ export const FinalCTA = ({ onCTAClick, onScheduleDemoClick }: FinalCTAProps) => 
 
                     {/* Headline */}
                     <h2
-                        className="font-heading mb-6 max-w-3xl mx-auto"
+                        className="font-satoshi mb-6 max-w-3xl mx-auto"
                         style={{
                             fontWeight: 700,
-                            fontSize: "clamp(1.4rem, 4.5vw, 3.25rem)",
-                            lineHeight: 1.05,
+                            fontSize: "clamp(1.8rem, 5.5vw, 3.75rem)",
+                            lineHeight: 1.03,
                             letterSpacing: "-0.045em",
-                            color: "rgba(255,255,255,0.95)",
+                            color: "#0A0A0A",
                         }}
                     >
-                        Seu time pode estar vendendo mais amanhã.
+                        Veja como sua agência pode parar de perder oportunidades{" "}
+                        <span
+                            style={{
+                                fontWeight: 700,
+                                background: "linear-gradient(135deg, #1556C0 0%, #2E78E0 45%, #1556C0 100%)",
+                                WebkitBackgroundClip: "text",
+                                WebkitTextFillColor: "transparent",
+                                backgroundClip: "text",
+                            }}
+                        >
+                            no WhatsApp.
+                        </span>
                     </h2>
 
                     {/* Sub-copy */}
                     <p
                         className="mb-10 max-w-xl mx-auto"
-                        style={{ color: "rgba(255,255,255,0.45)", fontSize: "1rem", lineHeight: 1.7 }}
+                        style={{
+                            color: "rgba(10,10,10,0.65)",
+                            fontSize: "clamp(1rem, 1.8vw, 1.125rem)",
+                            lineHeight: 1.65,
+                        }}
                     >
-                        Configura em 5 minutos. Cancela quando quiser — sem multa e sem burocracia.
+                        Agende uma demonstração personalizada e veja o Vyzon aplicado ao seu fluxo comercial.
                     </p>
 
                     {/* CTA buttons */}
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-                        <LandingButton
-                            href="/onboarding?plan=pro"
-                            onClick={(e) => { e.preventDefault(); onCTAClick(); }}
-                            variant="primary"
-                            size="lg"
-                            icon={<Rocket className="h-4 w-4" />}
-                            showArrow
-                        >
-                            Testar grátis por 14 dias
-                        </LandingButton>
-
                         <LandingButton
                             href="#agendar-demo"
                             onClick={(e) => {
@@ -98,31 +123,26 @@ export const FinalCTA = ({ onCTAClick, onScheduleDemoClick }: FinalCTAProps) => 
                                     onScheduleDemoClick();
                                 }
                             }}
-                            variant="secondary"
+                            variant="primary"
                             size="lg"
                             icon={<Calendar className="h-4 w-4" />}
+                            showArrow
                         >
-                            Agendar demonstração
+                            Agendar demo gratuita
                         </LandingButton>
                     </div>
 
-                    {/* Trust signals */}
-                    <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 mt-7">
-                        {[
-                            "14 dias grátis pra testar",
-                            "Cancela quando quiser",
-                            "Suporte humano no WhatsApp",
-                        ].map((t) => (
-                            <div
-                                key={t}
-                                className="flex items-center gap-1.5"
-                                style={{ color: "rgba(255,255,255,0.35)", fontSize: "0.75rem", fontWeight: 500 }}
-                            >
-                                <Check className="h-3 w-3 text-emerald-500/60" strokeWidth={2.5} />
-                                {t}
-                            </div>
-                        ))}
-                    </div>
+                    {/* Microcopy */}
+                    <p
+                        className="mt-7"
+                        style={{
+                            color: "rgba(10,10,10,0.5)",
+                            fontSize: "0.8125rem",
+                            fontWeight: 500,
+                        }}
+                    >
+                        Demo gratuita, personalizada para o contexto da sua agência.
+                    </p>
                 </div>
             </motion.div>
         </section>

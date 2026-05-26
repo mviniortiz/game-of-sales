@@ -41,7 +41,7 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                     />
                     <defs>
                         <linearGradient id="curveGradient" x1="720" y1="60" x2="720" y2="120">
-                            <stop stopColor="#7c3aed" stopOpacity="0.3" />
+                            <stop stopColor="#0E3E92" stopOpacity="0.3" />
                             <stop offset="1" stopColor="#0f172a" />
                         </linearGradient>
                     </defs>
@@ -120,13 +120,13 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                 <div className="grid lg:grid-cols-2 gap-12 items-center">
                     {/* Left: Text */}
                     <div>
-                        <Badge className="mb-6 bg-emerald-50 text-emerald-600 border-emerald-300 hover:bg-emerald-100">
+                        <Badge className="mb-6 bg-emerald-50 text-blue-700 border-emerald-300 hover:bg-emerald-100">
                             TECNOLOGIA GAME SALES + GAMIFICAÇÃO
                         </Badge>
 
                         <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight tracking-tight">
                             Transforme seu{" "}
-                            <span className="bg-gradient-to-r from-emerald-400 via-pink-400 to-emerald-400 bg-clip-text text-transparent">
+                            <span className="bg-gradient-to-r from-blue-500 via-pink-400 to-blue-500 bg-clip-text text-transparent">
                                 Time de Vendas
                             </span>{" "}
                             em Campeões
@@ -142,7 +142,7 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                                 onClick={onCTAClick}
                                 className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-semibold text-white rounded-xl overflow-hidden transition-all duration-300"
                                 style={{
-                                    background: "linear-gradient(135deg, #00E37A 0%, #ec4899 50%, #00E37A 100%)",
+                                    background: "linear-gradient(135deg, #1556C0 0%, #ec4899 50%, #1556C0 100%)",
                                     backgroundSize: "200% 200%",
                                 }}
                                 whileHover={{
@@ -187,15 +187,15 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                         {/* Trust indicators */}
                         <div className="flex items-center gap-6 mt-8 text-gray-400 text-sm">
                             <span className="flex items-center gap-1.5">
-                                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                                <span className="w-2 h-2 rounded-full bg-blue-600" />
                                 14 dias grátis
                             </span>
                             <span className="flex items-center gap-1.5">
-                                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                                <span className="w-2 h-2 rounded-full bg-blue-600" />
                                 Só cobra após o trial
                             </span>
                             <span className="flex items-center gap-1.5">
-                                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                                <span className="w-2 h-2 rounded-full bg-blue-600" />
                                 Setup em 5 min
                             </span>
                         </div>
@@ -224,11 +224,11 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                                     <div className="flex gap-1.5">
                                         <div className="w-3 h-3 rounded-full bg-rose-500" />
                                         <div className="w-3 h-3 rounded-full bg-amber-500" />
-                                        <div className="w-3 h-3 rounded-full bg-emerald-500" />
+                                        <div className="w-3 h-3 rounded-full bg-blue-600" />
                                     </div>
                                     <div className="flex-1">
                                         <div className="w-52 h-7 bg-gray-100 rounded-lg flex items-center justify-center gap-2 border border-gray-200">
-                                            <div className="w-3 h-3 rounded-full bg-emerald-500/50" />
+                                            <div className="w-3 h-3 rounded-full bg-blue-600/50" />
                                             <span className="text-xs text-gray-400">app.vyzon.com.br</span>
                                         </div>
                                     </div>
@@ -259,28 +259,28 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                                 <div className="grid grid-cols-3 gap-3 mb-5">
                                     <div className="bg-gradient-to-br from-emerald-500/20 to-emerald-600/5 rounded-xl p-3 border border-emerald-500/20">
                                         <div className="flex items-center gap-2 mb-1.5">
-                                            <div className="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                                                <TrendingUp className="h-3 w-3 text-emerald-600" />
+                                            <div className="w-6 h-6 rounded-lg bg-blue-600/20 flex items-center justify-center">
+                                                <TrendingUp className="h-3 w-3 text-blue-700" />
                                             </div>
                                             <span className="text-[10px] text-gray-400 uppercase">Vendas</span>
                                         </div>
-                                        <p className="text-xl font-bold text-emerald-600">R$ 48.2k</p>
+                                        <p className="text-xl font-bold text-blue-700">R$ 48.2k</p>
                                         <div className="flex items-center gap-1 mt-1">
-                                            <span className="text-[10px] text-emerald-600 bg-emerald-400/10 px-1.5 py-0.5 rounded">↑ 24%</span>
+                                            <span className="text-[10px] text-blue-700 bg-blue-600/10 px-1.5 py-0.5 rounded">↑ 24%</span>
                                         </div>
                                     </div>
 
                                     <div className="bg-gradient-to-br from-emerald-500/20 to-emerald-600/5 rounded-xl p-3 border border-emerald-500/20">
                                         <div className="flex items-center gap-2 mb-1.5">
-                                            <div className="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                                                <Target className="h-3 w-3 text-emerald-600" />
+                                            <div className="w-6 h-6 rounded-lg bg-blue-600/20 flex items-center justify-center">
+                                                <Target className="h-3 w-3 text-blue-700" />
                                             </div>
                                             <span className="text-[10px] text-gray-400 uppercase">Meta</span>
                                         </div>
-                                        <p className="text-xl font-bold text-emerald-600">127%</p>
+                                        <p className="text-xl font-bold text-blue-700">127%</p>
                                         <div className="w-full bg-emerald-900/50 rounded-full h-1.5 mt-2">
                                             <motion.div
-                                                className="bg-gradient-to-r from-emerald-400 to-pink-400 h-full rounded-full"
+                                                className="bg-gradient-to-r from-blue-500 to-pink-400 h-full rounded-full"
                                                 initial={{ width: 0 }}
                                                 animate={{ width: "100%" }}
                                                 transition={{ delay: 1, duration: 1 }}
@@ -336,7 +336,7 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                                                     <p className="text-sm font-medium text-gray-900 truncate">{player.name}</p>
                                                     <p className="text-[10px] text-gray-400">{player.xp} XP</p>
                                                 </div>
-                                                <span className="text-sm font-semibold text-emerald-600">{player.value}</span>
+                                                <span className="text-sm font-semibold text-blue-700">{player.value}</span>
                                             </div>
                                         ))}
                                     </div>
@@ -349,10 +349,10 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                                         animate={{ scale: [1, 1.1, 1] }}
                                         transition={{ duration: 1.5, repeat: Infinity }}
                                     >
-                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white shadow-lg">
+                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center text-white shadow-lg">
                                             <Bell className="w-5 h-5" />
                                         </div>
-                                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full flex items-center justify-center">
+                                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center">
                                             <span className="text-[8px] text-white font-bold">!</span>
                                         </div>
                                     </motion.div>
@@ -360,7 +360,7 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                                         <p className="text-sm font-medium text-gray-900">Nova venda registrada!</p>
                                         <p className="text-xs text-gray-400">Lucas acabou de fechar • R$ 3.200</p>
                                     </div>
-                                    <Badge className="bg-emerald-500/20 text-emerald-600 border-0">
+                                    <Badge className="bg-blue-600/20 text-blue-700 border-0">
                                         +150 XP
                                     </Badge>
                                 </div>
@@ -395,12 +395,12 @@ export const HeroDark = ({ onCTAClick, onDemoClick, onLoginClick }: HeroDarkProp
                                 style={{ boxShadow: "0 20px 40px -10px rgba(0, 227, 122, 0.2)" }}
                             >
                                 <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg">
+                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center shadow-lg">
                                         <Target className="h-6 w-6 text-white" />
                                     </div>
                                     <div>
                                         <p className="text-[10px] text-gray-400 uppercase tracking-wider">Meta Batida</p>
-                                        <p className="text-2xl font-bold text-emerald-600">127%</p>
+                                        <p className="text-2xl font-bold text-blue-700">127%</p>
                                     </div>
                                 </div>
                             </motion.div>

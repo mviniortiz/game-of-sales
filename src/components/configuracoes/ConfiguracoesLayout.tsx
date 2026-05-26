@@ -12,6 +12,7 @@ import {
   Link2,
   FileText,
   Webhook,
+  Sparkle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -67,6 +68,13 @@ const GROUPS: NavGroup[] = [
       },
     ],
   },
+  {
+    // F4E.2 2026-05-19: Memória Comercial da EVA. Membros leem, admin edita.
+    label: "EVA",
+    items: [
+      { id: "eva", label: "Contexto da EVA", path: "/configuracoes/eva", icon: Sparkle },
+    ],
+  },
 ];
 
 const TITLES: Record<string, { title: string; subtitle: string }> = {
@@ -85,6 +93,10 @@ const TITLES: Record<string, { title: string; subtitle: string }> = {
   "relatorios-publicos": {
     title: "Relatórios públicos",
     subtitle: "Links white-label pro cliente acompanhar sem login",
+  },
+  eva: {
+    title: "Contexto da EVA",
+    subtitle: "Setup estratégico da IA comercial assistida",
   },
 };
 

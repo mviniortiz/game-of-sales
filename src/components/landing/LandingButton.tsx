@@ -36,23 +36,23 @@ const ARROW_CLASS: Record<Size, string> = {
 };
 
 const PRIMARY_STYLE: React.CSSProperties = {
-    background: "#00E37A",
-    color: "#0D1421",
-    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.25), 0 1px 2px rgba(0,227,122,0.15)",
+    background: "#1556C0",
+    color: "#FFFFFF",
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.15), 0 1px 2px rgba(21,86,192,0.20)",
     fontWeight: 600,
     letterSpacing: "-0.01em",
 };
 
 const SECONDARY_STYLE: React.CSSProperties = {
-    background: "rgba(255,255,255,0.02)",
-    color: "#EDEDED",
-    boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.10)",
+    background: "rgba(10,10,10,0.03)",
+    color: "#0A0A0A",
+    boxShadow: "inset 0 0 0 1px rgba(10,10,10,0.12)",
     fontWeight: 500,
     letterSpacing: "-0.01em",
 };
 
 const baseClass =
-    "lbtn group relative inline-flex items-center justify-center rounded-lg no-underline whitespace-nowrap transition-[filter,box-shadow,background] duration-[180ms] ease-out";
+    "lbtn group relative inline-flex items-center justify-center rounded-[20px] no-underline whitespace-nowrap transition-[filter,box-shadow,background] duration-[180ms] ease-out";
 
 export const LandingButton = forwardRef<
     HTMLAnchorElement | HTMLButtonElement,

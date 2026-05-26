@@ -372,18 +372,18 @@ const SellerDashboard = () => {
 
   return (
     <div className="space-y-4 sm:space-y-6 p-1">
-      {/* Header - Premium Style */}
+      {/* Header — Central da Operação (F2.5 rename) */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Dashboard</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Central da Operação</h1>
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-200 text-[10px] font-semibold uppercase tracking-wider ring-1 ring-emerald-200/70 dark:ring-emerald-500/20">
               <Sparkles className="h-3 w-3" />
               Live
             </span>
           </div>
           <p className="text-sm text-muted-foreground font-medium">
-            Bem-vindo, <span className="text-foreground">{profile?.nome || "Vendedor"}</span> • {format(new Date(), "MMMM 'de' yyyy", { locale: ptBR })}
+            Acompanhe leads, EVA, pipeline e reuniões em tempo real. <span className="text-foreground">{profile?.nome || "Vendedor"}</span> • {format(new Date(), "MMMM 'de' yyyy", { locale: ptBR })}
           </p>
         </div>
       </div>

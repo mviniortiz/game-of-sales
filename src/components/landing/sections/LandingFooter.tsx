@@ -13,7 +13,7 @@ export const LandingFooter = ({ onNavClick, onLoginClick, onRegisterClick }: Pro
                 <div className="col-span-2 md:col-span-1">
                     <ThemeLogo className="h-8 w-auto mb-4" />
                     <p className="text-gray-500 text-sm leading-relaxed max-w-[220px]">
-                        CRM gamificado para times de vendas que querem bater meta todo mês.
+                        Central Comercial com EVA para agências que vendem por conversa.
                     </p>
                 </div>
 
@@ -28,18 +28,9 @@ export const LandingFooter = ({ onNavClick, onLoginClick, onRegisterClick }: Pro
                     </div>
                 </div>
 
-                <div>
-                    <p className="text-gray-400 text-xs uppercase tracking-widest mb-4" style={{ fontWeight: 600 }}>Alternativas</p>
-                    <div className="flex flex-col gap-2.5">
-                        <a href="/alternativas" className="text-gray-500 text-sm hover:text-gray-300 transition-colors" style={{ color: "#00E37A99" }}>Ver todos comparativos</a>
-                        <a href="/alternativa-hubspot" className="text-gray-500 text-sm hover:text-gray-300 transition-colors">Vyzon vs HubSpot</a>
-                        <a href="/alternativa-ploomes" className="text-gray-500 text-sm hover:text-gray-300 transition-colors">Vyzon vs Ploomes</a>
-                        <a href="/alternativa-rd-station" className="text-gray-500 text-sm hover:text-gray-300 transition-colors">Vyzon vs RD Station</a>
-                        <a href="/alternativa-kommo" className="text-gray-500 text-sm hover:text-gray-300 transition-colors">Vyzon vs Kommo</a>
-                        <a href="/alternativa-pipedrive" className="text-gray-500 text-sm hover:text-gray-300 transition-colors">Vyzon vs Pipedrive</a>
-                        <a href="/alternativa-agendor" className="text-gray-500 text-sm hover:text-gray-300 transition-colors">Vyzon vs Agendor</a>
-                    </div>
-                </div>
+                {/* F2.11.1 2026-05-20: "Alternativas" removida do footer — comparativos
+                    estão fracos no posicionamento atual de agências. As rotas
+                    /alternativa-* continuam funcionando (não removi). */}
 
                 <div>
                     <p className="text-gray-400 text-xs uppercase tracking-widest mb-4" style={{ fontWeight: 600 }}>Legal</p>

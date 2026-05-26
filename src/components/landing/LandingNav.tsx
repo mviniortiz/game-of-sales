@@ -23,36 +23,14 @@ type NavItem =
           }>;
       };
 
+// F2.11.1 2026-05-20: dropdown "Soluções" removido — verticais (Infoprodutores,
+// SaaS B2B, Imobiliárias) ainda fracas pro posicionamento atual de agência.
+// As rotas /para-* continuam ativas, só não aparecem no nav.
+// F2.12 2026-05-20: "Funcionalidades" removida (redundante com "Como funciona").
 const NAV_LINKS: NavItem[] = [
     { kind: "anchor", label: "Como funciona", anchor: "how-it-works" },
-    { kind: "anchor", label: "Funcionalidades", anchor: "features" },
     { kind: "anchor", label: "Eva", anchor: "eva" },
     { kind: "anchor", label: "Preços", anchor: "pricing" },
-    {
-        kind: "dropdown",
-        label: "Soluções",
-        items: [
-            {
-                label: "Para Infoprodutores",
-                sub: "Hotmart, Kiwify e Greenn nativos",
-                href: "/para-infoprodutores",
-                icon: Rocket,
-            },
-            {
-                label: "Para SaaS B2B",
-                sub: "SDR + Closer com WhatsApp e IA",
-                href: "/para-saas-b2b",
-                icon: Megaphone,
-            },
-            {
-                label: "Para Imobiliárias",
-                sub: "Corretores, lead e visita",
-                href: "/para-imobiliarias",
-                icon: Building2,
-                soon: true,
-            },
-        ],
-    },
 ];
 
 // Cross-page: quem clica em navbar fora da landing (ex.: /para-infoprodutores)
@@ -101,11 +79,29 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
             <header
                 className="fixed top-0 inset-x-0 z-50 landing-fade-in"
                 style={{
-                    background: scrolled ? "rgba(6,8,10,0.85)" : "transparent",
-                    backdropFilter: scrolled ? "blur(12px)" : "none",
-                    WebkitBackdropFilter: scrolled ? "blur(12px)" : "none",
-                    borderBottom: scrolled ? "1px solid var(--vyz-border)" : "1px solid transparent",
-                    boxShadow: scrolled ? "0 1px 3px rgba(0,0,0,0.4)" : "none",
+                    background: scrolled
+                        ? "rgba(255,255,255,0.55)"
+                        : "transparent",
+                    backdropFilter: scrolled
+                        ? "blur(24px) saturate(180%) brightness(1.04)"
+                        : "none",
+                    WebkitBackdropFilter: scrolled
+                        ? "blur(24px) saturate(180%) brightness(1.04)"
+                        : "none",
+                    borderBottom: scrolled
+                        ? "1px solid rgba(255,255,255,0.4)"
+                        : "1px solid transparent",
+                    boxShadow: scrolled
+                        ? [
+                            // highlight especular no topo (simula reflexo do glass)
+                            "inset 0 1px 0 rgba(255,255,255,0.65)",
+                            // borda interna inferior bem sutil
+                            "inset 0 -1px 0 rgba(10,10,10,0.06)",
+                            // sombra projetada suave que dá sensação de "flutuando"
+                            "0 1px 0 rgba(10,10,10,0.04)",
+                            "0 8px 32px -8px rgba(10,10,10,0.08)",
+                        ].join(", ")
+                        : "none",
                 }}
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -123,7 +119,7 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                                     <button
                                         key={link.anchor}
                                         onClick={() => handleAnchor(link.anchor)}
-                                        className="relative px-4 py-2 rounded-lg text-sm transition-colors duration-150 group hover:text-white"
+                                        className="relative px-4 py-2 rounded-lg text-sm transition-colors duration-150 group hover:text-black"
                                         style={{ color: "var(--vyz-text-muted)", fontWeight: 500 }}
                                     >
                                         <span className="relative z-10">{link.label}</span>
@@ -144,7 +140,7 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                                 >
                                     <button
                                         onClick={() => setSolutionsOpen((v) => !v)}
-                                        className="relative flex items-center gap-1 px-4 py-2 rounded-lg text-sm transition-colors duration-150 group hover:text-white"
+                                        className="relative flex items-center gap-1 px-4 py-2 rounded-lg text-sm transition-colors duration-150 group hover:text-black"
                                         style={{
                                             color: solutionsOpen ? "var(--vyz-text-primary)" : "var(--vyz-text-muted)",
                                             fontWeight: 500,
@@ -253,7 +249,7 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                                                         key={item.label}
                                                         href={item.href}
                                                         onClick={() => setSolutionsOpen(false)}
-                                                        className={`${commonClasses} no-underline hover:bg-white/5`}
+                                                        className={`${commonClasses} no-underline hover:bg-black/5`}
                                                         style={commonStyle}
                                                     >
                                                         {content}
@@ -270,7 +266,7 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                     <div className="hidden md:flex items-center gap-2">
                         <button
                             onClick={onLoginClick}
-                            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm transition-all duration-150 hover:bg-white/10 hover:text-white"
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm transition-all duration-150 hover:bg-black/5 hover:text-black"
                             style={{ color: "var(--vyz-text-muted)", fontWeight: 500 }}
                         >
                             <LogIn className="h-3.5 w-3.5" />
@@ -349,12 +345,12 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                                 <button
                                     key={link.anchor}
                                     onClick={() => handleAnchor(link.anchor)}
-                                    className="flex items-center gap-3 w-full px-4 py-3.5 rounded-xl text-left transition-colors hover:bg-white/5 hover:text-white"
+                                    className="flex items-center gap-3 w-full px-4 py-3.5 rounded-xl text-left transition-colors hover:bg-black/5 hover:text-black"
                                     style={{ color: "var(--vyz-text-muted)", fontWeight: 500, fontSize: "0.9375rem" }}
                                 >
                                     <span
                                         className="w-1 h-1 rounded-full flex-shrink-0"
-                                        style={{ background: "rgba(0,227,122,0.5)" }}
+                                        style={{ background: "rgba(21,86,192,0.5)" }}
                                     />
                                     {link.label}
                                 </button>
@@ -365,13 +361,13 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                             <div key={link.label} className="flex flex-col">
                                 <button
                                     onClick={() => setMobileSolutionsOpen((v) => !v)}
-                                    className="flex items-center justify-between gap-3 w-full px-4 py-3.5 rounded-xl text-left transition-colors hover:bg-white/5 hover:text-white"
+                                    className="flex items-center justify-between gap-3 w-full px-4 py-3.5 rounded-xl text-left transition-colors hover:bg-black/5 hover:text-black"
                                     style={{ color: "var(--vyz-text-muted)", fontWeight: 500, fontSize: "0.9375rem" }}
                                 >
                                     <span className="flex items-center gap-3">
                                         <span
                                             className="w-1 h-1 rounded-full flex-shrink-0"
-                                            style={{ background: "rgba(0,227,122,0.5)" }}
+                                            style={{ background: "rgba(21,86,192,0.5)" }}
                                         />
                                         {link.label}
                                     </span>
@@ -447,7 +443,7 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                                                     key={item.label}
                                                     href={item.href}
                                                     onClick={() => setMobileOpen(false)}
-                                                    className={`${cls} hover:bg-white/5 no-underline`}
+                                                    className={`${cls} hover:bg-black/5 no-underline`}
                                                 >
                                                     {inner}
                                                 </a>

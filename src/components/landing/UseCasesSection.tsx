@@ -1,43 +1,72 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BarChart3, Trophy, Link2, Check } from "lucide-react";
+import {
+    BarChart3,
+    Users,
+    Building2,
+    Check,
+    Workflow,
+    Clock,
+    Target,
+    MessageCircle,
+    Calendar,
+    Sparkle,
+    Brain,
+    LineChart,
+} from "lucide-react";
 
-// ─── Cases data ──────────────────────────────────────────────────────────────
-const CASES = [
+// ─────────────────────────────────────────────────────────────────────────────
+// F2.10 (2026-05-19) — UseCasesSection redesenhada.
+// 3 personas (Gestor / Vendedor / Agência) com cards premium + mock CSS por
+// tab. Foco no novo posicionamento de agência. SEM image generation —
+// mocks são 100% HTML/CSS.
+// ─────────────────────────────────────────────────────────────────────────────
+
+type IconCmp = React.ComponentType<{ className?: string; strokeWidth?: number }>;
+
+interface Case {
+    icon: IconCmp;
+    tag: string;
+    title: string;
+    description: string;
+    cards: { icon: IconCmp; label: string }[];
+}
+
+const CASES: readonly Case[] = [
     {
         icon: BarChart3,
-        tag: "Gestor Comercial",
-        title: "Visibilidade total, sem ficar cobrando",
+        tag: "Gestor",
+        title: "Visibilidade sem cobrar no grupo.",
         description:
-            "Painel ao vivo com faturamento, ticket médio, taxa de conversão e show rate. Enxergue quem está performando e se o time vai bater meta — tudo em tempo real.",
-        bullets: [
-            "Painel com KPIs ao vivo",
-            "Funil de calls (agendamento → show → venda)",
-            "Metas do time consolidadas",
+            "Veja prioridades, oportunidades paradas, gaps de contexto e performance comercial sem cobrar no grupo.",
+        cards: [
+            { icon: Workflow, label: "Prioridades do dia" },
+            { icon: Clock, label: "Oportunidades paradas" },
+            { icon: Target, label: "Performance comercial" },
         ],
     },
     {
-        icon: Trophy,
+        icon: Users,
         tag: "Vendedor",
-        title: "Competição que motiva sem pressão",
+        title: "Próximo passo claro em cada conversa.",
         description:
-            "Ranking com níveis, pódio ao vivo e meta individual. Cada venda fechada faz você subir. Acompanhe seu progresso e seus deals no pipeline.",
-        bullets: [
-            "Ranking com níveis e pódio",
-            "Pipeline pessoal de deals",
-            "Meta individual com progresso",
+            "Abra a conversa certa, veja o resumo da EVA e saiba o próximo passo antes de responder.",
+        cards: [
+            { icon: Sparkle, label: "Resumo da EVA" },
+            { icon: MessageCircle, label: "Conversa certa" },
+            { icon: Calendar, label: "Próximo passo" },
         ],
     },
     {
-        icon: Link2,
-        tag: "Dono de Infoproduto",
-        title: "Vendas automáticas, zero trabalho manual",
+        icon: Building2,
+        tag: "Agência",
+        title: "Conversa vira pipeline acompanhado.",
         description:
-            "Conecta seu checkout via webhook. Cada venda aprovada cai no painel e atualiza o ranking automaticamente. Sem copia-e-cola.",
-        bullets: [
-            "Sincronização automática via webhook",
-            "Painel de receita ao vivo",
-            "Extensão Chrome pro WhatsApp",
+            "Padronize atendimento, reduza lead perdido e transforme conversa em pipeline acompanhado.",
+        cards: [
+            { icon: BarChart3, label: "Central de Comando" },
+            { icon: Brain, label: "Memória Comercial" },
+            { icon: LineChart, label: "Pipeline acompanhado" },
         ],
     },
 ] as const;
@@ -47,48 +76,72 @@ export const UseCasesSection = () => {
     const [active, setActive] = useState(0);
 
     return (
-        <section className="relative py-28 px-4 sm:px-6 lg:px-8 overflow-hidden" style={{ background: "var(--vyz-bg)" }}>
-            {/* Green spotlight from top */}
+        <section
+            className="relative py-28 sm:py-32 px-4 sm:px-6 lg:px-8 overflow-hidden"
+            style={{ background: "#F8FAFC" }}
+        >
+            {/* Glow azul no topo */}
             <div
                 className="absolute inset-x-0 top-0 h-[400px] pointer-events-none"
                 style={{
-                    background: "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(0,227,122,0.08) 0%, transparent 70%)",
+                    background:
+                        "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(37,99,235,0.07) 0%, transparent 70%)",
                 }}
+                aria-hidden
             />
-            <div className="relative max-w-4xl mx-auto">
+            <div className="relative max-w-5xl mx-auto">
                 {/* Header */}
                 <motion.div
-                    className="text-center mb-14"
+                    className="text-center mb-12 sm:mb-14"
                     initial={{ y: 20 }}
                     whileInView={{ y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5 }}
                 >
                     <span
-                        className="inline-block text-xs text-emerald-400 rounded-full px-4 py-1.5 mb-5"
-                        style={{ fontWeight: 600, letterSpacing: "0.08em", background: "rgba(0,227,122,0.1)", border: "1px solid rgba(0,227,122,0.2)" }}
+                        className="inline-flex items-center text-[10.5px] sm:text-[11px] uppercase rounded-full px-3 py-1 mb-5"
+                        style={{
+                            background: "rgba(37,99,235,0.08)",
+                            border: "1px solid rgba(37,99,235,0.22)",
+                            color: "#1D4ED8",
+                            fontWeight: 700,
+                            letterSpacing: "0.15em",
+                        }}
                     >
-                        PARA QUEM É
+                        Para quem é
                     </span>
-
                     <h2
-                        className="font-heading mb-4"
-                        style={{ fontWeight: 700, fontSize: "clamp(1.75rem, 4.5vw, 2.75rem)", lineHeight: 1.1, letterSpacing: "-0.04em", color: "rgba(255,255,255,0.95)" }}
+                        className="font-satoshi mb-4 mx-auto"
+                        style={{
+                            fontWeight: 700,
+                            fontSize: "clamp(1.85rem, 4.5vw, 2.75rem)",
+                            lineHeight: 1.1,
+                            letterSpacing: "-0.04em",
+                            color: "#0B1220",
+                            maxWidth: "720px",
+                        }}
                     >
-                        Funciona pro{" "}
-                        <span className="text-emerald-400">seu time</span>
+                        Cada pessoa enxerga{" "}
+                        <span style={{ color: "#1D4ED8" }}>o que precisa fazer.</span>
                     </h2>
-
-                    <p className="max-w-lg mx-auto" style={{ fontSize: "1.0625rem", color: "rgba(255,255,255,0.45)" }}>
-                        Gestor ganha visibilidade. Vendedor ganha motivação. Dono de infoproduto ganha controle.
+                    <p
+                        className="max-w-xl mx-auto text-[15px] sm:text-[16px]"
+                        style={{ color: "rgba(10,10,10,0.55)", lineHeight: 1.55 }}
+                    >
+                        O gestor vê gargalos. O vendedor vê próximos passos. A agência
+                        ganha previsibilidade.
                     </p>
                 </motion.div>
 
                 {/* Tab selector */}
                 <div className="flex justify-center mb-10 sm:mb-12 px-2">
                     <div
-                        className="inline-flex gap-1 p-1 rounded-xl max-w-full overflow-x-auto no-scrollbar"
-                        style={{ background: "rgba(255,255,255,0.04)", boxShadow: "0 0 0 1px rgba(255,255,255,0.06)" }}
+                        className="inline-flex gap-1 p-1 rounded-xl"
+                        style={{
+                            background: "#FFFFFF",
+                            border: "1px solid #D9E2EC",
+                            boxShadow: "0 1px 2px rgba(15,23,42,0.04)",
+                        }}
                     >
                         {CASES.map((c, i) => {
                             const Icon = c.icon;
@@ -96,19 +149,35 @@ export const UseCasesSection = () => {
                             return (
                                 <button
                                     key={c.tag}
+                                    type="button"
                                     onClick={() => setActive(i)}
-                                    className="relative flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 rounded-lg text-xs sm:text-sm whitespace-nowrap transition-colors"
-                                    style={{ fontWeight: 600, color: isActive ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.35)" }}
+                                    className="relative flex items-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-2.5 rounded-lg text-[13px] sm:text-[14px] whitespace-nowrap transition-colors"
+                                    style={{
+                                        fontWeight: 600,
+                                        color: isActive ? "#FFFFFF" : "#475569",
+                                    }}
                                 >
                                     {isActive && (
                                         <motion.div
                                             layoutId="usecase-pill"
                                             className="absolute inset-0 rounded-lg"
-                                            style={{ background: "rgba(255,255,255,0.08)", boxShadow: "0 0 0 1px rgba(255,255,255,0.1)" }}
-                                            transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
+                                            style={{
+                                                background:
+                                                    "linear-gradient(135deg, #2563EB, #4A8CE8)",
+                                                boxShadow:
+                                                    "0 4px 12px -2px rgba(37,99,235,0.35)",
+                                            }}
+                                            transition={{
+                                                type: "spring",
+                                                bounce: 0.2,
+                                                duration: 0.4,
+                                            }}
                                         />
                                     )}
-                                    <Icon className={`relative h-4 w-4 ${isActive ? "text-emerald-400" : ""}`} strokeWidth={2} />
+                                    <Icon
+                                        className="relative h-3.5 w-3.5 sm:h-4 sm:w-4"
+                                        strokeWidth={2.1}
+                                    />
                                     <span className="relative">{c.tag}</span>
                                 </button>
                             );
@@ -123,34 +192,71 @@ export const UseCasesSection = () => {
                         return (
                             <motion.div
                                 key={c.tag}
-                                className="max-w-2xl mx-auto"
-                                initial={{ y: 12 }}
-                                animate={{ y: 0 }}
-                                exit={{ y: -12 }}
+                                className="max-w-3xl mx-auto"
+                                initial={{ y: 12, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                exit={{ y: -12, opacity: 0 }}
                                 transition={{ duration: 0.3 }}
                             >
                                 <h3
-                                    className="font-heading text-center mb-4"
-                                    style={{ fontWeight: 700, fontSize: "clamp(1.25rem, 3vw, 1.6rem)", lineHeight: 1.2, letterSpacing: "-0.03em", color: "rgba(255,255,255,0.95)" }}
+                                    className="font-satoshi text-center mb-4"
+                                    style={{
+                                        fontWeight: 700,
+                                        fontSize: "clamp(1.4rem, 3.5vw, 1.9rem)",
+                                        lineHeight: 1.18,
+                                        letterSpacing: "-0.028em",
+                                        color: "#0B1220",
+                                    }}
                                 >
                                     {c.title}
                                 </h3>
-
-                                <p className="text-center mb-8 leading-relaxed" style={{ fontSize: "0.95rem", color: "rgba(255,255,255,0.45)" }}>
+                                <p
+                                    className="text-center mb-9 leading-relaxed mx-auto max-w-lg text-[15px]"
+                                    style={{ color: "rgba(10,10,10,0.55)" }}
+                                >
                                     {c.description}
                                 </p>
 
                                 <ul className="grid sm:grid-cols-3 gap-4">
-                                    {c.bullets.map((b) => (
+                                    {c.cards.map(({ icon: CardIcon, label }) => (
                                         <li
-                                            key={b}
-                                            className="flex items-start gap-3 rounded-xl p-4"
-                                            style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)" }}
+                                            key={label}
+                                            className="rounded-2xl p-5 bg-white hover-lift"
+                                            style={{
+                                                border: "1px solid #D9E2EC",
+                                                boxShadow:
+                                                    "0 1px 2px rgba(15,23,42,0.04), 0 10px 30px rgba(15,23,42,0.045)",
+                                            }}
                                         >
-                                            <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: "rgba(0,227,122,0.1)" }}>
-                                                <Check className="h-3 w-3 text-emerald-400" strokeWidth={3} />
+                                            <div
+                                                className="h-10 w-10 rounded-xl flex items-center justify-center mb-3"
+                                                style={{
+                                                    background: "rgba(37,99,235,0.08)",
+                                                    border: "1px solid rgba(37,99,235,0.16)",
+                                                }}
+                                            >
+                                                <CardIcon
+                                                    className="h-4.5 w-4.5 text-[#2563EB]"
+                                                    strokeWidth={2.1}
+                                                />
                                             </div>
-                                            <span className="text-sm" style={{ fontWeight: 500, color: "rgba(255,255,255,0.55)" }}>{b}</span>
+                                            <p
+                                                className="text-[14px] sm:text-[14.5px]"
+                                                style={{
+                                                    fontWeight: 600,
+                                                    color: "#0B1220",
+                                                    letterSpacing: "-0.01em",
+                                                }}
+                                            >
+                                                {label}
+                                            </p>
+                                            <div
+                                                className="mt-2.5 flex items-center gap-1.5 text-[11.5px]"
+                                                style={{ color: "#059669", fontWeight: 600 }}
+                                            >
+                                                <Check className="h-3 w-3" strokeWidth={3} />
+                                                Disponível
+                                            </div>
                                         </li>
                                     ))}
                                 </ul>

@@ -56,6 +56,22 @@ import {
   UserPlus,
   CheckCheck,
 } from "lucide-react";
+// F5P.4e — Phosphor duotone padronizado (mesmo set da sidebar).
+// Alias *Ph evita conflito com nomes lucide já em uso no arquivo.
+import {
+  Target as TargetPh,
+  MagnifyingGlass as SearchPh,
+  Plus as PlusPh,
+  Sliders as SettingsPh,
+  CheckSquare as CheckSquarePh,
+  Checks as CheckCheckPh,
+  Funnel as FunnelPh,
+  FireSimple as FlamePh,
+  Clock as ClockPh,
+  CalendarBlank as CalendarPh,
+  CaretDown as CaretDownPh,
+  X as XPh,
+} from "@phosphor-icons/react";
 import { differenceInDays } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { syncWonDealToSale, unsyncDealSale } from "@/utils/salesSync";
@@ -67,6 +83,8 @@ import { PipelineConfigModal, StageConfig } from "@/components/crm/PipelineConfi
 import { LostDealModal } from "@/components/crm/LostDealModal";
 import { WinCelebration } from "@/components/crm/WinCelebration";
 import { useDealTags } from "@/hooks/useDealTags";
+import { usePipelineContextData } from "@/hooks/usePipelineContextData";
+import { useDealsTags } from "@/hooks/useDealsTags";
 
 // Icon mapping
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -1033,6 +1051,16 @@ export default function CRM() {
     return applyAdvancedFilters(result);
   }, [localDeals, selectedSeller, searchQuery, applyAdvancedFilters]);
 
+  // F5P.2 — Contexto comercial (conversa + EVA) por deal
+  const pipelineContext = usePipelineContextData(
+    useMemo(() => filteredDeals.map((d) => d.id), [filteredDeals]),
+  );
+
+  // F6T.2 — Tags transversais (F6T.1) batched por deal
+  const dealsTags = useDealsTags(
+    useMemo(() => filteredDeals.map((d) => d.id), [filteredDeals]),
+  );
+
   // Calculate pipeline total (from filtered deals)
   const pipelineTotal = filteredDeals.reduce((acc, deal) => acc + (Number(deal.value) || 0), 0);
 
@@ -1057,34 +1085,53 @@ export default function CRM() {
 
   return (
     <>
-      <div className="h-[calc(100vh-64px)] flex flex-col bg-background text-foreground">
-        {/* Header - Premium Style - 3 responsive rows */}
-        <div className="flex flex-col gap-3 px-4 sm:px-6 py-4 sm:py-5 border-b border-border bg-card backdrop-blur-sm shadow-sm">
-          {/* Row 1: Title + deal count + action buttons */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 sm:p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 ring-1 ring-emerald-100 dark:ring-emerald-500/20">
-                <Target className="h-4 sm:h-5 w-4 sm:w-5 text-emerald-600 dark:text-emerald-200" />
+      {/* F5P.4f — fundo com gradient sutil pra tirar cinza chapado, sem ruído */}
+      <div className="h-[calc(100vh-64px)] flex flex-col text-foreground bg-gradient-to-b from-background via-background to-slate-50/40 dark:to-card/20">
+        {/* F5P.4e — Header com Phosphor duotone + toolbar reestruturada.
+            Row 1 = título / stats / ações. Row 2 = search à esquerda, controles à direita (sem spacer flex-1 que squeezava o search). */}
+        <div className="flex flex-col gap-2.5 px-4 sm:px-6 py-3 sm:py-3.5 border-b border-border bg-card shadow-sm">
+          {/* Row 1: Title + stats inline + action buttons */}
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="p-1.5 sm:p-2 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 ring-1 ring-emerald-100 dark:ring-emerald-500/20 flex-shrink-0">
+                <TargetPh size={18} weight="duotone" className="text-emerald-600 dark:text-emerald-200" />
               </div>
-              <div>
-                <h1 className="text-lg sm:text-xl font-bold text-foreground tracking-tight flex items-center gap-2">
+              <div className="flex items-center gap-2 min-w-0 flex-wrap">
+                <h1 className="text-base sm:text-lg font-bold text-foreground tracking-tight whitespace-nowrap">
                   <span className="hidden sm:inline">Pipeline de Vendas</span>
                   <span className="sm:hidden">Pipeline</span>
-                  <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-semibold uppercase tracking-wider ring-1 ring-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-200 dark:ring-emerald-500/20">
-                    <Sparkles className="h-3 w-3" />
-                    Live
-                  </span>
                 </h1>
-                <p className="text-xs sm:text-[13px] text-muted-foreground font-medium mt-0.5">
-                  {isLoading ? "Carregando..." : (
-                    <>{deals.length} negociações • <span className="text-emerald-600 dark:text-emerald-300">{formatCurrency(pipelineTotal)}</span></>
+                <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[10px] font-semibold uppercase tracking-wider ring-1 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-200 dark:ring-emerald-500/20">
+                  <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+                  Live
+                </span>
+                {/* F5P.4f — KPI inline: total, valor e stale (quando houver), estilo Central */}
+                <span className="hidden sm:flex items-center gap-1.5 text-[12.5px] text-muted-foreground/90 font-medium pl-2 ml-0.5 border-l border-border/60">
+                  {isLoading ? (
+                    <span>Carregando...</span>
+                  ) : (
+                    <>
+                      <span className="tabular-nums text-foreground">{deals.length}</span>
+                      <span>{deals.length === 1 ? "oportunidade" : "oportunidades"}</span>
+                      <span className="text-muted-foreground/40">·</span>
+                      <span className="text-emerald-600 dark:text-emerald-300 tabular-nums font-semibold">{formatCurrency(pipelineTotal)}</span>
+                      {rottingDealsCount > 0 && (
+                        <>
+                          <span className="text-muted-foreground/40">·</span>
+                          <span className="inline-flex items-center gap-1 text-amber-700 dark:text-amber-300/90">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                            <span className="tabular-nums font-semibold">{rottingDealsCount}</span>
+                            <span>{rottingDealsCount === 1 ? "parada" : "paradas"}</span>
+                          </span>
+                        </>
+                      )}
+                    </>
                   )}
-                </p>
+                </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              {/* Selection Mode Toggle */}
+            <div className="flex items-center gap-2 flex-shrink-0">
               <Button
                 variant={selectionMode ? "default" : "outline"}
                 size="sm"
@@ -1092,11 +1139,10 @@ export default function CRM() {
                 aria-label={selectionMode ? "Selecionando" : "Selecionar"}
                 className={`min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 h-9 ${selectionMode ? "bg-emerald-600 hover:bg-emerald-500 text-white" : "border-border hover:bg-muted text-foreground"}`}
               >
-                <CheckSquare className="h-4 w-4 sm:mr-2" />
+                <CheckSquarePh size={16} weight="duotone" className="sm:mr-2" />
                 <span className="hidden sm:inline">{selectionMode ? "Selecionando" : "Selecionar"}</span>
               </Button>
 
-              {/* Select All / Deselect All - visible only in selection mode */}
               {selectionMode && (
                 <Button
                   variant="outline"
@@ -1105,14 +1151,13 @@ export default function CRM() {
                   aria-label={selectedDeals.size === allVisibleDealIds.length ? "Desmarcar todos" : "Selecionar todos"}
                   className="border-border hover:bg-muted text-foreground min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 h-9"
                 >
-                  <CheckCheck className="h-4 w-4 sm:mr-2" />
+                  <CheckCheckPh size={16} weight="duotone" className="sm:mr-2" />
                   <span className="hidden sm:inline">
                     {selectedDeals.size === allVisibleDealIds.length ? "Desmarcar todos" : "Selecionar todos"}
                   </span>
                 </Button>
               )}
 
-              {/* Config Button */}
               <Button
                 variant="outline"
                 size="sm"
@@ -1120,124 +1165,124 @@ export default function CRM() {
                 aria-label="Configurações"
                 className="border-border hover:bg-muted text-foreground min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 h-9"
               >
-                <Settings2 className="h-4 w-4 sm:mr-2" />
+                <SettingsPh size={16} weight="duotone" className="sm:mr-2" />
                 <span className="hidden sm:inline">Configurar</span>
               </Button>
 
-              {/* New Deal Button */}
               <Button
                 size="sm"
                 onClick={() => setShowNewDeal(true)}
                 aria-label="Adicionar"
                 className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all duration-200 min-h-[44px] sm:min-h-0 h-9"
               >
-                <Plus className="h-4 w-4 sm:mr-2" />
+                <PlusPh size={16} weight="duotone" className="sm:mr-2" />
                 <span className="hidden sm:inline">Nova Negociação</span>
               </Button>
             </div>
           </div>
 
-          {/* Row 2: Search bar (full width on mobile, always visible) */}
-          <div className="relative w-full sm:max-w-xs">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/70" />
-            <Input
-              type="text"
-              placeholder="Buscar negociações..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 h-10 sm:h-8 rounded-full border border-white/10 bg-white/[0.03] backdrop-blur-sm text-foreground placeholder:text-muted-foreground/70 transition-colors hover:border-white/15 focus:border-emerald-500/40 focus:ring-1 focus:ring-emerald-500/40 focus-visible:ring-1 focus-visible:ring-emerald-500/40"
-            />
-          </div>
-
-          {/* Row 3: Filter pills (seller, view toggle) - horizontal scroll on mobile */}
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-0.5 -mb-0.5">
-            {/* View Toggle — glass segmented */}
-            <div className="inline-flex items-center gap-0.5 rounded-full border border-white/10 bg-white/[0.03] p-0.5 backdrop-blur-sm flex-shrink-0">
-              {[
-                { id: "kanban", label: "Kanban" },
-                { id: "list", label: "Lista" },
-              ].map((v) => {
-                const active = viewMode === v.id;
-                return (
-                  <button
-                    key={v.id}
-                    type="button"
-                    onClick={() => setViewMode(v.id as "kanban" | "list")}
-                    className={`h-7 rounded-full px-3 text-[11.5px] font-medium transition-colors ${
-                      active
-                        ? "bg-white/10 text-foreground shadow-sm ring-1 ring-white/15"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {v.label}
-                  </button>
-                );
-              })}
+          {/* Row 2: Toolbar — search à esquerda (largura fixa sensata), controles empurrados com ml-auto.
+              F5P.4e: removido spacer flex-1 que squeezava o search no layout anterior. */}
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+            <div className="relative w-full sm:w-72 flex-shrink-0">
+              <SearchPh size={15} weight="duotone" className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/70 pointer-events-none" />
+              <Input
+                type="text"
+                placeholder="Buscar negociações..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 h-9 rounded-lg border border-input bg-background text-[13px] text-foreground placeholder:text-muted-foreground/70 transition-colors hover:border-border focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/40 focus-visible:ring-1 focus-visible:ring-emerald-500/40 dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/15"
+              />
             </div>
 
-            {/* Seller Filter */}
-            <FilterSelect
-              value={selectedSeller}
-              onChange={setSelectedSeller}
-              options={[
-                { value: "all", label: "Todos vendedores" },
-                ...vendors.map((v: any) => ({ value: v.id, label: v.nome })),
-              ]}
-              icon={User}
-              neutralValue="all"
-              minWidth="160px"
-            />
+            {/* Controles empurrados à direita */}
+            <div className="flex items-center gap-2 sm:ml-auto flex-shrink-0">
+              <div className="inline-flex items-center gap-0.5 rounded-lg border border-input bg-background p-0.5 flex-shrink-0 dark:border-white/10 dark:bg-white/[0.03]">
+                {[
+                  { id: "kanban", label: "Kanban" },
+                  { id: "list", label: "Lista" },
+                ].map((v) => {
+                  const active = viewMode === v.id;
+                  return (
+                    <button
+                      key={v.id}
+                      type="button"
+                      onClick={() => setViewMode(v.id as "kanban" | "list")}
+                      className={`h-7 rounded-md px-3 text-[11.5px] font-medium transition-colors ${
+                        active
+                          ? "bg-muted text-foreground shadow-sm ring-1 ring-border/60 dark:bg-white/10 dark:ring-white/15"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {v.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <FilterSelect
+                value={selectedSeller}
+                onChange={setSelectedSeller}
+                options={[
+                  { value: "all", label: "Todos vendedores" },
+                  ...vendors.map((v: any) => ({ value: v.id, label: v.nome })),
+                ]}
+                icon={User}
+                neutralValue="all"
+                minWidth="160px"
+              />
+            </div>
           </div>
         </div>
 
-        {/* Advanced Filters Bar */}
-        <div className="px-4 sm:px-6 py-2 border-b border-border bg-card/50">
+        {/* Advanced Filters Bar — F5P.4d: bg-muted/30 light + card/30 dark pra tier visual */}
+        <div className="px-4 sm:px-6 py-2 border-b border-border bg-muted/30 dark:bg-card/30">
           <div className="flex items-center gap-2 flex-wrap">
             {/* Toggle filters button */}
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[11.5px] font-medium backdrop-blur-sm transition-colors ${
+              className={`inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-[11.5px] font-medium transition-colors ${
                 activeFilterCount > 0
-                  ? "bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/30"
-                  : "border border-white/10 bg-white/[0.03] text-muted-foreground hover:border-white/15 hover:bg-white/[0.06] hover:text-foreground"
+                  ? "bg-emerald-500/15 text-emerald-700 ring-1 ring-emerald-500/30 dark:text-emerald-300"
+                  : "border border-input bg-background text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/15 dark:hover:bg-white/[0.06]"
               }`}
             >
-              <Filter className="h-3 w-3" />
+              <FunnelPh size={13} weight="duotone" />
               Filtros
               {activeFilterCount > 0 && (
                 <span className="inline-flex items-center justify-center h-4 min-w-[16px] px-1 rounded-full bg-emerald-500 text-white text-[10px] font-bold">
                   {activeFilterCount}
                 </span>
               )}
-              <ChevronDown className={`h-3 w-3 transition-transform ${showFilters ? "rotate-180" : ""}`} />
+              <CaretDownPh size={12} weight="bold" className={`transition-transform ${showFilters ? "rotate-180" : ""}`} />
             </button>
 
             {/* Inline active filter pills (always visible when active) */}
             {!showFilters && activeFilterCount > 0 && (
               <>
                 {filterHotDeals && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-orange-500/15 text-orange-400 ring-1 ring-orange-500/30">
-                    <Flame className="h-3 w-3" /> Hot
-                    <button onClick={() => setFilterHotDeals(false)} className="ml-0.5 hover:text-orange-200"><X className="h-2.5 w-2.5" /></button>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-orange-500/15 text-orange-600 ring-1 ring-orange-500/30 dark:text-orange-400">
+                    <FlamePh size={12} weight="duotone" /> Hot
+                    <button onClick={() => setFilterHotDeals(false)} className="ml-0.5 hover:text-orange-700 dark:hover:text-orange-200"><XPh size={10} weight="bold" /></button>
                   </span>
                 )}
                 {filterRottingDeals && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-rose-500/15 text-rose-400 ring-1 ring-rose-500/30">
-                    <Clock className="h-3 w-3" /> Parados
-                    <button onClick={() => setFilterRottingDeals(false)} className="ml-0.5 hover:text-rose-200"><X className="h-2.5 w-2.5" /></button>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-rose-500/15 text-rose-600 ring-1 ring-rose-500/30 dark:text-rose-400">
+                    <ClockPh size={12} weight="duotone" /> Parados
+                    <button onClick={() => setFilterRottingDeals(false)} className="ml-0.5 hover:text-rose-700 dark:hover:text-rose-200"><XPh size={10} weight="bold" /></button>
                   </span>
                 )}
                 {filterProbability !== "all" && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-blue-500/15 text-blue-400 ring-1 ring-blue-500/30">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-blue-500/15 text-blue-600 ring-1 ring-blue-500/30 dark:text-blue-400">
                     {filterProbability === "high" ? "Alta 70%+" : filterProbability === "medium" ? "Média 30-69%" : "Baixa <30%"}
-                    <button onClick={() => setFilterProbability("all")} className="ml-0.5 hover:text-blue-200"><X className="h-2.5 w-2.5" /></button>
+                    <button onClick={() => setFilterProbability("all")} className="ml-0.5 hover:text-blue-700 dark:hover:text-blue-200"><XPh size={10} weight="bold" /></button>
                   </span>
                 )}
                 {filterDateRange !== "all" && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-purple-500/15 text-purple-400 ring-1 ring-purple-500/30">
-                    <CalendarDays className="h-3 w-3" />
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-purple-500/15 text-purple-600 ring-1 ring-purple-500/30 dark:text-purple-400">
+                    <CalendarPh size={12} weight="duotone" />
                     {filterDateRange === "this_week" ? "Esta semana" : filterDateRange === "this_month" ? "Este mês" : "Vencidos"}
-                    <button onClick={() => setFilterDateRange("all")} className="ml-0.5 hover:text-purple-200"><X className="h-2.5 w-2.5" /></button>
+                    <button onClick={() => setFilterDateRange("all")} className="ml-0.5 hover:text-purple-700 dark:hover:text-purple-200"><XPh size={10} weight="bold" /></button>
                   </span>
                 )}
                 {filterTagIds.length > 0 && filterTagIds.map((tid) => {
@@ -1246,7 +1291,7 @@ export default function CRM() {
                   return (
                     <span key={tid} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium ring-1" style={{ backgroundColor: `${tag.color}22`, color: tag.color, borderColor: `${tag.color}55` }}>
                       {tag.name}
-                      <button onClick={() => setFilterTagIds((prev) => prev.filter((id) => id !== tid))} className="ml-0.5 hover:opacity-70"><X className="h-2.5 w-2.5" /></button>
+                      <button onClick={() => setFilterTagIds((prev) => prev.filter((id) => id !== tid))} className="ml-0.5 hover:opacity-70"><XPh size={10} weight="bold" /></button>
                     </span>
                   );
                 })}
@@ -1254,42 +1299,38 @@ export default function CRM() {
                   onClick={clearAllFilters}
                   className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  <X className="h-3 w-3" /> Limpar filtros
+                  <XPh size={12} weight="bold" /> Limpar filtros
                 </button>
               </>
             )}
 
-            {/* Expanded filter options */}
+            {/* Expanded filter options — F5P.4e: chips com contraste light/dark + Phosphor */}
             {showFilters && (
               <>
-                {/* Hot Deals */}
                 <button
                   onClick={() => setFilterHotDeals(!filterHotDeals)}
-                  className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[11.5px] font-medium backdrop-blur-sm transition-colors ${
+                  className={`inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-[11.5px] font-medium transition-colors ${
                     filterHotDeals
-                      ? "bg-orange-500/10 text-orange-300 ring-1 ring-orange-500/30"
-                      : "border border-white/10 bg-white/[0.03] text-muted-foreground hover:border-white/15 hover:bg-white/[0.06] hover:text-foreground"
+                      ? "bg-orange-500/15 text-orange-700 ring-1 ring-orange-500/30 dark:text-orange-300"
+                      : "border border-input bg-background text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/15 dark:hover:bg-white/[0.06]"
                   }`}
                 >
-                  <Flame className="h-3 w-3" /> Hot
+                  <FlamePh size={13} weight="duotone" /> Hot
                 </button>
 
-                {/* Rotting Deals */}
                 <button
                   onClick={() => setFilterRottingDeals(!filterRottingDeals)}
-                  className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[11.5px] font-medium backdrop-blur-sm transition-colors ${
+                  className={`inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-[11.5px] font-medium transition-colors ${
                     filterRottingDeals
-                      ? "bg-rose-500/10 text-rose-300 ring-1 ring-rose-500/30"
-                      : "border border-white/10 bg-white/[0.03] text-muted-foreground hover:border-white/15 hover:bg-white/[0.06] hover:text-foreground"
+                      ? "bg-rose-500/15 text-rose-700 ring-1 ring-rose-500/30 dark:text-rose-300"
+                      : "border border-input bg-background text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/15 dark:hover:bg-white/[0.06]"
                   }`}
                 >
-                  <Clock className="h-3 w-3" /> Parados 3+ dias
+                  <ClockPh size={13} weight="duotone" /> Parados 3+ dias
                 </button>
 
-                {/* Separator */}
-                <div className="w-px h-5 bg-white/10" />
+                <div className="w-px h-5 bg-border" />
 
-                {/* Probability quick buttons */}
                 {(["high", "medium", "low"] as const).map((level) => {
                   const labels = { high: "Prob. alta", medium: "Prob. média", low: "Prob. baixa" };
                   const isActive = filterProbability === level;
@@ -1297,10 +1338,10 @@ export default function CRM() {
                     <button
                       key={level}
                       onClick={() => setFilterProbability(isActive ? "all" : level)}
-                      className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[11.5px] font-medium backdrop-blur-sm transition-colors ${
+                      className={`inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-[11.5px] font-medium transition-colors ${
                         isActive
-                          ? "bg-sky-500/10 text-sky-300 ring-1 ring-sky-500/30"
-                          : "border border-white/10 bg-white/[0.03] text-muted-foreground hover:border-white/15 hover:bg-white/[0.06] hover:text-foreground"
+                          ? "bg-sky-500/15 text-sky-700 ring-1 ring-sky-500/30 dark:text-sky-300"
+                          : "border border-input bg-background text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/15 dark:hover:bg-white/[0.06]"
                       }`}
                     >
                       {labels[level]}
@@ -1308,10 +1349,8 @@ export default function CRM() {
                   );
                 })}
 
-                {/* Separator */}
-                <div className="w-px h-5 bg-white/10" />
+                <div className="w-px h-5 bg-border" />
 
-                {/* Date range quick buttons */}
                 {(["this_week", "this_month", "overdue"] as const).map((range) => {
                   const labels = { this_week: "Esta semana", this_month: "Este mês", overdue: "Vencidos" };
                   const isActive = filterDateRange === range;
@@ -1319,21 +1358,20 @@ export default function CRM() {
                     <button
                       key={range}
                       onClick={() => setFilterDateRange(isActive ? "all" : range)}
-                      className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[11.5px] font-medium backdrop-blur-sm transition-colors ${
+                      className={`inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-[11.5px] font-medium transition-colors ${
                         isActive
-                          ? "bg-violet-500/10 text-violet-300 ring-1 ring-violet-500/30"
-                          : "border border-white/10 bg-white/[0.03] text-muted-foreground hover:border-white/15 hover:bg-white/[0.06] hover:text-foreground"
+                          ? "bg-violet-500/15 text-violet-700 ring-1 ring-violet-500/30 dark:text-violet-300"
+                          : "border border-input bg-background text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/15 dark:hover:bg-white/[0.06]"
                       }`}
                     >
-                      <CalendarDays className="h-3 w-3" /> {labels[range]}
+                      <CalendarPh size={13} weight="duotone" /> {labels[range]}
                     </button>
                   );
                 })}
 
-                {/* Tags */}
                 {companyTags.length > 0 && (
                   <>
-                    <div className="w-px h-5 bg-white/10" />
+                    <div className="w-px h-5 bg-border" />
                     {companyTags.map((tag: any) => {
                       const isActive = filterTagIds.includes(tag.id);
                       return (
@@ -1344,10 +1382,10 @@ export default function CRM() {
                               isActive ? prev.filter((id) => id !== tag.id) : [...prev, tag.id]
                             )
                           }
-                          className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[11.5px] font-medium backdrop-blur-sm transition-colors ${
+                          className={`inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-[11.5px] font-medium transition-colors ${
                             isActive
                               ? ""
-                              : "border border-white/10 bg-white/[0.03] text-muted-foreground hover:border-white/15 hover:bg-white/[0.06] hover:text-foreground"
+                              : "border border-input bg-background text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/15 dark:hover:bg-white/[0.06]"
                           }`}
                           style={
                             isActive
@@ -1363,15 +1401,14 @@ export default function CRM() {
                   </>
                 )}
 
-                {/* Clear all */}
                 {activeFilterCount > 0 && (
                   <>
-                    <div className="w-px h-5 bg-white/10" />
+                    <div className="w-px h-5 bg-border" />
                     <button
                       onClick={clearAllFilters}
-                      className="inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[11.5px] font-medium text-rose-400 transition-colors hover:bg-rose-500/10"
+                      className="inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-[11.5px] font-medium text-rose-600 dark:text-rose-400 transition-colors hover:bg-rose-500/10"
                     >
-                      <X className="h-3 w-3" /> Limpar filtros
+                      <XPh size={13} weight="bold" /> Limpar filtros
                     </button>
                   </>
                 )}
@@ -1380,26 +1417,26 @@ export default function CRM() {
           </div>
         </div>
 
-        {/* Rotting Deals Banner */}
+        {/* F5P.4c — Rotting Banner com contraste decente em light + dark.
+            Antes: text-amber-200/95 em fundo claro = ilegível. */}
         {rottingDealsCount > 0 && !rottingBannerDismissed && (
           <div
-            className="flex items-center justify-between gap-3 px-4 sm:px-6 py-2.5 border-b border-amber-500/20 cursor-pointer"
-            style={{ background: "linear-gradient(90deg, rgba(245,158,11,0.12), rgba(239,68,68,0.10))" }}
+            className="flex items-center justify-between gap-3 px-4 sm:px-6 py-2.5 border-b border-amber-300/40 dark:border-amber-500/20 cursor-pointer transition-colors bg-amber-50 hover:bg-amber-100/70 dark:bg-amber-500/[0.06] dark:hover:bg-amber-500/[0.10]"
             onClick={() => setFilterRottingDeals((prev) => !prev)}
           >
-            <div className="flex items-center gap-2 text-sm font-medium">
-              <span className="inline-block w-2.5 h-2.5 rounded-full bg-rose-500 flex-shrink-0" />
-              <span className="text-amber-200">
-                {rottingDealsCount} negociação{rottingDealsCount !== 1 ? "ões" : ""} sem atualização há mais de 3 dias
+            <div className="flex items-center gap-2 text-[12.5px]">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />
+              <span className="font-medium text-amber-900 dark:text-amber-200">
+                {rottingDealsCount} {rottingDealsCount === 1 ? "oportunidade" : "oportunidades"} sem atualização há mais de 3 dias
               </span>
               {filterRottingDeals && (
-                <span className="ml-2 px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold uppercase tracking-wide">
-                  Filtro ativo
+                <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-200 text-amber-900 dark:bg-amber-500/20 dark:text-amber-200">
+                  filtro ativo
                 </span>
               )}
             </div>
             <button
-              className="p-1 rounded-md hover:bg-white/10 transition-colors text-amber-300/70 hover:text-amber-200"
+              className="p-1 rounded-md hover:bg-amber-200/60 dark:hover:bg-white/5 transition-colors text-amber-700/70 hover:text-amber-900 dark:text-amber-300/60 dark:hover:text-amber-200"
               onClick={(e) => {
                 e.stopPropagation();
                 setRottingBannerDismissed(true);
@@ -1407,7 +1444,7 @@ export default function CRM() {
               }}
               title="Fechar"
             >
-              <X className="h-4 w-4" />
+              <X className="h-3.5 w-3.5" />
             </button>
           </div>
         )}
@@ -1500,6 +1537,8 @@ export default function CRM() {
                       onToggleSelect={toggleSelectDeal}
                       stageNeighbors={stageNeighborsMap[stage.id]}
                       onSwipeMove={handleSwipeMove}
+                      contextByDeal={pipelineContext.contextByDeal}
+                      tagsByDeal={dealsTags.tagsByDeal}
                     />
                 ))}
               </div>

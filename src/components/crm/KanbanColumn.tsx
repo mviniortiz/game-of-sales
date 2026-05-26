@@ -4,7 +4,11 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DealCard, StageNeighbors } from "./DealCard";
 import type { Deal, Stage } from "@/pages/CRM";
+import type { PipelineDealContext } from "@/hooks/usePipelineContextData";
+import type { Tag } from "@/types/tags";
 import { Inbox, ArrowRight } from "lucide-react";
+// F5P.4e — Phosphor duotone padronizado (consistente com sidebar e header).
+import { Tray as TrayPh, ArrowRight as ArrowRightPh } from "@phosphor-icons/react";
 
 interface KanbanColumnProps {
   stage: Stage;
@@ -20,6 +24,10 @@ interface KanbanColumnProps {
   onToggleSelect?: (dealId: string) => void;
   stageNeighbors?: StageNeighbors;
   onSwipeMove?: (deal: Deal, targetStageId: string) => void;
+  /** F5P.2 — contexto enriquecido por deal */
+  contextByDeal?: Map<string, PipelineDealContext>;
+  /** F6T.2 — tags transversais (F6T.1) por deal */
+  tagsByDeal?: Map<string, Tag[]>;
 }
 
 // Micro funnel arrow between columns
@@ -34,7 +42,7 @@ const FunnelConnector = ({ rate }: { rate: number }) => {
   return (
     <div className="flex flex-col items-center justify-start pt-[52px] flex-shrink-0 w-5 z-10">
       <div className={`flex flex-col items-center gap-0.5 px-1 py-1.5 rounded-full ${bg} ring-1`}>
-        <ArrowRight className={`h-3 w-3 ${color}`} />
+        <ArrowRightPh size={12} weight="bold" className={color} />
         <span className={`text-[9px] font-bold tabular-nums ${color} [writing-mode:vertical-lr] rotate-180`}>
           {rate}%
         </span>
@@ -57,6 +65,8 @@ export const KanbanColumn = memo(({
   onToggleSelect,
   stageNeighbors,
   onSwipeMove,
+  contextByDeal,
+  tagsByDeal,
 }: KanbanColumnProps) => {
   const { setNodeRef, isOver } = useDroppable({ id: stage.id });
   const Icon = stage.icon;
@@ -65,11 +75,17 @@ export const KanbanColumn = memo(({
 
   const conversionRate = useMemo(() => {
     if (!showConversionRate || !previousStageCount || previousStageCount === 0) return null;
-    return Math.round((total.count / previousStageCount) * 100);
+    const rate = Math.round((total.count / previousStageCount) * 100);
+    // F5P.4c — pipelines com poucos deals geram ratios >100% que não fazem
+    // sentido como "conversão". Esconde quando estágio atual >= anterior.
+    if (rate > 100) return null;
+    return rate;
   }, [showConversionRate, total.count, previousStageCount]);
 
-  // Map stage color text-* → bg-* for stage dot
+  // Map stage color text-* → bg-* for stage dot e accent bar superior
   const dotBg = stage.color.replace("text-", "bg-").replace("-400", "-500");
+  // Stage accent bar: gradient sutil da cor do stage (F5P.4e)
+  const accentBg = stage.color.replace("text-", "bg-").replace("-400", "-500");
 
   return (
     <div className="flex items-stretch gap-0 h-full">
@@ -80,47 +96,53 @@ export const KanbanColumn = memo(({
         </div>
       )}
 
-      {/* ── Main Column (droppable shell inteiro — cobre header + track) ─ */}
+      {/* F5P.4c — 3 níveis tonais: board (claro) → coluna (slate-100) →
+          card (branco). Inverte estratégia anterior pra dar contraste real
+          em light mode. Em dark o card-secondary já cria diferença. */}
       <div
         ref={setNodeRef}
         className={`
-          relative flex flex-col w-[85vw] sm:w-[280px] flex-shrink-0 h-full rounded-xl
+          relative flex flex-col w-[85vw] sm:w-[280px] flex-shrink-0 h-full rounded-2xl
           border transition-colors duration-150 snap-center overflow-hidden
           ${isOver
-            ? "border-emerald-400/70 bg-emerald-500/[0.05]"
-            : "border-border/60 bg-card/30"
+            ? "border-emerald-400/60 bg-emerald-50 dark:bg-emerald-500/[0.05]"
+            : "border-slate-200/70 bg-slate-100/70 dark:border-border/40 dark:bg-card/40"
           }
         `}
       >
-        {/* Top accent bar quando isOver (GPU-friendly: scale-x) */}
+        {/* F5P.4e — Accent bar superior PERMANENTE com cor do stage (assina visualmente
+            cada coluna). Anima pra emerald quando isOver. */}
         <div
-          className={`absolute top-0 left-0 right-0 h-[2px] origin-left transition-transform duration-200 ${isOver ? "scale-x-100" : "scale-x-0"}`}
-          style={{ background: "linear-gradient(90deg, transparent, #00E37A, transparent)" }}
+          className={`absolute top-0 left-0 right-0 h-[3px] ${isOver ? "" : accentBg} transition-colors duration-150`}
+          style={isOver ? { background: "linear-gradient(90deg, #00E37A, #34d399, #00E37A)" } : undefined}
         />
-        {/* ── Column Header ────────────────────────────────── */}
-        <div className="px-3.5 pt-3.5 pb-3">
-          {/* Row 1: stage dot + title + count */}
+
+        {/* F5P.4e — Column Header com bg distinto (white em light / card em dark)
+            cria grouping visual com cards e separação clara do "track" da coluna */}
+        <div className="px-3.5 pt-4 pb-3 bg-white/60 dark:bg-card/30 border-b border-border/40">
           <div className="flex items-center gap-2 mb-1.5">
-            <span className={`w-2 h-2 rounded-full ${dotBg} flex-shrink-0`} />
-            <Icon className={`h-3.5 w-3.5 ${stage.color} flex-shrink-0`} strokeWidth={2.2} />
+            <Icon className={`h-4 w-4 ${stage.color} flex-shrink-0`} strokeWidth={2.2} />
             <span className="font-semibold text-foreground text-[13px] tracking-tight truncate flex-1">
               {stage.title}
             </span>
-            <span className="text-[11px] text-muted-foreground font-medium tabular-nums flex-shrink-0">
+            {/* Count badge sólido com cor do stage (bg + ring via currentColor) */}
+            <span className={`inline-flex items-center justify-center h-5 min-w-[20px] px-1.5 rounded-md text-[10.5px] font-bold tabular-nums bg-muted/60 dark:bg-card/60 ${stage.color}`} style={{ boxShadow: "inset 0 0 0 1px currentColor" }}>
               {total.count}
             </span>
           </div>
-
-          {/* Row 2: Value total */}
-          {total.count > 0 && (
-            <div className="text-[12px] font-semibold text-emerald-400 tabular-nums tracking-tight pl-4">
-              {formatCurrency(total.value)}
+          {total.count > 0 ? (
+            <div className="pl-6 flex items-baseline gap-1.5">
+              <span className="text-[11px] text-muted-foreground">Total</span>
+              <span className="text-[12.5px] font-semibold text-emerald-600 dark:text-emerald-300 tabular-nums">
+                {formatCurrency(total.value)}
+              </span>
+            </div>
+          ) : (
+            <div className="pl-6 text-[11px] text-muted-foreground/70">
+              vazio
             </div>
           )}
         </div>
-
-        {/* Subtle divider */}
-        <div className="h-px bg-border/40 mx-3" />
 
         {/* ── Cards Track ──────────────────────────────────── */}
         <div className="flex-1 p-2.5 overflow-hidden max-h-[calc(100vh-240px)]">
@@ -128,14 +150,15 @@ export const KanbanColumn = memo(({
             <SortableContext items={dealIds} strategy={verticalListSortingStrategy}>
               <div className="space-y-2 pt-1 pb-2">
                 {deals.length === 0 ? (
+                  // F5P.4 — empty state mais discreto, menor altura
                   <div className={`
-                    flex flex-col items-center justify-center h-40 rounded-lg border border-dashed
+                    flex flex-col items-center justify-center py-8 px-3 rounded-xl border border-dashed
                     transition-colors duration-150
-                    ${isOver ? "border-emerald-400/60 bg-emerald-500/[0.04]" : "border-border/40"}
+                    ${isOver ? "border-emerald-400/50 bg-emerald-500/[0.04]" : "border-border/30"}
                   `}>
-                    <Inbox className={`h-4 w-4 mb-1.5 ${isOver ? "text-emerald-400" : "text-muted-foreground/60"}`} strokeWidth={1.5} />
-                    <p className={`text-[10.5px] font-medium ${isOver ? "text-emerald-400" : "text-muted-foreground/60"}`}>
-                      {isOver ? "Solte aqui" : "Arraste um card"}
+                    <TrayPh size={14} weight="duotone" className={`mb-1 ${isOver ? "text-emerald-400" : "text-muted-foreground/50"}`} />
+                    <p className={`text-[10.5px] text-center ${isOver ? "text-emerald-400" : "text-muted-foreground/60"}`}>
+                      {isOver ? "Solte aqui" : "Nenhuma oportunidade aqui"}
                     </p>
                   </div>
                 ) : (
@@ -150,6 +173,8 @@ export const KanbanColumn = memo(({
                       onToggleSelect={onToggleSelect}
                       stageNeighbors={stageNeighbors}
                       onSwipeMove={onSwipeMove}
+                      context={contextByDeal?.get(deal.id)}
+                      tags={tagsByDeal?.get(deal.id)}
                     />
                   ))
                 )}

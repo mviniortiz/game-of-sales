@@ -306,7 +306,10 @@ async function syncAllEvents(accessToken: string, userId: string, supabase: any)
 
     const { data: insertedData, error: insertError } = await supabase
       .from("agendamentos")
-      .insert(newEvents)
+      .upsert(newEvents, {
+        onConflict: "user_id,google_event_id",
+        ignoreDuplicates: true,
+      })
       .select();
 
     if (insertError) {

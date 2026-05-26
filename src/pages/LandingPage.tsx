@@ -3,26 +3,20 @@ import { useNavigate } from "react-router-dom";
 import { trackEvent, FUNNEL_EVENTS } from "@/lib/analytics";
 import { LazyOnVisible } from "@/components/LazyOnVisible";
 import { HeroSection } from "@/components/landing/HeroSection";
-import { ImpactMetrics } from "@/components/landing/ImpactMetrics";
+import { PilaresSection } from "@/components/landing/PilaresSection";
+import { AgentStudioSection } from "@/components/landing/AgentStudioSection";
 import { PainPoints } from "@/components/landing/PainPoints";
+import { ProductShowcase } from "@/components/landing/ProductShowcase";
 import { LandingNav } from "@/components/landing/LandingNav";
 import { NavigatingOverlay } from "@/components/landing/sections/NavigatingOverlay";
 import { scrollToLazyAnchor, smoothScrollToId, useHashScrollOnMount } from "@/hooks/useLandingAnchor";
 
-const FlowSection = lazy(() =>
-    import("@/components/landing/FlowSection").then((m) => ({ default: m.FlowSection }))
-);
-const ProductBentoGrid = lazy(() =>
-    import("@/components/landing/ProductBentoGrid").then((m) => ({ default: m.ProductBentoGrid }))
-);
-const ComparisonSection = lazy(() =>
-    import("@/components/landing/ComparisonSection").then((m) => ({ default: m.ComparisonSection }))
-);
-const DemoVideoPlayer = lazy(() =>
-    import("@/components/landing/DemoVideoPlayer").then((m) => ({ default: m.DemoVideoPlayer }))
-);
-const UseCasesSection = lazy(() =>
-    import("@/components/landing/UseCasesSection").then((m) => ({ default: m.UseCasesSection }))
+// LP.2 2026-05-25: narrativa simplificada. Removidos do render (e dos imports):
+// FlowSection (Central de Comando standalone), PipelineSection, LigacoesSection
+// (Base de Conhecimento standalone), UseCasesSection (Para cada papel) e
+// DemoVideoPlayer — conteúdo redundante absorvido por Solução/EVA/Fluxo.
+const CentralComercialSection = lazy(() =>
+    import("@/components/landing/CentralComercialSection").then((m) => ({ default: m.CentralComercialSection }))
 );
 const EvaAISection = lazy(() =>
     import("@/components/landing/EvaAISection").then((m) => ({ default: m.EvaAISection }))
@@ -35,9 +29,6 @@ const DemoScheduleSection = lazy(() =>
 );
 const FinalCTA = lazy(() =>
     import("@/components/landing/FinalCTA").then((m) => ({ default: m.FinalCTA }))
-);
-const LigacoesSection = lazy(() =>
-    import("@/components/landing/sections/LigacoesSection").then((m) => ({ default: m.LigacoesSection }))
 );
 const PricingSection = lazy(() =>
     import("@/components/landing/sections/PricingSection").then((m) => ({ default: m.PricingSection }))
@@ -124,6 +115,7 @@ const LandingPage = () => {
                 onLoginClick={() => navigate("/auth")}
             />
 
+            {/* 1 · HERO */}
             <HeroSection
                 onCTAClick={() => scrollToLazyAnchor("pricing")}
                 onDemoClick={() => scrollToLazyAnchor("how-it-works")}
@@ -131,44 +123,36 @@ const LandingPage = () => {
                 onLoginClick={() => navigate("/auth")}
             />
 
-            <ImpactMetrics />
-
+            {/* 2 · PROBLEMA */}
             <PainPoints />
 
-            <LazyOnVisible minHeight="500px" id="how-it-works">
-                <FlowSection />
-            </LazyOnVisible>
+            {/* 3 · PROVA VISUAL DE PRODUTO (mock CSS) — âncora "Como funciona" */}
+            <div id="how-it-works">
+                <ProductShowcase />
+            </div>
 
-            <LazyOnVisible minHeight="600px">
-                <ProductBentoGrid />
-            </LazyOnVisible>
+            {/* 4 · COMO O VYZON RESOLVE */}
+            <AgentStudioSection onCTAClick={() => scrollToDemo("solucao")} />
 
-            <LazyOnVisible minHeight="800px">
-                <ComparisonSection onCTAClick={() => goToRegister("plus")} />
-            </LazyOnVisible>
-
-            <LazyOnVisible minHeight="320px" id="agendar-demo">
-                <DemoScheduleSection />
-            </LazyOnVisible>
-
-            <LazyOnVisible minHeight="500px">
-                <DemoVideoPlayer />
-            </LazyOnVisible>
-
-            <LazyOnVisible minHeight="600px">
-                <div id="use-cases">
-                    <UseCasesSection />
-                </div>
-            </LazyOnVisible>
-
-            <LazyOnVisible minHeight="500px">
-                <LigacoesSection onSeePlansClick={() => smoothScrollToId("pricing")} />
-            </LazyOnVisible>
-
+            {/* 5 · EVA */}
             <LazyOnVisible minHeight="700px">
                 <EvaAISection onCTAClick={() => smoothScrollToId("pricing")} />
             </LazyOnVisible>
 
+            {/* 6 · CENTRAL COMERCIAL (resumo comercial enxuto) */}
+            <LazyOnVisible minHeight="500px">
+                <CentralComercialSection />
+            </LazyOnVisible>
+
+            {/* 7 · PARA QUEM É */}
+            <PilaresSection />
+
+            {/* 8 · CTA / DEMO (alvo de todos os CTAs "Agendar") */}
+            <LazyOnVisible minHeight="320px" id="agendar-demo">
+                <DemoScheduleSection />
+            </LazyOnVisible>
+
+            {/* 9 · PRICING */}
             <LazyOnVisible minHeight="900px" id="pricing">
                 <PricingSection
                     onPlanSelect={goToRegister}
@@ -176,14 +160,19 @@ const LandingPage = () => {
                 />
             </LazyOnVisible>
 
+            {/* FAQ */}
             <LazyOnVisible minHeight="600px">
                 <div id="faq">
                     <FAQSection />
                 </div>
             </LazyOnVisible>
 
+            {/* CTA FINAL */}
             <LazyOnVisible minHeight="400px">
-                <FinalCTA onCTAClick={() => goToRegister("pro")} onScheduleDemoClick={() => scrollToDemo("final_cta")} />
+                <FinalCTA
+                    onCTAClick={() => goToRegister("pro")}
+                    onScheduleDemoClick={() => scrollToDemo("final_cta")}
+                />
             </LazyOnVisible>
 
             <LazyOnVisible minHeight="300px">

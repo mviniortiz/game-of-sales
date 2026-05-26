@@ -107,7 +107,8 @@ type Action =
   | "getMedia"
   | "monitor"
   | "deleteInstance"
-  | "setWebhookAll";
+  | "setWebhookAll"
+  | "import_history";
 
 type Body = {
   action?: Action;
@@ -128,6 +129,9 @@ type Body = {
   caption?: string;
   /** Instance name for deleteInstance action */
   targetInstanceName?: string;
+  /** F4W.7.3 — import_history: limites (com hard caps no handler) */
+  maxChats?: number;
+  maxMessagesPerChat?: number;
 };
 
 function json(status: number, body: unknown) {
@@ -209,6 +213,120 @@ async function evolutionRequest(
   }
 
   return parsed;
+}
+
+// ─────────────────────────────────────────────────────────────
+// F4W.7.3 — Import de histórico: helpers de normalização.
+// Espelham evolution-message-webhook (mesmo schema em channel_*).
+// TODO(consolidação): extrair pra módulo _shared usado pelas 2 functions.
+// ─────────────────────────────────────────────────────────────
+function parseTextFromMsg(msg: any): string | null {
+  const m = msg?.message;
+  if (!m) return msg?.body || msg?.text || null;
+  if (m.conversation) return m.conversation;
+  if (m.extendedTextMessage?.text) return m.extendedTextMessage.text;
+  if (m.imageMessage?.caption) return m.imageMessage.caption;
+  if (m.videoMessage?.caption) return m.videoMessage.caption;
+  return null;
+}
+
+function detectMsgType(msg: any): { type: string; mimetype?: string; caption?: string; audioDuration?: number; mediaUrl?: string } {
+  const m = msg?.message;
+  if (!m) return { type: "text" };
+  if (m.conversation || m.extendedTextMessage?.text) return { type: "text" };
+  if (m.imageMessage) return { type: "image", mimetype: m.imageMessage.mimetype, caption: m.imageMessage.caption, mediaUrl: m.imageMessage.url };
+  if (m.videoMessage) return { type: "video", mimetype: m.videoMessage.mimetype, caption: m.videoMessage.caption, mediaUrl: m.videoMessage.url };
+  if (m.audioMessage) return { type: "audio", mimetype: m.audioMessage.mimetype, audioDuration: Number(m.audioMessage.seconds || 0) || undefined, mediaUrl: m.audioMessage.url };
+  if (m.stickerMessage) return { type: "sticker", mimetype: m.stickerMessage.mimetype, mediaUrl: m.stickerMessage.url };
+  if (m.documentMessage) return { type: "document", mimetype: m.documentMessage.mimetype, caption: m.documentMessage.fileName, mediaUrl: m.documentMessage.url };
+  if (m.locationMessage || m.liveLocationMessage) return { type: "location" };
+  if (m.contactMessage) return { type: "contact" };
+  if (m.reactionMessage) return { type: "reaction" };
+  if (m.protocolMessage || m.senderKeyDistributionMessage) return { type: "protocol" };
+  return { type: "other" };
+}
+
+function mapChannelType(internal: string): string {
+  switch (internal) {
+    case "text": case "image": case "audio": case "video": case "document": case "reaction": case "location": return internal;
+    case "sticker": return "image";
+    case "contact": return "contacts";
+    default: return "unknown";
+  }
+}
+
+async function importEnsureConnection(admin: any, instanceName: string, companyId: string, userId: string): Promise<string | null> {
+  const metaPatch: Record<string, unknown> = { source: "import_history", instance_name: instanceName, user_id: userId };
+  try {
+    const { data: existing } = await admin.from("channel_connections").select("id, metadata").eq("provider", "evolution").eq("external_id", instanceName).maybeSingle();
+    if (existing?.id) {
+      const merged = { ...((existing.metadata as Record<string, unknown>) || {}), ...metaPatch };
+      await admin.from("channel_connections").update({ status: "active", last_seen_at: new Date().toISOString(), metadata: merged }).eq("id", existing.id);
+      return existing.id;
+    }
+    const { data: created, error } = await admin.from("channel_connections").insert({ company_id: companyId, provider: "evolution", channel_type: "whatsapp", external_id: instanceName, display_name: instanceName, status: "active", last_seen_at: new Date().toISOString(), metadata: metaPatch }).select("id").single();
+    if (error) {
+      const { data: again } = await admin.from("channel_connections").select("id").eq("provider", "evolution").eq("external_id", instanceName).maybeSingle();
+      return again?.id || null;
+    }
+    return created.id;
+  } catch {
+    return null;
+  }
+}
+
+async function importEnsureContact(admin: any, connectionId: string, companyId: string, remoteJid: string, name: string | null, chatPhone: string, phoneTail: string): Promise<string | null> {
+  try {
+    const { data: existing } = await admin.from("channel_contacts").select("id, name").eq("connection_id", connectionId).eq("external_contact_id", remoteJid).maybeSingle();
+    if (existing?.id) {
+      if (name && name !== existing.name) {
+        await admin.from("channel_contacts").update({ name }).eq("id", existing.id);
+      }
+      return existing.id;
+    }
+    const { data: created, error } = await admin.from("channel_contacts").insert({ company_id: companyId, connection_id: connectionId, external_contact_id: remoteJid, phone_e164: chatPhone || null, phone_tail: phoneTail || null, name, is_group: false, metadata: { chat_jid: remoteJid } }).select("id").single();
+    if (error) {
+      const { data: again } = await admin.from("channel_contacts").select("id").eq("connection_id", connectionId).eq("external_contact_id", remoteJid).maybeSingle();
+      return again?.id || null;
+    }
+    return created.id;
+  } catch {
+    return null;
+  }
+}
+
+async function importEnsureConversation(
+  admin: any,
+  connectionId: string,
+  companyId: string,
+  contactId: string,
+  lastMessageAt: string,
+  lastInboundAt: string | null,
+  lastOutboundAt: string | null,
+): Promise<{ id: string | null; isNew: boolean }> {
+  try {
+    const { data: existing } = await admin.from("channel_conversations").select("id").eq("connection_id", connectionId).eq("contact_id", contactId).maybeSingle();
+    if (existing?.id) return { id: existing.id, isNew: false };
+    // Conversa nova: import NÃO infla unread (mensagens históricas já lidas).
+    const { data: created, error } = await admin.from("channel_conversations").insert({
+      company_id: companyId,
+      connection_id: connectionId,
+      contact_id: contactId,
+      status: "open",
+      last_message_at: lastMessageAt,
+      last_inbound_at: lastInboundAt,
+      last_outbound_at: lastOutboundAt,
+      unread_count: 0,
+      metadata: {},
+    }).select("id").single();
+    if (error) {
+      const { data: again } = await admin.from("channel_conversations").select("id").eq("connection_id", connectionId).eq("contact_id", contactId).maybeSingle();
+      return { id: again?.id || null, isNew: false };
+    }
+    return { id: created.id, isNew: true };
+  } catch {
+    return { id: null, isNew: false };
+  }
 }
 
 serve(async (req) => {
@@ -387,6 +505,212 @@ serve(async (req) => {
         body: JSON.stringify({}),
       });
       return json(200, { success: true, instanceName, chats });
+    }
+
+    // ── F4W.7.3 — IMPORT_HISTORY: Evolution é fonte do IMPORT; channel_* é a
+    // verdade. Importa conversas/mensagens recentes (sem grupos, com limites).
+    if (action === "import_history") {
+      const MAX_CHATS_CAP = 30;
+      const MAX_MSGS_CAP = 100;
+      const TOTAL_CAP = 1000;
+      const maxChats = Math.max(1, Math.min(Number(body.maxChats || 20), MAX_CHATS_CAP));
+      const maxMsgs = Math.max(1, Math.min(Number(body.maxMessagesPerChat || 50), MAX_MSGS_CAP));
+
+      // 1. Garante a connection row (mesma resolução do webhook)
+      const connectionId = await importEnsureConnection(adminSupabase, instanceName, targetCompanyId, effectiveUserId);
+      if (!connectionId) {
+        return json(500, { error: "Não consegui resolver a conexão para importar" });
+      }
+
+      // 2. Busca chats recentes
+      let chatsRaw: any;
+      try {
+        chatsRaw = await evolutionRequest(`/chat/findChats/${instanceName}`, {
+          method: "POST",
+          body: JSON.stringify({}),
+        });
+      } catch (err: any) {
+        return json(502, { error: `Falha ao buscar conversas: ${err?.message || err}` });
+      }
+      const chatArr: any[] = Array.isArray(chatsRaw)
+        ? chatsRaw
+        : Array.isArray(chatsRaw?.chats)
+          ? chatsRaw.chats
+          : Array.isArray(chatsRaw?.chats?.records)
+            ? chatsRaw.chats.records
+            : Array.isArray(chatsRaw?.records)
+              ? chatsRaw.records
+              : [];
+
+      let skippedGroups = 0;
+      const candidatesChats = chatArr
+        .map((c: any) => ({
+          jid: String(c?.remoteJid || c?.id || ""),
+          name: (c?.pushName || c?.name || c?.contactName || c?.verifiedName || null) as string | null,
+          updatedAt: String(c?.updatedAt || c?.updated_at || ""),
+        }))
+        .filter((c) => {
+          if (!c.jid) return false;
+          if (c.jid.includes("@g.us")) { skippedGroups++; return false; }
+          if (c.jid.includes("@broadcast") || c.jid.includes("@newsletter")) return false;
+          // V1: só contatos individuais
+          return c.jid.endsWith("@s.whatsapp.net") || c.jid.endsWith("@lid");
+        });
+      // Mais recentes primeiro quando há updatedAt
+      candidatesChats.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+      const selectedChats = candidatesChats.slice(0, maxChats);
+
+      let importedChats = 0;
+      let importedMessages = 0;
+      let skippedDuplicates = 0;
+      let errors = 0;
+
+      for (const chat of selectedChats) {
+        if (importedMessages >= TOTAL_CAP) break;
+        const remoteJid = chat.jid;
+        const chatPhone = extractNumberFromJid(remoteJid);
+        const phoneTail = chatPhone.slice(-10);
+        try {
+          // 3. Busca mensagens recentes do chat
+          const remaining = TOTAL_CAP - importedMessages;
+          const limit = Math.min(maxMsgs, remaining);
+          const msgsRaw = await evolutionRequest(`/chat/findMessages/${instanceName}`, {
+            method: "POST",
+            body: JSON.stringify({ where: { key: { remoteJid } }, limit }),
+          });
+          const msgs: any[] = Array.isArray(msgsRaw)
+            ? msgsRaw
+            : Array.isArray(msgsRaw?.messages)
+              ? msgsRaw.messages
+              : Array.isArray(msgsRaw?.messages?.records)
+                ? msgsRaw.messages.records
+                : Array.isArray(msgsRaw?.records)
+                  ? msgsRaw.records
+                  : [];
+
+          // Normaliza candidatos (descarta sem id / reaction|protocol vazios)
+          const candidates = msgs
+            .map((msg: any) => {
+              const externalId = msg?.key?.id ? String(msg.key.id) : "";
+              if (!externalId) return null;
+              const t = detectMsgType(msg);
+              const text = parseTextFromMsg(msg);
+              if ((t.type === "reaction" || t.type === "protocol") && !text) return null;
+              const fromMe = msg?.key?.fromMe === true;
+              const tsSec = Number(msg?.messageTimestamp || msg?.timestamp || 0);
+              const ts = tsSec ? new Date(tsSec * 1000).toISOString() : new Date().toISOString();
+              return { raw: msg, externalId, direction: fromMe ? "outbound" : "inbound", ts, body: text, t };
+            })
+            .filter((x): x is NonNullable<typeof x> => x !== null);
+
+          if (candidates.length === 0) continue;
+
+          let maxTs = candidates[0].ts;
+          let lastIn: string | null = null;
+          let lastOut: string | null = null;
+          // F4W.7.4 — nome do contato só do pushName de mensagem INBOUND
+          // (outbound traz o nome do dono da conta). Fallback: nome do chat.
+          let inboundName: string | null = null;
+          let inboundNameTs = "";
+          for (const c of candidates) {
+            if (c.ts > maxTs) maxTs = c.ts;
+            if (c.direction === "inbound") {
+              if (!lastIn || c.ts > lastIn) lastIn = c.ts;
+              const pn = c.raw?.pushName ? String(c.raw.pushName).trim() : "";
+              if (pn && c.ts >= inboundNameTs) { inboundName = pn; inboundNameTs = c.ts; }
+            } else {
+              if (!lastOut || c.ts > lastOut) lastOut = c.ts;
+            }
+          }
+          const contactName = inboundName || chat.name;
+
+          // 4. Contato + conversa (idempotentes)
+          const contactId = await importEnsureContact(adminSupabase, connectionId, targetCompanyId, remoteJid, contactName, chatPhone, phoneTail);
+          if (!contactId) { errors++; continue; }
+          const conv = await importEnsureConversation(adminSupabase, connectionId, targetCompanyId, contactId, maxTs, lastIn, lastOut);
+          if (!conv.id) { errors++; continue; }
+          const conversationId = conv.id;
+
+          // 5. Mensagens (idempotente por connection_id + provider_message_id)
+          let chatImported = 0;
+          for (const c of candidates) {
+            if (importedMessages >= TOTAL_CAP) break;
+            try {
+              const { data: existsMsg } = await adminSupabase
+                .from("channel_messages")
+                .select("id")
+                .eq("connection_id", connectionId)
+                .eq("provider_message_id", c.externalId)
+                .maybeSingle();
+              if (existsMsg?.id) { skippedDuplicates++; continue; }
+
+              const mediaRef = (c.t.mediaUrl || c.t.mimetype || c.t.caption || c.t.audioDuration)
+                ? { url: c.t.mediaUrl || null, mimetype: c.t.mimetype || null, caption: c.t.caption || null, duration: c.t.audioDuration || null }
+                : {};
+              const { error: insErr } = await adminSupabase.from("channel_messages").insert({
+                company_id: targetCompanyId,
+                connection_id: connectionId,
+                conversation_id: conversationId,
+                contact_id: contactId,
+                provider_message_id: c.externalId,
+                direction: c.direction,
+                message_type: mapChannelType(c.t.type),
+                body: c.body,
+                media_ref: mediaRef,
+                status: c.direction === "inbound" ? "received" : "sent",
+                reply_to_message_id: null,
+                sent_by_user_id: c.direction === "outbound" ? effectiveUserId : null,
+                message_timestamp: c.ts,
+                raw_payload: c.raw,
+                raw_payload_redacted: false,
+                raw_payload_expires_at: null,
+                metadata: { chat_jid: remoteJid, instance_name: instanceName, original_type: c.t.type, imported: true },
+              });
+              if (insErr) {
+                if ((insErr as any).code === "23505") { skippedDuplicates++; }
+                else { errors++; }
+              } else {
+                importedMessages++;
+                chatImported++;
+              }
+            } catch {
+              errors++;
+            }
+          }
+
+          // 6. Conversa existente: avança cursores só pra frente (não mexe unread)
+          if (!conv.isNew) {
+            const { data: cur } = await adminSupabase
+              .from("channel_conversations")
+              .select("last_message_at, last_inbound_at, last_outbound_at")
+              .eq("id", conversationId)
+              .maybeSingle();
+            const patch: Record<string, unknown> = {};
+            if (!cur?.last_message_at || maxTs > cur.last_message_at) patch.last_message_at = maxTs;
+            if (lastIn && (!cur?.last_inbound_at || lastIn > cur.last_inbound_at)) patch.last_inbound_at = lastIn;
+            if (lastOut && (!cur?.last_outbound_at || lastOut > cur.last_outbound_at)) patch.last_outbound_at = lastOut;
+            if (Object.keys(patch).length > 0) {
+              await adminSupabase.from("channel_conversations").update(patch).eq("id", conversationId);
+            }
+          }
+
+          if (chatImported > 0) importedChats++;
+        } catch (err: any) {
+          errors++;
+          console.error(`[import_history] chat error jid_tail=${remoteJid.slice(-6)}: ${String(err?.message || err).slice(0, 120)}`);
+        }
+      }
+
+      console.log(`[import_history] done instance=${instanceName} chats=${importedChats} msgs=${importedMessages} dup=${skippedDuplicates} groups=${skippedGroups} errors=${errors}`);
+
+      return json(200, {
+        success: true,
+        importedChats,
+        importedMessages,
+        skippedGroups,
+        skippedDuplicates,
+        errors,
+      });
     }
 
     if (action === "messages") {
