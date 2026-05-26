@@ -28,9 +28,10 @@ jobs:
               BEGIN { allow=0 }
               /migrations-guard: allow-destructive/ { allow=1; next }
               /^[[:space:]]*--/ { next }
-              /DROP[[:space:]]+TABLE(?![^;]*IF EXISTS)/ && !allow { print FILENAME ":" NR ": DROP TABLE sem IF EXISTS"; exit 2 }
+              /GRANT|REVOKE/ { allow=0; next }
+              /DROP[[:space:]]+TABLE/ && $0 !~ /IF[[:space:]]+EXISTS/ && !allow { print FILENAME ":" NR ": DROP TABLE sem IF EXISTS"; exit 2 }
               /TRUNCATE/ && !allow { print FILENAME ":" NR ": TRUNCATE não permitido"; exit 2 }
-              /DROP[[:space:]]+COLUMN(?![^;]*IF EXISTS)/ && !allow { print FILENAME ":" NR ": DROP COLUMN sem IF EXISTS"; exit 2 }
+              /DROP[[:space:]]+COLUMN/ && $0 !~ /IF[[:space:]]+EXISTS/ && !allow { print FILENAME ":" NR ": DROP COLUMN sem IF EXISTS"; exit 2 }
               { allow=0 }
             ' "$f" || FAIL=1
           done < <(find supabase/migrations -name '*.sql' 2>/dev/null)
