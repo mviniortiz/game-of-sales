@@ -4,15 +4,21 @@ import App from "./App.tsx";
 import "./index.css";
 import { initAnalytics } from "./lib/analytics";
 
-const THEME_STORAGE_KEY = "vyzon-theme";
-
-// Apply stored theme preference before React mounts (persistent light/dark).
-// Default: LIGHT (2026-05-19). Quem tinha "dark" salvo no localStorage
-// continua em dark sem regressão.
+// Tema por contexto (hotfix 2026-05-26). A landing pública é dark-only
+// (textos brancos hardcoded sobre --vyz-bg escuro); o app logado é light-first
+// (bg-white / text-slate-*). Um tema global único quebrava um dos dois e o
+// "dark" legado no localStorage deixava o app novo ilegível. Decidimos pelo
+// pathname antes do React montar:
+//   - rotas públicas (landing / SEO / comparativos / relatório público) -> dark
+//   - app logado (catch-all do AppShell) -> light
 if (typeof window !== "undefined") {
-  const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+  const path = window.location.pathname;
+  const PUBLIC_EXACT = new Set(["/", "/landing"]);
+  const PUBLIC_PREFIX = ["/alternativa", "/para-", "/crm-", "/r/"];
+  const isPublicLanding =
+    PUBLIC_EXACT.has(path) || PUBLIC_PREFIX.some((p) => path.startsWith(p));
 
-  if (storedTheme === "dark") {
+  if (isPublicLanding) {
     document.documentElement.classList.add("dark");
   } else {
     document.documentElement.classList.remove("dark");
