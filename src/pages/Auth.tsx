@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Mail, Lock, ArrowRight, ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, ArrowRight, ArrowLeft, Loader2, Eye, EyeOff, MessageCircle, Sparkle, BarChart3 } from "lucide-react";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
 import { motion } from "framer-motion";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
@@ -16,8 +16,10 @@ const authSchema = z.object({
   password: z.string().min(8, "Senha deve ter no mínimo 8 caracteres").max(128, "Senha muito longa"),
 });
 
+// Light premium input — usa tokens semânticos (shadcn/Tailwind).
+// Tudo legível em fundo claro (#F3F6FA) e mantém ring azul Vyzon no focus.
 const inputClasses =
-  "bg-[rgba(255,255,255,0.03)] border-[rgba(255,255,255,0.08)] text-white placeholder:text-[rgba(255,255,255,0.25)] focus-visible:ring-1 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500/40 hover:border-[rgba(255,255,255,0.15)] h-12 text-base rounded-xl transition-all duration-200";
+  "bg-white border-[#E6EDF5] text-[#0B1220] placeholder:text-[#94A3B8] focus-visible:ring-1 focus-visible:ring-[#2563EB]/40 focus-visible:border-[#2563EB]/40 hover:border-[#CBD5E1] h-12 text-base rounded-xl transition-all duration-200";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -93,19 +95,19 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2 relative selection:bg-emerald-500/30" style={{ background: "var(--vyz-bg)" }}>
+    <div className="min-h-screen grid lg:grid-cols-2 relative selection:bg-[#2563EB]/20" style={{ background: "#F3F6FA" }}>
       {/* LEFT PANEL — Brand + Lottie (desktop only) */}
-      <div className="hidden lg:flex relative flex-col items-center justify-center overflow-hidden p-12 border-r border-white/5">
-        {/* Ambient background */}
+      <div className="hidden lg:flex relative flex-col items-center justify-center overflow-hidden p-12 border-r border-[#E6EDF5]">
+        {/* Ambient background — azul sutil em vez de emerald */}
         <div className="absolute inset-0 pointer-events-none">
           <div
             className="absolute top-[15%] left-1/2 -translate-x-1/2 w-[700px] h-[500px] rounded-full"
-            style={{ background: "radial-gradient(ellipse, rgba(0,227,122,0.10) 0%, transparent 60%)" }}
+            style={{ background: "radial-gradient(ellipse, rgba(37,99,235,0.08) 0%, transparent 60%)" }}
           />
           <div
-            className="absolute inset-0 opacity-[0.025]"
+            className="absolute inset-0 opacity-[0.03]"
             style={{
-              backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
+              backgroundImage: "linear-gradient(rgba(11,18,32,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(11,18,32,0.08) 1px, transparent 1px)",
               backgroundSize: "80px 80px",
             }}
           />
@@ -126,17 +128,44 @@ const Auth = () => {
             />
           </div>
 
-          {/* Tagline */}
+          {/* Tagline F2.8: posicionamento novo — EVA + WhatsApp + pipeline + performance */}
           <div className="text-center">
             <h2
-              className="text-2xl font-bold mb-3"
-              style={{ color: "rgba(255,255,255,0.95)", letterSpacing: "-0.02em" }}
+              className="font-satoshi text-[26px] sm:text-[28px] font-bold mb-3 leading-[1.08]"
+              style={{ color: "#0B1220", letterSpacing: "-0.022em" }}
             >
-              Sua operação de vendas,<br />jogada como um campeonato.
+              Sua operação comercial,<br />organizada pela EVA.
             </h2>
-            <p className="text-sm max-w-sm mx-auto" style={{ color: "rgba(255,255,255,0.4)" }}>
-              Ranking, metas, calls e pipeline num único lugar — com a Eva AI lendo seus dados pra você.
+            <p className="text-[14px] max-w-[400px] mx-auto leading-relaxed" style={{ color: "#475569" }}>
+              Leads, conversas, pipeline e performance em uma central feita
+              para agências que vendem pelo WhatsApp.
             </p>
+
+            {/* 3 bullets discretos */}
+            <ul className="mt-6 space-y-2.5 max-w-[340px] mx-auto text-left">
+              {[
+                { icon: MessageCircle, label: "Leads do WhatsApp organizados" },
+                { icon: Sparkle, label: "EVA sugerindo próximos passos" },
+                { icon: BarChart3, label: "Pipeline e performance em tempo real" },
+              ].map(({ icon: Icon, label }) => (
+                <li
+                  key={label}
+                  className="flex items-center gap-2.5 text-[12.5px]"
+                  style={{ color: "#475569" }}
+                >
+                  <span
+                    className="inline-flex items-center justify-center h-6 w-6 rounded-md shrink-0"
+                    style={{
+                      background: "rgba(37,99,235,0.08)",
+                      border: "1px solid rgba(37,99,235,0.16)",
+                    }}
+                  >
+                    <Icon className="h-3 w-3" strokeWidth={2.2} style={{ color: "#2563EB" }} />
+                  </span>
+                  {label}
+                </li>
+              ))}
+            </ul>
           </div>
         </motion.div>
       </div>
@@ -147,12 +176,12 @@ const Auth = () => {
         <div className="absolute inset-0 lg:hidden pointer-events-none">
           <div
             className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[900px] h-[600px] rounded-full"
-            style={{ background: "radial-gradient(ellipse, rgba(0,227,122,0.06) 0%, transparent 60%)" }}
+            style={{ background: "radial-gradient(ellipse, rgba(37,99,235,0.06) 0%, transparent 60%)" }}
           />
           <div
-            className="absolute inset-0 opacity-[0.02]"
+            className="absolute inset-0 opacity-[0.025]"
             style={{
-              backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
+              backgroundImage: "linear-gradient(rgba(11,18,32,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(11,18,32,0.06) 1px, transparent 1px)",
               backgroundSize: "80px 80px",
             }}
           />
@@ -169,9 +198,9 @@ const Auth = () => {
           <button
             onClick={() => navigate("/")}
             className="flex items-center gap-1.5 text-sm transition-colors duration-150"
-            style={{ color: "rgba(255,255,255,0.35)" }}
-            onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
-            onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}
+            style={{ color: "#64748B" }}
+            onMouseEnter={e => (e.currentTarget.style.color = "#0B1220")}
+            onMouseLeave={e => (e.currentTarget.style.color = "#64748B")}
           >
             <ArrowLeft className="h-4 w-4" />
             Voltar
@@ -185,14 +214,14 @@ const Auth = () => {
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           className="rounded-2xl p-6 sm:p-8 relative overflow-hidden"
           style={{
-            background: "rgba(255,255,255,0.02)",
-            boxShadow: "0 0 0 1px rgba(255,255,255,0.06), 0 24px 64px -12px rgba(0,0,0,0.5)",
+            background: "#FFFFFF",
+            boxShadow: "0 0 0 1px rgba(11,18,32,0.06), 0 1px 3px rgba(11,18,32,0.04), 0 24px 64px -16px rgba(37,99,235,0.10)",
           }}
         >
-          {/* Top accent line */}
+          {/* Top accent line — azul Vyzon */}
           <div
             className="absolute top-0 left-0 right-0 h-px"
-            style={{ background: "linear-gradient(90deg, transparent, rgba(0,227,122,0.3) 50%, transparent)" }}
+            style={{ background: "linear-gradient(90deg, transparent, rgba(37,99,235,0.4) 50%, transparent)" }}
           />
 
           {/* Logo */}
@@ -200,15 +229,15 @@ const Auth = () => {
             <ThemeLogo className="h-10" />
           </div>
 
-          {/* Header */}
+          {/* Header (F2.8: Satoshi) */}
           <div className="text-center mb-8">
             <h1
-              className="text-2xl font-bold mb-2"
-              style={{ color: "rgba(255,255,255,0.95)", letterSpacing: "-0.02em" }}
+              className="font-satoshi text-[24px] sm:text-[26px] font-bold mb-2 leading-tight"
+              style={{ color: "#0B1220", letterSpacing: "-0.022em" }}
             >
               Bem-vindo de volta
             </h1>
-            <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.875rem" }}>
+            <p style={{ color: "#64748B", fontSize: "0.875rem" }}>
               Entre na sua conta para acessar o painel.
             </p>
           </div>
@@ -220,9 +249,10 @@ const Auth = () => {
             disabled={loading || authLoading}
             className="w-full h-12 rounded-xl font-semibold text-[14px] flex items-center justify-center gap-2.5 mb-5 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
             style={{
-              background: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.1)",
-              color: "rgba(255,255,255,0.9)",
+              background: "#FFFFFF",
+              border: "1px solid #E6EDF5",
+              color: "#0B1220",
+              boxShadow: "0 1px 2px rgba(11,18,32,0.04)",
             }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -236,20 +266,20 @@ const Auth = () => {
 
           {/* Divider */}
           <div className="flex items-center gap-3 mb-5">
-            <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
-            <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.3)" }}>ou com email</span>
-            <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
+            <div className="flex-1 h-px" style={{ background: "#E6EDF5" }} />
+            <span className="text-[11px]" style={{ color: "#94A3B8" }}>ou com email</span>
+            <div className="flex-1 h-px" style={{ background: "#E6EDF5" }} />
           </div>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email */}
             <div className="space-y-1.5">
-              <Label className="text-[rgba(255,255,255,0.6)] text-sm font-medium">
+              <Label className="text-[#334155] text-sm font-medium">
                 E-mail
               </Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "rgba(255,255,255,0.25)" }} />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "#94A3B8" }} />
                 <Input
                   type="email"
                   placeholder="voce@empresa.com"
@@ -266,18 +296,18 @@ const Auth = () => {
             {/* Password */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <Label className="text-[rgba(255,255,255,0.6)] text-sm font-medium">
+                <Label className="text-[#334155] text-sm font-medium">
                   Senha
                 </Label>
                 <Link
                   to="/recuperar-senha"
-                  className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors"
+                  className="text-xs text-[#2563EB] hover:text-[#1D4ED8] transition-colors"
                 >
                   Esqueceu a senha?
                 </Link>
               </div>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "rgba(255,255,255,0.25)" }} />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "#94A3B8" }} />
                 <Input
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
@@ -291,9 +321,9 @@ const Auth = () => {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
-                  style={{ color: "rgba(255,255,255,0.25)" }}
-                  onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.5)")}
-                  onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.25)")}
+                  style={{ color: "#94A3B8" }}
+                  onMouseEnter={e => (e.currentTarget.style.color = "#64748B")}
+                  onMouseLeave={e => (e.currentTarget.style.color = "#94A3B8")}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -306,13 +336,13 @@ const Auth = () => {
               disabled={loading || authLoading}
               className="w-full h-12 rounded-xl text-white font-bold text-[15px] relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
-                background: "linear-gradient(135deg, #00E37A, #00B289)",
-                boxShadow: "0 0 0 1px rgba(0,227,122,0.3), 0 4px 20px rgba(0,227,122,0.25)",
+                background: "linear-gradient(135deg, #2563EB, #4A8CE8)",
+                boxShadow: "0 0 0 1px rgba(37,99,235,0.3), 0 4px 20px rgba(37,99,235,0.25)",
               }}
-              whileHover={!loading ? { scale: 1.02, boxShadow: "0 0 0 1px rgba(0,227,122,0.4), 0 8px 32px rgba(0,227,122,0.35)" } : undefined}
+              whileHover={!loading ? { scale: 1.02, boxShadow: "0 0 0 1px rgba(37,99,235,0.4), 0 8px 32px rgba(37,99,235,0.35)" } : undefined}
               whileTap={!loading ? { scale: 0.98 } : undefined}
             >
-              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
               {loading || authLoading ? (
                 <span className="relative flex items-center justify-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -329,17 +359,17 @@ const Auth = () => {
 
           {/* Divider */}
           <div className="flex items-center gap-3 my-6">
-            <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
-            <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.2)" }}>ou</span>
-            <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
+            <div className="flex-1 h-px" style={{ background: "#E6EDF5" }} />
+            <span className="text-[11px]" style={{ color: "#94A3B8" }}>ou</span>
+            <div className="flex-1 h-px" style={{ background: "#E6EDF5" }} />
           </div>
 
           {/* Register link */}
-          <p className="text-center text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>
+          <p className="text-center text-sm" style={{ color: "#64748B" }}>
             Não tem uma conta?{" "}
             <Link
               to="/onboarding"
-              className="text-emerald-400 hover:text-emerald-300 font-medium transition-colors"
+              className="text-[#2563EB] hover:text-[#1D4ED8] font-medium transition-colors"
             >
               Criar conta grátis
             </Link>
@@ -347,7 +377,7 @@ const Auth = () => {
         </motion.div>
 
         {/* Footer */}
-        <p className="text-center mt-6 text-[11px]" style={{ color: "rgba(255,255,255,0.15)" }}>
+        <p className="text-center mt-6 text-[11px]" style={{ color: "#CBD5E1" }}>
           © {new Date().getFullYear()} Vyzon. Todos os direitos reservados.
         </p>
       </div>

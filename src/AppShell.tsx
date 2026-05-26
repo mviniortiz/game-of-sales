@@ -18,6 +18,7 @@ const Register = lazy(() => import("./pages/Register"));
 const RecuperarSenha = lazy(() => import("./pages/RecuperarSenha"));
 const RedefinirSenha = lazy(() => import("./pages/RedefinirSenha"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Inicio = lazy(() => import("./pages/Inicio"));
 const Ranking = lazy(() => import("./pages/Ranking"));
 const NovaVenda = lazy(() => import("./pages/NovaVenda"));
 const Calls = lazy(() => import("./pages/Calls"));
@@ -36,10 +37,12 @@ const ConfImportar = lazy(() => import("./pages/configuracoes/Importar"));
 const ConfRelatoriosPublicos = lazy(() => import("./pages/configuracoes/RelatoriosPublicos"));
 const ConfContratos = lazy(() => import("./pages/configuracoes/Contratos"));
 const ConfWebhooksLeads = lazy(() => import("./pages/configuracoes/WebhooksLeads"));
+const ConfEvaContexto = lazy(() => import("./pages/configuracoes/EvaContexto"));
 const Calendario = lazy(() => import("./pages/Calendario"));
 const CRM = lazy(() => import("./pages/CRM"));
 const DealCommandCenter = lazy(() => import("./pages/DealCommandCenter"));
 const Pulse = lazy(() => import("./pages/Pulse"));
+const Inbox = lazy(() => import("./pages/Inbox"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 const SalesPerformanceCenter = lazy(() => import("./pages/SalesPerformanceCenter"));
 const AgenteRelatorios = lazy(() => import("./pages/AgenteRelatorios"));
@@ -103,8 +106,22 @@ const AppShell = () => (
               <Route path="/termos-de-servico" element={<TermosServico />} />
               <Route path="/changelog" element={<Changelog />} />
 
+              {/* F4A 2026-05-19: /inicio renderiza Inicio (Central da Operação).
+                  /dashboard antigo continua acessível como fallback (não removido em F4A,
+                  só não está no menu). F3 fez redirect /dashboard → /inicio que segue válido. */}
               <Route
-                path="/dashboard"
+                path="/inicio"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <Inicio />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/dashboard" element={<Navigate to="/inicio" replace />} />
+              <Route
+                path="/dashboard-legacy"
                 element={
                   <ProtectedRoute>
                     <AppLayout>
@@ -153,8 +170,9 @@ const AppShell = () => (
                   </ProtectedRoute>
                 }
               />
+              {/* F3 2026-05-19: /eva é a rota principal, /agente redirect silencioso */}
               <Route
-                path="/agente"
+                path="/eva"
                 element={
                   <ProtectedRoute>
                     <AdminRoute>
@@ -165,6 +183,7 @@ const AppShell = () => (
                   </ProtectedRoute>
                 }
               />
+              <Route path="/agente" element={<Navigate to="/eva" replace />} />
               <Route
                 path="/admin"
                 element={
@@ -290,14 +309,30 @@ const AppShell = () => (
                     </AdminRoute>
                   }
                 />
+                {/* F4E.2 2026-05-19: Contexto da Agência (membros leem, admin edita).
+                    UI não usa AdminRoute pra permitir leitura — RLS é a defesa real. */}
+                <Route path="eva" element={<ConfEvaContexto />} />
               </Route>
 
               {/* Legacy redirects */}
               <Route path="/profile" element={<Navigate to="/configuracoes/perfil" replace />} />
               <Route path="/integracoes" element={<Navigate to="/configuracoes/integracoes" replace />} />
               <Route path="/importar" element={<Navigate to="/configuracoes/importar" replace />} />
+              {/* F4C.1 2026-05-19: /inbox renderiza Inbox Comercial nova. Pulse antigo
+                  fica acessível em /inbox-legacy (fora do menu) pra rollback emergencial.
+                  /pulse e /whatsapp redirect silencioso pra /inbox. */}
               <Route
-                path="/pulse"
+                path="/inbox"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <Inbox />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/inbox-legacy"
                 element={
                   <ProtectedRoute>
                     <AppLayout>
@@ -306,9 +341,11 @@ const AppShell = () => (
                   </ProtectedRoute>
                 }
               />
-              <Route path="/whatsapp" element={<Navigate to="/pulse" replace />} />
+              <Route path="/pulse" element={<Navigate to="/inbox" replace />} />
+              <Route path="/whatsapp" element={<Navigate to="/inbox" replace />} />
+              {/* F3 2026-05-19: /agenda é a rota principal, /calendario redirect silencioso */}
               <Route
-                path="/calendario"
+                path="/agenda"
                 element={
                   <ProtectedRoute>
                     <AppLayout>
@@ -317,8 +354,10 @@ const AppShell = () => (
                   </ProtectedRoute>
                 }
               />
+              <Route path="/calendario" element={<Navigate to="/agenda" replace />} />
+              {/* F3 2026-05-19: /pipeline é a rota principal, /crm redirect silencioso */}
               <Route
-                path="/crm"
+                path="/pipeline"
                 element={
                   <ProtectedRoute>
                     <AppLayout>
@@ -327,6 +366,7 @@ const AppShell = () => (
                   </ProtectedRoute>
                 }
               />
+              <Route path="/crm" element={<Navigate to="/pipeline" replace />} />
               <Route
                 path="/deals/:id"
                 element={

@@ -168,12 +168,25 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
 
         const q = normalize(query.trim());
         const actionsRaw = [
+            // F4G 2026-05-19: separadas — 'Criar oportunidade' vai pro pipeline
+            // (deals), 'Registrar venda' vai pra performance/metas (vendas).
+            {
+                id: "nova-oportunidade",
+                label: "Criar oportunidade no pipeline",
+                sub: "Adiciona um lead novo ao funil de vendas",
+                icon: PlusCircle,
+                keywords: "criar oportunidade deal lead pipeline novo funil",
+                onSelect: () => {
+                    onOpenChange(false);
+                    window.dispatchEvent(new CustomEvent("vyzon:open-nova-oportunidade"));
+                },
+            },
             {
                 id: "nova-venda",
-                label: "Registrar nova venda",
-                sub: "Cria um novo deal no pipeline",
+                label: "Registrar venda",
+                sub: "Adiciona uma venda às metas e performance",
                 icon: PlusCircle,
-                keywords: "criar deal venda novo",
+                keywords: "registrar venda ganho fechamento metas performance",
                 onSelect: () => {
                     onOpenChange(false);
                     window.dispatchEvent(new CustomEvent("vyzon:open-nova-venda"));

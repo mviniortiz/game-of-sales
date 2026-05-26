@@ -24,6 +24,16 @@ export interface Chat {
     };
     phone?: string;
     isGroup: boolean;
+    /** F4W.4 — JID/external contact ID usado pelo Evolution Sender.
+     *  No useChannelInbox: contact.external_contact_id.
+     *  No useWhatsAppInboxDb legacy: igual ao id (chat_jid).
+     *  Preserva chamadas como `sendMessage(chat.chatJid, text)`. */
+    chatJid?: string;
+    /** V1.1 — id da channel_conversations (channel-first). undefined em legacy.
+     *  Presença = dá pra vincular um deal a esta conversa. */
+    conversationId?: string;
+    /** V1.1 — deal vinculado à conversa (channel_conversations.deal_id). */
+    dealId?: string | null;
 }
 
 export type MediaType = "image" | "video" | "audio" | "sticker" | "document" | null;
@@ -45,6 +55,9 @@ export interface MessageLine {
     mediaCaption?: string;
     /** Mimetype of the media */
     mediaMimetype?: string;
+    /** UI-only: mensagem outbound otimista aguardando confirmação do webhook.
+     *  Nunca persistida no banco. */
+    pending?: boolean;
 }
 
 
@@ -192,6 +205,11 @@ export const useEvolutionIntegration = () => {
     const [connected, setConnected] = useState(false);
     const [qrCodeBase64, setQrCodeBase64] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+    // F4-InboxDB (2026-05-20): quando Evolution está offline OU não há instance
+    // pareada, mas existem mensagens no banco pro user (demo seed ou histórico
+    // antigo), ativa modo read-only que lê chats/mensagens direto do banco.
+    // Envio fica desabilitado nesse modo (vê handleSend* abaixo).
+    const [dbFallbackMode, setDbFallbackMode] = useState(false);
 
     const [chats, setChats] = useState<Chat[]>([]);
     const [selectedChatMessages, setSelectedChatMessages] = useState<MessageLine[]>([]);
@@ -253,7 +271,106 @@ export const useEvolutionIntegration = () => {
 
     const chatsLoadedOnceRef = useRef(false);
 
+    // ─── F4-InboxDB: leitura via banco quando Evolution offline ──────────────
+    const fetchChatsFromDB = useCallback(async (): Promise<Chat[]> => {
+        if (!effectiveUserId) return [];
+        // Pega últimas mensagens por chat (1 row por chat_jid, a mais recente).
+        const { data, error: qErr } = await supabase
+            .from("whatsapp_messages")
+            .select("chat_jid, chat_phone, contact_name, is_group, body, direction, message_timestamp")
+            .eq("user_id", effectiveUserId)
+            .order("message_timestamp", { ascending: false })
+            .limit(200);
+        if (qErr) {
+            console.warn("[InboxDB] fetchChatsFromDB error:", qErr.message);
+            return [];
+        }
+        const byChat = new Map<string, Chat>();
+        for (const row of (data || []) as Array<Record<string, unknown>>) {
+            const jid = String(row.chat_jid);
+            if (byChat.has(jid)) continue;
+            const phone = String(row.chat_phone || "");
+            const name = (row.contact_name as string) || (phone ? `+${phone}` : "Contato");
+            const ts = row.message_timestamp
+                ? new Date(row.message_timestamp as string)
+                : new Date();
+            byChat.set(jid, {
+                id: jid,
+                name,
+                unreadCount: 0,
+                phone: phone ? `+${phone}` : undefined,
+                isGroup: Boolean(row.is_group),
+                lastMessage: {
+                    text: (row.body as string) || "",
+                    time: ts.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                    isMe: row.direction === "outbound",
+                },
+            });
+        }
+        return Array.from(byChat.values());
+    }, [effectiveUserId]);
+
+    const fetchMessagesFromDB = useCallback(async (chatJid: string): Promise<MessageLine[]> => {
+        if (!effectiveUserId || !chatJid) return [];
+        const { data, error: qErr } = await supabase
+            .from("whatsapp_messages")
+            .select("id, body, direction, message_timestamp, contact_name, media_url, media_mimetype, media_caption, audio_duration, message_type")
+            .eq("user_id", effectiveUserId)
+            .eq("chat_jid", chatJid)
+            .order("message_timestamp", { ascending: true })
+            .limit(200);
+        if (qErr) {
+            console.warn("[InboxDB] fetchMessagesFromDB error:", qErr.message);
+            return [];
+        }
+        return ((data || []) as Array<Record<string, unknown>>).map((row) => {
+            const ts = row.message_timestamp ? new Date(row.message_timestamp as string) : new Date();
+            const text = (row.body as string) || (row.media_caption as string) || "";
+            return {
+                id: String(row.id),
+                text,
+                sender: (row.direction === "outbound" ? "me" : "lead") as "me" | "lead",
+                time: ts.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                timestamp: Math.floor(ts.getTime() / 1000),
+                senderName: (row.contact_name as string) || undefined,
+            } satisfies MessageLine;
+        });
+    }, [effectiveUserId]);
+
+    const tryActivateDbFallback = useCallback(async (): Promise<boolean> => {
+        if (!effectiveUserId) return false;
+        const { count, error: qErr } = await supabase
+            .from("whatsapp_messages")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", effectiveUserId)
+            .limit(1);
+        if (qErr) {
+            console.warn("[InboxDB] tryActivateDbFallback count error:", qErr.message);
+            return false;
+        }
+        const hasMessages = (count ?? 0) > 0;
+        if (hasMessages) {
+            setDbFallbackMode(true);
+            setConnected(true);
+            setConnecting(false);
+            setQrCodeBase64(null);
+            setError(null);
+            const chats = await fetchChatsFromDB();
+            setChats(chats);
+            chatsLoadedOnceRef.current = true;
+            console.log(`[InboxDB] fallback ativado — ${chats.length} chats do banco`);
+            return true;
+        }
+        return false;
+    }, [effectiveUserId, fetchChatsFromDB]);
+
     const fetchChats = useCallback(async (forceLoad = false) => {
+        if (dbFallbackMode) {
+            const chats = await fetchChatsFromDB();
+            setChats(chats);
+            chatsLoadedOnceRef.current = true;
+            return;
+        }
         if (!connected && !forceLoad) return;
         // Only show loading spinner on first load
         if (!chatsLoadedOnceRef.current) {
@@ -405,13 +522,23 @@ export const useEvolutionIntegration = () => {
         setConnecting(true);
         setError(null);
         try {
-            const statusOpen = await checkConnectionState();
+            // F4-InboxDB: tenta Evolution, mas se falhar/não houver instance,
+            // verifica se há mensagens no banco e ativa modo DB fallback.
+            const statusOpen = await checkConnectionState().catch(() => false);
             if (statusOpen) {
                 await fetchChats(true);
                 return;
             }
 
-            const data = await invokeProxy("connect");
+            let data: any = null;
+            try {
+                data = await invokeProxy("connect");
+            } catch (connectErr) {
+                console.warn("[Evolution] connect proxy threw — tentando DB fallback:", connectErr);
+                const activated = await tryActivateDbFallback();
+                if (activated) return;
+                throw connectErr;
+            }
             if (data?.connected) {
                 setConnected(true);
                 setConnecting(false);
@@ -422,6 +549,11 @@ export const useEvolutionIntegration = () => {
 
             if (data?.qrCodeBase64) {
                 setQrCodeBase64(data.qrCodeBase64);
+            } else {
+                // F4-InboxDB: nem connected nem QR — Evolution sem instance ativa.
+                // Antes de ficar em loop de polling vazio, tenta DB fallback.
+                const activated = await tryActivateDbFallback();
+                if (activated) return;
             }
 
             pollingIntervalRef.current = setInterval(async () => {
@@ -443,7 +575,7 @@ export const useEvolutionIntegration = () => {
             setConnecting(false);
             setError(err?.message || "Erro ao gerar QR Code do WhatsApp.");
         }
-    }, [checkConnectionState, fetchChats, invokeProxy]);
+    }, [checkConnectionState, fetchChats, invokeProxy, tryActivateDbFallback]);
 
     const logout = useCallback(async () => {
         clearPolling();
@@ -457,6 +589,7 @@ export const useEvolutionIntegration = () => {
             setQrCodeBase64(null);
             setChats([]);
             setSelectedChatMessages([]);
+            setDbFallbackMode(false);
             chatsLoadedOnceRef.current = false;
             lastMsgSignatureRef.current = "";
         }
@@ -513,6 +646,17 @@ export const useEvolutionIntegration = () => {
 
     const fetchMessages = useCallback(async (chatId: string, isPolling = false) => {
         if (!connected || !chatId) return;
+        // F4-InboxDB: em modo DB, lê mensagens direto do banco
+        if (dbFallbackMode) {
+            if (!isPolling) setIsLoadingMessages(true);
+            try {
+                const msgs = await fetchMessagesFromDB(chatId);
+                setSelectedChatMessages(msgs);
+            } finally {
+                if (!isPolling) setIsLoadingMessages(false);
+            }
+            return;
+        }
         if (!isPolling) {
             setIsLoadingMessages(true);
             setError(null);
@@ -636,6 +780,12 @@ export const useEvolutionIntegration = () => {
 
     const sendMessage = useCallback(async (chatId: string, text: string) => {
         if (!connected || !chatId || !text.trim()) return;
+        // F4-InboxDB: modo DB é read-only — não envia mensagem real
+        if (dbFallbackMode) {
+            console.warn("[InboxDB] envio bloqueado em modo demo/read-only");
+            setError("Modo demo: envio de mensagem desabilitado. Conecte o WhatsApp para enviar de verdade.");
+            return;
+        }
 
         const optimistic: MessageLine = {
             id: `temp_${Date.now()}`,
@@ -696,6 +846,11 @@ export const useEvolutionIntegration = () => {
     }, [connected, invokeProxy]);
 
     const sendAudioMessage = useCallback(async (chatId: string, base64: string) => {
+        if (dbFallbackMode) {
+            console.warn("[InboxDB] envio áudio bloqueado em modo demo");
+            setError("Modo demo: envio desabilitado.");
+            return;
+        }
         if (!connected || !chatId || !base64) return;
 
         const optimistic: MessageLine = {
@@ -751,6 +906,26 @@ export const useEvolutionIntegration = () => {
     const stableFetchChats = useStableCallback(fetchChats);
     const stableFetchMessages = useStableCallback(fetchMessages);
     const stableGetAudioMedia = useStableCallback(getAudioMedia);
+    const stableTryDbFallback = useStableCallback(tryActivateDbFallback);
+
+    // F4-InboxDB (2026-05-20): auto-ativa DB fallback no mount quando o user
+    // tem mensagens no banco mas Evolution não está conectado. Cobre dois casos:
+    //   (a) demo seed sem WhatsApp pareado
+    //   (b) Evolution fora do ar / instance inválida
+    // Pequeno delay pra deixar Evolution tentar conectar naturalmente primeiro.
+    const dbFallbackTriedRef = useRef(false);
+    useEffect(() => {
+        if (!effectiveUserId) return;
+        if (connected || dbFallbackMode || connecting) return;
+        if (dbFallbackTriedRef.current) return;
+        const t = setTimeout(() => {
+            if (connected || dbFallbackMode || connecting) return;
+            dbFallbackTriedRef.current = true;
+            void stableTryDbFallback();
+        }, 1200);
+        return () => clearTimeout(t);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [effectiveUserId, connected, dbFallbackMode, connecting]);
 
     const refreshConnection = useCallback(async () => {
         const open = await stableCheckConnection();

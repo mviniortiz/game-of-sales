@@ -39,7 +39,7 @@ export const AdminDashboardOverview = () => {
 
   return (
     <div className="space-y-6 min-h-screen">
-      {/* Header - Sales Command Center Style */}
+      {/* Header — Central da Operação (F2.5 rename) */}
       <div className="relative">
         {/* Subtle gradient accent */}
         <div className="absolute -top-4 -left-4 w-64 h-64 bg-emerald-500/5 blur-3xl pointer-events-none" />
@@ -47,13 +47,13 @@ export const AdminDashboardOverview = () => {
         <div className="relative flex items-center justify-between">
           <div>
             <h1 className="text-xl sm:text-3xl font-bold text-foreground tracking-tight flex items-center gap-3 flex-wrap">
-              Visão Geral
+              Central da Operação
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-semibold uppercase tracking-wider ring-1 ring-emerald-500/20">
                 Live
               </span>
             </h1>
             <p className="text-muted-foreground mt-1">
-              <span className="text-foreground/80 font-medium">Sales Command Center</span> • Dashboard consolidado de toda a equipe
+              Acompanhe leads, EVA, pipeline e reuniões em tempo real.
             </p>
           </div>
         </div>
