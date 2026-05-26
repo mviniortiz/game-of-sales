@@ -6,10 +6,12 @@ type Theme = "light" | "dark";
 const storageKey = "vyzon-theme";
 
 const getStoredTheme = (): Theme => {
-  const stored = localStorage.getItem(storageKey);
-  if (stored === "light") return "light";
-  if (stored === "dark") return "dark";
-  return "light"; // Default to light premium (2026-05-19 pivot)
+  // App é light-first (bg-white / --vyz-* claros). O dark mode do app não está
+  // finalizado (o primitivo ui/sidebar usa --sidebar-background escuro no .dark,
+  // deixando o sidebar dark sobre conteúdo light). Forçamos light e ignoramos o
+  // "dark" legado no localStorage que ressuscitava esse estado quebrado.
+  // Reativar quando o tema escuro do app estiver completo.
+  return "light";
 };
 
 export const useTheme = () => {
