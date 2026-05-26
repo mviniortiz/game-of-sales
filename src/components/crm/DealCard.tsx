@@ -745,10 +745,10 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
           );
         })()}
 
-        {/* ── F6T.2 — Tags F6T.1 (até 3 chips + N) ──────────── */}
+        {/* ── F6T.2 — Tags F6T.1 (até 2 chips + N, pra não poluir o card) ── */}
         {tags.length > 0 && (
           <div className="flex items-center gap-1.5 flex-wrap mb-2.5">
-            {tags.slice(0, 3).map((tag) => {
+            {tags.slice(0, 2).map((tag) => {
               const useHex = isHexColor(tag.color);
               return (
                 <span
@@ -769,9 +769,9 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
                 </span>
               );
             })}
-            {tags.length > 3 && (
+            {tags.length > 2 && (
               <span className="text-[10px] text-muted-foreground font-medium">
-                +{tags.length - 3}
+                +{tags.length - 2}
               </span>
             )}
           </div>

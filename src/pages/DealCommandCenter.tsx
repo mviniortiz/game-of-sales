@@ -335,6 +335,57 @@ const DealTagsBlock = ({ dealId }: { dealId: string }) => {
 
 // â"€â"€â"€ Main Component â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
+/**
+ * F6T.3 — Dados do interesse imobiliário (demo incorporadora).
+ * Lê deal.source_data.interesse_imobiliario (jsonb) e renderiza os campos
+ * preenchidos. Read-only, estruturado — sem editor de schema genérico.
+ */
+const REAL_ESTATE_INTEREST_FIELDS: ReadonlyArray<{ key: string; label: string }> = [
+    { key: "empreendimento_interesse", label: "Empreendimento" },
+    { key: "tipo_imovel", label: "Tipo de imóvel" },
+    { key: "faixa_orcamento", label: "Faixa de orçamento" },
+    { key: "entrada_disponivel", label: "Entrada disponível" },
+    { key: "financiamento", label: "Financiamento" },
+    { key: "fgts", label: "Usa FGTS" },
+    { key: "prazo_compra", label: "Prazo de compra" },
+    { key: "corretor_responsavel", label: "Corretor responsável" },
+    { key: "proxima_acao", label: "Próxima ação" },
+];
+
+function formatRealEstateValue(v: unknown): string {
+    if (v === true) return "Sim";
+    if (v === false) return "Não";
+    if (v === null || v === undefined) return "";
+    return String(v).trim();
+}
+
+/** Extrai o objeto interesse_imobiliario de source_data, se existir. */
+function getRealEstateInterest(sourceData: unknown): Record<string, unknown> | null {
+    if (!sourceData || typeof sourceData !== "object") return null;
+    const interesse = (sourceData as Record<string, unknown>).interesse_imobiliario;
+    if (!interesse || typeof interesse !== "object") return null;
+    return interesse as Record<string, unknown>;
+}
+
+const RealEstateInterestBlock = ({ sourceData }: { sourceData: unknown }) => {
+    const interesse = getRealEstateInterest(sourceData);
+    if (!interesse) return null;
+    const rows = REAL_ESTATE_INTEREST_FIELDS
+        .map((f) => ({ label: f.label, value: formatRealEstateValue(interesse[f.key]) }))
+        .filter((r) => r.value !== "");
+    if (rows.length === 0) return null;
+    return (
+        <div className="flex flex-col gap-1.5">
+            {rows.map((r) => (
+                <div key={r.label} className="flex items-start justify-between gap-3">
+                    <span className="text-[11px] text-muted-foreground shrink-0">{r.label}</span>
+                    <span className="text-[11.5px] text-foreground font-medium text-right">{r.value}</span>
+                </div>
+            ))}
+        </div>
+    );
+};
+
 export default function DealCommandCenter() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
@@ -1354,6 +1405,14 @@ export default function DealCommandCenter() {
                                     <PropertiesSection title="Tags comerciais">
                                         <DealTagsBlock dealId={id!} />
                                     </PropertiesSection>
+
+                                    {/* F6T.3 — Dados do interesse imobiliário (demo incorporadora).
+                                        Só renderiza quando o deal tem source_data.interesse_imobiliario. */}
+                                    {getRealEstateInterest((deal as any).source_data) && (
+                                        <PropertiesSection title="Dados do interesse imobiliário">
+                                            <RealEstateInterestBlock sourceData={(deal as any).source_data} />
+                                        </PropertiesSection>
+                                    )}
 
                                     <PropertiesSection title="Campos customizados" defaultOpen={false}>
                                         <CustomFieldsSection dealId={id!} compact />
