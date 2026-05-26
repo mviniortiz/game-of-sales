@@ -21,6 +21,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useTagsForDeal } from "@/hooks/useDealTags";
 import { DealTagBadge } from "./DealTagBadge";
+import type { PipelineDealContext } from "@/hooks/usePipelineContextData";
+// F6T.2 — tags transversais (sistema F6T.1) substituem visualmente o deal_tags legado
+import type { Tag } from "@/types/tags";
+import { getTagColorClass, isHexColor } from "@/lib/tags";
 
 export interface StageNeighbors {
   prev: { id: string; title: string; color: string } | null;
@@ -38,12 +42,25 @@ interface DealCardProps {
   onToggleSelect?: (dealId: string) => void;
   stageNeighbors?: StageNeighbors;
   onSwipeMove?: (deal: Deal, targetStageId: string) => void;
+  /** F5P.2 — contexto comercial enriquecido (conversa + EVA) */
+  context?: PipelineDealContext;
+  /** F6T.2 — tags transversais (sistema F6T.1) carregadas batched no nível superior */
+  tags?: Tag[];
 }
 
-// Rotting status
+// F5P.2 — Mapeamento visual de temperatura EVA pros badges
+const EVA_TEMP_STYLES: Record<string, { label: string; bg: string; color: string }> = {
+  quente:  { label: "Quente", bg: "bg-rose-500/15",    color: "text-rose-300" },
+  morno:   { label: "Morno",  bg: "bg-amber-500/15",   color: "text-amber-300" },
+  frio:    { label: "Frio",   bg: "bg-sky-500/15",     color: "text-sky-300" },
+  unknown: { label: "EVA não analisou", bg: "bg-muted/40", color: "text-muted-foreground" },
+};
+
+// F5P.3 — Rotting status (visual mais sutil: borda âmbar discreta, sem rose
+// gritante. Severidade fica diferenciada por tonalidade, não por pulse).
 const getRottingStatus = (days: number) => {
-  if (days > 7) return { border: "border-l-rose-500", dot: "bg-rose-500", label: `${days}d`, severity: "high" as const };
-  if (days > 3) return { border: "border-l-amber-500", dot: "bg-amber-500", label: `${days}d`, severity: "mid" as const };
+  if (days > 7) return { border: "border-l-amber-500/70", dot: "bg-amber-500", label: `${days}d`, severity: "high" as const };
+  if (days > 3) return { border: "border-l-amber-400/50", dot: "bg-amber-400", label: `${days}d`, severity: "mid" as const };
   return { border: "border-l-transparent", dot: "bg-emerald-500", label: "", severity: "ok" as const };
 };
 
@@ -82,7 +99,7 @@ const parseBRL = (formatted: string) =>
 
 type EditableField = "title" | "customer_name" | "value";
 
-export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDelete, selectionMode = false, isSelected = false, onToggleSelect, stageNeighbors, onSwipeMove }: DealCardProps) => {
+export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDelete, selectionMode = false, isSelected = false, onToggleSelect, stageNeighbors, onSwipeMove, context, tags = [] }: DealCardProps) => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { user } = useAuth();
@@ -450,15 +467,14 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
       }}
       className={`
         group relative
-        bg-card/80 border border-border/60
-        ${rotting.severity !== "ok" ? `border-l-[3px] ${rotting.border}` : ""}
-        rounded-lg p-3
+        bg-white border border-slate-200/80
+        dark:bg-card dark:border-border/50
+        rounded-xl p-3.5 shadow-[0_1px_2px_rgba(15,23,42,0.06),0_2px_8px_-4px_rgba(15,23,42,0.05)]
         ${selectionMode ? "cursor-pointer" : "cursor-grab active:cursor-grabbing"}
-        transition-[border-color,background-color,transform,box-shadow] duration-150 will-change-transform
-        ${rotting.severity === "high" ? "rotting-pulse" : ""}
+        transition-[border-color,background-color,transform,box-shadow] duration-200 will-change-transform
         ${isBeingDragged
-          ? "scale-[1.025] -translate-y-0.5 shadow-[0_12px_32px_-6px_rgba(0,0,0,0.6)] border-emerald-500/70 ring-1 ring-emerald-500/30 z-50 !opacity-100"
-          : "hover:border-border hover:bg-card"
+          ? "scale-[1.025] -translate-y-0.5 shadow-[0_12px_32px_-6px_rgba(15,23,42,0.25)] border-emerald-500/70 ring-1 ring-emerald-500/30 z-50 !opacity-100"
+          : "hover:border-slate-300 dark:hover:border-border hover:-translate-y-px hover:shadow-[0_8px_20px_-8px_rgba(15,23,42,0.18)]"
         }
         ${isSortableDragging ? "opacity-30" : "opacity-100"}
         ${isSelected ? "!border-emerald-500 ring-2 ring-emerald-500/40" : ""}
@@ -490,16 +506,8 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
         </div>
       )}
 
-      {/* ── Hot Deal glow strip ───────────────────────────── */}
-      {deal.is_hot && (
-        <div className="absolute inset-0 rounded-xl pointer-events-none overflow-hidden">
-          <div className="absolute inset-0 rounded-xl ring-1 ring-orange-500/40" />
-          <div
-            className="absolute top-0 left-0 right-0 h-[2px] rounded-t-xl"
-            style={{ background: "linear-gradient(90deg, transparent, #f97316, transparent)" }}
-          />
-        </div>
-      )}
+      {/* F5P.4b — Hot deal ring agressivo REMOVIDO.
+          O Flame icon ao lado do título (Row 1) basta como sinal de hot. */}
 
       {/* ── Hover quick-action bar ────────────────────────── */}
       {typeof document !== "undefined" && !selectionMode && createPortal(
@@ -672,20 +680,102 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
             </span>
           )}
 
-          {dealTags.length > 0 && (
-            <div className="flex items-center gap-1 flex-shrink min-w-0 overflow-hidden">
-              <span className="w-px h-3 bg-border/60 flex-shrink-0" />
-              {dealTags.slice(0, 2).map((tag) => (
-                <DealTagBadge key={tag.id} tag={tag} />
-              ))}
-              {dealTags.length > 2 && (
-                <span className="text-[9px] text-muted-foreground font-medium flex-shrink-0">
-                  +{dealTags.length - 2}
+          {/* F6T.2 — dealTags legado (sistema deal_tags) escondido do card pra
+              evitar mistura visual com tags F6T.1. Dados continuam vivos no DB;
+              renderização principal agora usa props.tags (vide bloco abaixo). */}
+        </div>
+
+        {/* ── F5P.2: contexto comercial (canal + EVA) ───────── */}
+        {context && (() => {
+          const hasConv = !!context.conversationId;
+          const evaStyle = EVA_TEMP_STYLES[context.temperature] || EVA_TEMP_STYLES.unknown;
+          // Linha EVA: prioriza stale > proxima_acao
+          const evaLine = context.isStale
+            ? "EVA desatualizada"
+            : context.proximaAcao
+              ? `EVA: ${context.proximaAcao}`
+              : null;
+          return (
+            <div className="mb-2 flex flex-col gap-1.5" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {/* Badge canal */}
+                <span
+                  className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded font-semibold ${
+                    hasConv ? "bg-emerald-500/15 text-emerald-300" : "bg-muted/40 text-muted-foreground"
+                  }`}
+                >
+                  <span className={`h-1.5 w-1.5 rounded-full ${hasConv ? "bg-emerald-400" : "bg-slate-500"}`} />
+                  {hasConv ? "WhatsApp" : "Sem conversa"}
                 </span>
+
+                {/* Badge EVA temperatura */}
+                {hasConv && (
+                  <span className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded font-semibold ${evaStyle.bg} ${evaStyle.color}`}>
+                    <Flame className="h-2.5 w-2.5" />
+                    {evaStyle.label}
+                  </span>
+                )}
+              </div>
+
+              {/* Linha EVA (próxima ação OU stale) */}
+              {hasConv && evaLine && (
+                <p className={`text-[10.5px] truncate ${
+                  context.isStale ? "text-amber-300/90" : "text-muted-foreground"
+                }`}>
+                  {evaLine}
+                </p>
+              )}
+
+              {/* F5P.4f — "Abrir conversa" virou mini-pill com hover sutil + arrow */}
+              {context.conversationId && (
+                <button
+                  type="button"
+                  className="group/openconv inline-flex items-center gap-1.5 self-start px-2 py-1 -ml-0.5 rounded-md text-[10.5px] font-medium text-sky-600 dark:text-sky-300 bg-sky-500/10 hover:bg-sky-500/15 ring-1 ring-sky-500/15 hover:ring-sky-500/25 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/inbox?conversationId=${context.conversationId}`);
+                  }}
+                >
+                  <MessageSquare className="h-2.5 w-2.5" />
+                  Abrir conversa
+                  <ArrowRight className="h-2.5 w-2.5 -ml-0.5 translate-x-0 group-hover/openconv:translate-x-0.5 transition-transform" />
+                </button>
               )}
             </div>
-          )}
-        </div>
+          );
+        })()}
+
+        {/* ── F6T.2 — Tags F6T.1 (até 3 chips + N) ──────────── */}
+        {tags.length > 0 && (
+          <div className="flex items-center gap-1.5 flex-wrap mb-2.5">
+            {tags.slice(0, 3).map((tag) => {
+              const useHex = isHexColor(tag.color);
+              return (
+                <span
+                  key={tag.id}
+                  title={tag.description ?? tag.name}
+                  className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ring-1 ring-inset ${useHex ? "" : getTagColorClass(tag.color)}`}
+                  style={
+                    useHex
+                      ? {
+                          backgroundColor: `${tag.color}1a`,
+                          color: tag.color as string,
+                          boxShadow: `inset 0 0 0 1px ${tag.color}55`,
+                        }
+                      : undefined
+                  }
+                >
+                  {tag.name}
+                </span>
+              );
+            })}
+            {tags.length > 3 && (
+              <span className="text-[10px] text-muted-foreground font-medium">
+                +{tags.length - 3}
+              </span>
+            )}
+          </div>
+        )}
 
         {/* ── SLA badge (handoff ativo) ─────────────────────── */}
         {(deal as any).sla_breach_at && (
@@ -719,8 +809,8 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
           })()
         )}
 
-        {/* ── Value hero ───────────────────────────────────── */}
-        <div className="flex items-baseline justify-between gap-2 mb-2">
+        {/* F5P.4b — Value hero (sem probability % e sem barra colorida) */}
+        <div className="mb-3">
           {canInlineEdit && editingField === "value" ? (
             <input
               ref={inputRef}
@@ -732,71 +822,45 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
               onMouseDown={e => e.stopPropagation()}
               onPointerDown={e => e.stopPropagation()}
               disabled={isSaving}
-              className={`${inlineInputClass} text-[17px] font-bold text-emerald-400 tabular-nums w-36`}
+              className={`${inlineInputClass} text-[20px] font-bold text-emerald-400 tabular-nums w-36`}
               autoFocus
             />
           ) : canInlineEdit ? (
             <button
-              className="text-[17px] font-bold text-emerald-400 tabular-nums tracking-tight group/value inline-flex items-center gap-1 cursor-text rounded hover:bg-muted/40 transition-colors px-0.5 -mx-0.5"
+              className="text-[20px] font-bold text-emerald-400 tabular-nums tracking-tight group/value inline-flex items-center gap-1.5 cursor-text rounded hover:bg-muted/40 transition-colors px-0.5 -mx-0.5"
               onClick={e => startEditing("value", e)}
               onMouseDown={e => e.stopPropagation()}
               onPointerDown={e => e.stopPropagation()}
             >
               {formatCurrency(deal.value)}
-              <Pencil className="h-2.5 w-2.5 text-muted-foreground opacity-0 group-hover/value:opacity-100 transition-opacity flex-shrink-0" />
+              <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover/value:opacity-100 transition-opacity flex-shrink-0" />
             </button>
           ) : (
-            <span className="text-[17px] font-bold text-emerald-400 tabular-nums tracking-tight">
+            <span className="text-[20px] font-bold text-emerald-400 tabular-nums tracking-tight">
               {formatCurrency(deal.value)}
-            </span>
-          )}
-
-          {deal.probability > 0 && (
-            <span className={`
-              text-[10px] font-semibold tabular-nums
-              ${deal.probability >= 70
-                ? "text-emerald-400"
-                : deal.probability >= 40
-                  ? "text-amber-400"
-                  : "text-muted-foreground"
-              }
-            `}>
-              {deal.probability}%
             </span>
           )}
         </div>
 
-        {/* ── Probability bar (slim) ───────────────────────── */}
-        {deal.probability > 0 && (
-          <div className="relative h-[2px] w-full bg-muted/60 rounded-full overflow-hidden mb-3">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${deal.probability}%` }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
-              className={`absolute inset-y-0 left-0 bg-gradient-to-r ${probabilityColor} rounded-full`}
-            />
-          </div>
-        )}
-
-        {/* ── Meta row: aging + close date + activity ──────── */}
-        <div className="flex items-center gap-2 text-[10.5px] text-muted-foreground">
-          {/* Aging indicator (só se warn) */}
-          {daysSince > 3 && (
-            <span className={`inline-flex items-center gap-1 font-semibold tabular-nums ${daysSince > 7 ? "text-rose-400" : "text-amber-400"}`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${daysSince > 7 ? "bg-rose-500" : "bg-amber-500"}`} />
-              {daysSince}d
+        {/* ── F5P.4f — Meta row humanizado: linguagem comercial em vez de tags técnicas. */}
+        <div className="flex items-center gap-2.5 text-[10.5px] text-muted-foreground">
+          {/* Aguardando (era "Parado há X dias") — só em deals abertos */}
+          {daysSince > 3 && deal.stage !== "closed_won" && deal.stage !== "closed_lost" && (
+            <span className="inline-flex items-center gap-1 tabular-nums text-amber-600 dark:text-amber-400/90">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+              Aguardando {daysSince} {daysSince === 1 ? "dia" : "dias"}
             </span>
           )}
 
-          {/* Expected close */}
+          {/* Previsão de fechamento (prefixo "Prev." pra contextualizar a data) */}
           {deal.expected_close_date && (
             <span className={`inline-flex items-center gap-1 tabular-nums flex-shrink-0 ${isOverdue ? "text-rose-400 font-semibold" : ""}`}>
               <Calendar className="h-2.5 w-2.5" strokeWidth={2.2} />
-              {format(parseISO(deal.expected_close_date), "dd MMM", { locale: ptBR })}
+              {isOverdue ? "Venceu" : "Prev."} {format(parseISO(deal.expected_close_date), "dd MMM", { locale: ptBR })}
             </span>
           )}
 
-          {/* Last activity (truncated, right-aligned) */}
+          {/* Última atividade — addSuffix: true ("há X") para soar humano */}
           <span className="flex items-center gap-1 truncate flex-1 min-w-0 justify-end">
             {deal.lastActivity ? (
               <>
@@ -805,19 +869,15 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
                 {deal.lastActivity.type === "stage_change" && <ArrowRight className="h-2.5 w-2.5 flex-shrink-0" strokeWidth={2.2} />}
                 {deal.lastActivity.type === "update" && <Clock className="h-2.5 w-2.5 flex-shrink-0" strokeWidth={2.2} />}
                 <span className="truncate">
-                  {formatDistanceToNow(new Date(deal.lastActivity.date), { addSuffix: false, locale: ptBR })}
+                  {formatDistanceToNow(new Date(deal.lastActivity.date), { addSuffix: true, locale: ptBR })}
                 </span>
               </>
+            ) : deal.updated_at ? (
+              <span className="truncate">
+                Atualizado {formatDistanceToNow(new Date(deal.updated_at), { addSuffix: true, locale: ptBR })}
+              </span>
             ) : (
-              <>
-                <Clock className="h-2.5 w-2.5 flex-shrink-0" strokeWidth={2.2} />
-                <span className="truncate">
-                  {deal.updated_at
-                    ? formatDistanceToNow(new Date(deal.updated_at), { addSuffix: false, locale: ptBR })
-                    : "sem atividade"
-                  }
-                </span>
-              </>
+              <span className="truncate italic">Sem atividade</span>
             )}
           </span>
         </div>

@@ -9,7 +9,7 @@ const getStoredTheme = (): Theme => {
   const stored = localStorage.getItem(storageKey);
   if (stored === "light") return "light";
   if (stored === "dark") return "dark";
-  return "dark"; // Default to dark mode
+  return "light"; // Default to light premium (2026-05-19 pivot)
 };
 
 export const useTheme = () => {

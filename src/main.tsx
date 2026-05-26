@@ -6,14 +6,16 @@ import { initAnalytics } from "./lib/analytics";
 
 const THEME_STORAGE_KEY = "vyzon-theme";
 
-// Apply stored theme preference before React mounts (persistent light/dark)
+// Apply stored theme preference before React mounts (persistent light/dark).
+// Default: LIGHT (2026-05-19). Quem tinha "dark" salvo no localStorage
+// continua em dark sem regressão.
 if (typeof window !== "undefined") {
   const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
 
-  if (storedTheme === "light") {
-    document.documentElement.classList.remove("dark");
-  } else {
+  if (storedTheme === "dark") {
     document.documentElement.classList.add("dark");
+  } else {
+    document.documentElement.classList.remove("dark");
   }
 }
 

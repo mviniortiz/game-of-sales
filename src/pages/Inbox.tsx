@@ -1,0 +1,419 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { InboxList, type SyncStatus, type SyncTone } from "@/components/inbox/InboxList";
+import { InboxConversation } from "@/components/inbox/InboxConversation";
+import { EvaPanel } from "@/components/inbox/EvaPanel";
+import { WhatsAppConnectModal } from "@/components/inbox/WhatsAppConnectModal";
+import { useEvolutionSender } from "@/hooks/useEvolutionSender";
+import { useWhatsAppInboxDb } from "@/hooks/useWhatsAppInboxDb";
+import { useChannelInbox } from "@/hooks/useChannelInbox";
+import { useInboxConnectionStatus } from "@/hooks/useInboxConnectionStatus";
+import { useAuth } from "@/contexts/AuthContext";
+import { useTenant } from "@/contexts/TenantContext";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Inbox Comercial — F4W.4 (2026-05-20)
+//
+// Source primária: useChannelInbox (channel_connections/conversations/messages)
+// Fallback: useWhatsAppInboxDb (whatsapp_messages legado)
+//
+// Decisão da source:
+//   - channel é "ready" quando chatsLoadedOnce && !error
+//   - se channel readyou está OK ou ainda carregando, usa channel
+//   - se channel error OR (channel vazio E legacy tem dados) → legacy
+//
+// Envio continua via useEvolutionSender. selectedChat.chatJid carrega o
+// external_contact_id no channel ou o chat_jid no legacy, então o callback
+// não muda.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const STATUS_FRESH_WINDOW_MS = 5 * 60 * 1000;
+
+function formatTimeAgo(date: Date | null): string {
+    if (!date) return "";
+    const diffMs = Date.now() - date.getTime();
+    if (diffMs < 0) return "agora";
+    const seconds = Math.floor(diffMs / 1000);
+    if (seconds < 15) return "agora";
+    if (seconds < 60) return `há ${seconds}s`;
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `há ${minutes}min`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `há ${hours}h`;
+    const days = Math.floor(hours / 24);
+    return `há ${days}d`;
+}
+
+const Inbox = () => {
+    const { isAdmin, companyId } = useAuth();
+    const { activeCompanyId } = useTenant();
+    const [connectModalOpen, setConnectModalOpen] = useState(false);
+    const [historySyncing, setHistorySyncing] = useState(false);
+
+    // ── Sources: channel (primário) + legacy (fallback DEFERRED) ──────────
+    const channelInbox = useChannelInbox();
+
+    // F4W.4.1 — Legacy só monta de verdade quando o channel sinaliza erro
+    // ou retorna vazio. Antes disso, fica inerte (enabled=false) → zero
+    // queries / zero realtime / zero GC.
+    const [legacyEnabled, setLegacyEnabled] = useState(false);
+    const legacyInbox = useWhatsAppInboxDb({ enabled: legacyEnabled });
+
+    useEffect(() => {
+        if (legacyEnabled) return; // já ativado, não reverter
+        // Só decidimos depois do primeiro tentativa do channel
+        if (!channelInbox.chatsLoadedOnce && !channelInbox.error) return;
+        if (channelInbox.error) {
+            setLegacyEnabled(true);
+            return;
+        }
+        // Channel rodou sem erro mas veio vazio → liga o legacy pra confirmar
+        if (channelInbox.isEmpty) {
+            setLegacyEnabled(true);
+        }
+    }, [channelInbox.chatsLoadedOnce, channelInbox.error, channelInbox.isEmpty, legacyEnabled]);
+
+    const {
+        connected,
+        lastStatusCheckedAt,
+        sendMessage,
+        sendAudioMessage,
+        getAudioMedia,
+        refreshStatus,
+    } = useEvolutionSender();
+
+    const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [, setTick] = useState(0);
+    const isMobile = useIsMobile();
+
+    // F5C.2 — deep link `?conversationId=<uuid>` vindo da Central de Comando.
+    // Aplica uma única vez por valor de param + uma vez por load do active
+    // inbox: quando o id bater com algum chat da lista atual, seleciona.
+    // Se não bater, mantém estado default (sem quebrar).
+    const [searchParams, setSearchParams] = useSearchParams();
+    const deepLinkConvId = searchParams.get("conversationId");
+    const [appliedDeepLinkFor, setAppliedDeepLinkFor] = useState<string | null>(null);
+
+    // ── Decide source ativa ───────────────────────────────────────────────
+    // Channel "fica" como primária a partir do momento que ele responde com
+    // dados — depois disso não troca pra legacy mesmo se houver flicker.
+    // Só vai pra legacy se channel deu erro fatal OU veio vazio E legacy
+    // tem dados.
+    const useLegacy = useMemo(() => {
+        if (!channelInbox.chatsLoadedOnce && !channelInbox.error) return false;
+        if (channelInbox.error) return legacyEnabled && legacyInbox.chatsLoadedOnce;
+        if (channelInbox.isEmpty && legacyEnabled && legacyInbox.chats.length > 0) return true;
+        return false;
+    }, [
+        channelInbox.chatsLoadedOnce,
+        channelInbox.error,
+        channelInbox.isEmpty,
+        legacyEnabled,
+        legacyInbox.chatsLoadedOnce,
+        legacyInbox.chats.length,
+    ]);
+
+    const activeInbox = useLegacy ? legacyInbox : channelInbox;
+    const activeSourceLabel = useLegacy ? "legacy-fallback" : "channel";
+
+    useEffect(() => {
+        if (import.meta.env.DEV) {
+            console.log(
+                `[Inbox] active_source=${activeSourceLabel} ` +
+                `channel_chats=${channelInbox.chats.length} ` +
+                `legacy_chats=${legacyInbox.chats.length} ` +
+                `channel_error=${channelInbox.error || "none"}`,
+            );
+        }
+    }, [activeSourceLabel, channelInbox.chats.length, channelInbox.error, legacyInbox.chats.length]);
+
+    const chats = activeInbox.chats;
+    const selectedChatMessages = activeInbox.selectedChatMessages;
+    const isLoadingChats = activeInbox.isLoadingChats;
+    const isLoadingMessages = activeInbox.isLoadingMessages;
+
+    const selectedChat = chats.find((c) => c.id === selectedChatId);
+
+    // F4W.7.1 — estado da conexão WhatsApp (connection row + status ao vivo).
+    const connectionStatus = useInboxConnectionStatus({
+        connection: channelInbox.connection,
+        connectionError: channelInbox.error,
+        liveConnected: connected,
+        lastStatusCheckedAt,
+        hasMessages: chats.length > 0,
+        lastChatsLoadedAt: activeInbox.lastChatsLoadedAt,
+    });
+
+    // F5C.2 — Aplica deep link `?conversationId=` quando chats carregam
+    useEffect(() => {
+        if (!deepLinkConvId) return;
+        if (appliedDeepLinkFor === deepLinkConvId) return;
+        // Espera chats reais (não aplica em vazio nem antes do primeiro fetch)
+        if (!activeInbox.chatsLoadedOnce || chats.length === 0) return;
+        const found = chats.find((c) => c.id === deepLinkConvId);
+        if (found) {
+            setSelectedChatId(found.id);
+        }
+        setAppliedDeepLinkFor(deepLinkConvId);
+        // Limpa o param da URL — evita reaplicar se o user trocar de chat
+        const sp = new URLSearchParams(searchParams);
+        sp.delete("conversationId");
+        setSearchParams(sp, { replace: true });
+    }, [
+        deepLinkConvId,
+        appliedDeepLinkFor,
+        activeInbox.chatsLoadedOnce,
+        chats,
+        searchParams,
+        setSearchParams,
+    ]);
+
+    // F4W.4.3 — Sincroniza o ref do hook ANTES de qualquer fetch.
+    // Garante que Realtime sempre veja o id correto, sem race condition.
+    useEffect(() => {
+        activeInbox.setSelectedConversationId(selectedChatId);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedChatId, useLegacy]);
+
+    // Trocar de chat → fetchMessages + (se channel) zera unread_count
+    useEffect(() => {
+        if (!selectedChatId) return;
+        void activeInbox.fetchMessages(selectedChatId);
+        if (!useLegacy) {
+            void channelInbox.markConversationAsRead(selectedChatId);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedChatId, useLegacy]);
+
+    // F4W.4.3 — Quando a source troca (channel → legacy), o id selecionado
+    // de uma source não existe na outra. Limpa pra evitar UI vazia ou
+    // mistura. Usa ref pra detectar transição sem disparar no mount.
+    const prevUseLegacyRef = useRef<boolean | null>(null);
+    useEffect(() => {
+        if (prevUseLegacyRef.current !== null && prevUseLegacyRef.current !== useLegacy) {
+            setSelectedChatId(null);
+        }
+        prevUseLegacyRef.current = useLegacy;
+    }, [useLegacy]);
+
+    // Tick 60s pra labels relativas
+    useEffect(() => {
+        const interval = setInterval(() => setTick((t) => t + 1), 60_000);
+        return () => clearInterval(interval);
+    }, []);
+
+    // Mobile
+    const showListOnMobile = isMobile && !selectedChatId;
+    const showDetailOnMobile = isMobile && selectedChatId;
+
+    // ── Estado compound de sincronização ──────────────────────────────────
+    const syncStatus = useMemo<SyncStatus>(() => {
+        const dbHasData = chats.length > 0;
+        const statusIsFresh =
+            !!lastStatusCheckedAt &&
+            Date.now() - lastStatusCheckedAt.getTime() < STATUS_FRESH_WINDOW_MS;
+        const lastLoadedLabel = formatTimeAgo(activeInbox.lastChatsLoadedAt);
+
+        let tone: SyncTone;
+        let badge: string;
+        let detail: string | undefined;
+
+        if (lastStatusCheckedAt === null) {
+            tone = dbHasData ? "offline-with-history" : "unknown";
+            badge = dbHasData ? "Histórico salvo" : "Verificando…";
+            detail = dbHasData ? `Histórico atualizado ${lastLoadedLabel}` : undefined;
+        } else if (connected && statusIsFresh) {
+            tone = "live";
+            badge = "Live";
+            detail = `Atualizado ${lastLoadedLabel}`;
+        } else if (connected && !statusIsFresh) {
+            tone = "stale";
+            badge = "Status não verificado";
+            detail = `Atualizado ${lastLoadedLabel} · clique em atualizar`;
+        } else if (!connected && dbHasData) {
+            tone = "offline-with-history";
+            badge = "Histórico salvo";
+            detail = `WhatsApp desconectado · exibindo histórico (${lastLoadedLabel})`;
+        } else {
+            tone = "offline";
+            badge = "WhatsApp desconectado";
+            detail = undefined;
+        }
+
+        return { tone, badge, detail };
+    }, [chats.length, connected, lastStatusCheckedAt, activeInbox.lastChatsLoadedAt]);
+
+    // ── Refresh manual ────────────────────────────────────────────────────
+    const handleRefresh = async () => {
+        if (isRefreshing) return;
+        setIsRefreshing(true);
+        try {
+            await Promise.all([
+                activeInbox.refreshAll(selectedChatId),
+                refreshStatus(),
+            ]);
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
+
+    // F4W.7.3 — import sob demanda do histórico recente (Evolution → channel_*)
+    const handleSyncHistory = async () => {
+        if (historySyncing) return;
+        setHistorySyncing(true);
+        try {
+            const { data, error } = await supabase.functions.invoke("evolution-whatsapp", {
+                body: { action: "import_history", companyId: activeCompanyId || companyId },
+            });
+            if (error) throw error;
+            const r = data as { importedChats?: number; importedMessages?: number } | null;
+            const chatsN = r?.importedChats ?? 0;
+            const msgsN = r?.importedMessages ?? 0;
+            toast.success(
+                `Histórico atualizado: ${chatsN} ${chatsN === 1 ? "conversa" : "conversas"}, ` +
+                `${msgsN} ${msgsN === 1 ? "mensagem" : "mensagens"}`,
+            );
+            await handleRefresh();
+        } catch {
+            toast.error("Não foi possível sincronizar agora. Tente de novo em instantes.");
+        } finally {
+            setHistorySyncing(false);
+        }
+    };
+
+    // ── Envio: precisa do chatJid (não do conversationId) pro Evolution ──
+    // Em legacy chat.chatJid === chat.id. Em channel chat.chatJid é o
+    // external_contact_id (JID do WhatsApp). Sender usa esse pra falar com a
+    // Evolution.
+    const handleSendText = async (chatIdFromCallback: string, text: string) => {
+        const target = chats.find((c) => c.id === chatIdFromCallback) || selectedChat;
+        const jid = target?.chatJid;
+        if (!jid) {
+            console.warn("[Inbox] handleSendText: missing chatJid for", chatIdFromCallback);
+            return;
+        }
+        // Pending no active inbox (key é o id da seleção, não o JID)
+        activeInbox.appendPendingMessage(target!.id, text);
+        try {
+            await sendMessage(jid, text);
+            // F4W.4.3 — fetch imediato + segundo fetch atrasado pra cobrir
+            // webhook lento (Evolution insere em whatsapp_messages +
+            // dual-write em channel_messages com latência típica 1-3s).
+            void activeInbox.fetchMessages(target!.id);
+            window.setTimeout(() => {
+                if (target?.id) void activeInbox.fetchMessages(target.id);
+            }, 1500);
+        } catch (err) {
+            void activeInbox.fetchMessages(target!.id);
+            throw err;
+        }
+    };
+
+    const handleSendAudio = async (chatIdFromCallback: string, base64: string) => {
+        const target = chats.find((c) => c.id === chatIdFromCallback) || selectedChat;
+        const jid = target?.chatJid;
+        if (!jid) {
+            console.warn("[Inbox] handleSendAudio: missing chatJid for", chatIdFromCallback);
+            return;
+        }
+        await sendAudioMessage(jid, base64);
+        void activeInbox.fetchMessages(target!.id);
+        // F4W.4.3 — também atrasado pra áudio (webhook costuma ser ainda mais lento)
+        window.setTimeout(() => {
+            if (target?.id) void activeInbox.fetchMessages(target.id);
+        }, 2000);
+    };
+
+    return (
+        <div
+            className="flex w-full overflow-hidden -mx-3 -my-3 sm:-mx-4 sm:-my-4 md:-mx-6 md:-my-6"
+            style={{
+                height: "calc(100vh - 3.5rem)",
+                background: "#F3F6FA",
+            }}
+        >
+            {/* Coluna esquerda — lista */}
+            <aside
+                className={
+                    isMobile
+                        ? showListOnMobile
+                            ? "w-full flex flex-col"
+                            : "hidden"
+                        : "w-[340px] xl:w-[380px] shrink-0 flex flex-col border-r border-[#D9E2EC] bg-white"
+                }
+            >
+                <InboxList
+                    chats={chats}
+                    selectedChatId={selectedChatId}
+                    onSelect={setSelectedChatId}
+                    isLoading={isLoadingChats}
+                    connected={connected}
+                    syncStatus={syncStatus}
+                    onRefresh={handleRefresh}
+                    isRefreshing={isRefreshing}
+                    connectionStatus={connectionStatus}
+                    onConnectClick={() => setConnectModalOpen(true)}
+                    onSyncHistory={handleSyncHistory}
+                    historySyncing={historySyncing}
+                    adminScopeLabel={isAdmin ? "Minhas conversas" : undefined}
+                />
+            </aside>
+
+            {/* Coluna central — conversa */}
+            <main
+                className={
+                    isMobile
+                        ? showDetailOnMobile
+                            ? "flex-1 flex flex-col bg-white"
+                            : "hidden"
+                        : "flex-1 flex flex-col bg-white"
+                }
+            >
+                <InboxConversation
+                    chat={selectedChat || null}
+                    messages={selectedChatMessages}
+                    onSendText={handleSendText}
+                    onSendAudio={handleSendAudio}
+                    getAudioMedia={getAudioMedia}
+                    isLoading={isLoadingMessages}
+                    onBack={isMobile ? () => setSelectedChatId(null) : undefined}
+                    onRefresh={handleRefresh}
+                    isRefreshing={isRefreshing}
+                />
+            </main>
+
+            {/* Coluna direita — EvaPanel (desktop) */}
+            {!isMobile && (
+                <aside
+                    className="w-[340px] xl:w-[380px] shrink-0 flex flex-col bg-white"
+                    style={{ borderLeft: "1px solid #D9E2EC" }}
+                >
+                    <EvaPanel
+                        chat={selectedChat || null}
+                        messages={selectedChatMessages}
+                        onDealLinked={() => {
+                            // V1.1 — vínculo só ocorre no modo channel; refetcha pra
+                            // refletir o novo deal_id em chat.dealId.
+                            if (!useLegacy && selectedChatId) {
+                                void channelInbox.refreshAll(selectedChatId);
+                            }
+                        }}
+                    />
+                </aside>
+            )}
+
+            {/* F4W.7.2 — QR Code direto na Inbox */}
+            <WhatsAppConnectModal
+                open={connectModalOpen}
+                onClose={() => setConnectModalOpen(false)}
+                onConnected={() => { void handleRefresh(); }}
+            />
+        </div>
+    );
+};
+
+export default Inbox;

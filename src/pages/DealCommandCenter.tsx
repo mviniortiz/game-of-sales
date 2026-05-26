@@ -2,6 +2,14 @@
 import { logger } from "@/utils/logger";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useDealContextData } from "@/hooks/useDealContextData";
+import {
+    getQualificationScore,
+    getQualificationTemperature,
+    getQualificationIntent,
+    getQualificationObjection,
+    getQualificationService,
+} from "@/hooks/useCommandCenterData";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -69,6 +77,10 @@ const NovaTarefaModal = lazy(() => import("@/components/crm/NovaTarefaModal").th
 import { DealProducts } from "@/components/crm/DealProducts";
 import { CustomFieldsSection } from "@/components/crm/CustomFieldsSection";
 import { usePlan } from "@/hooks/usePlan";
+// F6T.2 — tags transversais (sistema F6T.1)
+import { useDealTagsSingle } from "@/hooks/useDealsTags";
+import { getTagColorClass, isHexColor } from "@/lib/tags";
+import type { Tag } from "@/types/tags";
 import {
     Tooltip,
     TooltipContent,
@@ -275,6 +287,51 @@ const PropertyRow = ({ label, icon: Icon, children }: { label: string; icon?: ty
         <div className="text-foreground text-right min-w-0 truncate text-[13px]">{children}</div>
     </div>
 );
+
+/**
+ * F6T.2 — Tags comerciais do deal (sistema F6T.1).
+ * Renderiza até 8 chips + "+N". Sem edição nesta fase.
+ * Quando lista vazia, mostra empty discreto.
+ */
+const DealTagsBlock = ({ dealId }: { dealId: string }) => {
+    const { tags, loading } = useDealTagsSingle(dealId);
+    if (loading) {
+        return <p className="text-[12px] text-muted-foreground/70 italic">Carregando tags...</p>;
+    }
+    if (tags.length === 0) {
+        return <p className="text-[12px] text-muted-foreground/70">Nenhuma tag aplicada.</p>;
+    }
+    const visible = tags.slice(0, 8);
+    const rest = tags.length - visible.length;
+    return (
+        <div className="flex items-center gap-1.5 flex-wrap">
+            {visible.map((tag: Tag) => {
+                const useHex = isHexColor(tag.color);
+                return (
+                    <span
+                        key={tag.id}
+                        title={tag.description ?? tag.name}
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium ring-1 ring-inset ${useHex ? "" : getTagColorClass(tag.color)}`}
+                        style={
+                            useHex
+                                ? {
+                                      backgroundColor: `${tag.color}1a`,
+                                      color: tag.color as string,
+                                      boxShadow: `inset 0 0 0 1px ${tag.color}55`,
+                                  }
+                                : undefined
+                        }
+                    >
+                        {tag.name}
+                    </span>
+                );
+            })}
+            {rest > 0 && (
+                <span className="text-[11px] text-muted-foreground font-medium">+{rest}</span>
+            )}
+        </div>
+    );
+};
 
 // â"€â"€â"€ Main Component â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
@@ -1159,6 +1216,13 @@ export default function DealCommandCenter() {
                                     <p className="text-sm text-foreground leading-relaxed">{deal.notes}</p>
                                 </div>
                             )}
+
+                            {/* F5P.1 — Contexto da conversa + Leitura EVA persistida */}
+                            <DealConversationContextBlock
+                                dealId={deal.id}
+                                companyId={deal.company_id}
+                                onOpenConversation={(href) => navigate(href)}
+                            />
                         </div>
 
                         {/* â"€â"€ RIGHT SIDEBAR (properties) â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
@@ -1284,6 +1348,11 @@ export default function DealCommandCenter() {
                                                 />
                                             </div>
                                         </div>
+                                    </PropertiesSection>
+
+                                    {/* F6T.2 — Tags comerciais (sistema F6T.1) */}
+                                    <PropertiesSection title="Tags comerciais">
+                                        <DealTagsBlock dealId={id!} />
                                     </PropertiesSection>
 
                                     <PropertiesSection title="Campos customizados" defaultOpen={false}>
@@ -1453,5 +1522,227 @@ export default function DealCommandCenter() {
                 )}
             </div>
         </>
+    );
+}
+
+// ─── F5P.1 — Contexto da conversa + Leitura EVA persistida ──────────────────
+
+function DealConversationContextBlock({
+    dealId,
+    companyId,
+    onOpenConversation,
+}: {
+    dealId: string;
+    companyId: string | null;
+    onOpenConversation: (href: string) => void;
+}) {
+    const ctx = useDealContextData(dealId, companyId);
+
+    // Loading inicial — skeleton compacto
+    if (ctx.loading) {
+        return (
+            <div className="bg-card/40 rounded-2xl p-4 border border-border space-y-2">
+                <div className="h-3 w-32 rounded bg-muted/40" />
+                <div className="h-4 w-full rounded bg-muted/30" />
+                <div className="h-4 w-3/4 rounded bg-muted/30" />
+            </div>
+        );
+    }
+
+    // Sem conversa vinculada → empty state mas ainda exibe estrutura
+    if (!ctx.conversation) {
+        return (
+            <div className="bg-card/40 rounded-2xl p-4 border border-border">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-2">
+                    Contexto da conversa
+                </p>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                    Nenhuma conversa vinculada a esta oportunidade.
+                </p>
+            </div>
+        );
+    }
+
+    const { conversation, contact, lastMessages, summary, qualification, isStaleByMessages, relatedGaps, openConversationHref } = ctx;
+
+    const lastInteractionLabel = conversation.last_message_at
+        ? formatDistanceToNow(new Date(conversation.last_message_at), { locale: ptBR, addSuffix: true })
+        : "—";
+
+    const score       = getQualificationScore(qualification);
+    const temperature = getQualificationTemperature(qualification);
+    const intent      = getQualificationIntent(qualification);
+    const service     = getQualificationService(qualification);
+    const objection   = getQualificationObjection(qualification);
+
+    const hasAnalysis = !!summary && !!summary.analyzed_at;
+    const analyzedAtLabel = summary?.analyzed_at
+        ? formatDistanceToNow(new Date(summary.analyzed_at), { locale: ptBR, addSuffix: true })
+        : null;
+
+    return (
+        <div className="space-y-4">
+            {/* ── Contexto da conversa ─────────────────────────────────── */}
+            <div className="bg-card/40 rounded-2xl p-4 border border-border">
+                <div className="flex items-center justify-between mb-3">
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
+                        Contexto da conversa
+                    </p>
+                    {openConversationHref && (
+                        <button
+                            type="button"
+                            onClick={() => onOpenConversation(openConversationHref)}
+                            className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[11px] font-semibold transition-colors bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-400 border border-emerald-500/20"
+                        >
+                            <MessageSquare className="h-3 w-3" />
+                            Abrir conversa
+                        </button>
+                    )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                        <p className="text-[10px] text-muted-foreground mb-0.5">Contato</p>
+                        <p className="text-sm text-foreground truncate">{contact?.name || "—"}</p>
+                    </div>
+                    <div>
+                        <p className="text-[10px] text-muted-foreground mb-0.5">Telefone</p>
+                        <p className="text-sm text-foreground tabular-nums truncate">
+                            {contact?.phone_e164 ? `+${contact.phone_e164}` : "—"}
+                        </p>
+                    </div>
+                    <div>
+                        <p className="text-[10px] text-muted-foreground mb-0.5">Canal</p>
+                        <p className="text-sm text-foreground">WhatsApp</p>
+                    </div>
+                    <div>
+                        <p className="text-[10px] text-muted-foreground mb-0.5">Última interação</p>
+                        <p className="text-sm text-foreground">{lastInteractionLabel}</p>
+                    </div>
+                </div>
+
+                {lastMessages.length > 0 && (
+                    <div className="space-y-1.5 pt-3 border-t border-border/50">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1.5">
+                            Últimas {lastMessages.length} mensagens
+                        </p>
+                        <ul className="space-y-1">
+                            {lastMessages.map((m) => {
+                                const text = m.body || m.media_caption || `[${m.message_type}]`;
+                                const truncated = text.length > 90 ? text.slice(0, 90) + "…" : text;
+                                return (
+                                    <li key={m.id} className="flex gap-2 text-[12px]">
+                                        <span
+                                            className={`shrink-0 mt-0.5 inline-block h-1.5 w-1.5 rounded-full ${
+                                                m.direction === "outbound" ? "bg-emerald-500" : "bg-blue-500"
+                                            }`}
+                                        />
+                                        <span className="text-muted-foreground truncate">{truncated}</span>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    </div>
+                )}
+            </div>
+
+            {/* ── Leitura da EVA ──────────────────────────────────────── */}
+            <div className="bg-card/40 rounded-2xl p-4 border border-border">
+                <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                        <Sparkles className="h-3.5 w-3.5 text-violet-400" />
+                        <p className="text-[10px] font-semibold text-violet-400/90 uppercase tracking-widest">
+                            Leitura da EVA
+                        </p>
+                    </div>
+                    {hasAnalysis && (
+                        <span className="text-[10px] text-muted-foreground">
+                            {isStaleByMessages ? "Pode estar desatualizada" : `Análise salva ${analyzedAtLabel}`}
+                        </span>
+                    )}
+                </div>
+
+                {!hasAnalysis ? (
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                        A EVA ainda não analisou conversas suficientes para esta oportunidade.
+                    </p>
+                ) : (
+                    <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-3">
+                            {typeof score === "number" && (
+                                <div>
+                                    <p className="text-[10px] text-muted-foreground mb-0.5">Score</p>
+                                    <p className="text-sm font-semibold tabular-nums text-foreground">{score}</p>
+                                </div>
+                            )}
+                            {temperature && (
+                                <div>
+                                    <p className="text-[10px] text-muted-foreground mb-0.5">Temperatura</p>
+                                    <p className="text-sm text-foreground capitalize">{temperature}</p>
+                                </div>
+                            )}
+                            {intent && (
+                                <div className="col-span-2">
+                                    <p className="text-[10px] text-muted-foreground mb-0.5">Intenção</p>
+                                    <p className="text-sm text-foreground">{intent}</p>
+                                </div>
+                            )}
+                            {service && (
+                                <div className="col-span-2">
+                                    <p className="text-[10px] text-muted-foreground mb-0.5">Serviço de interesse</p>
+                                    <p className="text-sm text-foreground">{service}</p>
+                                </div>
+                            )}
+                            {objection && (
+                                <div className="col-span-2">
+                                    <p className="text-[10px] text-muted-foreground mb-0.5">Objeção principal</p>
+                                    <p className="text-sm text-foreground">{objection}</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {qualification?.proxima_acao && (
+                            <div className="pt-3 border-t border-border/50">
+                                <p className="text-[10px] text-muted-foreground mb-0.5">Próxima ação sugerida</p>
+                                <p className="text-sm text-foreground">{qualification.proxima_acao}</p>
+                            </div>
+                        )}
+
+                        {qualification?.info_faltante && qualification.info_faltante.length > 0 && (
+                            <div className="pt-3 border-t border-border/50">
+                                <p className="text-[10px] text-muted-foreground mb-1.5">Informações faltantes</p>
+                                <ul className="space-y-0.5">
+                                    {qualification.info_faltante.slice(0, 5).map((info, i) => (
+                                        <li key={i} className="text-[12.5px] text-muted-foreground flex gap-2">
+                                            <span className="text-amber-400/80">·</span>
+                                            <span>{info}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+
+                        {relatedGaps.length > 0 && (
+                            <div className="pt-3 border-t border-border/50">
+                                <p className="text-[10px] text-muted-foreground mb-1.5">Lacunas observadas pela EVA</p>
+                                <ul className="space-y-0.5">
+                                    {relatedGaps.slice(0, 3).map((g) => (
+                                        <li key={g.id} className="text-[12.5px] text-muted-foreground flex gap-2">
+                                            <span className="text-violet-400/80">·</span>
+                                            <span className="truncate">
+                                                {(g.gap_description || "Lacuna").slice(0, 80)}
+                                                {g.occurrence_count && g.occurrence_count > 1 && (
+                                                    <span className="ml-1 text-[10px]">({g.occurrence_count}×)</span>
+                                                )}
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+        </div>
     );
 }

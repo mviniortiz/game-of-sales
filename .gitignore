@@ -43,3 +43,8 @@ prospecting/
 public/videos/sales-video-reels.mp4
 public/videos/sales-video-square.mp4
 public/videos/sales-video-vertical45.mp4
+
+# Google Ads exports (contêm customer ID / dados de conta — nunca versionar)
+Vyzonconvs.json
+Vyzonterms.json
+*-google-ads-export.json

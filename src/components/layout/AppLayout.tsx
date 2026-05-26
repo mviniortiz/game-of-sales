@@ -12,19 +12,24 @@ const UpgradeLock = lazy(() => import("@/pages/admin/UpgradeLock"));
 const EvaDock = lazy(() => import("@/components/eva/EvaDock").then((m) => ({ default: m.EvaDock })));
 const CommandSearch = lazy(() => import("./CommandSearch").then((m) => ({ default: m.CommandSearch })));
 
+// Page titles alinhados com nova nomenclatura visual da nav (F3 2026-05-19).
+// Rotas novas (/inicio, /inbox, etc) são as principais; antigas redirect silencioso.
 const getPageTitle = (pathname: string) => {
-  if (pathname === "/") return "Dashboard";
-  if (pathname.startsWith("/crm")) return "CRM";
-  if (pathname.startsWith("/calls")) return "Performance de Calls";
-  if (pathname.startsWith("/calendario")) return "Calendário";
-  if (pathname.startsWith("/metas")) return "Metas";
-  if (pathname.startsWith("/ranking")) return "Ranking";
+  if (pathname === "/") return "Início";
+  if (pathname.startsWith("/inicio") || pathname.startsWith("/dashboard")) return "Início";
+  if (pathname.startsWith("/inbox") || pathname.startsWith("/pulse") || pathname.startsWith("/whatsapp")) return "Inbox";
+  if (pathname.startsWith("/pipeline") || pathname.startsWith("/crm")) return "Pipeline";
+  if (pathname.startsWith("/agenda") || pathname.startsWith("/calendario")) return "Agenda";
+  if (pathname.startsWith("/eva") || pathname.startsWith("/agente")) return "EVA";
+  if (pathname.startsWith("/performance")) return "Performance";
+  if (pathname.startsWith("/calls")) return "Performance · Calls";
+  if (pathname.startsWith("/metas")) return "Performance · Metas";
+  if (pathname.startsWith("/ranking")) return "Performance · Ranking";
   if (pathname.startsWith("/integracoes")) return "Integrações";
-  if (pathname.startsWith("/nova-venda")) return "Nova Venda";
+  if (pathname.startsWith("/nova-venda")) return "Novo lead";
   if (pathname.startsWith("/deal")) return "Detalhes do Deal";
-  if (pathname.startsWith("/agente")) return "Eva";
   if (pathname.startsWith("/admin/suporte")) return "Suporte";
-  if (pathname.startsWith("/admin")) return "Administração";
+  if (pathname.startsWith("/admin")) return "Gestão";
   if (pathname.startsWith("/configuracoes")) return "Configurações";
   if (pathname.startsWith("/profile")) return "Perfil";
   if (pathname.startsWith("/docs")) return "Central de Ajuda";
@@ -86,12 +91,20 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
       {/* Trial Banner - only shows during active trial */}
       {isTrialActive && <TrialBanner />}
 
-      <div className="min-h-screen flex w-full bg-background text-foreground">
+      <div className="min-h-screen flex w-full text-[#0B1220]" style={{ background: "#F3F6FA" }}>
         <AppSidebar />
         <div className="flex-1 flex flex-col">
-          <header className="h-14 border-b border-border/50 bg-background/80 backdrop-blur-sm text-foreground flex items-center gap-2 sm:gap-4 px-3 sm:px-4 relative">
+          <header
+            className="h-14 flex items-center gap-2 sm:gap-4 px-3 sm:px-4 relative"
+            style={{
+              background: "rgba(255,255,255,0.7)",
+              backdropFilter: "blur(12px) saturate(180%)",
+              WebkitBackdropFilter: "blur(12px) saturate(180%)",
+              borderBottom: "1px solid #E6EDF5",
+            }}
+          >
             <SidebarTrigger />
-            <span className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{getPageTitle(location.pathname)}</span>
+            <span className="text-xs sm:text-sm font-medium text-[#64748B] truncate">{getPageTitle(location.pathname)}</span>
 
             {/* Search bar inline — expande suavemente no focus */}
             <div ref={searchWrapRef} className="ml-auto relative">
@@ -99,24 +112,24 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
                 onClick={() => setSearchOpen(true)}
                 animate={{ opacity: searchOpen ? 0 : 1 }}
                 transition={{ duration: 0.15 }}
-                className="group flex items-center gap-2 h-8 rounded-lg text-[12px] transition-colors"
+                className="group flex items-center gap-2 h-8 rounded-lg text-[12px] transition-colors hover:bg-[#F1F5F9]"
                 style={{
                   width: "clamp(180px, 24vw, 280px)",
                   paddingLeft: "10px",
                   paddingRight: "10px",
-                  background: "rgba(255,255,255,0.02)",
-                  border: "1px solid rgba(255,255,255,0.06)",
-                  color: "rgba(255,255,255,0.6)",
+                  background: "#FFFFFF",
+                  border: "1px solid #E6EDF5",
+                  color: "#64748B",
                   pointerEvents: searchOpen ? "none" : "auto",
                   willChange: "opacity",
                 }}
                 aria-label="Buscar (Ctrl+K)"
               >
-                <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60 group-hover:text-emerald-400/80 transition-colors" />
-                <span className="hidden sm:inline flex-1 text-left text-muted-foreground/55 truncate">
+                <Search className="h-3.5 w-3.5 shrink-0 text-[#94A3B8] group-hover:text-[#2563EB] transition-colors" />
+                <span className="hidden sm:inline flex-1 text-left text-[#94A3B8] truncate">
                   Buscar deals, páginas, ações…
                 </span>
-                <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-white/[0.04] border border-white/[0.06] text-[10px] font-mono text-muted-foreground/55 leading-none">
+                <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-[#F1F5F9] border border-[#E6EDF5] text-[10px] font-mono text-[#94A3B8] leading-none">
                   <span className="text-[9px]">⌘</span>K
                 </kbd>
               </motion.button>
@@ -126,7 +139,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
               </Suspense>
             </div>
           </header>
-          <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-auto">
+          <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-auto" style={{ background: "#F3F6FA" }}>
             {children}
           </main>
         </div>
