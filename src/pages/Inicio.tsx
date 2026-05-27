@@ -1126,13 +1126,13 @@ function EvaStatusRow({
     );
 }
 
-// Card principal: fundo branco + acento na borda esquerda (sem chapado).
-// Coral = urgência real; âmbar/azul/cinza pros demais níveis.
-const PRIMARY_TONE: Record<DailyPriority["priority"], { accent: string; chipBg: string; chipColor: string; label: string }> = {
-    critical: { accent: "#F43F5E", chipBg: "rgba(244,63,94,0.10)",   chipColor: "#BE123C", label: "Mais urgente" },
-    high:     { accent: "#F59E0B", chipBg: "rgba(245,158,11,0.12)",  chipColor: "#B45309", label: "Prioridade alta" },
-    medium:   { accent: "#2563EB", chipBg: "rgba(37,99,235,0.10)",   chipColor: "#1D4ED8", label: "Atenção" },
-    low:      { accent: "#94A3B8", chipBg: "rgba(148,163,184,0.15)", chipColor: "#64748B", label: "Acompanhar" },
+// Card principal: fundo branco, borda neutra uniforme. A urgência vive só no
+// badge (coral no crítico), sem faixa/borda colorida.
+const PRIMARY_TONE: Record<DailyPriority["priority"], { chipBg: string; chipColor: string; label: string }> = {
+    critical: { chipBg: "rgba(244,63,94,0.10)",   chipColor: "#BE123C", label: "Mais urgente" },
+    high:     { chipBg: "rgba(245,158,11,0.12)",  chipColor: "#B45309", label: "Prioridade alta" },
+    medium:   { chipBg: "rgba(37,99,235,0.10)",   chipColor: "#1D4ED8", label: "Atenção" },
+    low:      { chipBg: "rgba(148,163,184,0.15)", chipColor: "#64748B", label: "Acompanhar" },
 };
 
 function PrimaryPriorityCard({
@@ -1149,7 +1149,6 @@ function PrimaryPriorityCard({
             style={{
                 background: "#FFFFFF",
                 border: "1px solid #E2E8F0",
-                borderLeft: `3px solid ${tone.accent}`,
                 boxShadow: "0 1px 2px rgba(15,23,42,0.04)",
             }}
         >
