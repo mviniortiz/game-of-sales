@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, Fragment, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 // F5C.5.3 — Phosphor duotone (mesmo set da sidebar e do pipeline /pipeline).
@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
     Warning as AlertTriangle,
     ArrowRight,
+    CaretRight as ChevronRight,
     CalendarBlank as Calendar,
     Clock,
     Funnel as Filter,
@@ -18,10 +19,11 @@ import {
     ArrowsClockwise as RefreshCw,
     PaperPlaneTilt as Send,
     Sparkle as Sparkles,
+    Plus,
     Target,
 } from "@phosphor-icons/react";
 import { EvaPhotoAvatar } from "@/components/eva/EvaPhotoAvatar";
-import { useInicioData } from "@/hooks/useInicioData";
+import { useInicioData, PIPELINE_STAGE_KEYS, type PipelineStageData } from "@/hooks/useInicioData";
 import {
     useCommandCenterData,
     type AttentionItem,
@@ -203,107 +205,214 @@ function KpiCard({ label, value, icon: Icon, hint, loading, accent = "#2563EB" }
     );
 }
 
-// ─── Pipeline (real, já existia) ────────────────────────────────────────────
+// ─── Panorama do Pipeline (COMMAND.UI.1) ────────────────────────────────────
+// Síntese executiva e acionável: fluxo de etapas conectado + uma etapa em foco
+// + leitura da EVA, tudo num card único. Operacional (não analítico como
+// Performance). Sem kanban, donut ou funil. Dados reais (usePipelineStages).
 
-interface PipelineSectionProps {
-    stages: { name: string; count: number; value: string; color: string }[];
-    total: number;
-    loading: boolean;
-    onOpen: () => void;
-}
+// Próximo passo recomendado por etapa em foco (movimenta o funil pra frente).
+const STAGE_NEXT_REC: Record<string, string> = {
+    lead: "qualificar esses leads para destravar o funil",
+    qualification: "revisar oportunidades paradas e avançar para proposta",
+    proposal: "acompanhar as propostas enviadas e abrir negociação",
+    negotiation: "priorizar o fechamento das negociações em aberto",
+};
 
-function PipelineSection({ stages, total, loading, onOpen }: PipelineSectionProps) {
+// Célula de uma etapa no fluxo. Peso = barra discreta proporcional ao count.
+function StageCell({
+    name,
+    count,
+    value,
+    color,
+    weightPct,
+    focus,
+    won,
+}: {
+    name: string;
+    count: number;
+    value: string;
+    color: string;
+    weightPct: number;
+    focus: boolean;
+    won: boolean;
+}) {
     return (
-        <SectionCard
-            title="Pipeline de Oportunidades"
-            subtitle={loading ? "Carregando…" : `${total} deals em movimento`}
-            action={
-                <button
-                    onClick={onOpen}
-                    className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold h-9 px-3 rounded-lg transition-colors hover:bg-[#F1F5F9]"
-                    style={{ color: "#2563EB" }}
-                >
-                    Ver pipeline
-                    <ArrowRight size={12} weight="bold" />
-                </button>
+        <div
+            className="flex-1 min-w-0 rounded-xl px-3.5 py-3.5 border transition-colors"
+            style={
+                focus
+                    ? { background: "#EFF6FF", border: "1px solid rgba(37,99,235,0.35)" }
+                    : { background: "#F8FAFC", border: "1px solid #E2E8F0" }
             }
         >
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-                {stages.map((stage) => (
-                    <div
-                        key={stage.name}
-                        className="rounded-xl p-5 transition-all hover:translate-y-[-1px] hover:shadow-sm"
-                        style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }}
-                    >
-                        <div className="flex items-center gap-2 mb-2.5">
-                            <span className="h-2 w-2 rounded-full" style={{ background: stage.color }} />
-                            <span className="text-[12px]"
-                                style={{ color: "#475569", fontWeight: 600, letterSpacing: "0.01em" }}>
-                                {stage.name}
-                            </span>
-                        </div>
-                        <p className="text-[30px] sm:text-[34px] font-bold tabular-nums leading-none"
-                            style={{ color: "#0B1220", letterSpacing: "-0.028em" }}>
-                            {stage.count}
-                        </p>
-                        <p className="text-[13px] mt-2" style={{ color: "#64748B" }}>
-                            {stage.value}
-                        </p>
-                    </div>
-                ))}
+            <div className="flex items-center gap-1.5 mb-2">
+                <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: color }} />
+                <span className="text-[11px] font-semibold truncate" style={{ color: "#475569", letterSpacing: "0.01em" }}>
+                    {name}
+                </span>
             </div>
-        </SectionCard>
+            <p className="text-[22px] sm:text-[24px] font-bold tabular-nums leading-none" style={{ color: "#0B1220", letterSpacing: "-0.02em" }}>
+                {count}
+            </p>
+            <p className="text-[11.5px] mt-1" style={{ color: "#64748B" }}>{value}</p>
+            <div className="mt-2.5 h-1 rounded-full overflow-hidden" style={{ background: "#E2E8F0" }}>
+                <div
+                    className="h-full rounded-full transition-all"
+                    style={{ width: `${Math.max(count > 0 ? 6 : 0, weightPct)}%`, background: won ? "#10B981" : focus ? "#2563EB" : "#94A3B8" }}
+                />
+            </div>
+        </div>
     );
 }
 
-// F5C.5 — Pipeline + leitura simples ("Onde está travando")
-function PipelineDiagnosticCard({
-    stages,
+function PipelineFlowSkeleton() {
+    return (
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-1.5">
+            {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex-1 rounded-xl px-3.5 py-3.5" style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }}>
+                    <div className="h-2.5 w-16 rounded mb-3" style={{ background: "#EAF0F6" }} />
+                    <div className="h-6 w-10 rounded mb-2" style={{ background: "#EAF0F6" }} />
+                    <div className="h-2.5 w-12 rounded" style={{ background: "#EAF0F6" }} />
+                </div>
+            ))}
+        </div>
+    );
+}
+
+function PipelinePanoramaCard({
     rawStages,
     total,
     loading,
     onOpen,
 }: {
-    stages: { name: string; count: number; value: string; color: string }[];
-    rawStages: Array<{ name: string; count: number; key: string }>;
+    rawStages: PipelineStageData[];
     total: number;
     loading: boolean;
     onOpen: () => void;
 }) {
-    // Identifica o estágio aberto (não won/lost) com maior concentração de deals
-    const insight = useMemo(() => {
-        if (loading || rawStages.length === 0 || total === 0) return null;
-        const openStages = rawStages.filter((s) => s.key !== "closed_won" && s.key !== "closed_lost");
-        if (openStages.length === 0) return null;
-        const top = [...openStages].sort((a, b) => b.count - a.count)[0];
-        if (!top || top.count === 0) return null;
-        const pct = Math.round((top.count / total) * 100);
-        if (pct < 35) return null; // só destaca se concentração for relevante
-        return { name: top.name, count: top.count, pct };
-    }, [rawStages, total, loading]);
+    const view = useMemo(() => {
+        const openStages = rawStages.filter((s) => s.key !== "closed_won");
+        const won = rawStages.find((s) => s.key === "closed_won") ?? null;
+        const openCount = openStages.reduce((a, s) => a + s.count, 0);
+        const openValue = openStages.reduce((a, s) => a + s.totalValue, 0);
+        const maxCount = Math.max(1, ...rawStages.map((s) => s.count));
+
+        // Etapa em foco (determinística): maior count → maior valor → mais cedo no funil.
+        let focusKey: string | null = null;
+        if (openCount > 0) {
+            const ranked = [...openStages].sort((a, b) => {
+                if (b.count !== a.count) return b.count - a.count;
+                if (b.totalValue !== a.totalValue) return b.totalValue - a.totalValue;
+                return PIPELINE_STAGE_KEYS.indexOf(a.key) - PIPELINE_STAGE_KEYS.indexOf(b.key);
+            });
+            focusKey = ranked[0] && ranked[0].count > 0 ? ranked[0].key : null;
+        }
+        const focusStage = focusKey ? openStages.find((s) => s.key === focusKey) ?? null : null;
+        const focusPct = focusStage && openCount > 0 ? Math.round((focusStage.count / openCount) * 100) : 0;
+
+        return { won, openCount, openValue, maxCount, focusKey, focusStage, focusPct };
+    }, [rawStages]);
+
+    const wonValue = view.won?.totalValue ?? 0;
+    const wonStr = formatCompactBRL(wonValue);
+    const isEmpty = !loading && total === 0;
+
+    const subtitle = loading
+        ? "Carregando…"
+        : `${view.openCount} ${view.openCount === 1 ? "oportunidade" : "oportunidades"} em movimento · ${formatCompactBRL(view.openValue)} em aberto`;
+
+    // Leitura da EVA — integrada, acionável.
+    const wonClause = wonValue > 0
+        ? <> Ganho registrado: <strong style={{ color: "#0B1220" }}>{wonStr}</strong>.</>
+        : null;
+    const focusStage = view.focusStage;
+    let evaBody: ReactNode;
+    if (view.openCount === 0) {
+        evaBody = <>Nenhuma oportunidade em aberto no momento.{wonClause}</>;
+    } else if (view.openCount === 1 || !focusStage) {
+        evaBody = <>Histórico ainda inicial. Acompanhe o avanço entre etapas nos próximos dias.{wonClause}</>;
+    } else {
+        const rec = STAGE_NEXT_REC[focusStage.key] ?? "revisar as oportunidades paradas";
+        evaBody = (
+            <>
+                <strong style={{ color: "#0B1220" }}>{view.focusPct}%</strong> dos deals abertos estão em{" "}
+                <strong style={{ color: "#0B1220" }}>{focusStage.name}</strong>. Recomendação: {rec}.{wonClause}
+            </>
+        );
+    }
 
     return (
-        <div className="space-y-3">
-            <PipelineSection stages={stages} total={total} loading={loading} onOpen={onOpen} />
-            {insight && (
-                <div
-                    className="rounded-xl px-4 py-3 flex items-start gap-3"
-                    style={{
-                        background: "rgba(124,58,237,0.04)",
-                        border: "1px solid rgba(124,58,237,0.12)",
-                    }}
-                >
-                    <Sparkles size={14} weight="duotone" className="mt-0.5 shrink-0" style={{ color: "#6D28D9" }} />
-                    <p className="text-[12.5px] leading-relaxed flex-1" style={{ color: "#475569" }}>
-                        <span className="font-semibold" style={{ color: "#0B1220" }}>
-                            Leitura da EVA:
-                        </span>{" "}
-                        {insight.pct}% dos deals abertos estão concentrados em{" "}
-                        <strong style={{ color: "#0B1220" }}>{insight.name}</strong> ({insight.count} deals). Vale revisar se algum está parado.
-                    </p>
+        <SectionCard
+            title="Panorama do Pipeline"
+            subtitle={subtitle}
+            action={
+                isEmpty ? undefined : (
+                    <button
+                        onClick={onOpen}
+                        className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold h-9 px-3 rounded-lg transition-colors hover:bg-[#F1F5F9]"
+                        style={{ color: "#2563EB" }}
+                    >
+                        Ver pipeline
+                        <ArrowRight size={12} weight="bold" />
+                    </button>
+                )
+            }
+        >
+            {loading ? (
+                <PipelineFlowSkeleton />
+            ) : isEmpty ? (
+                <div className="flex flex-col items-center justify-center text-center py-8 gap-3">
+                    <p className="text-[13.5px]" style={{ color: "#475569" }}>Ainda não há oportunidades em movimento.</p>
+                    <button
+                        onClick={onOpen}
+                        className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg text-[12.5px] font-semibold text-white transition-colors hover:opacity-90"
+                        style={{ background: "#2563EB" }}
+                    >
+                        <Plus size={13} weight="bold" /> Criar oportunidade
+                    </button>
                 </div>
+            ) : (
+                <>
+                    {/* Fluxo horizontal conectado: Novo lead → … → Ganho */}
+                    <div className="flex flex-col sm:flex-row sm:items-stretch">
+                        {rawStages.map((s, i) => (
+                            <Fragment key={s.key}>
+                                <StageCell
+                                    name={s.name}
+                                    count={s.count}
+                                    value={formatCompactBRL(s.totalValue)}
+                                    color={s.color}
+                                    weightPct={Math.round((s.count / view.maxCount) * 100)}
+                                    focus={s.key === view.focusKey}
+                                    won={s.key === "closed_won"}
+                                />
+                                {i < rawStages.length - 1 && (
+                                    <div className="flex items-center justify-center shrink-0 py-1 sm:py-0 sm:px-0.5">
+                                        <ChevronRight size={14} weight="bold" className="rotate-90 sm:rotate-0" style={{ color: "#CBD5E1" }} />
+                                    </div>
+                                )}
+                            </Fragment>
+                        ))}
+                    </div>
+
+                    {/* Leitura da EVA — integrada ao card */}
+                    <div
+                        className="mt-4 rounded-xl px-4 py-3 flex items-start gap-2.5"
+                        style={{ background: "rgba(124,58,237,0.04)", border: "1px solid rgba(124,58,237,0.12)" }}
+                    >
+                        <span
+                            className="h-5 w-5 rounded-full flex items-center justify-center text-white text-[10px] font-bold shrink-0 mt-px leading-none"
+                            style={{ background: "#7C3AED" }}
+                        >
+                            E
+                        </span>
+                        <p className="text-[12.5px] leading-relaxed flex-1" style={{ color: "#475569" }}>
+                            <span className="font-semibold" style={{ color: "#0B1220" }}>Leitura da EVA:</span> {evaBody}
+                        </p>
+                    </div>
+                </>
             )}
-        </div>
+        </SectionCard>
     );
 }
 
@@ -1131,17 +1240,6 @@ const Inicio = () => {
     // Central de Comando — métricas reais + listas
     const cc = useCommandCenterData();
 
-    const pipelineStagesForUI = useMemo(
-        () =>
-            (pipeline.data || []).map((s) => ({
-                name: s.name,
-                count: s.count,
-                value: formatCompactBRL(s.totalValue),
-                color: s.color,
-            })),
-        [pipeline.data],
-    );
-
     const metrics: CommandCenterMetrics | null = cc.metrics;
 
     // F5C.6 — entrada do assistente da EVA (dados já carregados, read-only)
@@ -1288,9 +1386,8 @@ const Inicio = () => {
                 ))}
             </div>
 
-            {/* F5C.5 — Pilar 3: Onde está travando (Pipeline + leitura simples) */}
-            <PipelineDiagnosticCard
-                stages={pipelineStagesForUI}
+            {/* COMMAND.UI.1 — Panorama do Pipeline (fluxo + foco + leitura da EVA) */}
+            <PipelinePanoramaCard
                 rawStages={pipeline.data || []}
                 total={totalPipeline}
                 loading={pipeline.isLoading}
