@@ -11,7 +11,7 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { groupTagsByEntity } from "@/lib/tags";
-import type { Tag, TagAssignment, TagAssignmentWithTag } from "@/types/tags";
+import type { Tag, TagAssignment, TagAssignmentWithTag, TagEntityType } from "@/types/tags";
 
 interface TagJoinRow extends Omit<TagAssignment, "id"> {
     id: string;
@@ -110,5 +110,50 @@ export function useDealTagsSingle(dealId: string | undefined | null) {
         tags: dealId ? (tagsByDeal.get(dealId) ?? []) : [],
         loading,
         error,
+    };
+}
+
+/**
+ * F6T.3 — tags de qualquer entidade (conversation/deal/contact/knowledge_item).
+ * Read-only. Usado no EvaPanel pra mostrar marcadores comerciais da conversa
+ * e do deal vinculado. Sem IA: só lê tag_assignments já gravadas.
+ */
+export function useEntityTags(
+    entityType: TagEntityType,
+    entityId: string | null | undefined,
+) {
+    const query = useQuery({
+        queryKey: ["entity-tags", entityType, entityId ?? null],
+        enabled: !!entityId,
+        staleTime: 30_000,
+        queryFn: async (): Promise<Tag[]> => {
+            if (!entityId) return [];
+            const { data, error } = await supabase
+                .from("tag_assignments")
+                .select(`
+                    tags:tag_id (
+                        id, company_id, name, slug, color, category, description,
+                        created_by, created_at, updated_at
+                    )
+                `)
+                .eq("entity_type", entityType)
+                .eq("entity_id", entityId);
+
+            if (error) {
+                if (import.meta.env.DEV) {
+                    console.warn(`[useEntityTags:${entityType}] query failed:`, error.message);
+                }
+                return [];
+            }
+
+            return ((data ?? []) as unknown as Array<{ tags: Tag | null }>)
+                .map((r) => r.tags)
+                .filter((t): t is Tag => t !== null);
+        },
+    });
+
+    return {
+        tags: query.data ?? [],
+        loading: query.isLoading,
     };
 }

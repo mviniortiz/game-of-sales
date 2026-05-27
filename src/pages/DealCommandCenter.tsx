@@ -39,7 +39,7 @@ import {
     Shield,
     ShieldAlert,
     ShieldOff,
-    Sparkles,
+    Lightbulb,
     Send,
     Paperclip,
     FileText,
@@ -62,6 +62,9 @@ import {
     Plus,
     Lock,
     User,
+    ExternalLink,
+    Building2,
+    Tag as TagIcon,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -81,6 +84,9 @@ import { usePlan } from "@/hooks/usePlan";
 import { useDealTagsSingle } from "@/hooks/useDealsTags";
 import { getTagColorClass, isHexColor } from "@/lib/tags";
 import type { Tag } from "@/types/tags";
+import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
+import { stageLabelFor } from "@/lib/demoPipeline";
+import { DealDetailSkeleton } from "@/components/ui/skeletons";
 import {
     Tooltip,
     TooltipContent,
@@ -98,20 +104,58 @@ const PIPELINE_STAGES = [
     { id: "closed_won", label: "Ganho", shortLabel: "✓", color: "bg-emerald-500", ring: "ring-emerald-400" },
 ];
 
-const EVENT_ICONS: Record<string, { icon: typeof StickyNote; color: string; bg: string }> = {
-    note: { icon: StickyNote, color: "text-blue-400", bg: "bg-blue-500/15" },
-    call: { icon: PhoneCall, color: "text-emerald-400", bg: "bg-emerald-500/15" },
-    stage_change: { icon: Rocket, color: "text-violet-400", bg: "bg-violet-500/15" },
-    email: { icon: Mail, color: "text-amber-400", bg: "bg-amber-500/15" },
-    task_completed: { icon: CheckCircle2, color: "text-emerald-400", bg: "bg-emerald-500/15" },
+const EVENT_ICONS: Record<string, { icon: typeof StickyNote; color: string; bg: string; title: string }> = {
+    note:           { icon: StickyNote,    color: "text-[#7C3AED]", bg: "bg-[#7C3AED]/10", title: "Nota adicionada" },
+    call:           { icon: PhoneCall,     color: "text-[#10B981]", bg: "bg-[#10B981]/10", title: "Ligação realizada" },
+    message:        { icon: MessageSquare, color: "text-[#10B981]", bg: "bg-[#10B981]/10", title: "Mensagem no WhatsApp" },
+    stage_change:   { icon: Rocket,        color: "text-[#1556C0]", bg: "bg-[#1556C0]/10", title: "Mudança de etapa" },
+    email:          { icon: Mail,          color: "text-[#1556C0]", bg: "bg-[#1556C0]/10", title: "E-mail enviado" },
+    task_completed: { icon: CheckCircle2,  color: "text-[#10B981]", bg: "bg-[#10B981]/10", title: "Ação concluída" },
+};
+
+// Deriva o tipo de uma nota (deal_notes é só texto) pelo conteúdo, pra a
+// timeline ganhar ícones/cores por tipo como no design.
+const inferNoteType = (content: string): string => {
+    const c = (content || "").toLowerCase();
+    if (c.startsWith("ação concluída") || c.startsWith("acao concluida")) return "task_completed";
+    if (c.includes("ligação") || c.includes("ligacao") || c.includes("liguei") || c.includes("chamada")) return "call";
+    if (c.includes("whatsapp") || c.includes("mensagem")) return "message";
+    if (c.includes("e-mail") || c.includes("email")) return "email";
+    return "note";
 };
 
 // â"€â"€â"€ Helpers â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 const getHealthStatus = (days: number) => {
-    if (days > 7) return { icon: ShieldOff, color: "text-rose-400", bg: "bg-rose-500/10", border: "border-rose-500/20", label: "Crítico", subtitle: `${days}d sem contato` };
-    if (days > 3) return { icon: ShieldAlert, color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20", label: "Atenção", subtitle: `${days}d sem contato` };
-    return { icon: Shield, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20", label: "Saudável", subtitle: "Engajamento ativo" };
+    if (days > 7) return { icon: ShieldOff, color: "text-rose-400", bg: "bg-rose-500/10", border: "border-rose-500/20", hex: "#F43F5E", label: "Crítico", subtitle: `${days}d sem contato` };
+    if (days > 3) return { icon: ShieldAlert, color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20", hex: "#F59E0B", label: "Atenção", subtitle: `${days}d sem contato` };
+    return { icon: Shield, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20", hex: "#10B981", label: "Saudável", subtitle: "Engajamento ativo" };
+};
+
+// DEAL.UI.1 — gauge tipo velocímetro (arco semicircular 180°). SVG inline.
+const ProbabilityGauge = ({ value, hex }: { value: number; hex: string }) => {
+    const v = Math.max(0, Math.min(100, Math.round(value)));
+    const r = 30;
+    const cx = 40;
+    const cy = 38;
+    const arcLen = Math.PI * r; // semicírculo
+    const offset = arcLen * (1 - v / 100);
+    const d = `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`;
+    return (
+        <div className="relative w-[80px] h-[46px] flex items-end justify-center shrink-0">
+            <svg viewBox="0 0 80 44" className="w-[80px] h-[44px] absolute top-0 left-0">
+                <path d={d} fill="none" stroke="#E5E7EB" strokeWidth="6" strokeLinecap="round" />
+                <motion.path
+                    d={d} fill="none" stroke={hex} strokeWidth="6" strokeLinecap="round"
+                    strokeDasharray={arcLen}
+                    initial={{ strokeDashoffset: arcLen }}
+                    animate={{ strokeDashoffset: offset }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                />
+            </svg>
+            <span className="relative z-10 text-[13px] font-bold text-[#0B1220] tabular-nums leading-none">{v}%</span>
+        </div>
+    );
 };
 
 const formatCurrency = (value: number) => {
@@ -166,7 +210,7 @@ const getCallStatusBadge = (status?: string) => {
 // â"€â"€â"€ Sub-components â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 /** Linear-style stage chips */
-const StageChips = ({ currentStage, onStageChange }: { currentStage: string; onStageChange: (id: string) => void }) => {
+const StageChips = ({ currentStage, onStageChange, companyId }: { currentStage: string; onStageChange: (id: string) => void; companyId?: string | null }) => {
     const idx = PIPELINE_STAGES.findIndex(s => s.id === currentStage);
     return (
         <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
@@ -189,7 +233,7 @@ const StageChips = ({ currentStage, onStageChange }: { currentStage: string; onS
                             ? <CheckCircle2 className="h-3 w-3" />
                             : <span className={`w-1.5 h-1.5 rounded-full ${active ? stage.color : "bg-muted-foreground/40"}`} />
                         }
-                        <span>{stage.label}</span>
+                        <span>{stageLabelFor(companyId, stage.id, stage.label)}</span>
                     </button>
                 );
             })}
@@ -201,57 +245,162 @@ const StageChips = ({ currentStage, onStageChange }: { currentStage: string; onS
 const TimelineEntry = ({ event, isLast }: { event: any; isLast: boolean }) => {
     const cfg = EVENT_ICONS[event.type] || EVENT_ICONS.note;
     const Icon = cfg.icon;
+    const isMessage = event.type === "message";
+    const title = event.title || cfg.title;
     return (
         <div className="flex gap-3 group">
             <div className="flex flex-col items-center pt-0.5">
-                <div className={`w-6 h-6 rounded-full ${cfg.bg} flex items-center justify-center flex-shrink-0`}>
-                    <Icon className={`h-3 w-3 ${cfg.color}`} />
+                <div className={`w-7 h-7 rounded-full ${cfg.bg} flex items-center justify-center flex-shrink-0`}>
+                    {isMessage
+                        ? <WhatsAppIcon className={`h-3.5 w-3.5 ${cfg.color}`} />
+                        : <Icon className={`h-3.5 w-3.5 ${cfg.color}`} />}
                 </div>
-                {!isLast && <div className="w-px flex-1 bg-border mt-1.5 min-h-[20px]" />}
+                {!isLast && <div className="w-px flex-1 bg-[#E5E7EB] mt-1.5 min-h-[20px]" />}
             </div>
             <div className={`flex-1 min-w-0 ${isLast ? "pb-0" : "pb-5"}`}>
-                <div className="flex items-center gap-2 text-[11px] mb-1">
-                    <span className="font-medium text-foreground">{event.user_name || "Você"}</span>
-                    <span className="text-muted-foreground">
-                        {safeFormatDate(event.created_at, "dd MMM 'às' HH:mm")}
-                    </span>
+                <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                        <p className="text-[13px] font-semibold text-[#0B1220] leading-tight">{title}</p>
+                        {event.content && (
+                            <p className="text-[12.5px] text-slate-500 leading-relaxed break-words mt-0.5">{event.content}</p>
+                        )}
+                    </div>
+                    <div className="text-right shrink-0">
+                        <p className="text-[11px] text-slate-500 tabular-nums whitespace-nowrap">{safeFormatDate(event.created_at, "dd MMM, HH:mm")}</p>
+                        {event.user_name && <p className="text-[11px] text-slate-400 whitespace-nowrap">{event.user_name}</p>}
+                    </div>
                 </div>
-                <p className="text-sm text-foreground leading-relaxed break-words">{event.content || event.title}</p>
             </div>
         </div>
     );
 };
 
-/** Focus card — next-action prompt. Clean, no glow, no gradient */
-const FocusCard = ({ task, onComplete }: { task: any; onComplete: () => void }) => {
+// Ações recomendadas: a EVA sugere (proxima_acao da análise); o time executa,
+// edita ou conclui. Origem fica explícita no card.
+const PROXIMA_ACAO_LABELS: Record<string, string> = {
+    responder: "Responder agora",
+    qualificar: "Coletar mais informação",
+    criar_oportunidade: "Criar oportunidade no pipeline",
+    marcar_demo: "Marcar demo",
+    handoff_humano: "Passar pra um humano",
+    aguardar: "Aguardar resposta",
+};
+
+type NextAction = {
+    title: string;
+    source: "eva" | "deal" | "manual";
+    dueDate?: string | null;
+    suggestedReply?: string | null;
+    canWhatsApp?: boolean;
+};
+
+// Ao concluir uma ação, o time registra o RESULTADO; cada resultado mapeia o
+// próximo passo sugerido (regra determinística, sem custo de IA).
+const ACTION_RESULTS: ReadonlyArray<{ key: string; label: string; next: string }> = [
+    { key: "pediu_proposta", label: "Pediu proposta",            next: "Enviar a proposta" },
+    { key: "interessado",    label: "Demonstrou interesse",       next: "Enviar proposta ou agendar o próximo passo" },
+    { key: "pediu_retorno",  label: "Pediu pra retornar depois",  next: "Retornar no horário combinado" },
+    { key: "sem_resposta",   label: "Sem resposta / não atendeu", next: "Fazer follow-up" },
+    { key: "objecao",        label: "Levantou objeção",           next: "Responder à objeção levantada" },
+    { key: "avancou",        label: "Avançou (agendou/fechou)",   next: "Confirmar os próximos passos" },
+    { key: "sem_fit",        label: "Sem fit agora",              next: "Nutrir ou arquivar o lead" },
+];
+
+/** Focus card — próxima ação recomendada pela EVA; o time executa e, ao
+    concluir, registra o RESULTADO, que define o próximo passo sugerido. */
+const FocusCard = ({ action, onComplete, onExecute }: {
+    action: NextAction;
+    onComplete: (resultKey: string) => void;
+    onExecute?: () => void;
+}) => {
+    const [picking, setPicking] = useState(false);
     const [done, setDone] = useState(false);
-    const handle = () => { setDone(true); setTimeout(onComplete, 600); };
+    const isEva = action.source === "eva";
+    const pick = (key: string) => {
+        setDone(true);
+        setPicking(false);
+        setTimeout(() => onComplete(key), 400);
+    };
+    const dueChip = (() => {
+        if (!action.dueDate) return null;
+        const due = new Date(action.dueDate);
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        const dd = new Date(due); dd.setHours(0, 0, 0, 0);
+        const diff = Math.round((dd.getTime() - today.getTime()) / 86400000);
+        if (diff < 0) return { label: "Atrasado", cls: "bg-rose-50 text-rose-600 border-rose-200" };
+        if (diff === 0) return { label: "Hoje", cls: "bg-[#1556C0]/10 text-[#1556C0] border-[#1556C0]/20" };
+        if (diff === 1) return { label: "Amanhã", cls: "bg-amber-50 text-amber-700 border-amber-200" };
+        return { label: safeFormatDate(action.dueDate, "dd MMM"), cls: "bg-slate-100 text-slate-600 border-slate-200" };
+    })();
+
     return (
-        <div className={`
-            flex items-center gap-3 px-4 py-3 rounded-xl border transition-colors
-            ${done ? "bg-emerald-500/5 border-emerald-500/20" : "bg-card border-border hover:border-border/80"}
-        `}>
-            <button
-                onClick={handle}
-                className={`
-                    w-5 h-5 rounded-full flex items-center justify-center transition-colors flex-shrink-0
-                    ${done
-                        ? "bg-emerald-500 text-white"
-                        : "border border-muted-foreground/40 hover:border-emerald-500 hover:bg-emerald-500/10"}
-                `}
-            >
-                {done && <CheckCircle2 className="h-3.5 w-3.5" />}
-            </button>
-            <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-0.5">Próxima ação</p>
-                <p className={`text-sm font-medium truncate ${done ? "line-through text-muted-foreground" : "text-foreground"}`}>
-                    {task.title}
-                </p>
+        <div className={`rounded-2xl border shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-colors ${done ? "bg-[#10B981]/5 border-[#10B981]/30" : "bg-white border-[#E5E7EB]"}`}>
+            <div className="flex items-center gap-3 px-4 py-3.5">
+                <div className={`flex h-10 w-10 items-center justify-center rounded-xl flex-shrink-0 ${isEva ? "bg-[#7C3AED]/10" : "bg-[#1556C0]/10"}`}>
+                    {isEva
+                        ? <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#7C3AED] text-white text-[9px] font-bold leading-none">E</span>
+                        : <Calendar className="h-5 w-5 text-[#1556C0]" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                        <p className="text-[11px] font-semibold text-slate-500">Próxima ação</p>
+                        <span className={`inline-flex items-center px-1.5 py-px rounded text-[10px] font-semibold ${isEva ? "bg-[#7C3AED]/10 text-[#7C3AED]" : "bg-slate-100 text-slate-500"}`}>
+                            {isEva ? "Sugerida pela EVA" : "Tarefa do time"}
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <p className={`text-[14px] font-semibold truncate ${done ? "line-through text-slate-400" : "text-[#0B1220]"}`}>
+                            {action.title}
+                        </p>
+                        {dueChip && !done && (
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold border ${dueChip.cls}`}>
+                                {dueChip.label}
+                            </span>
+                        )}
+                    </div>
+                </div>
+                {!done ? (
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                        {onExecute && action.canWhatsApp && !picking && (
+                            <button
+                                onClick={onExecute}
+                                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-semibold bg-[#1556C0] text-white hover:brightness-110 transition"
+                                title={action.suggestedReply ? "Abre o WhatsApp com a resposta sugerida pela EVA" : "Abrir conversa no WhatsApp"}
+                            >
+                                <WhatsAppIcon className="h-3.5 w-3.5" />
+                                Responder
+                            </button>
+                        )}
+                        <button
+                            onClick={() => setPicking((v) => !v)}
+                            className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-semibold border transition-colors ${picking ? "bg-slate-100 border-[#E5E7EB] text-slate-600" : "bg-white border-[#E5E7EB] text-[#0B1220] hover:bg-slate-50"}`}
+                        >
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            {picking ? "Cancelar" : "Concluir"}
+                        </button>
+                    </div>
+                ) : (
+                    <span className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-semibold bg-[#10B981] text-white flex-shrink-0">
+                        <CheckCircle2 className="h-3.5 w-3.5" /> Concluída
+                    </span>
+                )}
             </div>
-            {task.due_date && !done && (
-                <div className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground flex-shrink-0">
-                    <Clock className="h-3 w-3" />
-                    <span>{safeFormatDate(task.due_date, "dd MMM, HH:mm")}</span>
+
+            {/* Seletor de resultado: define o próximo passo sugerido */}
+            {picking && !done && (
+                <div className="px-4 pb-3.5 border-t border-[#F1F5F9]">
+                    <p className="text-[11px] font-semibold text-slate-500 mb-2 mt-2.5">O que rolou? Isso define o próximo passo.</p>
+                    <div className="flex flex-wrap gap-1.5">
+                        {ACTION_RESULTS.map((r) => (
+                            <button
+                                key={r.key}
+                                onClick={() => pick(r.key)}
+                                className="inline-flex items-center px-2.5 py-1 rounded-lg text-[12px] font-medium border border-[#E5E7EB] bg-white text-[#0B1220] hover:bg-slate-50 hover:border-slate-300 transition-colors"
+                            >
+                                {r.label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             )}
         </div>
@@ -285,6 +434,14 @@ const PropertyRow = ({ label, icon: Icon, children }: { label: string; icon?: ty
             <span className="text-xs">{label}</span>
         </span>
         <div className="text-foreground text-right min-w-0 truncate text-[13px]">{children}</div>
+    </div>
+);
+
+// DEAL.UI.1 — linha label/valor premium light para os cards da sidebar.
+const SidebarRow = ({ label, value, strong = false }: { label: string; value: React.ReactNode; strong?: boolean }) => (
+    <div className="flex items-start justify-between gap-3">
+        <span className="text-[12px] text-slate-500 shrink-0">{label}</span>
+        <span className={`text-[12.5px] text-right min-w-0 truncate ${strong ? "font-semibold text-[#0B1220]" : "font-medium text-[#0B1220]"}`}>{value}</span>
     </div>
 );
 
@@ -334,6 +491,57 @@ const DealTagsBlock = ({ dealId }: { dealId: string }) => {
 };
 
 // â"€â"€â"€ Main Component â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+
+/**
+ * F6T.3 — Dados do interesse imobiliário (demo incorporadora).
+ * Lê deal.source_data.interesse_imobiliario (jsonb) e renderiza os campos
+ * preenchidos. Read-only, estruturado — sem editor de schema genérico.
+ */
+const REAL_ESTATE_INTEREST_FIELDS: ReadonlyArray<{ key: string; label: string }> = [
+    { key: "empreendimento_interesse", label: "Empreendimento" },
+    { key: "tipo_imovel", label: "Tipo de imóvel" },
+    { key: "faixa_orcamento", label: "Faixa de orçamento" },
+    { key: "entrada_disponivel", label: "Entrada disponível" },
+    { key: "financiamento", label: "Financiamento" },
+    { key: "fgts", label: "Usa FGTS" },
+    { key: "prazo_compra", label: "Prazo de compra" },
+    { key: "corretor_responsavel", label: "Corretor responsável" },
+    { key: "proxima_acao", label: "Próxima ação" },
+];
+
+function formatRealEstateValue(v: unknown): string {
+    if (v === true) return "Sim";
+    if (v === false) return "Não";
+    if (v === null || v === undefined) return "";
+    return String(v).trim();
+}
+
+/** Extrai o objeto interesse_imobiliario de source_data, se existir. */
+function getRealEstateInterest(sourceData: unknown): Record<string, unknown> | null {
+    if (!sourceData || typeof sourceData !== "object") return null;
+    const interesse = (sourceData as Record<string, unknown>).interesse_imobiliario;
+    if (!interesse || typeof interesse !== "object") return null;
+    return interesse as Record<string, unknown>;
+}
+
+const RealEstateInterestBlock = ({ sourceData }: { sourceData: unknown }) => {
+    const interesse = getRealEstateInterest(sourceData);
+    if (!interesse) return null;
+    const rows = REAL_ESTATE_INTEREST_FIELDS
+        .map((f) => ({ label: f.label, value: formatRealEstateValue(interesse[f.key]) }))
+        .filter((r) => r.value !== "");
+    if (rows.length === 0) return null;
+    return (
+        <div className="flex flex-col gap-1.5">
+            {rows.map((r) => (
+                <div key={r.label} className="flex items-start justify-between gap-3">
+                    <span className="text-[11px] text-muted-foreground shrink-0">{r.label}</span>
+                    <span className="text-[11.5px] text-foreground font-medium text-right">{r.value}</span>
+                </div>
+            ))}
+        </div>
+    );
+};
 
 export default function DealCommandCenter() {
     const { id } = useParams<{ id: string }>();
@@ -408,10 +616,31 @@ export default function DealCommandCenter() {
                 .eq("deal_id", id)
                 .order("created_at", { ascending: false });
             if (error) throw error;
-            return (notes || []).map((n: any) => ({
-                id: n.id, type: "note", title: "Nota adicionada",
-                content: n.content, created_at: n.created_at,
-            }));
+            const noteEvents = (notes || []).map((n: any) => {
+                const type = inferNoteType(n.content || "");
+                return { id: n.id, type, title: EVENT_ICONS[type]?.title ?? "Nota adicionada", content: n.content, created_at: n.created_at };
+            });
+            // Agrega as últimas mensagens da conversa vinculada (WhatsApp), pra
+            // a timeline ter atividades de tipos diferentes (ícones por cor).
+            let msgEvents: any[] = [];
+            try {
+                const { data: conv } = await supabase
+                    .from("channel_conversations").select("id")
+                    .eq("deal_id", id).order("last_message_at", { ascending: false }).limit(1).maybeSingle();
+                if (conv?.id) {
+                    const { data: msgs } = await supabase
+                        .from("channel_messages").select("id, direction, body, media_ref, message_timestamp")
+                        .eq("conversation_id", conv.id).order("message_timestamp", { ascending: false }).limit(6);
+                    msgEvents = (msgs || []).map((m: any) => ({
+                        id: "msg-" + m.id,
+                        type: "message",
+                        title: m.direction === "outbound" ? "Resposta enviada no WhatsApp" : "Mensagem recebida no WhatsApp",
+                        content: m.body || (m.media_ref?.caption) || "[mídia]",
+                        created_at: m.message_timestamp,
+                    }));
+                }
+            } catch { /* timeline funciona só com notas se a conversa falhar */ }
+            return [...noteEvents, ...msgEvents].sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
         },
         enabled: !!id,
     });
@@ -619,11 +848,30 @@ export default function DealCommandCenter() {
     const health = getHealthStatus(daysSince);
     const HealthIcon = health.icon;
 
-    const activeTask = {
-        id: "1",
-        title: "Ligar para o decisor sobre a proposta",
-        due_date: new Date(Date.now() + 86_400_000).toISOString(),
-    };
+    // Próxima ação recomendada pela EVA (proxima_acao da análise da conversa).
+    // Fallback: ação registrada no deal (imobiliário) e depois genérica.
+    // useDealContextData compartilha cache com o bloco de contexto (sem fetch duplo).
+    const dealCtx = useDealContextData(id, (deal as any)?.company_id);
+    const evaProxAcao = dealCtx.qualification?.proxima_acao;
+    const evaSuggestedReply = dealCtx.qualification?.resposta_sugerida ?? null;
+    const realEstateNextAction = getRealEstateInterest((deal as any)?.source_data)?.proxima_acao;
+    const inOneDay = new Date(Date.now() + 86_400_000).toISOString();
+    // Próximo passo definido pela última conclusão+resultado (prioridade máxima).
+    const persistedNext = (deal as any)?.source_data?.next_action;
+    const hasPersistedNext = persistedNext && typeof persistedNext.title === "string" && persistedNext.title.trim();
+    const nextAction: NextAction = hasPersistedNext
+        ? { title: persistedNext.title, source: "eva", dueDate: inOneDay, canWhatsApp: !!(deal as any)?.customer_phone }
+        : evaProxAcao
+            ? {
+                  title: PROXIMA_ACAO_LABELS[evaProxAcao] ?? evaProxAcao,
+                  source: "eva",
+                  dueDate: inOneDay,
+                  suggestedReply: evaSuggestedReply,
+                  canWhatsApp: !!(deal as any)?.customer_phone,
+              }
+            : (typeof realEstateNextAction === "string" && realEstateNextAction.trim())
+                ? { title: realEstateNextAction, source: "deal", dueDate: inOneDay, canWhatsApp: !!(deal as any)?.customer_phone }
+                : { title: "Definir o próximo passo com o lead", source: "manual", canWhatsApp: false };
 
     const TABS = [
         { id: "historico", label: "Histórico", icon: Clock },
@@ -636,13 +884,7 @@ export default function DealCommandCenter() {
     // â"€â"€ Loading / Not found â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
     if (isLoading) {
-        return (
-            <div className="flex items-center justify-center h-[calc(100vh-64px)] bg-background">
-                <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}>
-                    <Target className="h-8 w-8 text-emerald-500" />
-                </motion.div>
-            </div>
-        );
+        return <DealDetailSkeleton />;
     }
 
     if (!deal) {
@@ -659,7 +901,7 @@ export default function DealCommandCenter() {
 
     return (
         <>
-            <div className="min-h-[calc(100vh-64px)] bg-background">
+            <div className="min-h-[calc(100vh-64px)] bg-[#F8FAFC]">
                 {showConfetti && (
                     <Suspense fallback={null}>
                         <Confetti show={showConfetti} />
@@ -687,7 +929,7 @@ export default function DealCommandCenter() {
                         <div className="flex items-start justify-between gap-4 py-3">
                             <div className="flex items-center gap-3 min-w-0 flex-1">
                                 <Avatar className="h-10 w-10 ring-1 ring-border flex-shrink-0">
-                                    <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-cyan-500 text-white font-bold text-xs">
+                                    <AvatarFallback className="bg-gradient-to-br from-[#1556C0] to-[#2E78E0] text-white font-bold text-xs">
                                         {deal.customer_name?.substring(0, 2).toUpperCase() || "?"}
                                     </AvatarFallback>
                                 </Avatar>
@@ -761,6 +1003,7 @@ export default function DealCommandCenter() {
                         <div className="pb-3">
                             <StageChips
                                 currentStage={deal.stage || "lead"}
+                                companyId={deal.company_id}
                                 onStageChange={(s) => {
                                     if (s === "closed_lost") { setShowLostModal(true); return; }
                                     updateDeal.mutate({ stage: s });
@@ -779,11 +1022,36 @@ export default function DealCommandCenter() {
 
                             {/* Focus / next action */}
                             <FocusCard
-                                task={activeTask}
-                                onComplete={() => {
+                                key={nextAction.title}
+                                action={nextAction}
+                                onComplete={async (resultKey) => {
+                                    const r = ACTION_RESULTS.find((x) => x.key === resultKey);
+                                    const resultLabel = r?.label ?? resultKey;
+                                    const nextTitle = r?.next ?? "Definir o próximo passo com o lead";
                                     setShowConfetti(true);
                                     setTimeout(() => setShowConfetti(false), 2000);
-                                    toast.success("Ação concluída");
+                                    try {
+                                        await supabase.from("deal_notes" as any).insert({
+                                            deal_id: id, user_id: user?.id,
+                                            content: `Ação concluída: ${nextAction.title} · Resultado: ${resultLabel}`,
+                                        });
+                                        const prev = (deal as any)?.source_data && typeof (deal as any).source_data === "object" ? (deal as any).source_data : {};
+                                        await supabase.from("deals").update({
+                                            source_data: { ...prev, next_action: { title: nextTitle, from_result: resultKey, set_at: new Date().toISOString() } },
+                                        }).eq("id", id);
+                                        queryClient.invalidateQueries({ queryKey: ["deal", id] });
+                                        queryClient.invalidateQueries({ queryKey: ["deal-timeline", id] });
+                                        toast.success(`Registrado. Próximo passo: ${nextTitle}`);
+                                    } catch {
+                                        toast.error("Não consegui registrar a conclusão");
+                                    }
+                                }}
+                                onExecute={() => {
+                                    const raw = ((deal as any)?.customer_phone || "").replace(/\D/g, "");
+                                    if (!raw) { toast.error("Sem telefone de WhatsApp neste deal"); return; }
+                                    const wa = raw.startsWith("55") ? raw : "55" + raw;
+                                    const text = nextAction.suggestedReply ? `?text=${encodeURIComponent(nextAction.suggestedReply)}` : "";
+                                    window.open(`https://wa.me/${wa}${text}`, "_blank", "noopener,noreferrer");
                                 }}
                             />
 
@@ -1016,7 +1284,7 @@ export default function DealCommandCenter() {
                                                                         >
                                                                             {generateCallInsights.isPending && (generateCallInsights.variables === call.id)
                                                                                 ? <Loader2 className="h-4 w-4 animate-spin" />
-                                                                                : <Sparkles className="h-4 w-4" />}
+                                                                                : <Lightbulb className="h-4 w-4" />}
                                                                             <span className="ml-1">Gerar insights</span>
                                                                         </Button>
                                                                     </div>
@@ -1048,7 +1316,7 @@ export default function DealCommandCenter() {
                                                                 {call.insight && (
                                                                     <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 space-y-3">
                                                                         <div className="flex items-center gap-2 flex-wrap">
-                                                                            <Sparkles className="h-4 w-4 text-emerald-400" />
+                                                                            <Lightbulb className="h-4 w-4 text-emerald-400" />
                                                                             <p className="text-sm font-semibold text-emerald-300">Insights da ligação</p>
                                                                             <Badge variant="outline" className="border-emerald-500/20 text-emerald-300">
                                                                                 {call.insight.model || "mvp"}
@@ -1221,6 +1489,7 @@ export default function DealCommandCenter() {
                             <DealConversationContextBlock
                                 dealId={deal.id}
                                 companyId={deal.company_id}
+                                probability={deal.probability ?? null}
                                 onOpenConversation={(href) => navigate(href)}
                             />
                         </div>
@@ -1237,7 +1506,7 @@ export default function DealCommandCenter() {
                                                 <button
                                                     onClick={() => setShowCallModal(true)}
                                                     disabled={!canUseCalls}
-                                                    className="flex flex-col items-center justify-center gap-1 h-14 rounded-xl bg-card border border-border hover:border-emerald-500/40 hover:bg-emerald-500/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                                    className="flex flex-col items-center justify-center gap-1 h-14 rounded-xl bg-white border border-[#E5E7EB] hover:border-emerald-500/40 hover:bg-emerald-500/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                                 >
                                                     <Phone className="h-4 w-4 text-emerald-400" />
                                                     <span className="text-[10px] font-medium text-muted-foreground">Ligar</span>
@@ -1252,9 +1521,9 @@ export default function DealCommandCenter() {
                                                 <button
                                                     onClick={() => deal.customer_phone && window.open(`https://wa.me/${deal.customer_phone.replace(/\D/g, "")}`, "_blank")}
                                                     disabled={!deal.customer_phone}
-                                                    className="flex flex-col items-center justify-center gap-1 h-14 rounded-xl bg-card border border-border hover:border-green-500/40 hover:bg-green-500/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                                    className="flex flex-col items-center justify-center gap-1 h-14 rounded-xl bg-white border border-[#E5E7EB] hover:border-green-500/40 hover:bg-green-500/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                                 >
-                                                    <MessageSquare className="h-4 w-4 text-green-400" />
+                                                    <WhatsAppIcon className="h-4 w-4 text-[#25D366]" />
                                                     <span className="text-[10px] font-medium text-muted-foreground">WhatsApp</span>
                                                 </button>
                                             </TooltipTrigger>
@@ -1265,7 +1534,7 @@ export default function DealCommandCenter() {
                                                 <button
                                                     onClick={() => deal.customer_email && window.open(`mailto:${deal.customer_email}`, "_blank")}
                                                     disabled={!deal.customer_email}
-                                                    className="flex flex-col items-center justify-center gap-1 h-14 rounded-xl bg-card border border-border hover:border-blue-500/40 hover:bg-blue-500/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                                    className="flex flex-col items-center justify-center gap-1 h-14 rounded-xl bg-white border border-[#E5E7EB] hover:border-blue-500/40 hover:bg-blue-500/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                                 >
                                                     <Mail className="h-4 w-4 text-blue-400" />
                                                     <span className="text-[10px] font-medium text-muted-foreground">Email</span>
@@ -1277,7 +1546,7 @@ export default function DealCommandCenter() {
                                             <TooltipTrigger asChild>
                                                 <button
                                                     onClick={() => setShowTaskModal(true)}
-                                                    className="flex flex-col items-center justify-center gap-1 h-14 rounded-xl bg-card border border-border hover:border-violet-500/40 hover:bg-violet-500/5 transition-colors"
+                                                    className="flex flex-col items-center justify-center gap-1 h-14 rounded-xl bg-white border border-[#E5E7EB] hover:border-violet-500/40 hover:bg-violet-500/5 transition-colors"
                                                 >
                                                     <Plus className="h-4 w-4 text-violet-400" />
                                                     <span className="text-[10px] font-medium text-muted-foreground">Tarefa</span>
@@ -1288,77 +1557,81 @@ export default function DealCommandCenter() {
                                     </div>
                                 </TooltipProvider>
 
-                                {/* Health inline */}
-                                <div className={`flex items-center gap-2.5 px-3 py-2 rounded-lg border ${health.bg} ${health.border}`}>
-                                    <HealthIcon className={`h-3.5 w-3.5 ${health.color} flex-shrink-0`} />
-                                    <div className="flex-1 min-w-0">
-                                        <p className={`text-xs font-semibold ${health.color} leading-tight`}>{health.label}</p>
-                                        <p className="text-[11px] text-muted-foreground leading-tight">{health.subtitle}</p>
+                                {/* A) Status e saúde */}
+                                <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <TrendingUp className="h-4 w-4 text-slate-400" />
+                                        <p className="text-[13px] font-semibold text-[#0B1220]">Status e saúde</p>
+                                    </div>
+                                    <div className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border ${health.bg} ${health.border}`}>
+                                        <HealthIcon className={`h-4 w-4 ${health.color} flex-shrink-0`} />
+                                        <div className="flex-1 min-w-0">
+                                            <p className={`text-[13px] font-semibold ${health.color} leading-tight`}>{health.label}</p>
+                                            <p className="text-[11px] text-slate-500 leading-tight">{health.subtitle}</p>
+                                        </div>
+                                        <div className="flex flex-col items-center shrink-0">
+                                            <ProbabilityGauge value={deal.probability ?? 0} hex={health.hex} />
+                                            <p className="text-[10px] text-slate-500 mt-1">Probabilidade</p>
+                                        </div>
                                     </div>
                                 </div>
 
-                                {/* Properties panel */}
-                                <div className="bg-card/50 rounded-2xl border border-border px-4">
+                                {/* B) Contato */}
+                                <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <User className="h-4 w-4 text-slate-400" />
+                                        <p className="text-[13px] font-semibold text-[#0B1220]">Contato</p>
+                                    </div>
+                                    <div className="space-y-2.5">
+                                        <SidebarRow label="Nome" value={deal.customer_name || "—"} />
+                                        <SidebarRow label="Telefone" value={deal.customer_phone
+                                            ? <span className="inline-flex items-center gap-1.5 justify-end">{formatPhone(deal.customer_phone)}<WhatsAppIcon className="h-3.5 w-3.5 text-[#25D366] shrink-0" /></span>
+                                            : "—"} />
+                                        <SidebarRow label="E-mail" value={deal.customer_email
+                                            ? <a href={`mailto:${deal.customer_email}`} className="text-[#1556C0] hover:underline">{deal.customer_email}</a>
+                                            : "—"} />
+                                        <SidebarRow label="Origem" value={(deal as any).lead_source || (deal as any).source || "—"} />
+                                        <SidebarRow label="Último contato" value={deal.updated_at ? safeFormatDistance(deal.updated_at) : "—"} />
+                                    </div>
+                                </div>
 
-                                    <PropertiesSection title="Contato">
-                                        <PropertyRow label="Nome" icon={User}>
-                                            <span className="font-medium">{deal.customer_name || "—"}</span>
-                                        </PropertyRow>
-                                        <PropertyRow label="Email" icon={Mail}>
-                                            {deal.customer_email
-                                                ? <a href={`mailto:${deal.customer_email}`} className="text-emerald-400 hover:text-emerald-300 hover:underline truncate block">{deal.customer_email}</a>
-                                                : <span className="text-muted-foreground">—</span>}
-                                        </PropertyRow>
-                                        <PropertyRow label="Telefone" icon={Phone}>
-                                            {deal.customer_phone
-                                                ? <span className="font-medium tabular-nums">{formatPhone(deal.customer_phone)}</span>
-                                                : <span className="text-muted-foreground">—</span>}
-                                        </PropertyRow>
-                                    </PropertiesSection>
-
-                                    <PropertiesSection title="Detalhes">
-                                        <PropertyRow label="Valor" icon={DollarSign}>
-                                            <span className="font-semibold text-emerald-400 tabular-nums">{formatCurrency(deal.value || 0)}</span>
-                                        </PropertyRow>
-                                        <PropertyRow label="Fonte" icon={Target}>
-                                            <span className="font-medium">{(deal as any).source || "Manual"}</span>
-                                        </PropertyRow>
-                                        <PropertyRow label="Criado" icon={Calendar}>
-                                            <span className="font-medium">{safeFormatDate(deal.created_at, "dd MMM yyyy")}</span>
-                                        </PropertyRow>
-                                        <PropertyRow label="Atualizado" icon={Clock}>
-                                            <span className="font-medium">{safeFormatDistance(deal.updated_at)}</span>
-                                        </PropertyRow>
-
-                                        {/* Probability with inline bar */}
-                                        <div className="pt-1.5 space-y-1.5">
-                                            <div className="flex items-center justify-between text-xs">
-                                                <span className="text-muted-foreground flex items-center gap-1.5">
-                                                    <TrendingUp className="h-3.5 w-3.5" />
-                                                    Probabilidade
-                                                </span>
-                                                <span className="text-foreground font-semibold tabular-nums">{deal.probability ?? 0}%</span>
-                                            </div>
-                                            <div className="h-1 bg-muted rounded-full overflow-hidden">
-                                                <motion.div
-                                                    className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-cyan-400"
-                                                    initial={{ width: 0 }}
-                                                    animate={{ width: `${deal.probability ?? 0}%` }}
-                                                    transition={{ duration: 0.8, ease: "easeOut" }}
-                                                />
+                                {/* C) Dados do negócio */}
+                                <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <Building2 className="h-4 w-4 text-slate-400" />
+                                        <p className="text-[13px] font-semibold text-[#0B1220]">Dados do negócio</p>
+                                    </div>
+                                    {getRealEstateInterest((deal as any).source_data) ? (
+                                        <div className="space-y-2.5">
+                                            <RealEstateInterestBlock sourceData={(deal as any).source_data} />
+                                            <div className="pt-2.5 border-t border-[#F1F5F9]">
+                                                <SidebarRow label="Valor da proposta" value={formatCurrency(deal.value || 0)} strong />
                                             </div>
                                         </div>
-                                    </PropertiesSection>
+                                    ) : (
+                                        <div className="space-y-2.5">
+                                            <SidebarRow label="Valor da proposta" value={formatCurrency(deal.value || 0)} strong />
+                                            <SidebarRow label="Fonte" value={(deal as any).source || "Manual"} />
+                                            <SidebarRow label="Criado" value={safeFormatDate(deal.created_at, "dd MMM yyyy")} />
+                                            <SidebarRow label="Atualizado" value={safeFormatDistance(deal.updated_at)} />
+                                        </div>
+                                    )}
+                                </div>
 
-                                    {/* F6T.2 — Tags comerciais (sistema F6T.1) */}
-                                    <PropertiesSection title="Tags comerciais">
-                                        <DealTagsBlock dealId={id!} />
-                                    </PropertiesSection>
+                                {/* D) Tags */}
+                                <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <TagIcon className="h-4 w-4 text-slate-400" />
+                                        <p className="text-[13px] font-semibold text-[#0B1220]">Tags</p>
+                                    </div>
+                                    <DealTagsBlock dealId={id!} />
+                                </div>
 
+                                {/* E) Campos customizados */}
+                                <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
                                     <PropertiesSection title="Campos customizados" defaultOpen={false}>
                                         <CustomFieldsSection dealId={id!} compact />
                                     </PropertiesSection>
-
                                 </div>
                             </div>
                         </div>
@@ -1530,10 +1803,12 @@ export default function DealCommandCenter() {
 function DealConversationContextBlock({
     dealId,
     companyId,
+    probability,
     onOpenConversation,
 }: {
     dealId: string;
     companyId: string | null;
+    probability: number | null;
     onOpenConversation: (href: string) => void;
 }) {
     const ctx = useDealContextData(dealId, companyId);
@@ -1541,10 +1816,10 @@ function DealConversationContextBlock({
     // Loading inicial — skeleton compacto
     if (ctx.loading) {
         return (
-            <div className="bg-card/40 rounded-2xl p-4 border border-border space-y-2">
-                <div className="h-3 w-32 rounded bg-muted/40" />
-                <div className="h-4 w-full rounded bg-muted/30" />
-                <div className="h-4 w-3/4 rounded bg-muted/30" />
+            <div className="bg-white rounded-2xl p-4 border border-[#E5E7EB] shadow-[0_1px_2px_rgba(15,23,42,0.04)] space-y-2">
+                <div className="h-3 w-32 rounded bg-slate-200/70" />
+                <div className="h-4 w-full rounded bg-slate-100" />
+                <div className="h-4 w-3/4 rounded bg-slate-100" />
             </div>
         );
     }
@@ -1552,11 +1827,11 @@ function DealConversationContextBlock({
     // Sem conversa vinculada → empty state mas ainda exibe estrutura
     if (!ctx.conversation) {
         return (
-            <div className="bg-card/40 rounded-2xl p-4 border border-border">
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-2">
+            <div className="bg-white rounded-2xl p-4 border border-[#E5E7EB] shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-2">
                     Contexto da conversa
                 </p>
-                <p className="text-sm text-muted-foreground leading-relaxed">
+                <p className="text-sm text-slate-500 leading-relaxed">
                     Nenhuma conversa vinculada a esta oportunidade.
                 </p>
             </div>
@@ -1569,10 +1844,7 @@ function DealConversationContextBlock({
         ? formatDistanceToNow(new Date(conversation.last_message_at), { locale: ptBR, addSuffix: true })
         : "—";
 
-    const score       = getQualificationScore(qualification);
     const temperature = getQualificationTemperature(qualification);
-    const intent      = getQualificationIntent(qualification);
-    const service     = getQualificationService(qualification);
     const objection   = getQualificationObjection(qualification);
 
     const hasAnalysis = !!summary && !!summary.analyzed_at;
@@ -1580,168 +1852,169 @@ function DealConversationContextBlock({
         ? formatDistanceToNow(new Date(summary.analyzed_at), { locale: ptBR, addSuffix: true })
         : null;
 
+    // Probabilidade de ganho: usa a do deal; cai pro score da EVA se ausente.
+    const score = getQualificationScore(qualification);
+    const probScore = Math.max(0, Math.min(100,
+        Math.round(typeof probability === "number" ? probability : (typeof score === "number" ? score : 0))));
+    // Tendência derivada da temperatura da EVA (sem inventar campo novo).
+    const trend = temperature === "quente" ? "Subindo"
+        : temperature === "frio" ? "Em queda"
+        : temperature ? "Estável" : null;
+    // Motivos = o que a EVA já coletou; Atenções = o que falta + objeção.
+    const motivos = qualification?.info_coletada ?? [];
+    const atencoes = [
+        ...(qualification?.info_faltante ?? []),
+        ...(objection ? [`Objeção: ${objection}`] : []),
+    ];
+
     return (
         <div className="space-y-4">
-            {/* ── Contexto da conversa ─────────────────────────────────── */}
-            <div className="bg-card/40 rounded-2xl p-4 border border-border">
+            {/* ── Contexto da conversa (mini-chat) ─────────────────────── */}
+            <div className="bg-white rounded-2xl p-4 border border-[#E5E7EB] shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
                 <div className="flex items-center justify-between mb-3">
-                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
-                        Contexto da conversa
-                    </p>
+                    <div className="flex items-center gap-2">
+                        <WhatsAppIcon className="h-4 w-4 text-[#25D366]" />
+                        <p className="text-[13px] font-semibold text-[#0B1220]">Contexto da conversa</p>
+                    </div>
                     {openConversationHref && (
                         <button
                             type="button"
                             onClick={() => onOpenConversation(openConversationHref)}
-                            className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[11px] font-semibold transition-colors bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-400 border border-emerald-500/20"
+                            className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[#10B981] hover:underline"
                         >
-                            <MessageSquare className="h-3 w-3" />
-                            Abrir conversa
+                            Abrir no WhatsApp
+                            <ExternalLink className="h-3 w-3" />
                         </button>
                     )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 mb-3">
-                    <div>
-                        <p className="text-[10px] text-muted-foreground mb-0.5">Contato</p>
-                        <p className="text-sm text-foreground truncate">{contact?.name || "—"}</p>
-                    </div>
-                    <div>
-                        <p className="text-[10px] text-muted-foreground mb-0.5">Telefone</p>
-                        <p className="text-sm text-foreground tabular-nums truncate">
-                            {contact?.phone_e164 ? `+${contact.phone_e164}` : "—"}
-                        </p>
-                    </div>
-                    <div>
-                        <p className="text-[10px] text-muted-foreground mb-0.5">Canal</p>
-                        <p className="text-sm text-foreground">WhatsApp</p>
-                    </div>
-                    <div>
-                        <p className="text-[10px] text-muted-foreground mb-0.5">Última interação</p>
-                        <p className="text-sm text-foreground">{lastInteractionLabel}</p>
-                    </div>
+                {/* aba canal */}
+                <div className="mb-3 border-b border-[#F1F5F9]">
+                    <span className="inline-flex items-center gap-1.5 pb-2 -mb-px text-[12px] font-medium text-[#0F8A63] border-b-2 border-[#10B981]">
+                        <WhatsAppIcon className="h-3.5 w-3.5 text-[#25D366]" /> WhatsApp
+                    </span>
                 </div>
 
-                {lastMessages.length > 0 && (
-                    <div className="space-y-1.5 pt-3 border-t border-border/50">
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1.5">
-                            Últimas {lastMessages.length} mensagens
-                        </p>
-                        <ul className="space-y-1">
-                            {lastMessages.map((m) => {
-                                const text = m.body || m.media_caption || `[${m.message_type}]`;
-                                const truncated = text.length > 90 ? text.slice(0, 90) + "…" : text;
-                                return (
-                                    <li key={m.id} className="flex gap-2 text-[12px]">
-                                        <span
-                                            className={`shrink-0 mt-0.5 inline-block h-1.5 w-1.5 rounded-full ${
-                                                m.direction === "outbound" ? "bg-emerald-500" : "bg-blue-500"
-                                            }`}
-                                        />
-                                        <span className="text-muted-foreground truncate">{truncated}</span>
-                                    </li>
-                                );
-                            })}
-                        </ul>
+                {lastMessages.length > 0 ? (
+                    <div className="space-y-2">
+                        {lastMessages.map((m) => {
+                            const text = m.body || m.media_caption || `[${m.message_type}]`;
+                            const out = m.direction === "outbound";
+                            const time = safeFormatDate(m.message_timestamp, "HH:mm");
+                            return (
+                                <div key={m.id} className={`flex ${out ? "justify-end" : "justify-start"}`}>
+                                    <div
+                                        className={`max-w-[82%] rounded-2xl px-3 py-2 text-[12.5px] leading-snug ${
+                                            out
+                                                ? "bg-[#E7F9EF] text-[#0B1220] rounded-br-sm"
+                                                : "bg-[#F1F5F9] text-[#0B1220] rounded-bl-sm"
+                                        }`}
+                                    >
+                                        <p>{text}</p>
+                                        <p className="text-[10px] text-slate-400 text-right mt-0.5 tabular-nums">{time}</p>
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
+                ) : (
+                    <p className="text-sm text-slate-500">Sem mensagens recentes nesta conversa.</p>
+                )}
+
+                {openConversationHref && (
+                    <button
+                        type="button"
+                        onClick={() => onOpenConversation(openConversationHref)}
+                        className="w-full text-center text-[12px] font-medium text-[#1556C0] hover:underline mt-3 pt-3 border-t border-[#F1F5F9]"
+                    >
+                        Ver todas as mensagens
+                    </button>
                 )}
             </div>
 
-            {/* ── Leitura da EVA ──────────────────────────────────────── */}
-            <div className="bg-card/40 rounded-2xl p-4 border border-border">
-                <div className="flex items-center justify-between mb-3">
+            {/* ── Leitura da EVA (3 colunas) ──────────────────────────── */}
+            <div className="bg-[#FAF5FF] rounded-2xl p-4 border border-[#E9D5FF] shadow-[0_1px_2px_rgba(124,58,237,0.05)]">
+                <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                        <Sparkles className="h-3.5 w-3.5 text-violet-400" />
-                        <p className="text-[10px] font-semibold text-violet-400/90 uppercase tracking-widest">
-                            Leitura da EVA
-                        </p>
+                        <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#7C3AED] text-white text-[8px] font-bold leading-none">E</span>
+                        <p className="text-[13px] font-semibold text-[#7C3AED]">Leitura da EVA</p>
                     </div>
                     {hasAnalysis && (
-                        <span className="text-[10px] text-muted-foreground">
-                            {isStaleByMessages ? "Pode estar desatualizada" : `Análise salva ${analyzedAtLabel}`}
+                        <span className="text-[11px] text-slate-400">
+                            {isStaleByMessages ? "Pode estar desatualizada" : `Análise atualizada ${analyzedAtLabel}`}
                         </span>
                     )}
                 </div>
 
                 {!hasAnalysis ? (
-                    <p className="text-sm text-muted-foreground leading-relaxed">
+                    <p className="text-sm text-slate-500 leading-relaxed">
                         A EVA ainda não analisou conversas suficientes para esta oportunidade.
                     </p>
                 ) : (
-                    <div className="space-y-3">
-                        <div className="grid grid-cols-2 gap-3">
-                            {typeof score === "number" && (
-                                <div>
-                                    <p className="text-[10px] text-muted-foreground mb-0.5">Score</p>
-                                    <p className="text-sm font-semibold tabular-nums text-foreground">{score}</p>
+                    <>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            {/* Probabilidade */}
+                            <div>
+                                <div className="flex items-baseline gap-1.5">
+                                    <span className="text-[28px] font-bold text-[#0B1220] leading-none tabular-nums">{probScore}%</span>
                                 </div>
-                            )}
-                            {temperature && (
-                                <div>
-                                    <p className="text-[10px] text-muted-foreground mb-0.5">Temperatura</p>
-                                    <p className="text-sm text-foreground capitalize">{temperature}</p>
+                                <p className="text-[11px] text-slate-500 mt-1">Probabilidade de ganho</p>
+                                <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden mt-2">
+                                    <motion.div
+                                        className="h-full rounded-full bg-gradient-to-r from-[#7C3AED] to-[#A78BFA]"
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${probScore}%` }}
+                                        transition={{ duration: 0.8, ease: "easeOut" }}
+                                    />
                                 </div>
-                            )}
-                            {intent && (
-                                <div className="col-span-2">
-                                    <p className="text-[10px] text-muted-foreground mb-0.5">Intenção</p>
-                                    <p className="text-sm text-foreground">{intent}</p>
-                                </div>
-                            )}
-                            {service && (
-                                <div className="col-span-2">
-                                    <p className="text-[10px] text-muted-foreground mb-0.5">Serviço de interesse</p>
-                                    <p className="text-sm text-foreground">{service}</p>
-                                </div>
-                            )}
-                            {objection && (
-                                <div className="col-span-2">
-                                    <p className="text-[10px] text-muted-foreground mb-0.5">Objeção principal</p>
-                                    <p className="text-sm text-foreground">{objection}</p>
-                                </div>
-                            )}
+                                {trend && (
+                                    <p className="text-[11px] text-slate-500 mt-2">
+                                        Tendência: <span className="font-medium text-[#0B1220]">{trend}</span>
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Principais motivos */}
+                            <div>
+                                <p className="text-[12px] font-semibold text-[#0B1220] mb-1.5">Principais motivos</p>
+                                <ul className="space-y-1">
+                                    {motivos.length > 0 ? motivos.slice(0, 3).map((m, i) => (
+                                        <li key={i} className="flex gap-1.5 text-[12px] text-slate-600 leading-snug">
+                                            <span className="text-[#10B981] mt-px">•</span>
+                                            <span>{m}</span>
+                                        </li>
+                                    )) : <li className="text-[12px] text-slate-400">—</li>}
+                                </ul>
+                            </div>
+
+                            {/* Atenções */}
+                            <div>
+                                <p className="text-[12px] font-semibold text-[#0B1220] mb-1.5 flex items-center gap-1">
+                                    <AlertTriangle className="h-3 w-3 text-amber-500" /> Atenções
+                                </p>
+                                <ul className="space-y-1">
+                                    {atencoes.length > 0 ? atencoes.slice(0, 3).map((a, i) => (
+                                        <li key={i} className="flex gap-1.5 text-[12px] text-slate-600 leading-snug">
+                                            <span className="text-amber-500 mt-px">•</span>
+                                            <span>{a}</span>
+                                        </li>
+                                    )) : <li className="text-[12px] text-slate-400">—</li>}
+                                </ul>
+                            </div>
                         </div>
 
                         {qualification?.proxima_acao && (
-                            <div className="pt-3 border-t border-border/50">
-                                <p className="text-[10px] text-muted-foreground mb-0.5">Próxima ação sugerida</p>
-                                <p className="text-sm text-foreground">{qualification.proxima_acao}</p>
+                            <div className="mt-3 pt-3 border-t border-[#E9D5FF]">
+                                <p className="text-[11px] text-slate-500">
+                                    Próxima sugestão da EVA: <span className="text-[#0B1220] font-medium">{qualification.proxima_acao}</span>
+                                </p>
                             </div>
                         )}
-
-                        {qualification?.info_faltante && qualification.info_faltante.length > 0 && (
-                            <div className="pt-3 border-t border-border/50">
-                                <p className="text-[10px] text-muted-foreground mb-1.5">Informações faltantes</p>
-                                <ul className="space-y-0.5">
-                                    {qualification.info_faltante.slice(0, 5).map((info, i) => (
-                                        <li key={i} className="text-[12.5px] text-muted-foreground flex gap-2">
-                                            <span className="text-amber-400/80">·</span>
-                                            <span>{info}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-
-                        {relatedGaps.length > 0 && (
-                            <div className="pt-3 border-t border-border/50">
-                                <p className="text-[10px] text-muted-foreground mb-1.5">Lacunas observadas pela EVA</p>
-                                <ul className="space-y-0.5">
-                                    {relatedGaps.slice(0, 3).map((g) => (
-                                        <li key={g.id} className="text-[12.5px] text-muted-foreground flex gap-2">
-                                            <span className="text-violet-400/80">·</span>
-                                            <span className="truncate">
-                                                {(g.gap_description || "Lacuna").slice(0, 80)}
-                                                {g.occurrence_count && g.occurrence_count > 1 && (
-                                                    <span className="ml-1 text-[10px]">({g.occurrence_count}×)</span>
-                                                )}
-                                            </span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-                    </div>
+                    </>
                 )}
+                <p className="text-[10px] text-[#7C3AED]/70 mt-3 pt-3 border-t border-[#E9D5FF] leading-relaxed">
+                    A EVA é assistida: ela sugere e prioriza. Seu time decide e aprova.
+                </p>
             </div>
         </div>
     );

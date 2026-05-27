@@ -47,6 +47,9 @@ import { useCrmLookup } from "@/components/whatsapp/useCrmLookup";
 import type { CrmDeal } from "@/components/whatsapp/helpers";
 import type { Chat, MessageLine } from "@/hooks/useEvolutionAPI";
 import { useEvaInsight, type EvaInsightResult } from "@/hooks/useEvaInsight";
+import { useEntityTags } from "@/hooks/useDealsTags";
+import { getTagColorClass, isHexColor } from "@/lib/tags";
+import type { Tag } from "@/types/tags";
 import type {
     FitSugerido,
     KnowledgeGap,
@@ -797,6 +800,12 @@ function RealContent({
                 <QualificationBlock qualification={qualification} />
             </Section>
 
+            {/* F6T.3 — Marcadores comerciais (tags da conversa/deal vinculado) */}
+            <EvaTagsSection
+                conversationId={chat.conversationId}
+                dealId={dealState.effectiveDealId}
+            />
+
             {/* Resumo (secundário) */}
             <Section title="Resumo EVA">
                 <p
@@ -1253,6 +1262,64 @@ function KnowledgeGapsList({ gaps }: { gaps: KnowledgeGap[] }) {
 }
 
 // ─── Section wrapper ────────────────────────────────────────────────────────
+
+/**
+ * F6T.3 — Marcadores comerciais (tags F6T.1) associados à conversa e/ou ao
+ * deal vinculado. Read-only, dedupe por id. Deixa explícito que são marcadores
+ * do time, não aplicados pela EVA (critério: EVA não aplica tags sozinha).
+ */
+function EvaTagsSection({
+    conversationId,
+    dealId,
+}: {
+    conversationId?: string | null;
+    dealId?: string | null;
+}) {
+    const { tags: convTags } = useEntityTags("conversation", conversationId);
+    const { tags: dealTags } = useEntityTags("deal", dealId);
+
+    const tags = useMemo(() => {
+        const map = new Map<string, Tag>();
+        for (const t of [...convTags, ...dealTags]) map.set(t.id, t);
+        return [...map.values()];
+    }, [convTags, dealTags]);
+
+    if (tags.length === 0) return null;
+
+    return (
+        <Section title="Marcadores comerciais">
+            <div className="flex items-center gap-1.5 flex-wrap">
+                {tags.map((tag) => {
+                    const useHex = isHexColor(tag.color);
+                    return (
+                        <span
+                            key={tag.id}
+                            title={tag.description ?? tag.name}
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium ring-1 ring-inset ${useHex ? "" : getTagColorClass(tag.color)}`}
+                            style={
+                                useHex
+                                    ? {
+                                          backgroundColor: `${tag.color}1a`,
+                                          color: tag.color as string,
+                                          boxShadow: `inset 0 0 0 1px ${tag.color}55`,
+                                      }
+                                    : undefined
+                            }
+                        >
+                            {tag.name}
+                        </span>
+                    );
+                })}
+            </div>
+            <p
+                className="text-[10.5px] mt-2"
+                style={{ color: "#94A3B8", lineHeight: 1.4 }}
+            >
+                Marcadores aplicados pelo time. A EVA não aplica tags sozinha.
+            </p>
+        </Section>
+    );
+}
 
 function Section({
     title,

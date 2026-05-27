@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Search, MessageCircle, Users, Loader2, RefreshCw, Wifi, WifiOff, QrCode, AlertCircle } from "lucide-react";
+import { InboxListSkeleton } from "@/components/ui/skeletons";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import type { Chat } from "@/hooks/useEvolutionAPI";
@@ -233,9 +234,7 @@ export function InboxList({
             {/* Lista */}
             <div className="flex-1 overflow-y-auto">
                 {isLoading ? (
-                    <div className="flex items-center justify-center py-12">
-                        <Loader2 className="h-5 w-5 animate-spin" style={{ color: "#2563EB" }} />
-                    </div>
+                    <InboxListSkeleton rows={7} />
                 ) : filtered.length === 0 ? (
                     <EmptyState
                         hasAnyChats={visibleChats.length > 0}

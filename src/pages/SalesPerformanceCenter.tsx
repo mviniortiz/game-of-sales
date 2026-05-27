@@ -1,442 +1,460 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
     DollarSign,
     TrendingUp,
     Target,
-    ArrowUpRight,
-    ArrowDownRight,
-    BarChart3,
-    Sparkles,
-    Calendar as CalendarIcon,
+    Clock,
+    AlertTriangle,
+    CheckCircle2,
+    Users,
+    ArrowRight,
+    Flame,
+    Activity,
+    Plus,
 } from "lucide-react";
-import {
-    AreaChart,
-    Area,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    ResponsiveContainer,
-} from "recharts";
-import { format, subDays, startOfMonth, endOfMonth, differenceInDays } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { startOfMonth, endOfMonth, differenceInDays } from "date-fns";
 import { useTenant } from "@/contexts/TenantContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useVisibleSellers } from "@/hooks/useVisibleSellers";
+import { stageLabelFor } from "@/lib/demoPipeline";
 import { GoldenHoursHeatmap } from "@/components/dashboard/GoldenHoursHeatmap";
-import { ConversionFunnelDonut } from "@/components/dashboard/ConversionFunnelDonut";
-import { TeamPulseSection } from "@/components/dashboard/TeamPulseSection";
-import {
-    Tooltip as UITooltip,
-    TooltipContent,
-    TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
 import { PeriodToggle, DateRangePicker } from "@/components/filters";
+import { PerformanceSkeleton } from "@/components/ui/skeletons";
 
-// Currency formatters
+// ─── Formatação ──────────────────────────────────────────────────────────────
 const formatCurrencyCompact = (value: number) => {
-    if (value >= 1000000) {
-        return `R$ ${(value / 1000000).toFixed(2).replace('.', ',')}M`;
-    }
-    if (value >= 1000) {
-        return `R$ ${(value / 1000).toFixed(1).replace('.', ',')}k`;
-    }
-    return `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+    if (value >= 1_000_000) return `R$ ${(value / 1_000_000).toFixed(2).replace(".", ",")}M`;
+    if (value >= 1_000) return `R$ ${(value / 1_000).toFixed(0)}k`;
+    return `R$ ${value.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}`;
 };
+const daysSince = (iso?: string | null) => (iso ? differenceInDays(new Date(), new Date(iso)) : 0);
 
-const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-        style: "currency",
-        currency: "BRL",
-    }).format(value);
-};
+// Etapas abertas do funil (IDs fixos do banco; label relabelado por company).
+const OPEN_STAGE_DEFS = [
+    { id: "lead", label: "Lead", color: "#94A3B8" },
+    { id: "qualification", label: "Qualificação", color: "#1556C0" },
+    { id: "proposal", label: "Proposta", color: "#7C3AED" },
+    { id: "negotiation", label: "Negociação", color: "#F59E0B" },
+];
 
-// KPI Card with Sparkline
-interface KPICardProps {
-    title: string;
-    value: string;
-    fullValue?: string;
-    subtitle?: string;
-    icon: React.ElementType;
-    trend?: number;
-    trendLabel?: string;
-    iconColor?: string;
-    iconBg?: string;
-    sparklineData?: number[];
+interface OpenDeal {
+    id: string;
+    value: number | null;
+    stage: string;
+    created_at: string;
+    updated_at: string;
+    is_hot: boolean | null;
+    user_id: string | null;
+    customer_name: string | null;
 }
 
-const KPICard = ({
-    title,
-    value,
-    fullValue,
-    subtitle,
-    icon: Icon,
-    trend,
-    trendLabel,
-    iconColor = "text-emerald-400",
-    iconBg = "bg-emerald-500/10",
-    sparklineData,
-}: KPICardProps) => {
-    const isPositive = trend && trend > 0;
-    const TrendIcon = isPositive ? ArrowUpRight : ArrowDownRight;
-
-    const cardContent = (
-        <Card className="relative overflow-hidden border border-border bg-card shadow-sm hover:shadow-lg transition-all duration-300 group cursor-default rounded-xl">
-            <CardContent className="relative p-3 sm:p-5">
-                <div className="flex items-start justify-between gap-2 sm:gap-4">
-                    {/* Left: Icon */}
-                    <div className={`relative p-2 sm:p-3 rounded-xl sm:rounded-2xl ${iconBg} group-hover:scale-105 transition-all duration-200 ease-out`}>
-                        <Icon className={`h-4 w-4 sm:h-6 sm:w-6 ${iconColor}`} />
-                    </div>
-
-                    {/* Right: Content */}
-                    <div className="flex-1 text-right min-w-0">
-                        <p className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.1em] mb-1 sm:mb-2 truncate">
-                            {title}
-                        </p>
-                        <p className="text-xl sm:text-3xl font-bold text-foreground tabular-nums tracking-tight leading-none truncate">
-                            {value}
-                        </p>
-
-                        {/* Trend or Subtitle */}
-                        <div className="flex items-center justify-end gap-2 mt-2">
-                            {trend !== undefined && (
-                                <span className={`
-                  inline-flex items-center gap-0.5 
-                  px-2 py-0.5 rounded-full text-[11px] font-semibold
-                  ${isPositive
-                                        ? 'bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/20'
-                                        : 'bg-rose-500/10 text-rose-300 ring-1 ring-rose-500/20'
-                                    }
-                `}>
-                                    <TrendIcon className="h-3 w-3" />
-                                    {Math.abs(trend).toFixed(1)}%
-                                </span>
-                            )}
-                            {(trendLabel || subtitle) && (
-                                <span className="text-[11px] text-muted-foreground font-medium">
-                                    {trendLabel || subtitle}
-                                </span>
-                            )}
-                        </div>
-                    </div>
+// ─── Card base (premium light) ───────────────────────────────────────────────
+const Panel = ({ title, icon: Icon, action, children, className = "" }: {
+    title?: string;
+    icon?: React.ElementType;
+    action?: React.ReactNode;
+    children: React.ReactNode;
+    className?: string;
+}) => (
+    <div className={`bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4 sm:p-5 ${className}`}>
+        {title && (
+            <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                    {Icon && <Icon className="h-4 w-4 text-slate-400" />}
+                    <h2 className="text-[13px] font-semibold text-[#0B1220]">{title}</h2>
                 </div>
+                {action}
+            </div>
+        )}
+        {children}
+    </div>
+);
 
-                {/* Sparkline */}
-                {sparklineData && sparklineData.length > 0 && (
-                    <div className="mt-4 h-10">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={sparklineData.map((v, i) => ({ v, i }))}>
-                                <defs>
-                                    <linearGradient id={`spark-${title}`} x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stopColor={iconColor.includes("emerald") ? "#00E37A" : "#00E37A"} stopOpacity={0.3} />
-                                        <stop offset="100%" stopColor={iconColor.includes("emerald") ? "#00E37A" : "#00E37A"} stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <Area
-                                    type="monotone"
-                                    dataKey="v"
-                                    stroke={iconColor.includes("emerald") ? "#00E37A" : "#00E37A"}
-                                    strokeWidth={1.5}
-                                    fill={`url(#spark-${title})`}
-                                />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </div>
-                )}
-            </CardContent>
-        </Card>
-    );
-
-    if (fullValue) {
-        return (
-            <UITooltip>
-                <TooltipTrigger asChild>
-                    {cardContent}
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="bg-card border-border text-foreground font-mono">
-                    {fullValue}
-                </TooltipContent>
-            </UITooltip>
-        );
-    }
-
-    return cardContent;
-};
+// ─── KPI interpretativo ──────────────────────────────────────────────────────
+const Kpi = ({ label, value, context, tone = "default" }: {
+    label: string;
+    value: string;
+    context: string;
+    tone?: "default" | "muted" | "positive";
+}) => (
+    <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4">
+        <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">{label}</p>
+        <p className={`text-[22px] font-bold leading-tight mt-1 tabular-nums ${tone === "muted" ? "text-slate-400" : tone === "positive" ? "text-[#10B981]" : "text-[#0B1220]"}`}>
+            {value}
+        </p>
+        <p className="text-[12px] text-slate-500 mt-0.5 leading-snug">{context}</p>
+    </div>
+);
 
 const SalesPerformanceCenter = () => {
     const { activeCompanyId } = useTenant();
+    const { user, isAdmin, isSuperAdmin } = useAuth();
+    const navigate = useNavigate();
+    const isManager = isAdmin || isSuperAdmin;
+
     const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({
         from: startOfMonth(new Date()),
         to: endOfMonth(new Date()),
     });
+    const inicio = dateRange.from?.toISOString().split("T")[0] || new Date().toISOString().split("T")[0];
+    const fim = dateRange.to?.toISOString().split("T")[0] || new Date().toISOString().split("T")[0];
 
-    const inicioMes = dateRange.from?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0];
-    const fimMes = dateRange.to?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0];
+    const { data: sellers = [] } = useVisibleSellers();
 
-    // Main stats query
-    const { data: stats } = useQuery({
-        queryKey: ["spc-stats", inicioMes, fimMes, activeCompanyId],
+    const { data: perf, isLoading } = useQuery({
+        queryKey: ["perf-story", inicio, fim, activeCompanyId],
         queryFn: async () => {
             if (!activeCompanyId) return null;
-
-            // Pipeline value (deals not closed)
-            const { data: deals } = await supabase
+            const { data: openDeals } = await supabase
                 .from("deals")
-                .select("value, stage, created_at")
+                .select("id, value, stage, created_at, updated_at, is_hot, user_id, customer_name")
                 .eq("company_id", activeCompanyId)
                 .not("stage", "in", "(closed_won,closed_lost)");
-
-            const pipelineValue = deals?.reduce((acc, d) => acc + (Number(d.value) || 0), 0) || 0;
-
-            // Won deals for win rate
             const { data: wonDeals } = await supabase
                 .from("deals")
                 .select("id, value, created_at, updated_at")
                 .eq("company_id", activeCompanyId)
                 .eq("stage", "closed_won")
-                .gte("updated_at", inicioMes)
-                .lte("updated_at", fimMes);
-
+                .gte("updated_at", inicio).lte("updated_at", fim);
             const { data: lostDeals } = await supabase
                 .from("deals")
                 .select("id")
                 .eq("company_id", activeCompanyId)
                 .eq("stage", "closed_lost")
-                .gte("updated_at", inicioMes)
-                .lte("updated_at", fimMes);
-
-            const wonCount = wonDeals?.length || 0;
-            const lostCount = lostDeals?.length || 0;
-            const winRate = (wonCount + lostCount) > 0 ? (wonCount / (wonCount + lostCount)) * 100 : 0;
-
-            // Average sales cycle (days from created to won)
-            const salesCycles = wonDeals?.map((d) => {
-                const created = new Date(d.created_at);
-                const updated = new Date(d.updated_at);
-                return differenceInDays(updated, created);
-            }) || [];
-            const avgCycle = salesCycles.length > 0 ? salesCycles.reduce((a, b) => a + b, 0) / salesCycles.length : 0;
-
-            // Forecast (pipeline value * win rate)
-            const forecast = pipelineValue * (winRate / 100);
-
+                .gte("updated_at", inicio).lte("updated_at", fim);
             return {
-                pipelineValue,
-                winRate,
-                avgCycle,
-                forecast,
-                wonCount,
-                wonValue: wonDeals?.reduce((acc, d) => acc + (Number(d.value) || 0), 0) || 0,
+                openDeals: (openDeals || []) as OpenDeal[],
+                wonDeals: wonDeals || [],
+                lostCount: lostDeals?.length || 0,
             };
         },
         enabled: !!activeCompanyId,
     });
 
-    // Sales evolution
-    const { data: salesEvolution } = useQuery({
-        queryKey: ["spc-evolution", inicioMes, fimMes, activeCompanyId],
-        queryFn: async () => {
-            if (!activeCompanyId) return [];
+    const m = useMemo(() => {
+        const open = perf?.openDeals ?? [];
+        const won = perf?.wonDeals ?? [];
+        const lostCount = perf?.lostCount ?? 0;
+        const visibleOpen = isManager ? open : open.filter((d) => d.user_id === user?.id);
 
-            const { data: vendas } = await supabase
-                .from("vendas")
-                .select("data_venda, valor")
-                .eq("company_id", activeCompanyId)
-                .eq("status", "Aprovado")
-                .gte("data_venda", inicioMes)
-                .lte("data_venda", fimMes)
-                .order("data_venda", { ascending: true });
+        const pipelineValue = visibleOpen.reduce((a, d) => a + (Number(d.value) || 0), 0);
+        const openCount = visibleOpen.length;
+        const wonCount = won.length;
+        const wonValue = won.reduce((a, d) => a + (Number(d.value) || 0), 0);
+        const decided = wonCount + lostCount;
+        const winRate = decided > 0 ? Math.round((wonCount / decided) * 100) : null;
+        const cycles = won.map((d: any) => differenceInDays(new Date(d.updated_at), new Date(d.created_at)));
+        const avgCycle = cycles.length > 0 ? Math.round(cycles.reduce((a, b) => a + b, 0) / cycles.length) : null;
+        const forecast = winRate !== null ? pipelineValue * (winRate / 100) : null;
 
-            // Group by date
-            const grouped = (vendas || []).reduce((acc: Record<string, number>, v) => {
-                const date = format(new Date(v.data_venda), "dd/MM");
-                acc[date] = (acc[date] || 0) + Number(v.valor);
-                return acc;
-            }, {});
+        const funnelAll = OPEN_STAGE_DEFS.map((s) => {
+            const deals = visibleOpen.filter((d) => d.stage === s.id);
+            return { ...s, count: deals.length, value: deals.reduce((a, d) => a + (Number(d.value) || 0), 0) };
+        });
+        const funnel = funnelAll.filter((s) => s.count > 0);
+        const maxFunnelValue = Math.max(1, ...funnel.map((s) => s.value));
+        const topByValue = funnel.slice().sort((a, b) => b.value - a.value)[0] ?? null;
+        const sortedByCount = funnel.slice().sort((a, b) => b.count - a.count);
+        const topByCount = sortedByCount[0] ?? null;
+        // Empate de volume: não destacar "maior volume" se mais de uma etapa empata.
+        const countTie = topByCount ? sortedByCount.filter((s) => s.count === topByCount.count).length > 1 : false;
 
-            // Fill dates
-            const result = [];
-            const today = new Date();
-            for (let i = 14; i >= 0; i--) {
-                const date = subDays(today, i);
-                const dateKey = format(date, "dd/MM");
-                result.push({
-                    date: dateKey,
-                    valor: grouped[dateKey] || 0,
-                });
-            }
+        // Atenção
+        const stalledProposals = visibleOpen.filter((d) => d.stage === "proposal" && daysSince(d.updated_at) > 7);
+        const stalledNegotiations = visibleOpen.filter((d) => d.stage === "negotiation" && daysSince(d.updated_at) > 7);
+        const hotStalled = visibleOpen.filter((d) => d.is_hot && daysSince(d.updated_at) > 5);
+        const anyStalled = visibleOpen.filter((d) => daysSince(d.updated_at) > 7);
 
-            return result;
-        },
-        enabled: !!activeCompanyId,
-    });
+        // Time (por responsável) — só gestor
+        const byOwner = new Map<string, { count: number; value: number }>();
+        for (const d of open) {
+            const k = d.user_id ?? "none";
+            const cur = byOwner.get(k) ?? { count: 0, value: 0 };
+            cur.count += 1; cur.value += Number(d.value) || 0;
+            byOwner.set(k, cur);
+        }
 
-    // Sparkline data for KPIs
-    const sparklineData = salesEvolution?.map((d) => d.valor) || [];
+        return {
+            open, visibleOpen, pipelineValue, openCount, wonCount, wonValue, lostCount, decided,
+            winRate, avgCycle, forecast, funnel, funnelAll, maxFunnelValue, topByValue, topByCount, countTie,
+            stalledProposals, stalledNegotiations, hotStalled, anyStalled, byOwner,
+        };
+    }, [perf, isManager, user?.id]);
+
+    const sellerName = (id: string) => sellers.find((s) => s.id === id)?.nome ?? "Sem responsável definido";
+
+    // Resumo executivo determinístico
+    const summary = useMemo(() => {
+        if (!perf) return "Carregando o panorama da operação…";
+        const parts: string[] = [];
+        parts.push(`${formatCurrencyCompact(m.pipelineValue)} em pipeline ativo`);
+        parts.push(`${m.openCount} ${m.openCount === 1 ? "oportunidade aberta" : "oportunidades abertas"}`);
+        parts.push(m.wonCount > 0
+            ? `${m.wonCount} ${m.wonCount === 1 ? "venda" : "vendas"} no período (${formatCurrencyCompact(m.wonValue)})`
+            : "nenhuma venda registrada no período");
+        let leitura = "";
+        if (m.openCount === 0) {
+            leitura = "Ainda não há oportunidades no funil — comece registrando os primeiros leads.";
+        } else if (m.wonCount === 0) {
+            leitura = "A operação ainda está em fase inicial: acompanhe o avanço de propostas, visitas e follow-ups.";
+        } else {
+            leitura = `Win rate de ${m.winRate}% no período. Mantenha o ritmo de avanço das oportunidades abertas.`;
+        }
+        return `${parts.join(", ")}. ${leitura}`;
+    }, [perf, m]);
+
+    // Itens de atenção
+    const attention = useMemo(() => {
+        const items: { sev: "high" | "mid" | "info"; text: string }[] = [];
+        if (m.stalledNegotiations.length > 0) items.push({ sev: "high", text: `${m.stalledNegotiations.length} negociação(ões) parada(s) há mais de 7 dias` });
+        if (m.hotStalled.length > 0) items.push({ sev: "high", text: `${m.hotStalled.length} lead(s) quente(s) sem movimento há dias` });
+        if (m.stalledProposals.length > 0) items.push({ sev: "mid", text: `${m.stalledProposals.length} proposta(s)/visita(s) que precisam avançar` });
+        if (m.openCount > 0 && m.wonCount === 0) items.push({ sev: "mid", text: "Nenhum ganho registrado no período" });
+        if (m.topByValue) items.push({ sev: "info", text: `Maior valor concentrado em ${stageLabelFor(activeCompanyId, m.topByValue.id, m.topByValue.label)} — priorize avançar essas oportunidades` });
+        if (m.openCount > 0 && m.decided < 3) items.push({ sev: "info", text: "Histórico ainda insuficiente para medir conversão real" });
+        return items;
+    }, [m, activeCompanyId]);
+
+    const periodFilter = (
+        <div className="flex flex-wrap items-center gap-2">
+            <PeriodToggle value={dateRange} onChange={setDateRange} longLabels />
+            <DateRangePicker value={dateRange} onChange={setDateRange} placeholder="Custom" />
+        </div>
+    );
+
+    const headerBlock = (
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+            <div>
+                <div className="flex items-center gap-2">
+                    <h1 className="text-xl sm:text-2xl font-bold text-[#0B1220] tracking-tight">Performance Comercial</h1>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-[#1556C0]/10 text-[#1556C0]">
+                        {isManager ? "Visão da empresa" : "Minha performance"}
+                    </span>
+                </div>
+                <p className="text-[13px] text-slate-500 mt-1">Entenda resultado, funil e ritmo do time em tempo real.</p>
+            </div>
+            {periodFilter}
+        </div>
+    );
+
+    // Skeleton enquanto os dados carregam (sem gráficos vazios).
+    if (isLoading && !perf) {
+        return (
+            <div className="min-h-screen bg-[#F8FAFC] -m-3 sm:-m-4 md:-m-6 p-3 sm:p-4 md:p-6 space-y-5">
+                {headerBlock}
+                <PerformanceSkeleton />
+            </div>
+        );
+    }
 
     return (
-        <div className="space-y-6 min-h-screen">
-            {/* Header */}
-            <div className="relative">
-                <div className="absolute -top-4 -left-4 w-64 h-64 bg-emerald-500/5 blur-3xl pointer-events-none" />
+        <div className="min-h-screen bg-[#F8FAFC] -m-3 sm:-m-4 md:-m-6 p-3 sm:p-4 md:p-6 space-y-5">
+            {/* 1. Header */}
+            {headerBlock}
 
-                <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            {/* 2. Executive summary */}
+            <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4 sm:p-5">
+                <div className="flex items-start gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1556C0]/10 flex-shrink-0">
+                        <Activity className="h-5 w-5 text-[#1556C0]" />
+                    </div>
                     <div>
-                        <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight flex items-center gap-3 flex-wrap">
-                            Sales Performance Center
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 text-xs font-semibold uppercase tracking-wider ring-1 ring-amber-500/20">
-                                <Sparkles className="h-3 w-3" />
-                                Beta
-                            </span>
-                        </h1>
-                        <p className="text-muted-foreground mt-1">
-                            <span className="text-foreground/80 font-medium">Análise avançada</span> • Insights de vendas em tempo real
-                        </p>
-                    </div>
-
-                    {/* Quick Date Filters */}
-                    <div className="flex flex-wrap items-center gap-2">
-                        <PeriodToggle value={dateRange} onChange={setDateRange} longLabels />
-                        <DateRangePicker value={dateRange} onChange={setDateRange} placeholder="Custom" />
+                        <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Resumo do período</p>
+                        <p className="text-[14px] text-[#0B1220] leading-relaxed">{summary}</p>
                     </div>
                 </div>
             </div>
 
-            {/* Row 1: KPIs + Main Chart */}
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6">
-                {/* Left: 4 KPI Cards stacked 2x2 */}
-                <div className="lg:col-span-2 grid grid-cols-2 gap-3 sm:gap-4">
-                    <KPICard
-                        title="Pipeline Ativo"
-                        value={formatCurrencyCompact(stats?.pipelineValue || 0)}
-                        fullValue={formatCurrency(stats?.pipelineValue || 0)}
-                        icon={DollarSign}
-                        iconColor="text-emerald-400"
-                        iconBg="bg-emerald-500/10"
-                        sparklineData={sparklineData}
-                    />
-                    <KPICard
-                        title="Win Rate"
-                        value={`${(stats?.winRate || 0).toFixed(0)}%`}
-                        subtitle={`${stats?.wonCount || 0} ganhos`}
-                        icon={Target}
-                        trend={(stats?.winRate || 0) - 30}
-                        trendLabel="vs média"
-                        iconColor="text-emerald-400"
-                        iconBg="bg-emerald-500/10"
-                    />
-                    <KPICard
-                        title="Ciclo de Venda"
-                        value={`${Math.round(stats?.avgCycle || 0)}d`}
-                        subtitle="média de dias"
-                        icon={CalendarIcon}
-                        iconColor="text-emerald-400"
-                        iconBg="bg-emerald-500/10"
-                    />
-                    <KPICard
-                        title="Forecast"
-                        value={formatCurrencyCompact(stats?.forecast || 0)}
-                        fullValue={formatCurrency(stats?.forecast || 0)}
-                        subtitle="projeção"
-                        icon={TrendingUp}
-                        iconColor="text-amber-400"
-                        iconBg="bg-amber-500/10"
-                    />
-                </div>
+            {/* 3. KPIs interpretativos */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <Kpi label="Pipeline ativo" value={formatCurrencyCompact(m.pipelineValue)}
+                    context={`${m.openCount} ${m.openCount === 1 ? "oportunidade aberta" : "oportunidades abertas"}`} />
+                <Kpi label="Conversão"
+                    value={m.winRate !== null ? `${m.winRate}%` : "Sem base"}
+                    context={m.winRate !== null ? `${m.wonCount} ganhos / ${m.decided} decididos` : `${m.wonCount} ganhos no período`}
+                    tone={m.winRate === null ? "muted" : "default"} />
+                <Kpi label="Ciclo médio"
+                    value={m.avgCycle !== null ? `${m.avgCycle} dias` : "Sem histórico"}
+                    context={m.avgCycle !== null ? "da criação ao ganho" : "ainda sem vendas fechadas"}
+                    tone={m.avgCycle === null ? "muted" : "default"} />
+                <Kpi label="Forecast"
+                    value={m.forecast !== null ? formatCurrencyCompact(m.forecast) : "—"}
+                    context={m.forecast !== null ? "projeção pelo win rate" : "precisa de histórico de ganhos"}
+                    tone={m.forecast === null ? "muted" : "default"} />
+            </div>
 
-                {/* Right: Main Chart */}
-                <Card className="lg:col-span-3 relative overflow-hidden border border-border bg-card shadow-sm rounded-xl">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl pointer-events-none" />
-
-                    <CardHeader className="pb-2 relative">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                    <div className="p-1.5 rounded-lg bg-emerald-500/10">
-                                        <BarChart3 className="h-4 w-4 text-emerald-400" />
-                                    </div>
-                                    Evolução de Vendas
-                                </CardTitle>
-                                <p className="text-[11px] text-muted-foreground mt-1 ml-8">Últimos 15 dias • Faturamento diário</p>
+            {/* 4. História do funil + Leitura da EVA */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+                <Panel className="lg:col-span-2">
+                    <div className="flex items-start justify-between mb-4">
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <Target className="h-4 w-4 text-slate-400" />
+                                <h2 className="text-[13px] font-semibold text-[#0B1220]">Mapa do funil</h2>
                             </div>
+                            <p className="text-[12px] text-slate-500 mt-0.5">Distribuição de valor e oportunidades por etapa</p>
                         </div>
-                    </CardHeader>
+                        {m.openCount > 0 && (
+                            <button onClick={() => navigate("/pipeline")} className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#1556C0] hover:underline shrink-0">
+                                Abrir pipeline <ArrowRight className="h-3 w-3" />
+                            </button>
+                        )}
+                    </div>
 
-                    <CardContent className="pt-0 relative">
-                        <ResponsiveContainer width="100%" height={280}>
-                            <AreaChart data={salesEvolution || []} margin={{ top: 20, right: 10, left: 0, bottom: 0 }}>
-                                <defs>
-                                    <linearGradient id="colorValorSPC" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stopColor="#00E37A" stopOpacity={0.5} />
-                                        <stop offset="50%" stopColor="#4F46E5" stopOpacity={0.2} />
-                                        <stop offset="100%" stopColor="#4F46E5" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.25)" vertical={false} />
-                                <XAxis
-                                    dataKey="date"
-                                    stroke="rgba(100,116,139,0.6)"
-                                    fontSize={10}
-                                    tickLine={false}
-                                    axisLine={false}
-                                    dy={10}
-                                />
-                                <YAxis
-                                    stroke="rgba(100,116,139,0.6)"
-                                    fontSize={10}
-                                    tickLine={false}
-                                    axisLine={false}
-                                    tickFormatter={(v) => formatCurrencyCompact(v)}
-                                    width={55}
-                                />
-                                <Tooltip
-                                    contentStyle={{
-                                        backgroundColor: "rgba(15, 23, 42, 0.95)",
-                                        backdropFilter: "blur(12px)",
-                                        border: "1px solid rgba(51, 65, 85, 0.5)",
-                                        borderRadius: "12px",
-                                        boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
-                                        padding: "12px 16px"
-                                    }}
-                                    labelStyle={{ color: "#94a3b8", fontSize: 11, marginBottom: 4 }}
-                                    formatter={(value: number) => [
-                                        <span className="text-emerald-400 font-semibold">{formatCurrency(value)}</span>,
-                                        <span className="text-muted-foreground">Faturamento</span>
-                                    ]}
-                                />
-                                <Area
-                                    type="monotone"
-                                    dataKey="valor"
-                                    stroke="#00E37A"
-                                    strokeWidth={2.5}
-                                    fill="url(#colorValorSPC)"
-                                    dot={false}
-                                    activeDot={{
-                                        r: 6,
-                                        fill: "#00E37A",
-                                        stroke: "#fff",
-                                        strokeWidth: 2,
-                                        filter: "drop-shadow(0 0 8px rgba(0, 227, 122, 0.5))"
-                                    }}
-                                />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </CardContent>
-                </Card>
+                    {m.openCount === 0 ? (
+                        <div className="text-center py-6">
+                            <p className="text-[13px] text-slate-500 mb-3">Ainda não há oportunidades abertas para analisar o funil.</p>
+                            <button onClick={() => navigate("/pipeline")} className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg text-[13px] font-semibold bg-[#1556C0] text-white hover:brightness-110 transition">
+                                <Plus className="h-4 w-4" /> Criar oportunidade
+                            </button>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="flex items-center gap-8 pb-4 mb-4 border-b border-[#F1F5F9]">
+                                <div>
+                                    <p className="text-[11px] text-slate-500">Pipeline total</p>
+                                    <p className="text-[20px] font-bold text-[#0B1220] tabular-nums leading-tight">{formatCurrencyCompact(m.pipelineValue)}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[11px] text-slate-500">Oportunidades</p>
+                                    <p className="text-[20px] font-bold text-[#0B1220] tabular-nums leading-tight">{m.openCount} abertas</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-3.5">
+                                {m.funnelAll.map((s) => {
+                                    const pct = m.pipelineValue > 0 ? Math.round((s.value / m.pipelineValue) * 100) : 0;
+                                    const isTopValue = m.topByValue?.id === s.id && s.count > 0;
+                                    const insight =
+                                        s.count === 0 ? { text: "Sem oportunidades nesta etapa", cls: "text-slate-400" }
+                                        : isTopValue ? { text: "Maior concentração de valor", cls: "text-[#1556C0]" }
+                                        : (!m.countTie && m.topByCount?.id === s.id) ? { text: "Maior volume de oportunidades", cls: "text-[#1556C0]" }
+                                        : (s.id === "proposal" || s.id === "negotiation") ? { text: "Follow-up recomendado", cls: "text-amber-600" }
+                                        : { text: "Precisa avançar qualificação", cls: "text-slate-400" };
+                                    return (
+                                        <div key={s.id} className={`rounded-xl px-3 py-2.5 -mx-1 ${isTopValue ? "bg-[#1556C0]/[0.04] ring-1 ring-[#1556C0]/15" : ""} ${s.count === 0 ? "opacity-55" : ""}`}>
+                                            <div className="flex items-center justify-between gap-3 mb-1.5">
+                                                <div className="flex items-center gap-2 min-w-0">
+                                                    <span className="text-[13px] font-semibold text-[#0B1220]">{stageLabelFor(activeCompanyId, s.id, s.label)}</span>
+                                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10.5px] font-medium bg-slate-100 text-slate-600">
+                                                        {s.count} {s.count === 1 ? "oportunidade" : "oportunidades"}
+                                                    </span>
+                                                </div>
+                                                <div className="text-right shrink-0 tabular-nums">
+                                                    <span className="text-[14px] font-bold text-[#0B1220]">{formatCurrencyCompact(s.value)}</span>
+                                                    <span className="text-[12px] text-slate-400 ml-1.5">{pct}%</span>
+                                                </div>
+                                            </div>
+                                            <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                                                <div className="h-full rounded-full transition-all" style={{ width: `${s.count === 0 ? 0 : Math.max(4, (s.value / m.maxFunnelValue) * 100)}%`, background: s.color }} />
+                                            </div>
+                                            <p className={`text-[11px] mt-1 ${insight.cls}`}>{insight.text}</p>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </>
+                    )}
+                </Panel>
+
+                <Panel className="bg-[#FAF5FF] border-[#E9D5FF]">
+                    <div className="flex items-center gap-2 mb-3">
+                        <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#7C3AED] text-white text-[8px] font-bold leading-none">E</span>
+                        <h2 className="text-[13px] font-semibold text-[#7C3AED]">Leitura da EVA</h2>
+                    </div>
+                    {m.funnel.length === 0 ? (
+                        <p className="text-[12.5px] text-slate-500">Quando houver oportunidades no funil, a EVA aponta concentração e gargalos aqui.</p>
+                    ) : (
+                        <ul className="space-y-2 text-[12.5px] text-slate-600">
+                            {m.topByValue && <li className="flex gap-1.5"><span className="text-[#7C3AED] mt-px">•</span><span>Maior valor concentrado em <strong className="text-[#0B1220]">{stageLabelFor(activeCompanyId, m.topByValue.id, m.topByValue.label)}</strong> ({formatCurrencyCompact(m.topByValue.value)}).</span></li>}
+                            <li className="flex gap-1.5"><span className="text-[#7C3AED] mt-px">•</span><span>Prioridade: avançar oportunidades para a próxima etapa.</span></li>
+                            {m.anyStalled.length > 0 && <li className="flex gap-1.5"><span className="text-amber-500 mt-px">•</span><span>{m.anyStalled.length} oportunidade(s) parada(s) há mais de 7 dias — possível gargalo.</span></li>}
+                            {m.wonCount === 0 && <li className="flex gap-1.5"><span className="text-slate-400 mt-px">•</span><span>Histórico ainda insuficiente para medir conversão real.</span></li>}
+                        </ul>
+                    )}
+                    <p className="text-[10px] text-[#7C3AED]/70 mt-3 pt-3 border-t border-[#E9D5FF]">A EVA aponta tendências. As decisões seguem com o time.</p>
+                </Panel>
             </div>
 
-            {/* Row 2: Heatmap + Funnel */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <GoldenHoursHeatmap dateRange={dateRange} />
-                <ConversionFunnelDonut dateRange={dateRange} />
+            {/* 5 + 6: Atenção do gestor + Performance do time lado a lado em telas largas */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+            {/* 5. Atenção do gestor */}
+            <Panel title="Atenção do gestor" icon={AlertTriangle}
+                action={attention.length > 0 ? (
+                    <button onClick={() => navigate("/pipeline")} className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#1556C0] hover:underline">
+                        Abrir pipeline <ArrowRight className="h-3 w-3" />
+                    </button>
+                ) : undefined}>
+                {attention.length === 0 ? (
+                    <div className="flex items-center gap-2 text-[13px] text-[#10B981]">
+                        <CheckCircle2 className="h-4 w-4" />
+                        Tudo em dia. Nenhum deal parado há mais de 7 dias.
+                    </div>
+                ) : (
+                    <ul className="space-y-2">
+                        {attention.map((a, i) => {
+                            const sevStyle = a.sev === "high"
+                                ? { bg: "rgba(244,63,94,0.05)", bd: "rgba(244,63,94,0.2)", dot: "bg-rose-500" }
+                                : a.sev === "mid"
+                                ? { bg: "rgba(245,158,11,0.06)", bd: "rgba(245,158,11,0.25)", dot: "bg-amber-500" }
+                                : { bg: "rgba(21,86,192,0.05)", bd: "rgba(21,86,192,0.18)", dot: "bg-[#1556C0]" };
+                            return (
+                                <li key={i} className="flex items-center gap-2.5 px-3 py-2 rounded-xl border" style={{ background: sevStyle.bg, borderColor: sevStyle.bd }}>
+                                    <span className={`h-1.5 w-1.5 rounded-full ${sevStyle.dot}`} />
+                                    <span className="text-[13px] text-[#0B1220] flex-1">{a.text}</span>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                )}
+            </Panel>
+
+            {/* 6. Performance do time / Minha performance */}
+            <Panel title={isManager ? "Performance do time" : "Minha performance"} icon={Users}>
+                {isManager ? (
+                    m.byOwner.size === 0 ? (
+                        <p className="text-[13px] text-slate-500">Nenhuma oportunidade aberta para distribuir entre o time.</p>
+                    ) : (
+                        <ul className="divide-y divide-[#F1F5F9]">
+                            {[...m.byOwner.entries()].sort((a, b) => b[1].value - a[1].value).map(([uid, agg]) => {
+                                const stalled = m.open.filter((d) => (d.user_id ?? "none") === uid && daysSince(d.updated_at) > 7).length;
+                                return (
+                                    <li key={uid} className="flex items-center justify-between gap-3 py-2.5">
+                                        <div className="min-w-0">
+                                            <p className="text-[13px] font-medium text-[#0B1220] truncate">{uid === "none" ? "Sem responsável definido" : sellerName(uid)}</p>
+                                            <p className="text-[12px] text-slate-500">{agg.count} oportunidade(s) · {formatCurrencyCompact(agg.value)}</p>
+                                        </div>
+                                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold ${stalled > 0 ? "bg-amber-50 text-amber-700 border border-amber-200" : "bg-[#10B981]/10 text-[#0F8A63] border border-[#10B981]/20"}`}>
+                                            {stalled > 0 ? `${stalled} parado(s)` : "Em dia"}
+                                        </span>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    )
+                ) : (
+                    <div className="grid grid-cols-2 gap-3">
+                        <div><p className="text-[11px] text-slate-500">Minhas oportunidades</p><p className="text-[18px] font-bold text-[#0B1220] tabular-nums">{m.openCount}</p></div>
+                        <div><p className="text-[11px] text-slate-500">Meu pipeline</p><p className="text-[18px] font-bold text-[#0B1220] tabular-nums">{formatCurrencyCompact(m.pipelineValue)}</p></div>
+                        <div><p className="text-[11px] text-slate-500">Deals parados</p><p className="text-[18px] font-bold text-[#0B1220] tabular-nums">{m.anyStalled.length}</p></div>
+                        <div><p className="text-[11px] text-slate-500">Leads quentes</p><p className="text-[18px] font-bold text-[#0B1220] tabular-nums">{m.visibleOpen.filter((d) => d.is_hot).length}</p></div>
+                    </div>
+                )}
+            </Panel>
+
             </div>
 
-            {/* Row 3: Team Pulse */}
-            <TeamPulseSection />
+            {/* 7. Ritmo comercial */}
+            <Panel title="Ritmo comercial" icon={Clock}>
+                {m.open.length + m.wonCount >= 3 ? (
+                    <GoldenHoursHeatmap dateRange={dateRange} />
+                ) : (
+                    <p className="text-[13px] text-slate-500 py-4">Volume insuficiente para calcular horários de maior atividade. Quando houver mais conversas e oportunidades, o ritmo aparece aqui.</p>
+                )}
+            </Panel>
         </div>
     );
 };
