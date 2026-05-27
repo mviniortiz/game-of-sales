@@ -1126,13 +1126,13 @@ function EvaStatusRow({
     );
 }
 
-// Card principal: fundo branco, borda neutra uniforme. A urgência vive só no
-// badge (coral no crítico), sem faixa/borda colorida.
-const PRIMARY_TONE: Record<DailyPriority["priority"], { chipBg: string; chipColor: string; label: string }> = {
-    critical: { chipBg: "rgba(244,63,94,0.10)",   chipColor: "#BE123C", label: "Mais urgente" },
-    high:     { chipBg: "rgba(245,158,11,0.12)",  chipColor: "#B45309", label: "Prioridade alta" },
-    medium:   { chipBg: "rgba(37,99,235,0.10)",   chipColor: "#1D4ED8", label: "Atenção" },
-    low:      { chipBg: "rgba(148,163,184,0.15)", chipColor: "#64748B", label: "Acompanhar" },
+// Card principal: contorno e fundo no tom da severidade, bem suaves (coral
+// levíssimo no crítico). Cor presente sem pesar; urgência reforçada no badge.
+const PRIMARY_TONE: Record<DailyPriority["priority"], { bg: string; border: string; shadow: string; chipBg: string; chipColor: string; label: string }> = {
+    critical: { bg: "#FFF6F7", border: "rgba(244,63,94,0.30)",  shadow: "0 1px 3px rgba(244,63,94,0.08)",  chipBg: "rgba(244,63,94,0.10)",   chipColor: "#BE123C", label: "Mais urgente" },
+    high:     { bg: "#FFFBF2", border: "rgba(245,158,11,0.32)", shadow: "0 1px 3px rgba(245,158,11,0.08)", chipBg: "rgba(245,158,11,0.12)",  chipColor: "#B45309", label: "Prioridade alta" },
+    medium:   { bg: "#F6F9FF", border: "rgba(37,99,235,0.24)",  shadow: "0 1px 3px rgba(37,99,235,0.06)",  chipBg: "rgba(37,99,235,0.10)",   chipColor: "#1D4ED8", label: "Atenção" },
+    low:      { bg: "#FFFFFF", border: "#E2E8F0",               shadow: "0 1px 2px rgba(15,23,42,0.04)",   chipBg: "rgba(148,163,184,0.15)", chipColor: "#64748B", label: "Acompanhar" },
 };
 
 function PrimaryPriorityCard({
@@ -1147,9 +1147,9 @@ function PrimaryPriorityCard({
         <div
             className="rounded-2xl p-4 sm:p-5 flex flex-col"
             style={{
-                background: "#FFFFFF",
-                border: "1px solid #E2E8F0",
-                boxShadow: "0 1px 2px rgba(15,23,42,0.04)",
+                background: tone.bg,
+                border: `1px solid ${tone.border}`,
+                boxShadow: tone.shadow,
             }}
         >
             <div className="flex items-center gap-2 mb-2 flex-wrap">
