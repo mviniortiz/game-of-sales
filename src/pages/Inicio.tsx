@@ -846,16 +846,19 @@ const CONFIDENCE_LABEL: Record<EvaResponse["confidence"], string> = {
 
 function EvaCommandCard({
     priorities,
+    gapsCount,
     loading,
     onNavigate,
     evaInput,
 }: {
     priorities: DailyPriority[];
+    gapsCount: number;
     loading: boolean;
     onNavigate: (href: string) => void;
     evaInput: CentralEvaInput;
 }) {
     const [composer, setComposer] = useState("");
+    const [showAllCommands, setShowAllCommands] = useState(false);
     // F5C.6 — assistente determinístico (sem IA): responde com dados já carregados.
     const assistant = useCentralEvaAssistant(evaInput);
 
@@ -864,19 +867,20 @@ function EvaCommandCard({
 
     const critical = priorities[0];
     const secondary = priorities.slice(1, 3);
-    const totalPriorities = priorities.length;
+    const total = priorities.length;
+    const criticalCount = priorities.filter((p) => p.priority === "critical").length;
 
-    const headline = loading
-        ? "Lendo a operação…"
-        : isThinking
-            ? "Analisando sua operação…"
-            : totalPriorities > 0
-                ? `Você tem ${totalPriorities} ${totalPriorities === 1 ? "prioridade comercial" : "prioridades comerciais"} para resolver agora.`
-                : "Tudo em dia por enquanto.";
-
-    const subtext = isThinking
-        ? "Estou cruzando conversas, oportunidades e qualificações…"
-        : "Eu li conversas, oportunidades e sinais do pipeline.";
+    // Linha-resumo (leitura em 5s): quantas, quantas críticas, quantas lacunas.
+    const summaryParts: ReactNode[] = [];
+    if (loading || isThinking) {
+        summaryParts.push("Lendo a operação…");
+    } else if (total === 0) {
+        summaryParts.push("Nenhuma prioridade crítica agora");
+    } else {
+        summaryParts.push(`${total} ${total === 1 ? "prioridade detectada" : "prioridades detectadas"}`);
+        if (criticalCount > 0) summaryParts.push(<span style={{ color: "#BE123C", fontWeight: 600 }}>{criticalCount} {criticalCount === 1 ? "crítica" : "críticas"}</span>);
+        if (gapsCount > 0) summaryParts.push(<span style={{ color: "#475569", fontWeight: 600 }}>{gapsCount} {gapsCount === 1 ? "lacuna de contexto" : "lacunas de contexto"}</span>);
+    }
 
     const handleAsk = (e: React.FormEvent) => {
         e.preventDefault();
@@ -884,120 +888,103 @@ function EvaCommandCard({
         assistant.ask(composer);
     };
 
+    const visibleCommands = showAllCommands ? assistant.commands : assistant.commands.slice(0, 4);
+    const hasMore = assistant.commands.length > 4;
+
     return (
         <div
-            className="rounded-3xl relative overflow-hidden"
+            className="rounded-2xl"
             style={{
-                background:
-                    "linear-gradient(135deg, #FFFFFF 0%, rgba(124,58,237,0.04) 50%, rgba(37,99,235,0.04) 100%)",
-                border: "1px solid rgba(148,163,184,0.30)",
-                boxShadow:
-                    "0 1px 2px rgba(15,23,42,0.04), 0 24px 60px -16px rgba(15,23,42,0.10)",
+                background: "#FFFFFF",
+                border: "1px solid #D9E2EC",
+                boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 10px 30px rgba(15,23,42,0.05)",
             }}
         >
-            {/* Topline lilás → azul */}
-            <div
-                className="absolute top-0 inset-x-0 h-[2px] pointer-events-none"
-                style={{
-                    background:
-                        "linear-gradient(90deg, transparent, rgba(124,58,237,0.55) 35%, rgba(37,99,235,0.55) 65%, transparent)",
-                }}
-            />
-            {/* Glow lilás canto direito */}
-            <div
-                className="absolute -top-20 -right-20 w-80 h-80 rounded-full pointer-events-none hidden sm:block"
-                style={{
-                    background:
-                        "radial-gradient(circle, rgba(124,58,237,0.10) 0%, transparent 70%)",
-                }}
-                aria-hidden
-            />
-
-            <div className="relative z-10 px-6 sm:px-9 pt-7 sm:pt-9 pb-6">
-                {/* Header */}
-                <div className="flex items-start gap-5 mb-6">
-                    <EvaPhotoAvatar size="lg" ring="glow" thinking={isThinking} />
+            <div className="px-5 sm:px-7 pt-6 pb-6">
+                {/* 1. Header compacto */}
+                <div className="flex items-start gap-3.5 mb-5">
+                    <EvaPhotoAvatar size="md" ring="glow" thinking={isThinking} />
                     <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2.5 mb-2 flex-wrap">
-                            <h2 className="text-[19px] sm:text-[22px] font-bold tracking-tight"
+                        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                            <h2 className="text-[16px] sm:text-[17px] font-bold tracking-tight"
                                 style={{ color: "#0B1220", letterSpacing: "-0.02em" }}>
                                 EVA Comercial
                             </h2>
-                            <span className="inline-flex items-center gap-1 text-[10px] uppercase px-2 py-0.5 rounded"
-                                style={{
-                                    background: "rgba(124,58,237,0.10)",
-                                    color: "#6D28D9",
-                                    fontWeight: 700,
-                                    letterSpacing: "0.08em",
-                                }}>
-                                <Sparkles size={10} weight="duotone" />
+                            <span className="inline-flex items-center text-[9.5px] uppercase px-1.5 py-0.5 rounded"
+                                style={{ background: "rgba(124,58,237,0.10)", color: "#6D28D9", fontWeight: 700, letterSpacing: "0.08em" }}>
                                 Prévia
                             </span>
                         </div>
-                        <p className="text-[16px] sm:text-[19px] font-semibold leading-snug mb-1"
-                            style={{ color: "#0B1220", letterSpacing: "-0.015em" }}>
-                            {headline}
+                        <p className="text-[14px] sm:text-[15px] font-semibold leading-snug"
+                            style={{ color: "#0B1220", letterSpacing: "-0.01em" }}>
+                            {summaryParts.map((part, i) => (
+                                <Fragment key={i}>
+                                    {i > 0 && <span style={{ color: "#CBD5E1" }}> · </span>}
+                                    {part}
+                                </Fragment>
+                            ))}
                         </p>
-                        <p className="text-[13px]" style={{ color: "#475569" }}>
-                            {subtext}
+                        <p className="text-[12px] mt-0.5" style={{ color: "#64748B" }}>
+                            A EVA leu conversas, oportunidades e sinais da operação.
                         </p>
                     </div>
                 </div>
 
-                {/* Prioridade crítica em destaque */}
-                {critical && <CriticalPriorityBlock item={critical} onNavigate={onNavigate} />}
-
-                {/* Prioridades secundárias */}
-                {secondary.length > 0 && (
-                    <ul className="mt-3 flex flex-col gap-1.5">
-                        {secondary.map((p) => (
-                            <SecondaryPriorityRow key={p.id} item={p} onNavigate={onNavigate} />
-                        ))}
-                    </ul>
-                )}
-
-                {/* Empty state quando sem prioridades */}
-                {!loading && totalPriorities === 0 && (
-                    <div className="rounded-xl px-5 py-6 text-center"
+                {/* 2. Prioridades em grid (principal + 2 secundárias) */}
+                {!loading && total === 0 ? (
+                    <div className="rounded-xl px-5 py-5 text-center"
                         style={{ background: "rgba(16,185,129,0.04)", border: "1px solid rgba(16,185,129,0.15)" }}>
-                        <p className="text-[13px] font-semibold" style={{ color: "#047857" }}>
-                            Sem prioridades críticas agora.
-                        </p>
+                        <p className="text-[13px] font-semibold" style={{ color: "#047857" }}>Sem prioridades críticas agora.</p>
                         <p className="text-[11.5px] mt-1" style={{ color: "#64748B" }}>
                             Continuo acompanhando as conversas e te aviso quando aparecer algo urgente.
                         </p>
                     </div>
+                ) : critical ? (
+                    <div className={`grid gap-3 ${secondary.length > 0 ? "lg:grid-cols-2" : "grid-cols-1"}`}>
+                        <PrimaryPriorityCard item={critical} onNavigate={onNavigate} />
+                        {secondary.length > 0 && (
+                            <div className="flex flex-col gap-3">
+                                {secondary.map((p) => (
+                                    <SecondaryPriorityCard key={p.id} item={p} onNavigate={onNavigate} />
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <div className="grid gap-3 lg:grid-cols-2">
+                        <div className="rounded-2xl h-36" style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }} />
+                        <div className="flex flex-col gap-3">
+                            <div className="rounded-xl flex-1 min-h-[64px]" style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }} />
+                            <div className="rounded-xl flex-1 min-h-[64px]" style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }} />
+                        </div>
+                    </div>
                 )}
 
-                {/* F5C.6 — Pergunte à EVA (funcional, determinístico) */}
-                <form onSubmit={handleAsk} className="mt-5 sm:mt-6 relative">
+                {/* 3. Command bar */}
+                <form onSubmit={handleAsk} className="mt-5 relative">
                     <input
                         type="text"
                         value={composer}
                         onChange={(e) => setComposer(e.target.value)}
-                        placeholder="Pergunte à EVA sobre sua operação…"
+                        placeholder="Pergunte à EVA sobre a operação, pipeline ou conversas"
                         disabled={isThinking}
-                        className="w-full h-11 pl-4 pr-32 rounded-xl text-[13.5px] outline-none transition-colors disabled:opacity-70"
-                        style={{
-                            background: "rgba(255,255,255,0.8)",
-                            border: "1px solid rgba(148,163,184,0.30)",
-                            color: "#0B1220",
-                        }}
+                        className="w-full h-11 pl-4 pr-32 rounded-xl text-[13px] outline-none transition-all focus:border-[#7C3AED]/40 disabled:opacity-70"
+                        style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", color: "#0B1220" }}
                     />
                     <button
                         type="submit"
                         disabled={!composer.trim() || isThinking}
-                        className="absolute right-1.5 top-1.5 inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12.5px] font-semibold text-white transition-all hover:brightness-110 disabled:opacity-40"
-                        style={{ background: "linear-gradient(135deg, #6D28D9, #2563EB)" }}
+                        className="absolute right-1.5 top-1.5 inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg text-[12.5px] font-semibold text-white transition-all hover:brightness-110 disabled:opacity-40"
+                        style={{ background: "#2563EB" }}
                     >
                         Perguntar
                         <Send size={12} weight="duotone" />
                     </button>
                 </form>
 
-                {/* Chips de comandos sugeridos */}
+                {/* Chips: no máximo 4 + "Mais ações" */}
                 <div className="mt-3 flex flex-wrap gap-2">
-                    {assistant.commands.map((c) => (
+                    {visibleCommands.map((c) => (
                         <button
                             key={c.id}
                             type="button"
@@ -1006,17 +993,23 @@ function EvaCommandCard({
                                 setComposer(c.label);
                                 assistant.ask(c.label, c.id);
                             }}
-                            className="text-[12px] px-3 py-1.5 rounded-full transition-colors hover:bg-white disabled:opacity-50"
-                            style={{
-                                background: "rgba(255,255,255,0.65)",
-                                border: "1px solid rgba(148,163,184,0.30)",
-                                color: "#475569",
-                                fontWeight: 500,
-                            }}
+                            className="text-[12px] px-3 py-1.5 rounded-full transition-colors hover:bg-[#F1F5F9] disabled:opacity-50"
+                            style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", color: "#475569", fontWeight: 500 }}
                         >
                             {c.label}
                         </button>
                     ))}
+                    {hasMore && !showAllCommands && (
+                        <button
+                            type="button"
+                            onClick={() => setShowAllCommands(true)}
+                            className="inline-flex items-center gap-1 text-[12px] px-3 py-1.5 rounded-full transition-colors hover:brightness-105"
+                            style={{ background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.18)", color: "#6D28D9", fontWeight: 600 }}
+                        >
+                            Mais ações
+                            <MoreHorizontal size={13} weight="bold" />
+                        </button>
+                    )}
                 </div>
 
                 {/* Resposta da EVA — loading / answered / error / out_of_scope */}
@@ -1130,65 +1123,65 @@ function EvaStatusRow({
     );
 }
 
-function CriticalPriorityBlock({
+// Tom suave (rosado/âmbar) pro card principal — sem vermelho chapado.
+const PRIMARY_TONE: Record<DailyPriority["priority"], { bg: string; border: string; chipBg: string; chipColor: string; label: string }> = {
+    critical: { bg: "rgba(244,63,94,0.05)",  border: "rgba(244,63,94,0.20)",  chipBg: "rgba(244,63,94,0.12)",  chipColor: "#BE123C", label: "Mais urgente" },
+    high:     { bg: "rgba(245,158,11,0.06)", border: "rgba(245,158,11,0.22)", chipBg: "rgba(245,158,11,0.14)", chipColor: "#B45309", label: "Prioridade alta" },
+    medium:   { bg: "rgba(37,99,235,0.05)",  border: "rgba(37,99,235,0.18)",  chipBg: "rgba(37,99,235,0.10)",  chipColor: "#1D4ED8", label: "Atenção" },
+    low:      { bg: "#F8FAFC",               border: "#E2E8F0",               chipBg: "rgba(148,163,184,0.15)", chipColor: "#64748B", label: "Acompanhar" },
+};
+
+function PrimaryPriorityCard({
     item,
     onNavigate,
 }: {
     item: DailyPriority;
     onNavigate: (href: string) => void;
 }) {
-    const tone = PRIORITY_DAILY_TONE[item.priority];
+    const tone = PRIMARY_TONE[item.priority];
     return (
         <div
-            className="rounded-2xl p-4 sm:p-5"
-            style={{
-                background: "rgba(220,38,38,0.04)",
-                border: "1px solid rgba(220,38,38,0.16)",
-            }}
+            className="rounded-2xl p-4 sm:p-5 flex flex-col"
+            style={{ background: tone.bg, border: `1px solid ${tone.border}` }}
         >
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
                 <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded"
-                    style={{ background: tone.bg, color: tone.color, letterSpacing: "0.06em" }}>
+                    style={{ background: tone.chipBg, color: tone.chipColor, letterSpacing: "0.06em" }}>
                     <AlertTriangle size={10} weight="duotone" />
-                    Mais urgente
+                    {tone.label}
                 </span>
                 {item.contactName && (
-                    <span className="text-[11px] truncate" style={{ color: "#64748B" }}>
-                        · {item.contactName}
-                    </span>
+                    <span className="text-[11px] truncate" style={{ color: "#64748B" }}>· {item.contactName}</span>
                 )}
             </div>
             <p className="text-[15px] sm:text-[16px] font-semibold mb-1"
                 style={{ color: "#0B1220", letterSpacing: "-0.01em" }}>
                 {item.title}
             </p>
-            <p className="text-[12.5px] mb-3" style={{ color: "#475569", lineHeight: 1.5 }}>
+            <p className="text-[12.5px]" style={{ color: "#475569", lineHeight: 1.5 }}>
                 {item.description}
             </p>
-            <p className="text-[11px] italic mb-3" style={{ color: "#94A3B8" }}>
-                Por que: {item.reason}
+            <p className="text-[11px] mt-2" style={{ color: "#94A3B8" }}>
+                <span style={{ fontWeight: 600 }}>Por que:</span> {item.reason}
             </p>
-            <div className="flex items-center gap-2 flex-wrap">
-                {item.href && (
+            {item.href && (
+                <div className="mt-auto pt-4">
                     <button
                         type="button"
                         onClick={() => onNavigate(item.href!)}
                         className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg text-[12.5px] font-semibold text-white transition-all hover:brightness-110"
-                        style={{
-                            background: "linear-gradient(135deg, #2563EB, #4A8CE8)",
-                            boxShadow: "0 6px 14px -4px rgba(37,99,235,0.40)",
-                        }}
+                        style={{ background: "#2563EB", boxShadow: "0 6px 14px -6px rgba(37,99,235,0.45)" }}
                     >
                         {item.actionLabel}
                         <ArrowRight size={12} weight="bold" />
                     </button>
-                )}
-            </div>
+                </div>
+            )}
         </div>
     );
 }
 
-function SecondaryPriorityRow({
+function SecondaryPriorityCard({
     item,
     onNavigate,
 }: {
@@ -1198,33 +1191,26 @@ function SecondaryPriorityRow({
     const tone = PRIORITY_DAILY_TONE[item.priority];
     const clickable = !!item.href;
     return (
-        <li
-            className={`flex items-center gap-3 px-3.5 py-2.5 rounded-lg transition-colors ${
+        <div
+            className={`flex-1 min-h-[64px] rounded-xl p-3.5 flex flex-col justify-center transition-colors ${
                 clickable ? "cursor-pointer hover:bg-[#F8FAFC]" : ""
             }`}
-            style={{ background: "rgba(255,255,255,0.6)", border: "1px solid rgba(148,163,184,0.18)" }}
+            style={{ background: "#FFFFFF", border: "1px solid #E2E8F0" }}
             onClick={() => clickable && onNavigate(item.href!)}
         >
-            <span
-                className="h-1.5 w-1.5 rounded-full shrink-0"
-                style={{ background: tone.color }}
-            />
-            <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-medium truncate" style={{ color: "#0B1220" }}>
-                    {item.title}
-                </p>
-                <p className="text-[11px] truncate" style={{ color: "#64748B" }}>
-                    {item.reason}
-                </p>
+            <div className="flex items-center gap-2 mb-1">
+                <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: tone.color }} />
+                <p className="text-[12.5px] font-semibold truncate" style={{ color: "#0B1220" }}>{item.title}</p>
             </div>
+            <p className="text-[11px] truncate" style={{ color: "#64748B" }}>{item.reason}</p>
             {clickable && (
-                <span className="text-[11px] font-semibold shrink-0 inline-flex items-center gap-1"
+                <span className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold self-start"
                     style={{ color: "#2563EB" }}>
                     {item.actionLabel}
-                    <ArrowRight size={12} weight="bold" />
+                    <ArrowRight size={11} weight="bold" />
                 </span>
             )}
-        </li>
+        </div>
     );
 }
 
@@ -1241,6 +1227,14 @@ const Inicio = () => {
     const cc = useCommandCenterData();
 
     const metrics: CommandCenterMetrics | null = cc.metrics;
+
+    // Lacunas de contexto detectadas (dado já carregado, só leitura) — alimenta a
+    // linha-resumo da EVA. Max evita dupla contagem entre as duas fontes.
+    const gapsCount = useMemo(() => {
+        const fromHighlights = cc.evaHighlights.filter((h) => h.source === "knowledge_gap" || h.type === "missing_information").length;
+        const fromAttention = cc.attentionItems.filter((a) => a.type === "knowledge_gap").length;
+        return Math.max(fromHighlights, fromAttention);
+    }, [cc.evaHighlights, cc.attentionItems]);
 
     // F5C.6 — entrada do assistente da EVA (dados já carregados, read-only)
     const evaInput: CentralEvaInput = useMemo(
@@ -1374,6 +1368,7 @@ const Inicio = () => {
             {/* F5C.5/F5C.6 — Card EVA dominante + assistente funcional */}
             <EvaCommandCard
                 priorities={cc.dailyPriorities}
+                gapsCount={gapsCount}
                 loading={cc.loading}
                 onNavigate={navigate}
                 evaInput={evaInput}
