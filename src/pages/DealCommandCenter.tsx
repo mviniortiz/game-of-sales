@@ -983,6 +983,7 @@ export default function DealCommandCenter() {
 
                             {/* Focus / next action */}
                             <FocusCard
+                                key={nextAction.title}
                                 action={nextAction}
                                 onComplete={async (resultKey) => {
                                     const r = ACTION_RESULTS.find((x) => x.key === resultKey);
