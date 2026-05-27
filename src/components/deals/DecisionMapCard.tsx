@@ -8,10 +8,11 @@
 //   - EVA SUGERE a partir da conversa; o time aprova antes de adicionar.
 // ─────────────────────────────────────────────────────────────────────────────
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Users, Plus, MessageSquare, StickyNote } from "lucide-react";
+import { Users, Plus, MessageSquare, StickyNote, User, Building2, ExternalLink } from "lucide-react";
 import {
     Dialog,
     DialogContent,
@@ -137,6 +138,9 @@ const fmtDate = (ts: string) => {
     }
 };
 
+// Remove wildcards do ILIKE (nome vem do CRM, mas evita % / _ virarem coringa).
+const likeTerm = (s: string) => `%${s.trim().replace(/[%_]/g, "")}%`;
+
 // ── Nós do flowchart ──────────────────────────────────────────────────────────
 
 const DecisionNode = ({ p, root = false, onClick }: { p: DecisionPerson; root?: boolean; onClick: () => void }) => (
@@ -188,8 +192,9 @@ const DecisionFlow = ({ people, onSelect }: { people: DecisionPerson[]; onSelect
 
 // ── Card principal ────────────────────────────────────────────────────────────
 
-export function DecisionMapCard({ dealId, sourceData }: { dealId: string; sourceData: unknown }) {
+export function DecisionMapCard({ dealId, companyId, sourceData }: { dealId: string; companyId: string | null; sourceData: unknown }) {
     const qc = useQueryClient();
+    const navigate = useNavigate();
     const people = getDecisionMap(sourceData);
 
     const { data: items = [] } = useQuery<ContextItem[]>({
@@ -242,6 +247,26 @@ export function DecisionMapCard({ dealId, sourceData }: { dealId: string; source
     const [editIndex, setEditIndex] = useState<number | null>(null);
     const [form, setForm] = useState<DecisionPerson>({ nome: "" });
     const [detailIndex, setDetailIndex] = useState<number | null>(null);
+
+    const selected = detailIndex !== null ? people[detailIndex] : null;
+
+    // Onde mais essa pessoa aparece no CRM (contatos + outras negociações do
+    // mesmo tenant). Só dados internos, sempre filtrado por company_id.
+    const { data: xref } = useQuery({
+        queryKey: ["decision-person-xref", companyId, selected?.nome ?? ""],
+        enabled: !!companyId && !!selected?.nome,
+        queryFn: async () => {
+            const term = likeTerm(selected!.nome);
+            const [contactsRes, dealsRes] = await Promise.all([
+                supabase.from("channel_contacts").select("id, name, phone_e164").eq("company_id", companyId!).ilike("name", term).limit(4),
+                supabase.from("deals").select("id, title, customer_name").eq("company_id", companyId!).ilike("customer_name", term).neq("id", dealId).limit(5),
+            ]);
+            return {
+                contacts: (contactsRes.data as { id: string; name: string; phone_e164: string | null }[]) ?? [],
+                deals: (dealsRes.data as { id: string; title: string; customer_name: string | null }[]) ?? [],
+            };
+        },
+    });
 
     const openAdd = (preset?: Partial<DecisionPerson>) => {
         setEditIndex(null);
@@ -430,6 +455,12 @@ export function DecisionMapCard({ dealId, sourceData }: { dealId: string; source
                     {detailIndex !== null && people[detailIndex] && (() => {
                         const p = people[detailIndex];
                         const mentions = findMentions(p, items);
+                        const q = encodeURIComponent(p.nome.trim());
+                        const externalLinks = [
+                            { label: "LinkedIn", url: `https://www.linkedin.com/search/results/people/?keywords=${q}` },
+                            { label: "Google", url: `https://www.google.com/search?q=${q}` },
+                        ];
+                        const xrefCount = (xref?.contacts.length ?? 0) + (xref?.deals.length ?? 0);
                         return (
                             <>
                                 <DialogHeader>
@@ -488,8 +519,64 @@ export function DecisionMapCard({ dealId, sourceData }: { dealId: string; source
                                             </p>
                                         )}
                                     </div>
+
+                                    {/* Em outros lugares do CRM — contatos + outras negociações */}
+                                    {xrefCount > 0 && (
+                                        <div>
+                                            <p className="text-[11px] font-semibold text-[#0B1220] mb-1.5">Em outros lugares do CRM</p>
+                                            <ul className="space-y-1.5">
+                                                {xref!.contacts.map((c) => (
+                                                    <li key={"c-" + c.id} className="flex items-center gap-2 rounded-lg bg-slate-50 px-2.5 py-1.5">
+                                                        <User className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                                                        <div className="min-w-0">
+                                                            <p className="text-[11.5px] text-[#0B1220] leading-snug truncate">{c.name}</p>
+                                                            <p className="text-[10px] text-slate-400">{c.phone_e164 || "Contato no WhatsApp"}</p>
+                                                        </div>
+                                                    </li>
+                                                ))}
+                                                {xref!.deals.map((d) => (
+                                                    <li key={"d-" + d.id}>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => { setDetailIndex(null); navigate(`/deals/${d.id}`); }}
+                                                            className="flex w-full items-center gap-2 rounded-lg bg-slate-50 px-2.5 py-1.5 text-left hover:bg-slate-100 transition-colors"
+                                                        >
+                                                            <Building2 className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                                                            <div className="min-w-0 flex-1">
+                                                                <p className="text-[11.5px] text-[#0B1220] leading-snug truncate">{d.title}</p>
+                                                                {d.customer_name && <p className="text-[10px] text-slate-400 truncate">{d.customer_name}</p>}
+                                                            </div>
+                                                            <ExternalLink className="h-3 w-3 text-slate-300 shrink-0" />
+                                                        </button>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+
+                                    {/* Procurar externamente — atalho de busca, não coleta nem armazena */}
+                                    <div>
+                                        <p className="text-[11px] font-semibold text-[#0B1220] mb-1.5">Procurar externamente</p>
+                                        <div className="flex gap-2">
+                                            {externalLinks.map((l) => (
+                                                <a
+                                                    key={l.label}
+                                                    href={l.url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex-1 inline-flex items-center justify-center gap-1.5 h-8 rounded-lg border border-[#E5E7EB] text-[11.5px] font-medium text-[#0B1220] hover:border-[#1556C0]/40 hover:text-[#1556C0] transition-colors"
+                                                >
+                                                    <ExternalLink className="h-3.5 w-3.5" /> {l.label}
+                                                </a>
+                                            ))}
+                                        </div>
+                                        <p className="text-[10px] text-slate-400 mt-1.5 leading-snug">
+                                            Abre uma busca pelo nome em nova aba. A Vyzon não coleta nem armazena esses resultados.
+                                        </p>
+                                    </div>
+
                                     <p className="text-[10px] text-slate-400 leading-relaxed border-t border-[#F1F5F9] pt-2.5">
-                                        Baseado nas conversas e notas desta negociação. A Vyzon não busca dados externos.
+                                        Menções e registros vêm do seu próprio CRM (conversas, notas, contatos e negociações).
                                     </p>
                                 </div>
                                 <DialogFooter>

@@ -1624,7 +1624,7 @@ export default function DealCommandCenter() {
                                 </div>
 
                                 {/* C.2) Mapa de decisão — editável em qualquer deal; EVA sugere da conversa */}
-                                <DecisionMapCard dealId={id!} sourceData={(deal as any).source_data} />
+                                <DecisionMapCard dealId={id!} companyId={(deal as any).company_id ?? null} sourceData={(deal as any).source_data} />
 
                                 {/* D) Tags */}
                                 <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
