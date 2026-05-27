@@ -84,6 +84,7 @@ import { usePlan } from "@/hooks/usePlan";
 import { useDealTagsSingle } from "@/hooks/useDealsTags";
 import { getTagColorClass, isHexColor } from "@/lib/tags";
 import type { Tag } from "@/types/tags";
+import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import {
     Tooltip,
     TooltipContent,
@@ -1334,7 +1335,7 @@ export default function DealCommandCenter() {
                                                     disabled={!deal.customer_phone}
                                                     className="flex flex-col items-center justify-center gap-1 h-14 rounded-xl bg-white border border-[#E5E7EB] hover:border-green-500/40 hover:bg-green-500/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                                 >
-                                                    <MessageSquare className="h-4 w-4 text-green-400" />
+                                                    <WhatsAppIcon className="h-4 w-4 text-[#25D366]" />
                                                     <span className="text-[10px] font-medium text-muted-foreground">WhatsApp</span>
                                                 </button>
                                             </TooltipTrigger>
@@ -1395,7 +1396,9 @@ export default function DealCommandCenter() {
                                     </div>
                                     <div className="space-y-2.5">
                                         <SidebarRow label="Nome" value={deal.customer_name || "—"} />
-                                        <SidebarRow label="Telefone" value={deal.customer_phone ? formatPhone(deal.customer_phone) : "—"} />
+                                        <SidebarRow label="Telefone" value={deal.customer_phone
+                                            ? <span className="inline-flex items-center gap-1.5 justify-end">{formatPhone(deal.customer_phone)}<WhatsAppIcon className="h-3.5 w-3.5 text-[#25D366] shrink-0" /></span>
+                                            : "—"} />
                                         <SidebarRow label="E-mail" value={deal.customer_email
                                             ? <a href={`mailto:${deal.customer_email}`} className="text-[#1556C0] hover:underline">{deal.customer_email}</a>
                                             : "—"} />
@@ -1682,7 +1685,7 @@ function DealConversationContextBlock({
             <div className="bg-white rounded-2xl p-4 border border-[#E5E7EB] shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
                 <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                        <MessageSquare className="h-4 w-4 text-[#10B981]" />
+                        <WhatsAppIcon className="h-4 w-4 text-[#25D366]" />
                         <p className="text-[13px] font-semibold text-[#0B1220]">Contexto da conversa</p>
                     </div>
                     {openConversationHref && (
@@ -1700,7 +1703,7 @@ function DealConversationContextBlock({
                 {/* aba canal */}
                 <div className="mb-3 border-b border-[#F1F5F9]">
                     <span className="inline-flex items-center gap-1.5 pb-2 -mb-px text-[12px] font-medium text-[#0F8A63] border-b-2 border-[#10B981]">
-                        <span className="h-2 w-2 rounded-full bg-[#10B981]" /> WhatsApp
+                        <WhatsAppIcon className="h-3.5 w-3.5 text-[#25D366]" /> WhatsApp
                     </span>
                 </div>
 
