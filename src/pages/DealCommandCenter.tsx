@@ -88,6 +88,7 @@ import type { Tag } from "@/types/tags";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { stageLabelFor } from "@/lib/demoPipeline";
 import { DealDetailSkeleton } from "@/components/ui/skeletons";
+import { DecisionMapCard, getDecisionMap } from "@/components/deals/DecisionMapCard";
 import {
     Tooltip,
     TooltipContent,
@@ -540,86 +541,6 @@ const RealEstateInterestBlock = ({ sourceData }: { sourceData: unknown }) => {
                     <span className="text-[11.5px] text-foreground font-medium text-right">{r.value}</span>
                 </div>
             ))}
-        </div>
-    );
-};
-
-// ── Mapa de decisão (demo incorporadora) ───────────────────────────────────
-// Pessoas informadas pelo lead ou pelo corretor que influenciam a compra.
-// NÃO é rastreamento: dados manuais em source_data.mapa_decisao.
-interface DecisionPerson { nome: string; relacao?: string; papel?: string; origem?: string; }
-
-function getDecisionMap(sourceData: unknown): DecisionPerson[] {
-    if (!sourceData || typeof sourceData !== "object") return [];
-    const md = (sourceData as Record<string, unknown>).mapa_decisao;
-    return Array.isArray(md) ? (md as DecisionPerson[]) : [];
-}
-
-const DECISION_ROLE_CHIP: Record<string, string> = {
-    "Lead principal": "bg-[#1556C0]/10 text-[#1556C0]",
-    "Decisor financeiro": "bg-[#7C3AED]/10 text-[#7C3AED]",
-    "Influenciador": "bg-amber-100 text-amber-700",
-    "Apoia entrada": "bg-[#10B981]/10 text-[#0F8A63]",
-    "Apoio financeiro": "bg-[#10B981]/10 text-[#0F8A63]",
-};
-
-const DECISION_ROLE_AVATAR: Record<string, string> = {
-    "Lead principal": "bg-[#1556C0]",
-    "Decisor financeiro": "bg-[#7C3AED]",
-    "Influenciador": "bg-amber-500",
-    "Apoia entrada": "bg-[#10B981]",
-    "Apoio financeiro": "bg-[#10B981]",
-};
-
-const decisionInitials = (n: string) => {
-    const parts = (n || "").trim().split(/\s+/).filter(Boolean);
-    if (parts.length === 0) return "?";
-    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-};
-
-const DecisionNode = ({ p, root = false }: { p: DecisionPerson; root?: boolean }) => (
-    <div className="flex items-start gap-2.5">
-        <span className={`flex items-center justify-center rounded-full text-white font-semibold shrink-0 ${root ? "h-8 w-8 text-[11px]" : "h-7 w-7 text-[10px]"} ${(p.papel && DECISION_ROLE_AVATAR[p.papel]) || "bg-slate-400"}`}>
-            {decisionInitials(p.nome)}
-        </span>
-        <div className="min-w-0 pt-0.5">
-            <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-[12.5px] font-semibold text-[#0B1220]">{p.nome}</span>
-                {p.papel && (
-                    <span className={`inline-flex items-center px-1.5 py-px rounded text-[10px] font-semibold ${DECISION_ROLE_CHIP[p.papel] ?? "bg-slate-100 text-slate-600"}`}>
-                        {p.papel}
-                    </span>
-                )}
-            </div>
-            {(p.relacao || p.origem) && (
-                <p className="text-[10.5px] text-slate-500 leading-snug mt-0.5">{[p.relacao, p.origem].filter(Boolean).join(" · ")}</p>
-            )}
-        </div>
-    </div>
-);
-
-// Flowchart vertical: lead principal (raiz) -> influenciadores ramificados.
-const DecisionMapBlock = ({ people }: { people: DecisionPerson[] }) => {
-    if (people.length === 0) return null;
-    const root = people.find((p) => p.papel === "Lead principal") ?? people[0];
-    const branches = people.filter((p) => p !== root);
-    return (
-        <div>
-            <DecisionNode p={root} root />
-            {branches.length > 0 && (
-                <div className="relative ml-4 mt-1 pl-5 border-l-2 border-dashed border-[#E5E7EB] space-y-3 pt-2">
-                    {branches.map((p, i) => (
-                        <div key={i} className="relative">
-                            <span className="absolute -left-5 top-3.5 w-4 border-t-2 border-dashed border-[#E5E7EB]" aria-hidden />
-                            <DecisionNode p={p} />
-                        </div>
-                    ))}
-                </div>
-            )}
-            <p className="text-[10.5px] text-slate-400 pt-3 mt-3 border-t border-[#F1F5F9] leading-relaxed">
-                Registre apenas pessoas informadas pelo lead ou pelo corretor durante a negociação.
-            </p>
         </div>
     );
 };
@@ -1702,17 +1623,8 @@ export default function DealCommandCenter() {
                                     )}
                                 </div>
 
-                                {/* C.2) Mapa de decisão — só quando há pessoas registradas (demo incorporadora) */}
-                                {getDecisionMap((deal as any).source_data).length > 0 && (
-                                    <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-                                        <div className="flex items-center gap-2 mb-0.5">
-                                            <Users className="h-4 w-4 text-slate-400" />
-                                            <p className="text-[13px] font-semibold text-[#0B1220]">Mapa de decisão</p>
-                                        </div>
-                                        <p className="text-[11px] text-slate-500 mb-3">Pessoas mencionadas ou envolvidas na compra.</p>
-                                        <DecisionMapBlock people={getDecisionMap((deal as any).source_data)} />
-                                    </div>
-                                )}
+                                {/* C.2) Mapa de decisão — editável em qualquer deal; EVA sugere da conversa */}
+                                <DecisionMapCard dealId={id!} sourceData={(deal as any).source_data} />
 
                                 {/* D) Tags */}
                                 <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
