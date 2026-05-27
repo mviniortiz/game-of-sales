@@ -102,12 +102,24 @@ const PIPELINE_STAGES = [
     { id: "closed_won", label: "Ganho", shortLabel: "✓", color: "bg-emerald-500", ring: "ring-emerald-400" },
 ];
 
-const EVENT_ICONS: Record<string, { icon: typeof StickyNote; color: string; bg: string }> = {
-    note: { icon: StickyNote, color: "text-blue-400", bg: "bg-blue-500/15" },
-    call: { icon: PhoneCall, color: "text-emerald-400", bg: "bg-emerald-500/15" },
-    stage_change: { icon: Rocket, color: "text-violet-400", bg: "bg-violet-500/15" },
-    email: { icon: Mail, color: "text-amber-400", bg: "bg-amber-500/15" },
-    task_completed: { icon: CheckCircle2, color: "text-emerald-400", bg: "bg-emerald-500/15" },
+const EVENT_ICONS: Record<string, { icon: typeof StickyNote; color: string; bg: string; title: string }> = {
+    note:           { icon: StickyNote,    color: "text-[#7C3AED]", bg: "bg-[#7C3AED]/10", title: "Nota adicionada" },
+    call:           { icon: PhoneCall,     color: "text-[#10B981]", bg: "bg-[#10B981]/10", title: "Ligação realizada" },
+    message:        { icon: MessageSquare, color: "text-[#10B981]", bg: "bg-[#10B981]/10", title: "Mensagem no WhatsApp" },
+    stage_change:   { icon: Rocket,        color: "text-[#1556C0]", bg: "bg-[#1556C0]/10", title: "Mudança de etapa" },
+    email:          { icon: Mail,          color: "text-[#1556C0]", bg: "bg-[#1556C0]/10", title: "E-mail enviado" },
+    task_completed: { icon: CheckCircle2,  color: "text-[#10B981]", bg: "bg-[#10B981]/10", title: "Ação concluída" },
+};
+
+// Deriva o tipo de uma nota (deal_notes é só texto) pelo conteúdo, pra a
+// timeline ganhar ícones/cores por tipo como no design.
+const inferNoteType = (content: string): string => {
+    const c = (content || "").toLowerCase();
+    if (c.startsWith("ação concluída") || c.startsWith("acao concluida")) return "task_completed";
+    if (c.includes("ligação") || c.includes("ligacao") || c.includes("liguei") || c.includes("chamada")) return "call";
+    if (c.includes("whatsapp") || c.includes("mensagem")) return "message";
+    if (c.includes("e-mail") || c.includes("email")) return "email";
+    return "note";
 };
 
 // â"€â"€â"€ Helpers â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
@@ -231,22 +243,31 @@ const StageChips = ({ currentStage, onStageChange }: { currentStage: string; onS
 const TimelineEntry = ({ event, isLast }: { event: any; isLast: boolean }) => {
     const cfg = EVENT_ICONS[event.type] || EVENT_ICONS.note;
     const Icon = cfg.icon;
+    const isMessage = event.type === "message";
+    const title = event.title || cfg.title;
     return (
         <div className="flex gap-3 group">
             <div className="flex flex-col items-center pt-0.5">
-                <div className={`w-6 h-6 rounded-full ${cfg.bg} flex items-center justify-center flex-shrink-0`}>
-                    <Icon className={`h-3 w-3 ${cfg.color}`} />
+                <div className={`w-7 h-7 rounded-full ${cfg.bg} flex items-center justify-center flex-shrink-0`}>
+                    {isMessage
+                        ? <WhatsAppIcon className={`h-3.5 w-3.5 ${cfg.color}`} />
+                        : <Icon className={`h-3.5 w-3.5 ${cfg.color}`} />}
                 </div>
-                {!isLast && <div className="w-px flex-1 bg-border mt-1.5 min-h-[20px]" />}
+                {!isLast && <div className="w-px flex-1 bg-[#E5E7EB] mt-1.5 min-h-[20px]" />}
             </div>
             <div className={`flex-1 min-w-0 ${isLast ? "pb-0" : "pb-5"}`}>
-                <div className="flex items-center gap-2 text-[11px] mb-1">
-                    <span className="font-medium text-foreground">{event.user_name || "Você"}</span>
-                    <span className="text-muted-foreground">
-                        {safeFormatDate(event.created_at, "dd MMM 'às' HH:mm")}
-                    </span>
+                <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                        <p className="text-[13px] font-semibold text-[#0B1220] leading-tight">{title}</p>
+                        {event.content && (
+                            <p className="text-[12.5px] text-slate-500 leading-relaxed break-words mt-0.5">{event.content}</p>
+                        )}
+                    </div>
+                    <div className="text-right shrink-0">
+                        <p className="text-[11px] text-slate-500 tabular-nums whitespace-nowrap">{safeFormatDate(event.created_at, "dd MMM, HH:mm")}</p>
+                        {event.user_name && <p className="text-[11px] text-slate-400 whitespace-nowrap">{event.user_name}</p>}
+                    </div>
                 </div>
-                <p className="text-sm text-foreground leading-relaxed break-words">{event.content || event.title}</p>
             </div>
         </div>
     );
@@ -593,10 +614,31 @@ export default function DealCommandCenter() {
                 .eq("deal_id", id)
                 .order("created_at", { ascending: false });
             if (error) throw error;
-            return (notes || []).map((n: any) => ({
-                id: n.id, type: "note", title: "Nota adicionada",
-                content: n.content, created_at: n.created_at,
-            }));
+            const noteEvents = (notes || []).map((n: any) => {
+                const type = inferNoteType(n.content || "");
+                return { id: n.id, type, title: EVENT_ICONS[type]?.title ?? "Nota adicionada", content: n.content, created_at: n.created_at };
+            });
+            // Agrega as últimas mensagens da conversa vinculada (WhatsApp), pra
+            // a timeline ter atividades de tipos diferentes (ícones por cor).
+            let msgEvents: any[] = [];
+            try {
+                const { data: conv } = await supabase
+                    .from("channel_conversations").select("id")
+                    .eq("deal_id", id).order("last_message_at", { ascending: false }).limit(1).maybeSingle();
+                if (conv?.id) {
+                    const { data: msgs } = await supabase
+                        .from("channel_messages").select("id, direction, body, media_ref, message_timestamp")
+                        .eq("conversation_id", conv.id).order("message_timestamp", { ascending: false }).limit(6);
+                    msgEvents = (msgs || []).map((m: any) => ({
+                        id: "msg-" + m.id,
+                        type: "message",
+                        title: m.direction === "outbound" ? "Resposta enviada no WhatsApp" : "Mensagem recebida no WhatsApp",
+                        content: m.body || (m.media_ref?.caption) || "[mídia]",
+                        created_at: m.message_timestamp,
+                    }));
+                }
+            } catch { /* timeline funciona só com notas se a conversa falhar */ }
+            return [...noteEvents, ...msgEvents].sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
         },
         enabled: !!id,
     });
