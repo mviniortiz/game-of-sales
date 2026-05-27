@@ -65,6 +65,7 @@ import {
     ExternalLink,
     Building2,
     Tag as TagIcon,
+    Users,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -542,6 +543,48 @@ const RealEstateInterestBlock = ({ sourceData }: { sourceData: unknown }) => {
         </div>
     );
 };
+
+// ── Mapa de decisão (demo incorporadora) ───────────────────────────────────
+// Pessoas informadas pelo lead ou pelo corretor que influenciam a compra.
+// NÃO é rastreamento: dados manuais em source_data.mapa_decisao.
+interface DecisionPerson { nome: string; relacao?: string; papel?: string; origem?: string; }
+
+function getDecisionMap(sourceData: unknown): DecisionPerson[] {
+    if (!sourceData || typeof sourceData !== "object") return [];
+    const md = (sourceData as Record<string, unknown>).mapa_decisao;
+    return Array.isArray(md) ? (md as DecisionPerson[]) : [];
+}
+
+const DECISION_ROLE_CHIP: Record<string, string> = {
+    "Lead principal": "bg-[#1556C0]/10 text-[#1556C0]",
+    "Decisor financeiro": "bg-[#7C3AED]/10 text-[#7C3AED]",
+    "Influenciador": "bg-amber-100 text-amber-700",
+    "Apoia entrada": "bg-[#10B981]/10 text-[#0F8A63]",
+    "Apoio financeiro": "bg-[#10B981]/10 text-[#0F8A63]",
+};
+
+const DecisionMapBlock = ({ people }: { people: DecisionPerson[] }) => (
+    <div className="space-y-2.5">
+        {people.map((p, i) => (
+            <div key={i} className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                    <p className="text-[12.5px] font-medium text-[#0B1220] truncate">{p.nome}</p>
+                    {(p.relacao || p.origem) && (
+                        <p className="text-[11px] text-slate-500">{[p.relacao, p.origem].filter(Boolean).join(" · ")}</p>
+                    )}
+                </div>
+                {p.papel && (
+                    <span className={`shrink-0 inline-flex items-center px-2 py-0.5 rounded-md text-[10.5px] font-semibold ${DECISION_ROLE_CHIP[p.papel] ?? "bg-slate-100 text-slate-600"}`}>
+                        {p.papel}
+                    </span>
+                )}
+            </div>
+        ))}
+        <p className="text-[10.5px] text-slate-400 pt-2 mt-1 border-t border-[#F1F5F9] leading-relaxed">
+            Registre apenas pessoas informadas pelo lead ou pelo corretor durante a negociação.
+        </p>
+    </div>
+);
 
 export default function DealCommandCenter() {
     const { id } = useParams<{ id: string }>();
@@ -1490,6 +1533,9 @@ export default function DealCommandCenter() {
                                 dealId={deal.id}
                                 companyId={deal.company_id}
                                 probability={deal.probability ?? null}
+                                decisionHint={getDecisionMap((deal as any).source_data).some((p) => p.papel === "Decisor financeiro" && (p.origem || "").toLowerCase().includes("mencionad"))
+                                    ? "A EVA identificou possível decisor financeiro mencionado na conversa. Revise antes de adicionar ao mapa de decisão."
+                                    : null}
                                 onOpenConversation={(href) => navigate(href)}
                             />
                         </div>
@@ -1617,6 +1663,18 @@ export default function DealCommandCenter() {
                                         </div>
                                     )}
                                 </div>
+
+                                {/* C.2) Mapa de decisão — só quando há pessoas registradas (demo incorporadora) */}
+                                {getDecisionMap((deal as any).source_data).length > 0 && (
+                                    <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+                                        <div className="flex items-center gap-2 mb-0.5">
+                                            <Users className="h-4 w-4 text-slate-400" />
+                                            <p className="text-[13px] font-semibold text-[#0B1220]">Mapa de decisão</p>
+                                        </div>
+                                        <p className="text-[11px] text-slate-500 mb-3">Pessoas mencionadas ou envolvidas na compra.</p>
+                                        <DecisionMapBlock people={getDecisionMap((deal as any).source_data)} />
+                                    </div>
+                                )}
 
                                 {/* D) Tags */}
                                 <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
@@ -1804,11 +1862,13 @@ function DealConversationContextBlock({
     dealId,
     companyId,
     probability,
+    decisionHint,
     onOpenConversation,
 }: {
     dealId: string;
     companyId: string | null;
     probability: number | null;
+    decisionHint?: string | null;
     onOpenConversation: (href: string) => void;
 }) {
     const ctx = useDealContextData(dealId, companyId);
@@ -2011,6 +2071,12 @@ function DealConversationContextBlock({
                             </div>
                         )}
                     </>
+                )}
+                {decisionHint && (
+                    <div className="mt-3 pt-3 border-t border-[#E9D5FF] flex items-start gap-1.5">
+                        <Users className="h-3.5 w-3.5 text-[#7C3AED] mt-px shrink-0" />
+                        <p className="text-[11.5px] text-[#0B1220] leading-snug">{decisionHint}</p>
+                    </div>
                 )}
                 <p className="text-[10px] text-[#7C3AED]/70 mt-3 pt-3 border-t border-[#E9D5FF] leading-relaxed">
                     A EVA é assistida: ela sugere e prioriza. Seu time decide e aprova.
