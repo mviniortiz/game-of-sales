@@ -563,28 +563,66 @@ const DECISION_ROLE_CHIP: Record<string, string> = {
     "Apoio financeiro": "bg-[#10B981]/10 text-[#0F8A63]",
 };
 
-const DecisionMapBlock = ({ people }: { people: DecisionPerson[] }) => (
-    <div className="space-y-2.5">
-        {people.map((p, i) => (
-            <div key={i} className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                    <p className="text-[12.5px] font-medium text-[#0B1220] truncate">{p.nome}</p>
-                    {(p.relacao || p.origem) && (
-                        <p className="text-[11px] text-slate-500">{[p.relacao, p.origem].filter(Boolean).join(" · ")}</p>
-                    )}
-                </div>
+const DECISION_ROLE_AVATAR: Record<string, string> = {
+    "Lead principal": "bg-[#1556C0]",
+    "Decisor financeiro": "bg-[#7C3AED]",
+    "Influenciador": "bg-amber-500",
+    "Apoia entrada": "bg-[#10B981]",
+    "Apoio financeiro": "bg-[#10B981]",
+};
+
+const decisionInitials = (n: string) => {
+    const parts = (n || "").trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return "?";
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+};
+
+const DecisionNode = ({ p, root = false }: { p: DecisionPerson; root?: boolean }) => (
+    <div className="flex items-start gap-2.5">
+        <span className={`flex items-center justify-center rounded-full text-white font-semibold shrink-0 ${root ? "h-8 w-8 text-[11px]" : "h-7 w-7 text-[10px]"} ${(p.papel && DECISION_ROLE_AVATAR[p.papel]) || "bg-slate-400"}`}>
+            {decisionInitials(p.nome)}
+        </span>
+        <div className="min-w-0 pt-0.5">
+            <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[12.5px] font-semibold text-[#0B1220]">{p.nome}</span>
                 {p.papel && (
-                    <span className={`shrink-0 inline-flex items-center px-2 py-0.5 rounded-md text-[10.5px] font-semibold ${DECISION_ROLE_CHIP[p.papel] ?? "bg-slate-100 text-slate-600"}`}>
+                    <span className={`inline-flex items-center px-1.5 py-px rounded text-[10px] font-semibold ${DECISION_ROLE_CHIP[p.papel] ?? "bg-slate-100 text-slate-600"}`}>
                         {p.papel}
                     </span>
                 )}
             </div>
-        ))}
-        <p className="text-[10.5px] text-slate-400 pt-2 mt-1 border-t border-[#F1F5F9] leading-relaxed">
-            Registre apenas pessoas informadas pelo lead ou pelo corretor durante a negociação.
-        </p>
+            {(p.relacao || p.origem) && (
+                <p className="text-[10.5px] text-slate-500 leading-snug mt-0.5">{[p.relacao, p.origem].filter(Boolean).join(" · ")}</p>
+            )}
+        </div>
     </div>
 );
+
+// Flowchart vertical: lead principal (raiz) -> influenciadores ramificados.
+const DecisionMapBlock = ({ people }: { people: DecisionPerson[] }) => {
+    if (people.length === 0) return null;
+    const root = people.find((p) => p.papel === "Lead principal") ?? people[0];
+    const branches = people.filter((p) => p !== root);
+    return (
+        <div>
+            <DecisionNode p={root} root />
+            {branches.length > 0 && (
+                <div className="relative ml-4 mt-1 pl-5 border-l-2 border-dashed border-[#E5E7EB] space-y-3 pt-2">
+                    {branches.map((p, i) => (
+                        <div key={i} className="relative">
+                            <span className="absolute -left-5 top-3.5 w-4 border-t-2 border-dashed border-[#E5E7EB]" aria-hidden />
+                            <DecisionNode p={p} />
+                        </div>
+                    ))}
+                </div>
+            )}
+            <p className="text-[10.5px] text-slate-400 pt-3 mt-3 border-t border-[#F1F5F9] leading-relaxed">
+                Registre apenas pessoas informadas pelo lead ou pelo corretor durante a negociação.
+            </p>
+        </div>
+    );
+};
 
 export default function DealCommandCenter() {
     const { id } = useParams<{ id: string }>();
