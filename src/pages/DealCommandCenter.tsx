@@ -118,25 +118,28 @@ const getHealthStatus = (days: number) => {
     return { icon: Shield, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20", hex: "#10B981", label: "Saudável", subtitle: "Engajamento ativo" };
 };
 
-// DEAL.UI.1 — gauge circular (anel) de probabilidade. SVG inline, sem dependência.
+// DEAL.UI.1 — gauge tipo velocímetro (arco semicircular 180°). SVG inline.
 const ProbabilityGauge = ({ value, hex }: { value: number; hex: string }) => {
     const v = Math.max(0, Math.min(100, Math.round(value)));
-    const r = 15.5;
-    const circ = 2 * Math.PI * r;
-    const offset = circ * (1 - v / 100);
+    const r = 30;
+    const cx = 40;
+    const cy = 38;
+    const arcLen = Math.PI * r; // semicírculo
+    const offset = arcLen * (1 - v / 100);
+    const d = `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`;
     return (
-        <div className="relative h-12 w-12 flex items-center justify-center shrink-0">
-            <svg viewBox="0 0 40 40" className="h-12 w-12 -rotate-90">
-                <circle cx="20" cy="20" r={r} fill="none" stroke="#E5E7EB" strokeWidth="3.5" />
-                <motion.circle
-                    cx="20" cy="20" r={r} fill="none" stroke={hex} strokeWidth="3.5" strokeLinecap="round"
-                    strokeDasharray={circ}
-                    initial={{ strokeDashoffset: circ }}
+        <div className="relative w-[80px] h-[46px] flex items-end justify-center shrink-0">
+            <svg viewBox="0 0 80 44" className="w-[80px] h-[44px] absolute top-0 left-0">
+                <path d={d} fill="none" stroke="#E5E7EB" strokeWidth="6" strokeLinecap="round" />
+                <motion.path
+                    d={d} fill="none" stroke={hex} strokeWidth="6" strokeLinecap="round"
+                    strokeDasharray={arcLen}
+                    initial={{ strokeDashoffset: arcLen }}
                     animate={{ strokeDashoffset: offset }}
                     transition={{ duration: 0.8, ease: "easeOut" }}
                 />
             </svg>
-            <span className="absolute text-[11px] font-bold text-[#0B1220] tabular-nums leading-none">{v}%</span>
+            <span className="relative z-10 text-[13px] font-bold text-[#0B1220] tabular-nums leading-none">{v}%</span>
         </div>
     );
 };
@@ -722,9 +725,12 @@ export default function DealCommandCenter() {
     const health = getHealthStatus(daysSince);
     const HealthIcon = health.icon;
 
+    const realEstateNextAction = getRealEstateInterest((deal as any)?.source_data)?.proxima_acao;
     const activeTask = {
         id: "1",
-        title: "Ligar para o decisor sobre a proposta",
+        title: typeof realEstateNextAction === "string" && realEstateNextAction.trim()
+            ? realEstateNextAction
+            : "Definir o próximo passo com o lead",
         due_date: new Date(Date.now() + 86_400_000).toISOString(),
     };
 
@@ -884,9 +890,9 @@ export default function DealCommandCenter() {
                             <FocusCard
                                 task={activeTask}
                                 onComplete={() => {
+                                    addNote.mutate(`Ação concluída: ${activeTask.title}`);
                                     setShowConfetti(true);
                                     setTimeout(() => setShowConfetti(false), 2000);
-                                    toast.success("Ação concluída");
                                 }}
                             />
 
