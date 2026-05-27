@@ -39,7 +39,7 @@ import {
     Shield,
     ShieldAlert,
     ShieldOff,
-    Sparkles,
+    Lightbulb,
     Send,
     Paperclip,
     FileText,
@@ -710,7 +710,7 @@ export default function DealCommandCenter() {
 
     return (
         <>
-            <div className="min-h-[calc(100vh-64px)] bg-background">
+            <div className="min-h-[calc(100vh-64px)] bg-[#F8FAFC]">
                 {showConfetti && (
                     <Suspense fallback={null}>
                         <Confetti show={showConfetti} />
@@ -738,7 +738,7 @@ export default function DealCommandCenter() {
                         <div className="flex items-start justify-between gap-4 py-3">
                             <div className="flex items-center gap-3 min-w-0 flex-1">
                                 <Avatar className="h-10 w-10 ring-1 ring-border flex-shrink-0">
-                                    <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-cyan-500 text-white font-bold text-xs">
+                                    <AvatarFallback className="bg-gradient-to-br from-[#1556C0] to-[#2E78E0] text-white font-bold text-xs">
                                         {deal.customer_name?.substring(0, 2).toUpperCase() || "?"}
                                     </AvatarFallback>
                                 </Avatar>
@@ -1067,7 +1067,7 @@ export default function DealCommandCenter() {
                                                                         >
                                                                             {generateCallInsights.isPending && (generateCallInsights.variables === call.id)
                                                                                 ? <Loader2 className="h-4 w-4 animate-spin" />
-                                                                                : <Sparkles className="h-4 w-4" />}
+                                                                                : <Lightbulb className="h-4 w-4" />}
                                                                             <span className="ml-1">Gerar insights</span>
                                                                         </Button>
                                                                     </div>
@@ -1099,7 +1099,7 @@ export default function DealCommandCenter() {
                                                                 {call.insight && (
                                                                     <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 space-y-3">
                                                                         <div className="flex items-center gap-2 flex-wrap">
-                                                                            <Sparkles className="h-4 w-4 text-emerald-400" />
+                                                                            <Lightbulb className="h-4 w-4 text-emerald-400" />
                                                                             <p className="text-sm font-semibold text-emerald-300">Insights da ligação</p>
                                                                             <Badge variant="outline" className="border-emerald-500/20 text-emerald-300">
                                                                                 {call.insight.model || "mvp"}
@@ -1288,7 +1288,7 @@ export default function DealCommandCenter() {
                                                 <button
                                                     onClick={() => setShowCallModal(true)}
                                                     disabled={!canUseCalls}
-                                                    className="flex flex-col items-center justify-center gap-1 h-14 rounded-xl bg-card border border-border hover:border-emerald-500/40 hover:bg-emerald-500/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                                    className="flex flex-col items-center justify-center gap-1 h-14 rounded-xl bg-white border border-[#E5E7EB] hover:border-emerald-500/40 hover:bg-emerald-500/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                                 >
                                                     <Phone className="h-4 w-4 text-emerald-400" />
                                                     <span className="text-[10px] font-medium text-muted-foreground">Ligar</span>
@@ -1303,7 +1303,7 @@ export default function DealCommandCenter() {
                                                 <button
                                                     onClick={() => deal.customer_phone && window.open(`https://wa.me/${deal.customer_phone.replace(/\D/g, "")}`, "_blank")}
                                                     disabled={!deal.customer_phone}
-                                                    className="flex flex-col items-center justify-center gap-1 h-14 rounded-xl bg-card border border-border hover:border-green-500/40 hover:bg-green-500/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                                    className="flex flex-col items-center justify-center gap-1 h-14 rounded-xl bg-white border border-[#E5E7EB] hover:border-green-500/40 hover:bg-green-500/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                                 >
                                                     <MessageSquare className="h-4 w-4 text-green-400" />
                                                     <span className="text-[10px] font-medium text-muted-foreground">WhatsApp</span>
@@ -1316,7 +1316,7 @@ export default function DealCommandCenter() {
                                                 <button
                                                     onClick={() => deal.customer_email && window.open(`mailto:${deal.customer_email}`, "_blank")}
                                                     disabled={!deal.customer_email}
-                                                    className="flex flex-col items-center justify-center gap-1 h-14 rounded-xl bg-card border border-border hover:border-blue-500/40 hover:bg-blue-500/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                                    className="flex flex-col items-center justify-center gap-1 h-14 rounded-xl bg-white border border-[#E5E7EB] hover:border-blue-500/40 hover:bg-blue-500/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                                 >
                                                     <Mail className="h-4 w-4 text-blue-400" />
                                                     <span className="text-[10px] font-medium text-muted-foreground">Email</span>
@@ -1328,7 +1328,7 @@ export default function DealCommandCenter() {
                                             <TooltipTrigger asChild>
                                                 <button
                                                     onClick={() => setShowTaskModal(true)}
-                                                    className="flex flex-col items-center justify-center gap-1 h-14 rounded-xl bg-card border border-border hover:border-violet-500/40 hover:bg-violet-500/5 transition-colors"
+                                                    className="flex flex-col items-center justify-center gap-1 h-14 rounded-xl bg-white border border-[#E5E7EB] hover:border-violet-500/40 hover:bg-violet-500/5 transition-colors"
                                                 >
                                                     <Plus className="h-4 w-4 text-violet-400" />
                                                     <span className="text-[10px] font-medium text-muted-foreground">Tarefa</span>
@@ -1349,7 +1349,7 @@ export default function DealCommandCenter() {
                                 </div>
 
                                 {/* Properties panel */}
-                                <div className="bg-card/50 rounded-2xl border border-border px-4">
+                                <div className="bg-white rounded-2xl border border-[#E5E7EB] px-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
 
                                     <PropertiesSection title="Contato">
                                         <PropertyRow label="Nome" icon={User}>
@@ -1600,10 +1600,10 @@ function DealConversationContextBlock({
     // Loading inicial — skeleton compacto
     if (ctx.loading) {
         return (
-            <div className="bg-card/40 rounded-2xl p-4 border border-border space-y-2">
-                <div className="h-3 w-32 rounded bg-muted/40" />
-                <div className="h-4 w-full rounded bg-muted/30" />
-                <div className="h-4 w-3/4 rounded bg-muted/30" />
+            <div className="bg-white rounded-2xl p-4 border border-[#E5E7EB] shadow-[0_1px_2px_rgba(15,23,42,0.04)] space-y-2">
+                <div className="h-3 w-32 rounded bg-slate-200/70" />
+                <div className="h-4 w-full rounded bg-slate-100" />
+                <div className="h-4 w-3/4 rounded bg-slate-100" />
             </div>
         );
     }
@@ -1611,11 +1611,11 @@ function DealConversationContextBlock({
     // Sem conversa vinculada → empty state mas ainda exibe estrutura
     if (!ctx.conversation) {
         return (
-            <div className="bg-card/40 rounded-2xl p-4 border border-border">
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-2">
+            <div className="bg-white rounded-2xl p-4 border border-[#E5E7EB] shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-2">
                     Contexto da conversa
                 </p>
-                <p className="text-sm text-muted-foreground leading-relaxed">
+                <p className="text-sm text-slate-500 leading-relaxed">
                     Nenhuma conversa vinculada a esta oportunidade.
                 </p>
             </div>
@@ -1642,16 +1642,22 @@ function DealConversationContextBlock({
     return (
         <div className="space-y-4">
             {/* ── Contexto da conversa ─────────────────────────────────── */}
-            <div className="bg-card/40 rounded-2xl p-4 border border-border">
+            <div className="bg-white rounded-2xl p-4 border border-[#E5E7EB] shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
                 <div className="flex items-center justify-between mb-3">
-                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
-                        Contexto da conversa
-                    </p>
+                    <div className="flex items-center gap-2">
+                        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
+                            Contexto da conversa
+                        </p>
+                        <span className="inline-flex items-center gap-1 h-5 px-1.5 rounded text-[10px] font-semibold bg-[#10B981]/10 text-[#0F8A63] border border-[#10B981]/20">
+                            <span className="h-1.5 w-1.5 rounded-full bg-[#10B981]" />
+                            WhatsApp
+                        </span>
+                    </div>
                     {openConversationHref && (
                         <button
                             type="button"
                             onClick={() => onOpenConversation(openConversationHref)}
-                            className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[11px] font-semibold transition-colors bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-400 border border-emerald-500/20"
+                            className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[11px] font-semibold transition-colors bg-[#1556C0]/10 hover:bg-[#1556C0]/15 text-[#1556C0] border border-[#1556C0]/20"
                         >
                             <MessageSquare className="h-3 w-3" />
                             Abrir conversa
@@ -1706,16 +1712,16 @@ function DealConversationContextBlock({
             </div>
 
             {/* ── Leitura da EVA ──────────────────────────────────────── */}
-            <div className="bg-card/40 rounded-2xl p-4 border border-border">
+            <div className="bg-[#FAF5FF] rounded-2xl p-4 border border-[#E9D5FF] shadow-[0_1px_2px_rgba(124,58,237,0.05)]">
                 <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                        <Sparkles className="h-3.5 w-3.5 text-violet-400" />
-                        <p className="text-[10px] font-semibold text-violet-400/90 uppercase tracking-widest">
+                        <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#7C3AED] text-white text-[8px] font-bold leading-none">E</span>
+                        <p className="text-[10px] font-semibold text-[#7C3AED] uppercase tracking-widest">
                             Leitura da EVA
                         </p>
                     </div>
                     {hasAnalysis && (
-                        <span className="text-[10px] text-muted-foreground">
+                        <span className="text-[10px] text-slate-400">
                             {isStaleByMessages ? "Pode estar desatualizada" : `Análise salva ${analyzedAtLabel}`}
                         </span>
                     )}
@@ -1801,6 +1807,9 @@ function DealConversationContextBlock({
                         )}
                     </div>
                 )}
+                <p className="text-[10px] text-[#7C3AED]/70 mt-3 pt-3 border-t border-[#E9D5FF] leading-relaxed">
+                    A EVA é assistida: ela sugere e prioriza. Seu time decide e aprova.
+                </p>
             </div>
         </div>
     );
