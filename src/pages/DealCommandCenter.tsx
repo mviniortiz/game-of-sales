@@ -271,15 +271,33 @@ type NextAction = {
     canWhatsApp?: boolean;
 };
 
-/** Focus card — próxima ação recomendada pela EVA, executada/concluída pelo time. */
+// Ao concluir uma ação, o time registra o RESULTADO; cada resultado mapeia o
+// próximo passo sugerido (regra determinística, sem custo de IA).
+const ACTION_RESULTS: ReadonlyArray<{ key: string; label: string; next: string }> = [
+    { key: "pediu_proposta", label: "Pediu proposta",            next: "Enviar a proposta" },
+    { key: "interessado",    label: "Demonstrou interesse",       next: "Enviar proposta ou agendar o próximo passo" },
+    { key: "pediu_retorno",  label: "Pediu pra retornar depois",  next: "Retornar no horário combinado" },
+    { key: "sem_resposta",   label: "Sem resposta / não atendeu", next: "Fazer follow-up" },
+    { key: "objecao",        label: "Levantou objeção",           next: "Responder à objeção levantada" },
+    { key: "avancou",        label: "Avançou (agendou/fechou)",   next: "Confirmar os próximos passos" },
+    { key: "sem_fit",        label: "Sem fit agora",              next: "Nutrir ou arquivar o lead" },
+];
+
+/** Focus card — próxima ação recomendada pela EVA; o time executa e, ao
+    concluir, registra o RESULTADO, que define o próximo passo sugerido. */
 const FocusCard = ({ action, onComplete, onExecute }: {
     action: NextAction;
-    onComplete: () => void;
+    onComplete: (resultKey: string) => void;
     onExecute?: () => void;
 }) => {
+    const [picking, setPicking] = useState(false);
     const [done, setDone] = useState(false);
-    const handle = () => { setDone(true); setTimeout(onComplete, 600); };
     const isEva = action.source === "eva";
+    const pick = (key: string) => {
+        setDone(true);
+        setPicking(false);
+        setTimeout(() => onComplete(key), 400);
+    };
     const dueChip = (() => {
         if (!action.dueDate) return null;
         const due = new Date(action.dueDate);
@@ -293,50 +311,75 @@ const FocusCard = ({ action, onComplete, onExecute }: {
     })();
 
     return (
-        <div className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl border shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-colors ${done ? "bg-[#10B981]/5 border-[#10B981]/30" : "bg-white border-[#E5E7EB]"}`}>
-            <div className={`flex h-10 w-10 items-center justify-center rounded-xl flex-shrink-0 ${isEva ? "bg-[#7C3AED]/10" : "bg-[#1556C0]/10"}`}>
-                {isEva
-                    ? <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#7C3AED] text-white text-[9px] font-bold leading-none">E</span>
-                    : <Calendar className="h-5 w-5 text-[#1556C0]" />}
-            </div>
-            <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-0.5">
-                    <p className="text-[11px] font-semibold text-slate-500">Próxima ação</p>
-                    <span className={`inline-flex items-center px-1.5 py-px rounded text-[10px] font-semibold ${isEva ? "bg-[#7C3AED]/10 text-[#7C3AED]" : "bg-slate-100 text-slate-500"}`}>
-                        {isEva ? "Sugerida pela EVA" : "Tarefa do time"}
-                    </span>
+        <div className={`rounded-2xl border shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-colors ${done ? "bg-[#10B981]/5 border-[#10B981]/30" : "bg-white border-[#E5E7EB]"}`}>
+            <div className="flex items-center gap-3 px-4 py-3.5">
+                <div className={`flex h-10 w-10 items-center justify-center rounded-xl flex-shrink-0 ${isEva ? "bg-[#7C3AED]/10" : "bg-[#1556C0]/10"}`}>
+                    {isEva
+                        ? <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#7C3AED] text-white text-[9px] font-bold leading-none">E</span>
+                        : <Calendar className="h-5 w-5 text-[#1556C0]" />}
                 </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                    <p className={`text-[14px] font-semibold truncate ${done ? "line-through text-slate-400" : "text-[#0B1220]"}`}>
-                        {action.title}
-                    </p>
-                    {dueChip && !done && (
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold border ${dueChip.cls}`}>
-                            {dueChip.label}
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                        <p className="text-[11px] font-semibold text-slate-500">Próxima ação</p>
+                        <span className={`inline-flex items-center px-1.5 py-px rounded text-[10px] font-semibold ${isEva ? "bg-[#7C3AED]/10 text-[#7C3AED]" : "bg-slate-100 text-slate-500"}`}>
+                            {isEva ? "Sugerida pela EVA" : "Tarefa do time"}
                         </span>
-                    )}
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <p className={`text-[14px] font-semibold truncate ${done ? "line-through text-slate-400" : "text-[#0B1220]"}`}>
+                            {action.title}
+                        </p>
+                        {dueChip && !done && (
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold border ${dueChip.cls}`}>
+                                {dueChip.label}
+                            </span>
+                        )}
+                    </div>
                 </div>
-            </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
-                {onExecute && !done && action.canWhatsApp && (
-                    <button
-                        onClick={onExecute}
-                        className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-semibold bg-[#1556C0] text-white hover:brightness-110 transition"
-                        title={action.suggestedReply ? "Abre o WhatsApp com a resposta sugerida pela EVA" : "Abrir conversa no WhatsApp"}
-                    >
-                        <WhatsAppIcon className="h-3.5 w-3.5" />
-                        Responder
-                    </button>
+                {!done ? (
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                        {onExecute && action.canWhatsApp && !picking && (
+                            <button
+                                onClick={onExecute}
+                                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-semibold bg-[#1556C0] text-white hover:brightness-110 transition"
+                                title={action.suggestedReply ? "Abre o WhatsApp com a resposta sugerida pela EVA" : "Abrir conversa no WhatsApp"}
+                            >
+                                <WhatsAppIcon className="h-3.5 w-3.5" />
+                                Responder
+                            </button>
+                        )}
+                        <button
+                            onClick={() => setPicking((v) => !v)}
+                            className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-semibold border transition-colors ${picking ? "bg-slate-100 border-[#E5E7EB] text-slate-600" : "bg-white border-[#E5E7EB] text-[#0B1220] hover:bg-slate-50"}`}
+                        >
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            {picking ? "Cancelar" : "Concluir"}
+                        </button>
+                    </div>
+                ) : (
+                    <span className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-semibold bg-[#10B981] text-white flex-shrink-0">
+                        <CheckCircle2 className="h-3.5 w-3.5" /> Concluída
+                    </span>
                 )}
-                <button
-                    onClick={handle}
-                    disabled={done}
-                    className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-semibold border transition-colors ${done ? "bg-[#10B981] text-white border-[#10B981]" : "bg-white border-[#E5E7EB] text-[#0B1220] hover:bg-slate-50"}`}
-                >
-                    <CheckCircle2 className="h-3.5 w-3.5" />
-                    {done ? "Concluída" : "Concluir"}
-                </button>
             </div>
+
+            {/* Seletor de resultado: define o próximo passo sugerido */}
+            {picking && !done && (
+                <div className="px-4 pb-3.5 border-t border-[#F1F5F9]">
+                    <p className="text-[11px] font-semibold text-slate-500 mb-2 mt-2.5">O que rolou? Isso define o próximo passo.</p>
+                    <div className="flex flex-wrap gap-1.5">
+                        {ACTION_RESULTS.map((r) => (
+                            <button
+                                key={r.key}
+                                onClick={() => pick(r.key)}
+                                className="inline-flex items-center px-2.5 py-1 rounded-lg text-[12px] font-medium border border-[#E5E7EB] bg-white text-[#0B1220] hover:bg-slate-50 hover:border-slate-300 transition-colors"
+                            >
+                                {r.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
@@ -769,17 +812,22 @@ export default function DealCommandCenter() {
     const evaSuggestedReply = dealCtx.qualification?.resposta_sugerida ?? null;
     const realEstateNextAction = getRealEstateInterest((deal as any)?.source_data)?.proxima_acao;
     const inOneDay = new Date(Date.now() + 86_400_000).toISOString();
-    const nextAction: NextAction = evaProxAcao
-        ? {
-              title: PROXIMA_ACAO_LABELS[evaProxAcao] ?? evaProxAcao,
-              source: "eva",
-              dueDate: inOneDay,
-              suggestedReply: evaSuggestedReply,
-              canWhatsApp: !!(deal as any)?.customer_phone,
-          }
-        : (typeof realEstateNextAction === "string" && realEstateNextAction.trim())
-            ? { title: realEstateNextAction, source: "deal", dueDate: inOneDay, canWhatsApp: !!(deal as any)?.customer_phone }
-            : { title: "Definir o próximo passo com o lead", source: "manual", canWhatsApp: false };
+    // Próximo passo definido pela última conclusão+resultado (prioridade máxima).
+    const persistedNext = (deal as any)?.source_data?.next_action;
+    const hasPersistedNext = persistedNext && typeof persistedNext.title === "string" && persistedNext.title.trim();
+    const nextAction: NextAction = hasPersistedNext
+        ? { title: persistedNext.title, source: "eva", dueDate: inOneDay, canWhatsApp: !!(deal as any)?.customer_phone }
+        : evaProxAcao
+            ? {
+                  title: PROXIMA_ACAO_LABELS[evaProxAcao] ?? evaProxAcao,
+                  source: "eva",
+                  dueDate: inOneDay,
+                  suggestedReply: evaSuggestedReply,
+                  canWhatsApp: !!(deal as any)?.customer_phone,
+              }
+            : (typeof realEstateNextAction === "string" && realEstateNextAction.trim())
+                ? { title: realEstateNextAction, source: "deal", dueDate: inOneDay, canWhatsApp: !!(deal as any)?.customer_phone }
+                : { title: "Definir o próximo passo com o lead", source: "manual", canWhatsApp: false };
 
     const TABS = [
         { id: "historico", label: "Histórico", icon: Clock },
@@ -936,10 +984,27 @@ export default function DealCommandCenter() {
                             {/* Focus / next action */}
                             <FocusCard
                                 action={nextAction}
-                                onComplete={() => {
-                                    addNote.mutate(`Ação concluída: ${nextAction.title}`);
+                                onComplete={async (resultKey) => {
+                                    const r = ACTION_RESULTS.find((x) => x.key === resultKey);
+                                    const resultLabel = r?.label ?? resultKey;
+                                    const nextTitle = r?.next ?? "Definir o próximo passo com o lead";
                                     setShowConfetti(true);
                                     setTimeout(() => setShowConfetti(false), 2000);
+                                    try {
+                                        await supabase.from("deal_notes" as any).insert({
+                                            deal_id: id, user_id: user?.id,
+                                            content: `Ação concluída: ${nextAction.title} · Resultado: ${resultLabel}`,
+                                        });
+                                        const prev = (deal as any)?.source_data && typeof (deal as any).source_data === "object" ? (deal as any).source_data : {};
+                                        await supabase.from("deals").update({
+                                            source_data: { ...prev, next_action: { title: nextTitle, from_result: resultKey, set_at: new Date().toISOString() } },
+                                        }).eq("id", id);
+                                        queryClient.invalidateQueries({ queryKey: ["deal", id] });
+                                        queryClient.invalidateQueries({ queryKey: ["deal-timeline", id] });
+                                        toast.success(`Registrado. Próximo passo: ${nextTitle}`);
+                                    } catch {
+                                        toast.error("Não consegui registrar a conclusão");
+                                    }
                                 }}
                                 onExecute={() => {
                                     const raw = ((deal as any)?.customer_phone || "").replace(/\D/g, "");
