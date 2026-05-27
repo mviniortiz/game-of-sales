@@ -13,6 +13,7 @@ import {
     ArrowRight,
     Flame,
     Activity,
+    Plus,
 } from "lucide-react";
 import { startOfMonth, endOfMonth, differenceInDays } from "date-fns";
 import { useTenant } from "@/contexts/TenantContext";
@@ -148,10 +149,11 @@ const SalesPerformanceCenter = () => {
         const avgCycle = cycles.length > 0 ? Math.round(cycles.reduce((a, b) => a + b, 0) / cycles.length) : null;
         const forecast = winRate !== null ? pipelineValue * (winRate / 100) : null;
 
-        const funnel = OPEN_STAGE_DEFS.map((s) => {
+        const funnelAll = OPEN_STAGE_DEFS.map((s) => {
             const deals = visibleOpen.filter((d) => d.stage === s.id);
             return { ...s, count: deals.length, value: deals.reduce((a, d) => a + (Number(d.value) || 0), 0) };
-        }).filter((s) => s.count > 0);
+        });
+        const funnel = funnelAll.filter((s) => s.count > 0);
         const maxFunnelValue = Math.max(1, ...funnel.map((s) => s.value));
         const topByValue = funnel.slice().sort((a, b) => b.value - a.value)[0] ?? null;
         const topByCount = funnel.slice().sort((a, b) => b.count - a.count)[0] ?? null;
@@ -173,7 +175,7 @@ const SalesPerformanceCenter = () => {
 
         return {
             open, visibleOpen, pipelineValue, openCount, wonCount, wonValue, lostCount, decided,
-            winRate, avgCycle, forecast, funnel, maxFunnelValue, topByValue, topByCount,
+            winRate, avgCycle, forecast, funnel, funnelAll, maxFunnelValue, topByValue, topByCount,
             stalledProposals, stalledNegotiations, hotStalled, anyStalled, byOwner,
         };
     }, [perf, isManager, user?.id]);
@@ -266,23 +268,75 @@ const SalesPerformanceCenter = () => {
 
             {/* 4. História do funil + Leitura da EVA */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <Panel title="Onde o pipeline está hoje" icon={Target} className="lg:col-span-2">
-                    {m.funnel.length === 0 ? (
-                        <p className="text-[13px] text-slate-500 py-6 text-center">Nenhuma oportunidade aberta no pipeline ainda.</p>
-                    ) : (
-                        <div className="space-y-3">
-                            {m.funnel.map((s) => (
-                                <div key={s.id}>
-                                    <div className="flex items-center justify-between text-[12.5px] mb-1">
-                                        <span className="font-medium text-[#0B1220]">{stageLabelFor(activeCompanyId, s.id, s.label)}</span>
-                                        <span className="text-slate-500 tabular-nums">{s.count} {s.count === 1 ? "deal" : "deals"} · {formatCurrencyCompact(s.value)}</span>
-                                    </div>
-                                    <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
-                                        <div className="h-full rounded-full" style={{ width: `${Math.max(4, (s.value / m.maxFunnelValue) * 100)}%`, background: s.color }} />
-                                    </div>
-                                </div>
-                            ))}
+                <Panel className="lg:col-span-2">
+                    <div className="flex items-start justify-between mb-4">
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <Target className="h-4 w-4 text-slate-400" />
+                                <h2 className="text-[13px] font-semibold text-[#0B1220]">Mapa do funil</h2>
+                            </div>
+                            <p className="text-[12px] text-slate-500 mt-0.5">Distribuição de valor e oportunidades por etapa</p>
                         </div>
+                        {m.openCount > 0 && (
+                            <button onClick={() => navigate("/pipeline")} className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#1556C0] hover:underline shrink-0">
+                                Abrir pipeline <ArrowRight className="h-3 w-3" />
+                            </button>
+                        )}
+                    </div>
+
+                    {m.openCount === 0 ? (
+                        <div className="text-center py-6">
+                            <p className="text-[13px] text-slate-500 mb-3">Ainda não há oportunidades abertas para analisar o funil.</p>
+                            <button onClick={() => navigate("/pipeline")} className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg text-[13px] font-semibold bg-[#1556C0] text-white hover:brightness-110 transition">
+                                <Plus className="h-4 w-4" /> Criar oportunidade
+                            </button>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="flex items-center gap-8 pb-4 mb-4 border-b border-[#F1F5F9]">
+                                <div>
+                                    <p className="text-[11px] text-slate-500">Pipeline total</p>
+                                    <p className="text-[20px] font-bold text-[#0B1220] tabular-nums leading-tight">{formatCurrencyCompact(m.pipelineValue)}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[11px] text-slate-500">Oportunidades</p>
+                                    <p className="text-[20px] font-bold text-[#0B1220] tabular-nums leading-tight">{m.openCount} abertas</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-3.5">
+                                {m.funnelAll.map((s) => {
+                                    const pct = m.pipelineValue > 0 ? Math.round((s.value / m.pipelineValue) * 100) : 0;
+                                    const isTopValue = m.topByValue?.id === s.id && s.count > 0;
+                                    const insight =
+                                        s.count === 0 ? { text: "Sem oportunidades nesta etapa", cls: "text-slate-400" }
+                                        : isTopValue ? { text: "Maior concentração de valor", cls: "text-[#1556C0]" }
+                                        : m.topByCount?.id === s.id ? { text: "Maior volume de oportunidades", cls: "text-[#1556C0]" }
+                                        : (s.id === "proposal" || s.id === "negotiation") ? { text: "Follow-up recomendado", cls: "text-amber-600" }
+                                        : { text: "Precisa avançar qualificação", cls: "text-slate-400" };
+                                    return (
+                                        <div key={s.id} className={`rounded-xl px-3 py-2.5 -mx-1 ${isTopValue ? "bg-[#1556C0]/[0.04] ring-1 ring-[#1556C0]/15" : ""}`}>
+                                            <div className="flex items-center justify-between gap-3 mb-1.5">
+                                                <div className="flex items-center gap-2 min-w-0">
+                                                    <span className="text-[13px] font-semibold text-[#0B1220]">{stageLabelFor(activeCompanyId, s.id, s.label)}</span>
+                                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10.5px] font-medium bg-slate-100 text-slate-600">
+                                                        {s.count} {s.count === 1 ? "oportunidade" : "oportunidades"}
+                                                    </span>
+                                                </div>
+                                                <div className="text-right shrink-0 tabular-nums">
+                                                    <span className="text-[14px] font-bold text-[#0B1220]">{formatCurrencyCompact(s.value)}</span>
+                                                    <span className="text-[12px] text-slate-400 ml-1.5">{pct}%</span>
+                                                </div>
+                                            </div>
+                                            <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                                                <div className="h-full rounded-full transition-all" style={{ width: `${s.count === 0 ? 0 : Math.max(4, (s.value / m.maxFunnelValue) * 100)}%`, background: s.color }} />
+                                            </div>
+                                            <p className={`text-[11px] mt-1 ${insight.cls}`}>{insight.text}</p>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </>
                     )}
                 </Panel>
 
@@ -296,9 +350,9 @@ const SalesPerformanceCenter = () => {
                     ) : (
                         <ul className="space-y-2 text-[12.5px] text-slate-600">
                             {m.topByValue && <li className="flex gap-1.5"><span className="text-[#7C3AED] mt-px">•</span><span>Maior valor concentrado em <strong className="text-[#0B1220]">{stageLabelFor(activeCompanyId, m.topByValue.id, m.topByValue.label)}</strong> ({formatCurrencyCompact(m.topByValue.value)}).</span></li>}
-                            {m.topByCount && <li className="flex gap-1.5"><span className="text-[#7C3AED] mt-px">•</span><span>Mais oportunidades em <strong className="text-[#0B1220]">{stageLabelFor(activeCompanyId, m.topByCount.id, m.topByCount.label)}</strong> ({m.topByCount.count}).</span></li>}
-                            {m.anyStalled.length > 0 && <li className="flex gap-1.5"><span className="text-amber-500 mt-px">•</span><span>Possível gargalo: {m.anyStalled.length} oportunidade(s) parada(s) há mais de 7 dias.</span></li>}
-                            {m.decided < 3 && <li className="flex gap-1.5"><span className="text-slate-400 mt-px">•</span><span>Histórico insuficiente para um win rate confiável ({m.decided} decididos).</span></li>}
+                            <li className="flex gap-1.5"><span className="text-[#7C3AED] mt-px">•</span><span>Prioridade: avançar oportunidades para a próxima etapa.</span></li>
+                            {m.anyStalled.length > 0 && <li className="flex gap-1.5"><span className="text-amber-500 mt-px">•</span><span>{m.anyStalled.length} oportunidade(s) parada(s) há mais de 7 dias — possível gargalo.</span></li>}
+                            {m.wonCount === 0 && <li className="flex gap-1.5"><span className="text-slate-400 mt-px">•</span><span>Histórico ainda insuficiente para medir conversão real.</span></li>}
                         </ul>
                     )}
                     <p className="text-[10px] text-[#7C3AED]/70 mt-3 pt-3 border-t border-[#E9D5FF]">A EVA aponta tendências. As decisões seguem com o time.</p>
