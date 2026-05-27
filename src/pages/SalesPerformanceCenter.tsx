@@ -156,7 +156,10 @@ const SalesPerformanceCenter = () => {
         const funnel = funnelAll.filter((s) => s.count > 0);
         const maxFunnelValue = Math.max(1, ...funnel.map((s) => s.value));
         const topByValue = funnel.slice().sort((a, b) => b.value - a.value)[0] ?? null;
-        const topByCount = funnel.slice().sort((a, b) => b.count - a.count)[0] ?? null;
+        const sortedByCount = funnel.slice().sort((a, b) => b.count - a.count);
+        const topByCount = sortedByCount[0] ?? null;
+        // Empate de volume: não destacar "maior volume" se mais de uma etapa empata.
+        const countTie = topByCount ? sortedByCount.filter((s) => s.count === topByCount.count).length > 1 : false;
 
         // Atenção
         const stalledProposals = visibleOpen.filter((d) => d.stage === "proposal" && daysSince(d.updated_at) > 7);
@@ -175,7 +178,7 @@ const SalesPerformanceCenter = () => {
 
         return {
             open, visibleOpen, pipelineValue, openCount, wonCount, wonValue, lostCount, decided,
-            winRate, avgCycle, forecast, funnel, funnelAll, maxFunnelValue, topByValue, topByCount,
+            winRate, avgCycle, forecast, funnel, funnelAll, maxFunnelValue, topByValue, topByCount, countTie,
             stalledProposals, stalledNegotiations, hotStalled, anyStalled, byOwner,
         };
     }, [perf, isManager, user?.id]);
@@ -204,13 +207,15 @@ const SalesPerformanceCenter = () => {
 
     // Itens de atenção
     const attention = useMemo(() => {
-        const items: { sev: "high" | "mid"; text: string }[] = [];
+        const items: { sev: "high" | "mid" | "info"; text: string }[] = [];
         if (m.stalledNegotiations.length > 0) items.push({ sev: "high", text: `${m.stalledNegotiations.length} negociação(ões) parada(s) há mais de 7 dias` });
         if (m.hotStalled.length > 0) items.push({ sev: "high", text: `${m.hotStalled.length} lead(s) quente(s) sem movimento há dias` });
-        if (m.stalledProposals.length > 0) items.push({ sev: "mid", text: `${m.stalledProposals.length} proposta(s) sem follow-up recente` });
+        if (m.stalledProposals.length > 0) items.push({ sev: "mid", text: `${m.stalledProposals.length} proposta(s)/visita(s) que precisam avançar` });
         if (m.openCount > 0 && m.wonCount === 0) items.push({ sev: "mid", text: "Nenhum ganho registrado no período" });
+        if (m.topByValue) items.push({ sev: "info", text: `Maior valor concentrado em ${stageLabelFor(activeCompanyId, m.topByValue.id, m.topByValue.label)} — priorize avançar essas oportunidades` });
+        if (m.openCount > 0 && m.decided < 3) items.push({ sev: "info", text: "Histórico ainda insuficiente para medir conversão real" });
         return items;
-    }, [m]);
+    }, [m, activeCompanyId]);
 
     const periodFilter = (
         <div className="flex flex-wrap items-center gap-2">
@@ -267,7 +272,7 @@ const SalesPerformanceCenter = () => {
             </div>
 
             {/* 4. História do funil + Leitura da EVA */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
                 <Panel className="lg:col-span-2">
                     <div className="flex items-start justify-between mb-4">
                         <div>
@@ -311,11 +316,11 @@ const SalesPerformanceCenter = () => {
                                     const insight =
                                         s.count === 0 ? { text: "Sem oportunidades nesta etapa", cls: "text-slate-400" }
                                         : isTopValue ? { text: "Maior concentração de valor", cls: "text-[#1556C0]" }
-                                        : m.topByCount?.id === s.id ? { text: "Maior volume de oportunidades", cls: "text-[#1556C0]" }
+                                        : (!m.countTie && m.topByCount?.id === s.id) ? { text: "Maior volume de oportunidades", cls: "text-[#1556C0]" }
                                         : (s.id === "proposal" || s.id === "negotiation") ? { text: "Follow-up recomendado", cls: "text-amber-600" }
                                         : { text: "Precisa avançar qualificação", cls: "text-slate-400" };
                                     return (
-                                        <div key={s.id} className={`rounded-xl px-3 py-2.5 -mx-1 ${isTopValue ? "bg-[#1556C0]/[0.04] ring-1 ring-[#1556C0]/15" : ""}`}>
+                                        <div key={s.id} className={`rounded-xl px-3 py-2.5 -mx-1 ${isTopValue ? "bg-[#1556C0]/[0.04] ring-1 ring-[#1556C0]/15" : ""} ${s.count === 0 ? "opacity-55" : ""}`}>
                                             <div className="flex items-center justify-between gap-3 mb-1.5">
                                                 <div className="flex items-center gap-2 min-w-0">
                                                     <span className="text-[13px] font-semibold text-[#0B1220]">{stageLabelFor(activeCompanyId, s.id, s.label)}</span>
@@ -359,6 +364,8 @@ const SalesPerformanceCenter = () => {
                 </Panel>
             </div>
 
+            {/* 5 + 6: Atenção do gestor + Performance do time lado a lado em telas largas */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
             {/* 5. Atenção do gestor */}
             <Panel title="Atenção do gestor" icon={AlertTriangle}
                 action={attention.length > 0 ? (
@@ -373,15 +380,19 @@ const SalesPerformanceCenter = () => {
                     </div>
                 ) : (
                     <ul className="space-y-2">
-                        {attention.map((a, i) => (
-                            <li key={i} className="flex items-center gap-2.5 px-3 py-2 rounded-xl border" style={{
-                                background: a.sev === "high" ? "rgba(244,63,94,0.05)" : "rgba(245,158,11,0.06)",
-                                borderColor: a.sev === "high" ? "rgba(244,63,94,0.2)" : "rgba(245,158,11,0.25)",
-                            }}>
-                                <span className={`h-1.5 w-1.5 rounded-full ${a.sev === "high" ? "bg-rose-500" : "bg-amber-500"}`} />
-                                <span className="text-[13px] text-[#0B1220] flex-1">{a.text}</span>
-                            </li>
-                        ))}
+                        {attention.map((a, i) => {
+                            const sevStyle = a.sev === "high"
+                                ? { bg: "rgba(244,63,94,0.05)", bd: "rgba(244,63,94,0.2)", dot: "bg-rose-500" }
+                                : a.sev === "mid"
+                                ? { bg: "rgba(245,158,11,0.06)", bd: "rgba(245,158,11,0.25)", dot: "bg-amber-500" }
+                                : { bg: "rgba(21,86,192,0.05)", bd: "rgba(21,86,192,0.18)", dot: "bg-[#1556C0]" };
+                            return (
+                                <li key={i} className="flex items-center gap-2.5 px-3 py-2 rounded-xl border" style={{ background: sevStyle.bg, borderColor: sevStyle.bd }}>
+                                    <span className={`h-1.5 w-1.5 rounded-full ${sevStyle.dot}`} />
+                                    <span className="text-[13px] text-[#0B1220] flex-1">{a.text}</span>
+                                </li>
+                            );
+                        })}
                     </ul>
                 )}
             </Panel>
@@ -418,6 +429,8 @@ const SalesPerformanceCenter = () => {
                     </div>
                 )}
             </Panel>
+
+            </div>
 
             {/* 7. Ritmo comercial */}
             <Panel title="Ritmo comercial" icon={Clock}>
