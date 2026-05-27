@@ -62,6 +62,9 @@ import {
     Plus,
     Lock,
     User,
+    ExternalLink,
+    Building2,
+    Tag as TagIcon,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -226,34 +229,51 @@ const TimelineEntry = ({ event, isLast }: { event: any; isLast: boolean }) => {
 const FocusCard = ({ task, onComplete }: { task: any; onComplete: () => void }) => {
     const [done, setDone] = useState(false);
     const handle = () => { setDone(true); setTimeout(onComplete, 600); };
+    // Chip de prazo derivado do due_date (Hoje / Amanhã / Atrasado / data).
+    const dueChip = (() => {
+        if (!task?.due_date) return null;
+        const due = new Date(task.due_date);
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        const dd = new Date(due); dd.setHours(0, 0, 0, 0);
+        const diff = Math.round((dd.getTime() - today.getTime()) / 86400000);
+        if (diff < 0) return { label: "Atrasado", cls: "bg-rose-50 text-rose-600 border-rose-200" };
+        if (diff === 0) return { label: "Hoje", cls: "bg-[#1556C0]/10 text-[#1556C0] border-[#1556C0]/20" };
+        if (diff === 1) return { label: "Amanhã", cls: "bg-amber-50 text-amber-700 border-amber-200" };
+        return { label: safeFormatDate(task.due_date, "dd MMM"), cls: "bg-slate-100 text-slate-600 border-slate-200" };
+    })();
+
     return (
-        <div className={`
-            flex items-center gap-3 px-4 py-3 rounded-xl border transition-colors
-            ${done ? "bg-emerald-500/5 border-emerald-500/20" : "bg-card border-border hover:border-border/80"}
-        `}>
-            <button
-                onClick={handle}
-                className={`
-                    w-5 h-5 rounded-full flex items-center justify-center transition-colors flex-shrink-0
-                    ${done
-                        ? "bg-emerald-500 text-white"
-                        : "border border-muted-foreground/40 hover:border-emerald-500 hover:bg-emerald-500/10"}
-                `}
-            >
-                {done && <CheckCircle2 className="h-3.5 w-3.5" />}
-            </button>
+        <div className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl border shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-colors ${done ? "bg-[#10B981]/5 border-[#10B981]/30" : "bg-white border-[#E5E7EB]"}`}>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1556C0]/10 flex-shrink-0">
+                <Calendar className="h-5 w-5 text-[#1556C0]" />
+            </div>
             <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-0.5">Próxima ação</p>
-                <p className={`text-sm font-medium truncate ${done ? "line-through text-muted-foreground" : "text-foreground"}`}>
-                    {task.title}
-                </p>
+                <p className="text-[11px] font-semibold text-slate-500 mb-0.5">Próxima ação</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                    <p className={`text-[14px] font-semibold truncate ${done ? "line-through text-slate-400" : "text-[#0B1220]"}`}>
+                        {task.title}
+                    </p>
+                    {dueChip && !done && (
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold border ${dueChip.cls}`}>
+                            {dueChip.label}
+                        </span>
+                    )}
+                </div>
             </div>
             {task.due_date && !done && (
-                <div className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground flex-shrink-0">
-                    <Clock className="h-3 w-3" />
-                    <span>{safeFormatDate(task.due_date, "dd MMM, HH:mm")}</span>
+                <div className="hidden md:flex items-center gap-1.5 text-[12px] text-slate-500 flex-shrink-0">
+                    <Clock className="h-3.5 w-3.5" />
+                    <span className="tabular-nums">{safeFormatDate(task.due_date, "dd MMM, HH:mm")}</span>
                 </div>
             )}
+            <button
+                onClick={handle}
+                disabled={done}
+                className={`flex-shrink-0 inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-semibold border transition-colors ${done ? "bg-[#10B981] text-white border-[#10B981]" : "bg-white border-[#E5E7EB] text-[#0B1220] hover:bg-slate-50"}`}
+            >
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                {done ? "Concluída" : "Concluir"}
+            </button>
         </div>
     );
 };
@@ -285,6 +305,14 @@ const PropertyRow = ({ label, icon: Icon, children }: { label: string; icon?: ty
             <span className="text-xs">{label}</span>
         </span>
         <div className="text-foreground text-right min-w-0 truncate text-[13px]">{children}</div>
+    </div>
+);
+
+// DEAL.UI.1 — linha label/valor premium light para os cards da sidebar.
+const SidebarRow = ({ label, value, strong = false }: { label: string; value: React.ReactNode; strong?: boolean }) => (
+    <div className="flex items-start justify-between gap-3">
+        <span className="text-[12px] text-slate-500 shrink-0">{label}</span>
+        <span className={`text-[12.5px] text-right min-w-0 truncate ${strong ? "font-semibold text-[#0B1220]" : "font-medium text-[#0B1220]"}`}>{value}</span>
     </div>
 );
 
@@ -1272,6 +1300,7 @@ export default function DealCommandCenter() {
                             <DealConversationContextBlock
                                 dealId={deal.id}
                                 companyId={deal.company_id}
+                                probability={deal.probability ?? null}
                                 onOpenConversation={(href) => navigate(href)}
                             />
                         </div>
@@ -1339,85 +1368,79 @@ export default function DealCommandCenter() {
                                     </div>
                                 </TooltipProvider>
 
-                                {/* Health inline */}
-                                <div className={`flex items-center gap-2.5 px-3 py-2 rounded-lg border ${health.bg} ${health.border}`}>
-                                    <HealthIcon className={`h-3.5 w-3.5 ${health.color} flex-shrink-0`} />
-                                    <div className="flex-1 min-w-0">
-                                        <p className={`text-xs font-semibold ${health.color} leading-tight`}>{health.label}</p>
-                                        <p className="text-[11px] text-muted-foreground leading-tight">{health.subtitle}</p>
+                                {/* A) Status e saúde */}
+                                <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <TrendingUp className="h-4 w-4 text-slate-400" />
+                                        <p className="text-[13px] font-semibold text-[#0B1220]">Status e saúde</p>
+                                    </div>
+                                    <div className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border ${health.bg} ${health.border}`}>
+                                        <HealthIcon className={`h-4 w-4 ${health.color} flex-shrink-0`} />
+                                        <div className="flex-1 min-w-0">
+                                            <p className={`text-[13px] font-semibold ${health.color} leading-tight`}>{health.label}</p>
+                                            <p className="text-[11px] text-slate-500 leading-tight">{health.subtitle}</p>
+                                        </div>
+                                        <div className="text-right shrink-0">
+                                            <p className="text-[16px] font-bold text-[#0B1220] tabular-nums leading-none">{deal.probability ?? 0}%</p>
+                                            <p className="text-[10px] text-slate-500 mt-0.5">Probabilidade</p>
+                                        </div>
                                     </div>
                                 </div>
 
-                                {/* Properties panel */}
-                                <div className="bg-white rounded-2xl border border-[#E5E7EB] px-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+                                {/* B) Contato */}
+                                <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <User className="h-4 w-4 text-slate-400" />
+                                        <p className="text-[13px] font-semibold text-[#0B1220]">Contato</p>
+                                    </div>
+                                    <div className="space-y-2.5">
+                                        <SidebarRow label="Nome" value={deal.customer_name || "—"} />
+                                        <SidebarRow label="Telefone" value={deal.customer_phone ? formatPhone(deal.customer_phone) : "—"} />
+                                        <SidebarRow label="E-mail" value={deal.customer_email
+                                            ? <a href={`mailto:${deal.customer_email}`} className="text-[#1556C0] hover:underline">{deal.customer_email}</a>
+                                            : "—"} />
+                                        <SidebarRow label="Origem" value={(deal as any).lead_source || (deal as any).source || "—"} />
+                                        <SidebarRow label="Último contato" value={deal.updated_at ? safeFormatDistance(deal.updated_at) : "—"} />
+                                    </div>
+                                </div>
 
-                                    <PropertiesSection title="Contato">
-                                        <PropertyRow label="Nome" icon={User}>
-                                            <span className="font-medium">{deal.customer_name || "—"}</span>
-                                        </PropertyRow>
-                                        <PropertyRow label="Email" icon={Mail}>
-                                            {deal.customer_email
-                                                ? <a href={`mailto:${deal.customer_email}`} className="text-emerald-400 hover:text-emerald-300 hover:underline truncate block">{deal.customer_email}</a>
-                                                : <span className="text-muted-foreground">—</span>}
-                                        </PropertyRow>
-                                        <PropertyRow label="Telefone" icon={Phone}>
-                                            {deal.customer_phone
-                                                ? <span className="font-medium tabular-nums">{formatPhone(deal.customer_phone)}</span>
-                                                : <span className="text-muted-foreground">—</span>}
-                                        </PropertyRow>
-                                    </PropertiesSection>
-
-                                    <PropertiesSection title="Detalhes">
-                                        <PropertyRow label="Valor" icon={DollarSign}>
-                                            <span className="font-semibold text-emerald-400 tabular-nums">{formatCurrency(deal.value || 0)}</span>
-                                        </PropertyRow>
-                                        <PropertyRow label="Fonte" icon={Target}>
-                                            <span className="font-medium">{(deal as any).source || "Manual"}</span>
-                                        </PropertyRow>
-                                        <PropertyRow label="Criado" icon={Calendar}>
-                                            <span className="font-medium">{safeFormatDate(deal.created_at, "dd MMM yyyy")}</span>
-                                        </PropertyRow>
-                                        <PropertyRow label="Atualizado" icon={Clock}>
-                                            <span className="font-medium">{safeFormatDistance(deal.updated_at)}</span>
-                                        </PropertyRow>
-
-                                        {/* Probability with inline bar */}
-                                        <div className="pt-1.5 space-y-1.5">
-                                            <div className="flex items-center justify-between text-xs">
-                                                <span className="text-muted-foreground flex items-center gap-1.5">
-                                                    <TrendingUp className="h-3.5 w-3.5" />
-                                                    Probabilidade
-                                                </span>
-                                                <span className="text-foreground font-semibold tabular-nums">{deal.probability ?? 0}%</span>
-                                            </div>
-                                            <div className="h-1 bg-muted rounded-full overflow-hidden">
-                                                <motion.div
-                                                    className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-cyan-400"
-                                                    initial={{ width: 0 }}
-                                                    animate={{ width: `${deal.probability ?? 0}%` }}
-                                                    transition={{ duration: 0.8, ease: "easeOut" }}
-                                                />
+                                {/* C) Dados do negócio */}
+                                <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <Building2 className="h-4 w-4 text-slate-400" />
+                                        <p className="text-[13px] font-semibold text-[#0B1220]">Dados do negócio</p>
+                                    </div>
+                                    {getRealEstateInterest((deal as any).source_data) ? (
+                                        <div className="space-y-2.5">
+                                            <RealEstateInterestBlock sourceData={(deal as any).source_data} />
+                                            <div className="pt-2.5 border-t border-[#F1F5F9]">
+                                                <SidebarRow label="Valor da proposta" value={formatCurrency(deal.value || 0)} strong />
                                             </div>
                                         </div>
-                                    </PropertiesSection>
-
-                                    {/* F6T.2 — Tags comerciais (sistema F6T.1) */}
-                                    <PropertiesSection title="Tags comerciais">
-                                        <DealTagsBlock dealId={id!} />
-                                    </PropertiesSection>
-
-                                    {/* F6T.3 — Dados do interesse imobiliário (demo incorporadora).
-                                        Só renderiza quando o deal tem source_data.interesse_imobiliario. */}
-                                    {getRealEstateInterest((deal as any).source_data) && (
-                                        <PropertiesSection title="Dados do interesse imobiliário">
-                                            <RealEstateInterestBlock sourceData={(deal as any).source_data} />
-                                        </PropertiesSection>
+                                    ) : (
+                                        <div className="space-y-2.5">
+                                            <SidebarRow label="Valor da proposta" value={formatCurrency(deal.value || 0)} strong />
+                                            <SidebarRow label="Fonte" value={(deal as any).source || "Manual"} />
+                                            <SidebarRow label="Criado" value={safeFormatDate(deal.created_at, "dd MMM yyyy")} />
+                                            <SidebarRow label="Atualizado" value={safeFormatDistance(deal.updated_at)} />
+                                        </div>
                                     )}
+                                </div>
 
+                                {/* D) Tags */}
+                                <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <TagIcon className="h-4 w-4 text-slate-400" />
+                                        <p className="text-[13px] font-semibold text-[#0B1220]">Tags</p>
+                                    </div>
+                                    <DealTagsBlock dealId={id!} />
+                                </div>
+
+                                {/* E) Campos customizados */}
+                                <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
                                     <PropertiesSection title="Campos customizados" defaultOpen={false}>
                                         <CustomFieldsSection dealId={id!} compact />
                                     </PropertiesSection>
-
                                 </div>
                             </div>
                         </div>
@@ -1589,10 +1612,12 @@ export default function DealCommandCenter() {
 function DealConversationContextBlock({
     dealId,
     companyId,
+    probability,
     onOpenConversation,
 }: {
     dealId: string;
     companyId: string | null;
+    probability: number | null;
     onOpenConversation: (href: string) => void;
 }) {
     const ctx = useDealContextData(dealId, companyId);
@@ -1628,10 +1653,7 @@ function DealConversationContextBlock({
         ? formatDistanceToNow(new Date(conversation.last_message_at), { locale: ptBR, addSuffix: true })
         : "—";
 
-    const score       = getQualificationScore(qualification);
     const temperature = getQualificationTemperature(qualification);
-    const intent      = getQualificationIntent(qualification);
-    const service     = getQualificationService(qualification);
     const objection   = getQualificationObjection(qualification);
 
     const hasAnalysis = !!summary && !!summary.analyzed_at;
@@ -1639,173 +1661,165 @@ function DealConversationContextBlock({
         ? formatDistanceToNow(new Date(summary.analyzed_at), { locale: ptBR, addSuffix: true })
         : null;
 
+    // Probabilidade de ganho: usa a do deal; cai pro score da EVA se ausente.
+    const score = getQualificationScore(qualification);
+    const probScore = Math.max(0, Math.min(100,
+        Math.round(typeof probability === "number" ? probability : (typeof score === "number" ? score : 0))));
+    // Tendência derivada da temperatura da EVA (sem inventar campo novo).
+    const trend = temperature === "quente" ? "Subindo"
+        : temperature === "frio" ? "Em queda"
+        : temperature ? "Estável" : null;
+    // Motivos = o que a EVA já coletou; Atenções = o que falta + objeção.
+    const motivos = qualification?.info_coletada ?? [];
+    const atencoes = [
+        ...(qualification?.info_faltante ?? []),
+        ...(objection ? [`Objeção: ${objection}`] : []),
+    ];
+
     return (
         <div className="space-y-4">
-            {/* ── Contexto da conversa ─────────────────────────────────── */}
+            {/* ── Contexto da conversa (mini-chat) ─────────────────────── */}
             <div className="bg-white rounded-2xl p-4 border border-[#E5E7EB] shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
                 <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
-                            Contexto da conversa
-                        </p>
-                        <span className="inline-flex items-center gap-1 h-5 px-1.5 rounded text-[10px] font-semibold bg-[#10B981]/10 text-[#0F8A63] border border-[#10B981]/20">
-                            <span className="h-1.5 w-1.5 rounded-full bg-[#10B981]" />
-                            WhatsApp
-                        </span>
+                        <MessageSquare className="h-4 w-4 text-[#10B981]" />
+                        <p className="text-[13px] font-semibold text-[#0B1220]">Contexto da conversa</p>
                     </div>
                     {openConversationHref && (
                         <button
                             type="button"
                             onClick={() => onOpenConversation(openConversationHref)}
-                            className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[11px] font-semibold transition-colors bg-[#1556C0]/10 hover:bg-[#1556C0]/15 text-[#1556C0] border border-[#1556C0]/20"
+                            className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[#10B981] hover:underline"
                         >
-                            <MessageSquare className="h-3 w-3" />
-                            Abrir conversa
+                            Abrir no WhatsApp
+                            <ExternalLink className="h-3 w-3" />
                         </button>
                     )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 mb-3">
-                    <div>
-                        <p className="text-[10px] text-muted-foreground mb-0.5">Contato</p>
-                        <p className="text-sm text-foreground truncate">{contact?.name || "—"}</p>
-                    </div>
-                    <div>
-                        <p className="text-[10px] text-muted-foreground mb-0.5">Telefone</p>
-                        <p className="text-sm text-foreground tabular-nums truncate">
-                            {contact?.phone_e164 ? `+${contact.phone_e164}` : "—"}
-                        </p>
-                    </div>
-                    <div>
-                        <p className="text-[10px] text-muted-foreground mb-0.5">Canal</p>
-                        <p className="text-sm text-foreground">WhatsApp</p>
-                    </div>
-                    <div>
-                        <p className="text-[10px] text-muted-foreground mb-0.5">Última interação</p>
-                        <p className="text-sm text-foreground">{lastInteractionLabel}</p>
-                    </div>
+                {/* aba canal */}
+                <div className="mb-3 border-b border-[#F1F5F9]">
+                    <span className="inline-flex items-center gap-1.5 pb-2 -mb-px text-[12px] font-medium text-[#0F8A63] border-b-2 border-[#10B981]">
+                        <span className="h-2 w-2 rounded-full bg-[#10B981]" /> WhatsApp
+                    </span>
                 </div>
 
-                {lastMessages.length > 0 && (
-                    <div className="space-y-1.5 pt-3 border-t border-border/50">
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1.5">
-                            Últimas {lastMessages.length} mensagens
-                        </p>
-                        <ul className="space-y-1">
-                            {lastMessages.map((m) => {
-                                const text = m.body || m.media_caption || `[${m.message_type}]`;
-                                const truncated = text.length > 90 ? text.slice(0, 90) + "…" : text;
-                                return (
-                                    <li key={m.id} className="flex gap-2 text-[12px]">
-                                        <span
-                                            className={`shrink-0 mt-0.5 inline-block h-1.5 w-1.5 rounded-full ${
-                                                m.direction === "outbound" ? "bg-emerald-500" : "bg-blue-500"
-                                            }`}
-                                        />
-                                        <span className="text-muted-foreground truncate">{truncated}</span>
-                                    </li>
-                                );
-                            })}
-                        </ul>
+                {lastMessages.length > 0 ? (
+                    <div className="space-y-2">
+                        {lastMessages.map((m) => {
+                            const text = m.body || m.media_caption || `[${m.message_type}]`;
+                            const out = m.direction === "outbound";
+                            const time = safeFormatDate(m.message_timestamp, "HH:mm");
+                            return (
+                                <div key={m.id} className={`flex ${out ? "justify-end" : "justify-start"}`}>
+                                    <div
+                                        className={`max-w-[82%] rounded-2xl px-3 py-2 text-[12.5px] leading-snug ${
+                                            out
+                                                ? "bg-[#E7F9EF] text-[#0B1220] rounded-br-sm"
+                                                : "bg-[#F1F5F9] text-[#0B1220] rounded-bl-sm"
+                                        }`}
+                                    >
+                                        <p>{text}</p>
+                                        <p className="text-[10px] text-slate-400 text-right mt-0.5 tabular-nums">{time}</p>
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
+                ) : (
+                    <p className="text-sm text-slate-500">Sem mensagens recentes nesta conversa.</p>
+                )}
+
+                {openConversationHref && (
+                    <button
+                        type="button"
+                        onClick={() => onOpenConversation(openConversationHref)}
+                        className="w-full text-center text-[12px] font-medium text-[#1556C0] hover:underline mt-3 pt-3 border-t border-[#F1F5F9]"
+                    >
+                        Ver todas as mensagens
+                    </button>
                 )}
             </div>
 
-            {/* ── Leitura da EVA ──────────────────────────────────────── */}
+            {/* ── Leitura da EVA (3 colunas) ──────────────────────────── */}
             <div className="bg-[#FAF5FF] rounded-2xl p-4 border border-[#E9D5FF] shadow-[0_1px_2px_rgba(124,58,237,0.05)]">
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                         <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#7C3AED] text-white text-[8px] font-bold leading-none">E</span>
-                        <p className="text-[10px] font-semibold text-[#7C3AED] uppercase tracking-widest">
-                            Leitura da EVA
-                        </p>
+                        <p className="text-[13px] font-semibold text-[#7C3AED]">Leitura da EVA</p>
                     </div>
                     {hasAnalysis && (
-                        <span className="text-[10px] text-slate-400">
-                            {isStaleByMessages ? "Pode estar desatualizada" : `Análise salva ${analyzedAtLabel}`}
+                        <span className="text-[11px] text-slate-400">
+                            {isStaleByMessages ? "Pode estar desatualizada" : `Análise atualizada ${analyzedAtLabel}`}
                         </span>
                     )}
                 </div>
 
                 {!hasAnalysis ? (
-                    <p className="text-sm text-muted-foreground leading-relaxed">
+                    <p className="text-sm text-slate-500 leading-relaxed">
                         A EVA ainda não analisou conversas suficientes para esta oportunidade.
                     </p>
                 ) : (
-                    <div className="space-y-3">
-                        <div className="grid grid-cols-2 gap-3">
-                            {typeof score === "number" && (
-                                <div>
-                                    <p className="text-[10px] text-muted-foreground mb-0.5">Score</p>
-                                    <p className="text-sm font-semibold tabular-nums text-foreground">{score}</p>
+                    <>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            {/* Probabilidade */}
+                            <div>
+                                <div className="flex items-baseline gap-1.5">
+                                    <span className="text-[28px] font-bold text-[#0B1220] leading-none tabular-nums">{probScore}%</span>
                                 </div>
-                            )}
-                            {temperature && (
-                                <div>
-                                    <p className="text-[10px] text-muted-foreground mb-0.5">Temperatura</p>
-                                    <p className="text-sm text-foreground capitalize">{temperature}</p>
+                                <p className="text-[11px] text-slate-500 mt-1">Probabilidade de ganho</p>
+                                <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden mt-2">
+                                    <motion.div
+                                        className="h-full rounded-full bg-gradient-to-r from-[#7C3AED] to-[#A78BFA]"
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${probScore}%` }}
+                                        transition={{ duration: 0.8, ease: "easeOut" }}
+                                    />
                                 </div>
-                            )}
-                            {intent && (
-                                <div className="col-span-2">
-                                    <p className="text-[10px] text-muted-foreground mb-0.5">Intenção</p>
-                                    <p className="text-sm text-foreground">{intent}</p>
-                                </div>
-                            )}
-                            {service && (
-                                <div className="col-span-2">
-                                    <p className="text-[10px] text-muted-foreground mb-0.5">Serviço de interesse</p>
-                                    <p className="text-sm text-foreground">{service}</p>
-                                </div>
-                            )}
-                            {objection && (
-                                <div className="col-span-2">
-                                    <p className="text-[10px] text-muted-foreground mb-0.5">Objeção principal</p>
-                                    <p className="text-sm text-foreground">{objection}</p>
-                                </div>
-                            )}
+                                {trend && (
+                                    <p className="text-[11px] text-slate-500 mt-2">
+                                        Tendência: <span className="font-medium text-[#0B1220]">{trend}</span>
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Principais motivos */}
+                            <div>
+                                <p className="text-[12px] font-semibold text-[#0B1220] mb-1.5">Principais motivos</p>
+                                <ul className="space-y-1">
+                                    {motivos.length > 0 ? motivos.slice(0, 3).map((m, i) => (
+                                        <li key={i} className="flex gap-1.5 text-[12px] text-slate-600 leading-snug">
+                                            <span className="text-[#10B981] mt-px">•</span>
+                                            <span>{m}</span>
+                                        </li>
+                                    )) : <li className="text-[12px] text-slate-400">—</li>}
+                                </ul>
+                            </div>
+
+                            {/* Atenções */}
+                            <div>
+                                <p className="text-[12px] font-semibold text-[#0B1220] mb-1.5 flex items-center gap-1">
+                                    <AlertTriangle className="h-3 w-3 text-amber-500" /> Atenções
+                                </p>
+                                <ul className="space-y-1">
+                                    {atencoes.length > 0 ? atencoes.slice(0, 3).map((a, i) => (
+                                        <li key={i} className="flex gap-1.5 text-[12px] text-slate-600 leading-snug">
+                                            <span className="text-amber-500 mt-px">•</span>
+                                            <span>{a}</span>
+                                        </li>
+                                    )) : <li className="text-[12px] text-slate-400">—</li>}
+                                </ul>
+                            </div>
                         </div>
 
                         {qualification?.proxima_acao && (
-                            <div className="pt-3 border-t border-border/50">
-                                <p className="text-[10px] text-muted-foreground mb-0.5">Próxima ação sugerida</p>
-                                <p className="text-sm text-foreground">{qualification.proxima_acao}</p>
+                            <div className="mt-3 pt-3 border-t border-[#E9D5FF]">
+                                <p className="text-[11px] text-slate-500">
+                                    Próxima sugestão da EVA: <span className="text-[#0B1220] font-medium">{qualification.proxima_acao}</span>
+                                </p>
                             </div>
                         )}
-
-                        {qualification?.info_faltante && qualification.info_faltante.length > 0 && (
-                            <div className="pt-3 border-t border-border/50">
-                                <p className="text-[10px] text-muted-foreground mb-1.5">Informações faltantes</p>
-                                <ul className="space-y-0.5">
-                                    {qualification.info_faltante.slice(0, 5).map((info, i) => (
-                                        <li key={i} className="text-[12.5px] text-muted-foreground flex gap-2">
-                                            <span className="text-amber-400/80">·</span>
-                                            <span>{info}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-
-                        {relatedGaps.length > 0 && (
-                            <div className="pt-3 border-t border-border/50">
-                                <p className="text-[10px] text-muted-foreground mb-1.5">Lacunas observadas pela EVA</p>
-                                <ul className="space-y-0.5">
-                                    {relatedGaps.slice(0, 3).map((g) => (
-                                        <li key={g.id} className="text-[12.5px] text-muted-foreground flex gap-2">
-                                            <span className="text-violet-400/80">·</span>
-                                            <span className="truncate">
-                                                {(g.gap_description || "Lacuna").slice(0, 80)}
-                                                {g.occurrence_count && g.occurrence_count > 1 && (
-                                                    <span className="ml-1 text-[10px]">({g.occurrence_count}×)</span>
-                                                )}
-                                            </span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-                    </div>
+                    </>
                 )}
                 <p className="text-[10px] text-[#7C3AED]/70 mt-3 pt-3 border-t border-[#E9D5FF] leading-relaxed">
                     A EVA é assistida: ela sugere e prioriza. Seu time decide e aprova.
