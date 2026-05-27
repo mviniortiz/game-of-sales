@@ -7,8 +7,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
     Warning as AlertTriangle,
     ArrowRight,
+    ArrowUp,
     CaretRight as ChevronRight,
     CalendarBlank as Calendar,
+    CircleNotch,
     Clock,
     Funnel as Filter,
     FireSimple as Flame,
@@ -17,7 +19,6 @@ import {
     ChatText as MessageSquare,
     DotsThree as MoreHorizontal,
     ArrowsClockwise as RefreshCw,
-    PaperPlaneTilt as Send,
     Sparkle as Sparkles,
     Plus,
     Target,
@@ -895,8 +896,8 @@ function EvaCommandCard({
         <div
             className="rounded-2xl"
             style={{
-                background: "#FFFFFF",
-                border: "1px solid #D9E2EC",
+                background: "linear-gradient(180deg, rgba(124,58,237,0.022) 0%, #FFFFFF 30%)",
+                border: "1px solid #E4E9F2",
                 boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 10px 30px rgba(15,23,42,0.05)",
             }}
         >
@@ -960,7 +961,7 @@ function EvaCommandCard({
                     </div>
                 )}
 
-                {/* 3. Command bar */}
+                {/* 3. Command bar — botão ícone-only (acento roxo da EVA) */}
                 <form onSubmit={handleAsk} className="mt-5 relative">
                     <input
                         type="text"
@@ -968,17 +969,19 @@ function EvaCommandCard({
                         onChange={(e) => setComposer(e.target.value)}
                         placeholder="Pergunte à EVA sobre a operação, pipeline ou conversas"
                         disabled={isThinking}
-                        className="w-full h-11 pl-4 pr-32 rounded-xl text-[13px] outline-none transition-all focus:border-[#7C3AED]/40 disabled:opacity-70"
+                        className="w-full h-11 pl-4 pr-14 rounded-xl text-[13px] outline-none transition-all focus:border-[#7C3AED]/40 disabled:opacity-70"
                         style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", color: "#0B1220" }}
                     />
                     <button
                         type="submit"
                         disabled={!composer.trim() || isThinking}
-                        className="absolute right-1.5 top-1.5 inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg text-[12.5px] font-semibold text-white transition-all hover:brightness-110 disabled:opacity-40"
-                        style={{ background: "#2563EB" }}
+                        aria-label="Perguntar à EVA"
+                        className={`eva-send-btn absolute right-1.5 top-1.5 inline-flex items-center justify-center h-8 w-8 rounded-full text-white disabled:opacity-40 disabled:shadow-none ${composer.trim() && !isThinking ? "eva-send-idle" : ""}`}
+                        style={{ background: "linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)" }}
                     >
-                        Perguntar
-                        <Send size={12} weight="duotone" />
+                        {isThinking
+                            ? <CircleNotch size={15} weight="bold" className="animate-spin" />
+                            : <ArrowUp size={15} weight="bold" />}
                     </button>
                 </form>
 
@@ -1123,12 +1126,13 @@ function EvaStatusRow({
     );
 }
 
-// Tom suave (rosado/âmbar) pro card principal — sem vermelho chapado.
-const PRIMARY_TONE: Record<DailyPriority["priority"], { bg: string; border: string; chipBg: string; chipColor: string; label: string }> = {
-    critical: { bg: "rgba(244,63,94,0.05)",  border: "rgba(244,63,94,0.20)",  chipBg: "rgba(244,63,94,0.12)",  chipColor: "#BE123C", label: "Mais urgente" },
-    high:     { bg: "rgba(245,158,11,0.06)", border: "rgba(245,158,11,0.22)", chipBg: "rgba(245,158,11,0.14)", chipColor: "#B45309", label: "Prioridade alta" },
-    medium:   { bg: "rgba(37,99,235,0.05)",  border: "rgba(37,99,235,0.18)",  chipBg: "rgba(37,99,235,0.10)",  chipColor: "#1D4ED8", label: "Atenção" },
-    low:      { bg: "#F8FAFC",               border: "#E2E8F0",               chipBg: "rgba(148,163,184,0.15)", chipColor: "#64748B", label: "Acompanhar" },
+// Card principal: fundo branco + acento na borda esquerda (sem chapado).
+// Coral = urgência real; âmbar/azul/cinza pros demais níveis.
+const PRIMARY_TONE: Record<DailyPriority["priority"], { accent: string; chipBg: string; chipColor: string; label: string }> = {
+    critical: { accent: "#F43F5E", chipBg: "rgba(244,63,94,0.10)",   chipColor: "#BE123C", label: "Mais urgente" },
+    high:     { accent: "#F59E0B", chipBg: "rgba(245,158,11,0.12)",  chipColor: "#B45309", label: "Prioridade alta" },
+    medium:   { accent: "#2563EB", chipBg: "rgba(37,99,235,0.10)",   chipColor: "#1D4ED8", label: "Atenção" },
+    low:      { accent: "#94A3B8", chipBg: "rgba(148,163,184,0.15)", chipColor: "#64748B", label: "Acompanhar" },
 };
 
 function PrimaryPriorityCard({
@@ -1142,7 +1146,12 @@ function PrimaryPriorityCard({
     return (
         <div
             className="rounded-2xl p-4 sm:p-5 flex flex-col"
-            style={{ background: tone.bg, border: `1px solid ${tone.border}` }}
+            style={{
+                background: "#FFFFFF",
+                border: "1px solid #E2E8F0",
+                borderLeft: `3px solid ${tone.accent}`,
+                boxShadow: "0 1px 2px rgba(15,23,42,0.04)",
+            }}
         >
             <div className="flex items-center gap-2 mb-2 flex-wrap">
                 <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded"
