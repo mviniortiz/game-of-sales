@@ -252,33 +252,63 @@ const TimelineEntry = ({ event, isLast }: { event: any; isLast: boolean }) => {
     );
 };
 
-/** Focus card — next-action prompt. Clean, no glow, no gradient */
-const FocusCard = ({ task, onComplete }: { task: any; onComplete: () => void }) => {
+// Ações recomendadas: a EVA sugere (proxima_acao da análise); o time executa,
+// edita ou conclui. Origem fica explícita no card.
+const PROXIMA_ACAO_LABELS: Record<string, string> = {
+    responder: "Responder agora",
+    qualificar: "Coletar mais informação",
+    criar_oportunidade: "Criar oportunidade no pipeline",
+    marcar_demo: "Marcar demo",
+    handoff_humano: "Passar pra um humano",
+    aguardar: "Aguardar resposta",
+};
+
+type NextAction = {
+    title: string;
+    source: "eva" | "deal" | "manual";
+    dueDate?: string | null;
+    suggestedReply?: string | null;
+    canWhatsApp?: boolean;
+};
+
+/** Focus card — próxima ação recomendada pela EVA, executada/concluída pelo time. */
+const FocusCard = ({ action, onComplete, onExecute }: {
+    action: NextAction;
+    onComplete: () => void;
+    onExecute?: () => void;
+}) => {
     const [done, setDone] = useState(false);
     const handle = () => { setDone(true); setTimeout(onComplete, 600); };
-    // Chip de prazo derivado do due_date (Hoje / Amanhã / Atrasado / data).
+    const isEva = action.source === "eva";
     const dueChip = (() => {
-        if (!task?.due_date) return null;
-        const due = new Date(task.due_date);
+        if (!action.dueDate) return null;
+        const due = new Date(action.dueDate);
         const today = new Date(); today.setHours(0, 0, 0, 0);
         const dd = new Date(due); dd.setHours(0, 0, 0, 0);
         const diff = Math.round((dd.getTime() - today.getTime()) / 86400000);
         if (diff < 0) return { label: "Atrasado", cls: "bg-rose-50 text-rose-600 border-rose-200" };
         if (diff === 0) return { label: "Hoje", cls: "bg-[#1556C0]/10 text-[#1556C0] border-[#1556C0]/20" };
         if (diff === 1) return { label: "Amanhã", cls: "bg-amber-50 text-amber-700 border-amber-200" };
-        return { label: safeFormatDate(task.due_date, "dd MMM"), cls: "bg-slate-100 text-slate-600 border-slate-200" };
+        return { label: safeFormatDate(action.dueDate, "dd MMM"), cls: "bg-slate-100 text-slate-600 border-slate-200" };
     })();
 
     return (
         <div className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl border shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-colors ${done ? "bg-[#10B981]/5 border-[#10B981]/30" : "bg-white border-[#E5E7EB]"}`}>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1556C0]/10 flex-shrink-0">
-                <Calendar className="h-5 w-5 text-[#1556C0]" />
+            <div className={`flex h-10 w-10 items-center justify-center rounded-xl flex-shrink-0 ${isEva ? "bg-[#7C3AED]/10" : "bg-[#1556C0]/10"}`}>
+                {isEva
+                    ? <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#7C3AED] text-white text-[9px] font-bold leading-none">E</span>
+                    : <Calendar className="h-5 w-5 text-[#1556C0]" />}
             </div>
             <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-semibold text-slate-500 mb-0.5">Próxima ação</p>
+                <div className="flex items-center gap-2 mb-0.5">
+                    <p className="text-[11px] font-semibold text-slate-500">Próxima ação</p>
+                    <span className={`inline-flex items-center px-1.5 py-px rounded text-[10px] font-semibold ${isEva ? "bg-[#7C3AED]/10 text-[#7C3AED]" : "bg-slate-100 text-slate-500"}`}>
+                        {isEva ? "Sugerida pela EVA" : "Tarefa do time"}
+                    </span>
+                </div>
                 <div className="flex items-center gap-2 flex-wrap">
                     <p className={`text-[14px] font-semibold truncate ${done ? "line-through text-slate-400" : "text-[#0B1220]"}`}>
-                        {task.title}
+                        {action.title}
                     </p>
                     {dueChip && !done && (
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold border ${dueChip.cls}`}>
@@ -287,20 +317,26 @@ const FocusCard = ({ task, onComplete }: { task: any; onComplete: () => void }) 
                     )}
                 </div>
             </div>
-            {task.due_date && !done && (
-                <div className="hidden md:flex items-center gap-1.5 text-[12px] text-slate-500 flex-shrink-0">
-                    <Clock className="h-3.5 w-3.5" />
-                    <span className="tabular-nums">{safeFormatDate(task.due_date, "dd MMM, HH:mm")}</span>
-                </div>
-            )}
-            <button
-                onClick={handle}
-                disabled={done}
-                className={`flex-shrink-0 inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-semibold border transition-colors ${done ? "bg-[#10B981] text-white border-[#10B981]" : "bg-white border-[#E5E7EB] text-[#0B1220] hover:bg-slate-50"}`}
-            >
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                {done ? "Concluída" : "Concluir"}
-            </button>
+            <div className="flex items-center gap-2 flex-shrink-0">
+                {onExecute && !done && action.canWhatsApp && (
+                    <button
+                        onClick={onExecute}
+                        className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-semibold bg-[#1556C0] text-white hover:brightness-110 transition"
+                        title={action.suggestedReply ? "Abre o WhatsApp com a resposta sugerida pela EVA" : "Abrir conversa no WhatsApp"}
+                    >
+                        <WhatsAppIcon className="h-3.5 w-3.5" />
+                        Responder
+                    </button>
+                )}
+                <button
+                    onClick={handle}
+                    disabled={done}
+                    className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-semibold border transition-colors ${done ? "bg-[#10B981] text-white border-[#10B981]" : "bg-white border-[#E5E7EB] text-[#0B1220] hover:bg-slate-50"}`}
+                >
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    {done ? "Concluída" : "Concluir"}
+                </button>
+            </div>
         </div>
     );
 };
@@ -725,14 +761,25 @@ export default function DealCommandCenter() {
     const health = getHealthStatus(daysSince);
     const HealthIcon = health.icon;
 
+    // Próxima ação recomendada pela EVA (proxima_acao da análise da conversa).
+    // Fallback: ação registrada no deal (imobiliário) e depois genérica.
+    // useDealContextData compartilha cache com o bloco de contexto (sem fetch duplo).
+    const dealCtx = useDealContextData(id, (deal as any)?.company_id);
+    const evaProxAcao = dealCtx.qualification?.proxima_acao;
+    const evaSuggestedReply = dealCtx.qualification?.resposta_sugerida ?? null;
     const realEstateNextAction = getRealEstateInterest((deal as any)?.source_data)?.proxima_acao;
-    const activeTask = {
-        id: "1",
-        title: typeof realEstateNextAction === "string" && realEstateNextAction.trim()
-            ? realEstateNextAction
-            : "Definir o próximo passo com o lead",
-        due_date: new Date(Date.now() + 86_400_000).toISOString(),
-    };
+    const inOneDay = new Date(Date.now() + 86_400_000).toISOString();
+    const nextAction: NextAction = evaProxAcao
+        ? {
+              title: PROXIMA_ACAO_LABELS[evaProxAcao] ?? evaProxAcao,
+              source: "eva",
+              dueDate: inOneDay,
+              suggestedReply: evaSuggestedReply,
+              canWhatsApp: !!(deal as any)?.customer_phone,
+          }
+        : (typeof realEstateNextAction === "string" && realEstateNextAction.trim())
+            ? { title: realEstateNextAction, source: "deal", dueDate: inOneDay, canWhatsApp: !!(deal as any)?.customer_phone }
+            : { title: "Definir o próximo passo com o lead", source: "manual", canWhatsApp: false };
 
     const TABS = [
         { id: "historico", label: "Histórico", icon: Clock },
@@ -888,11 +935,18 @@ export default function DealCommandCenter() {
 
                             {/* Focus / next action */}
                             <FocusCard
-                                task={activeTask}
+                                action={nextAction}
                                 onComplete={() => {
-                                    addNote.mutate(`Ação concluída: ${activeTask.title}`);
+                                    addNote.mutate(`Ação concluída: ${nextAction.title}`);
                                     setShowConfetti(true);
                                     setTimeout(() => setShowConfetti(false), 2000);
+                                }}
+                                onExecute={() => {
+                                    const raw = ((deal as any)?.customer_phone || "").replace(/\D/g, "");
+                                    if (!raw) { toast.error("Sem telefone de WhatsApp neste deal"); return; }
+                                    const wa = raw.startsWith("55") ? raw : "55" + raw;
+                                    const text = nextAction.suggestedReply ? `?text=${encodeURIComponent(nextAction.suggestedReply)}` : "";
+                                    window.open(`https://wa.me/${wa}${text}`, "_blank", "noopener,noreferrer");
                                 }}
                             />
 
