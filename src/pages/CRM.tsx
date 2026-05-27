@@ -85,6 +85,7 @@ import { WinCelebration } from "@/components/crm/WinCelebration";
 import { useDealTags } from "@/hooks/useDealTags";
 import { usePipelineContextData } from "@/hooks/usePipelineContextData";
 import { useDealsTags } from "@/hooks/useDealsTags";
+import { stageLabelFor } from "@/lib/demoPipeline";
 
 // Icon mapping
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -390,7 +391,10 @@ export default function CRM() {
   }, [effectiveCompanyId]);
 
   // Convert configs to full stage objects
-  const STAGES = useMemo(() => stageConfigs.map(configToStage), [stageConfigs]);
+  const STAGES = useMemo(
+    () => stageConfigs.map((c) => configToStage({ ...c, title: stageLabelFor(effectiveCompanyId, c.id, c.title) })),
+    [stageConfigs, effectiveCompanyId],
+  );
 
   // Optimized sensors for fast, responsive drag
   const sensors = useSensors(

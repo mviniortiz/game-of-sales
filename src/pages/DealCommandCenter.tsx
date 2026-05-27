@@ -85,6 +85,7 @@ import { useDealTagsSingle } from "@/hooks/useDealsTags";
 import { getTagColorClass, isHexColor } from "@/lib/tags";
 import type { Tag } from "@/types/tags";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
+import { stageLabelFor } from "@/lib/demoPipeline";
 import {
     Tooltip,
     TooltipContent,
@@ -208,7 +209,7 @@ const getCallStatusBadge = (status?: string) => {
 // â"€â"€â"€ Sub-components â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 /** Linear-style stage chips */
-const StageChips = ({ currentStage, onStageChange }: { currentStage: string; onStageChange: (id: string) => void }) => {
+const StageChips = ({ currentStage, onStageChange, companyId }: { currentStage: string; onStageChange: (id: string) => void; companyId?: string | null }) => {
     const idx = PIPELINE_STAGES.findIndex(s => s.id === currentStage);
     return (
         <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
@@ -231,7 +232,7 @@ const StageChips = ({ currentStage, onStageChange }: { currentStage: string; onS
                             ? <CheckCircle2 className="h-3 w-3" />
                             : <span className={`w-1.5 h-1.5 rounded-full ${active ? stage.color : "bg-muted-foreground/40"}`} />
                         }
-                        <span>{stage.label}</span>
+                        <span>{stageLabelFor(companyId, stage.id, stage.label)}</span>
                     </button>
                 );
             })}
@@ -1007,6 +1008,7 @@ export default function DealCommandCenter() {
                         <div className="pb-3">
                             <StageChips
                                 currentStage={deal.stage || "lead"}
+                                companyId={deal.company_id}
                                 onStageChange={(s) => {
                                     if (s === "closed_lost") { setShowLostModal(true); return; }
                                     updateDeal.mutate({ stage: s });
