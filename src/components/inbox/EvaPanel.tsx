@@ -140,22 +140,65 @@ function EmptyPanel({ reason }: { reason: "no-chat" | "no-messages" }) {
 }
 
 function LoadingState({ message }: { message?: string }) {
+    // Estado informativo (não progresso real): os dois primeiros itens aparecem
+    // como já checados; os demais "em análise". Sem afirmar ações inexistentes.
+    const checklist = [
+        { label: "Últimas mensagens", done: true },
+        { label: "Oportunidade vinculada", done: true },
+        { label: "Dados do lead", done: false },
+        { label: "Próxima ação sugerida", done: false },
+    ];
     return (
-        <div className="flex-1 flex flex-col items-center justify-center px-5 text-center">
-            <EvaPhotoAvatar size="md" ring="glow" className="mb-4" />
-            <Loader2
-                className="h-4 w-4 animate-spin mb-2"
-                style={{ color: "#2563EB" }}
-            />
-            <p className="text-[13px] font-semibold mb-1" style={{ color: "#0B1220" }}>
-                {message || "EVA analisando conversa…"}
-            </p>
-            <p
-                className="text-[11.5px]"
-                style={{ color: "#64748B", lineHeight: 1.55, maxWidth: "240px" }}
-            >
-                Buscando contexto da agência, mensagens e pipeline.
-            </p>
+        <div className="p-4">
+            <div className="rounded-2xl border border-[#E9D5FF] bg-[#FAF5FF] p-4 shadow-[0_1px_2px_rgba(124,58,237,0.05)]">
+                {/* Header: avatar com halo roxo discreto + título */}
+                <div className="flex items-center gap-3 mb-3">
+                    <div className="relative shrink-0">
+                        <span className="absolute -inset-1 rounded-full bg-[#7C3AED]/25 blur-[6px] animate-pulse" aria-hidden />
+                        <EvaPhotoAvatar size="sm" ring="subtle" className="relative" />
+                    </div>
+                    <div className="min-w-0">
+                        <p className="text-[13px] font-semibold" style={{ color: "#0B1220" }}>
+                            {message || "EVA analisando conversa"}
+                        </p>
+                        <p className="text-[11.5px] text-slate-500 leading-snug">
+                            Buscando contexto comercial antes de sugerir o próximo passo.
+                        </p>
+                    </div>
+                </div>
+
+                {/* Barra indeterminada (shimmer sutil) */}
+                <div className="h-1 rounded-full bg-[#7C3AED]/10 overflow-hidden mb-4">
+                    <div className="h-full w-1/3 rounded-full bg-[#7C3AED]/50 animate-pulse" />
+                </div>
+
+                {/* Checklist "Analisando agora" */}
+                <p className="text-[10px] font-semibold text-[#7C3AED] uppercase tracking-widest mb-2">Analisando agora</p>
+                <ul className="space-y-1.5 mb-4">
+                    {checklist.map((c) => (
+                        <li key={c.label} className="flex items-center gap-2 text-[12.5px]">
+                            {c.done ? (
+                                <CheckCircle2 className="h-3.5 w-3.5 text-[#10B981] shrink-0" />
+                            ) : (
+                                <span className="flex h-3.5 w-3.5 items-center justify-center shrink-0" aria-hidden>
+                                    <span className="h-1.5 w-1.5 rounded-full bg-[#7C3AED] animate-pulse" />
+                                </span>
+                            )}
+                            <span className={c.done ? "text-slate-500" : "text-[#0B1220]"}>{c.label}</span>
+                            {!c.done && <span className="ml-auto text-[10.5px] text-[#7C3AED]/70">em análise</span>}
+                        </li>
+                    ))}
+                </ul>
+
+                {/* Skeleton de resposta em preparação */}
+                <div className="rounded-xl bg-white border border-[#E9D5FF]/70 p-3 space-y-2">
+                    <div className="h-2.5 rounded bg-[#7C3AED]/10 animate-pulse" />
+                    <div className="h-2.5 w-5/6 rounded bg-[#7C3AED]/10 animate-pulse" />
+                    <div className="h-2.5 w-2/3 rounded bg-[#7C3AED]/10 animate-pulse" />
+                </div>
+
+                <p className="text-[10px] text-[#7C3AED]/70 mt-3 text-center">A EVA sugere. Seu time aprova.</p>
+            </div>
         </div>
     );
 }
