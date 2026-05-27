@@ -22,6 +22,7 @@ import { useVisibleSellers } from "@/hooks/useVisibleSellers";
 import { stageLabelFor } from "@/lib/demoPipeline";
 import { GoldenHoursHeatmap } from "@/components/dashboard/GoldenHoursHeatmap";
 import { PeriodToggle, DateRangePicker } from "@/components/filters";
+import { PerformanceSkeleton } from "@/components/ui/skeletons";
 
 // ─── Formatação ──────────────────────────────────────────────────────────────
 const formatCurrencyCompact = (value: number) => {
@@ -224,21 +225,35 @@ const SalesPerformanceCenter = () => {
         </div>
     );
 
+    const headerBlock = (
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+            <div>
+                <div className="flex items-center gap-2">
+                    <h1 className="text-xl sm:text-2xl font-bold text-[#0B1220] tracking-tight">Performance Comercial</h1>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-[#1556C0]/10 text-[#1556C0]">
+                        {isManager ? "Visão da empresa" : "Minha performance"}
+                    </span>
+                </div>
+                <p className="text-[13px] text-slate-500 mt-1">Entenda resultado, funil e ritmo do time em tempo real.</p>
+            </div>
+            {periodFilter}
+        </div>
+    );
+
+    // Skeleton enquanto os dados carregam (sem gráficos vazios).
+    if (isLoading && !perf) {
+        return (
+            <div className="min-h-screen bg-[#F8FAFC] -m-3 sm:-m-4 md:-m-6 p-3 sm:p-4 md:p-6 space-y-5">
+                {headerBlock}
+                <PerformanceSkeleton />
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-[#F8FAFC] -m-3 sm:-m-4 md:-m-6 p-3 sm:p-4 md:p-6 space-y-5">
             {/* 1. Header */}
-            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                <div>
-                    <div className="flex items-center gap-2">
-                        <h1 className="text-xl sm:text-2xl font-bold text-[#0B1220] tracking-tight">Performance Comercial</h1>
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-[#1556C0]/10 text-[#1556C0]">
-                            {isManager ? "Visão da empresa" : "Minha performance"}
-                        </span>
-                    </div>
-                    <p className="text-[13px] text-slate-500 mt-1">Entenda resultado, funil e ritmo do time em tempo real.</p>
-                </div>
-                {periodFilter}
-            </div>
+            {headerBlock}
 
             {/* 2. Executive summary */}
             <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4 sm:p-5">
@@ -440,8 +455,6 @@ const SalesPerformanceCenter = () => {
                     <p className="text-[13px] text-slate-500 py-4">Volume insuficiente para calcular horários de maior atividade. Quando houver mais conversas e oportunidades, o ritmo aparece aqui.</p>
                 )}
             </Panel>
-
-            {isLoading && <p className="text-[12px] text-slate-400 text-center">Carregando dados…</p>}
         </div>
     );
 };

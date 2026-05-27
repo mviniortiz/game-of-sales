@@ -86,6 +86,7 @@ import { getTagColorClass, isHexColor } from "@/lib/tags";
 import type { Tag } from "@/types/tags";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { stageLabelFor } from "@/lib/demoPipeline";
+import { DealDetailSkeleton } from "@/components/ui/skeletons";
 import {
     Tooltip,
     TooltipContent,
@@ -883,13 +884,7 @@ export default function DealCommandCenter() {
     // â"€â"€ Loading / Not found â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
     if (isLoading) {
-        return (
-            <div className="flex items-center justify-center h-[calc(100vh-64px)] bg-background">
-                <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}>
-                    <Target className="h-8 w-8 text-emerald-500" />
-                </motion.div>
-            </div>
-        );
+        return <DealDetailSkeleton />;
     }
 
     if (!deal) {
