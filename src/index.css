@@ -640,3 +640,31 @@ All colors MUST be HSL.
     transform: none;
   }
 }
+
+/* EVA.UI — botão de envio (ícone-only) da command bar da Central.
+   idle: breathing glow roxo · hover: lift + sombra mais viva · loading: spin. */
+.eva-send-btn {
+  box-shadow: 0 2px 6px -2px rgba(124, 58, 237, 0.45);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.eva-send-btn:hover:not(:disabled) {
+  transform: translateY(-1.5px);
+  box-shadow: 0 8px 18px -4px rgba(124, 58, 237, 0.6);
+}
+.eva-send-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+@keyframes eva-send-breath {
+  0%, 100% { box-shadow: 0 2px 6px -2px rgba(124, 58, 237, 0.45); }
+  50%      { box-shadow: 0 3px 12px -1px rgba(124, 58, 237, 0.55), 0 0 0 4px rgba(124, 58, 237, 0.08); }
+}
+.eva-send-idle {
+  animation: eva-send-breath 2.8s ease-in-out infinite;
+}
+.eva-send-idle:hover:not(:disabled) {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .eva-send-btn { transition: none; }
+  .eva-send-idle { animation: none; }
+}

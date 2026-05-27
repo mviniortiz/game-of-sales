@@ -65,6 +65,7 @@ import {
     ExternalLink,
     Building2,
     Tag as TagIcon,
+    Users,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -87,6 +88,7 @@ import type { Tag } from "@/types/tags";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { stageLabelFor } from "@/lib/demoPipeline";
 import { DealDetailSkeleton } from "@/components/ui/skeletons";
+import { DecisionMapCard, getDecisionMap } from "@/components/deals/DecisionMapCard";
 import {
     Tooltip,
     TooltipContent,
@@ -1490,6 +1492,9 @@ export default function DealCommandCenter() {
                                 dealId={deal.id}
                                 companyId={deal.company_id}
                                 probability={deal.probability ?? null}
+                                decisionHint={getDecisionMap((deal as any).source_data).some((p) => p.papel === "Decisor financeiro" && (p.origem || "").toLowerCase().includes("mencionad"))
+                                    ? "A EVA identificou possível decisor financeiro mencionado na conversa. Revise antes de adicionar ao mapa de decisão."
+                                    : null}
                                 onOpenConversation={(href) => navigate(href)}
                             />
                         </div>
@@ -1617,6 +1622,9 @@ export default function DealCommandCenter() {
                                         </div>
                                     )}
                                 </div>
+
+                                {/* C.2) Mapa de decisão — editável em qualquer deal; EVA sugere da conversa */}
+                                <DecisionMapCard dealId={id!} companyId={(deal as any).company_id ?? null} sourceData={(deal as any).source_data} />
 
                                 {/* D) Tags */}
                                 <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
@@ -1804,11 +1812,13 @@ function DealConversationContextBlock({
     dealId,
     companyId,
     probability,
+    decisionHint,
     onOpenConversation,
 }: {
     dealId: string;
     companyId: string | null;
     probability: number | null;
+    decisionHint?: string | null;
     onOpenConversation: (href: string) => void;
 }) {
     const ctx = useDealContextData(dealId, companyId);
@@ -2011,6 +2021,12 @@ function DealConversationContextBlock({
                             </div>
                         )}
                     </>
+                )}
+                {decisionHint && (
+                    <div className="mt-3 pt-3 border-t border-[#E9D5FF] flex items-start gap-1.5">
+                        <Users className="h-3.5 w-3.5 text-[#7C3AED] mt-px shrink-0" />
+                        <p className="text-[11.5px] text-[#0B1220] leading-snug">{decisionHint}</p>
+                    </div>
                 )}
                 <p className="text-[10px] text-[#7C3AED]/70 mt-3 pt-3 border-t border-[#E9D5FF] leading-relaxed">
                     A EVA é assistida: ela sugere e prioriza. Seu time decide e aprova.
