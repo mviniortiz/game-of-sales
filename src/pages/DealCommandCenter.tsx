@@ -113,9 +113,32 @@ const EVENT_ICONS: Record<string, { icon: typeof StickyNote; color: string; bg: 
 // â"€â"€â"€ Helpers â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 const getHealthStatus = (days: number) => {
-    if (days > 7) return { icon: ShieldOff, color: "text-rose-400", bg: "bg-rose-500/10", border: "border-rose-500/20", label: "Crítico", subtitle: `${days}d sem contato` };
-    if (days > 3) return { icon: ShieldAlert, color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20", label: "Atenção", subtitle: `${days}d sem contato` };
-    return { icon: Shield, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20", label: "Saudável", subtitle: "Engajamento ativo" };
+    if (days > 7) return { icon: ShieldOff, color: "text-rose-400", bg: "bg-rose-500/10", border: "border-rose-500/20", hex: "#F43F5E", label: "Crítico", subtitle: `${days}d sem contato` };
+    if (days > 3) return { icon: ShieldAlert, color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20", hex: "#F59E0B", label: "Atenção", subtitle: `${days}d sem contato` };
+    return { icon: Shield, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20", hex: "#10B981", label: "Saudável", subtitle: "Engajamento ativo" };
+};
+
+// DEAL.UI.1 — gauge circular (anel) de probabilidade. SVG inline, sem dependência.
+const ProbabilityGauge = ({ value, hex }: { value: number; hex: string }) => {
+    const v = Math.max(0, Math.min(100, Math.round(value)));
+    const r = 15.5;
+    const circ = 2 * Math.PI * r;
+    const offset = circ * (1 - v / 100);
+    return (
+        <div className="relative h-12 w-12 flex items-center justify-center shrink-0">
+            <svg viewBox="0 0 40 40" className="h-12 w-12 -rotate-90">
+                <circle cx="20" cy="20" r={r} fill="none" stroke="#E5E7EB" strokeWidth="3.5" />
+                <motion.circle
+                    cx="20" cy="20" r={r} fill="none" stroke={hex} strokeWidth="3.5" strokeLinecap="round"
+                    strokeDasharray={circ}
+                    initial={{ strokeDashoffset: circ }}
+                    animate={{ strokeDashoffset: offset }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                />
+            </svg>
+            <span className="absolute text-[11px] font-bold text-[#0B1220] tabular-nums leading-none">{v}%</span>
+        </div>
+    );
 };
 
 const formatCurrency = (value: number) => {
@@ -1381,9 +1404,9 @@ export default function DealCommandCenter() {
                                             <p className={`text-[13px] font-semibold ${health.color} leading-tight`}>{health.label}</p>
                                             <p className="text-[11px] text-slate-500 leading-tight">{health.subtitle}</p>
                                         </div>
-                                        <div className="text-right shrink-0">
-                                            <p className="text-[16px] font-bold text-[#0B1220] tabular-nums leading-none">{deal.probability ?? 0}%</p>
-                                            <p className="text-[10px] text-slate-500 mt-0.5">Probabilidade</p>
+                                        <div className="flex flex-col items-center shrink-0">
+                                            <ProbabilityGauge value={deal.probability ?? 0} hex={health.hex} />
+                                            <p className="text-[10px] text-slate-500 mt-1">Probabilidade</p>
                                         </div>
                                     </div>
                                 </div>
