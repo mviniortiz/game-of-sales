@@ -118,17 +118,37 @@ function NivelChip({ nivel }: { nivel: string }) {
     );
 }
 
+type PodiumSize = "large" | "medium" | "small";
+
+const PODIUM_SIZE: Record<PodiumSize, {
+    pad: string;
+    avatar: string;
+    avatarText: string;
+    name: string;
+    value: string;
+    badge: string;
+    gap: string;
+    skeletonH: number;
+}> = {
+    large:  { pad: "p-5 sm:p-7",   avatar: "h-16 w-16 sm:h-20 sm:w-20", avatarText: "text-[15px]", name: "text-[14.5px] sm:text-[16px]", value: "text-[22px] sm:text-[28px]", badge: "h-7 w-7 text-[12px]", gap: "gap-3",   skeletonH: 230 },
+    medium: { pad: "p-4 sm:p-5",   avatar: "h-14 w-14 sm:h-16 sm:w-16", avatarText: "text-[13px]", name: "text-[13px] sm:text-[14px]",   value: "text-[18px] sm:text-[20px]", badge: "h-6 w-6 text-[11px]", gap: "gap-2.5", skeletonH: 190 },
+    small:  { pad: "p-3.5 sm:p-4", avatar: "h-12 w-12 sm:h-14 sm:w-14", avatarText: "text-[12px]", name: "text-[12.5px] sm:text-[13px]", value: "text-[16px] sm:text-[18px]", badge: "h-5 w-5 text-[10px]", gap: "gap-2",   skeletonH: 170 },
+};
+
 function PodiumCard({
-    vendedor, rank, isCurrentUser, metaAtual,
+    vendedor, rank, isCurrentUser, metaAtual, size = "medium",
 }: {
     vendedor?: VendedorRanking;
     rank: 1 | 2 | 3;
     isCurrentUser: boolean;
     metaAtual: number;
+    size?: PodiumSize;
 }) {
+    const sz = PODIUM_SIZE[size];
     if (!vendedor) {
         return (
-            <div className="rounded-2xl h-[180px]" style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }} />
+            <div className="rounded-2xl"
+                style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", height: sz.skeletonH }} />
         );
     }
     const style = PODIUM_RANK[rank];
@@ -140,30 +160,36 @@ function PodiumCard({
                 background: style.softBg,
                 border: `1px solid ${style.accentBorder}`,
                 boxShadow: rank === 1
-                    ? "0 1px 2px rgba(15,23,42,0.04), 0 14px 32px -10px rgba(234,179,8,0.20)"
-                    : "0 1px 2px rgba(15,23,42,0.04), 0 10px 30px rgba(15,23,42,0.05)",
+                    ? "0 1px 2px rgba(15,23,42,0.04), 0 22px 48px -12px rgba(234,179,8,0.32)"
+                    : "0 1px 2px rgba(15,23,42,0.04), 0 10px 26px rgba(15,23,42,0.06)",
             }}>
-            <div className="p-5 flex flex-col items-center text-center gap-2.5">
-                {/* Avatar + badge rank */}
+            <div className={`${sz.pad} flex flex-col items-center text-center ${sz.gap}`}>
+                {/* Chip "Líder" só pro 1º — reforça o peso visual */}
+                {rank === 1 && (
+                    <div className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full"
+                        style={{ background: "rgba(234,179,8,0.14)", color: "#A16207", letterSpacing: "0.08em" }}>
+                        <Crown size={11} weight="fill" style={{ color: "#EAB308" }} />
+                        Líder
+                    </div>
+                )}
+
+                {/* Avatar + badge de rank */}
                 <div className="relative">
-                    <Avatar className="h-14 w-14 ring-2" style={{ boxShadow: `0 0 0 2px ${style.ringColor}40` }}>
+                    <Avatar className={`${sz.avatar} ring-2`} style={{ boxShadow: `0 0 0 2px ${style.ringColor}40` }}>
                         {vendedor.avatar_url && <AvatarImage src={vendedor.avatar_url} alt={vendedor.nome} />}
-                        <AvatarFallback style={{ background: "#F1F5F9", color: "#0B1220" }} className="text-[13px] font-semibold">
+                        <AvatarFallback style={{ background: "#F1F5F9", color: "#0B1220" }} className={`${sz.avatarText} font-semibold`}>
                             {getInitials(vendedor.nome)}
                         </AvatarFallback>
                     </Avatar>
-                    <span className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full flex items-center justify-center text-[11px] font-bold shadow-[0_2px_6px_rgba(15,23,42,0.18)]"
+                    <span className={`absolute -bottom-1 -right-1 ${sz.badge} rounded-full flex items-center justify-center font-bold shadow-[0_2px_6px_rgba(15,23,42,0.20)]`}
                         style={{ background: style.badgeBg, color: style.badgeColor }}>
                         {rank}
                     </span>
-                    {rank === 1 && (
-                        <Crown size={14} weight="fill" className="absolute -top-1 -left-1" style={{ color: "#EAB308" }} />
-                    )}
                 </div>
 
                 {/* Nome + nível */}
                 <div className="w-full">
-                    <p className="text-[13.5px] font-bold truncate" style={{ color: "#0B1220" }}>{vendedor.nome}</p>
+                    <p className={`${sz.name} font-bold truncate`} style={{ color: "#0B1220" }}>{vendedor.nome}</p>
                     <div className="flex items-center justify-center gap-1.5 mt-1 flex-wrap">
                         <NivelChip nivel={vendedor.nivel || "Bronze"} />
                         {isCurrentUser && (
@@ -176,8 +202,8 @@ function PodiumCard({
                 </div>
 
                 {/* Valor */}
-                <p className="text-[18px] sm:text-[20px] font-bold tabular-nums leading-none"
-                    style={{ color: "#0B1220", letterSpacing: "-0.02em" }}>
+                <p className={`${sz.value} font-bold tabular-nums leading-none`}
+                    style={{ color: "#0B1220", letterSpacing: "-0.022em" }}>
                     {formatCurrencyCompact(vendedor.valor_vendido)}
                 </p>
 
@@ -687,27 +713,39 @@ const Ranking = () => {
                 </div>
             ) : (
                 <>
-                    {/* Pódio top 3 */}
+                    {/* Pódio top 3 — olímpico (2-1-3 em desktop, 1-2-3 em mobile) */}
                     {top3.length > 0 && (
-                        <div data-tour="ranking-section" className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-                            <PodiumCard
-                                vendedor={first}
-                                rank={1}
-                                isCurrentUser={first?.user_id === currentUserId}
-                                metaAtual={metaValor}
-                            />
-                            <PodiumCard
-                                vendedor={second}
-                                rank={2}
-                                isCurrentUser={second?.user_id === currentUserId}
-                                metaAtual={metaValor}
-                            />
-                            <PodiumCard
-                                vendedor={third}
-                                rank={3}
-                                isCurrentUser={third?.user_id === currentUserId}
-                                metaAtual={metaValor}
-                            />
+                        <div data-tour="ranking-section" className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-12 sm:items-end">
+                            {/* 2º — ordem 2 em mobile, esquerda em desktop com pequeno push down */}
+                            <div className="order-2 sm:order-1 sm:col-span-4 sm:pt-6">
+                                <PodiumCard
+                                    vendedor={second}
+                                    rank={2}
+                                    isCurrentUser={second?.user_id === currentUserId}
+                                    metaAtual={metaValor}
+                                    size="medium"
+                                />
+                            </div>
+                            {/* 1º — ordem 1 em mobile, central em desktop, sem padding (mais alto) */}
+                            <div className="order-1 sm:order-2 sm:col-span-4">
+                                <PodiumCard
+                                    vendedor={first}
+                                    rank={1}
+                                    isCurrentUser={first?.user_id === currentUserId}
+                                    metaAtual={metaValor}
+                                    size="large"
+                                />
+                            </div>
+                            {/* 3º — ordem 3, direita em desktop com push down maior */}
+                            <div className="order-3 sm:col-span-4 sm:pt-10">
+                                <PodiumCard
+                                    vendedor={third}
+                                    rank={3}
+                                    isCurrentUser={third?.user_id === currentUserId}
+                                    metaAtual={metaValor}
+                                    size="small"
+                                />
+                            </div>
                         </div>
                     )}
 
