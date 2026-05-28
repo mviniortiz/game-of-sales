@@ -20,6 +20,8 @@ import {
   CalendarBlank,
   Sparkle as SparkleIcon,
   ChartLineUp,
+  Target,
+  Trophy,
   GearSix,
   ShieldCheck,
   Lifebuoy as LifeBuoyIcon,
@@ -94,6 +96,8 @@ const mainNavItems: NavItem[] = [
   { title: "Agenda", url: "/agenda", icon: CalendarBlank },
   { title: "EVA", url: "/eva", icon: SparkleIcon, adminOnly: true, feature: "eva" },
   { title: "Performance", url: "/performance", icon: ChartLineUp },
+  { title: "Metas", url: "/metas", icon: Target },
+  { title: "Ranking", url: "/ranking", icon: Trophy },
   { title: "Configurações", url: "/configuracoes", icon: GearSix },
 ];
 
