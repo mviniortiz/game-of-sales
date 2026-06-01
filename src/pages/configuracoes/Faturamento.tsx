@@ -5,7 +5,7 @@ import { usePlan } from "@/hooks/usePlan";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
-  Sparkles, Crown, Zap, Check, ArrowRight, Users, Package, CreditCard,
+  Star, Crown, Rocket, Check, ArrowRight, Users, Package, CreditCard,
   Loader2, AlertTriangle, Calendar, HeartCrack,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -18,12 +18,12 @@ const PLAN_DETAILS: Record<PlanType, {
   features: string[];
 }> = {
   starter: {
-    icon: Zap,
+    icon: Star,
     price: "R$ 147/mês",
     features: ["2 vendedores", "10 produtos", "Dashboard + CRM", "Ranking + Gamificação"],
   },
   plus: {
-    icon: Sparkles,
+    icon: Rocket,
     price: "R$ 297/mês",
     features: ["10 vendedores", "50 produtos", "Eva (30/dia)", "Tudo do Starter"],
   },
@@ -113,7 +113,7 @@ export default function Faturamento() {
 
   if (!isAdmin) {
     return (
-      <div className="rounded-2xl border border-border/50 bg-card p-8 text-center">
+      <div className="rounded-2xl border border-[#E6EDF5] bg-white shadow-[0_1px_2px_rgba(11,18,32,0.04)] p-8 text-center">
         <p className="text-sm text-muted-foreground">
           Apenas admins podem acessar faturamento.
         </p>
@@ -167,7 +167,7 @@ export default function Faturamento() {
           <Button
             size="sm"
             onClick={() => navigate(`/upgrade?plan=${currentPlan}`)}
-            className="h-8 text-xs bg-emerald-500 hover:bg-emerald-600 text-white shrink-0"
+            className="h-8 text-xs bg-[#2563EB] hover:bg-[#1D4ED8] text-white shrink-0"
           >
             Reativar
           </Button>
@@ -175,29 +175,29 @@ export default function Faturamento() {
       )}
 
       {/* Plan card */}
-      <div className="rounded-2xl border border-border/50 bg-card overflow-hidden">
-        <div className="grid sm:grid-cols-[1fr_auto] divide-y sm:divide-y-0 sm:divide-x divide-border/50">
+      <div className="rounded-2xl border border-[#E6EDF5] bg-white shadow-[0_1px_2px_rgba(11,18,32,0.04)] overflow-hidden">
+        <div className="grid sm:grid-cols-[1fr_auto] divide-y sm:divide-y-0 sm:divide-x divide-[#E6EDF5]">
           <div className="p-6 space-y-4">
             <div className="flex items-center gap-3">
               <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${
-                currentPlan === "pro" ? "bg-emerald-500/15" :
-                currentPlan === "plus" ? "bg-blue-500/15" :
-                "bg-zinc-500/15"
+                currentPlan === "pro" ? "bg-[rgba(124,58,237,0.12)]" :
+                currentPlan === "plus" ? "bg-[rgba(37,99,235,0.12)]" :
+                "bg-[#F1F5F9]"
               }`}>
                 <PlanIcon className={`h-5 w-5 ${
-                  currentPlan === "pro" ? "text-emerald-400" :
-                  currentPlan === "plus" ? "text-blue-400" :
-                  "text-zinc-400"
+                  currentPlan === "pro" ? "text-[#7C3AED]" :
+                  currentPlan === "plus" ? "text-[#2563EB]" :
+                  "text-[#64748B]"
                 }`} />
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <p className="text-base font-bold text-foreground">Plano {planInfo.label}</p>
                   <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
-                    isCancelled ? "bg-rose-500/15 text-rose-400" :
-                    status === "active" ? "bg-emerald-500/15 text-emerald-400" :
-                    isTrialing ? "bg-amber-500/15 text-amber-400" :
-                    "bg-zinc-500/15 text-zinc-400"
+                    isCancelled ? "bg-[#FEF2F2] text-[#DC2626]" :
+                    status === "active" ? "bg-[#ECFDF3] text-[#16A34A]" :
+                    isTrialing ? "bg-[#FFFBEB] text-[#B45309]" :
+                    "bg-[#F1F5F9] text-[#64748B]"
                   }`}>
                     {isCancelled ? "Cancelado" : isTrialing ? "Trial" : "Ativo"}
                   </span>
@@ -242,13 +242,13 @@ export default function Faturamento() {
 
       {/* Monthly summary */}
       <div className="grid sm:grid-cols-2 gap-3">
-        <div className="rounded-xl border border-border/50 bg-card p-4">
+        <div className="rounded-2xl border border-[#E6EDF5] bg-white p-4">
           <p className="text-[11px] text-muted-foreground mb-1">Faturamento no mês</p>
           <p className="text-xl font-bold text-foreground tabular-nums">
             {formatCurrency(stats.revenueThisMonth)}
           </p>
         </div>
-        <div className="rounded-xl border border-border/50 bg-card p-4">
+        <div className="rounded-2xl border border-[#E6EDF5] bg-white p-4">
           <p className="text-[11px] text-muted-foreground mb-1">Vendas no mês</p>
           <p className="text-xl font-bold text-foreground tabular-nums">
             {stats.salesThisMonth}
@@ -258,8 +258,8 @@ export default function Faturamento() {
 
       {/* Upgrade options */}
       {currentIndex < planOrder.length - 1 && !isCancelled && (
-        <div className="rounded-2xl border border-border/50 bg-card overflow-hidden">
-          <div className="px-5 py-3.5 border-b border-border/50">
+        <div className="rounded-2xl border border-[#E6EDF5] bg-white shadow-[0_1px_2px_rgba(11,18,32,0.04)] overflow-hidden">
+          <div className="px-5 py-3.5 border-b border-[#E6EDF5]">
             <h2 className="text-[13px] font-semibold text-foreground">Fazer upgrade</h2>
             <p className="text-xs text-muted-foreground mt-0.5">Destrava mais vendedores, Eva e integrações</p>
           </div>
@@ -275,9 +275,9 @@ export default function Faturamento() {
                   className="w-full flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/40 hover:border-border transition-all text-left group"
                 >
                   <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
-                    plan === "plus" ? "bg-blue-500/15" : "bg-emerald-500/15"
+                    plan === "plus" ? "bg-[rgba(37,99,235,0.12)]" : "bg-[rgba(124,58,237,0.12)]"
                   }`}>
-                    <Icon className={`h-4 w-4 ${plan === "plus" ? "text-blue-400" : "text-emerald-400"}`} />
+                    <Icon className={`h-4 w-4 ${plan === "plus" ? "text-[#2563EB]" : "text-[#7C3AED]"}`} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-foreground">{info.label}</p>
@@ -350,7 +350,7 @@ function UsageRow({
       </div>
       <div className="h-1 rounded-full bg-muted/50 overflow-hidden">
         <div
-          className={`h-full rounded-full transition-all ${nearLimit ? "bg-amber-500" : "bg-emerald-500/80"}`}
+          className={`h-full rounded-full transition-all ${nearLimit ? "bg-amber-500" : "bg-[#2563EB]"}`}
           style={{ width: `${pct}%` }}
         />
       </div>

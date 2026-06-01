@@ -6,10 +6,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import {
   Copy,
   Check,
@@ -24,10 +20,11 @@ import {
   ChevronRight,
   CheckCircle2,
   Lock,
-  Sparkles,
-  Zap,
+  Info,
+  Radio,
   PlayCircle,
   FileCode,
+  KeyRound,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -53,10 +50,10 @@ interface IntegrationConfigModalProps {
 }
 
 const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
-  { id: "overview", label: "Visão geral", icon: Sparkles },
+  { id: "overview", label: "Visão geral", icon: Info },
   { id: "setup", label: "Como conectar", icon: Rocket },
-  { id: "webhook", label: "Credenciais", icon: Webhook },
-  { id: "events", label: "Eventos", icon: Zap },
+  { id: "webhook", label: "Credenciais", icon: KeyRound },
+  { id: "events", label: "Eventos", icon: Radio },
   { id: "make", label: "Via Make", icon: Workflow },
 ];
 
@@ -112,6 +109,7 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
     }
     if (!token.trim()) {
       toast.error(`Informe ${spec.webhook.authFieldLabel}`);
+      setActiveTab("webhook");
       return;
     }
 
@@ -201,27 +199,27 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-[95vw] sm:max-w-[760px] p-0 bg-card border-border overflow-hidden max-h-[90vh] flex flex-col">
+      <DialogContent className="max-w-[95vw] sm:max-w-[760px] p-0 overflow-hidden max-h-[90vh] flex flex-col" style={{ background: "#FFFFFF", border: "1px solid #E6EDF5" }}>
         {/* ─── Header ──────────────────────────────────────────── */}
-        <div className="relative px-6 pt-6 pb-5 border-b border-border/60 bg-gradient-to-br from-muted/30 to-transparent">
+        <div className="px-6 pt-6 pb-4" style={{ borderBottom: "1px solid #E6EDF5", background: "#FBFCFE" }}>
           <DialogHeader className="text-left">
             <div className="flex items-start gap-4">
-              <div className="w-14 h-14 rounded-xl bg-white ring-1 ring-border shadow-sm p-2.5 flex items-center justify-center shrink-0">
+              <div className="w-14 h-14 rounded-xl bg-white shadow-sm p-2.5 flex items-center justify-center shrink-0" style={{ border: "1px solid #EEF2F7" }}>
                 <img src={spec.logo} alt={spec.name} className="w-full h-full object-contain" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <DialogTitle className="text-xl font-bold text-foreground tracking-tight">
+                  <DialogTitle className="text-xl font-bold tracking-tight" style={{ color: "#0B1220" }}>
                     {spec.name}
                   </DialogTitle>
                   {isConnected && (
-                    <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px] font-semibold">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1 animate-pulse" />
-                      ATIVA
-                    </Badge>
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase" style={{ background: "#ECFDF3", color: "#16A34A", letterSpacing: "0.04em" }}>
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#16A34A" }} />
+                      Conectada
+                    </span>
                   )}
                 </div>
-                <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+                <DialogDescription className="text-xs mt-0.5" style={{ color: "#64748B" }}>
                   {spec.tagline}
                 </DialogDescription>
               </div>
@@ -229,7 +227,7 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
           </DialogHeader>
 
           {/* Tabs */}
-          <div className="flex gap-1 mt-5 overflow-x-auto scrollbar-hide -mx-1 px-1">
+          <div className="flex gap-1 mt-5 overflow-x-auto no-scrollbar -mx-1 px-1">
             {TABS.map((tab) => {
               const TabIcon = tab.icon;
               const active = activeTab === tab.id;
@@ -237,13 +235,10 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`
-                    flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-all
-                    ${active
-                      ? "bg-background text-foreground shadow-sm ring-1 ring-border"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-                    }
-                  `}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors"
+                  style={active
+                    ? { background: "#FFFFFF", color: "#0B1220", boxShadow: "0 1px 2px rgba(11,18,32,0.06)", border: "1px solid #E6EDF5" }
+                    : { color: "#64748B" }}
                 >
                   <TabIcon className="w-3.5 h-3.5" />
                   {tab.label}
@@ -257,63 +252,63 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
         <div className="flex-1 overflow-y-auto px-6 py-5">
           {isLoading ? (
             <div className="flex items-center justify-center py-16">
-              <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
+              <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#2563EB" }} />
             </div>
           ) : (
             <>
               {/* ─── Overview ───────────────────────────────── */}
               {activeTab === "overview" && (
                 <div className="space-y-5">
-                  <p className="text-sm text-foreground/90 leading-relaxed">
+                  <p className="text-sm leading-relaxed" style={{ color: "#334155" }}>
                     {spec.description}
                   </p>
 
                   <div>
-                    <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                    <h3 className="text-[10px] font-semibold uppercase mb-2" style={{ color: "#94A3B8", letterSpacing: "0.06em" }}>
                       O que essa integração faz
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {spec.features.map((feature) => (
                         <div
                           key={feature}
-                          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/40 border border-border/50"
+                          className="flex items-center gap-2 px-3 py-2 rounded-lg"
+                          style={{ background: "#F8FAFC", border: "1px solid #EEF2F7" }}
                         >
-                          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                          <span className="text-xs text-foreground">{feature}</span>
+                          <CheckCircle2 className="w-4 h-4 shrink-0" style={{ color: "#16A34A" }} />
+                          <span className="text-xs" style={{ color: "#0B1220" }}>{feature}</span>
                         </div>
                       ))}
                     </div>
                   </div>
 
                   <div>
-                    <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <h3 className="text-[10px] font-semibold uppercase mb-2 flex items-center gap-1.5" style={{ color: "#94A3B8", letterSpacing: "0.06em" }}>
                       <Lock className="w-3 h-3" />
                       Segurança
                     </h3>
                     <div className="space-y-1.5">
                       {spec.securityNotes.map((note, i) => (
-                        <div key={i} className="flex items-start gap-2 text-xs text-muted-foreground leading-relaxed">
-                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-400/70 shrink-0 mt-0.5" />
+                        <div key={i} className="flex items-start gap-2 text-xs leading-relaxed" style={{ color: "#64748B" }}>
+                          <ShieldCheck className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: "#16A34A" }} />
                           <span>{note}</span>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/15">
-                    <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
-                    <p className="text-xs text-foreground/80 flex-1">
-                      Pronto para conectar? Vá para a aba <strong className="text-emerald-400">Como conectar</strong> e siga o passo-a-passo.
+                  <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: "rgba(37,99,235,0.05)", border: "1px solid rgba(37,99,235,0.15)" }}>
+                    <Rocket className="w-4 h-4 shrink-0" style={{ color: "#2563EB" }} />
+                    <p className="text-xs flex-1" style={{ color: "#334155" }}>
+                      Pronto para conectar? Veja o passo-a-passo em <strong style={{ color: "#2563EB" }}>Como conectar</strong>.
                     </p>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-7 text-xs text-emerald-400 hover:text-emerald-300"
+                    <button
+                      className="inline-flex items-center gap-0.5 h-7 px-2 rounded-lg text-xs font-semibold transition-colors hover:bg-[rgba(37,99,235,0.08)]"
+                      style={{ color: "#2563EB" }}
                       onClick={() => setActiveTab("setup")}
                     >
                       Começar
-                      <ChevronRight className="w-3 h-3 ml-0.5" />
-                    </Button>
+                      <ChevronRight className="w-3 h-3" />
+                    </button>
                   </div>
                 </div>
               )}
@@ -322,10 +317,10 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
               {activeTab === "setup" && (
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-sm font-semibold text-foreground mb-0.5">
+                    <h3 className="text-sm font-semibold mb-0.5" style={{ color: "#0B1220" }}>
                       Passo-a-passo de conexão
                     </h3>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs" style={{ color: "#64748B" }}>
                       Leva menos de 5 minutos. Depois é tempo real para sempre.
                     </p>
                   </div>
@@ -333,23 +328,21 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
                   <ol className="space-y-3">
                     {spec.setupSteps.map((step, i) => (
                       <li key={i} className="relative pl-10">
-                        {/* Connecting line */}
                         {i < spec.setupSteps.length - 1 && (
-                          <div className="absolute left-[14px] top-7 bottom-[-12px] w-px bg-border" />
+                          <div className="absolute left-[14px] top-7 bottom-[-12px] w-px" style={{ background: "#E6EDF5" }} />
                         )}
-                        {/* Number */}
-                        <div className="absolute left-0 top-0 w-7 h-7 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-[11px] font-bold text-emerald-400">
+                        <div className="absolute left-0 top-0 w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold" style={{ background: "rgba(37,99,235,0.08)", color: "#2563EB", border: "1px solid rgba(37,99,235,0.2)" }}>
                           {i + 1}
                         </div>
-                        <div className="p-3 rounded-lg border border-border/60 bg-card/60">
-                          <h4 className="text-sm font-semibold text-foreground">{step.title}</h4>
-                          <p className="text-xs text-muted-foreground leading-relaxed mt-0.5">
+                        <div className="p-3 rounded-xl" style={{ border: "1px solid #E6EDF5", background: "#FFFFFF" }}>
+                          <h4 className="text-sm font-semibold" style={{ color: "#0B1220" }}>{step.title}</h4>
+                          <p className="text-xs leading-relaxed mt-0.5" style={{ color: "#64748B" }}>
                             {step.description}
                           </p>
                           {step.note && (
-                            <div className="mt-2 flex items-start gap-1.5 p-2 rounded-md bg-amber-500/5 border border-amber-500/15">
-                              <Lock className="w-3 h-3 text-amber-500 shrink-0 mt-0.5" />
-                              <span className="text-[11px] text-amber-600 dark:text-amber-400 leading-relaxed">
+                            <div className="mt-2 flex items-start gap-1.5 p-2 rounded-md" style={{ background: "#FFFBEB", border: "1px solid rgba(217,119,6,0.18)" }}>
+                              <Lock className="w-3 h-3 shrink-0 mt-0.5" style={{ color: "#D97706" }} />
+                              <span className="text-[11px] leading-relaxed" style={{ color: "#B45309" }}>
                                 {step.note}
                               </span>
                             </div>
@@ -363,14 +356,23 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
                     href={spec.dashboardUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group flex items-center justify-between w-full p-3 rounded-lg border border-border/60 bg-muted/20 hover:bg-muted/40 hover:border-emerald-500/30 transition-all"
+                    className="group flex items-center justify-between w-full p-3 rounded-xl transition-colors hover:bg-[#F8FAFC]"
+                    style={{ border: "1px solid #E6EDF5" }}
                   >
                     <div className="flex items-center gap-2.5">
-                      <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-emerald-400" />
-                      <span className="text-xs font-medium text-foreground">{spec.dashboardLabel}</span>
+                      <ExternalLink className="w-4 h-4" style={{ color: "#2563EB" }} />
+                      <span className="text-xs font-medium" style={{ color: "#0B1220" }}>{spec.dashboardLabel}</span>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-transform" />
+                    <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" style={{ color: "#94A3B8" }} />
                   </a>
+
+                  <button
+                    onClick={() => setActiveTab("webhook")}
+                    className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-lg text-sm font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] transition-colors"
+                  >
+                    <KeyRound className="w-4 h-4" />
+                    Ir para as credenciais
+                  </button>
                 </div>
               )}
 
@@ -380,62 +382,54 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
                   {/* URL */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <Label className="text-xs font-semibold text-foreground uppercase tracking-wider">
+                      <label className="text-xs font-semibold uppercase" style={{ color: "#64748B", letterSpacing: "0.04em" }}>
                         URL do webhook
-                      </Label>
-                      <Badge variant="outline" className="text-[9px] px-1.5 py-0 font-mono">
+                      </label>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded font-mono font-semibold" style={{ background: "#F1F5F9", color: "#64748B" }}>
                         {spec.webhook.method}
-                      </Badge>
+                      </span>
                     </div>
                     <div className="flex gap-2">
-                      <Input
+                      <input
                         value={spec.webhook.url}
                         readOnly
-                        className="bg-muted/30 border-border text-xs font-mono"
+                        className="flex-1 h-9 px-3 rounded-lg text-xs font-mono outline-none"
+                        style={{ background: "#F8FAFC", border: "1px solid #E6EDF5", color: "#334155" }}
                       />
-                      <Button
-                        variant="outline"
-                        size="icon"
+                      <button
                         onClick={() => handleCopy(spec.webhook.url, "url")}
-                        className="shrink-0"
+                        className="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-colors hover:bg-[#F1F5F9]"
+                        style={{ border: "1px solid #E6EDF5" }}
                       >
-                        {copiedUrl ? (
-                          <Check className="w-4 h-4 text-emerald-500" />
-                        ) : (
-                          <Copy className="w-4 h-4" />
-                        )}
-                      </Button>
+                        {copiedUrl ? <Check className="w-4 h-4" style={{ color: "#16A34A" }} /> : <Copy className="w-4 h-4" style={{ color: "#64748B" }} />}
+                      </button>
                     </div>
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-[11px]" style={{ color: "#94A3B8" }}>
                       Cole essa URL no painel da {spec.name} como destino do webhook/postback.
                     </p>
                   </div>
 
                   {/* Auth header */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-foreground uppercase tracking-wider">
+                    <label className="text-xs font-semibold uppercase" style={{ color: "#64748B", letterSpacing: "0.04em" }}>
                       Header de autenticação
-                    </Label>
+                    </label>
                     <div className="flex gap-2">
-                      <Input
+                      <input
                         value={spec.webhook.authHeader}
                         readOnly
-                        className="bg-muted/30 border-border text-xs font-mono"
+                        className="flex-1 h-9 px-3 rounded-lg text-xs font-mono outline-none"
+                        style={{ background: "#F8FAFC", border: "1px solid #E6EDF5", color: "#334155" }}
                       />
-                      <Button
-                        variant="outline"
-                        size="icon"
+                      <button
                         onClick={() => handleCopy(spec.webhook.authHeader, "header")}
-                        className="shrink-0"
+                        className="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-colors hover:bg-[#F1F5F9]"
+                        style={{ border: "1px solid #E6EDF5" }}
                       >
-                        {copiedHeader ? (
-                          <Check className="w-4 h-4 text-emerald-500" />
-                        ) : (
-                          <Copy className="w-4 h-4" />
-                        )}
-                      </Button>
+                        {copiedHeader ? <Check className="w-4 h-4" style={{ color: "#16A34A" }} /> : <Copy className="w-4 h-4" style={{ color: "#64748B" }} />}
+                      </button>
                     </div>
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-[11px]" style={{ color: "#94A3B8" }}>
                       {spec.webhook.authType === "hmac"
                         ? "Validação HMAC-SHA256 — o secret abaixo é usado para verificar a assinatura."
                         : "A plataforma deve enviar o token nesse header em cada request."}
@@ -443,18 +437,20 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
                   </div>
 
                   {/* Token input */}
-                  <div className="space-y-1.5 pt-2 border-t border-border/40">
-                    <Label className="text-xs font-semibold text-foreground uppercase tracking-wider">
+                  <div className="space-y-1.5 pt-3" style={{ borderTop: "1px solid #EEF2F7" }}>
+                    <label className="text-xs font-semibold uppercase flex items-center gap-1.5" style={{ color: "#0B1220", letterSpacing: "0.04em" }}>
+                      <KeyRound className="w-3.5 h-3.5" style={{ color: "#2563EB" }} />
                       {spec.webhook.authFieldLabel}
-                    </Label>
-                    <Input
+                    </label>
+                    <input
                       type="password"
                       value={token}
                       onChange={(e) => setToken(e.target.value)}
                       placeholder={spec.webhook.authFieldPlaceholder}
-                      className="bg-background border-border font-mono"
+                      className="w-full h-10 px-3 rounded-lg text-sm font-mono outline-none transition-colors focus:border-[#2563EB]"
+                      style={{ background: "#FFFFFF", border: "1px solid #E6EDF5", color: "#0B1220" }}
                     />
-                    <p className="text-[11px] text-muted-foreground">{spec.webhook.authFieldHelp}</p>
+                    <p className="text-[11px]" style={{ color: "#94A3B8" }}>{spec.webhook.authFieldHelp}</p>
                   </div>
                 </div>
               )}
@@ -463,23 +459,23 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
               {activeTab === "events" && (
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-sm font-semibold text-foreground mb-0.5">
+                    <h3 className="text-sm font-semibold mb-0.5" style={{ color: "#0B1220" }}>
                       Eventos suportados
                     </h3>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs" style={{ color: "#64748B" }}>
                       Cada evento da {spec.name} é processado automaticamente no seu CRM.
                     </p>
                   </div>
 
-                  <div className="divide-y divide-border/40 rounded-lg border border-border/60 bg-card/60 overflow-hidden">
-                    {spec.events.map((event) => (
-                      <div key={event.label} className="flex items-start gap-3 p-3">
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-2 shrink-0" />
+                  <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #E6EDF5" }}>
+                    {spec.events.map((event, i) => (
+                      <div key={event.label} className="flex items-start gap-3 p-3" style={i > 0 ? { borderTop: "1px solid #EEF2F7" } : undefined}>
+                        <div className="w-1.5 h-1.5 rounded-full mt-2 shrink-0" style={{ background: "#2563EB" }} />
                         <div className="flex-1 min-w-0">
-                          <code className="text-[11px] font-mono text-emerald-400 font-semibold">
+                          <code className="text-[11px] font-mono font-semibold" style={{ color: "#2563EB" }}>
                             {event.label}
                           </code>
-                          <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                          <p className="text-xs mt-0.5 leading-relaxed" style={{ color: "#64748B" }}>
                             {event.description}
                           </p>
                         </div>
@@ -490,15 +486,15 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
                   {/* Sample payload */}
                   <div>
                     <div className="flex items-center gap-1.5 mb-2">
-                      <FileCode className="w-3.5 h-3.5 text-muted-foreground" />
-                      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      <FileCode className="w-3.5 h-3.5" style={{ color: "#94A3B8" }} />
+                      <span className="text-[10px] font-semibold uppercase" style={{ color: "#94A3B8", letterSpacing: "0.06em" }}>
                         Payload de exemplo (esperado)
                       </span>
                     </div>
-                    <pre className="text-[11px] font-mono text-foreground/80 p-3 rounded-lg bg-muted/30 border border-border/60 overflow-x-auto leading-relaxed">
+                    <pre className="text-[11px] font-mono p-3 rounded-xl overflow-x-auto leading-relaxed" style={{ color: "#334155", background: "#F8FAFC", border: "1px solid #E6EDF5" }}>
 {samplePayload}
                     </pre>
-                    <p className="text-[11px] text-muted-foreground mt-1.5">
+                    <p className="text-[11px] mt-1.5" style={{ color: "#94A3B8" }}>
                       Formatos variam por plataforma. O adapter do Vyzon normaliza automaticamente.
                     </p>
                   </div>
@@ -509,67 +505,59 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
               {activeTab === "make" && (
                 <div className="space-y-4">
                   <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-lg bg-purple-500/10 border border-purple-500/20 shrink-0">
-                      <Workflow className="w-5 h-5 text-purple-400" />
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(124,58,237,0.08)" }}>
+                      <Workflow className="w-5 h-5" style={{ color: "#7C3AED" }} />
                     </div>
                     <div>
-                      <h3 className="text-sm font-semibold text-foreground">
+                      <h3 className="text-sm font-semibold" style={{ color: "#0B1220" }}>
                         Integrar via Make (Integromat)
                       </h3>
-                      <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                      <p className="text-xs mt-0.5 leading-relaxed" style={{ color: "#64748B" }}>
                         {spec.make.description}
                       </p>
                     </div>
                   </div>
 
                   <div className="space-y-3">
-                    <div className="p-3 rounded-lg border border-border/60 bg-card/60">
+                    <div className="p-3 rounded-xl" style={{ border: "1px solid #E6EDF5" }}>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="w-6 h-6 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-[10px] font-bold text-emerald-400">
+                        <span className="w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold" style={{ background: "rgba(37,99,235,0.08)", color: "#2563EB" }}>
                           1
                         </span>
-                        <span className="text-xs font-semibold text-foreground">Módulo Trigger</span>
+                        <span className="text-xs font-semibold" style={{ color: "#0B1220" }}>Módulo Trigger</span>
                       </div>
-                      <code className="block text-[11px] font-mono text-muted-foreground pl-8">
+                      <code className="block text-[11px] font-mono pl-8" style={{ color: "#64748B" }}>
                         {spec.make.trigger_module}
                       </code>
                     </div>
 
                     <div className="flex justify-center">
-                      <ChevronRight className="w-4 h-4 text-muted-foreground rotate-90" />
+                      <ChevronRight className="w-4 h-4 rotate-90" style={{ color: "#94A3B8" }} />
                     </div>
 
-                    <div className="p-3 rounded-lg border border-border/60 bg-card/60">
+                    <div className="p-3 rounded-xl" style={{ border: "1px solid #E6EDF5" }}>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="w-6 h-6 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-[10px] font-bold text-emerald-400">
+                        <span className="w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold" style={{ background: "rgba(37,99,235,0.08)", color: "#2563EB" }}>
                           2
                         </span>
-                        <span className="text-xs font-semibold text-foreground">Módulo Action</span>
+                        <span className="text-xs font-semibold" style={{ color: "#0B1220" }}>Módulo Action</span>
                       </div>
-                      <code className="block text-[11px] font-mono text-muted-foreground pl-8">
+                      <code className="block text-[11px] font-mono pl-8" style={{ color: "#64748B" }}>
                         {spec.make.action_module}
                       </code>
                     </div>
                   </div>
 
-                  <div className="p-3 rounded-lg bg-blue-500/5 border border-blue-500/15">
-                    <h4 className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1.5 flex items-center gap-1.5">
+                  <div className="p-3 rounded-xl" style={{ background: "rgba(37,99,235,0.04)", border: "1px solid rgba(37,99,235,0.12)" }}>
+                    <h4 className="text-xs font-semibold mb-1.5 flex items-center gap-1.5" style={{ color: "#2563EB" }}>
                       <BookOpen className="w-3.5 h-3.5" />
                       Configuração do HTTP module
                     </h4>
-                    <div className="space-y-1 text-[11px] font-mono text-muted-foreground">
-                      <div>
-                        <span className="text-foreground/60">URL:</span> {spec.webhook.url}
-                      </div>
-                      <div>
-                        <span className="text-foreground/60">Method:</span> POST
-                      </div>
-                      <div>
-                        <span className="text-foreground/60">Headers:</span> {spec.webhook.authHeader}: {`{seu_token}`}
-                      </div>
-                      <div>
-                        <span className="text-foreground/60">Body:</span> JSON — payload da plataforma
-                      </div>
+                    <div className="space-y-1 text-[11px] font-mono" style={{ color: "#64748B" }}>
+                      <div><span style={{ color: "#94A3B8" }}>URL:</span> {spec.webhook.url}</div>
+                      <div><span style={{ color: "#94A3B8" }}>Method:</span> POST</div>
+                      <div><span style={{ color: "#94A3B8" }}>Headers:</span> {spec.webhook.authHeader}: {`{seu_token}`}</div>
+                      <div><span style={{ color: "#94A3B8" }}>Body:</span> JSON — payload da plataforma</div>
                     </div>
                   </div>
 
@@ -577,13 +565,14 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
                     href="https://www.make.com/en/integrations"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group flex items-center justify-between w-full p-3 rounded-lg border border-border/60 bg-muted/20 hover:bg-muted/40 hover:border-purple-500/30 transition-all"
+                    className="group flex items-center justify-between w-full p-3 rounded-xl transition-colors hover:bg-[#F8FAFC]"
+                    style={{ border: "1px solid #E6EDF5" }}
                   >
                     <div className="flex items-center gap-2.5">
-                      <PlayCircle className="w-4 h-4 text-muted-foreground group-hover:text-purple-400" />
-                      <span className="text-xs font-medium text-foreground">Abrir Make.com</span>
+                      <PlayCircle className="w-4 h-4" style={{ color: "#7C3AED" }} />
+                      <span className="text-xs font-medium" style={{ color: "#0B1220" }}>Abrir Make.com</span>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-purple-400 group-hover:translate-x-0.5 transition-transform" />
+                    <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" style={{ color: "#94A3B8" }} />
                   </a>
                 </div>
               )}
@@ -592,15 +581,14 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
         </div>
 
         {/* ─── Footer ──────────────────────────────────────────── */}
-        <div className="flex items-center justify-between gap-3 px-6 py-3 border-t border-border/60 bg-muted/20">
+        <div className="flex items-center justify-between gap-3 px-6 py-3" style={{ borderTop: "1px solid #E6EDF5", background: "#FBFCFE" }}>
           <div>
             {configId && (
-              <Button
-                variant="ghost"
-                size="sm"
+              <button
                 onClick={handleDisconnect}
                 disabled={isDisconnecting}
-                className="h-8 text-xs text-rose-500 hover:text-rose-400 hover:bg-rose-500/10"
+                className="inline-flex items-center h-8 px-2.5 rounded-lg text-xs font-medium transition-colors hover:bg-[#FEF2F2]"
+                style={{ color: "#DC2626" }}
               >
                 {isDisconnecting ? (
                   <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
@@ -608,22 +596,25 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
                   <Unlink className="w-3.5 h-3.5 mr-1.5" />
                 )}
                 Desconectar
-              </Button>
+              </button>
             )}
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="h-8 text-xs" onClick={onClose}>
+            <button
+              onClick={onClose}
+              className="h-9 px-4 rounded-lg text-xs font-medium transition-colors hover:bg-[#F1F5F9]"
+              style={{ border: "1px solid #E6EDF5", color: "#475569" }}
+            >
               Fechar
-            </Button>
-            <Button
-              size="sm"
+            </button>
+            <button
               onClick={handleSave}
               disabled={isSaving || !token.trim()}
-              className="h-8 text-xs bg-emerald-600 hover:bg-emerald-500 text-white"
+              className="inline-flex items-center justify-center h-9 px-4 rounded-lg text-xs font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSaving && <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />}
               {configId ? "Salvar alterações" : "Conectar"}
-            </Button>
+            </button>
           </div>
         </div>
       </DialogContent>

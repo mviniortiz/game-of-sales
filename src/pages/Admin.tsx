@@ -17,6 +17,7 @@ import {
   TrendingUp,
   DollarSign,
   UserCheck,
+  FileText,
 } from "lucide-react";
 import { toast } from "sonner";
 import { AdminVendedores } from "@/components/admin/AdminVendedores";
@@ -27,6 +28,7 @@ import { AdminCompanies } from "@/components/admin/AdminCompanies";
 import { EvolutionMonitor } from "@/components/admin/EvolutionMonitor";
 import { AdminProdutos } from "@/components/admin/AdminProdutos";
 import { AdminFormasPagamento } from "@/components/admin/AdminFormasPagamento";
+import Contratos from "@/pages/configuracoes/Contratos";
 
 type AdminSection = {
   id: string;
@@ -41,6 +43,7 @@ const sections: AdminSection[] = [
   { id: "vendas", label: "Vendas", icon: ShoppingCart, group: "Comercial" },
   { id: "produtos", label: "Produtos", icon: Package, group: "Comercial" },
   { id: "pagamentos", label: "Pagamentos", icon: CreditCard, group: "Comercial" },
+  { id: "contratos", label: "Contratos", icon: FileText, group: "Comercial" },
   { id: "relatorios", label: "Relatórios", icon: BarChart3, group: "Performance" },
   { id: "metas", label: "Metas", icon: Target, group: "Performance" },
   { id: "empresas", label: "Empresas", icon: Building2, group: "Sistema", superAdminOnly: true },
@@ -52,6 +55,7 @@ const sectionComponents: Record<string, React.ComponentType> = {
   vendas: AdminVendas,
   produtos: AdminProdutos,
   pagamentos: AdminFormasPagamento,
+  contratos: Contratos,
   relatorios: AdminRelatorios,
   metas: AdminMetas,
   empresas: AdminCompanies,

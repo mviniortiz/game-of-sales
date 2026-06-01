@@ -11,23 +11,21 @@ import {
   Settings,
   Puzzle,
   Activity,
-  Zap,
-  AlertTriangle,
   ArrowUpRight,
-  Wifi,
-  BarChart3,
   Shield,
   Plug,
   Inbox,
   ShoppingCart,
   CreditCard,
   Calendar,
+  Bell,
 } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { IntegrationConfigModal } from "@/components/integrations/IntegrationConfigModal";
 import { GoogleCalendarConfigModal } from "@/components/integrations/GoogleCalendarConfigModal";
+import { ChannelConfigModal, CHANNEL_SPECS, type ChannelPlatform } from "@/components/integrations/ChannelConfigModal";
 import { WebhookHeartbeat } from "@/components/integrations/WebhookHeartbeat";
 import { INTEGRATIONS_CONFIG } from "@/config/integrationsConfig";
 import { supabase } from "@/integrations/supabase/client";
@@ -53,6 +51,8 @@ import asaasLogo from "@/assets/integrations/asaas.svg";
 import zapierLogo from "@/assets/integrations/zapier.svg";
 import notazzLogo from "@/assets/integrations/notazz.png";
 import googleSheetsLogo from "@/assets/integrations/google-sheets.svg";
+import slackLogo from "@/assets/integrations/slack.svg";
+import discordLogo from "@/assets/integrations/discord.svg";
 
 // ── Types ──────────────────────────────────────────────────────────
 type IntegrationStatus = "active" | "available" | "roadmap";
@@ -61,6 +61,7 @@ type IntegrationCategory =
   | "lead_capture"
   | "checkout"
   | "payment"
+  | "notifications"
   | "productivity";
 
 interface Integration {
@@ -265,6 +266,28 @@ const INTEGRATIONS: Integration[] = [
     category: "productivity",
     features: ["NF-e / NFS-e", "Callback de status", "PDF/XML no deal"],
   },
+
+  // ── Notificações (saída) ────────────────────────────────
+  {
+    id: "slack",
+    name: "Slack",
+    description: "A EVA avisa o time no canal a cada venda fechada e quando a meta é batida",
+    logo: slackLogo,
+    logoBg: "bg-white",
+    status: "available",
+    category: "notifications",
+    features: ["Venda fechada", "Meta batida", "Mensagem da EVA"],
+  },
+  {
+    id: "discord",
+    name: "Discord",
+    description: "Notificações de vendas e metas no servidor do time, escritas pela EVA",
+    logo: discordLogo,
+    logoBg: "bg-white",
+    status: "available",
+    category: "notifications",
+    features: ["Venda fechada", "Meta batida", "Mensagem da EVA"],
+  },
 ];
 
 const FILTER_TABS: { id: IntegrationCategory; label: string; icon: React.ElementType }[] = [
@@ -272,6 +295,7 @@ const FILTER_TABS: { id: IntegrationCategory; label: string; icon: React.Element
   { id: "lead_capture", label: "Captura de leads", icon: Inbox },
   { id: "checkout", label: "Checkouts", icon: ShoppingCart },
   { id: "payment", label: "Pagamentos", icon: CreditCard },
+  { id: "notifications", label: "Notificações", icon: Bell },
   { id: "productivity", label: "Produtividade", icon: Calendar },
 ];
 
@@ -279,6 +303,7 @@ const GROUP_ORDER: Exclude<IntegrationCategory, "all">[] = [
   "lead_capture",
   "checkout",
   "payment",
+  "notifications",
   "productivity",
 ];
 
@@ -297,6 +322,11 @@ const GROUP_META: Record<Exclude<IntegrationCategory, "all">, { label: string; s
     label: "Gateways de pagamento",
     sub: "Cobrança recorrente, PIX e cartão com webhook",
     icon: CreditCard,
+  },
+  notifications: {
+    label: "Notificações do time",
+    sub: "A EVA avisa o time sobre vendas e metas no Slack ou Discord",
+    icon: Bell,
   },
   productivity: {
     label: "Produtividade",
@@ -381,12 +411,12 @@ const EVENT_LABELS: Record<string, string> = {
 };
 
 // ── Status helpers ──────────────────────────────────────────────────
-const getStatusColor = (status: string | null) => {
+const statusDot = (status: string | null) => {
   switch (status) {
-    case "success": return { bg: "bg-emerald-500/10", text: "text-emerald-400", border: "border-emerald-500/20", dot: "bg-emerald-400" };
-    case "error": return { bg: "bg-rose-500/10", text: "text-rose-400", border: "border-rose-500/20", dot: "bg-rose-400" };
-    case "processing": return { bg: "bg-amber-500/10", text: "text-amber-400", border: "border-amber-500/20", dot: "bg-amber-400" };
-    default: return { bg: "bg-slate-500/10", text: "text-slate-400", border: "border-slate-500/20", dot: "bg-slate-400" };
+    case "success": return "#16A34A";
+    case "error": return "#DC2626";
+    case "processing": return "#D97706";
+    default: return "#94A3B8";
   }
 };
 
@@ -425,61 +455,56 @@ const IntegrationCard = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
       whileHover={{ y: -2, transition: { duration: 0.15 } }}
-      className={`
-        group relative flex flex-col h-full rounded-xl border transition-all duration-200 overflow-hidden
-        ${isActive
-          ? "bg-card border-emerald-500/25"
-          : isRoadmap
-            ? "bg-card/40 border-border/60"
-            : "bg-card border-border hover:border-emerald-500/30"
-        }
-      `}
+      className="group relative flex flex-col h-full rounded-2xl overflow-hidden transition-colors"
+      style={{
+        background: isRoadmap ? "#F8FAFC" : "#FFFFFF",
+        border: `1px solid ${isActive ? "rgba(22,163,74,0.28)" : "#E6EDF5"}`,
+        boxShadow: "0 1px 2px rgba(11,18,32,0.04)",
+      }}
     >
-      {/* Active accent line */}
-      {isActive && (
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent" />
-      )}
-
       <div className="p-5 flex-1 flex flex-col">
         {/* Header row: Logo + Status */}
-        <div className="flex items-start justify-between mb-4">
-          <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${integration.logoBg} p-2 ring-1 ring-border/80 overflow-hidden shadow-sm`}>
+        <div className="flex items-start justify-between mb-3.5">
+          <div
+            className="w-12 h-12 rounded-xl flex items-center justify-center bg-white p-2 overflow-hidden"
+            style={{ border: "1px solid #EEF2F7" }}
+          >
             {integration.logo ? (
               <img src={integration.logo} alt={integration.name} className="w-full h-full object-contain" />
             ) : (
-              <span className={`text-base font-bold ${integration.logoColor || "text-foreground"}`}>
+              <span className="text-base font-bold" style={{ color: "#0B1220" }}>
                 {integration.logoText}
               </span>
             )}
           </div>
 
           {isActive && (
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-              <span className="relative flex w-1.5 h-1.5">
-                <span className="absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-60" />
-                <span className="relative rounded-full w-1.5 h-1.5 bg-emerald-400" />
+            <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full" style={{ background: "#ECFDF3" }}>
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#16A34A" }} />
+              <span className="text-[10px] font-semibold uppercase" style={{ color: "#16A34A", letterSpacing: "0.04em" }}>
+                Conectado
               </span>
-              <span className="text-[10px] font-semibold text-emerald-400 uppercase tracking-wider">Ativo</span>
-            </div>
+            </span>
           )}
           {isRoadmap && (
-            <Badge variant="secondary" className="bg-muted text-muted-foreground border-border text-[10px] font-medium">
-              Em Breve
-            </Badge>
+            <span className="text-[10px] font-semibold px-2 py-1 rounded-full" style={{ background: "#F1F5F9", color: "#94A3B8" }}>
+              Em breve
+            </span>
           )}
         </div>
 
         {/* Name & Description */}
-        <h3 className="text-[15px] font-semibold text-foreground mb-1 tracking-tight">{integration.name}</h3>
-        <p className="text-xs text-muted-foreground line-clamp-2 mb-4 leading-relaxed">{integration.description}</p>
+        <h3 className="text-[15px] font-semibold mb-1 tracking-tight" style={{ color: "#0B1220" }}>{integration.name}</h3>
+        <p className="text-xs line-clamp-2 leading-relaxed" style={{ color: "#64748B" }}>{integration.description}</p>
 
-        {/* Feature pills */}
+        {/* Feature pills (até 3 — resto vai pro modal) */}
         {integration.features && !isRoadmap && (
-          <div className="flex flex-wrap gap-1.5 mb-4">
-            {integration.features.map((feature) => (
+          <div className="flex flex-wrap gap-1.5 mt-3.5">
+            {integration.features.slice(0, 3).map((feature) => (
               <span
                 key={feature}
-                className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-muted/60 text-muted-foreground border border-border/60"
+                className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium"
+                style={{ background: "#F8FAFC", color: "#64748B", border: "1px solid #EEF2F7" }}
               >
                 {feature}
               </span>
@@ -487,80 +512,68 @@ const IntegrationCard = ({
           </div>
         )}
 
-        {/* Active: Last event info */}
+        {/* Active: último evento (compacto) */}
         {isActive && lastEvent && (
-          <div className="mt-auto mb-3 p-2.5 rounded-lg bg-muted/30 border border-border/60">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${getStatusColor(lastEvent.status).dot}`} />
-                <span className="text-[10px] text-muted-foreground truncate">
-                  {EVENT_LABELS[lastEvent.event_type || ""] || lastEvent.event_type || "Evento"}
-                </span>
-              </div>
-              <span className="text-[10px] text-muted-foreground/60 tabular-nums flex-shrink-0 ml-2">
-                {formatDistanceToNow(new Date(lastEvent.created_at), { addSuffix: true, locale: ptBR })}
+          <div className="mt-3.5 flex items-center justify-between gap-2">
+            <span className="flex items-center gap-1.5 min-w-0">
+              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: statusDot(lastEvent.status) }} />
+              <span className="text-[11px] truncate" style={{ color: "#64748B" }}>
+                {EVENT_LABELS[lastEvent.event_type || ""] || lastEvent.event_type || "Evento"}
               </span>
-            </div>
-            {eventCount !== undefined && eventCount > 0 && (
-              <div className="flex items-center gap-1 mt-1.5 pt-1.5 border-t border-border/40">
-                <BarChart3 className="h-2.5 w-2.5 text-muted-foreground/60" />
-                <span className="text-[10px] text-muted-foreground/70 tabular-nums">{eventCount} eventos este mês</span>
-              </div>
-            )}
+            </span>
+            <span className="text-[10px] tabular-nums shrink-0" style={{ color: "#94A3B8" }}>
+              {formatDistanceToNow(new Date(lastEvent.created_at), { addSuffix: true, locale: ptBR })}
+            </span>
           </div>
         )}
 
-        {/* Spacer for consistent card height */}
-        {!isActive && !isRoadmap && <div className="flex-1" />}
-        {isRoadmap && <div className="flex-1" />}
+        <div className="flex-1" />
       </div>
 
       {/* Footer */}
-      <div className="px-5 py-3 border-t border-border/60 bg-muted/10">
+      <div className="px-5 py-3" style={{ borderTop: "1px solid #EEF2F7", background: "#FCFDFE" }}>
         {isActive && (
           <div className="flex items-center justify-between">
-            <span className="flex items-center gap-1.5 text-[11px] text-emerald-400 font-medium">
-              <Wifi className="w-3 h-3" />
-              Conectado
+            <span className="text-[11px]" style={{ color: "#94A3B8" }}>
+              {eventCount !== undefined && eventCount > 0 ? `${eventCount} eventos este mês` : "Recebendo eventos"}
             </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 text-xs gap-1 text-muted-foreground hover:text-foreground"
+            <button
               onClick={onManage}
+              className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors hover:bg-[#F1F5F9]"
+              style={{ color: "#475569" }}
             >
-              <Settings className="w-3 h-3" />
+              <Settings className="w-3.5 h-3.5" />
               Gerenciar
-            </Button>
+            </button>
           </div>
         )}
 
         {effectiveStatus === "available" && (
-          <Button
-            className="w-full gap-2 bg-emerald-600 hover:bg-emerald-500 text-white h-8 text-xs font-medium shadow-sm"
-            size="sm"
+          <button
             onClick={onConnect}
+            className="w-full inline-flex items-center justify-center gap-2 h-9 rounded-lg text-xs font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] transition-colors"
           >
             <Plug className="w-3.5 h-3.5" />
             Conectar
-          </Button>
+          </button>
         )}
 
         {isRoadmap && (
           <div className="flex items-center justify-between">
-            <span className="text-[11px] text-muted-foreground tabular-nums">
-              <span className="font-semibold text-foreground">{votes}</span> votos
+            <span className="text-[11px] tabular-nums" style={{ color: "#94A3B8" }}>
+              <span className="font-semibold" style={{ color: "#0B1220" }}>{votes}</span> votos
             </span>
-            <Button
-              variant={hasVoted ? "secondary" : "outline"}
-              size="sm"
+            <button
               onClick={handleVote}
               disabled={hasVoted}
-              className={`gap-1 h-7 text-xs ${hasVoted ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/10" : ""}`}
+              className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg border transition-colors disabled:cursor-default"
+              style={hasVoted
+                ? { background: "#ECFDF3", color: "#16A34A", borderColor: "rgba(22,163,74,0.2)" }
+                : { borderColor: "#E6EDF5", color: "#475569" }}
             >
               <ThumbsUp className={`w-3 h-3 ${hasVoted ? "fill-current" : ""}`} />
               {hasVoted ? "Votado" : "Votar"}
-            </Button>
+            </button>
           </div>
         )}
       </div>
@@ -586,6 +599,7 @@ const Integracoes = () => {
   const [activeFilter, setActiveFilter] = useState<IntegrationCategory>("all");
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
   const [googleCalendarModalOpen, setGoogleCalendarModalOpen] = useState(false);
+  const [channelPlatform, setChannelPlatform] = useState<ChannelPlatform | null>(null);
   const [activeIntegrationIds, setActiveIntegrationIds] = useState<Set<string>>(new Set());
   const [googleCalendarConnected, setGoogleCalendarConnected] = useState(false);
 
@@ -714,6 +728,10 @@ const Integracoes = () => {
       setGoogleCalendarModalOpen(true);
       return;
     }
+    if (id === "slack" || id === "discord") {
+      setChannelPlatform(id);
+      return;
+    }
     if (id === "google-sheets") {
       navigate("/configuracoes/webhooks-leads?create=google_sheets");
       return;
@@ -752,107 +770,80 @@ const Integracoes = () => {
 
   return (
     <>
-      <div className="w-full min-h-screen bg-background">
-        {/* ── Header ─────────────────────────────────────────── */}
-        <div className="border-b border-border/60 bg-card/40 backdrop-blur-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-            <div className="flex items-start justify-between gap-6 flex-wrap">
-              {/* Title */}
-              <div className="flex items-start gap-4">
-                <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 shadow-sm">
-                  <Puzzle className="w-5 h-5 text-emerald-400" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-foreground tracking-tight" style={{ fontFamily: "var(--font-heading)", letterSpacing: "-0.02em" }}>
-                    Integrações
-                  </h1>
-                  <p className="text-sm text-muted-foreground mt-0.5">
-                    Conecte suas plataformas e automatize seu fluxo de vendas
-                  </p>
-                </div>
+      <div className="space-y-6">
+        {/* Stats + filtros + busca (o título "Integrações" vem do layout de Configurações) */}
+        <div className="flex flex-col gap-4">
+          {/* Mini stats */}
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <div className="flex items-center gap-2 rounded-xl px-3.5 py-2" style={{ background: "#FFFFFF", border: "1px solid #E6EDF5", boxShadow: "0 1px 2px rgba(11,18,32,0.04)" }}>
+              <span className="text-[11px] font-semibold uppercase" style={{ color: "#64748B", letterSpacing: "0.04em" }}>Conectadas</span>
+              <span className="text-sm font-bold tabular-nums flex items-center gap-1.5" style={{ color: "#0B1220" }}>
+                {connectedCount}
+                {connectedCount > 0 && <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#16A34A" }} />}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 rounded-xl px-3.5 py-2" style={{ background: "#FFFFFF", border: "1px solid #E6EDF5", boxShadow: "0 1px 2px rgba(11,18,32,0.04)" }}>
+              <span className="text-[11px] font-semibold uppercase" style={{ color: "#64748B", letterSpacing: "0.04em" }}>Eventos no mês</span>
+              <span className="text-sm font-bold tabular-nums" style={{ color: "#0B1220" }}>{webhookStats.totalCount}</span>
+            </div>
+            {webhookStats.errorCount > 0 && (
+              <div className="flex items-center gap-2 rounded-xl px-3.5 py-2" style={{ background: "#FEF2F2", border: "1px solid rgba(220,38,38,0.18)" }}>
+                <span className="text-[11px] font-semibold uppercase" style={{ color: "#DC2626", letterSpacing: "0.04em" }}>Erros</span>
+                <span className="text-sm font-bold tabular-nums" style={{ color: "#DC2626" }}>{webhookStats.errorCount}</span>
               </div>
+            )}
+          </div>
 
-              {/* Stats */}
-              <div className="flex items-center flex-wrap gap-3 md:gap-6">
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Conectadas</span>
-                  <span className="text-xl font-bold text-foreground tabular-nums flex items-center gap-1.5">
-                    {connectedCount}
-                    {connectedCount > 0 && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />}
-                  </span>
-                </div>
-                <div className="w-px h-10 bg-border hidden md:block" />
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Eventos/mês</span>
-                  <span className="text-xl font-bold text-foreground tabular-nums">{webhookStats.totalCount}</span>
-                </div>
-                {webhookStats.errorCount > 0 && (
-                  <>
-                    <div className="w-px h-10 bg-border hidden md:block" />
-                    <div className="flex flex-col">
-                      <span className="text-[10px] font-semibold text-rose-400/80 uppercase tracking-wider">Erros</span>
-                      <span className="text-xl font-bold text-rose-400 tabular-nums flex items-center gap-1.5">
-                        {webhookStats.errorCount}
-                        <AlertTriangle className="w-4 h-4" />
-                      </span>
-                    </div>
-                  </>
-                )}
-              </div>
+          {/* Filtros + busca */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex gap-1 p-1 rounded-xl overflow-x-auto no-scrollbar" style={{ background: "#F1F5F9" }}>
+              {FILTER_TABS.map(tab => {
+                const TabIcon = tab.icon;
+                const active = activeFilter === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveFilter(tab.id)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors"
+                    style={active
+                      ? { background: "#FFFFFF", color: "#0B1220", boxShadow: "0 1px 2px rgba(11,18,32,0.06)" }
+                      : { color: "#64748B" }}
+                  >
+                    <TabIcon className="w-3.5 h-3.5" />
+                    {tab.label}
+                  </button>
+                );
+              })}
             </div>
 
-            {/* Filter tabs + search row */}
-            <div className="flex flex-col gap-3 sm:gap-4 mt-6 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex gap-1 p-1 rounded-lg bg-muted/40 border border-border/60 overflow-x-auto max-w-full">
-                {FILTER_TABS.map(tab => {
-                  const TabIcon = tab.icon;
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveFilter(tab.id)}
-                      className={`
-                        relative flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all
-                        ${activeFilter === tab.id
-                          ? "bg-background text-foreground shadow-sm"
-                          : "text-muted-foreground hover:text-foreground"
-                        }
-                      `}
-                    >
-                      <TabIcon className="w-3.5 h-3.5" />
-                      {tab.label}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Search */}
-              <div className="relative w-full sm:w-72">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="Buscar integrações..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 h-9 text-sm bg-background/60"
-                />
-              </div>
+            {/* Busca */}
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "#94A3B8" }} />
+              <input
+                type="text"
+                placeholder="Buscar integração..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-3 h-9 text-sm rounded-lg outline-none transition-colors focus:border-[#2563EB]"
+                style={{ background: "#FFFFFF", border: "1px solid #E6EDF5", color: "#0B1220" }}
+              />
             </div>
           </div>
         </div>
 
         {/* ── Content ────────────────────────────────────────── */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+        <div className="space-y-9">
 
           {/* ── Connected Integrations ──────────────────────── */}
           {activeIntegrations.length > 0 && (
             <section>
-              <div className="flex items-end justify-between mb-5">
+              <div className="flex items-end justify-between mb-4">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    <h2 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Conectadas</h2>
+                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#16A34A" }} />
+                    <h2 className="text-[11px] font-semibold uppercase" style={{ color: "#16A34A", letterSpacing: "0.06em" }}>Conectadas</h2>
                   </div>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-[13px]" style={{ color: "#94A3B8" }}>
                     {activeIntegrations.length} {activeIntegrations.length === 1 ? "integração ativa" : "integrações ativas"}
                   </p>
                 </div>
@@ -883,18 +874,18 @@ const Integracoes = () => {
                   const GroupIcon = meta.icon;
                   return (
                     <section key={groupKey}>
-                      <div className="flex items-end justify-between mb-5">
+                      <div className="flex items-end justify-between mb-4">
                         <div>
                           <div className="flex items-center gap-2 mb-1">
-                            <GroupIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            <GroupIcon className="h-3.5 w-3.5" style={{ color: "#2563EB" }} />
+                            <h2 className="text-[11px] font-semibold uppercase" style={{ color: "#64748B", letterSpacing: "0.06em" }}>
                               {meta.label}
                             </h2>
-                            <span className="text-[10px] font-mono text-muted-foreground/60 tabular-nums">
+                            <span className="text-[10px] tabular-nums" style={{ color: "#94A3B8" }}>
                               {groupItems.length}
                             </span>
                           </div>
-                          <p className="text-sm text-muted-foreground">{meta.sub}</p>
+                          <p className="text-[13px]" style={{ color: "#94A3B8" }}>{meta.sub}</p>
                         </div>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -913,12 +904,12 @@ const Integracoes = () => {
               </div>
             ) : (
               <section>
-                <div className="flex items-end justify-between mb-5">
+                <div className="flex items-end justify-between mb-4">
                   <div>
-                    <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                    <h2 className="text-[11px] font-semibold uppercase mb-1" style={{ color: "#64748B", letterSpacing: "0.06em" }}>
                       {GROUP_META[activeFilter as Exclude<IntegrationCategory, "all">]?.label ?? "Disponíveis"}
                     </h2>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-[13px]" style={{ color: "#94A3B8" }}>
                       {availableIntegrations.length} {availableIntegrations.length === 1 ? "plataforma pronta" : "plataformas prontas"} para conectar
                     </p>
                   </div>
@@ -937,19 +928,19 @@ const Integracoes = () => {
             )
           )}
 
-          {/* ── Webhook Heartbeat Monitor ─────────────────── */}
+          {/* ── Atividade dos webhooks ─────────────────── */}
           {webhookLogs.length > 0 && (
             <section>
-              <div className="flex items-end justify-between mb-5">
+              <div className="flex items-end justify-between mb-4">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <Activity className="h-3.5 w-3.5 text-emerald-400" />
-                    <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Atividade em tempo real
+                    <Activity className="h-3.5 w-3.5" style={{ color: "#2563EB" }} />
+                    <h2 className="text-[11px] font-semibold uppercase" style={{ color: "#64748B", letterSpacing: "0.06em" }}>
+                      Atividade
                     </h2>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    Sinal vital dos seus webhooks
+                  <p className="text-[13px]" style={{ color: "#94A3B8" }}>
+                    Eventos recebidos dos seus webhooks
                   </p>
                 </div>
               </div>
@@ -965,19 +956,19 @@ const Integracoes = () => {
           {/* ── Roadmap ──────────────────────────────────────── */}
           {roadmapIntegrations.length > 0 && (
             <section>
-              <div className="flex items-end justify-between mb-5 flex-wrap gap-3">
+              <div className="flex items-end justify-between mb-4 flex-wrap gap-3">
                 <div>
-                  <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                  <h2 className="text-[11px] font-semibold uppercase mb-1" style={{ color: "#64748B", letterSpacing: "0.06em" }}>
                     Em breve
                   </h2>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-[13px]" style={{ color: "#94A3B8" }}>
                     Vote nas próximas integrações que quer ver no Vyzon
                   </p>
                 </div>
-                <Badge variant="outline" className="bg-amber-500/5 text-amber-500 border-amber-500/20 text-[10px]">
-                  <ThumbsUp className="w-3 h-3 mr-1" />
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full" style={{ background: "rgba(37,99,235,0.08)", color: "#2563EB" }}>
+                  <ThumbsUp className="w-3 h-3" />
                   Votação aberta
-                </Badge>
+                </span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {roadmapIntegrations.map(integration => (
@@ -991,34 +982,37 @@ const Integracoes = () => {
             </section>
           )}
 
-          {/* ── Request Integration CTA ──────────────────────── */}
-          <div className="relative overflow-hidden rounded-2xl border border-dashed border-emerald-500/20 bg-gradient-to-br from-emerald-500/[0.03] to-transparent p-6">
-            <div className="flex items-center gap-5 flex-wrap">
-              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 shrink-0">
-                <Puzzle className="w-5 h-5 text-emerald-400" />
+          {/* ── Solicitar integração ──────────────────────── */}
+          <div className="rounded-2xl p-5 sm:p-6" style={{ background: "#F8FAFC", border: "1px dashed #D8E2F0" }}>
+            <div className="flex items-center gap-4 flex-wrap">
+              <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(37,99,235,0.08)" }}>
+                <Puzzle className="w-5 h-5" style={{ color: "#2563EB" }} />
               </div>
               <div className="flex-1 min-w-[240px]">
-                <h3 className="font-semibold text-foreground text-[15px] tracking-tight">
+                <h3 className="font-semibold text-[15px] tracking-tight" style={{ color: "#0B1220" }}>
                   Precisa de outra integração?
                 </h3>
-                <p className="text-sm text-muted-foreground mt-0.5">
-                  Conte-nos qual plataforma você usa — priorizamos as mais votadas
+                <p className="text-[13px] mt-0.5" style={{ color: "#64748B" }}>
+                  Conte qual plataforma você usa, priorizamos as mais votadas
                 </p>
               </div>
-              <Button variant="outline" size="sm" className="shrink-0 gap-1.5 h-9">
+              <button
+                className="shrink-0 inline-flex items-center gap-1.5 h-9 px-4 rounded-lg text-xs font-semibold transition-colors hover:bg-[#F1F5F9]"
+                style={{ border: "1px solid #E6EDF5", color: "#2563EB", background: "#FFFFFF" }}
+              >
                 Solicitar integração
                 <ArrowUpRight className="w-3.5 h-3.5" />
-              </Button>
+              </button>
             </div>
           </div>
 
           {/* ── Footer ───────────────────────────────────────── */}
-          <div className="flex items-center justify-between text-[11px] text-muted-foreground/70 pt-6 border-t border-border/40 flex-wrap gap-2">
+          <div className="flex items-center justify-between text-[11px] pt-5 flex-wrap gap-2" style={{ borderTop: "1px solid #EEF2F7", color: "#94A3B8" }}>
             <span className="flex items-center gap-1.5">
               <Shield className="h-3 w-3" />
               Dados criptografados e protegidos
             </span>
-            <Link to="/politica-privacidade" className="text-emerald-500 hover:text-emerald-400 transition-colors">
+            <Link to="/politica-privacidade" className="transition-colors hover:underline" style={{ color: "#2563EB" }}>
               Política de Privacidade
             </Link>
           </div>
@@ -1039,6 +1033,14 @@ const Integracoes = () => {
         onClose={() => setGoogleCalendarModalOpen(false)}
         onSaved={handleIntegrationSaved}
       />
+      {channelPlatform && (
+        <ChannelConfigModal
+          spec={CHANNEL_SPECS[channelPlatform]}
+          open={!!channelPlatform}
+          onClose={() => setChannelPlatform(null)}
+          onSaved={handleIntegrationSaved}
+        />
+      )}
     </>
   );
 };

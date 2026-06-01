@@ -45,7 +45,6 @@ const GROUPS: NavGroup[] = [
       { id: "organizacao", label: "Organização", path: "/configuracoes/organizacao", icon: Building2, adminOnly: true },
       { id: "time", label: "Acesso", path: "/configuracoes/time", icon: Users, adminOnly: true },
       { id: "faturamento", label: "Faturamento", path: "/configuracoes/faturamento", icon: CreditCard, adminOnly: true },
-      { id: "contratos", label: "Contratos", path: "/configuracoes/contratos", icon: FileText, adminOnly: true },
     ],
   },
   {
@@ -53,7 +52,6 @@ const GROUPS: NavGroup[] = [
     items: [
       { id: "integracoes", label: "Integrações", path: "/configuracoes/integracoes", icon: Plug, adminOnly: true },
       { id: "importar", label: "Importar", path: "/configuracoes/importar", icon: Upload, adminOnly: true },
-      { id: "webhooks-leads", label: "Webhooks de leads", path: "/configuracoes/webhooks-leads", icon: Webhook, adminOnly: true },
     ],
   },
   {
@@ -81,13 +79,8 @@ const TITLES: Record<string, { title: string; subtitle: string }> = {
   perfil: { title: "Perfil", subtitle: "Sua identidade dentro do Vyzon" },
   seguranca: { title: "Segurança", subtitle: "Senha, sessões e acessos" },
   organizacao: { title: "Organização", subtitle: "Dados da empresa" },
-  time: { title: "Acesso", subtitle: "Quem pode entrar e em qual nível" },
+  time: { title: "Acesso", subtitle: "Gestão da equipe centralizada em Gestão → Equipe" },
   faturamento: { title: "Faturamento", subtitle: "Plano, uso e histórico" },
-  contratos: { title: "Contratos", subtitle: "MRR, renovações e churn do portfólio" },
-  "webhooks-leads": {
-    title: "Webhooks de leads",
-    subtitle: "Receba leads do Meta Lead Ads, Zapier, Make e afins",
-  },
   integracoes: { title: "Integrações", subtitle: "Checkouts, webhooks e automações" },
   importar: { title: "Importar", subtitle: "Traga deals e vendas de fora" },
   "relatorios-publicos": {

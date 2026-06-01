@@ -151,7 +151,7 @@ export default function Organizacao() {
 
   if (!isAdmin) {
     return (
-      <div className="rounded-2xl border border-border/50 bg-card p-8 text-center">
+      <div className="rounded-2xl border border-[#E6EDF5] bg-white shadow-[0_1px_2px_rgba(11,18,32,0.04)] p-8 text-center">
         <p className="text-sm text-muted-foreground">
           Apenas admins podem editar a organização.
         </p>
@@ -161,10 +161,10 @@ export default function Organizacao() {
 
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl border border-border/50 bg-card overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-border/50 flex items-center gap-2.5">
-          <Building2 className="h-4 w-4 text-muted-foreground/70" />
-          <h2 className="text-[13px] font-semibold text-foreground">
+      <div className="rounded-2xl border border-[#E6EDF5] bg-white shadow-[0_1px_2px_rgba(11,18,32,0.04)] overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-[#E6EDF5] flex items-center gap-2.5">
+          <Building2 className="h-4 w-4 text-[#2563EB]" />
+          <h2 className="text-[13px] font-semibold text-[#0B1220]">
             Dados da empresa
           </h2>
         </div>
@@ -227,7 +227,7 @@ export default function Organizacao() {
             </div>
           </div>
 
-          <div className="h-px bg-border/50" />
+          <div className="h-px bg-[#E6EDF5]" />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5 sm:col-span-2">
@@ -303,7 +303,7 @@ export default function Organizacao() {
           </div>
 
           <div className="flex justify-end pt-1">
-            <Button onClick={handleSave} disabled={saving} size="sm">
+            <Button onClick={handleSave} disabled={saving} size="sm" className="rounded-lg bg-[#2563EB] hover:bg-[#1D4ED8] text-white">
               {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               Salvar alterações
             </Button>
