@@ -78,10 +78,10 @@ export default function Perfil() {
 
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl border border-border/50 bg-card overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-border/50 flex items-center gap-2.5">
-          <User className="h-4 w-4 text-muted-foreground/70" />
-          <h2 className="text-[13px] font-semibold text-foreground">Informações pessoais</h2>
+      <div className="rounded-2xl border border-[#E6EDF5] bg-white overflow-hidden" style={{ boxShadow: "0 1px 2px rgba(11,18,32,0.04)" }}>
+        <div className="px-5 py-3.5 border-b border-[#E6EDF5] flex items-center gap-2.5">
+          <User className="h-4 w-4 text-[#2563EB]" />
+          <h2 className="text-[13px] font-semibold text-[#0B1220]">Informações pessoais</h2>
         </div>
         <div className="px-5 py-5 space-y-5">
           <AvatarUpload
@@ -101,7 +101,7 @@ export default function Perfil() {
             </div>
           </div>
           <div className="flex justify-end">
-            <Button onClick={handleSave} disabled={loading} size="sm">
+            <Button onClick={handleSave} disabled={loading} size="sm" className="rounded-lg bg-[#2563EB] hover:bg-[#1D4ED8] text-white">
               {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               Salvar
             </Button>

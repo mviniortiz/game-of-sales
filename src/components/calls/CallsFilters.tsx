@@ -74,7 +74,7 @@ export const CallsFilters = ({
       onClearAll={activeFilters.length > 0 ? handleClearAll : undefined}
     >
       <PeriodToggle value={dateRange} onChange={setDateRange} />
-      <DateRangePicker value={dateRange} onChange={setDateRange} placeholder="Custom" numberOfMonths={1} />
+      <DateRangePicker value={dateRange} onChange={setDateRange} placeholder="Personalizado" numberOfMonths={1} />
       {isAdmin ? (
         <FilterSelect
           value={selectedVendedor}

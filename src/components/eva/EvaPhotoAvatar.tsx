@@ -21,6 +21,25 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 export type EvaSize = "xs" | "sm" | "md" | "lg" | "xl";
 
+// V2 — Estados expressivos da EVA (arte dedicada em /eva/mood-*.png).
+// Quando a prop `mood` é passada, o avatar usa esse conjunto e faz crossfade
+// ao trocar de estado. Sem `mood`, mantém o comportamento legado (normal/thinking).
+export type EvaMood = "normal" | "happy" | "excited" | "thinking" | "waving";
+
+const MOOD_RES: Record<EvaSize, { base: number; retina: number }> = {
+    xs: { base: 64, retina: 128 },
+    sm: { base: 64, retina: 128 },
+    md: { base: 128, retina: 256 },
+    lg: { base: 256, retina: 512 },
+    xl: { base: 512, retina: 512 },
+};
+
+function moodSrcSet(mood: EvaMood, size: EvaSize) {
+    const { base, retina } = MOOD_RES[size];
+    const src = `/eva/mood-${mood}-${base}.png`;
+    return { src, srcSet: `${src} 1x, /eva/mood-${mood}-${retina}.png 2x` };
+}
+
 interface SizeConfig {
     px: number;
     /** Asset de menor resolução pro 1x */
@@ -82,6 +101,12 @@ interface EvaPhotoAvatarProps {
      * request do usuário (Inbox sugestão, /eva streaming, etc).
      */
     thinking?: boolean;
+    /**
+     * V2 — Estado expressivo. Quando definido, usa a arte dedicada
+     * (/eva/mood-*.png) e faz crossfade ao mudar. Ex.: "happy" ao avançar
+     * uma etapa, "excited" ao concluir, "waving" nas boas-vindas.
+     */
+    mood?: EvaMood;
     className?: string;
     /** Default: "EVA, IA comercial do Vyzon" (não muda em produção, é assinatura). */
     alt?: string;
@@ -91,6 +116,7 @@ export function EvaPhotoAvatar({
     size = "md",
     ring = "subtle",
     thinking = false,
+    mood,
     className = "",
     alt = "EVA, IA comercial do Vyzon",
 }: EvaPhotoAvatarProps) {
@@ -163,7 +189,23 @@ export function EvaPhotoAvatar({
                 }
             >
                 <AnimatePresence mode="sync" initial={false}>
-                    {thinking ? (
+                    {mood ? (
+                        <motion.img
+                            key={`mood-${mood}`}
+                            src={moodSrcSet(mood, size).src}
+                            srcSet={moodSrcSet(mood, size).srcSet}
+                            alt={alt}
+                            width={px}
+                            height={px}
+                            decoding="async"
+                            draggable={false}
+                            className="absolute inset-0 w-full h-full object-cover"
+                            initial={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 1.04 }}
+                            animate={reducedMotion ? { opacity: 1 } : { opacity: 1, scale: 1 }}
+                            exit={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.97 }}
+                            transition={{ duration: reducedMotion ? 0.15 : 0.34, ease: [0.32, 0.72, 0.24, 1] }}
+                        />
+                    ) : thinking ? (
                         <motion.img
                             key="thinking"
                             src={thinkingSrc}

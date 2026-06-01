@@ -17,10 +17,10 @@ export const EvolucaoVendasChart = ({ data }: EvolucaoVendasChartProps) => {
   };
 
   return (
-    <div className="rounded-xl border border-border/50 bg-card p-4">
-      <div className="flex items-center gap-2 mb-4">
-        <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-muted">
-          <TrendingUp className="h-4 w-4 text-muted-foreground" />
+    <div className="rounded-2xl border border-[#E6EDF5] bg-white p-5" style={{ boxShadow: "0 1px 2px rgba(11,18,32,0.04)" }}>
+      <div className="flex items-center gap-2.5 mb-4">
+        <div className="flex items-center justify-center h-8 w-8 rounded-lg" style={{ background: "#EFF4FF" }}>
+          <TrendingUp className="h-4 w-4 text-[#2563EB]" />
         </div>
         <div>
           <h4 className="text-sm font-semibold text-foreground">Evolução de Vendas</h4>
@@ -31,12 +31,12 @@ export const EvolucaoVendasChart = ({ data }: EvolucaoVendasChartProps) => {
         <AreaChart data={data} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id="colorVendas" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+              <stop offset="5%" stopColor="#2563EB" stopOpacity={0.3} />
+              <stop offset="95%" stopColor="#2563EB" stopOpacity={0} />
             </linearGradient>
             <linearGradient id="colorFaturamento" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#00E37A" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#00E37A" stopOpacity={0} />
+              <stop offset="5%" stopColor="#16A34A" stopOpacity={0.3} />
+              <stop offset="95%" stopColor="#16A34A" stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(128,128,128,0.1)" vertical={false} />
@@ -45,12 +45,12 @@ export const EvolucaoVendasChart = ({ data }: EvolucaoVendasChartProps) => {
           <YAxis yAxisId="right" orientation="right" stroke="rgba(128,128,128,0.4)" fontSize={11} tickLine={false} axisLine={false} width={55} tickFormatter={formatCurrency} />
           <Tooltip
             contentStyle={{
-              backgroundColor: "hsl(var(--popover))",
-              border: "1px solid hsl(var(--border))",
-              borderRadius: "10px",
-              boxShadow: "0 8px 24px rgba(0,0,0,0.2)",
+              backgroundColor: "#FFFFFF",
+              border: "1px solid #E6EDF5",
+              borderRadius: "12px",
+              boxShadow: "0 8px 24px -8px rgba(11,18,32,0.12)",
               padding: "10px 14px",
-              color: "hsl(var(--popover-foreground))",
+              color: "#0B1220",
             }}
             labelStyle={{ color: "hsl(var(--popover-foreground))", fontWeight: 600, marginBottom: "6px" }}
             formatter={(value: number, name: string) => {
@@ -66,8 +66,8 @@ export const EvolucaoVendasChart = ({ data }: EvolucaoVendasChartProps) => {
               </span>
             )}
           />
-          <Area yAxisId="left" type="monotone" dataKey="vendas" stroke="#6366f1" strokeWidth={2} fill="url(#colorVendas)" name="vendas" dot={false} activeDot={{ r: 4, fill: "#6366f1", stroke: "hsl(var(--card))", strokeWidth: 2 }} />
-          <Area yAxisId="right" type="monotone" dataKey="faturamento" stroke="#00E37A" strokeWidth={2} fill="url(#colorFaturamento)" name="Faturamento" dot={false} activeDot={{ r: 4, fill: "#00E37A", stroke: "hsl(var(--card))", strokeWidth: 2 }} />
+          <Area yAxisId="left" type="monotone" dataKey="vendas" stroke="#2563EB" strokeWidth={2} fill="url(#colorVendas)" name="vendas" dot={false} activeDot={{ r: 4, fill: "#2563EB", stroke: "hsl(var(--card))", strokeWidth: 2 }} />
+          <Area yAxisId="right" type="monotone" dataKey="faturamento" stroke="#16A34A" strokeWidth={2} fill="url(#colorFaturamento)" name="Faturamento" dot={false} activeDot={{ r: 4, fill: "#16A34A", stroke: "hsl(var(--card))", strokeWidth: 2 }} />
         </AreaChart>
       </ResponsiveContainer>
     </div>

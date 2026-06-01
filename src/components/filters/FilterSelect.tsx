@@ -39,20 +39,20 @@ export const FilterSelect = ({
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger
         className={cn(
-          "h-8 gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-3 text-[11.5px] font-medium backdrop-blur-sm transition-colors",
-          "hover:border-white/15 hover:bg-white/[0.06]",
-          "data-[state=open]:border-white/20 data-[state=open]:bg-white/[0.08]",
+          "h-9 w-auto gap-1.5 rounded-lg border bg-white px-3 text-[12.5px] font-medium transition-colors",
+          "border-[#E6EDF5] hover:border-[#D7DEE9] hover:bg-[#F8FAFC]",
+          "data-[state=open]:border-[#2563EB] data-[state=open]:ring-2 data-[state=open]:ring-[rgba(37,99,235,0.18)]",
           isActive
-            ? "text-foreground ring-1 ring-emerald-500/40"
-            : "text-muted-foreground",
+            ? "text-[#0B1220] border-[#2563EB] ring-2 ring-[rgba(37,99,235,0.18)]"
+            : "text-[#64748B]",
           className,
         )}
         style={{ minWidth }}
       >
-        {Icon ? <Icon className="h-3.5 w-3.5 opacity-70" /> : null}
+        {Icon ? <Icon className="h-3.5 w-3.5 opacity-70 shrink-0" /> : null}
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
-      <SelectContent className="border border-white/10 bg-card/95 shadow-xl backdrop-blur-xl">
+      <SelectContent className="border border-[#E6EDF5] bg-white shadow-lg">
         {options.map((opt) => (
           <SelectItem key={opt.value} value={opt.value}>
             {opt.label}

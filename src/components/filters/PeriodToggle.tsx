@@ -29,7 +29,7 @@ export const PeriodToggle = ({
   return (
     <div
       className={cn(
-        "inline-flex items-center gap-0.5 rounded-full border border-white/10 bg-white/[0.03] p-0.5 backdrop-blur-sm",
+        "inline-flex items-center gap-0.5 rounded-lg border border-[#E6EDF5] bg-[#F8FAFC] p-0.5",
         className,
       )}
       role="tablist"
@@ -44,10 +44,10 @@ export const PeriodToggle = ({
             aria-selected={active}
             onClick={() => onChange(computeQuickRange(range.id))}
             className={cn(
-              "h-7 rounded-full px-3 text-[11px] font-medium transition-colors",
+              "h-7 rounded-md px-3 text-[11.5px] font-medium transition-colors",
               active
-                ? "bg-white/10 text-foreground shadow-sm ring-1 ring-white/15"
-                : "text-muted-foreground hover:text-foreground",
+                ? "bg-white text-[#0B1220] shadow-sm ring-1 ring-[#E6EDF5]"
+                : "text-[#64748B] hover:text-[#0B1220]",
             )}
           >
             {longLabels ? range.longLabel : range.label}

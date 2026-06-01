@@ -2,7 +2,7 @@ import { usePlan } from '@/hooks/usePlan';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Lock, Sparkles, ArrowRight, Check } from 'lucide-react';
+import { Lock, ArrowUpCircle, ArrowRight, Check } from 'lucide-react';
 import { PLAN_FEATURES, PLANS_INFO, PlanType, PlanFeatures } from '@/config/planConfig';
 import { useNavigate } from 'react-router-dom';
 
@@ -39,8 +39,8 @@ export const UpgradePrompt = ({
         <div className={`flex items-center justify-center min-h-[400px] p-6 ${className}`}>
             <Card className="w-full max-w-lg border-border bg-card shadow-xl">
                 <CardHeader className="text-center pb-2">
-                    <div className="mx-auto mb-4 p-4 rounded-full bg-gradient-to-br from-emerald-500/20 to-emerald-500/20 ring-1 ring-emerald-500/30">
-                        <Lock className="h-8 w-8 text-emerald-500" />
+                    <div className="mx-auto mb-4 p-4 rounded-full bg-[rgba(37,99,235,0.10)] ring-1 ring-[rgba(37,99,235,0.30)]">
+                        <Lock className="h-8 w-8 text-[#2563EB]" />
                     </div>
                     <CardTitle className="text-2xl font-bold text-foreground">
                         {defaultTitle}
@@ -66,7 +66,7 @@ export const UpgradePrompt = ({
                     {/* Features included */}
                     <div className="bg-muted/50 rounded-lg p-4 space-y-3">
                         <p className="text-sm font-medium text-foreground flex items-center gap-2">
-                            <Sparkles className="h-4 w-4 text-amber-500" />
+                            <ArrowUpCircle className="h-4 w-4 text-[#2563EB]" />
                             O que você ganha com {requiredPlanInfo.label}:
                         </p>
                         <ul className="space-y-2 text-sm text-muted-foreground">
@@ -111,10 +111,10 @@ export const UpgradePrompt = ({
                     <div className="flex flex-col gap-3">
                         <Button
                             size="lg"
-                            className="w-full bg-gradient-to-r from-emerald-600 to-emerald-600 hover:from-emerald-500 hover:to-emerald-500 text-white font-semibold shadow-lg"
-                            onClick={() => navigate('/planos')}
+                            className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-semibold shadow-lg"
+                            onClick={() => navigate(`/upgrade?plan=${requiredPlan}`)}
                         >
-                            <Sparkles className="h-4 w-4 mr-2" />
+                            <ArrowUpCircle className="h-4 w-4 mr-2" />
                             Ver Planos e Fazer Upgrade
                         </Button>
                         <Button

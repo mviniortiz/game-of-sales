@@ -102,7 +102,7 @@ export const AdminFilters = ({
       onClearAll={activeFilters.length > 0 ? handleClearAll : undefined}
     >
       <PeriodToggle value={dateRange} onChange={setDateRange} />
-      <DateRangePicker value={dateRange} onChange={setDateRange} placeholder="Custom" />
+      <DateRangePicker value={dateRange} onChange={setDateRange} placeholder="Personalizado" />
       <FilterSelect
         value={selectedVendedor}
         onChange={setSelectedVendedor}

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, memo } from "react";
 import { logger } from "@/utils/logger";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { trackEvent, trackConversion, trackPurchaseConversion, FUNNEL_EVENTS } from "@/lib/analytics";
+import { trackEvent, FUNNEL_EVENTS } from "@/lib/analytics";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,7 +31,7 @@ import {
     Image,
     CreditCard,
     Crown,
-    Zap,
+    Star,
     Shield,
     Lock,
     Calendar,
@@ -41,107 +41,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
+import { EvaPhotoAvatar } from "@/components/eva/EvaPhotoAvatar";
 import { Confetti } from "@/components/crm/Confetti";
-import { PLANS, formatPrice, getAnnualMonthlyEquivalent, getAnnualPrice, getBillingConfig, type BillingCycle } from "@/config/plans";
-import { initMercadoPago } from "@mercadopago/sdk-react";
-import coreCreateCardToken from "@mercadopago/sdk-react/esm/coreMethods/cardToken/create";
-import { RATE_LIMITS, resetRateLimit } from "@/lib/rateLimiter";
+import { PLANS, formatPrice, getAnnualMonthlyEquivalent, type BillingCycle } from "@/config/plans";
 import { getAttribution } from "@/lib/attribution";
-import { formatDocument, validateDocument } from "@/utils/document";
 import { z } from "zod";
-
-// Initialize MercadoPago SDK
-const mpPublicKey = import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY;
-if (mpPublicKey) {
-    initMercadoPago(mpPublicKey, { locale: "pt-BR" });
-}
-
-// MP error code to user-friendly message mapping
-const MP_ERROR_MESSAGES: Record<string, string> = {
-    "106": "Número do cartão inválido. Verifique e tente novamente.",
-    "109": "Esse cartão não processa o número de parcelas selecionado.",
-    "126": "Não foi possível processar o pagamento. Tente novamente.",
-    "129": "Esse cartão não processa o valor selecionado.",
-    "145": "Usuário não encontrado. Verifique seus dados.",
-    "150": "Pagamento não disponível no momento. Tente novamente mais tarde.",
-    "151": "Pagamento não disponível no momento. Tente outro cartão.",
-    "160": "Não foi possível processar o pagamento. Tente outro cartão.",
-    "204": "Bandeira do cartão não disponível no momento.",
-    "205": "Número do cartão inválido. Verifique e tente novamente.",
-    "208": "Mês de validade inválido.",
-    "209": "Ano de validade inválido.",
-    "212": "CPF/CNPJ inválido. Verifique e tente novamente.",
-    "213": "CPF/CNPJ inválido. Verifique e tente novamente.",
-    "214": "CPF/CNPJ inválido. Verifique e tente novamente.",
-    "220": "Banco emissor não disponível. Tente outro cartão.",
-    "221": "Titular do cartão inválido. Verifique o nome.",
-    "224": "Código de segurança (CVV) inválido.",
-    "E301": "Número do cartão inválido. Verifique e tente novamente.",
-    "E302": "Código de segurança (CVV) inválido.",
-    "316": "Titular do cartão inválido. Verifique o nome.",
-    "322": "CPF/CNPJ inválido. Verifique e tente novamente.",
-    "323": "CPF/CNPJ inválido. Verifique e tente novamente.",
-    "324": "CPF/CNPJ inválido. Verifique e tente novamente.",
-    "325": "Mês de validade inválido.",
-    "326": "Ano de validade inválido.",
-    "default": "Não foi possível processar o cartão. Verifique os dados e tente novamente.",
-};
-
-const getMpErrorMessage = (error: any): string => {
-    const cause = error?.cause;
-    if (Array.isArray(cause)) {
-        for (const c of cause) {
-            const code = c?.code || c?.message;
-            if (code && MP_ERROR_MESSAGES[code]) return MP_ERROR_MESSAGES[code];
-        }
-    }
-    const msg = String(error?.message || "").toLowerCase();
-    if (msg.includes("whitespace") || msg.includes("public_key")) return "Erro de configuração do pagamento. Entre em contato com o suporte.";
-    if (msg.includes("card number")) return "Número do cartão inválido.";
-    if (msg.includes("security code") || msg.includes("cvv")) return "Código de segurança (CVV) inválido.";
-    if (msg.includes("expiration")) return "Data de validade inválida.";
-    if (msg.includes("cardholder")) return "Nome do titular inválido.";
-    if (msg.includes("timeout") || msg.includes("tempo")) return "Tempo esgotado. Verifique sua conexão e tente novamente.";
-    if (msg.includes("4000") || msg.includes("amount")) return "Valor acima do limite permitido. Entre em contato com o suporte.";
-    if (msg.includes("validation") || msg.includes("failed")) return "Dados do cartão inválidos. Verifique e tente novamente.";
-    return MP_ERROR_MESSAGES["default"];
-};
-
-// Card number formatting helpers
-const formatCardNumber = (value: string): string => {
-    const digits = value.replace(/\D/g, "").slice(0, 16);
-    return digits.replace(/(\d{4})(?=\d)/g, "$1 ");
-};
-
-const formatExpiration = (value: string): string => {
-    const digits = value.replace(/\D/g, "").slice(0, 4);
-    if (digits.length > 2) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-    return digits;
-};
-
-type CardBrand = "visa" | "mastercard" | "amex" | "elo" | "hipercard" | "diners" | "unknown";
-
-const detectCardBrand = (cardNumber: string): CardBrand => {
-    const d = cardNumber.replace(/\D/g, "");
-    if (!d) return "unknown";
-    if (/^3[47]/.test(d)) return "amex";
-    if (/^(4011(78|79)|431274|438935|45(1416|7393|763[12])|504175|627780|636297|636368|65(003[1-3]|003[5-9]|004[0-9]|005[0-1])|6504(0[5-9]|[1-3][0-9])|6550[0-1]|65506[4-9]|65507[0-9]|65508[0-9])/.test(d)) return "elo";
-    if (/^(606282|3841)/.test(d)) return "hipercard";
-    if (/^(30[0-5]|36|38)/.test(d)) return "diners";
-    if (/^(5[1-5]|2(2[2-9][1-9]|2[3-9][0-9]|[3-6][0-9]|7[01][0-9]|720))/.test(d)) return "mastercard";
-    if (/^4/.test(d)) return "visa";
-    return "unknown";
-};
-
-const CARD_BRAND_META: Record<CardBrand, { label: string; bg: string; fg: string }> = {
-    visa: { label: "VISA", bg: "#1a1f71", fg: "#ffffff" },
-    mastercard: { label: "MASTER", bg: "#eb001b", fg: "#ffffff" },
-    amex: { label: "AMEX", bg: "#006fcf", fg: "#ffffff" },
-    elo: { label: "ELO", bg: "#000000", fg: "#ffff00" },
-    hipercard: { label: "HIPER", bg: "#c00000", fg: "#ffffff" },
-    diners: { label: "DINERS", bg: "#0079be", fg: "#ffffff" },
-    unknown: { label: "", bg: "transparent", fg: "transparent" },
-};
 
 // ── Pipeline stage config type (matches CRM.tsx StageConfig) ──
 interface StageConfig {
@@ -219,8 +123,19 @@ const SEGMENT_OPTIONS = [
 
 const PIPELINE_CONFIG_KEY_PREFIX = "vyzon_pipeline_config_v3_";
 
+// Cores das colunas do mini-funil no preview ao vivo
+const STAGE_DOT = ["#94A3B8", "#2563EB", "#7C3AED", "#F59E0B", "#16A34A"];
+
+// Adapta o funil sugerido pelo segmento escolhido
+const segmentToTemplate = (seg: string): string => {
+    const s = (seg || "").toLowerCase();
+    if (s.includes("infoproduto")) return "infoprodutos";
+    if (s.includes("consultoria") || s.includes("marketing") || s.includes("agência") || s.includes("agencia") || s.includes("servi")) return "servicos";
+    return "b2b";
+};
+
 const PLAN_ICONS: Record<string, LucideIcon> = {
-    starter: Zap,
+    starter: Star,
     plus: Crown,
     pro: Rocket,
 };
@@ -251,6 +166,9 @@ export default function Onboarding() {
     const [currentStep, setCurrentStep] = useState(resolvedInitialStep);
     const [direction, setDirection] = useState(1);
     const [showConfetti, setShowConfetti] = useState(false);
+    const [evaHappyPulse, setEvaHappyPulse] = useState(false);
+    const [evaTyped, setEvaTyped] = useState("");
+    const [evaTyping, setEvaTyping] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -281,12 +199,8 @@ export default function Onboarding() {
     // Step 5: Plan + Payment
     const [selectedPlan, setSelectedPlan] = useState(searchParams.get("plan") || "plus");
     const [billingCycle, setBillingCycle] = useState<BillingCycle>("annual");
-    const [cardToken, setCardToken] = useState<string | null>(null);
     const [paymentLoading, setPaymentLoading] = useState(false);
     const [paymentError, setPaymentError] = useState<string | null>(null);
-    const [cardNumber, setCardNumber] = useState("");
-    const [cardExpiration, setCardExpiration] = useState("");
-    const [cardCvv, setCardCvv] = useState("");
 
     // Step 6: Invite team
     const [teamEmails, setTeamEmails] = useState<string[]>([""]);
@@ -451,182 +365,46 @@ export default function Onboarding() {
         }
     };
 
-    // Handle payment submission for step 5
-    const handlePayment = async () => {
-        trackEvent(FUNNEL_EVENTS.PAYMENT_SUBMIT, { plan: selectedPlan });
+    // Inicia o trial de 14 dias SEM cartão (step 5).
+    // A contratação (com cartão via Mercado Pago) acontece in-app ao expirar o trial,
+    // via UpgradeLock (AppLayout) -> /upgrade.
+    const handleStartTrial = async () => {
+        trackEvent(FUNNEL_EVENTS.PAYMENT_SUBMIT, { plan: selectedPlan, trial_no_card: true });
 
-        // Recover company ID — prefer authCompanyId (from profile, matches edge function check)
-        // over localStorage which may be stale from a previous attempt
-        let companyId = authCompanyId
+        const companyId = authCompanyId
             || effectiveCompanyId
             || localStorage.getItem(ONBOARDING_COMPANY_KEY);
         if (companyId && companyId !== effectiveCompanyId) {
             lockAndSetCompanyId(companyId);
         }
-
-        // Recover user email — auth state may not have updated after signUp
-        let email = user?.email || regEmail || localStorage.getItem(ONBOARDING_EMAIL_KEY) || "";
-        if (!email) {
-            try {
-                const { data: { session: freshSession } } = await supabase.auth.getSession();
-                email = freshSession?.user?.email || "";
-            } catch { /* ignore */ }
-        }
-
-        if (!companyId || !email) {
-            console.error("[handlePayment] Missing data:", { companyId, email, user: !!user, regEmail, authCompanyId, effectiveCompanyId });
-            toast({ title: "Erro", description: "Dados da empresa não encontrados. Tente recarregar a página.", variant: "destructive" });
-            return;
-        }
-
-        const cardholderName = (document.getElementById("cardholder-name") as HTMLInputElement)?.value;
-        const docNumber = (document.getElementById("doc-number") as HTMLInputElement)?.value;
-        const rawCardNumber = cardNumber.replace(/\D/g, "");
-        const expParts = cardExpiration.split("/");
-        const expMonth = expParts[0] || "";
-        const expYear = expParts[1] ? (expParts[1].length === 2 ? `20${expParts[1]}` : expParts[1]) : "";
-        const rawCvv = cardCvv.replace(/\D/g, "");
-
-        if (!cardholderName || !docNumber || !rawCardNumber || !expMonth || !expYear || !rawCvv) {
-            toast({ title: "Campos obrigatórios", description: "Preencha todos os dados do cartão", variant: "destructive" });
-            return;
-        }
-
-        if (rawCardNumber.length < 13 || rawCardNumber.length > 19) {
-            toast({ title: "Cartão inválido", description: "O número do cartão deve ter entre 13 e 19 dígitos", variant: "destructive" });
-            return;
-        }
-
-        if (rawCvv.length < 3 || rawCvv.length > 4) {
-            toast({ title: "CVV inválido", description: "O código de segurança deve ter 3 ou 4 dígitos", variant: "destructive" });
-            return;
-        }
-
-        const docResult = validateDocument(docNumber);
-        if (!docResult.valid) {
-            toast({ title: "Documento inválido", description: docResult.error || "CPF/CNPJ inválido", variant: "destructive" });
+        if (!companyId) {
+            toast({ title: "Erro", description: "Dados da empresa não encontrados. Recarregue a página.", variant: "destructive" });
             return;
         }
 
         setPaymentLoading(true);
         setPaymentError(null);
-
         try {
-            // Ensure user is authenticated before calling edge function
-            const { data: { session: currentSession } } = await supabase.auth.getSession();
-            if (!currentSession && regEmail && regPassword) {
-                console.log("[handlePayment] No active session, attempting sign-in...");
-                const { error: signInErr } = await supabase.auth.signInWithPassword({
-                    email: regEmail,
-                    password: regPassword,
-                });
-                if (signInErr) {
-                    console.warn("[handlePayment] Auto sign-in failed:", signInErr.message);
-                }
-            }
+            const trialEnds = new Date(Date.now() + 14 * 86400000).toISOString();
+            const { error } = await supabase
+                .from("companies")
+                .update({
+                    plan: selectedPlan,
+                    subscription_status: "trialing",
+                    trial_ends_at: trialEnds,
+                } as any)
+                .eq("id", companyId);
+            if (error) throw error;
 
-            console.log("[handlePayment] Creating card token with core method...");
+            try { await refreshProfile(); } catch { /* non-critical */ }
 
-            const tokenPromise = coreCreateCardToken({
-                cardNumber: rawCardNumber,
-                cardholderName,
-                cardExpirationMonth: expMonth,
-                cardExpirationYear: expYear,
-                securityCode: rawCvv,
-                identificationType: docResult.type!,
-                identificationNumber: docNumber.replace(/\D/g, ""),
-            });
-            const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error("Tempo esgotado ao processar cartão. Tente novamente.")), 30000)
-            );
-            const tokenResponse = await Promise.race([tokenPromise, timeoutPromise]) as any;
-
-            console.log("[handlePayment] Token response:", tokenResponse?.id ? "OK" : "FAILED");
-
-            if (!tokenResponse?.id) {
-                throw new Error("Não foi possível processar o cartão. Verifique os dados e tente novamente.");
-            }
-
-            // Get billing config
-            const billing = getBillingConfig(selectedPlan, billingCycle);
-            if (!billing) throw new Error("Plano inválido");
-
-            // Split cardholder name into first/last for MP antifraud
-            const trimmedName = cardholderName.trim().replace(/\s+/g, " ");
-            const nameParts = trimmedName.split(" ");
-            const firstName = nameParts[0] || trimmedName;
-            const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : firstName;
-
-            // Call edge function to create subscription
-            const response = await supabase.functions.invoke("mercadopago-create-subscription", {
-                body: {
-                    token: tokenResponse.id,
-                    email,
-                    companyId,
-                    billingConfig: {
-                        frequency: billing.frequency,
-                        frequencyType: billing.frequencyType,
-                        transactionAmount: billing.transactionAmount,
-                    },
-                    payerInfo: {
-                        firstName,
-                        lastName,
-                        identification: {
-                            type: docResult.type!,
-                            number: docNumber.replace(/\D/g, ""),
-                        },
-                    },
-                },
-            });
-
-            if (response.error) {
-                // Try to extract detailed error from edge function response
-                let detail = response.error.message;
-                try {
-                    const ctx = (response.error as any).context;
-                    if (ctx && typeof ctx.json === "function") {
-                        const body = await ctx.json();
-                        detail = body?.error || body?.message || detail;
-                        console.error("[handlePayment] Edge function error:", body);
-                    }
-                } catch {
-                    // fallback to generic message
-                }
-                throw new Error(detail || "Erro ao criar assinatura");
-            }
-
-            let result = response.data;
-            console.log("[handlePayment] Edge function response:", result, typeof result);
-            // Supabase sometimes returns stringified JSON
-            if (typeof result === "string") {
-                try { result = JSON.parse(result); } catch { /* keep as-is */ }
-            }
-            if (!result?.success) {
-                throw new Error(result?.error || result?.message || "Erro ao processar pagamento");
-            }
-
-            // Update company plan locally (best effort — edge function already set trial)
-            try {
-                const { error: planErr } = await supabase
-                    .from("companies")
-                    .update({ plan: selectedPlan })
-                    .eq("id", companyId);
-                if (planErr) console.warn("[handlePayment] Plan update error (non-critical):", planErr);
-            } catch (planErr) {
-                console.warn("[handlePayment] Plan update exception (non-critical):", planErr);
-            }
-
-            console.log("[handlePayment] SUCCESS! Advancing to next step...");
-            trackEvent(FUNNEL_EVENTS.PAYMENT_SUCCESS, { plan: selectedPlan });
-            trackPurchaseConversion(Number(billing?.transactionAmount) || 0, undefined, true);
-            toast({ title: "Assinatura criada!", description: "Seu trial de 14 dias começou. Aproveite!" });
+            trackEvent(FUNNEL_EVENTS.PAYMENT_SUCCESS, { plan: selectedPlan, trial_no_card: true });
+            toast({ title: "Teste liberado!", description: "Você tem 14 dias grátis com acesso total." });
             advanceStep();
         } catch (error: any) {
-            const msg = getMpErrorMessage(error);
-            console.error("[handlePayment] Error:", error);
-            trackEvent(FUNNEL_EVENTS.PAYMENT_ERROR, { plan: selectedPlan, error: msg });
+            const msg = error?.message || "Não foi possível iniciar o teste. Tente novamente.";
             setPaymentError(msg);
-            toast({ title: "Erro no pagamento", description: msg, variant: "destructive" });
+            toast({ title: "Erro", description: msg, variant: "destructive" });
         } finally {
             setPaymentLoading(false);
         }
@@ -828,7 +606,7 @@ export default function Onboarding() {
             return;
         }
 
-        // Step 5: Payment handled by handlePayment()
+        // Step 5: tratado por handleStartTrial() (trial sem cartão)
         if (currentStep === 5) {
             return;
         }
@@ -851,6 +629,9 @@ export default function Onboarding() {
         const nextStep = Math.min(currentStep + 1, TOTAL_STEPS);
         trackEvent(FUNNEL_EVENTS.ONBOARDING_STEP, { step: nextStep, plan: selectedPlan });
         setCurrentStep(nextStep);
+        // EVA reage com alegria a cada avanço (some sozinho)
+        setEvaHappyPulse(true);
+        setTimeout(() => setEvaHappyPulse(false), 1500);
     };
 
     const handleBack = () => {
@@ -978,6 +759,71 @@ export default function Onboarding() {
         { icon: Users, label: "Equipe" },
         { icon: Rocket, label: "Pronto!" },
     ];
+    // Falas da EVA por etapa (1-indexed) — a copiloto "reage" ao progresso
+    const evaSay: Record<number, string> = {
+        1: "Oi! Sou a EVA. Vou montar seu Vyzon aqui do lado enquanto a gente conversa.",
+        2: "Boa! Já coloquei o nome da sua empresa no painel.",
+        3: "Você lidera por aqui, vai aparecer no ranking do time.",
+        4: "Montei seu funil, olha ele tomando forma do lado.",
+        5: "Pode testar à vontade: 14 dias com acesso total, sem cartão.",
+        6: "Bora chamar o time? Os avatares já aparecem no painel.",
+        7: "Pronto! Seu Vyzon já está montado. Bora vender.",
+    };
+    const evaThinking = isLoading || paymentLoading || inviteLoading;
+    // Estado expressivo da EVA por contexto: pensando (loading) > comemora (fim)
+    // > acena (boas-vindas) > feliz (acabou de avançar) > normal.
+    const evaMood = evaThinking
+        ? "thinking"
+        : currentStep === 7
+            ? "excited"
+            : currentStep === 1
+                ? "waving"
+                : evaHappyPulse
+                    ? "happy"
+                    : "normal";
+
+    // Adapta o funil sugerido pelo segmento (pré-seleciona pro step do pipeline)
+    useEffect(() => {
+        if (segment && !selectedTemplate) setSelectedTemplate(segmentToTemplate(segment));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [segment]);
+
+    // Funil efetivo mostrado no preview ao vivo (escolhido > por segmento > b2b)
+    const previewTpl = selectedTemplate || segmentToTemplate(segment) || "b2b";
+    const previewStages = PIPELINE_TEMPLATES[previewTpl].stages;
+    const previewName = (userName || regName || "Você").trim().split(" ")[0] || "Você";
+    // Dados de exemplo pra dar vida ao preview (rotulado como "prévia")
+    const sampleCounts = [3, 2, 1, 1, 0];
+    const sampleDeals = [
+        { cliente: "Mariana Costa", valor: 3500 },
+        { cliente: "Studio Alpha", valor: 8900 },
+        { cliente: "João Pereira", valor: 12000 },
+    ];
+
+    // Fala "ao vivo" da EVA: pensa um instante → digita a frase letra a letra
+    useEffect(() => {
+        const full = evaSay[currentStep] || evaSay[1];
+        setEvaTyped("");
+        setEvaTyping(true);
+        let i = 0;
+        let iv: ReturnType<typeof setInterval> | undefined;
+        const delay = setTimeout(() => {
+            iv = setInterval(() => {
+                i++;
+                setEvaTyped(full.slice(0, i));
+                if (i >= full.length) {
+                    clearInterval(iv);
+                    setEvaTyping(false);
+                }
+            }, 22);
+        }, 380);
+        return () => {
+            clearTimeout(delay);
+            if (iv) clearInterval(iv);
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentStep]);
+
     // If logged in, skip step 1 visually
     const stepMeta = isLoggedIn ? allStepMeta.slice(1) : allStepMeta;
     const displayStep = isLoggedIn ? currentStep - 1 : currentStep;
@@ -993,7 +839,7 @@ export default function Onboarding() {
                     <div className="flex items-center gap-2">
                         <span
                             className="text-[11px] font-bold px-2 py-0.5 rounded-md"
-                            style={{ background: "rgba(0,227,122,0.1)", color: "#33FF9E" }}
+                            style={{ background: "rgba(37,99,235,0.10)", color: "#2563EB" }}
                         >
                             {displayStep}/{displayTotalSteps}
                         </span>
@@ -1001,7 +847,7 @@ export default function Onboarding() {
                             <motion.span
                                 key={currentLabel}
                                 className="text-sm font-medium"
-                                style={{ color: "rgba(255,255,255,0.7)" }}
+                                style={{ color: "#334155" }}
                                 initial={{ opacity: 0, x: 8 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -8 }}
@@ -1011,15 +857,15 @@ export default function Onboarding() {
                             </motion.span>
                         </AnimatePresence>
                     </div>
-                    <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.2)" }}>
+                    <span className="text-[11px]" style={{ color: "#94A3B8" }}>
                         {Math.round(pct)}%
                     </span>
                 </div>
                 {/* Single progress bar */}
-                <div className="h-1 w-full rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+                <div className="h-1 w-full rounded-full overflow-hidden" style={{ background: "#E6EDF5" }}>
                     <motion.div
                         className="h-full rounded-full"
-                        style={{ background: "linear-gradient(90deg, #00E37A, #33FF9E)" }}
+                        style={{ background: "linear-gradient(90deg, #2563EB, #4A8CE8)" }}
                         initial={false}
                         animate={{ width: `${pct}%` }}
                         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
@@ -1030,7 +876,7 @@ export default function Onboarding() {
     };
 
     const inputClasses =
-        "bg-[rgba(255,255,255,0.03)] border-[rgba(255,255,255,0.08)] text-white placeholder:text-[rgba(255,255,255,0.25)] focus-visible:ring-1 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500/40 hover:border-[rgba(255,255,255,0.15)] h-12 text-base rounded-xl transition-all duration-200";
+        "bg-white border-[#E6EDF5] text-[#0B1220] placeholder:text-[#94A3B8] focus-visible:ring-2 focus-visible:ring-[rgba(37,99,235,0.18)] focus-visible:border-[#2563EB] hover:border-[#D7DEE9] h-12 text-base rounded-xl transition-all duration-200";
 
     // MP Card field styles moved to top-level MpCardFields component
 
@@ -1045,14 +891,14 @@ export default function Onboarding() {
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: "rgba(0,227,122,0.08)", border: "1px solid rgba(0,227,122,0.2)" }}
+                            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: "rgba(37,99,235,0.08)", border: "1px solid rgba(37,99,235,0.2)" }}
                         >
-                            <Rocket className="h-8 w-8 text-emerald-500" />
+                            <Rocket className="h-8 w-8 text-[#2563EB]" />
                         </motion.div>
-                        <h2 className="text-2xl font-bold text-white tracking-tight mb-2 text-center">
+                        <h2 className="text-2xl font-bold text-[#0B1220] tracking-tight mb-2 text-center">
                             Crie sua conta
                         </h2>
-                        <p className="text-[rgba(255,255,255,0.45)] mb-6 text-sm text-center">
+                        <p className="text-[#64748B] mb-6 text-sm text-center">
                             Comece sua jornada de alta performance em vendas
                         </p>
 
@@ -1089,9 +935,9 @@ export default function Onboarding() {
                             }}
                             className="w-full h-12 rounded-xl font-semibold text-[14px] flex items-center justify-center gap-2.5 transition-all hover:scale-[1.01] active:scale-[0.99]"
                             style={{
-                                background: "rgba(255,255,255,0.03)",
-                                border: "1px solid rgba(255,255,255,0.1)",
-                                color: "rgba(255,255,255,0.9)",
+                                background: "#FFFFFF",
+                                border: "1px solid #E6EDF5",
+                                color: "#334155",
                             }}
                         >
                             <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -1104,19 +950,19 @@ export default function Onboarding() {
                         </button>
 
                         <div className="flex items-center gap-3 my-5">
-                            <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
-                            <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.3)" }}>ou com email</span>
-                            <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
+                            <div className="flex-1 h-px" style={{ background: "#E6EDF5" }} />
+                            <span className="text-[11px]" style={{ color: "#94A3B8" }}>ou com email</span>
+                            <div className="flex-1 h-px" style={{ background: "#E6EDF5" }} />
                         </div>
 
                         <div className="space-y-4">
                             {/* Nome */}
                             <div className="space-y-1.5">
-                                <Label className="text-[rgba(255,255,255,0.6)] text-sm font-medium">
+                                <Label className="text-[#334155] text-sm font-medium">
                                     Seu nome completo <span className="text-rose-400">*</span>
                                 </Label>
                                 <div className="relative">
-                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[rgba(255,255,255,0.3)]" />
+                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#94A3B8]" />
                                     <Input
                                         ref={inputRef}
                                         placeholder="Joao Silva"
@@ -1134,11 +980,11 @@ export default function Onboarding() {
 
                             {/* Email */}
                             <div className="space-y-1.5">
-                                <Label className="text-[rgba(255,255,255,0.6)] text-sm font-medium">
+                                <Label className="text-[#334155] text-sm font-medium">
                                     E-mail <span className="text-rose-400">*</span>
                                 </Label>
                                 <div className="relative">
-                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[rgba(255,255,255,0.3)]" />
+                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#94A3B8]" />
                                     <Input
                                         placeholder="voce@empresa.com"
                                         value={regEmail}
@@ -1156,11 +1002,11 @@ export default function Onboarding() {
 
                             {/* Empresa */}
                             <div className="space-y-1.5">
-                                <Label className="text-[rgba(255,255,255,0.6)] text-sm font-medium">
+                                <Label className="text-[#334155] text-sm font-medium">
                                     Nome da empresa <span className="text-rose-400">*</span>
                                 </Label>
                                 <div className="relative">
-                                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[rgba(255,255,255,0.3)]" />
+                                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#94A3B8]" />
                                     <Input
                                         placeholder="Sua Empresa Ltda"
                                         value={regCompanyName}
@@ -1176,11 +1022,11 @@ export default function Onboarding() {
 
                             {/* Senha */}
                             <div className="space-y-1.5">
-                                <Label className="text-[rgba(255,255,255,0.6)] text-sm font-medium">
+                                <Label className="text-[#334155] text-sm font-medium">
                                     Senha <span className="text-rose-400">*</span>
                                 </Label>
                                 <div className="relative">
-                                    <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[rgba(255,255,255,0.3)]" />
+                                    <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#94A3B8]" />
                                     <Input
                                         placeholder="Mínimo 8 caracteres"
                                         value={regPassword}
@@ -1193,7 +1039,7 @@ export default function Onboarding() {
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[rgba(255,255,255,0.3)] hover:text-[rgba(255,255,255,0.6)] transition-colors"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#64748B] transition-colors"
                                     >
                                         {showPassword ? <X className="h-4 w-4" /> : <Check className="h-4 w-4" />}
                                     </button>
@@ -1201,20 +1047,20 @@ export default function Onboarding() {
                                 {fieldTouched.regPassword && fieldErrors.regPassword ? (
                                     <p className="text-xs text-rose-400 pl-1">{fieldErrors.regPassword}</p>
                                 ) : regPassword.length > 0 && regPassword.length < 8 ? (
-                                    <p className="text-xs text-amber-400/70 pl-1">Minimo 8 caracteres ({regPassword.length}/8)</p>
+                                    <p className="text-xs text-[#64748B] pl-1">Minimo 8 caracteres ({regPassword.length}/8)</p>
                                 ) : regPassword.length >= 8 ? (
-                                    <p className="text-xs text-emerald-400/70 pl-1 flex items-center gap-1"><Check className="h-3 w-3" /> Senha valida</p>
+                                    <p className="text-xs text-[#2563EB] pl-1 flex items-center gap-1"><Check className="h-3 w-3" /> Senha valida</p>
                                 ) : null}
                             </div>
                         </div>
 
-                        <p className="text-[11px] text-[rgba(255,255,255,0.3)] mt-5 text-center">
+                        <p className="text-[11px] text-[#94A3B8] mt-5 text-center">
                             Ao criar sua conta, você concorda com nossos{" "}
                             <a
                                 href="/termos-de-servico"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2 transition-colors"
+                                className="text-[#2563EB] hover:text-[#4A8CE8] underline underline-offset-2 transition-colors"
                             >
                                 Termos de Uso
                             </a>.
@@ -1230,20 +1076,20 @@ export default function Onboarding() {
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)" }}
+                            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: "rgba(37,99,235,0.08)", border: "1px solid rgba(37,99,235,0.20)" }}
                         >
-                            <Building2 className="h-8 w-8 text-amber-500" />
+                            <Building2 className="h-8 w-8 text-[#2563EB]" />
                         </motion.div>
-                        <h2 className="text-2xl font-bold text-white tracking-tight mb-2 text-center">
+                        <h2 className="text-2xl font-bold text-[#0B1220] tracking-tight mb-2 text-center">
                             Dados da Empresa
                         </h2>
-                        <p className="text-[rgba(255,255,255,0.45)] mb-8 text-sm text-center">
+                        <p className="text-[#64748B] mb-8 text-sm text-center">
                             Vamos configurar o ambiente da sua empresa
                         </p>
 
                         <div className="space-y-5">
                             <div className="space-y-2">
-                                <Label className="text-[rgba(255,255,255,0.6)] text-sm font-medium">
+                                <Label className="text-[#334155] text-sm font-medium">
                                     Nome da empresa <span className="text-rose-400">*</span>
                                 </Label>
                                 <Input
@@ -1257,8 +1103,8 @@ export default function Onboarding() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="text-[rgba(255,255,255,0.6)] text-sm font-medium">
-                                    Segmento
+                                <Label className="text-[#334155] text-sm font-medium">
+                                    Segmento <span className="text-[#94A3B8] font-normal">(opcional)</span>
                                 </Label>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     {SEGMENT_OPTIONS.map((seg) => (
@@ -1268,8 +1114,8 @@ export default function Onboarding() {
                                             onClick={() => setSegment(segment === seg ? "" : seg)}
                                             className={`text-left px-3 py-2.5 rounded-xl border text-sm transition-all duration-200 ${
                                                 segment === seg
-                                                    ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-400"
-                                                    : "bg-[rgba(255,255,255,0.03)] border-[rgba(255,255,255,0.06)] text-[rgba(255,255,255,0.45)] hover:bg-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.12)] hover:text-white"
+                                                    ? "bg-[rgba(37,99,235,0.08)] border-[rgba(37,99,235,0.45)] text-[#2563EB]"
+                                                    : "bg-white border-[#E6EDF5] text-[#64748B] hover:bg-[#F1F5F9] hover:border-[#D7DEE9] hover:text-[#0B1220]"
                                             }`}
                                         >
                                             {seg}
@@ -1279,14 +1125,14 @@ export default function Onboarding() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="text-[rgba(255,255,255,0.6)] text-sm font-medium">
+                                <Label className="text-[#334155] text-sm font-medium">
                                     Logo (opcional)
                                 </Label>
                                 <div className="flex items-center gap-4">
                                     <button
                                         type="button"
                                         onClick={() => fileInputRef.current?.click()}
-                                        className="flex items-center justify-center w-16 h-16 rounded-xl border-2 border-dashed border-[rgba(255,255,255,0.08)] hover:border-[rgba(255,255,255,0.15)] bg-[rgba(255,255,255,0.03)] transition-colors overflow-hidden"
+                                        className="flex items-center justify-center w-16 h-16 rounded-xl border-2 border-dashed border-[#E6EDF5] hover:border-[#D7DEE9] bg-white transition-colors overflow-hidden"
                                     >
                                         {logoPreview ? (
                                             <img
@@ -1295,12 +1141,12 @@ export default function Onboarding() {
                                                 className="w-full h-full object-cover"
                                             />
                                         ) : (
-                                            <Image className="w-6 h-6 text-[rgba(255,255,255,0.3)]" />
+                                            <Image className="w-6 h-6 text-[#94A3B8]" />
                                         )}
                                     </button>
-                                    <div className="text-sm text-[rgba(255,255,255,0.3)]">
+                                    <div className="text-sm text-[#94A3B8]">
                                         {logoFile ? (
-                                            <span className="text-emerald-400">{logoFile.name}</span>
+                                            <span className="text-[#2563EB]">{logoFile.name}</span>
                                         ) : (
                                             "Clique para enviar (max 2MB)"
                                         )}
@@ -1326,24 +1172,24 @@ export default function Onboarding() {
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)" }}
+                            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: "rgba(37,99,235,0.08)", border: "1px solid rgba(37,99,235,0.20)" }}
                         >
-                            <User className="h-8 w-8 text-amber-500" />
+                            <User className="h-8 w-8 text-[#2563EB]" />
                         </motion.div>
-                        <h2 className="text-2xl font-bold text-white tracking-tight mb-2 text-center">
+                        <h2 className="text-2xl font-bold text-[#0B1220] tracking-tight mb-2 text-center">
                             Seu Perfil
                         </h2>
-                        <p className="text-[rgba(255,255,255,0.45)] mb-8 text-sm text-center">
+                        <p className="text-[#64748B] mb-8 text-sm text-center">
                             Conte-nos um pouco sobre voce
                         </p>
 
                         <div className="space-y-5">
                             <div className="space-y-2">
-                                <Label className="text-[rgba(255,255,255,0.6)] text-sm font-medium">
+                                <Label className="text-[#334155] text-sm font-medium">
                                     Seu nome <span className="text-rose-400">*</span>
                                 </Label>
                                 <div className="relative">
-                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[rgba(255,255,255,0.3)]" />
+                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#94A3B8]" />
                                     <Input
                                         ref={inputRef}
                                         placeholder="Seu nome completo"
@@ -1356,11 +1202,11 @@ export default function Onboarding() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="text-[rgba(255,255,255,0.6)] text-sm font-medium">
-                                    Telefone / WhatsApp
+                                <Label className="text-[#334155] text-sm font-medium">
+                                    Telefone / WhatsApp <span className="text-[#94A3B8] font-normal">(opcional)</span>
                                 </Label>
                                 <div className="relative">
-                                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[rgba(255,255,255,0.3)]" />
+                                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#94A3B8]" />
                                     <Input
                                         placeholder="(11) 99999-9999"
                                         value={userPhone}
@@ -1371,11 +1217,11 @@ export default function Onboarding() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="text-[rgba(255,255,255,0.6)] text-sm font-medium">
-                                    Cargo
+                                <Label className="text-[#334155] text-sm font-medium">
+                                    Cargo <span className="text-[#94A3B8] font-normal">(opcional)</span>
                                 </Label>
                                 <div className="relative">
-                                    <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[rgba(255,255,255,0.3)]" />
+                                    <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#94A3B8]" />
                                     <Input
                                         placeholder="Ex: Gerente Comercial"
                                         value={userRole}
@@ -1396,14 +1242,14 @@ export default function Onboarding() {
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)" }}
+                            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: "rgba(37,99,235,0.08)", border: "1px solid rgba(37,99,235,0.20)" }}
                         >
-                            <LayoutDashboard className="h-8 w-8 text-amber-500" />
+                            <LayoutDashboard className="h-8 w-8 text-[#2563EB]" />
                         </motion.div>
-                        <h2 className="text-2xl font-bold text-white tracking-tight mb-2 text-center">
+                        <h2 className="text-2xl font-bold text-[#0B1220] tracking-tight mb-2 text-center">
                             Configure seu Pipeline
                         </h2>
-                        <p className="text-[rgba(255,255,255,0.45)] mb-8 text-sm text-center">
+                        <p className="text-[#64748B] mb-8 text-sm text-center">
                             Escolha um modelo de funil para começar. Você pode personalizar depois.
                         </p>
 
@@ -1421,15 +1267,15 @@ export default function Onboarding() {
                                         onClick={() => setSelectedTemplate(key)}
                                         className={`group relative flex items-start gap-4 px-5 py-4 rounded-2xl border transition-all duration-300 text-left overflow-hidden ${
                                             isSelected
-                                                ? "bg-emerald-500/10 border-emerald-500/50 shadow-[0_0_20px_-5px_rgba(0,227,122,0.2)]"
-                                                : "bg-[rgba(255,255,255,0.03)] backdrop-blur-sm border-[rgba(255,255,255,0.06)] hover:bg-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.12)] hover:shadow-lg"
+                                                ? "bg-[rgba(37,99,235,0.08)] border-[rgba(37,99,235,0.45)] shadow-[0_0_20px_-5px_rgba(37,99,235,0.2)]"
+                                                : "bg-white backdrop-blur-sm border-[#E6EDF5] hover:bg-[#F1F5F9] hover:border-[#D7DEE9] hover:shadow-lg"
                                         }`}
                                     >
                                         <div
                                             className={`p-2.5 rounded-lg shrink-0 transition-colors ${
                                                 isSelected
-                                                    ? "bg-emerald-500/20 text-emerald-400"
-                                                    : "bg-[rgba(255,255,255,0.06)] text-[rgba(255,255,255,0.45)] group-hover:text-amber-500 group-hover:bg-amber-500/10"
+                                                    ? "bg-[rgba(37,99,235,0.16)] text-[#2563EB]"
+                                                    : "bg-[#F1F5F9] text-[#64748B] group-hover:text-[#2563EB] group-hover:bg-[rgba(37,99,235,0.08)]"
                                             }`}
                                         >
                                             <Icon className="h-5 w-5" />
@@ -1437,12 +1283,12 @@ export default function Onboarding() {
                                         <div className="flex-1 min-w-0">
                                             <p
                                                 className={`font-semibold text-sm ${
-                                                    isSelected ? "text-emerald-400" : "text-white"
+                                                    isSelected ? "text-[#2563EB]" : "text-[#0B1220]"
                                                 }`}
                                             >
                                                 {template.label}
                                             </p>
-                                            <p className="text-xs text-[rgba(255,255,255,0.3)] mt-0.5">
+                                            <p className="text-xs text-[#94A3B8] mt-0.5">
                                                 {template.description}
                                             </p>
                                             <div className="flex flex-wrap gap-1.5 mt-2">
@@ -1451,8 +1297,8 @@ export default function Onboarding() {
                                                         key={s.id}
                                                         className={`text-[10px] px-2 py-0.5 rounded-full border ${
                                                             isSelected
-                                                                ? "border-emerald-500/30 text-emerald-300 bg-emerald-500/10"
-                                                                : "border-[rgba(255,255,255,0.08)] text-[rgba(255,255,255,0.3)] bg-[rgba(255,255,255,0.04)]"
+                                                                ? "border-[rgba(37,99,235,0.30)] text-[#4A8CE8] bg-[rgba(37,99,235,0.08)]"
+                                                                : "border-[#E6EDF5] text-[#94A3B8] bg-[#F8FAFC]"
                                                         }`}
                                                     >
                                                         {s.title}
@@ -1462,7 +1308,7 @@ export default function Onboarding() {
                                         </div>
                                         {isSelected && (
                                             <motion.div layoutId="templateCheck" className="shrink-0 self-center">
-                                                <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center shadow-[0_0_10px_rgba(0,227,122,0.5)]">
+                                                <div className="w-6 h-6 rounded-full bg-[#2563EB] flex items-center justify-center shadow-[0_0_10px_rgba(37,99,235,0.5)]">
                                                     <Check className="w-3.5 h-3.5 text-white" />
                                                 </div>
                                             </motion.div>
@@ -1482,8 +1328,6 @@ export default function Onboarding() {
                     : currentPlan?.monthlyPrice ?? 0;
                 const trialEndDate = new Date(Date.now() + 14 * 86400000)
                     .toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
-                const brand = detectCardBrand(cardNumber);
-                const brandMeta = CARD_BRAND_META[brand];
 
                 return (
                     <div>
@@ -1491,25 +1335,25 @@ export default function Onboarding() {
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: "rgba(0,227,122,0.08)", border: "1px solid rgba(0,227,122,0.2)" }}
+                            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: "rgba(37,99,235,0.08)", border: "1px solid rgba(37,99,235,0.2)" }}
                         >
-                            <CreditCard className="h-8 w-8 text-emerald-500" />
+                            <CreditCard className="h-8 w-8 text-[#2563EB]" />
                         </motion.div>
-                        <h2 className="font-heading text-2xl font-bold text-white tracking-tight mb-2 text-center">
+                        <h2 className="font-heading text-2xl font-bold text-[#0B1220] tracking-tight mb-2 text-center">
                             Escolha seu Plano
                         </h2>
-                        <p className="text-[rgba(255,255,255,0.45)] mb-6 text-sm text-center">
+                        <p className="text-[#64748B] mb-6 text-sm text-center">
                             14 dias grátis para testar. Cancele quando quiser.
                         </p>
 
                         {/* Billing toggle */}
-                        <div className="inline-flex items-center gap-1 p-1 rounded-xl mx-auto mb-6 w-full max-w-[260px]" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                        <div className="inline-flex items-center gap-1 p-1 rounded-xl mx-auto mb-6 w-full max-w-[260px]" style={{ background: "#F8FAFC", border: "1px solid #E6EDF5" }}>
                             <button
                                 onClick={() => setBillingCycle("monthly")}
                                 className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium ${
                                     billingCycle === "monthly"
-                                        ? "bg-[rgba(255,255,255,0.08)] text-white"
-                                        : "text-[rgba(255,255,255,0.4)] hover:text-[rgba(255,255,255,0.7)]"
+                                        ? "bg-white text-[#0B1220] shadow-[0_1px_2px_rgba(11,18,32,0.06)]"
+                                        : "text-[#64748B] hover:text-[#0B1220]"
                                 }`}
                             >
                                 Mensal
@@ -1518,12 +1362,12 @@ export default function Onboarding() {
                                 onClick={() => setBillingCycle("annual")}
                                 className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-1.5 ${
                                     billingCycle === "annual"
-                                        ? "bg-emerald-500/15 text-emerald-400 shadow-[0_0_0_1px_rgba(0,227,122,0.3)]"
-                                        : "text-[rgba(255,255,255,0.4)] hover:text-[rgba(255,255,255,0.7)]"
+                                        ? "bg-[rgba(37,99,235,0.12)] text-[#2563EB] shadow-[0_0_0_1px_rgba(37,99,235,0.3)]"
+                                        : "text-[#64748B] hover:text-[#0B1220]"
                                 }`}
                             >
                                 Anual
-                                <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-bold">
+                                <span className="text-[10px] bg-[rgba(37,99,235,0.16)] text-[#2563EB] px-1.5 py-0.5 rounded font-bold">
                                     -10%
                                 </span>
                             </button>
@@ -1551,55 +1395,55 @@ export default function Onboarding() {
                                         } ${
                                             isSelected
                                                 ? isPopular
-                                                    ? "bg-gradient-to-br from-emerald-500/15 to-emerald-500/5 border-emerald-500/60 shadow-[0_0_24px_-4px_rgba(0,227,122,0.4)]"
-                                                    : "bg-emerald-500/10 border-emerald-500/50 shadow-[0_0_15px_-5px_rgba(0,227,122,0.3)]"
+                                                    ? "bg-gradient-to-br from-[rgba(37,99,235,0.12)] to-[rgba(37,99,235,0.04)] border-[rgba(37,99,235,0.55)] shadow-[0_0_24px_-4px_rgba(37,99,235,0.4)]"
+                                                    : "bg-[rgba(37,99,235,0.08)] border-[rgba(37,99,235,0.45)] shadow-[0_0_15px_-5px_rgba(37,99,235,0.3)]"
                                                 : isPopular
-                                                    ? "bg-[rgba(0,227,122,0.04)] border-[rgba(0,227,122,0.2)] hover:border-emerald-500/40"
-                                                    : "bg-[rgba(255,255,255,0.03)] border-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.12)]"
+                                                    ? "bg-[rgba(37,99,235,0.04)] border-[rgba(37,99,235,0.2)] hover:border-[rgba(37,99,235,0.40)]"
+                                                    : "bg-white border-[#E6EDF5] hover:border-[#D7DEE9]"
                                         }`}
                                     >
                                         {isPopular && (
-                                            <div className="absolute -top-2 right-4 px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[9px] font-bold uppercase tracking-wider shadow-[0_0_10px_rgba(0,227,122,0.4)]">
+                                            <div className="absolute -top-2 right-4 px-2 py-0.5 rounded-full bg-[#2563EB] text-white text-[9px] font-bold uppercase tracking-wider shadow-[0_0_10px_rgba(37,99,235,0.4)]">
                                                 Popular
                                             </div>
                                         )}
                                         <div className={`p-2 rounded-lg shrink-0 ${
                                             isSelected
-                                                ? "bg-emerald-500/20"
+                                                ? "bg-[rgba(37,99,235,0.16)]"
                                                 : isPopular
-                                                    ? "bg-emerald-500/10"
-                                                    : "bg-[rgba(255,255,255,0.06)]"
+                                                    ? "bg-[rgba(37,99,235,0.08)]"
+                                                    : "bg-[#F1F5F9]"
                                         }`}>
                                             <PlanIcon className={`h-4 w-4 ${
                                                 isSelected
-                                                    ? "text-emerald-400"
+                                                    ? "text-[#2563EB]"
                                                     : isPopular
-                                                        ? "text-emerald-400/80"
-                                                        : "text-[rgba(255,255,255,0.45)]"
+                                                        ? "text-[#4A8CE8]"
+                                                        : "text-[#64748B]"
                                             }`} />
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className={`font-bold text-sm ${
-                                                isSelected ? "text-emerald-400" : "text-white"
+                                                isSelected ? "text-[#2563EB]" : "text-[#0B1220]"
                                             }`}>
                                                 {plan.name}
                                             </p>
-                                            <p className="text-xs text-[rgba(255,255,255,0.35)] mt-0.5">
+                                            <p className="text-xs text-[#94A3B8] mt-0.5">
                                                 {plan.description}
                                             </p>
                                         </div>
                                         <div className="text-right shrink-0">
                                             <p className={`font-bold ${isPopular ? "text-xl" : "text-lg"} ${
-                                                isSelected ? "text-emerald-400" : "text-white"
+                                                isSelected ? "text-[#2563EB]" : "text-[#0B1220]"
                                             }`}>
                                                 R$ {monthlyDisplay}
                                             </p>
-                                            <p className="text-[10px] text-[rgba(255,255,255,0.3)]">/mês</p>
+                                            <p className="text-[10px] text-[#94A3B8]">/mês</p>
                                         </div>
                                         <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-opacity ${
                                             isSelected
-                                                ? "bg-emerald-500 opacity-100"
-                                                : "bg-[rgba(255,255,255,0.06)] opacity-60"
+                                                ? "bg-[#2563EB] opacity-100"
+                                                : "bg-[#F1F5F9] opacity-60"
                                         }`}>
                                             {isSelected && <Check className="w-3 h-3 text-white" />}
                                         </div>
@@ -1613,140 +1457,58 @@ export default function Onboarding() {
                             <div
                                 className="rounded-2xl p-4 mb-6"
                                 style={{
-                                    background: "linear-gradient(135deg, rgba(0,227,122,0.08), rgba(0,227,122,0.02))",
-                                    border: "1px solid rgba(0,227,122,0.2)",
+                                    background: "linear-gradient(135deg, rgba(37,99,235,0.08), rgba(37,99,235,0.02))",
+                                    border: "1px solid rgba(37,99,235,0.2)",
                                 }}
                             >
                                 <div className="flex items-center gap-2 mb-3">
-                                    <Shield className="h-4 w-4 text-emerald-400 shrink-0" />
-                                    <p className="font-heading font-bold text-sm text-white">
+                                    <Shield className="h-4 w-4 text-[#2563EB] shrink-0" />
+                                    <p className="font-heading font-bold text-sm text-[#0B1220]">
                                         Como funciona
                                     </p>
                                 </div>
                                 <div className="space-y-2.5">
                                     <div className="flex items-center justify-between gap-3">
                                         <div className="flex items-center gap-2.5 min-w-0">
-                                            <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0">
-                                                <Check className="h-3 w-3 text-emerald-400" strokeWidth={3} />
+                                            <div className="w-6 h-6 rounded-full bg-[rgba(37,99,235,0.16)] border border-[rgba(37,99,235,0.40)] flex items-center justify-center shrink-0">
+                                                <Check className="h-3 w-3 text-[#2563EB]" strokeWidth={3} />
                                             </div>
-                                            <span className="text-sm text-white/85">
+                                            <span className="text-sm text-[#334155]">
                                                 Hoje — acesso total liberado
                                             </span>
                                         </div>
-                                        <span className="text-sm font-bold text-emerald-400 shrink-0">R$ 0</span>
+                                        <span className="text-sm font-bold text-[#2563EB] shrink-0">R$ 0</span>
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
                                         <div className="flex items-center gap-2.5 min-w-0">
-                                            <div className="w-6 h-6 rounded-full bg-[rgba(255,255,255,0.06)] border border-white/10 flex items-center justify-center shrink-0">
-                                                <Calendar className="h-3 w-3 text-white/60" strokeWidth={2} />
+                                            <div className="w-6 h-6 rounded-full bg-[#F1F5F9] border border-[#E6EDF5] flex items-center justify-center shrink-0">
+                                                <Calendar className="h-3 w-3 text-[#64748B]" strokeWidth={2} />
                                             </div>
-                                            <span className="text-sm text-white/85 truncate">
+                                            <span className="text-sm text-[#334155] truncate">
                                                 A partir de {trialEndDate}
                                             </span>
                                         </div>
-                                        <span className="text-sm font-bold text-white shrink-0">
+                                        <span className="text-sm font-bold text-[#0B1220] shrink-0">
                                             {formatPrice(chargeAmount)}/mês
                                         </span>
                                     </div>
                                 </div>
-                                <p className="text-[11px] text-white/50 mt-3 pt-3 border-t border-white/5">
+                                <p className="text-[11px] text-[#64748B] mt-3 pt-3 border-t border-[#E6EDF5]">
                                     Cancele quando quiser pelo painel, sem multa.
                                 </p>
                             </div>
                         )}
 
-                        {/* Card form com preview da bandeira */}
-                        <div className="space-y-4">
-                            <div className="space-y-2">
-                                <Label className="text-[rgba(255,255,255,0.6)] text-sm font-medium">
-                                    Número do cartão <span className="text-rose-400">*</span>
-                                </Label>
-                                <div className="relative">
-                                    <Input
-                                        placeholder="0000 0000 0000 0000"
-                                        className={`${inputClasses} pr-24`}
-                                        maxLength={19}
-                                        value={cardNumber}
-                                        onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
-                                        inputMode="numeric"
-                                        autoComplete="cc-number"
-                                    />
-                                    {brand !== "unknown" && (
-                                        <motion.div
-                                            initial={{ opacity: 0, scale: 0.9 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            transition={{ duration: 0.2 }}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2"
-                                        >
-                                            <div
-                                                className="px-2 py-1 rounded-md text-[10px] font-bold tracking-wider leading-none"
-                                                style={{ background: brandMeta.bg, color: brandMeta.fg }}
-                                            >
-                                                {brandMeta.label}
-                                            </div>
-                                        </motion.div>
-                                    )}
-                                </div>
+                        {/* Sem cartão — destaque */}
+                        <div className="flex items-start gap-3 rounded-2xl px-4 py-3.5 mb-2" style={{ background: "rgba(37,99,235,0.06)", border: "1px solid rgba(37,99,235,0.18)" }}>
+                            <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(37,99,235,0.12)" }}>
+                                <Shield className="h-4 w-4 text-[#2563EB]" />
                             </div>
-
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-2">
-                                    <Label className="text-[rgba(255,255,255,0.6)] text-sm font-medium">
-                                        Validade <span className="text-rose-400">*</span>
-                                    </Label>
-                                    <Input
-                                        placeholder="MM/AA"
-                                        className={inputClasses}
-                                        maxLength={5}
-                                        value={cardExpiration}
-                                        onChange={(e) => setCardExpiration(formatExpiration(e.target.value))}
-                                        inputMode="numeric"
-                                        autoComplete="cc-exp"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label className="text-[rgba(255,255,255,0.6)] text-sm font-medium">
-                                        CVV <span className="text-rose-400">*</span>
-                                    </Label>
-                                    <Input
-                                        placeholder="123"
-                                        className={inputClasses}
-                                        maxLength={4}
-                                        value={cardCvv}
-                                        onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                                        inputMode="numeric"
-                                        type="password"
-                                        autoComplete="cc-csc"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label className="text-[rgba(255,255,255,0.6)] text-sm font-medium">
-                                    Nome no cartão <span className="text-rose-400">*</span>
-                                </Label>
-                                <Input
-                                    id="cardholder-name"
-                                    placeholder="Nome como está no cartão"
-                                    className={inputClasses}
-                                    autoComplete="cc-name"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label className="text-[rgba(255,255,255,0.6)] text-sm font-medium">
-                                    CPF ou CNPJ do titular <span className="text-rose-400">*</span>
-                                </Label>
-                                <Input
-                                    id="doc-number"
-                                    placeholder="000.000.000-00 ou 00.000.000/0000-00"
-                                    className={inputClasses}
-                                    maxLength={18}
-                                    inputMode="numeric"
-                                    onChange={(e) => {
-                                        e.target.value = formatDocument(e.target.value);
-                                    }}
-                                />
+                            <div className="min-w-0">
+                                <p className="text-sm font-semibold text-[#0B1220]">Sem cartão para começar</p>
+                                <p className="text-xs text-[#64748B] mt-0.5">
+                                    Acesso total por 14 dias. Só pedimos pagamento se você decidir continuar, e dá pra contratar pela própria plataforma.
+                                </p>
                             </div>
                         </div>
 
@@ -1757,48 +1519,48 @@ export default function Onboarding() {
                             </div>
                         )}
 
-                        {/* Payment CTA */}
+                        {/* CTA — inicia trial sem cartão */}
                         <div className="mt-6 flex items-center gap-3">
                             <Button
                                 variant="outline"
                                 onClick={handleBack}
                                 disabled={paymentLoading}
-                                className="h-12 w-12 shrink-0 p-0 border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.06)] hover:bg-[rgba(255,255,255,0.08)] text-[rgba(255,255,255,0.6)] hover:text-white rounded-xl transition-colors disabled:opacity-50"
+                                className="h-12 w-12 shrink-0 p-0 border-[#E6EDF5] bg-[#F1F5F9] hover:bg-[#EEF2F7] text-[#64748B] hover:text-[#0B1220] rounded-xl transition-colors disabled:opacity-50"
                             >
                                 <ArrowLeft className="h-5 w-5" />
                             </Button>
                             <Button
-                                onClick={handlePayment}
+                                onClick={handleStartTrial}
                                 disabled={paymentLoading || !selectedPlan}
                                 className="relative flex-1 h-12 text-white font-bold text-base rounded-xl border-none transition-transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:hover:translate-y-0 overflow-hidden"
                                 style={{
-                                    background: "linear-gradient(135deg, #00E37A, #00B289)",
-                                    boxShadow: "0 0 0 1px rgba(0,227,122,0.3), 0 4px 24px rgba(0,227,122,0.3)",
+                                    background: "linear-gradient(135deg, #2563EB, #1D4ED8)",
+                                    boxShadow: "0 0 0 1px rgba(37,99,235,0.3), 0 4px 24px rgba(37,99,235,0.3)",
                                 }}
                             >
                                 {paymentLoading ? (
                                     <>
                                         <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                        Processando...
+                                        Liberando acesso...
                                     </>
                                 ) : (
                                     <span className="flex items-center justify-center gap-2">
-                                        <Shield className="h-5 w-5" />
-                                        Iniciar trial grátis
+                                        Começar teste grátis
+                                        <ArrowRight className="h-5 w-5" />
                                     </span>
                                 )}
                             </Button>
                         </div>
 
                         {/* Trust row */}
-                        <div className="mt-5 pt-5 border-t border-white/5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] text-white/40">
-                            <div className="flex items-center gap-1.5">
-                                <Lock className="h-3 w-3" strokeWidth={2} />
-                                <span>Conexão SSL</span>
-                            </div>
+                        <div className="mt-5 pt-5 border-t border-[#E6EDF5] flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] text-[#94A3B8]">
                             <div className="flex items-center gap-1.5">
                                 <CreditCard className="h-3 w-3" strokeWidth={2} />
-                                <span>Mercado Pago</span>
+                                <span>Sem cartão agora</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <Lock className="h-3 w-3" strokeWidth={2} />
+                                <span>Cancele quando quiser</span>
                             </div>
                             <div className="flex items-center gap-1.5">
                                 <Shield className="h-3 w-3" strokeWidth={2} />
@@ -1817,14 +1579,14 @@ export default function Onboarding() {
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)" }}
+                            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: "rgba(37,99,235,0.08)", border: "1px solid rgba(37,99,235,0.20)" }}
                         >
-                            <Users className="h-8 w-8 text-amber-500" />
+                            <Users className="h-8 w-8 text-[#2563EB]" />
                         </motion.div>
-                        <h2 className="text-2xl font-bold text-white tracking-tight mb-2 text-center">
+                        <h2 className="text-2xl font-bold text-[#0B1220] tracking-tight mb-2 text-center">
                             Convide sua Equipe
                         </h2>
-                        <p className="text-[rgba(255,255,255,0.45)] mb-8 text-sm text-center">
+                        <p className="text-[#64748B] mb-8 text-sm text-center">
                             Adicione os e-mails dos seus vendedores. Eles receberao um convite por e-mail.
                         </p>
 
@@ -1838,7 +1600,7 @@ export default function Onboarding() {
                                     className="flex items-center gap-2"
                                 >
                                     <div className="relative flex-1">
-                                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[rgba(255,255,255,0.3)]" />
+                                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#94A3B8]" />
                                         <Input
                                             placeholder="vendedor@empresa.com"
                                             value={email}
@@ -1851,7 +1613,7 @@ export default function Onboarding() {
                                         <button
                                             type="button"
                                             onClick={() => removeEmailField(index)}
-                                            className="p-2 text-[rgba(255,255,255,0.3)] hover:text-rose-400 transition-colors"
+                                            className="p-2 text-[#94A3B8] hover:text-rose-400 transition-colors"
                                         >
                                             <X className="w-4 h-4" />
                                         </button>
@@ -1863,7 +1625,7 @@ export default function Onboarding() {
                                 <button
                                     type="button"
                                     onClick={addEmailField}
-                                    className="flex items-center gap-2 text-sm text-[rgba(255,255,255,0.45)] hover:text-emerald-400 transition-colors py-2"
+                                    className="flex items-center gap-2 text-sm text-[#64748B] hover:text-[#2563EB] transition-colors py-2"
                                 >
                                     <Plus className="w-4 h-4" />
                                     Adicionar mais um vendedor
@@ -1875,7 +1637,7 @@ export default function Onboarding() {
                             <Button
                                 onClick={handleInviteTeam}
                                 disabled={inviteLoading || teamEmails.every((e) => !e.trim())}
-                                className="w-full h-12 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:hover:translate-y-0"
+                                className="w-full h-12 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold rounded-xl shadow-lg shadow-[0_8px_24px_-8px_rgba(37,99,235,0.30)] transition-all hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:hover:translate-y-0"
                             >
                                 {inviteLoading ? (
                                     <>
@@ -1902,24 +1664,24 @@ export default function Onboarding() {
                             animate={{ scale: 1, rotate: 0 }}
                             transition={{ type: "spring", stiffness: 200, damping: 15 }}
                             className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
-                            style={{ background: "rgba(0,227,122,0.1)", border: "1px solid rgba(0,227,122,0.25)" }}
+                            style={{ background: "rgba(37,99,235,0.1)", border: "1px solid rgba(37,99,235,0.25)" }}
                         >
-                            <Trophy className="h-10 w-10 text-emerald-400" />
+                            <Trophy className="h-10 w-10 text-[#2563EB]" />
                         </motion.div>
 
                         <motion.p
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.2 }}
-                            className="text-amber-400 font-bold text-xs uppercase tracking-widest mb-3"
+                            className="text-[#2563EB] font-bold text-xs uppercase tracking-widest mb-3"
                         >
                             Tudo pronto!
                         </motion.p>
 
-                        <h2 className="text-2xl font-bold text-white tracking-tight mb-2">
+                        <h2 className="text-2xl font-bold text-[#0B1220] tracking-tight mb-2">
                             Seu ambiente esta configurado!
                         </h2>
-                        <p className="text-[rgba(255,255,255,0.45)] mb-10 text-sm max-w-sm mx-auto">
+                        <p className="text-[#64748B] mb-10 text-sm max-w-sm mx-auto">
                             {companyName
                                 ? `A empresa "${companyName}" esta pronta para usar o Vyzon.`
                                 : "Seu Vyzon esta pronto para usar."}{" "}
@@ -1933,20 +1695,20 @@ export default function Onboarding() {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.3 }}
                                 onClick={() => handleComplete("crm")}
-                                className="group flex items-center gap-4 px-5 py-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 transition-all text-left"
+                                className="group flex items-center gap-4 px-5 py-4 rounded-2xl border border-[rgba(37,99,235,0.30)] bg-[rgba(37,99,235,0.08)] hover:bg-[rgba(37,99,235,0.16)] transition-all text-left"
                             >
-                                <div className="p-2.5 rounded-lg bg-emerald-500/20">
-                                    <LayoutDashboard className="h-5 w-5 text-emerald-400" />
+                                <div className="p-2.5 rounded-lg bg-[rgba(37,99,235,0.16)]">
+                                    <LayoutDashboard className="h-5 w-5 text-[#2563EB]" />
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-sm font-semibold text-emerald-400">
+                                    <p className="text-sm font-semibold text-[#2563EB]">
                                         Ir ao Pipeline
                                     </p>
-                                    <p className="text-xs text-[rgba(255,255,255,0.3)]">
+                                    <p className="text-xs text-[#94A3B8]">
                                         Comece a adicionar seus deals
                                     </p>
                                 </div>
-                                <ArrowRight className="h-4 w-4 text-emerald-500 group-hover:translate-x-1 transition-transform" />
+                                <ArrowRight className="h-4 w-4 text-[#2563EB] group-hover:translate-x-1 transition-transform" />
                             </motion.button>
 
                             <motion.button
@@ -1954,20 +1716,20 @@ export default function Onboarding() {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.4 }}
                                 onClick={() => handleComplete("nova-venda")}
-                                className="group flex items-center gap-4 px-5 py-4 rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.03)] hover:bg-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.12)] transition-all text-left"
+                                className="group flex items-center gap-4 px-5 py-4 rounded-2xl border border-[#E6EDF5] bg-white hover:bg-[#F1F5F9] hover:border-[#D7DEE9] transition-all text-left"
                             >
-                                <div className="p-2.5 rounded-lg bg-[rgba(255,255,255,0.06)]">
-                                    <Package className="h-5 w-5 text-amber-400" />
+                                <div className="p-2.5 rounded-lg bg-[#F1F5F9]">
+                                    <Package className="h-5 w-5 text-[#2563EB]" />
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-sm font-semibold text-white">
+                                    <p className="text-sm font-semibold text-[#0B1220]">
                                         Registrar uma Venda
                                     </p>
-                                    <p className="text-xs text-[rgba(255,255,255,0.3)]">
+                                    <p className="text-xs text-[#94A3B8]">
                                         Registre sua primeira venda agora
                                     </p>
                                 </div>
-                                <ArrowRight className="h-4 w-4 text-[rgba(255,255,255,0.3)] group-hover:translate-x-1 transition-transform" />
+                                <ArrowRight className="h-4 w-4 text-[#94A3B8] group-hover:translate-x-1 transition-transform" />
                             </motion.button>
 
                             <motion.button
@@ -1975,20 +1737,20 @@ export default function Onboarding() {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.5 }}
                                 onClick={() => handleComplete("dashboard")}
-                                className="group flex items-center gap-4 px-5 py-4 rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.03)] hover:bg-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.12)] transition-all text-left"
+                                className="group flex items-center gap-4 px-5 py-4 rounded-2xl border border-[#E6EDF5] bg-white hover:bg-[#F1F5F9] hover:border-[#D7DEE9] transition-all text-left"
                             >
-                                <div className="p-2.5 rounded-lg bg-[rgba(255,255,255,0.06)]">
-                                    <BarChart3 className="h-5 w-5 text-blue-400" />
+                                <div className="p-2.5 rounded-lg bg-[#F1F5F9]">
+                                    <BarChart3 className="h-5 w-5 text-[#2563EB]" />
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-sm font-semibold text-white">
+                                    <p className="text-sm font-semibold text-[#0B1220]">
                                         Ver Dashboard
                                     </p>
-                                    <p className="text-xs text-[rgba(255,255,255,0.3)]">
+                                    <p className="text-xs text-[#94A3B8]">
                                         Veja metricas e acompanhe o time
                                     </p>
                                 </div>
-                                <ArrowRight className="h-4 w-4 text-[rgba(255,255,255,0.3)] group-hover:translate-x-1 transition-transform" />
+                                <ArrowRight className="h-4 w-4 text-[#94A3B8] group-hover:translate-x-1 transition-transform" />
                             </motion.button>
                         </div>
                     </div>
@@ -2000,17 +1762,109 @@ export default function Onboarding() {
     };
 
     return (
-        <div className="min-h-screen flex selection:bg-emerald-500/30" style={{ background: "#06080a" }}>
+        <div className="min-h-screen flex selection:bg-[rgba(37,99,235,0.18)]" style={{ background: "#F3F6FA" }}>
             <Confetti show={showConfetti} />
 
             {/* Left Panel - Dynamic per step (hidden on mobile) */}
-            <div className="hidden lg:flex w-1/2 relative overflow-hidden flex-col justify-between p-12" style={{ background: "#0a0d10", borderRight: "1px solid rgba(255,255,255,0.06)" }}>
+            <div className="hidden lg:flex w-1/2 relative overflow-hidden flex-col justify-between p-12" style={{ background: "#FFFFFF", borderRight: "1px solid #E6EDF5" }}>
+                {/* Subtle top glow */}
+                <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 70% 50% at 30% 0%, rgba(37,99,235,0.06) 0%, transparent 70%)" }} />
                 {/* Subtle grid overlay */}
-                <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
+                <div className="absolute inset-0 opacity-[0.5] pointer-events-none" style={{ backgroundImage: "linear-gradient(rgba(11,18,32,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(11,18,32,0.025) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
 
                 {/* Top — Logo + Dynamic headline */}
                 <div className="relative z-10">
-                    <ThemeLogo className="h-12 mb-10" />
+                    <ThemeLogo className="h-12 mb-8" />
+
+                    {/* EVA — copiloto que reage a cada etapa */}
+                    <div className="flex items-start gap-3.5 mb-8">
+                        <div className="relative shrink-0 mt-0.5" style={{ width: 80, height: 80 }}>
+                            {/* aura reativa ao estado (mais intensa pensando, âmbar comemorando) */}
+                            <motion.div
+                                aria-hidden
+                                className="absolute -inset-3 rounded-full pointer-events-none"
+                                style={{ background: `radial-gradient(circle, ${evaMood === "excited" ? "rgba(245,158,11,0.22)" : "rgba(124,58,237,0.18)"} 0%, rgba(124,58,237,0) 70%)` }}
+                                animate={{
+                                    opacity: evaThinking ? [0.5, 0.95, 0.5] : [0.4, 0.8, 0.4],
+                                    scale: evaThinking ? [0.96, 1.14, 0.96] : [0.95, 1.08, 0.95],
+                                }}
+                                transition={{ duration: evaThinking ? 2.2 : 4, repeat: Infinity, ease: "easeInOut" }}
+                            />
+                            {/* cristais flutuando (assinatura da EVA) */}
+                            <motion.span
+                                aria-hidden
+                                className="absolute -top-1 -right-1 h-2 w-2 rotate-45 rounded-[2px]"
+                                style={{ background: "linear-gradient(135deg,#a78bfa,#7c3aed)" }}
+                                animate={{ y: [0, -6, 0], opacity: [0.55, 1, 0.55] }}
+                                transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+                            />
+                            <motion.span
+                                aria-hidden
+                                className="absolute bottom-0 -left-2 h-1.5 w-1.5 rounded-full"
+                                style={{ background: "#22d3ee" }}
+                                animate={{ y: [0, 5, 0], opacity: [0.4, 0.9, 0.4] }}
+                                transition={{ duration: 3.8, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
+                            />
+                            {/* avatar: punch (muda expressão) > float idle > bob no ritmo da fala */}
+                            <motion.div
+                                key={evaMood}
+                                initial={{ scale: 0.82 }}
+                                animate={{ scale: 1 }}
+                                transition={{ type: "spring", stiffness: 320, damping: 16 }}
+                            >
+                                <motion.div
+                                    animate={{ y: [0, -3, 0] }}
+                                    transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                                >
+                                    <motion.div
+                                        animate={evaTyping ? { y: [0, -1.5, 0], scale: [1, 1.02, 1] } : { y: 0, scale: 1 }}
+                                        transition={evaTyping ? { duration: 0.45, repeat: Infinity, ease: "easeInOut" } : { duration: 0.2 }}
+                                    >
+                                        <EvaPhotoAvatar size="lg" ring="glow" mood={evaMood} thinking={evaThinking} />
+                                    </motion.div>
+                                </motion.div>
+                            </motion.div>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 mb-1.5">
+                                <span className="text-sm font-semibold text-[#0B1220]">EVA</span>
+                                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md" style={{ background: "rgba(124,58,237,0.10)", color: "#7c3aed" }}>
+                                    sua copiloto
+                                </span>
+                            </div>
+                            <div
+                                className="relative inline-flex items-center rounded-2xl rounded-tl-sm px-3.5 py-2.5 text-sm leading-snug min-h-[42px]"
+                                style={{ background: "#FFFFFF", border: "1px solid #E6EDF5", color: "#334155", boxShadow: "0 4px 16px -8px rgba(11,18,32,0.12)" }}
+                            >
+                                {evaTyping && evaTyped === "" ? (
+                                    <span className="inline-flex items-center gap-1 py-1" aria-label="EVA digitando">
+                                        {[0, 1, 2].map((d) => (
+                                            <motion.span
+                                                key={d}
+                                                className="h-1.5 w-1.5 rounded-full"
+                                                style={{ background: "#7c3aed" }}
+                                                animate={{ opacity: [0.3, 1, 0.3], y: [0, -2, 0] }}
+                                                transition={{ duration: 0.9, repeat: Infinity, ease: "easeInOut", delay: d * 0.15 }}
+                                            />
+                                        ))}
+                                    </span>
+                                ) : (
+                                    <span>
+                                        {evaTyped}
+                                        {evaTyping && (
+                                            <motion.span
+                                                className="inline-block w-[2px] h-[1em] align-middle ml-0.5"
+                                                style={{ background: "#7c3aed" }}
+                                                animate={{ opacity: [1, 0, 1] }}
+                                                transition={{ duration: 0.7, repeat: Infinity }}
+                                            />
+                                        )}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={`left-${currentStep}`}
@@ -2021,77 +1875,77 @@ export default function Onboarding() {
                         >
                             {currentStep === 1 && (
                                 <>
-                                    <h1 className="text-4xl xl:text-5xl font-bold leading-tight mb-5" style={{ color: "rgba(255,255,255,0.95)", letterSpacing: "-0.03em" }}>
+                                    <h1 className="text-2xl xl:text-3xl font-bold leading-tight mb-2.5" style={{ color: "#0B1220", letterSpacing: "-0.03em" }}>
                                         Crie sua conta em{" "}
-                                        <span className="text-emerald-400">30 segundos</span>.
+                                        <span className="text-[#2563EB]">30 segundos</span>.
                                     </h1>
-                                    <p className="text-lg max-w-md" style={{ color: "rgba(255,255,255,0.4)" }}>
+                                    <p className="text-sm max-w-md" style={{ color: "#64748B" }}>
                                         Preencha seus dados básicos e já tenha acesso à plataforma completa.
                                     </p>
                                 </>
                             )}
                             {currentStep === 2 && (
                                 <>
-                                    <h1 className="text-4xl xl:text-5xl font-bold leading-tight mb-5" style={{ color: "rgba(255,255,255,0.95)", letterSpacing: "-0.03em" }}>
+                                    <h1 className="text-2xl xl:text-3xl font-bold leading-tight mb-2.5" style={{ color: "#0B1220", letterSpacing: "-0.03em" }}>
                                         Personalize para{" "}
-                                        <span className="text-emerald-400">sua empresa</span>.
+                                        <span className="text-[#2563EB]">sua empresa</span>.
                                     </h1>
-                                    <p className="text-lg max-w-md" style={{ color: "rgba(255,255,255,0.4)" }}>
+                                    <p className="text-sm max-w-md" style={{ color: "#64748B" }}>
                                         Essas informações nos ajudam a configurar o ambiente ideal para o seu negócio.
                                     </p>
                                 </>
                             )}
                             {currentStep === 3 && (
                                 <>
-                                    <h1 className="text-4xl xl:text-5xl font-bold leading-tight mb-5" style={{ color: "rgba(255,255,255,0.95)", letterSpacing: "-0.03em" }}>
+                                    <h1 className="text-2xl xl:text-3xl font-bold leading-tight mb-2.5" style={{ color: "#0B1220", letterSpacing: "-0.03em" }}>
                                         Quem vai{" "}
-                                        <span className="text-emerald-400">liderar</span>?
+                                        <span className="text-[#2563EB]">liderar</span>?
                                     </h1>
-                                    <p className="text-lg max-w-md" style={{ color: "rgba(255,255,255,0.4)" }}>
+                                    <p className="text-sm max-w-md" style={{ color: "#64748B" }}>
                                         Seu perfil aparece no ranking e no dashboard do time.
                                     </p>
                                 </>
                             )}
                             {currentStep === 4 && (
                                 <>
-                                    <h1 className="text-4xl xl:text-5xl font-bold leading-tight mb-5" style={{ color: "rgba(255,255,255,0.95)", letterSpacing: "-0.03em" }}>
+                                    <h1 className="text-2xl xl:text-3xl font-bold leading-tight mb-2.5" style={{ color: "#0B1220", letterSpacing: "-0.03em" }}>
                                         Monte seu{" "}
-                                        <span className="text-amber-400">funil de vendas</span>.
+                                        <span className="text-[#2563EB]">funil de vendas</span>.
                                     </h1>
-                                    <p className="text-lg max-w-md" style={{ color: "rgba(255,255,255,0.4)" }}>
+                                    <p className="text-sm max-w-md" style={{ color: "#64748B" }}>
                                         Escolha um template pronto ou personalize depois. Você pode mudar a qualquer momento.
                                     </p>
                                 </>
                             )}
                             {currentStep === 5 && (
                                 <>
-                                    <h1 className="text-4xl xl:text-5xl font-bold leading-tight mb-5" style={{ color: "rgba(255,255,255,0.95)", letterSpacing: "-0.03em" }}>
+                                    <h1 className="text-2xl xl:text-3xl font-bold leading-tight mb-2.5" style={{ color: "#0B1220", letterSpacing: "-0.03em" }}>
                                         Escolha o plano{" "}
-                                        <span className="text-emerald-400">ideal</span>.
+                                        <span className="text-[#2563EB]">ideal</span>.
                                     </h1>
-                                    <p className="text-lg max-w-md" style={{ color: "rgba(255,255,255,0.4)" }}>
+                                    <p className="text-sm max-w-md" style={{ color: "#64748B" }}>
                                         Todos os planos incluem 14 dias grátis. Cancele quando quiser, sem burocracia.
                                     </p>
                                 </>
                             )}
                             {currentStep === 6 && (
                                 <>
-                                    <h1 className="text-4xl xl:text-5xl font-bold leading-tight mb-5" style={{ color: "rgba(255,255,255,0.95)", letterSpacing: "-0.03em" }}>
+                                    <h1 className="text-2xl xl:text-3xl font-bold leading-tight mb-2.5" style={{ color: "#0B1220", letterSpacing: "-0.03em" }}>
                                         Traga seu{" "}
-                                        <span className="text-blue-400">time junto</span>.
+                                        <span className="text-[#2563EB]">time junto</span>.
                                     </h1>
-                                    <p className="text-lg max-w-md" style={{ color: "rgba(255,255,255,0.4)" }}>
+                                    <p className="text-sm max-w-md" style={{ color: "#64748B" }}>
                                         Convide vendedores por e-mail. Eles recebem acesso instantâneo ao pipeline e ranking.
                                     </p>
                                 </>
                             )}
                             {currentStep === 7 && (
                                 <>
-                                    <h1 className="text-4xl xl:text-5xl font-bold leading-tight mb-5" style={{ color: "rgba(255,255,255,0.95)", letterSpacing: "-0.03em" }}>
+                                    <h1 className="text-2xl xl:text-3xl font-bold leading-tight mb-2.5" style={{ color: "#0B1220", letterSpacing: "-0.03em" }}>
                                         Tudo pronto.{" "}
-                                        <span className="text-emerald-400">Boas vendas!</span>
+                                        <span className="text-[#2563EB]">Boas vendas!</span>
                                     </h1>
-                                    <p className="text-lg max-w-md" style={{ color: "rgba(255,255,255,0.4)" }}>
+                                    <p className="text-sm max-w-md" style={{ color: "#64748B" }}>
                                         Seu ambiente está configurado. Hora de colocar o time para vender.
                                     </p>
                                 </>
@@ -2100,53 +1954,97 @@ export default function Onboarding() {
                     </AnimatePresence>
                 </div>
 
-                {/* Bottom — Dynamic feature highlights per step */}
+                {/* Bottom — Preview ao vivo: mini-mockup do Vyzon com dados de exemplo */}
                 <div className="relative z-10">
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={`features-${currentStep}`}
-                            initial={{ opacity: 0, y: 12 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -8 }}
-                            transition={{ duration: 0.3, delay: 0.1 }}
-                            className="space-y-3"
-                        >
-                            {(currentStep <= 3 ? [
-                                { icon: Zap, text: "Setup em menos de 5 minutos" },
-                                { icon: Trophy, text: "Ranking gamificado ao vivo" },
-                                { icon: LayoutDashboard, text: "Pipeline visual estilo Kanban" },
-                            ] : currentStep === 4 ? [
-                                { icon: Briefcase, text: "Templates prontos para B2B, infoprodutos e serviços" },
-                                { icon: LayoutDashboard, text: "Personalize estágios, cores e ícones" },
-                                { icon: ArrowRight, text: "Mude a qualquer momento nas configurações" },
-                            ] : currentStep === 5 ? [
-                                { icon: Shield, text: "Pagamento seguro via MercadoPago" },
-                                { icon: CreditCard, text: "14 dias grátis — cobrança só depois" },
-                                { icon: Zap, text: "Cancele quando quiser, sem multa" },
-                            ] : currentStep === 6 ? [
-                                { icon: Users, text: "Cada vendedor tem seu próprio login" },
-                                { icon: Trophy, text: "Ranking atualiza automaticamente" },
-                                { icon: Mail, text: "Convite chega direto no e-mail" },
-                            ] : [
-                                { icon: Rocket, text: "Pipeline, ranking e metas prontos" },
-                                { icon: Users, text: "Time convidado e com acesso" },
-                                { icon: Trophy, text: "Comece a bater metas hoje" },
-                            ]).map((item, i) => {
-                                const Icon = item.icon;
-                                return (
-                                    <div key={i} className="flex items-center gap-3">
-                                        <div
-                                            className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                                            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
-                                        >
-                                            <Icon className="w-4 h-4 text-emerald-400" />
-                                        </div>
-                                        <span className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>{item.text}</span>
+                    <motion.div
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4 }}
+                        className="rounded-2xl p-5"
+                        style={{ background: "#FFFFFF", border: "1px solid #E6EDF5", boxShadow: "0 12px 32px -16px rgba(11,18,32,0.14)" }}
+                    >
+                        {/* Empresa + tag prévia */}
+                        <div className="flex items-center justify-between mb-3.5">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                                {logoPreview ? (
+                                    <img src={logoPreview} alt="" className="h-9 w-9 rounded-lg object-cover shrink-0" style={{ border: "1px solid #E6EDF5" }} />
+                                ) : (
+                                    <div className="h-9 w-9 rounded-lg flex items-center justify-center text-white font-bold text-sm shrink-0" style={{ background: "linear-gradient(135deg,#2563EB,#4A8CE8)" }}>
+                                        {(companyName || regCompanyName || "V").trim().charAt(0).toUpperCase()}
                                     </div>
-                                );
-                            })}
-                        </motion.div>
-                    </AnimatePresence>
+                                )}
+                                <div className="min-w-0">
+                                    <p className="text-sm font-semibold truncate" style={{ color: "#0B1220" }}>{companyName || regCompanyName || "Sua empresa"}</p>
+                                    <p className="text-[10.5px] truncate" style={{ color: "#94A3B8" }}>{segment || "Central comercial"}</p>
+                                </div>
+                            </div>
+                            <span className="text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded shrink-0" style={{ background: "#F1F5F9", color: "#94A3B8", letterSpacing: "0.06em" }}>prévia</span>
+                        </div>
+
+                        {/* Pipeline em destaque */}
+                        <div className="rounded-xl px-4 py-3 mb-3" style={{ background: "#F8FAFC", border: "1px solid #E6EDF5" }}>
+                            <div className="flex items-center justify-between">
+                                <p className="text-[10px] font-semibold uppercase" style={{ color: "#64748B", letterSpacing: "0.04em" }}>Pipeline</p>
+                                <span className="text-[10.5px] font-semibold" style={{ color: "#16A34A" }}>▲ 12%</span>
+                            </div>
+                            <p className="text-[26px] font-bold tabular-nums leading-none mt-1" style={{ color: "#0B1220", letterSpacing: "-0.02em" }}>R$ 36.300</p>
+                        </div>
+
+                        {/* Funil (colunas com contagem) */}
+                        <div className="grid grid-cols-5 gap-1 mb-3">
+                            <AnimatePresence mode="popLayout">
+                                {previewStages.map((s, i) => (
+                                    <motion.div key={`${previewTpl}-${s.id}`} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ delay: i * 0.04 }} className="rounded-md px-1 py-1.5 text-center" style={{ background: "#F8FAFC", border: "1px solid #EEF2F7" }}>
+                                        <span className="block h-1 w-1 rounded-full mx-auto mb-0.5" style={{ background: STAGE_DOT[i % STAGE_DOT.length] }} />
+                                        <p className="text-[7.5px] leading-tight truncate" style={{ color: "#94A3B8" }}>{s.title}</p>
+                                        <p className="text-[12px] font-bold tabular-nums" style={{ color: "#475569" }}>{sampleCounts[i] ?? 0}</p>
+                                    </motion.div>
+                                ))}
+                            </AnimatePresence>
+                        </div>
+
+                        {/* Deals de exemplo */}
+                        <div className="space-y-1.5 mb-3">
+                            {sampleDeals.map((d, i) => (
+                                <div key={i} className="flex items-center gap-2">
+                                    <span className="h-6 w-6 rounded-full flex items-center justify-center text-[9px] font-bold text-white shrink-0" style={{ background: STAGE_DOT[(i + 1) % STAGE_DOT.length] }}>
+                                        {d.cliente.charAt(0)}
+                                    </span>
+                                    <span className="text-[11.5px] flex-1 truncate" style={{ color: "#475569" }}>{d.cliente}</span>
+                                    <span className="text-[11.5px] font-semibold tabular-nums" style={{ color: "#0B1220" }}>R$ {d.valor.toLocaleString("pt-BR")}</span>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Ranking (você + meta) */}
+                        <div className="mb-3">
+                            <div className="flex items-center justify-between mb-1">
+                                <span className="text-[11px] inline-flex items-center gap-1.5" style={{ color: "#475569" }}>
+                                    <span className="text-[9px] font-bold px-1 rounded" style={{ background: "#FEF3C7", color: "#B45309" }}>1º</span>
+                                    {previewName}
+                                </span>
+                                <span className="text-[11px] font-semibold" style={{ color: "#16A34A" }}>82% da meta</span>
+                            </div>
+                            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "#E6EDF5" }}>
+                                <motion.div initial={{ width: 0 }} animate={{ width: "82%" }} transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }} className="h-full rounded-full" style={{ background: "linear-gradient(90deg,#2563EB,#4A8CE8)" }} />
+                            </div>
+                        </div>
+
+                        {/* Plano + time */}
+                        <div className="flex items-center justify-between pt-3" style={{ borderTop: "1px solid #E6EDF5" }}>
+                            <span className="text-[11px]" style={{ color: "#64748B" }}>
+                                Plano <span className="font-semibold" style={{ color: "#0B1220" }}>{PLANS[selectedPlan]?.name || "Plus"}</span> · 14 dias grátis
+                            </span>
+                            <div className="flex -space-x-1.5">
+                                {teamEmails.filter((e) => e.trim()).slice(0, 3).map((e, i) => (
+                                    <span key={i} className="h-5 w-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white" style={{ background: "#7c3aed", border: "1.5px solid #FFFFFF" }}>
+                                        {e.trim().charAt(0).toUpperCase()}
+                                    </span>
+                                ))}
+                                <span className="h-5 w-5 rounded-full flex items-center justify-center text-[11px] leading-none" style={{ background: "#EFF4FF", border: "1.5px solid #FFFFFF", color: "#2563EB" }}>+</span>
+                            </div>
+                        </div>
+                    </motion.div>
                 </div>
             </div>
 
@@ -2163,13 +2061,26 @@ export default function Onboarding() {
                         <ThemeLogo className="h-10 mx-auto" />
                     </div>
 
+                    {/* Voltar — disponível em qualquer etapa acima da mínima */}
+                    {currentStep > (isLoggedIn ? 2 : 1) && currentStep !== 7 && (
+                        <button
+                            type="button"
+                            onClick={handleBack}
+                            disabled={isLoading || paymentLoading || inviteLoading}
+                            className="inline-flex items-center gap-1.5 text-sm text-[#64748B] hover:text-[#0B1220] mb-4 transition-colors disabled:opacity-40"
+                        >
+                            <ArrowLeft className="h-4 w-4" />
+                            Voltar
+                        </button>
+                    )}
+
                     {/* Stepper */}
                     <Stepper />
 
                     {/* Step Card */}
-                    <div className="rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 relative overflow-hidden" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                    <div className="rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 relative overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid #E6EDF5", boxShadow: "0 1px 2px rgba(11,18,32,0.04), 0 12px 32px -12px rgba(11,18,32,0.10)" }}>
                         {/* Top border accent */}
-                        <div className="absolute top-0 left-0 right-0 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(0,227,122,0.3) 50%, transparent)" }} />
+                        <div className="absolute top-0 left-0 right-0 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(37,99,235,0.3) 50%, transparent)" }} />
 
                         {/* Step content */}
                         <AnimatePresence mode="wait" custom={direction}>
@@ -2199,7 +2110,7 @@ export default function Onboarding() {
                                         variant="outline"
                                         onClick={handleBack}
                                         disabled={isLoading}
-                                        className="h-12 w-12 shrink-0 p-0 border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.06)] hover:bg-[rgba(255,255,255,0.08)] text-[rgba(255,255,255,0.6)] hover:text-white rounded-xl transition-colors disabled:opacity-50"
+                                        className="h-12 w-12 shrink-0 p-0 border-[#E6EDF5] bg-[#F1F5F9] hover:bg-[#EEF2F7] text-[#64748B] hover:text-[#0B1220] rounded-xl transition-colors disabled:opacity-50"
                                     >
                                         <ArrowLeft className="h-5 w-5" />
                                     </Button>
@@ -2208,7 +2119,7 @@ export default function Onboarding() {
                                 <Button
                                     onClick={handleNext}
                                     disabled={!canProceed() || isLoading}
-                                    className="flex-1 h-12 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-base rounded-xl shadow-lg shadow-emerald-500/20 border-none transition-all hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:hover:translate-y-0 group"
+                                    className="flex-1 h-12 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold text-base rounded-xl shadow-lg shadow-[0_8px_24px_-8px_rgba(37,99,235,0.30)] border-none transition-all hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:hover:translate-y-0 group"
                                 >
                                     {isLoading ? (
                                         <>
@@ -2231,7 +2142,7 @@ export default function Onboarding() {
                                 <button
                                     type="button"
                                     onClick={handleSkip}
-                                    className="text-sm text-[rgba(255,255,255,0.3)] hover:text-[rgba(255,255,255,0.6)] transition-colors"
+                                    className="text-sm text-[#94A3B8] hover:text-[#64748B] transition-colors"
                                 >
                                     Pular por agora
                                 </button>
@@ -2245,7 +2156,7 @@ export default function Onboarding() {
                                     variant="outline"
                                     onClick={handleBack}
                                     disabled={inviteLoading}
-                                    className="h-12 w-12 shrink-0 p-0 border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.06)] hover:bg-[rgba(255,255,255,0.08)] text-[rgba(255,255,255,0.6)] hover:text-white rounded-xl transition-colors disabled:opacity-50"
+                                    className="h-12 w-12 shrink-0 p-0 border-[#E6EDF5] bg-[#F1F5F9] hover:bg-[#EEF2F7] text-[#64748B] hover:text-[#0B1220] rounded-xl transition-colors disabled:opacity-50"
                                 >
                                     <ArrowLeft className="h-5 w-5" />
                                 </Button>
@@ -2253,7 +2164,7 @@ export default function Onboarding() {
                                     type="button"
                                     onClick={handleSkip}
                                     disabled={inviteLoading}
-                                    className="flex-1 text-sm text-[rgba(255,255,255,0.3)] hover:text-[rgba(255,255,255,0.6)] transition-colors py-3"
+                                    className="flex-1 text-sm text-[#94A3B8] hover:text-[#64748B] transition-colors py-3"
                                 >
                                     Pular por agora
                                 </button>

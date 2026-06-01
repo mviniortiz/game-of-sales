@@ -38,18 +38,18 @@ export const DateRangePicker = ({
         <button
           type="button"
           className={cn(
-            "inline-flex h-8 items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-3 text-[11.5px] font-medium backdrop-blur-sm transition-colors",
-            "hover:border-white/15 hover:bg-white/[0.06]",
-            hasValue ? "text-foreground ring-1 ring-emerald-500/40" : "text-muted-foreground",
+            "inline-flex h-9 items-center gap-1.5 rounded-lg border bg-white px-3 text-[12.5px] font-medium transition-colors",
+            "border-[#E6EDF5] hover:border-[#D7DEE9] hover:bg-[#F8FAFC]",
+            hasValue ? "text-[#0B1220] border-[#2563EB] ring-2 ring-[rgba(37,99,235,0.18)]" : "text-[#64748B]",
             className,
           )}
         >
-          <CalendarIcon className="h-3.5 w-3.5 opacity-70" />
+          <CalendarIcon className="h-3.5 w-3.5 opacity-70 shrink-0" />
           {label}
         </button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-auto border border-white/10 bg-card/95 p-0 shadow-xl backdrop-blur-xl"
+        className="w-auto border border-[#E6EDF5] bg-white p-0 shadow-lg"
         align="start"
       >
         <Calendar

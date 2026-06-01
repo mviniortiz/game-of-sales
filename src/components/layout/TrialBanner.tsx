@@ -1,121 +1,54 @@
-// Trial Banner Component - Progressive Urgency Based on Days Remaining
+// Trial Banner — indicador discreto do período de teste (sem ícones chamativos)
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Rocket, AlertTriangle, Timer, X, Zap, Trophy } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useTrial } from '@/hooks/useTrial';
-import { Button } from '@/components/ui/button';
 
-type UrgencyStage = 'comfortable' | 'warning' | 'critical';
+type Stage = 'comfortable' | 'warning' | 'critical';
 
-interface UrgencyConfig {
-    bgClass: string;
-    borderClass: string;
-    icon: typeof Rocket;
-    iconClass: string;
-    textClass: string;
-    getMessage: (days: number) => React.ReactNode;
-    buttonText: string;
-    buttonClass: string;
-    chipLabel?: string;
-    chipClass?: string;
-}
-
-const getUrgencyStage = (daysRemaining: number): UrgencyStage => {
-    if (daysRemaining <= 1) return 'critical';
-    if (daysRemaining <= 3) return 'warning';
+const getStage = (days: number): Stage => {
+    if (days <= 1) return 'critical';
+    if (days <= 3) return 'warning';
     return 'comfortable';
 };
 
-const urgencyConfigs: Record<UrgencyStage, UrgencyConfig> = {
+const styles: Record<Stage, { bar: string; dot: string; text: string; link: string }> = {
     comfortable: {
-        bgClass: 'bg-card',
-        borderClass: 'border-b border-emerald-500/20',
-        icon: Trophy,
-        iconClass: 'text-emerald-400',
-        textClass: 'text-foreground',
-        getMessage: (days) => (
-            <>
-                Você está no{' '}
-                <span className="font-bold text-emerald-400">Vyzon PRO Trial</span>
-                <span className="hidden sm:inline text-muted-foreground">
-                    {' '}— Acesso completo por{' '}
-                    <span className="font-bold text-foreground">{days} dias</span>
-                </span>
-            </>
-        ),
-        buttonText: 'Ver Planos',
-        buttonClass: 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
-        chipLabel: 'TRIAL ATIVO',
-        chipClass: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30',
+        bar: 'bg-[#F8FAFC] border-b border-[#E6EDF5]',
+        dot: '#2563EB',
+        text: '#64748B',
+        link: 'text-[#2563EB] hover:text-[#1D4ED8]',
     },
     warning: {
-        bgClass: 'bg-card',
-        borderClass: 'border-b border-amber-500/30',
-        icon: AlertTriangle,
-        iconClass: 'text-amber-400',
-        textClass: 'text-foreground',
-        getMessage: (days) => (
-            <>
-                <span className="hidden sm:inline text-muted-foreground">⚡ Atenção: </span>
-                Seu trial expira em{' '}
-                <span className="font-bold text-amber-400">{days} {days === 1 ? 'dia' : 'dias'}</span>
-                <span className="hidden sm:inline text-muted-foreground"> — não perca seus dados!</span>
-            </>
-        ),
-        buttonText: 'Garantir Acesso',
-        buttonClass: 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-bold',
-        chipLabel: `${0} DIAS`,
-        chipClass: 'bg-amber-500/15 text-amber-400 border border-amber-500/30',
+        bar: 'bg-[#FFFBEB] border-b border-[#FDE68A]',
+        dot: '#D97706',
+        text: '#92400E',
+        link: 'text-[#B45309] hover:text-[#92400E]',
     },
     critical: {
-        bgClass: 'bg-card',
-        borderClass: 'border-b border-rose-500/40',
-        icon: Timer,
-        iconClass: 'text-rose-400 animate-pulse',
-        textClass: 'text-foreground',
-        getMessage: (days) => (
-            <span>
-                ⚠️{' '}
-                <span className="text-rose-400 font-bold">
-                    {days === 0 ? 'SEU ACESSO EXPIRA HOJE' : 'ÚLTIMO DIA DE TRIAL'}
-                </span>
-                {' '}— Assine agora para não perder seus dados.
-            </span>
-        ),
-        buttonText: 'ASSINAR AGORA',
-        buttonClass: 'bg-rose-500 hover:bg-rose-400 text-white font-bold shadow-lg shadow-rose-500/25 uppercase tracking-wide',
-        chipLabel: 'EXPIRA HOJE',
-        chipClass: 'bg-rose-500/15 text-rose-400 border border-rose-500/30 animate-pulse',
+        bar: 'bg-[#FEF2F2] border-b border-[#FECACA]',
+        dot: '#DC2626',
+        text: '#991B1B',
+        link: 'text-[#DC2626] hover:text-[#991B1B]',
     },
 };
 
-// Mini countdown block
-const DayBlock = ({ value, label }: { value: number; label: string }) => (
-    <div className="flex flex-col items-center justify-center bg-muted rounded-lg px-2.5 py-1 min-w-[2.5rem] border border-border">
-        <span className="text-sm font-bold tabular-nums text-foreground leading-none">{String(value).padStart(2, '0')}</span>
-        <span className="text-[9px] text-muted-foreground uppercase tracking-wide leading-none mt-0.5">{label}</span>
-    </div>
-);
-
 export const TrialBanner = () => {
-    const { isTrialActive, daysRemaining, trialEndsAt } = useTrial();
-    const [isDismissed, setIsDismissed] = useState(false);
+    const { isTrialActive, daysRemaining } = useTrial();
+    const [dismissed, setDismissed] = useState(false);
 
-    if (!isTrialActive || isDismissed) {
-        return null;
-    }
+    if (!isTrialActive || dismissed) return null;
 
-    const stage = getUrgencyStage(daysRemaining);
-    const config = urgencyConfigs[stage];
-    const Icon = config.icon;
+    const stage = getStage(daysRemaining);
+    const s = styles[stage];
 
-    // Build chip label with dynamic days
-    const chipLabel = stage === 'comfortable'
-        ? 'TRIAL ATIVO'
-        : stage === 'warning'
-            ? `${daysRemaining} DIAS`
-            : 'EXPIRA HOJE';
+    const message =
+        stage === 'critical'
+            ? daysRemaining <= 0
+                ? 'Seu teste termina hoje'
+                : 'Último dia de teste'
+            : `Teste grátis · ${daysRemaining} ${daysRemaining === 1 ? 'dia restante' : 'dias restantes'}`;
 
     return (
         <AnimatePresence>
@@ -123,68 +56,29 @@ export const TrialBanner = () => {
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
-                className={`relative overflow-hidden ${config.bgClass} ${config.borderClass}`}
+                className={`relative overflow-hidden ${s.bar}`}
             >
-                <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between gap-4">
-                    {/* Left: Status chip + Icon + Message */}
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                        {/* Status chip */}
-                        <span className={`hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold tracking-widest flex-shrink-0 ${config.chipClass || 'bg-muted text-foreground'}`}>
-                            <span className="h-1.5 w-1.5 rounded-full bg-current opacity-80 inline-block" />
-                            {chipLabel}
-                        </span>
-
-                        {/* Icon */}
-                        <Icon className={`h-4 w-4 flex-shrink-0 ${config.iconClass}`} />
-
-                        {/* Message */}
-                        <p className={`text-sm font-medium truncate ${config.textClass}`}>
-                            {config.getMessage(daysRemaining)}
+                <div className="px-4 sm:px-6 py-1.5 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                        <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: s.dot }} />
+                        <p className="text-[12px] truncate" style={{ color: s.text }}>
+                            {message}
                         </p>
-
-                        {/* Day countdown blocks — only comfortable stage, desktop */}
-                        {stage === 'comfortable' && (
-                            <div className="hidden lg:flex items-center gap-1.5 flex-shrink-0 ml-2">
-                                <DayBlock value={daysRemaining} label="dias" />
-                            </div>
-                        )}
                     </div>
-
-                    {/* Right: CTA + Progress bar + Close */}
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                        {/* Trial progress mini-bar — comfortable only */}
-                        {stage === 'comfortable' && (
-                            <div className="hidden md:flex items-center gap-2">
-                                <div className="w-20 h-1.5 bg-muted rounded-full overflow-hidden">
-                                    <div
-                                        className="h-full bg-emerald-500 rounded-full"
-                                        style={{ width: `${Math.round(((14 - daysRemaining) / 14) * 100)}%` }}
-                                    />
-                                </div>
-                                <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                                    {daysRemaining}d restantes
-                                </span>
-                            </div>
-                        )}
-
-                        <Link to="/upgrade">
-                            <Button
-                                size="sm"
-                                className={`h-7 px-3.5 text-xs border-0 rounded-lg ${config.buttonClass}`}
-                            >
-                                <Zap className="h-3 w-3 mr-1.5 flex-shrink-0" />
-                                {config.buttonText}
-                            </Button>
+                    <div className="flex items-center gap-3 shrink-0">
+                        <Link
+                            to="/upgrade"
+                            className={`text-[12px] font-medium transition-colors ${s.link}`}
+                        >
+                            Ver planos
                         </Link>
-
-                        {/* Close only in non-critical stages */}
                         {stage !== 'critical' && (
                             <button
-                                onClick={() => setIsDismissed(true)}
-                                className="p-1 hover:bg-muted rounded-full transition-colors flex-shrink-0"
-                                aria-label="Fechar banner"
+                                onClick={() => setDismissed(true)}
+                                className="p-0.5 rounded hover:bg-black/5 transition-colors"
+                                aria-label="Fechar"
                             >
-                                <X className="h-3.5 w-3.5 text-muted-foreground" />
+                                <X className="h-3.5 w-3.5" style={{ color: s.text }} />
                             </button>
                         )}
                     </div>

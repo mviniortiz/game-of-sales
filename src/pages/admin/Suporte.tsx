@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import DOMPurify from "dompurify";
 
 interface ReceivedEmail {
   id: string;
@@ -322,7 +323,12 @@ const Suporte = () => {
                   {emailDetail.html ? (
                     <div
                       className="prose dark:prose-invert max-w-none text-sm text-foreground/85"
-                      dangerouslySetInnerHTML={{ __html: emailDetail.html }}
+                      dangerouslySetInnerHTML={{
+                        __html: DOMPurify.sanitize(emailDetail.html, {
+                          FORBID_TAGS: ["script", "style", "iframe", "object", "embed", "form"],
+                          FORBID_ATTR: ["onerror", "onload", "onclick"],
+                        }),
+                      }}
                     />
                   ) : emailDetail.text ? (
                     <pre className="whitespace-pre-wrap text-sm font-sans text-foreground/85">

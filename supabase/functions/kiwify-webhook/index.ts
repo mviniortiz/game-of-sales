@@ -72,12 +72,22 @@ async function markWebhookEventStatus(supabase: any, provider: string, eventKey:
     }
 }
 
+// Comparação em tempo constante para evitar timing attack na validação do HMAC.
+function timingSafeEqualHex(a: string, b: string): boolean {
+    if (a.length !== b.length) return false;
+    let mismatch = 0;
+    for (let i = 0; i < a.length; i++) {
+        mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
+    }
+    return mismatch === 0;
+}
+
 function verifyKiwifySignature(body: string, signature: string, secret: string): boolean {
     try {
         const hmac = createHmac("sha256", secret);
         hmac.update(body);
         const computed = hmac.digest("hex");
-        return computed === signature;
+        return timingSafeEqualHex(computed, signature);
     } catch {
         return false;
     }

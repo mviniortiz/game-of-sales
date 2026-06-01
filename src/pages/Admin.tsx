@@ -23,7 +23,6 @@ import { AdminVendedores } from "@/components/admin/AdminVendedores";
 import { AdminVendas } from "@/components/admin/AdminVendas";
 import { AdminRelatorios } from "@/components/admin/AdminRelatorios";
 import { AdminMetas } from "@/components/admin/AdminMetas";
-import { AdminManagement } from "@/components/profile/AdminManagement";
 import { AdminCompanies } from "@/components/admin/AdminCompanies";
 import { EvolutionMonitor } from "@/components/admin/EvolutionMonitor";
 import { AdminProdutos } from "@/components/admin/AdminProdutos";
@@ -38,8 +37,7 @@ type AdminSection = {
 };
 
 const sections: AdminSection[] = [
-  { id: "vendedores", label: "Vendedores", icon: Users, group: "Equipe" },
-  { id: "usuarios", label: "Usuários", icon: UserCog, group: "Equipe" },
+  { id: "vendedores", label: "Equipe", icon: Users, group: "Equipe" },
   { id: "vendas", label: "Vendas", icon: ShoppingCart, group: "Comercial" },
   { id: "produtos", label: "Produtos", icon: Package, group: "Comercial" },
   { id: "pagamentos", label: "Pagamentos", icon: CreditCard, group: "Comercial" },
@@ -58,7 +56,6 @@ const sectionComponents: Record<string, React.ComponentType> = {
   metas: AdminMetas,
   empresas: AdminCompanies,
   monitor: EvolutionMonitor,
-  usuarios: AdminManagement,
 };
 
 type KpiData = {
@@ -148,10 +145,10 @@ const Admin = () => {
   if (!isAdmin) return null;
 
   const kpiCards = [
-    { label: "Vendedores", value: kpis.totalSellers, icon: UserCheck, format: "number" as const },
-    { label: "Vendas (mês)", value: kpis.totalSalesMonth, icon: TrendingUp, format: "number" as const },
-    { label: "Faturamento", value: kpis.revenueMonth, icon: DollarSign, format: "currency" as const },
-    { label: "Ticket Médio", value: kpis.avgTicket, icon: BarChart3, format: "currency" as const },
+    { label: "Vendedores", value: kpis.totalSellers, color: "#2563EB", format: "number" as const },
+    { label: "Vendas no mês", value: kpis.totalSalesMonth, color: "#2563EB", format: "number" as const },
+    { label: "Faturamento", value: kpis.revenueMonth, color: "#16A34A", format: "currency" as const },
+    { label: "Ticket médio", value: kpis.avgTicket, color: "#64748B", format: "currency" as const },
   ];
 
   const formatValue = (value: number, format: "number" | "currency") => {
@@ -162,59 +159,59 @@ const Admin = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-emerald-500/10">
-          <Shield className="h-5 w-5 text-emerald-400" />
-        </div>
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Administração</h1>
-          <p className="text-sm text-muted-foreground">Painel de controle do sistema</p>
-        </div>
+      <div>
+        <h1 className="text-[22px] sm:text-[26px] font-bold tracking-tight" style={{ color: "#0B1220", letterSpacing: "-0.02em" }}>
+          Gestão
+        </h1>
+        <p className="text-[13px] sm:text-sm" style={{ color: "#64748B" }}>
+          Equipe, comercial e performance da sua operação
+        </p>
       </div>
 
-      {/* KPI Strip */}
-      <div className="rounded-xl border border-border/50 bg-card grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-border/40">
+      {/* KPI cards — padrão premium (Início/Metas) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {kpiCards.map((kpi) => (
-          <div key={kpi.label} className="flex items-center gap-2.5 px-3 py-3 sm:px-4 sm:py-4 min-w-0">
-            <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-muted shrink-0">
-              <kpi.icon className="h-3.5 w-3.5 text-muted-foreground" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[9px] sm:text-[10px] text-muted-foreground font-semibold uppercase tracking-wider truncate">
+          <div
+            key={kpi.label}
+            className="rounded-2xl px-4 py-4 sm:px-5 sm:py-5"
+            style={{ background: "#FFFFFF", border: "1px solid #E6EDF5", boxShadow: "0 1px 2px rgba(11,18,32,0.04)" }}
+          >
+            <div className="flex items-center gap-2 mb-2.5">
+              <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: kpi.color }} />
+              <p className="text-[11px] font-semibold uppercase truncate" style={{ color: "#64748B", letterSpacing: "0.04em" }}>
                 {kpi.label}
               </p>
-              {kpiLoading ? (
-                <div className="h-5 w-14 rounded bg-muted animate-pulse mt-0.5" />
-              ) : (
-                <p className="text-sm sm:text-base font-bold text-foreground tabular-nums truncate">
-                  {formatValue(kpi.value, kpi.format)}
-                </p>
-              )}
             </div>
+            {kpiLoading ? (
+              <div className="h-7 w-20 rounded-md animate-pulse" style={{ background: "#EEF2F7" }} />
+            ) : (
+              <p className="text-[24px] sm:text-[28px] font-bold tabular-nums leading-none" style={{ color: "#0B1220", letterSpacing: "-0.02em" }}>
+                {formatValue(kpi.value, kpi.format)}
+              </p>
+            )}
           </div>
         ))}
       </div>
 
-      {/* Main Layout: Sidebar + Content */}
-      <div className="flex flex-col lg:flex-row gap-4">
-        {/* Sidebar Nav */}
+      {/* Layout: nav + conteúdo */}
+      <div className="flex flex-col lg:flex-row gap-5">
+        {/* Nav */}
         <nav className="lg:w-56 shrink-0">
-          {/* Mobile: horizontal scroll */}
+          {/* Mobile: scroll horizontal */}
           <div className="lg:hidden overflow-x-auto -mx-1 px-1 pb-2">
-            <div className="flex gap-1">
+            <div className="flex gap-1.5">
               {visibleSections.map((section) => {
                 const isActive = activeSection === section.id;
                 return (
                   <button
                     key={section.id}
                     onClick={() => setActiveSection(section.id)}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-                      isActive
-                        ? "bg-emerald-500/10 text-emerald-400"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                    }`}
+                    className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-[13px] font-medium whitespace-nowrap transition-colors"
+                    style={isActive
+                      ? { background: "rgba(37,99,235,0.10)", color: "#2563EB" }
+                      : { color: "#64748B" }}
                   >
                     <section.icon className="h-4 w-4 shrink-0" />
                     {section.label}
@@ -224,11 +221,11 @@ const Admin = () => {
             </div>
           </div>
 
-          {/* Desktop: vertical grouped nav */}
-          <div className="hidden lg:flex flex-col gap-4 sticky top-6">
+          {/* Desktop: nav agrupada */}
+          <div className="hidden lg:flex flex-col gap-5 sticky top-5">
             {Object.entries(grouped).map(([group, items]) => (
               <div key={group}>
-                <p className="text-[11px] uppercase text-muted-foreground/50 font-semibold tracking-widest px-3 mb-1.5">
+                <p className="text-[11px] uppercase font-semibold px-3 mb-1.5" style={{ color: "#94A3B8", letterSpacing: "0.08em" }}>
                   {group}
                 </p>
                 <div className="flex flex-col gap-0.5">
@@ -238,11 +235,10 @@ const Admin = () => {
                       <button
                         key={section.id}
                         onClick={() => setActiveSection(section.id)}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors text-left w-full ${
-                          isActive
-                            ? "bg-emerald-500/10 text-emerald-400 font-medium"
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                        }`}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13.5px] transition-colors text-left w-full hover:bg-[#F1F5F9]"
+                        style={isActive
+                          ? { background: "rgba(37,99,235,0.10)", color: "#2563EB", fontWeight: 600 }
+                          : { color: "#475569" }}
                       >
                         <section.icon className="h-4 w-4 shrink-0" />
                         <span>{section.label}</span>
@@ -255,9 +251,12 @@ const Admin = () => {
           </div>
         </nav>
 
-        {/* Content */}
+        {/* Conteúdo */}
         <div className="flex-1 min-w-0">
-          <div className="rounded-xl border border-border/50 bg-card p-4 sm:p-6">
+          <div
+            className="rounded-2xl p-4 sm:p-6"
+            style={{ background: "#FFFFFF", border: "1px solid #E6EDF5", boxShadow: "0 1px 2px rgba(11,18,32,0.04), 0 12px 32px -16px rgba(11,18,32,0.08)" }}
+          >
             {ActiveComponent && <ActiveComponent />}
           </div>
         </div>

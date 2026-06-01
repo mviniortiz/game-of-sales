@@ -418,6 +418,34 @@ serve(async (req) => {
       });
     }
 
+    // Enforce do limite de vendedores do plano (fonte de verdade; espelha src/config/planConfig.ts).
+    // Conta todos os profiles da empresa (inclui admin), igual à barra de uso em /configuracoes/faturamento.
+    if (!isSuperAdmin) {
+      const PLAN_MAX_USERS: Record<string, number> = { starter: 2, plus: 10, pro: Infinity };
+      const { data: planRow } = await (supabaseAdmin as any)
+        .from("companies")
+        .select("plan")
+        .eq("id", targetCompanyId)
+        .single();
+      const plan = (planRow?.plan as string) || "starter";
+      const maxUsers = PLAN_MAX_USERS[plan] ?? 2;
+      if (Number.isFinite(maxUsers)) {
+        const { count } = await (supabaseAdmin as any)
+          .from("profiles")
+          .select("id", { count: "exact", head: true })
+          .eq("company_id", targetCompanyId);
+        if ((count ?? 0) >= maxUsers) {
+          return new Response(JSON.stringify({
+            error: `Seu plano ${plan} permite até ${maxUsers} vendedores. Faça upgrade para adicionar mais.`,
+            code: "PLAN_LIMIT",
+          }), {
+            status: 403,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+    }
+
     const password = generatePassword();
 
     const { data: created, error: createError } = await supabaseAdmin.auth.admin.createUser({

@@ -10,7 +10,7 @@ interface DistribuicaoProdutosChartProps {
   }>;
 }
 
-const BAR_COLORS = ["#00E37A", "#00B289", "#33FF9E", "#66FFB3", "#0891b2", "#64748b"];
+const BAR_COLORS = ["#2563EB", "#4A8CE8", "#7C3AED", "#0EA5E9", "#22C55E", "#94A3B8"];
 
 export const DistribuicaoProdutosChart = ({ data }: DistribuicaoProdutosChartProps) => {
   const chartData = useMemo(() => {
@@ -49,10 +49,10 @@ export const DistribuicaoProdutosChart = ({ data }: DistribuicaoProdutosChartPro
   };
 
   return (
-    <div className="rounded-xl border border-border/50 bg-card p-4">
-      <div className="flex items-center gap-2 mb-4">
-        <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-muted">
-          <Package className="h-4 w-4 text-muted-foreground" />
+    <div className="rounded-2xl border border-[#E6EDF5] bg-white p-5" style={{ boxShadow: "0 1px 2px rgba(11,18,32,0.04)" }}>
+      <div className="flex items-center gap-2.5 mb-4">
+        <div className="flex items-center justify-center h-8 w-8 rounded-lg" style={{ background: "#EFF4FF" }}>
+          <Package className="h-4 w-4 text-[#2563EB]" />
         </div>
         <div>
           <h4 className="text-sm font-semibold text-foreground">Faturamento por Produto</h4>
@@ -66,12 +66,12 @@ export const DistribuicaoProdutosChart = ({ data }: DistribuicaoProdutosChartPro
           <YAxis type="category" dataKey="shortName" stroke="rgba(128,128,128,0.4)" fontSize={11} tickLine={false} axisLine={false} width={120} tick={{ fill: "hsl(var(--muted-foreground))" }} />
           <Tooltip
             contentStyle={{
-              backgroundColor: "hsl(var(--popover))",
-              border: "1px solid hsl(var(--border))",
-              borderRadius: "10px",
-              boxShadow: "0 8px 24px rgba(0,0,0,0.2)",
+              backgroundColor: "#FFFFFF",
+              border: "1px solid #E6EDF5",
+              borderRadius: "12px",
+              boxShadow: "0 8px 24px -8px rgba(11,18,32,0.12)",
               padding: "10px 14px",
-              color: "hsl(var(--popover-foreground))",
+              color: "#0B1220",
             }}
             labelStyle={{ color: "hsl(var(--popover-foreground))", fontWeight: 600, marginBottom: "4px" }}
             formatter={(value: number, _name: string, props: any) => [

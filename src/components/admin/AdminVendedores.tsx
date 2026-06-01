@@ -43,10 +43,13 @@ import {
   TrendingUp,
   TrendingDown,
   Building2,
-  ArrowRightLeft
+  ArrowRightLeft,
+  Shield,
+  ShieldOff
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { useTenant } from "@/contexts/TenantContext";
 import {
   Select,
@@ -100,9 +103,9 @@ const TopPerformerCard = ({ vendedor }: TopPerformerCardProps) => {
   return (
     <div className="flex items-center gap-3 p-3 rounded-xl border border-amber-500/20 bg-amber-500/5">
       <div className="relative shrink-0">
-        <Avatar className="h-10 w-10 ring-2 ring-amber-500/30">
+        <Avatar className="h-10 w-10 ring-2 ring-[rgba(37,99,235,0.30)]">
           <AvatarImage src={vendedor?.avatar_url || ""} />
-          <AvatarFallback className="bg-amber-500/15 text-amber-400 font-semibold text-sm">
+          <AvatarFallback className="bg-[rgba(37,99,235,0.12)] text-[#2563EB] font-semibold text-sm">
             {vendedor ? getInitials(vendedor.nome) : "?"}
           </AvatarFallback>
         </Avatar>
@@ -132,7 +135,8 @@ export const AdminVendedores = () => {
   const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const queryClient = useQueryClient();
-  const { isSuperAdmin, activeCompanyId } = useTenant();
+  const navigate = useNavigate();
+  const { isSuperAdmin, activeCompanyId, getUserLimit, planInfo, currentPlan } = useTenant();
 
   // Transfer company states
   const [showTransferModal, setShowTransferModal] = useState(false);
@@ -172,6 +176,15 @@ export const AdminVendedores = () => {
 
       if (error) throw error;
 
+      // Cargos de admin — unifica a antiga aba "Usuários" dentro da Equipe
+      const ids = (profiles || []).map((p: any) => p.id);
+      const { data: adminRoles } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "admin")
+        .in("user_id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
+      const adminSet = new Set((adminRoles || []).map((r: any) => r.user_id));
+
       return profiles?.map((profile) => {
         const vendasMes = profile.vendas?.filter((v: any) => {
           const dataVenda = new Date(v.data_venda || v.created_at);
@@ -202,6 +215,7 @@ export const AdminVendedores = () => {
           isOnline,
           trend,
           companyName: (profile as any).companies?.name || null,
+          is_admin: adminSet.has(profile.id),
         };
       }) || [];
     },
@@ -365,9 +379,36 @@ export const AdminVendedores = () => {
     }).format(value);
   };
 
+  const toggleAdmin = async (userId: string, isCurrentlyAdmin: boolean) => {
+    if (isCurrentlyAdmin) {
+      const { error } = await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "admin");
+      if (error) { toast.error("Erro ao remover permissão de admin"); return; }
+      toast.success("Permissão de admin removida");
+    } else {
+      const { error } = await supabase.from("user_roles").insert({ user_id: userId, role: "admin" });
+      if (error) { toast.error("Erro ao conceder permissão de admin"); return; }
+      toast.success("Permissão de admin concedida");
+    }
+    queryClient.invalidateQueries({ queryKey: ["admin-vendedores"] });
+  };
+
   const handleCreateSeller = async () => {
     if (!nome.trim() || !email.trim()) {
       toast.error("Preencha nome e e-mail");
+      return;
+    }
+
+    // Enforce do limite de vendedores do plano (backend valida de novo)
+    const sellerLimit = getUserLimit();
+    const currentSellers = vendedores?.length ?? 0;
+    if (!isSuperAdmin && Number.isFinite(sellerLimit) && currentSellers >= sellerLimit) {
+      toast.error(`Seu plano ${planInfo.label} permite até ${sellerLimit} vendedores.`, {
+        description: "Faça upgrade para adicionar mais membros ao time.",
+        action: {
+          label: "Fazer upgrade",
+          onClick: () => navigate(`/upgrade?plan=${currentPlan === "starter" ? "plus" : "pro"}`),
+        },
+      });
       return;
     }
 
@@ -539,12 +580,12 @@ export const AdminVendedores = () => {
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className={`gap-2 ${hasActiveFilters ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'border-border text-muted-foreground'}`}
+                className={`gap-2 ${hasActiveFilters ? 'border-[#2563EB] text-[#2563EB] dark:text-[#4A8CE8]' : 'border-border text-muted-foreground'}`}
               >
                 <Filter className="h-4 w-4" />
                 Filtrar
                 {hasActiveFilters && (
-                  <span className="ml-1 bg-emerald-100 dark:bg-emerald-500/30 text-emerald-600 dark:text-emerald-300 text-xs px-1.5 py-0.5 rounded-full">
+                  <span className="ml-1 bg-[#EFF4FF] dark:bg-[rgba(37,99,235,0.30)] text-[#2563EB] dark:text-[#93B4F5] text-xs px-1.5 py-0.5 rounded-full">
                     {filterLevels.length + filterStatus.length}
                   </span>
                 )}
@@ -624,7 +665,7 @@ export const AdminVendedores = () => {
 
         {/* Add Button */}
         <Button
-          className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/40 transition-all w-full sm:w-auto"
+          className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-semibold shadow-lg shadow-[0_8px_24px_-8px_rgba(37,99,235,0.40)] transition-all w-full sm:w-auto"
           onClick={() => setShowAdd(true)}
         >
           <Plus className="h-4 w-4 mr-2" />
@@ -640,13 +681,13 @@ export const AdminVendedores = () => {
           return (
             <div
               key={vendedor.id}
-              className="rounded-xl border border-border bg-card p-3 space-y-3"
+              className="rounded-2xl border border-[#E6EDF5] bg-white p-3 space-y-3"
             >
               <div className="flex items-start gap-3">
                 <div className="relative shrink-0">
                   <Avatar className="h-10 w-10 ring-2 ring-border">
                     <AvatarImage src={vendedor.avatar_url || ""} />
-                    <AvatarFallback className="bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200 font-semibold text-xs">
+                    <AvatarFallback className="bg-[#EFF4FF] text-[#2563EB] dark:bg-[rgba(37,99,235,0.20)] dark:text-[#93B4F5] font-semibold text-xs">
                       {getInitials(vendedor.nome)}
                     </AvatarFallback>
                   </Avatar>
@@ -684,12 +725,22 @@ export const AdminVendedores = () => {
                         {isSuperAdmin && (
                           <DropdownMenuItem
                             onClick={() => openTransferModal(vendedor)}
-                            className="cursor-pointer text-emerald-600 dark:text-emerald-400"
+                            className="cursor-pointer text-[#2563EB] dark:text-[#4A8CE8]"
                           >
                             <ArrowRightLeft className="h-4 w-4 mr-2" />
                             Transferir Empresa
                           </DropdownMenuItem>
                         )}
+                        <DropdownMenuItem
+                          onClick={() => toggleAdmin(vendedor.id, !!vendedor.is_admin)}
+                          className="cursor-pointer text-muted-foreground hover:text-foreground"
+                        >
+                          {vendedor.is_admin ? (
+                            <><ShieldOff className="h-4 w-4 mr-2" />Remover admin</>
+                          ) : (
+                            <><Shield className="h-4 w-4 mr-2" />Tornar admin</>
+                          )}
+                        </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => {
                             setSellerToDelete({ id: vendedor.id, nome: vendedor.nome });
@@ -716,7 +767,7 @@ export const AdminVendedores = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 pt-2 border-t border-border/60">
+              <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[#EEF2F7]">
                 <div>
                   <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-semibold">Vendas</p>
                   <p className="text-sm font-bold text-foreground tabular-nums">{vendedor.totalVendasMes}</p>
@@ -763,26 +814,26 @@ export const AdminVendedores = () => {
           );
         })}
         {filteredVendedores?.length === 0 && (
-          <div className="rounded-xl border border-border bg-card text-center py-12 text-sm text-muted-foreground">
+          <div className="rounded-2xl border border-[#E6EDF5] bg-white text-center py-12 text-sm text-muted-foreground">
             Nenhum vendedor encontrado.
           </div>
         )}
       </div>
 
       {/* Table (desktop only) */}
-      <div className="hidden sm:block rounded-xl border border-border overflow-hidden bg-card">
+      <div className="hidden sm:block rounded-2xl border border-[#E6EDF5] overflow-hidden bg-white">
         <div className="overflow-x-auto">
         <Table className="min-w-[800px]">
           <TableHeader>
-            <TableRow className="bg-muted/50 hover:bg-muted/50">
-              <TableHead className="text-muted-foreground font-semibold">Vendedor</TableHead>
-              <TableHead className="text-muted-foreground font-semibold">Empresa</TableHead>
-              <TableHead className="text-muted-foreground font-semibold">Nível</TableHead>
-              <TableHead className="text-muted-foreground font-semibold">Pontos</TableHead>
-              <TableHead className="text-muted-foreground font-semibold text-right">Vendas</TableHead>
-              <TableHead className="text-muted-foreground font-semibold text-right">Faturamento</TableHead>
-              <TableHead className="text-muted-foreground font-semibold">Último Login</TableHead>
-              <TableHead className="text-muted-foreground font-semibold text-right">Ações</TableHead>
+            <TableRow className="bg-[#F8FAFC] hover:bg-[#F8FAFC]">
+              <TableHead className="text-[10.5px] uppercase tracking-wider text-[#94A3B8] font-semibold">Vendedor</TableHead>
+              <TableHead className="text-[10.5px] uppercase tracking-wider text-[#94A3B8] font-semibold">Empresa</TableHead>
+              <TableHead className="text-[10.5px] uppercase tracking-wider text-[#94A3B8] font-semibold">Nível</TableHead>
+              <TableHead className="text-[10.5px] uppercase tracking-wider text-[#94A3B8] font-semibold">Pontos</TableHead>
+              <TableHead className="text-[10.5px] uppercase tracking-wider text-[#94A3B8] font-semibold text-right">Vendas</TableHead>
+              <TableHead className="text-[10.5px] uppercase tracking-wider text-[#94A3B8] font-semibold text-right">Faturamento</TableHead>
+              <TableHead className="text-[10.5px] uppercase tracking-wider text-[#94A3B8] font-semibold">Último Login</TableHead>
+              <TableHead className="text-[10.5px] uppercase tracking-wider text-[#94A3B8] font-semibold text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -792,7 +843,7 @@ export const AdminVendedores = () => {
               return (
                 <TableRow
                   key={vendedor.id}
-                  className="group hover:bg-muted/50 transition-colors border-border"
+                  className="group hover:bg-[#F8FAFC] transition-colors border-border"
                 >
                   {/* User Column */}
                   <TableCell className="py-4">
@@ -800,7 +851,7 @@ export const AdminVendedores = () => {
                       <div className="relative">
                         <Avatar className="h-10 w-10 ring-2 ring-border">
                           <AvatarImage src={vendedor.avatar_url || ""} />
-                          <AvatarFallback className="bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200 font-semibold">
+                          <AvatarFallback className="bg-[#EFF4FF] text-[#2563EB] dark:bg-[rgba(37,99,235,0.20)] dark:text-[#93B4F5] font-semibold">
                             {getInitials(vendedor.nome)}
                           </AvatarFallback>
                         </Avatar>
@@ -913,7 +964,7 @@ export const AdminVendedores = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0 text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400"
+                          className="h-8 w-8 p-0 text-muted-foreground hover:text-[#2563EB] dark:hover:text-[#4A8CE8]"
                           aria-label="Estatísticas"
                           onClick={() => setStatsVendedor(vendedor)}
                         >
@@ -939,7 +990,7 @@ export const AdminVendedores = () => {
                           {isSuperAdmin && (
                             <DropdownMenuItem
                               onClick={() => openTransferModal(vendedor)}
-                              className="cursor-pointer text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300"
+                              className="cursor-pointer text-[#2563EB] dark:text-[#4A8CE8] hover:text-[#1D4ED8] dark:hover:text-[#93B4F5]"
                             >
                               <ArrowRightLeft className="h-4 w-4 mr-2" />
                               Transferir Empresa
@@ -1035,7 +1086,7 @@ export const AdminVendedores = () => {
               <Button
                 onClick={handleCreateSeller}
                 disabled={submitting}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white"
               >
                 {submitting ? "Criando..." : "Criar"}
               </Button>
@@ -1096,7 +1147,7 @@ export const AdminVendedores = () => {
             <Button
               onClick={handleTransferCompany}
               disabled={transferring || !targetCompanyId}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white"
             >
               {transferring ? "Transferindo..." : "Confirmar Transferência"}
             </Button>
@@ -1149,7 +1200,7 @@ export const AdminVendedores = () => {
             <div className="flex items-center gap-3">
               <Avatar className="h-12 w-12 ring-2 ring-border">
                 <AvatarImage src={statsVendedor?.avatar_url || ""} />
-                <AvatarFallback className="bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200 font-semibold">
+                <AvatarFallback className="bg-[#EFF4FF] text-[#2563EB] dark:bg-[rgba(37,99,235,0.20)] dark:text-[#93B4F5] font-semibold">
                   {getInitials(statsVendedor?.nome || "")}
                 </AvatarFallback>
               </Avatar>
@@ -1284,7 +1335,7 @@ export const AdminVendedores = () => {
                       return (
                         <div
                           key={deal.id}
-                          className="flex items-center justify-between px-3 py-2 rounded-lg bg-muted/50 border border-border"
+                          className="flex items-center justify-between px-3 py-2 rounded-lg bg-[#F8FAFC] border border-border"
                         >
                           <div className="flex items-center gap-2 min-w-0">
                             {deal.is_hot && <span className="text-orange-400 shrink-0">🔥</span>}
@@ -1317,7 +1368,7 @@ export const AdminVendedores = () => {
             </div>
           ) : (
             <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500" />
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2563EB]" />
             </div>
           )}
         </DialogContent>

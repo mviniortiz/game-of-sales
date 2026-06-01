@@ -65,12 +65,11 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <SidebarProvider>
-      {/* Trial Banner - only shows during active trial */}
-      {isTrialActive && <TrialBanner />}
-
       <div className="min-h-screen flex w-full text-[#0B1220]" style={{ background: "#F3F6FA" }}>
         <AppSidebar />
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Trial Banner — faixa horizontal no topo da área de conteúdo (não como coluna) */}
+          {isTrialActive && <TrialBanner />}
           <header
             className="h-14 flex items-center gap-2 sm:gap-4 px-3 sm:px-4 relative"
             style={{

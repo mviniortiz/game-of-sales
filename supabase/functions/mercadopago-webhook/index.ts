@@ -141,6 +141,16 @@ async function processWebhook(req: Request) {
     }
 }
 
+// Comparação em tempo constante para evitar timing attack na validação do HMAC.
+function timingSafeEqualHex(a: string, b: string): boolean {
+    if (a.length !== b.length) return false;
+    let mismatch = 0;
+    for (let i = 0; i < a.length; i++) {
+        mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
+    }
+    return mismatch === 0;
+}
+
 function verifySignature(body: string, signature: string | null, requestId: string | null): boolean {
     if (!signature || !requestId || !MERCADOPAGO_WEBHOOK_SECRET) {
         return false;
@@ -160,7 +170,7 @@ function verifySignature(body: string, signature: string | null, requestId: stri
         hmac.update(manifest);
         const computed = hmac.digest("hex");
 
-        return computed === v1;
+        return timingSafeEqualHex(computed, v1);
     } catch {
         return false;
     }

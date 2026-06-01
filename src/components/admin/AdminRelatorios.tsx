@@ -228,7 +228,7 @@ export const AdminRelatorios = () => {
     if (value === undefined || value === 0) return null;
     const positive = value >= 0;
     return (
-      <span className={`inline-flex items-center gap-0.5 text-xs font-semibold ${positive ? "text-emerald-400" : "text-rose-400"}`}>
+      <span className={`inline-flex items-center gap-0.5 text-xs font-semibold ${positive ? "text-[#16A34A]" : "text-[#DC2626]"}`}>
         {positive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
         {positive ? "+" : ""}{value.toFixed(1)}%
       </span>
@@ -236,18 +236,18 @@ export const AdminRelatorios = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h3 className="text-lg font-bold text-foreground">Relatórios</h3>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <h3 className="text-[18px] font-bold tracking-tight" style={{ color: "#0B1220", letterSpacing: "-0.02em" }}>Relatórios</h3>
+          <p className="text-[13px] mt-0.5" style={{ color: "#64748B" }}>
             {format(dateRange.from, "dd MMM", { locale: ptBR })} — {format(dateRange.to, "dd MMM yyyy", { locale: ptBR })}
           </p>
         </div>
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2 border-border/50 text-muted-foreground hover:text-foreground shrink-0">
+            <Button variant="outline" size="sm" className="gap-2 h-9 rounded-lg border-[#E6EDF5] text-[#475569] hover:text-[#0B1220] hover:bg-[#F8FAFC] shrink-0">
               <CalendarIcon className="h-3.5 w-3.5" />
               Período
             </Button>
@@ -271,30 +271,28 @@ export const AdminRelatorios = () => {
       {isLoading ? (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-20 rounded-xl bg-muted animate-pulse" />
+            <div key={i} className="h-[88px] rounded-xl animate-pulse" style={{ background: "#EEF2F7" }} />
           ))}
         </div>
       ) : (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="p-4 rounded-xl border border-border/50 bg-card">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Vendas</p>
-            <p className="text-2xl font-bold text-foreground tabular-nums mt-1">{stats?.totalVendas || 0}</p>
-            <TrendBadge value={stats?.trendVendas} />
-          </div>
-          <div className="p-4 rounded-xl border border-border/50 bg-card">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Faturamento</p>
-            <p className="text-2xl font-bold text-foreground tabular-nums mt-1">{formatCurrency(stats?.faturamentoTotal || 0)}</p>
-            <TrendBadge value={stats?.trendFaturamento} />
-          </div>
-          <div className="p-4 rounded-xl border border-border/50 bg-card">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Ticket Médio</p>
-            <p className="text-2xl font-bold text-foreground tabular-nums mt-1">{formatCurrency(stats?.ticketMedio || 0)}</p>
-          </div>
-          <div className="p-4 rounded-xl border border-border/50 bg-card">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Top Plataforma</p>
-            <p className="text-2xl font-bold text-foreground mt-1 truncate">{stats?.topPlataforma?.nome || "—"}</p>
-            <span className="text-xs text-muted-foreground">{stats?.topPlataforma?.vendas || 0} vendas</span>
-          </div>
+          {[
+            { label: "Vendas", value: String(stats?.totalVendas || 0), color: "#2563EB", trend: stats?.trendVendas },
+            { label: "Faturamento", value: formatCurrency(stats?.faturamentoTotal || 0), color: "#16A34A", trend: stats?.trendFaturamento },
+            { label: "Ticket médio", value: formatCurrency(stats?.ticketMedio || 0), color: "#64748B" },
+            { label: "Top plataforma", value: stats?.topPlataforma?.nome || "—", color: "#7C3AED", sub: `${stats?.topPlataforma?.vendas || 0} vendas` },
+          ].map((k) => (
+            <div key={k.label} className="rounded-xl px-4 py-3.5" style={{ background: "#F8FAFC", border: "1px solid #E6EDF5" }}>
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: k.color }} />
+                <p className="text-[10.5px] font-semibold uppercase truncate" style={{ color: "#64748B", letterSpacing: "0.04em" }}>{k.label}</p>
+              </div>
+              <p className="text-[20px] sm:text-[22px] font-bold tabular-nums leading-none truncate" style={{ color: "#0B1220", letterSpacing: "-0.02em" }}>{k.value}</p>
+              <div className="mt-1.5 min-h-[16px]">
+                {k.trend !== undefined ? <TrendBadge value={k.trend} /> : k.sub ? <span className="text-[11px]" style={{ color: "#94A3B8" }}>{k.sub}</span> : null}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
@@ -315,8 +313,8 @@ export const AdminRelatorios = () => {
       {/* Top Lists */}
       <div className="grid gap-4 lg:grid-cols-2">
         {/* Top Vendedores */}
-        <div className="rounded-xl border border-border/50 bg-card p-4">
-          <h4 className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-3">Top Vendedores</h4>
+        <div className="rounded-2xl p-5" style={{ background: "#FFFFFF", border: "1px solid #E6EDF5", boxShadow: "0 1px 2px rgba(11,18,32,0.04)" }}>
+          <h4 className="text-[11px] uppercase tracking-wider font-semibold mb-3.5" style={{ color: "#94A3B8", letterSpacing: "0.06em" }}>Top Vendedores</h4>
           {stats?.topVendedores && stats.topVendedores.length > 0 ? (
             <div className="space-y-3">
               {stats.topVendedores.map((v, i) => (
@@ -324,7 +322,7 @@ export const AdminRelatorios = () => {
                   <div className="relative shrink-0">
                     <Avatar className="h-9 w-9">
                       <AvatarImage src={v.avatarUrl || ""} />
-                      <AvatarFallback className="bg-emerald-500/10 text-emerald-400 text-xs font-semibold">
+                      <AvatarFallback className="bg-[#EFF4FF] text-[#2563EB] text-xs font-semibold">
                         {getInitials(v.nome)}
                       </AvatarFallback>
                     </Avatar>
@@ -353,14 +351,14 @@ export const AdminRelatorios = () => {
         </div>
 
         {/* Top Produtos */}
-        <div className="rounded-xl border border-border/50 bg-card p-4">
-          <h4 className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-3">Top Produtos</h4>
+        <div className="rounded-2xl p-5" style={{ background: "#FFFFFF", border: "1px solid #E6EDF5", boxShadow: "0 1px 2px rgba(11,18,32,0.04)" }}>
+          <h4 className="text-[11px] uppercase tracking-wider font-semibold mb-3.5" style={{ color: "#94A3B8", letterSpacing: "0.06em" }}>Top Produtos</h4>
           {stats?.topProdutos && stats.topProdutos.length > 0 ? (
             <div className="space-y-3">
               {stats.topProdutos.map((p, i) => (
                 <div key={i} className="flex items-center gap-3">
-                  <div className="flex items-center justify-center h-9 w-9 rounded-lg bg-muted shrink-0">
-                    {getRankIcon(i + 1) || <Package className="h-4 w-4 text-muted-foreground" />}
+                  <div className="flex items-center justify-center h-9 w-9 rounded-lg shrink-0" style={{ background: "#EFF4FF" }}>
+                    {getRankIcon(i + 1) || <Package className="h-4 w-4 text-[#2563EB]" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">

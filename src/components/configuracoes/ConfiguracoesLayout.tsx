@@ -12,8 +12,8 @@ import {
   Link2,
   FileText,
   Webhook,
-  Sparkle,
 } from "lucide-react";
+import { EvaIcon } from "@/components/icons/EvaAvatar";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -72,7 +72,7 @@ const GROUPS: NavGroup[] = [
     // F4E.2 2026-05-19: Memória Comercial da EVA. Membros leem, admin edita.
     label: "EVA",
     items: [
-      { id: "eva", label: "Contexto da EVA", path: "/configuracoes/eva", icon: Sparkle },
+      { id: "eva", label: "Contexto da EVA", path: "/configuracoes/eva", icon: EvaIcon },
     ],
   },
 ];
@@ -147,7 +147,7 @@ export default function ConfiguracoesLayout() {
                   className={cn(
                     "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs whitespace-nowrap transition-colors font-medium",
                     active
-                      ? "bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20"
+                      ? "bg-[rgba(37,99,235,0.10)] text-[#2563EB] ring-1 ring-[rgba(37,99,235,0.20)]"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted/40",
                   )}
                 >
@@ -179,14 +179,14 @@ export default function ConfiguracoesLayout() {
                           className={cn(
                             "group flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm transition-all font-medium",
                             active
-                              ? "text-emerald-400 bg-emerald-500/10 ring-1 ring-emerald-500/20"
+                              ? "text-[#2563EB] bg-[rgba(37,99,235,0.10)] ring-1 ring-[rgba(37,99,235,0.20)]"
                               : "text-muted-foreground hover:text-foreground hover:bg-muted/40",
                           )}
                         >
                           <Icon
                             className={cn(
                               "h-4 w-4 transition-colors",
-                              active ? "text-emerald-400" : "text-muted-foreground/70 group-hover:text-foreground",
+                              active ? "text-[#2563EB]" : "text-muted-foreground/70 group-hover:text-foreground",
                             )}
                           />
                           <span className="flex-1">{item.label}</span>

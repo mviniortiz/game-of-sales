@@ -57,7 +57,7 @@ const MonthPicker = ({ value, onChange }: { value: string; onChange: (v: string)
       <Button
         type="button"
         variant="outline"
-        className="w-full justify-between bg-transparent border-border/50 text-foreground"
+        className="w-full justify-between bg-transparent border-[#E6EDF5] text-foreground"
       >
         <div className="flex items-center gap-2">
           <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -132,7 +132,7 @@ const CurrencyInput = ({
           onChange(String(parseBRLInput(cleaned)));
         }}
         placeholder="0,00"
-        className="pl-9 bg-transparent border-border/50"
+        className="pl-9 bg-transparent border-[#E6EDF5]"
         required
       />
     </div>
@@ -524,12 +524,12 @@ export const AdminMetas = () => {
 
     return (
       <div
-        className={`relative rounded-xl border bg-card p-4 space-y-4 group transition-colors ${
+        className={`relative rounded-2xl border bg-white p-4 space-y-4 group transition-colors ${
           isGod
             ? "border-amber-500/40"
             : isBeat
               ? "border-emerald-500/30"
-              : "border-border/50"
+              : "border-[#E6EDF5]"
         }`}
       >
         {/* Delete */}
@@ -652,12 +652,12 @@ export const AdminMetas = () => {
 
     return (
       <div
-        className={`relative rounded-xl border bg-card p-5 space-y-4 group transition-colors ${
+        className={`relative rounded-2xl border bg-white p-5 space-y-4 group transition-colors ${
           isGod
             ? "border-amber-500/40"
             : isBeat
               ? "border-emerald-500/30"
-              : "border-border/50"
+              : "border-[#E6EDF5]"
         }`}
       >
         {/* Delete */}
@@ -693,13 +693,13 @@ export const AdminMetas = () => {
         {/* Header */}
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Zap className="h-4 w-4 text-emerald-400" />
+            <Target className="h-4 w-4 text-[#2563EB]" />
             <h4 className="text-sm font-semibold text-foreground">
               {meta.descricao || "Meta Consolidada"}
             </h4>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <Badge variant="outline" className="bg-muted/50 border-border/50 text-muted-foreground text-[10px]">
+            <Badge variant="outline" className="bg-muted/50 border-[#E6EDF5] text-muted-foreground text-[10px]">
               <Calendar className="h-3 w-3 mr-1" />
               {format(new Date(meta.mes_referencia + "T12:00:00"), "MMMM yyyy", { locale: ptBR })}
             </Badge>
@@ -779,10 +779,10 @@ export const AdminMetas = () => {
 
   return (
     <Tabs defaultValue="individual" className="w-full">
-      <TabsList className="grid w-full max-w-full sm:max-w-sm mx-auto grid-cols-2 bg-muted/30 border border-border/50 gap-1 p-1 h-auto rounded-xl">
+      <TabsList className="grid w-full max-w-full sm:max-w-sm mx-auto grid-cols-2 bg-muted/30 border border-[#E6EDF5] gap-1 p-1 h-auto rounded-xl">
         <TabsTrigger
           value="individual"
-          className="flex items-center justify-center gap-1.5 px-2 py-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-emerald-500/15 data-[state=active]:text-emerald-400 data-[state=active]:shadow-none"
+          className="flex items-center justify-center gap-1.5 px-2 py-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-[rgba(37,99,235,0.10)] data-[state=active]:text-[#2563EB] data-[state=active]:shadow-none"
         >
           <Target className="h-3.5 w-3.5" />
           <span className="sm:hidden">Individuais</span>
@@ -790,7 +790,7 @@ export const AdminMetas = () => {
         </TabsTrigger>
         <TabsTrigger
           value="consolidada"
-          className="flex items-center justify-center gap-1.5 px-2 py-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-emerald-500/15 data-[state=active]:text-emerald-400 data-[state=active]:shadow-none"
+          className="flex items-center justify-center gap-1.5 px-2 py-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-[rgba(37,99,235,0.10)] data-[state=active]:text-[#2563EB] data-[state=active]:shadow-none"
         >
           <TrendingUp className="h-3.5 w-3.5" />
           <span className="sm:hidden">Consolidada</span>
@@ -804,11 +804,11 @@ export const AdminMetas = () => {
           {/* LEFT COLUMN - Form (Sticky) */}
           <div className="col-span-12 lg:col-span-4">
             <div className="lg:sticky lg:top-4 space-y-4">
-              <div className="rounded-xl border border-border/50 bg-card p-4 sm:p-5 space-y-5">
+              <div className="rounded-2xl border border-[#E6EDF5] bg-white p-4 sm:p-5 space-y-5">
                 {/* Header */}
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-emerald-500/10">
-                    <Target className="h-4 w-4 text-emerald-400" />
+                  <div className="flex items-center justify-center h-8 w-8 rounded-lg" style={{ background: "rgba(37,99,235,0.10)" }}>
+                    <Target className="h-4 w-4 text-[#2563EB]" />
                   </div>
                   <div>
                     <h3 className="text-sm font-semibold text-foreground">Definir Meta Individual</h3>
@@ -821,7 +821,7 @@ export const AdminMetas = () => {
                   <div className="space-y-1.5">
                     <Label className="text-sm text-muted-foreground">Vendedor</Label>
                     <Select value={userId} onValueChange={setUserId}>
-                      <SelectTrigger className="bg-transparent border-border/50">
+                      <SelectTrigger className="bg-transparent border-[#E6EDF5]">
                         <SelectValue placeholder="Selecione um vendedor" />
                       </SelectTrigger>
                       <SelectContent className="bg-card border-border">
@@ -844,16 +844,16 @@ export const AdminMetas = () => {
 
                   {/* Performance Insight */}
                   {userId && performanceInsight && (
-                    <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-3">
+                    <div className="rounded-lg p-3" style={{ background: "rgba(37,99,235,0.08)", border: "1px solid rgba(37,99,235,0.20)" }}>
                       <div className="flex items-center gap-1.5 mb-1.5">
-                        <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
-                        <span className="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider">
+                        <TrendingUp className="h-3.5 w-3.5 text-[#2563EB]" />
+                        <span className="text-[11px] font-semibold text-[#2563EB] uppercase tracking-wider">
                           Performance Insight
                         </span>
                       </div>
                       <p className="text-sm text-foreground">
                         Média 3 meses:{" "}
-                        <span className="font-bold text-emerald-400">
+                        <span className="font-bold text-[#2563EB]">
                           {formatCurrencyCompact(performanceInsight.average)}
                         </span>
                       </p>
@@ -878,7 +878,7 @@ export const AdminMetas = () => {
                   <Button
                     type="submit"
                     disabled={createMeta.isPending}
-                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white"
+                    className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white"
                   >
                     {createMeta.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
                     {createMeta.isPending ? "Definindo..." : "Definir Meta"}
@@ -887,7 +887,7 @@ export const AdminMetas = () => {
               </div>
 
               {/* Quick Stats */}
-              <div className="rounded-xl border border-border/50 bg-card p-4">
+              <div className="rounded-2xl border border-[#E6EDF5] bg-white p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4 text-muted-foreground" />
@@ -913,9 +913,9 @@ export const AdminMetas = () => {
 
             {/* Team Health */}
             {metas && metas.length > 0 && (
-              <div className="rounded-xl border border-border/50 bg-card p-4 mb-5">
+              <div className="rounded-2xl border border-[#E6EDF5] bg-white p-4 mb-5">
                 <div className="flex items-center gap-2 mb-3">
-                  <Users className="h-4 w-4 text-emerald-400" />
+                  <Users className="h-4 w-4 text-[#2563EB]" />
                   <h4 className="text-sm font-semibold text-foreground">Saúde do Time</h4>
                 </div>
 
@@ -976,11 +976,11 @@ export const AdminMetas = () => {
           {/* LEFT COLUMN - Form (Sticky) */}
           <div className="col-span-12 lg:col-span-4">
             <div className="lg:sticky lg:top-4 space-y-4">
-              <div className="rounded-xl border border-border/50 bg-card p-4 sm:p-5 space-y-5">
+              <div className="rounded-2xl border border-[#E6EDF5] bg-white p-4 sm:p-5 space-y-5">
                 {/* Header */}
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-emerald-500/10">
-                    <Zap className="h-4 w-4 text-emerald-400" />
+                  <div className="flex items-center justify-center h-8 w-8 rounded-lg" style={{ background: "rgba(37,99,235,0.10)" }}>
+                    <Target className="h-4 w-4 text-[#2563EB]" />
                   </div>
                   <div>
                     <h3 className="text-sm font-semibold text-foreground">Definir Meta Consolidada</h3>
@@ -1003,8 +1003,8 @@ export const AdminMetas = () => {
                       onChange={setValorMetaConsolidada}
                     />
                     {metas && metas.length > 0 && (
-                      <p className="text-[11px] text-emerald-400 mt-1.5 flex items-center gap-1">
-                        <Sparkles className="h-3 w-3" />
+                      <p className="text-[11px] text-[#2563EB] mt-1.5 flex items-center gap-1">
+                        <TrendingUp className="h-3 w-3" />
                         Soma individuais: <span className="font-semibold">{formatCurrencyCompact(teamHealthStats?.totalTarget || 0)}</span>
                       </p>
                     )}
@@ -1017,7 +1017,7 @@ export const AdminMetas = () => {
                       value={descricaoConsolidada}
                       onChange={(e) => setDescricaoConsolidada(e.target.value)}
                       placeholder="Ex: Meta Black Friday..."
-                      className="bg-transparent border-border/50 min-h-[72px]"
+                      className="bg-transparent border-[#E6EDF5] min-h-[72px]"
                     />
                   </div>
 
@@ -1028,14 +1028,14 @@ export const AdminMetas = () => {
                       value={produtoAlvo}
                       onChange={(e) => setProdutoAlvo(e.target.value)}
                       placeholder="Ex: Plano Premium..."
-                      className="bg-transparent border-border/50"
+                      className="bg-transparent border-[#E6EDF5]"
                     />
                   </div>
 
                   <Button
                     type="submit"
                     disabled={createMetaConsolidada.isPending}
-                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white"
+                    className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white"
                   >
                     {createMetaConsolidada.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
                     {createMetaConsolidada.isPending ? "Definindo..." : "Definir Meta Consolidada"}
@@ -1044,10 +1044,10 @@ export const AdminMetas = () => {
               </div>
 
               {/* Quick Stats */}
-              <div className="rounded-xl border border-border/50 bg-card p-4">
+              <div className="rounded-2xl border border-[#E6EDF5] bg-white p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Zap className="h-4 w-4 text-muted-foreground" />
+                    <Target className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm text-muted-foreground">Campanhas Ativas</span>
                   </div>
                   <span className="text-lg font-bold text-foreground tabular-nums">{metasConsolidadas?.length || 0}</span>

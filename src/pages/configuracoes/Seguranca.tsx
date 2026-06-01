@@ -45,10 +45,10 @@ export default function Seguranca() {
 
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl border border-border/50 bg-card overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-border/50 flex items-center gap-2.5">
-          <Lock className="h-4 w-4 text-muted-foreground/70" />
-          <h2 className="text-[13px] font-semibold text-foreground">Alterar senha</h2>
+      <div className="rounded-2xl border border-[#E6EDF5] bg-white overflow-hidden shadow-[0_1px_2px_rgba(11,18,32,0.04)]">
+        <div className="px-5 py-3.5 border-b border-[#E6EDF5] flex items-center gap-2.5">
+          <Lock className="h-4 w-4 text-[#2563EB]" />
+          <h2 className="text-[13px] font-semibold text-[#0B1220]">Alterar senha</h2>
         </div>
         <div className="px-5 py-5 space-y-4">
           <div className="grid sm:grid-cols-2 gap-3">
@@ -92,7 +92,7 @@ export default function Seguranca() {
             </div>
           </div>
           <div className="flex justify-end">
-            <Button onClick={handleChange} disabled={changing || !newPassword || !confirmPassword} size="sm">
+            <Button onClick={handleChange} disabled={changing || !newPassword || !confirmPassword} size="sm" className="rounded-lg bg-[#2563EB] hover:bg-[#1D4ED8] text-white">
               {changing && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               Alterar senha
             </Button>
@@ -100,10 +100,10 @@ export default function Seguranca() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border/50 bg-card overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-border/50 flex items-center gap-2.5">
-          <ShieldCheck className="h-4 w-4 text-muted-foreground/70" />
-          <h2 className="text-[13px] font-semibold text-foreground">Sessões</h2>
+      <div className="rounded-2xl border border-[#E6EDF5] bg-white overflow-hidden shadow-[0_1px_2px_rgba(11,18,32,0.04)]">
+        <div className="px-5 py-3.5 border-b border-[#E6EDF5] flex items-center gap-2.5">
+          <ShieldCheck className="h-4 w-4 text-[#2563EB]" />
+          <h2 className="text-[13px] font-semibold text-[#0B1220]">Sessões</h2>
         </div>
         <div className="px-5 py-5">
           <p className="text-xs text-muted-foreground">
