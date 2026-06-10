@@ -1,4 +1,5 @@
-import { MessageCircle, Sparkle, Workflow, Check, ArrowRight, Search } from "lucide-react";
+import { MessageCircle, Workflow, Check, ArrowRight, Search } from "lucide-react";
+import { EvaNode } from "./EvaNode";
 
 // LP.2.2 2026-05-25: prova visual de produto em mock CSS de alta fidelidade
 // (sem screenshot real). Mostra o fluxo WhatsApp → EVA → Pipeline:
@@ -46,54 +47,52 @@ function Badge({ tone, children }: { tone: Tone; children: React.ReactNode }) {
 
 export const ProductShowcase = () => {
     return (
-        <section className="relative py-28 sm:py-32 px-4 sm:px-6 lg:px-8 overflow-hidden" style={{ background: "#F7FAFF" }}>
-            {/* Glow azul + violeta sutil no topo */}
-            <div
-                className="absolute inset-x-0 top-0 h-[420px] pointer-events-none"
-                aria-hidden
-                style={{
-                    background:
-                        "radial-gradient(ellipse 60% 50% at 50% 0%, rgba(37,99,235,0.08) 0%, transparent 70%)",
-                }}
-            />
-            <div
-                className="absolute top-[8%] right-[6%] w-[420px] h-[340px] rounded-full pointer-events-none hidden lg:block"
-                aria-hidden
-                style={{ background: "radial-gradient(circle, rgba(124,58,237,0.07) 0%, transparent 65%)" }}
-            />
-
+        <section className="lp-paper relative py-24 sm:py-32 px-4 sm:px-6 lg:px-8 overflow-hidden">
             <div className="relative max-w-6xl mx-auto">
+                {/* Estação do fio */}
+                <div className="lp-station mb-12 sm:mb-16 landing-fade-in-up">
+                    <span className="lp-station-node" />
+                    <span className="lp-mono" style={{ color: "var(--lp-ink-55)" }}>
+                        02 · a prova
+                    </span>
+                    <span className="lp-station-rule" />
+                </div>
+
                 {/* Header */}
-                <div className="text-center mb-12 sm:mb-14 landing-fade-in-up">
+                <div className="mb-12 sm:mb-14 landing-fade-in-up">
                     <h2
-                        className="font-satoshi mx-auto"
+                        className="font-satoshi"
                         style={{
-                            fontWeight: 700,
-                            fontSize: "clamp(1.9rem, 4.8vw, 3rem)",
-                            lineHeight: 1.08,
+                            fontWeight: 900,
+                            fontSize: "clamp(1.9rem, 4.8vw, 3.2rem)",
+                            lineHeight: 1.04,
                             letterSpacing: "-0.04em",
-                            color: "#0B1220",
+                            color: "var(--lp-ink)",
                             maxWidth: "720px",
                         }}
                     >
-                        Veja como a conversa vira <span style={{ color: "#1D4ED8" }}>oportunidade</span>.
+                        Veja como a conversa vira{" "}
+                        <span className="lp-serif" style={{ color: "var(--lp-blue)", fontWeight: 500 }}>
+                            oportunidade
+                        </span>
+                        .
                     </h2>
                     <p
-                        className="mt-5 mx-auto max-w-2xl"
-                        style={{ fontSize: "clamp(0.95rem, 1.8vw, 1.125rem)", lineHeight: 1.6, color: "rgba(10,10,10,0.58)" }}
+                        className="mt-5 max-w-2xl"
+                        style={{ fontSize: "clamp(0.95rem, 1.8vw, 1.125rem)", lineHeight: 1.6, color: "var(--lp-ink-70)" }}
                     >
                         A Inbox organiza o atendimento, a EVA sugere o próximo passo e o pipeline mantém a oportunidade em movimento.
                     </p>
                 </div>
 
-                {/* Mock card */}
+                {/* Mock card — moldura blueprint com marcas de corte */}
+                <div className="lp-frame relative landing-fade-in-up landing-delay-200">
                 <div
-                    className="relative rounded-[24px] overflow-hidden landing-fade-in-up landing-delay-200"
+                    className="relative rounded-[12px] overflow-hidden"
                     style={{
                         background: "#FFFFFF",
-                        border: "1px solid #D9E2EC",
-                        boxShadow:
-                            "0 1px 2px rgba(15,23,42,0.04), 0 40px 90px -28px rgba(21,86,192,0.28), 0 0 0 1px rgba(255,255,255,0.6) inset",
+                        border: "1px solid var(--lp-line)",
+                        boxShadow: "0 24px 64px -32px rgba(13,20,33,0.25)",
                     }}
                 >
                     {/* Top chrome bar */}
@@ -244,7 +243,7 @@ export const ProductShowcase = () => {
                                     className="h-7 w-7 rounded-lg flex items-center justify-center shrink-0"
                                     style={{ background: "linear-gradient(135deg, #7C3AED, #A78BFA)" }}
                                 >
-                                    <Sparkle className="h-4 w-4 text-white" strokeWidth={2.2} />
+                                    <EvaNode size={15} color="#FFFFFF" />
                                 </div>
                                 <span className="text-[13.5px]" style={{ color: "#0B1220", fontWeight: 600 }}>
                                     EVA Comercial
@@ -290,7 +289,7 @@ export const ProductShowcase = () => {
                                         className="text-[10.5px] uppercase mb-2 inline-flex items-center gap-1.5"
                                         style={{ letterSpacing: "0.1em", color: "#6D28D9", fontWeight: 700 }}
                                     >
-                                        <Sparkle className="h-3 w-3" strokeWidth={2.4} />
+                                        <EvaNode size={11} color="#6D28D9" />
                                         Sugestão da EVA
                                     </p>
                                     <p className="text-[13px] mb-3.5" style={{ color: "rgba(10,10,10,0.78)", lineHeight: 1.5 }}>
@@ -355,13 +354,14 @@ export const ProductShowcase = () => {
                         </div>
                     </div>
                 </div>
+                </div>
 
-                {/* Microcopy */}
+                {/* Microcopy — frase canônica (1ª de 2 ocorrências na página) */}
                 <p
-                    className="mt-7 text-center inline-flex items-center gap-1.5 mx-auto w-full justify-center landing-fade-in landing-delay-300"
-                    style={{ fontSize: "0.875rem", color: "#6D28D9", fontWeight: 600 }}
+                    className="mt-8 text-center inline-flex items-center gap-2 mx-auto w-full justify-center landing-fade-in landing-delay-300 lp-serif"
+                    style={{ fontSize: "1.0625rem", color: "var(--lp-ink-70)" }}
                 >
-                    <Sparkle className="h-3.5 w-3.5" strokeWidth={2.3} />
+                    <EvaNode size={13} color="var(--lp-eva)" />
                     A EVA sugere. Seu time aprova.
                 </p>
             </div>

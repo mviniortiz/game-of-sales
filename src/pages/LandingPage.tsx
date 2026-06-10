@@ -6,6 +6,7 @@ import { HeroSection } from "@/components/landing/HeroSection";
 import { PilaresSection } from "@/components/landing/PilaresSection";
 import { AgentStudioSection } from "@/components/landing/AgentStudioSection";
 import { PainPoints } from "@/components/landing/PainPoints";
+import { TrustNoteSection } from "@/components/landing/TrustNoteSection";
 import { ProductShowcase } from "@/components/landing/ProductShowcase";
 import { LandingNav } from "@/components/landing/LandingNav";
 import { NavigatingOverlay } from "@/components/landing/sections/NavigatingOverlay";
@@ -15,9 +16,10 @@ import { scrollToLazyAnchor, smoothScrollToId, useHashScrollOnMount } from "@/ho
 // FlowSection (Central de Comando standalone), PipelineSection, LigacoesSection
 // (Base de Conhecimento standalone), UseCasesSection (Para cada papel) e
 // DemoVideoPlayer — conteúdo redundante absorvido por Solução/EVA/Fluxo.
-const CentralComercialSection = lazy(() =>
-    import("@/components/landing/CentralComercialSection").then((m) => ({ default: m.CentralComercialSection }))
-);
+// LP.3 2026-06-09: removida também a CentralComercialSection ("Tudo que o
+// comercial precisa") — repetia dor + benefícios; resultados absorvidos pela
+// microcopy dos módulos em AgentStudioSection. Entrou TrustNoteSection (prova
+// honesta antes do agendamento).
 const EvaAISection = lazy(() =>
     import("@/components/landing/EvaAISection").then((m) => ({ default: m.EvaAISection }))
 );
@@ -107,7 +109,7 @@ const LandingPage = () => {
     };
 
     return (
-        <div className="min-h-screen w-full bg-white text-gray-900 selection:bg-emerald-500/30">
+        <div className="min-h-screen w-full selection:bg-blue-700/20" style={{ background: "var(--lp-paper)", color: "var(--lp-ink)" }}>
             {isNavigating && <NavigatingOverlay plan={selectedPlan} />}
 
             <LandingNav
@@ -139,13 +141,11 @@ const LandingPage = () => {
                 <EvaAISection onCTAClick={() => smoothScrollToId("pricing")} />
             </LazyOnVisible>
 
-            {/* 6 · CENTRAL COMERCIAL (resumo comercial enxuto) */}
-            <LazyOnVisible minHeight="500px">
-                <CentralComercialSection />
-            </LazyOnVisible>
-
-            {/* 7 · PARA QUEM É */}
+            {/* 6 · PARA QUEM É */}
             <PilaresSection />
+
+            {/* 7 · CONFIANÇA (por que o Vyzon existe — sem prova social inventada) */}
+            <TrustNoteSection />
 
             {/* 8 · CTA / DEMO (alvo de todos os CTAs "Agendar") */}
             <LazyOnVisible minHeight="320px" id="agendar-demo">

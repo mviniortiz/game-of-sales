@@ -6,7 +6,6 @@ import { DealCard, StageNeighbors } from "./DealCard";
 import type { Deal, Stage } from "@/pages/CRM";
 import type { PipelineDealContext } from "@/hooks/usePipelineContextData";
 import type { Tag } from "@/types/tags";
-import { Inbox, ArrowRight } from "lucide-react";
 // F5P.4e — Phosphor duotone padronizado (consistente com sidebar e header).
 import { Tray as TrayPh, ArrowRight as ArrowRightPh } from "@phosphor-icons/react";
 
@@ -30,11 +29,11 @@ interface KanbanColumnProps {
   tagsByDeal?: Map<string, Tag[]>;
 }
 
-// Micro funnel arrow between columns
+// Micro funnel arrow between columns — LP-PIPE.1: tons duais light-first
 const FunnelConnector = ({ rate }: { rate: number }) => {
   const color =
-    rate >= 50 ? "text-emerald-400" :
-      rate >= 25 ? "text-amber-400" : "text-muted-foreground";
+    rate >= 50 ? "text-emerald-600 dark:text-emerald-400" :
+      rate >= 25 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground";
   const bg =
     rate >= 50 ? "bg-emerald-500/10 ring-emerald-500/20" :
       rate >= 25 ? "bg-amber-500/10 ring-amber-500/20" : "bg-muted/60 ring-border";
@@ -156,8 +155,8 @@ export const KanbanColumn = memo(({
                     transition-colors duration-150
                     ${isOver ? "border-emerald-400/50 bg-emerald-500/[0.04]" : "border-border/30"}
                   `}>
-                    <TrayPh size={14} weight="duotone" className={`mb-1 ${isOver ? "text-emerald-400" : "text-muted-foreground/50"}`} />
-                    <p className={`text-[10.5px] text-center ${isOver ? "text-emerald-400" : "text-muted-foreground/60"}`}>
+                    <TrayPh size={14} weight="duotone" className={`mb-1 ${isOver ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground/50"}`} />
+                    <p className={`text-[10.5px] text-center ${isOver ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground/60"}`}>
                       {isOver ? "Solte aqui" : "Nenhuma oportunidade aqui"}
                     </p>
                   </div>

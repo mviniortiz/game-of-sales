@@ -535,27 +535,18 @@ All colors MUST be HSL.
   transform: translateY(0);
 }
 
-/* Landing Button — pill azul Vyzon (#1556C0) sólido com glow sutil */
-.lbtn-primary:hover {
-  filter: brightness(1.08);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.20),
-    0 0 24px rgba(21, 86, 192, 0.30),
-    0 2px 4px rgba(21, 86, 192, 0.24);
-}
+/* Landing Button — LP.4: o press editorial vive em .lp-press (sombra dura);
+   aqui só o feedback de :active e o reforço da hairline do secundário. */
 .lbtn-primary:active {
-  filter: brightness(0.96);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 1px 2px rgba(21, 86, 192, 0.20);
+  transform: translate(0, 0) !important;
+  box-shadow: none !important;
 }
 .lbtn-secondary:hover {
-  background: rgba(10, 10, 10, 0.06) !important;
-  box-shadow: inset 0 0 0 1px rgba(10, 10, 10, 0.2) !important;
-  color: #0A0A0A !important;
+  border-color: var(--lp-ink, #0D1421) !important;
 }
 .lbtn-secondary:active {
-  background: rgba(10, 10, 10, 0.08) !important;
+  transform: translate(0, 0) !important;
+  box-shadow: none !important;
 }
 
 /* Pricing card hover lift */
@@ -667,4 +658,2796 @@ All colors MUST be HSL.
 @media (prefers-reduced-motion: reduce) {
   .eva-send-btn { transition: none; }
   .eva-send-idle { animation: none; }
+}
+
+/* EVA.STUDIO.9 — Motion & Blueprint Generation Experience.
+   Animações leves e honestas: reveal por bloco, pulso do núcleo durante a
+   geração e shimmer discreto nas fontes. Tudo desligado em reduced-motion. */
+@keyframes evaReveal {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.eva-reveal {
+  animation: evaReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes evaGenPulse {
+  0%, 100% { transform: scale(1);    opacity: 0.9; }
+  50%      { transform: scale(1.25); opacity: 1; }
+}
+.eva-gen-pulse {
+  animation: evaGenPulse 1.4s ease-in-out infinite;
+}
+@keyframes evaSrcShimmer {
+  0%, 100% { box-shadow: 0 4px 16px -10px rgba(11, 18, 32, 0.14); }
+  50%      { box-shadow: 0 6px 22px -10px rgba(124, 58, 237, 0.30); }
+}
+.eva-src-shimmer {
+  animation: evaSrcShimmer 1.7s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .eva-reveal { animation: none; }
+  .eva-gen-pulse { animation: none; }
+  .eva-src-shimmer { animation: none; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   COMMAND.UI.8 — Animações da Central de Comando (/inicio).
+   Função, não enfeite: cada movimento responde "o que mudou? / pra onde olhar?
+   / deu certo?". Rápido na interação (150-300ms), sutil, ease-out, sem bounce.
+   Tudo desligado em prefers-reduced-motion (acessibilidade, não opcional).
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* 1. Entrada escalonada — só na 1ª montagem dos blocos do topo da página. */
+@keyframes vz-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.vz-stagger > * {
+  opacity: 0;
+  animation: vz-rise 0.4s ease-out forwards;
+}
+.vz-stagger > *:nth-child(1) { animation-delay: 0.04s; }
+.vz-stagger > *:nth-child(2) { animation-delay: 0.10s; }
+.vz-stagger > *:nth-child(3) { animation-delay: 0.16s; }
+.vz-stagger > *:nth-child(4) { animation-delay: 0.22s; }
+.vz-stagger > *:nth-child(5) { animation-delay: 0.28s; }
+.vz-stagger > *:nth-child(6) { animation-delay: 0.34s; }
+
+/* 2. Pulso do herói — SÓ no card crítico. Respira (2.4s), não pisca. */
+.vz-pulse-critical { position: relative; }
+.vz-pulse-critical::after {
+  content: "";
+  position: absolute;
+  inset: -1.5px;
+  border-radius: 1rem; /* casa com o rounded-2xl do herói */
+  pointer-events: none;
+  animation: vz-pulse-ring 2.4s ease-out infinite;
+}
+@keyframes vz-pulse-ring {
+  0%   { box-shadow: 0 0 0 0 rgba(203, 67, 39, 0.32); }
+  70%  { box-shadow: 0 0 0 9px rgba(203, 67, 39, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(203, 67, 39, 0); }
+}
+
+/* 4. Check "pop" ao resolver + linha saindo ("o dia encolhendo"). */
+@keyframes vz-check-pop {
+  0%   { transform: scale(0.6); }
+  60%  { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+.vz-check-pop { animation: vz-check-pop 0.3s ease-out; }
+.vz-resolving {
+  opacity: 0.45;
+  transition: opacity 0.25s ease-out, transform 0.25s ease-out;
+}
+.vz-resolving .vz-row-title { text-decoration: line-through; }
+
+@media (prefers-reduced-motion: reduce) {
+  .vz-stagger > * { opacity: 1; animation: none; }
+  .vz-pulse-critical::after { animation: none; }
+  .vz-check-pop { animation: none; }
+  .vz-resolving { transition: none; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   EvaEntity — malha de nós abstrata da EVA. A forma é simples; o movimento é
+   a personalidade. Cor por estado via CSS vars (muda mesmo em reduced-motion);
+   movimento por estado (desligado em reduced-motion).
+   ───────────────────────────────────────────────────────────────────────── */
+.vz-eva {
+  display: block;
+  /* paleta padrão (idle/thinking) = roxo da EVA — um pouco mais forte/saturada
+     que a base, pras claras (nós externos + linhas) não lavarem. */
+  --eva-core: #352C82;
+  --eva-c1: #4A3FC2;
+  --eva-c2: #6C62D6;
+  --eva-c3: #948BE8;
+  --eva-line: #B6B0F0;
+  --eva-bg: #ECEAFD;
+}
+/* a cor acompanha a troca de estado (cor ≠ movimento, ok em reduced-motion) */
+.vz-eva-bg,
+.vz-eva-core-hi { transition: fill 0.4s ease; }
+.vz-eva-line {
+  stroke: var(--eva-line);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  transition: stroke 0.4s ease;
+}
+/* variante pequena (<40px): stroke proporcionalmente mais grosso, senão some */
+.vz-eva--sm .vz-eva-line { stroke-width: 2.7; }
+/* escala em torno do próprio centro de cada peça. O easing de transform "segura"
+   a desaceleração quando a animação é trocada/removida (ex: alert tenso → idle
+   calmo): em vez de snap do scale, ela ASSENTA. Dormente enquanto a animação
+   roda (a animação vence); só atua no instante do switch de estado. */
+.vz-eva-mesh,
+.vz-eva-node,
+.vz-eva-core {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.vz-eva-node,
+.vz-eva-core { transition: fill 0.4s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
+
+/* alert: malha coral, tensa */
+.vz-eva--alert {
+  --eva-core: #9A3412;
+  --eva-c1: #D85A30;
+  --eva-c2: #EA7B52;
+  --eva-c3: #F3A982;
+  --eva-line: #F6C9B3;
+  --eva-bg: #FCEEE7;
+}
+/* done: malha verde, "tudo resolvido" */
+.vz-eva--done {
+  --eva-core: #2C5210;
+  --eva-c1: #3B6D11;
+  --eva-c2: #5C9A2E;
+  --eva-c3: #9BC36E;
+  --eva-line: #CFE3B8;
+  --eva-bg: #EDF5E3;
+}
+/* listening: malha apagada (slate), "em escuta, sem contexto pra sugerir".
+   A EVA sinaliza o modo pela cor antes de qualquer texto ser lido. */
+.vz-eva--listening {
+  --eva-core: #475569;
+  --eva-c1: #64748B;
+  --eva-c2: #94A3B8;
+  --eva-c3: #C3CDD9;
+  --eva-line: #DDE4EC;
+  --eva-bg: #F1F5F9;
+}
+
+@keyframes vz-eva-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+@keyframes vz-eva-breathe-deep { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.07); } }
+/* thinking: pulso DE LEVE (1.13) — o sinal nas linhas é a estrela; pulso forte
+   que repete a cada refetch vira tique nervoso na periferia da visão. */
+@keyframes vz-eva-node-pulse { 0%, 100% { transform: scale(1); opacity: 0.82; } 50% { transform: scale(1.13); opacity: 1; } }
+@keyframes vz-eva-node-tense { 0%, 100% { transform: scale(1); opacity: 0.9; } 50% { transform: scale(1.16); opacity: 1; } }
+@keyframes vz-eva-core-tense { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+@keyframes vz-eva-flow { from { stroke-dashoffset: 10; } to { stroke-dashoffset: 0; } }
+
+/* idle: respiro lento, quase imperceptível (padrão) */
+.vz-eva--idle .vz-eva-mesh { animation: vz-eva-breathe 4s ease-in-out infinite; }
+
+/* thinking: nós pulsam ~1s (defasados) + sinal percorrendo as linhas */
+.vz-eva--thinking .vz-eva-node { animation: vz-eva-node-pulse 1s ease-in-out infinite; }
+.vz-eva--thinking .vz-eva-line { stroke-dasharray: 3 7; animation: vz-eva-flow 1.1s linear infinite; }
+
+/* alert: pulso mais tenso e curto. 1.2s lê tenso; se ficar ansioso demais ao
+   lado da tela parada, subir pra 1.5s (ainda tenso, menos frenético). */
+.vz-eva--alert .vz-eva-node { animation: vz-eva-node-tense 1.2s ease-in-out infinite; }
+.vz-eva--alert .vz-eva-core { animation: vz-eva-core-tense 1.2s ease-in-out infinite; }
+
+/* done: respiro profundo e lento */
+.vz-eva--done .vz-eva-mesh { animation: vz-eva-breathe-deep 5s ease-in-out infinite; }
+
+/* listening: respiro AINDA mais lento que idle — presença mínima, só escuta */
+.vz-eva--listening .vz-eva-mesh { animation: vz-eva-breathe 6.5s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .vz-eva-mesh,
+  .vz-eva-node,
+  .vz-eva-core,
+  .vz-eva-line { animation: none !important; }
+  .vz-eva--thinking .vz-eva-line { stroke-dasharray: none; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   EvaAssistColumn — lateral da EVA na Inbox como MÁQUINA DE RESPOSTA.
+   O olho lê camadas por função, não uma lista plana:
+     branco  = ação (zona de resposta, o herói)
+     #F8FAFC = contexto (faixa de apoio)
+     âmbar   = descubra (o que destrava a sugestão)
+   Micro-labels uppercase em #1E293B (regra de contraste do projeto).
+   ───────────────────────────────────────────────────────────────────────── */
+.vz-evassist {
+  --evassist-core: #534AB7;
+  --evassist-core-deep: #423A9C;
+  --evassist-soft: #EEEDFE;
+  --evassist-line: rgba(83, 74, 183, 0.22);
+  --evassist-ink: #0B1220;
+  --evassist-muted: #64748B;
+  --evassist-label: #1E293B;
+  --evassist-border: #D9E2EC;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: #ffffff;
+  color: var(--evassist-ink);
+}
+
+/* 1. Header — EvaEntity + nome + 1 linha de estado do lead */
+.vz-evassist-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--evassist-border);
+  flex-shrink: 0;
+}
+.vz-evassist-header-name {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--evassist-ink);
+}
+.vz-evassist-header-state {
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--evassist-muted);
+  margin-top: 1px;
+}
+
+/* Micro-label estrutural (degrau mais alto da hierarquia tipográfica) */
+.vz-evassist-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--evassist-label);
+}
+
+/* Selo de controle — desenhado como ESTADO, não como limitação.
+   data-autonomy="human" é a semente: no futuro este pill vira o toggle de
+   "conceder autonomia por tipo de mensagem" (concedida pelo humano, revogável).
+   Por enquanto é fixo: a EVA NUNCA envia sozinha. */
+.vz-evassist-seal {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--evassist-line);
+  background: #ffffff;
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--evassist-core-deep);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.vz-evassist-seal-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--evassist-core);
+}
+/* Variante do selo no estado SE CALA: a EVA não sugeriu nada, então não há o
+   que "controlar" — o selo diz o que ela ESTÁ fazendo: escutando. */
+.vz-evassist-seal--listening {
+  border-color: #dde4ec;
+  color: #64748b;
+}
+.vz-evassist-seal--listening .vz-evassist-seal-dot { background: #94a3b8; }
+
+/* 2. ZONA DE RESPOSTA — o herói. Fundo branco (ação). */
+.vz-evassist-zone {
+  padding: 16px 16px 14px;
+  flex-shrink: 0;
+}
+.vz-evassist-zone-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+/* Card da sugestão (estado CONFIA): roxo claro, hairline gradiente no topo */
+.vz-evassist-hero {
+  position: relative;
+  border-radius: 14px;
+  border: 1px solid var(--evassist-line);
+  background: var(--evassist-soft);
+  box-shadow: 0 12px 28px -18px rgba(83, 74, 183, 0.5);
+  padding: 14px 14px 12px;
+  overflow: hidden;
+  animation: vz-evassist-in 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.vz-evassist-hero::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #534ab7, #948be8 70%, transparent);
+}
+.vz-evassist-hero-text {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--evassist-ink);
+  white-space: pre-wrap;
+}
+.vz-evassist-hero-edit {
+  width: 100%;
+  min-height: 112px;
+  resize: vertical;
+  border-radius: 10px;
+  border: 1px solid var(--evassist-line);
+  background: #ffffff;
+  padding: 10px 12px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--evassist-ink);
+  outline: none;
+}
+.vz-evassist-hero-edit:focus { border-color: var(--evassist-core); }
+.vz-evassist-hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* Botões da zona de resposta */
+.vz-evassist-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 9px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter 0.15s ease, background 0.15s ease, transform 0.1s ease;
+  border: 1px solid transparent;
+}
+.vz-evassist-btn:active { transform: translateY(1px); }
+/* Fallbacks nas vars: estes botões são reutilizados FORA do .vz-evassist
+   (Studio F1/F2). Sem fallback, var() indefinida invalida o gradient inteiro
+   e o botão renderiza branco-no-branco (bug do Confirmar invisível). */
+.vz-evassist-btn--primary {
+  background: linear-gradient(135deg, var(--evassist-core, #534ab7), #6c62d6);
+  color: #ffffff;
+  box-shadow: 0 6px 14px -6px rgba(83, 74, 183, 0.55);
+}
+.vz-evassist-btn--primary:hover { filter: brightness(1.08); }
+/* Disabled = cinza neutro inequívoco ("ainda não"), NUNCA roxo lavado — roxo
+   apagado lê como botão quebrado (lição do bug do Confirmar). Quando o campo
+   ganha texto, o salto pro roxo cheio com sombra é o "agora pode". */
+.vz-evassist-btn--primary:disabled {
+  background: #eef2f6;
+  color: #94a3b8;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+.vz-evassist-btn--primary:disabled:hover { filter: none; }
+.vz-evassist-btn--ghost {
+  background: transparent;
+  color: var(--evassist-core-deep, #423a9c);
+  border-color: var(--evassist-line, rgba(83, 74, 183, 0.22));
+}
+/* Degrau entre primary e ghost: ação positiva mas NÃO dominante (ex: o
+   Confirmar individual dentro do grupo de alta confiança, onde o caminho
+   rápido é o lote — dois roxos cheios lado a lado brigariam). */
+.vz-evassist-btn--soft {
+  background: #eeedfe;
+  color: var(--evassist-core-deep, #423a9c);
+  border-color: transparent;
+}
+.vz-evassist-btn--soft:hover { background: #e5e3fc; }
+.vz-evassist-btn--ghost:hover { background: rgba(83, 74, 183, 0.06); }
+
+/* Microcopy do loop de aprendizado */
+.vz-evassist-learn {
+  margin-top: 9px;
+  font-size: 10.5px;
+  line-height: 1.45;
+  color: #7a73c9;
+}
+
+/* Estado SE CALA: o silêncio é silencioso — texto leve, SEM caixa. O peso
+   visual inverte: o herói deste estado é o âmbar "descubra isto primeiro"
+   (a ação útil agora é descobrir, não responder). */
+.vz-evassist-quiet {
+  animation: vz-evassist-in 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.vz-evassist-quiet-text {
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--evassist-muted);
+  padding: 2px 2px 0;
+}
+/* Herói do estado SE CALA: mesma anatomia do hero roxo, em âmbar */
+.vz-evassist-discover {
+  position: relative;
+  margin-top: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(217, 119, 6, 0.28);
+  background: #fff7e8;
+  box-shadow: 0 12px 28px -18px rgba(217, 119, 6, 0.55);
+  padding: 13px 14px 12px;
+  overflow: hidden;
+}
+.vz-evassist-discover::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #d97706, #fbbf24 70%, transparent);
+}
+.vz-evassist-q {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 0;
+}
+.vz-evassist-q + .vz-evassist-q { border-top: 1px solid rgba(217, 119, 6, 0.16); }
+.vz-evassist-q-text {
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: #3f3115;
+}
+.vz-evassist-q-use {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 26px;
+  padding: 0 9px;
+  border-radius: 7px;
+  border: 1px solid rgba(217, 119, 6, 0.35);
+  background: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  color: #92400e;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.vz-evassist-q-use:hover { background: #fdf0dc; }
+
+/* 3. Contexto do lead — faixa de apoio, fundo secundário */
+.vz-evassist-context {
+  background: #f8fafc;
+  border-top: 1px solid #eef2f6;
+  border-bottom: 1px solid #eef2f6;
+  padding: 13px 16px 14px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.vz-evassist-context-summary {
+  font-size: 12px;
+  line-height: 1.55;
+  color: #334155;
+  margin-top: 7px;
+}
+.vz-evassist-context-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.vz-evassist-score {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 7px;
+  background: #ffffff;
+  border: 1px solid var(--evassist-line);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--evassist-core-deep);
+  font-variant-numeric: tabular-nums;
+}
+.vz-evassist-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 7px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  font-size: 11px;
+  font-weight: 600;
+  color: #475569;
+}
+.vz-evassist-chip-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+}
+
+/* 4. Próxima ação — rodapé fino: o que fazer depois de enviar */
+.vz-evassist-next {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 11px 16px 13px;
+  background: #ffffff;
+  flex-shrink: 0;
+}
+.vz-evassist-next-text {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: #475569;
+}
+.vz-evassist-next-text strong { color: var(--evassist-ink); font-weight: 600; }
+
+/* entrada: só translate (nunca opacity:0 — regra do projeto p/ WebViews) */
+@keyframes vz-evassist-in {
+  from { transform: translateY(6px); }
+  to   { transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vz-evassist-hero,
+  .vz-evassist-quiet { animation: none; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   InboxPriorityList — lista de conversas reordenada pela EVA, com o PORQUÊ.
+   Paleta de risco do app: coral = quente/urgente, âmbar = esfriando,
+   cinza/neutro = frio. A cor comunica antes da leitura.
+   Estado A (Studio configurado) prioriza por valor; Estado B se cala sobre
+   valor e ordena pelo único sinal real: tempo esperando resposta sua.
+   ───────────────────────────────────────────────────────────────────────── */
+.vz-evlist {
+  --evlist-hot: #d85a30;
+  --evlist-hot-deep: #9a3412;
+  --evlist-warm: #f59e0b;
+  --evlist-warm-deep: #92400e;
+  --evlist-cold: #94a3b8;
+  --evlist-cold-deep: #64748b;
+  --evlist-border: #d9e2ec;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: #ffffff;
+}
+
+.vz-evlist-header {
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--evlist-border);
+  flex-shrink: 0;
+}
+.vz-evlist-title {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #0b1220;
+  line-height: 1.2;
+}
+.vz-evlist-subtitle {
+  font-size: 10.5px;
+  color: #64748b;
+  margin-top: 1px;
+}
+/* Toggle de ordem — a EVA propõe, o humano pode revogar */
+.vz-evlist-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 9px;
+  border-radius: 7px;
+  border: 1px solid var(--evlist-border);
+  background: #ffffff;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+  flex-shrink: 0;
+}
+.vz-evlist-toggle:hover { background: #f4f7fb; }
+
+/* Ponte pro EVA Studio (estado B) — convite com presença, não erro.
+   O fallback resolve a dor de hoje mas tem que vender o Studio de amanhã. */
+.vz-evlist-bridge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 12px 16px;
+  background: #eeedfe;
+  border-bottom: 1px solid rgba(83, 74, 183, 0.18);
+  cursor: pointer;
+  transition: background 0.15s ease;
+  flex-shrink: 0;
+}
+.vz-evlist-bridge:hover { background: #e5e3fc; }
+.vz-evlist-bridge-title {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #3a3390;
+  line-height: 1.3;
+}
+.vz-evlist-bridge-sub {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 500;
+  color: #5b51c4;
+  line-height: 1.4;
+  margin-top: 1px;
+}
+
+/* Labels de seção (RESPONDA AGORA / DEPOIS) */
+.vz-evlist-section {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 16px 5px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: #1e293b;
+}
+.vz-evlist-section-count {
+  font-weight: 600;
+  color: #94a3b8;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* Linha */
+.vz-evlist-row {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 10px 14px 10px 16px;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.vz-evlist-row:hover { background: #f4f7fb; }
+.vz-evlist-row--selected { background: #eef4ff; }
+.vz-evlist-row--selected:hover { background: #eef4ff; }
+
+/* Barra de risco lateral (3px) na cor da prioridade */
+.vz-evlist-bar {
+  position: absolute;
+  left: 4px;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 999px;
+}
+.vz-evlist-bar--quente { background: var(--evlist-hot); }
+.vz-evlist-bar--esfriando { background: var(--evlist-warm); }
+.vz-evlist-bar--frio { background: #cbd5e1; }
+
+/* Avatar — a temperatura colore antes da leitura */
+.vz-evlist-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #ffffff;
+  background: linear-gradient(135deg, #2563eb, #4a8ce8); /* neutro (estado B) */
+}
+.vz-evlist-avatar--quente { background: linear-gradient(135deg, #d85a30, #ea7b52); }
+.vz-evlist-avatar--esfriando { background: linear-gradient(135deg, #d97706, #fbbf24); }
+.vz-evlist-avatar--frio { background: linear-gradient(135deg, #64748b, #94a3b8); }
+
+.vz-evlist-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #0b1220;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.vz-evlist-time {
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+.vz-evlist-preview {
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 1px;
+}
+
+/* Etiqueta-motivo: o porquê da posição (estado A).
+   min-width 0 + texto interno truncável: a etiqueta degrada com elipse,
+   NUNCA empurra a linha pro lado (lista não rola horizontal). */
+.vz-evlist-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 18px;
+  padding: 0 7px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+  min-width: 0;
+}
+.vz-evlist-tag-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.vz-evlist-tag--quente { background: rgba(216, 90, 48, 0.1); color: var(--evlist-hot-deep); }
+.vz-evlist-tag--esfriando { background: rgba(245, 158, 11, 0.12); color: var(--evlist-warm-deep); }
+.vz-evlist-tag--frio { background: rgba(148, 163, 184, 0.14); color: var(--evlist-cold-deep); }
+/* Estado B: o SLOT da etiqueta existe mas está trancado — a ausência visível
+   é o que vende o Studio. Vazio e tracejado, sem fingir valor calculado. */
+.vz-evlist-tag--locked {
+  background: transparent;
+  border: 1px dashed #cbd5e1;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+/* Sinal neutro de tempo (estado B) + contador rebaixado (mede volume, não valor) */
+.vz-evlist-wait {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.vz-evlist-unread {
+  font-size: 10px;
+  color: #94a3b8;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Contatos sem conversa ativa — recolhidos no fim, fora do caminho */
+.vz-evlist-junk-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  text-align: left;
+  padding: 10px 16px;
+  border-top: 1px solid #eef2f6;
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+.vz-evlist-junk-toggle:hover { color: #64748b; }
+.vz-evlist-junk-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  padding: 7px 16px;
+  font-size: 11.5px;
+  color: #94a3b8;
+  cursor: pointer;
+}
+.vz-evlist-junk-row:hover { background: #f8fafc; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   EVA Studio — Frente 1: criar agente é UMA decisão (o propósito), não um
+   formulário. Toda configuração vai pra construção guiada. Alma: a EVA
+   propõe, o humano revisa, nada acontece sem aprovação.
+   ───────────────────────────────────────────────────────────────────────── */
+.vz-agentcreate {
+  --studio-core: #534ab7;
+  --studio-core-deep: #423a9c;
+  --studio-soft: #eeedfe;
+  --studio-line: rgba(83, 74, 183, 0.22);
+  --studio-ink: #0b1220;
+  --studio-muted: #64748b;
+  --studio-label: #1e293b;
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 48px 24px 56px;
+}
+/* Fallbacks: estas classes são reutilizadas fora do .vz-agentcreate (F2). */
+.vz-agentcreate-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--studio-label, #1e293b);
+}
+.vz-agentcreate-title {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--studio-ink, #0b1220);
+  line-height: 1.2;
+}
+.vz-agentcreate-sub {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--studio-muted, #64748b);
+}
+
+/* Selo de controle do Studio — mesma alma do Inbox */
+.vz-agentcreate-seal {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--studio-line, rgba(83, 74, 183, 0.22));
+  background: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--studio-core-deep, #423a9c);
+  white-space: nowrap;
+}
+.vz-agentcreate-seal-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--studio-core, #534ab7);
+}
+
+/* Cards de propósito — A decisão. Um clique cria. */
+.vz-agentcreate-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-top: 28px;
+}
+@media (max-width: 720px) {
+  .vz-agentcreate-grid { grid-template-columns: 1fr; }
+}
+.vz-agentcreate-card {
+  position: relative;
+  text-align: left;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  padding: 20px 18px 18px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.2s ease, transform 0.15s ease;
+  animation: vz-evassist-in 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.vz-agentcreate-card:hover {
+  border-color: var(--studio-line);
+  box-shadow: 0 16px 36px -22px rgba(83, 74, 183, 0.45);
+  transform: translateY(-2px);
+}
+.vz-agentcreate-card:active { transform: translateY(0); }
+.vz-agentcreate-card-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--studio-soft);
+  color: var(--studio-core-deep);
+  margin-bottom: 14px;
+}
+.vz-agentcreate-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--studio-ink);
+  letter-spacing: -0.01em;
+}
+.vz-agentcreate-card-desc {
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--studio-muted);
+  margin-top: 5px;
+}
+.vz-agentcreate-card-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 14px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--studio-core-deep);
+}
+/* Card disponível em destaque: é a única ação real da tela */
+.vz-agentcreate-card--featured {
+  border-color: var(--studio-line);
+  box-shadow: 0 12px 30px -22px rgba(83, 74, 183, 0.4);
+}
+/* "Em breve" rebaixado: presente (vende a visão) mas recuado — o olho vai
+   direto pro disponível. Texto menor e mais apagado de propósito. */
+.vz-agentcreate-card--soon {
+  cursor: default;
+  background: #fafbfd;
+}
+.vz-agentcreate-card--soon:hover { border-color: #e2e8f0; box-shadow: none; transform: none; }
+.vz-agentcreate-card--soon .vz-agentcreate-card-icon { background: #f1f5f9; color: #94a3b8; }
+.vz-agentcreate-card--soon .vz-agentcreate-card-title { color: #64748b; font-size: 13.5px; }
+.vz-agentcreate-card--soon .vz-agentcreate-card-desc { color: #94a3b8; font-size: 11px; }
+.vz-agentcreate-soon-badge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+  background: #f1f5f9;
+  border-radius: 999px;
+  padding: 3px 8px;
+}
+
+/* O que a EVA vai olhar pra montar sozinha */
+.vz-agentcreate-sources {
+  margin-top: 32px;
+  border-radius: 14px;
+  border: 1px solid #eef2f6;
+  background: #f8fafc;
+  padding: 16px 18px;
+}
+.vz-agentcreate-source {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 7px 0;
+}
+.vz-agentcreate-source + .vz-agentcreate-source { border-top: 1px solid #eef2f6; }
+.vz-agentcreate-source-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--studio-ink, #0b1220);
+}
+.vz-agentcreate-source-detail {
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--studio-muted, #64748b);
+  margin-top: 1px;
+}
+.vz-agentcreate-source-state {
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Microcopy âncora do medo */
+.vz-agentcreate-promise {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 24px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--studio-muted);
+  text-align: center;
+}
+
+/* Painel pós-escolha: a transparência vem como CONSEQUÊNCIA da decisão
+   ("escolheu Vender → vou olhar isto pra montar"), não como leitura prévia */
+.vz-agentcreate-building {
+  border-radius: 16px;
+  border: 1px solid var(--studio-line);
+  background: #ffffff;
+  box-shadow: 0 16px 40px -26px rgba(83, 74, 183, 0.45);
+  padding: 24px;
+  margin-top: 28px;
+  animation: vz-evassist-in 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   EVA Studio — Frente 2: construção guiada. Substitui o formulário em
+   branco por "olha o que eu entendi da sua operação, confirma?".
+   Cards de sugestão com evidência + lacunas acionáveis (âmbar, mesma
+   anatomia do "descubra" do Inbox) + rodapé de causa-e-efeito.
+   ───────────────────────────────────────────────────────────────────────── */
+.vz-ctxbuild {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 40px 24px 0;
+}
+
+/* Card de sugestão — a unidade de revisão */
+.vz-ctxbuild-card {
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  padding: 16px 18px 14px;
+  margin-top: 12px;
+  animation: vz-evassist-in 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* A confiança ORGANIZA a tela: alta = compacta (só carimbar), média = espaço
+   e atenção. A sugestão óbvia e a duvidosa não podem pesar igual. */
+.vz-ctxbuild-group-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 26px;
+}
+.vz-ctxbuild-batch {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(135deg, #534ab7, #6c62d6);
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 14px -6px rgba(83, 74, 183, 0.55);
+  transition: filter 0.15s ease;
+  white-space: nowrap;
+}
+.vz-ctxbuild-batch:hover { filter: brightness(1.08); }
+
+/* Variante compacta (confiança alta): evidência em 1 linha, ações menores */
+.vz-ctxbuild-card--compact { padding: 12px 14px 11px; }
+.vz-ctxbuild-card--compact .vz-ctxbuild-statement {
+  font-size: 12.5px;
+  margin-top: 7px;
+}
+.vz-ctxbuild-card--compact .vz-ctxbuild-evidence {
+  margin-top: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+.vz-ctxbuild-evidence-clamp {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.vz-ctxbuild-card--compact .vz-ctxbuild-evidence-source {
+  margin-top: 0;
+  flex-shrink: 0;
+}
+.vz-ctxbuild-card--compact .vz-ctxbuild-actions { margin-top: 9px; }
+.vz-ctxbuild-card--compact .vz-evassist-btn { height: 28px; padding: 0 11px; font-size: 11.5px; }
+.vz-ctxbuild-type {
+  display: inline-flex;
+  align-items: center;
+  height: 19px;
+  padding: 0 8px;
+  border-radius: 6px;
+  background: #eeedfe;
+  font-size: 10px;
+  font-weight: 700;
+  color: #423a9c;
+  white-space: nowrap;
+}
+.vz-ctxbuild-conf {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #64748b;
+}
+.vz-ctxbuild-conf-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: #d6d3f3;
+}
+.vz-ctxbuild-conf-dot--on { background: #534ab7; }
+
+/* A afirmação em linguagem simples — o degrau mais alto do card */
+.vz-ctxbuild-statement {
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: #0b1220;
+  margin-top: 9px;
+}
+
+/* A evidência: o trecho que sustenta + a fonte */
+.vz-ctxbuild-evidence {
+  margin-top: 8px;
+  padding: 7px 12px;
+  border-left: 2px solid #d6d3f3;
+  font-size: 11.5px;
+  line-height: 1.5;
+  font-style: italic;
+  color: #475569;
+}
+.vz-ctxbuild-evidence-source {
+  display: block;
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 600;
+  color: #94a3b8;
+  margin-top: 3px;
+}
+
+.vz-ctxbuild-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+.vz-ctxbuild-dismiss {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 4px 6px;
+}
+.vz-ctxbuild-dismiss:hover { color: #64748b; }
+
+/* Correção inline — editar ensina a EVA */
+.vz-ctxbuild-edit {
+  width: 100%;
+  min-height: 64px;
+  resize: vertical;
+  border-radius: 10px;
+  border: 1px solid rgba(83, 74, 183, 0.22);
+  background: #ffffff;
+  padding: 9px 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #0b1220;
+  outline: none;
+  margin-top: 9px;
+}
+.vz-ctxbuild-edit:focus { border-color: #534ab7; }
+.vz-ctxbuild-learn {
+  font-size: 10.5px;
+  color: #7a73c9;
+  margin-top: 7px;
+}
+
+/* Lacunas acionáveis — âmbar, mesma anatomia do "descubra" do Inbox */
+.vz-ctxbuild-gaps {
+  position: relative;
+  border-radius: 14px;
+  border: 1px solid rgba(217, 119, 6, 0.28);
+  background: #fff7e8;
+  box-shadow: 0 12px 28px -18px rgba(217, 119, 6, 0.45);
+  padding: 15px 18px 6px;
+  margin-top: 28px;
+  overflow: hidden;
+}
+.vz-ctxbuild-gaps::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #d97706, #fbbf24 70%, transparent);
+}
+.vz-ctxbuild-gap {
+  padding: 11px 0 12px;
+}
+.vz-ctxbuild-gap + .vz-ctxbuild-gap { border-top: 1px solid rgba(217, 119, 6, 0.16); }
+.vz-ctxbuild-gap-q {
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: #3f3115;
+}
+.vz-ctxbuild-gap-meta {
+  font-size: 10.5px;
+  color: #a16207;
+  margin-top: 3px;
+}
+.vz-ctxbuild-gap-define {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 7px;
+  border: 1px solid rgba(217, 119, 6, 0.35);
+  background: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  color: #92400e;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  flex-shrink: 0;
+}
+.vz-ctxbuild-gap-define:hover { background: #fdf0dc; }
+/* Variante recuada (estado conta nova): as perguntas são o plano B — o
+   caminho do texto colado tem que vencer claramente. */
+.vz-ctxbuild-gap-define--lite {
+  border: none;
+  background: transparent;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.vz-ctxbuild-gap-define--lite:hover { background: transparent; color: #78350f; }
+
+/* Estado conta nova — atalho generoso, NUNCA formulário em branco */
+.vz-ctxbuild-paste {
+  position: relative;
+  border-radius: 16px;
+  border: 1px solid rgba(83, 74, 183, 0.22);
+  background: #eeedfe;
+  box-shadow: 0 16px 40px -26px rgba(83, 74, 183, 0.5);
+  padding: 20px;
+  margin-top: 24px;
+  overflow: hidden;
+}
+.vz-ctxbuild-paste::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #534ab7, #948be8 70%, transparent);
+}
+.vz-ctxbuild-paste-input {
+  width: 100%;
+  min-height: 130px;
+  resize: vertical;
+  border-radius: 12px;
+  border: 1px solid rgba(83, 74, 183, 0.2);
+  background: #ffffff;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #0b1220;
+  outline: none;
+  margin-top: 12px;
+}
+.vz-ctxbuild-paste-input:focus { border-color: #534ab7; }
+
+/* Rodapé fixo de causa-e-efeito */
+.vz-ctxbuild-footer {
+  position: sticky;
+  bottom: 0;
+  background: #ffffff;
+  border-top: 1px solid #eef2f6;
+  padding: 12px 0 14px;
+  margin-top: 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.vz-ctxbuild-footer-text {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: #64748b;
+}
+.vz-ctxbuild-footer-count {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 700;
+  color: #423a9c;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── F3 · Replay de momento-chave (prova de confiança) ──────────────────── */
+.vz-simreplay-card {
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  padding: 16px 18px 14px;
+  margin-top: 14px;
+  animation: vz-evassist-in 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.vz-simreplay-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.vz-simreplay-lead {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0b1220;
+}
+.vz-simreplay-tension {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  margin-top: 2px;
+}
+.vz-simreplay-critical {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 17px;
+  padding: 0 6px;
+  border-radius: 5px;
+  background: #fef2f2;
+  color: #dc2626;
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.vz-simreplay-outcome {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  height: 21px;
+  padding: 0 9px;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  font-size: 10.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.vz-simreplay-context {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: #64748b;
+  margin-top: 9px;
+}
+.vz-simreplay-bubble {
+  position: relative;
+  border-radius: 12px;
+  padding: 9px 12px 10px;
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.vz-simreplay-bubble-label {
+  display: block;
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 3px;
+  opacity: 0.7;
+}
+.vz-simreplay-bubble--lead {
+  background: #f1f5f9;
+  color: #0b1220;
+}
+.vz-simreplay-bubble--lead .vz-simreplay-bubble-label { color: #64748b; }
+.vz-simreplay-bubble--eva {
+  background: #f5f3ff;
+  border: 1px solid rgba(124, 58, 237, 0.14);
+  color: #4c1d95;
+}
+.vz-simreplay-bubble--eva .vz-simreplay-bubble-label { color: #7c3aed; }
+.vz-simreplay-anchor {
+  border-radius: 10px;
+  border: 1px solid transparent;
+  padding: 8px 12px;
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+.vz-simreplay-seller { margin-top: 9px; }
+.vz-simreplay-seller-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+}
+.vz-simreplay-seller-toggle:hover { color: #64748b; }
+.vz-simreplay-seller-text {
+  margin-top: 6px;
+  padding: 8px 12px;
+  border-left: 2px solid #e2e8f0;
+  font-size: 12px;
+  line-height: 1.55;
+  font-style: italic;
+  color: #64748b;
+}
+.vz-simreplay-redline {
+  font-size: 11px;
+  font-weight: 600;
+  color: #b9c0cc;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 4px 6px;
+  transition: color 0.15s ease;
+}
+.vz-simreplay-redline:hover { color: #dc2626; }
+
+/* Painel de confiança — o termômetro honesto + convite de ativação */
+.vz-simreplay-panel {
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  padding: 18px 20px 20px;
+  box-shadow: 0 16px 40px -28px rgba(15, 23, 42, 0.4);
+}
+.vz-simreplay-panel--ready { border-color: rgba(22, 163, 74, 0.3); background: #f6fdf9; }
+.vz-simreplay-panel--blocked { border-color: rgba(220, 38, 38, 0.28); background: #fffafa; }
+.vz-simreplay-panel--warming { border-color: rgba(217, 119, 6, 0.28); background: #fffdf7; }
+.vz-simreplay-panel-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.vz-simreplay-panel-headline {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0b1220;
+}
+.vz-simreplay-panel-reason {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #475569;
+  margin-top: 3px;
+}
+.vz-simreplay-panel-score {
+  flex-shrink: 0;
+  font-size: 18px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.vz-simreplay-bar {
+  height: 7px;
+  border-radius: 999px;
+  background: #eef2f7;
+  overflow: hidden;
+  margin-top: 14px;
+}
+.vz-simreplay-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1), background 0.3s ease;
+}
+.vz-simreplay-bar-meta {
+  font-size: 10.5px;
+  color: #94a3b8;
+  margin-top: 7px;
+}
+.vz-simreplay-activate {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 44px;
+  margin-top: 16px;
+  border-radius: 12px;
+  border: none;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter 0.15s ease, background 0.15s ease;
+}
+.vz-simreplay-activate:disabled {
+  background: #fef2f2;
+  color: #dc2626;
+  cursor: not-allowed;
+}
+.vz-simreplay-activate--ready {
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  color: #ffffff;
+  box-shadow: 0 10px 22px -10px rgba(22, 163, 74, 0.6);
+}
+.vz-simreplay-activate--ready:hover { filter: brightness(1.06); }
+.vz-simreplay-activate--soft {
+  height: 40px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  font-weight: 600;
+  box-shadow: none;
+}
+.vz-simreplay-activate--soft:hover { background: #f8fafc; color: #475569; }
+
+/* Estado vazio — o que destrava o replay */
+.vz-simreplay-empty {
+  position: relative;
+  border-radius: 16px;
+  border: 1px solid #e6e9ef;
+  background: #f8fafc;
+  padding: 18px 20px;
+  margin-top: 22px;
+}
+.vz-simreplay-empty-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.vz-simreplay-empty-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #475569;
+}
+.vz-simreplay-empty-dot {
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #534ab7;
+  margin-top: 6px;
+}
+.vz-simreplay-refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  height: 28px;
+  padding: 0 11px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.vz-simreplay-refresh:hover:not(:disabled) { background: #f8fafc; border-color: #cbd5e1; }
+.vz-simreplay-refresh:disabled { opacity: 0.6; cursor: progress; }
+
+/* ── EVA Studio Shell — casca de jornada (header único + stepper + lateral) ── */
+.vz-studioshell {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 32px 24px 60px;
+}
+.vz-studioshell-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.vz-studioshell-title {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #0b1220;
+}
+.vz-studioshell-subtitle {
+  font-size: 13px;
+  color: #64748b;
+  margin-top: 2px;
+}
+.vz-studioshell-stepcount {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  color: #6d28d9;
+  background: #f5f3ff;
+  border: 1px solid rgba(124, 58, 237, 0.18);
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* Stepper horizontal */
+.vz-studioshell-stepper {
+  display: flex;
+  align-items: center;
+  margin-top: 22px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid #eef2f6;
+}
+.vz-studioshell-stepper-item {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+.vz-studioshell-stepper-line {
+  height: 2px;
+  flex: 1;
+  background: #e2e8f0;
+  margin: 0 6px;
+}
+.vz-studioshell-stepper-line--on { background: #7c3aed; }
+.vz-studioshell-stepper-node {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  white-space: nowrap;
+}
+.vz-studioshell-stepper-node:disabled { cursor: default; }
+.vz-studioshell-stepper-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+  border: 1.5px solid #d9e2ec;
+  color: #94a3b8;
+  background: #ffffff;
+}
+.vz-studioshell-stepper-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #94a3b8;
+}
+.vz-studioshell-stepper-node--done .vz-studioshell-stepper-dot {
+  background: #16a34a;
+  border-color: #16a34a;
+  color: #ffffff;
+}
+.vz-studioshell-stepper-node--done .vz-studioshell-stepper-label { color: #475569; }
+.vz-studioshell-stepper-node--current .vz-studioshell-stepper-dot {
+  background: linear-gradient(135deg, #534ab7, #7c3aed);
+  border-color: #534ab7;
+  color: #ffffff;
+  box-shadow: 0 4px 12px -4px rgba(124, 58, 237, 0.5);
+}
+.vz-studioshell-stepper-node--current .vz-studioshell-stepper-label { color: #4c1d95; font-weight: 700; }
+
+/* Corpo: lateral + conteúdo */
+.vz-studioshell-body {
+  display: grid;
+  grid-template-columns: 212px 1fr;
+  gap: 28px;
+  margin-top: 24px;
+  align-items: start;
+}
+@media (max-width: 860px) {
+  .vz-studioshell-body { grid-template-columns: 1fr; }
+  .vz-studioshell-rail { flex-direction: row; overflow-x: auto; }
+}
+.vz-studioshell-rail {
+  position: sticky;
+  top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.vz-studioshell-rail-head {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #94a3b8;
+  margin-bottom: 6px;
+}
+.vz-studioshell-rail-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 9px 10px;
+  border-radius: 10px;
+  transition: background 0.15s ease;
+}
+.vz-studioshell-rail-item:hover:not(:disabled) { background: #f8fafc; }
+.vz-studioshell-rail-item:disabled { cursor: default; opacity: 0.55; }
+.vz-studioshell-rail-item--current { background: #f5f3ff; }
+.vz-studioshell-rail-mark {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+  border: 1.5px solid #d9e2ec;
+  color: #94a3b8;
+  background: #ffffff;
+}
+.vz-studioshell-rail-item--done .vz-studioshell-rail-mark { background: #16a34a; border-color: #16a34a; color: #fff; }
+.vz-studioshell-rail-item--current .vz-studioshell-rail-mark {
+  background: linear-gradient(135deg, #534ab7, #7c3aed);
+  border-color: #534ab7;
+  color: #fff;
+  font-size: 9px;
+}
+.vz-studioshell-rail-label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #334155;
+}
+.vz-studioshell-rail-item--current .vz-studioshell-rail-label { color: #4c1d95; font-weight: 700; }
+.vz-studioshell-rail-sub {
+  display: block;
+  font-size: 10.5px;
+  color: #94a3b8;
+  margin-top: 1px;
+  line-height: 1.35;
+}
+.vz-studioshell-readiness {
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #eef2f6;
+  background: #fbfcfe;
+}
+.vz-studioshell-readiness-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #64748b;
+}
+.vz-studioshell-readiness-pct { font-weight: 800; color: #4c1d95; font-variant-numeric: tabular-nums; }
+.vz-studioshell-readiness-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: #eef2f7;
+  overflow: hidden;
+  margin-top: 7px;
+}
+.vz-studioshell-readiness-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #534ab7, #7c3aed);
+}
+.vz-studioshell-secondary {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #eef2f6;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.vz-studioshell-secondary-link {
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+.vz-studioshell-secondary-link:hover { background: #f8fafc; color: #475569; }
+.vz-studioshell-content { min-width: 0; }
+.vz-studioshell-content-step {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #7c3aed;
+  margin-bottom: 14px;
+}
+.vz-studioshell-content-step span { color: #94a3b8; font-weight: 600; text-transform: none; letter-spacing: 0; }
+
+/* ── EVA Studio Conversacional — criar agente conversando (não formulário) ── */
+.vz-convo {
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 28px 24px 32px;
+}
+.vz-convo-head {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-bottom: 18px;
+}
+.vz-convo-title {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #0b1220;
+}
+.vz-convo-sub { font-size: 12.5px; color: #64748b; margin-top: 1px; }
+.vz-convo-body {
+  display: grid;
+  grid-template-columns: 1fr 332px;
+  gap: 20px;
+  height: min(70vh, 600px);
+}
+@media (max-width: 880px) {
+  .vz-convo-body { grid-template-columns: 1fr; height: auto; }
+  .vz-convo-agent { order: -1; }
+}
+
+/* Coluna da conversa */
+.vz-convo-chat {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-radius: 20px;
+  border: 1px solid #e9edf3;
+  background: linear-gradient(180deg, #fbfcfe 0%, #ffffff 40%);
+  box-shadow: 0 24px 60px -40px rgba(15, 23, 42, 0.35);
+  overflow: hidden;
+}
+.vz-convo-stream {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 22px 22px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.vz-convo-row { display: flex; align-items: flex-end; gap: 9px; max-width: 86%; }
+.vz-convo-row--eva { align-self: flex-start; }
+.vz-convo-row--user { align-self: flex-end; flex-direction: row-reverse; }
+.vz-convo-ava {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f3ff;
+  border: 1px solid rgba(124, 58, 237, 0.14);
+}
+.vz-convo-bubble {
+  font-size: 13.5px;
+  line-height: 1.55;
+  padding: 11px 15px;
+  border-radius: 16px;
+  animation: vz-evassist-in 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.vz-convo-bubble--eva {
+  background: #f4f6fa;
+  color: #1e293b;
+  border-bottom-left-radius: 5px;
+}
+.vz-convo-bubble--user {
+  background: linear-gradient(135deg, #534ab7, #6c62d6);
+  color: #ffffff;
+  border-bottom-right-radius: 5px;
+  box-shadow: 0 8px 18px -10px rgba(83, 74, 183, 0.6);
+}
+
+/* Composer — voz + seta-pra-cima (estilo Claude, paleta Vyzon) */
+.vz-convo-composer {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin: 10px;
+  padding: 8px 8px 8px 10px;
+  border-radius: 18px;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  box-shadow: 0 10px 30px -20px rgba(15, 23, 42, 0.4);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.vz-convo-composer:focus-within {
+  border-color: rgba(83, 74, 183, 0.55);
+  box-shadow: 0 0 0 4px rgba(83, 74, 183, 0.1);
+}
+.vz-convo-composer--rec { border-color: rgba(220, 38, 38, 0.4); }
+.vz-convo-mic {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  border: none;
+  background: #f1f5f9;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.vz-convo-mic:hover { background: #e9eef4; color: #475569; }
+.vz-convo-mic--on {
+  background: #fef2f2;
+  color: #dc2626;
+  animation: vz-convo-pulse 1.4s ease-in-out infinite;
+}
+@keyframes vz-convo-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.3); }
+  50% { box-shadow: 0 0 0 6px rgba(220, 38, 38, 0); }
+}
+.vz-convo-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  resize: none;
+  background: transparent;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #0b1220;
+  padding: 8px 2px;
+  max-height: 120px;
+  font-family: inherit;
+}
+.vz-convo-input::placeholder { color: #9aa6b6; }
+.vz-convo-send {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  background: linear-gradient(135deg, #534ab7, #1556c0);
+  box-shadow: 0 8px 18px -8px rgba(83, 74, 183, 0.7);
+  transition: filter 0.15s ease, transform 0.1s ease;
+}
+.vz-convo-send:hover:not(:disabled) { filter: brightness(1.08); }
+.vz-convo-send:active:not(:disabled) { transform: scale(0.94); }
+.vz-convo-send:disabled {
+  background: #e2e8f0;
+  color: #ffffff;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+.vz-convo-rechint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #dc2626;
+  margin: 0 16px 10px;
+}
+.vz-convo-recdot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #dc2626;
+  animation: vz-convo-pulse 1.2s ease-in-out infinite;
+}
+
+/* O agente nascendo */
+.vz-convo-agent {
+  border-radius: 20px;
+  border: 1px solid #e9edf3;
+  background: #ffffff;
+  padding: 18px;
+  box-shadow: 0 24px 60px -44px rgba(15, 23, 42, 0.35);
+  align-self: start;
+}
+.vz-convo-agent-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.vz-convo-agent-kicker {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #7c3aed;
+}
+.vz-convo-agent-name { font-size: 15px; font-weight: 700; color: #0b1220; margin-top: 2px; }
+.vz-convo-agent-status {
+  flex-shrink: 0;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #f5f3ff;
+  color: #6d28d9;
+  white-space: nowrap;
+}
+.vz-convo-agent-status--done { background: #ecfdf3; color: #16a34a; }
+.vz-convo-agent-prog {
+  height: 5px;
+  border-radius: 999px;
+  background: #eef2f7;
+  overflow: hidden;
+  margin: 14px 0 16px;
+}
+.vz-convo-agent-prog-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #534ab7, #7c3aed);
+  transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.vz-convo-fields { display: flex; flex-direction: column; gap: 4px; }
+.vz-convo-field {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 10px;
+  border-radius: 12px;
+  opacity: 0.5;
+  transition: opacity 0.4s ease, background 0.4s ease;
+}
+.vz-convo-field--on {
+  opacity: 1;
+  background: #fbfcfe;
+  animation: vz-evassist-in 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.vz-convo-field-mark {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1.5px solid #d9e2ec;
+  color: #94a3b8;
+  background: #fff;
+}
+.vz-convo-field--on .vz-convo-field-mark {
+  background: #16a34a;
+  border-color: #16a34a;
+  color: #fff;
+}
+.vz-convo-field-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+}
+.vz-convo-field-value { font-size: 12.5px; font-weight: 500; color: #334155; margin-top: 2px; line-height: 1.4; }
+.vz-convo-field--on .vz-convo-field-value { color: #0b1220; }
+.vz-convo-agent-cta {
+  width: 100%;
+  margin-top: 16px;
+  height: 40px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  box-shadow: 0 10px 22px -10px rgba(22, 163, 74, 0.6);
+}
+.vz-convo-agent-cta:hover { filter: brightness(1.05); }
+
+/* "Pensando" — 3 pontinhos, pra a resposta não ser brusca */
+.vz-convo-typing {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 14px 16px;
+}
+.vz-convo-typing-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #94a3b8;
+  animation: vz-convo-typing 1.3s ease-in-out infinite;
+}
+.vz-convo-typing-dot:nth-child(2) { animation-delay: 0.18s; }
+.vz-convo-typing-dot:nth-child(3) { animation-delay: 0.36s; }
+@keyframes vz-convo-typing {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+
+/* Botão de anexo no composer */
+.vz-convo-attach {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  border: none;
+  background: #f1f5f9;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.vz-convo-attach:hover { background: #e9eef4; color: #475569; }
+
+/* Anexo escolhido, aguardando envio */
+.vz-convo-pending-attach {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 12px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: #f5f3ff;
+  border: 1px solid rgba(124, 58, 237, 0.16);
+  font-size: 12px;
+  font-weight: 600;
+  color: #4c1d95;
+}
+.vz-convo-pending-attach span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vz-convo-pending-attach button {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #7c3aed;
+  display: flex;
+  padding: 2px;
+}
+
+/* Chip do anexo dentro da bolha */
+.vz-convo-attach-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  background: rgba(255, 255, 255, 0.2);
+}
+.vz-convo-bubble--eva .vz-convo-attach-chip { background: #eef2f7; color: #475569; }
+
+.vz-convo-hint {
+  font-size: 11px;
+  color: #9aa6b6;
+  margin: 0 16px 10px;
+}
+
+/* ── Campo de Provas da EVA (SimulationLab) ── */
+.vz-simlab {
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 28px 24px 40px;
+}
+.vz-simlab-head { display: flex; align-items: center; gap: 13px; margin-bottom: 20px; }
+.vz-simlab-title { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; color: #0b1220; }
+.vz-simlab-sub { font-size: 12.5px; color: #64748b; margin-top: 1px; }
+.vz-simlab-body {
+  display: grid;
+  grid-template-columns: 264px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 880px) { .vz-simlab-body { grid-template-columns: 1fr; } }
+
+/* Trilha de dificuldade */
+.vz-simlab-track { display: flex; flex-direction: column; gap: 8px; }
+.vz-simlab-track-head {
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: #94a3b8; margin-bottom: 2px;
+}
+.vz-simlab-level {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  text-align: left;
+  padding: 11px 12px;
+  border-radius: 14px;
+  border: 1.5px solid #e9edf3;
+  background: #ffffff;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+}
+.vz-simlab-level:hover { border-color: #d9e2ec; }
+.vz-simlab-level--on { box-shadow: 0 10px 28px -18px rgba(15, 23, 42, 0.4); }
+.vz-simlab-level-avatar {
+  flex-shrink: 0;
+  width: 34px; height: 34px;
+  border-radius: 999px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800;
+}
+.vz-simlab-level-name { display: block; font-size: 13px; font-weight: 700; color: #0b1220; }
+.vz-simlab-level-type { display: block; font-size: 11px; color: #64748b; margin-top: 1px; }
+.vz-simlab-bars { display: flex; align-items: flex-end; gap: 2px; flex-shrink: 0; height: 16px; }
+.vz-simlab-bar { width: 3px; border-radius: 2px; }
+
+/* Sala de simulação */
+.vz-simlab-room {
+  border-radius: 20px;
+  border: 1px solid #e9edf3;
+  background: linear-gradient(180deg, #fbfcfe 0%, #ffffff 36%);
+  box-shadow: 0 24px 60px -42px rgba(15, 23, 42, 0.35);
+  overflow: hidden;
+}
+.vz-simlab-room-head {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 18px;
+  border-bottom: 1px solid #eef2f6;
+}
+.vz-simlab-room-avatar {
+  width: 40px; height: 40px; border-radius: 999px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 800; flex-shrink: 0;
+}
+.vz-simlab-room-name { font-size: 14px; font-weight: 700; color: #0b1220; }
+.vz-simlab-room-type { font-size: 12px; color: #64748b; margin-top: 1px; }
+.vz-simlab-diff-badge {
+  flex-shrink: 0; font-size: 11px; font-weight: 700;
+  padding: 4px 11px; border-radius: 999px;
+}
+.vz-simlab-convo {
+  padding: 18px;
+  display: flex; flex-direction: column; gap: 14px;
+  min-height: 230px; max-height: 420px; overflow-y: auto;
+}
+.vz-simlab-turn { display: flex; max-width: 92%; }
+.vz-simlab-turn--lead { align-self: flex-start; }
+.vz-simlab-turn--eva { align-self: flex-end; flex-direction: column; align-items: flex-end; max-width: 96%; }
+.vz-simlab-bubble {
+  font-size: 13.5px; line-height: 1.55; padding: 11px 15px; border-radius: 16px;
+  animation: vz-evassist-in 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.vz-simlab-bubble--lead { background: #f1f5f9; color: #1e293b; border-bottom-left-radius: 5px; }
+.vz-simlab-bubble--eva {
+  background: linear-gradient(135deg, #534ab7, #6c62d6);
+  color: #ffffff; border-bottom-right-radius: 5px;
+  box-shadow: 0 8px 18px -10px rgba(83, 74, 183, 0.55);
+}
+.vz-simlab-eva { display: flex; flex-direction: column; align-items: flex-end; gap: 7px; }
+/* Trace — "o que a EVA percebeu" */
+.vz-simlab-read {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  justify-content: flex-end;
+  max-width: 420px;
+}
+.vz-simlab-read-head {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.05em; color: #94a3b8;
+}
+.vz-simlab-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 600;
+  padding: 3px 9px; border-radius: 7px;
+  background: #eef2f7; color: #475569;
+}
+.vz-simlab-tag--flag { background: #fef2f2; color: #dc2626; }
+.vz-simlab-handoff {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11.5px; font-weight: 600; color: #b45309;
+  background: #fff7e8; border: 1px solid rgba(217, 119, 6, 0.2);
+  padding: 5px 10px; border-radius: 9px;
+}
+/* Veredito */
+.vz-simlab-verdict {
+  display: flex; align-items: flex-start; gap: 12px;
+  margin: 4px 16px 16px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid #eef2f6;
+  background: #fbfcfe;
+  animation: vz-evassist-in 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.vz-simlab-verdict--ok { border-color: rgba(22, 163, 74, 0.25); background: #f6fdf9; }
+.vz-simlab-verdict--critical { border-color: rgba(217, 119, 6, 0.28); background: #fffdf7; }
+.vz-simlab-verdict-icon {
+  flex-shrink: 0; width: 28px; height: 28px; border-radius: 999px;
+  display: flex; align-items: center; justify-content: center; color: #fff;
+}
+.vz-simlab-verdict--ok .vz-simlab-verdict-icon { background: #16a34a; }
+.vz-simlab-verdict--critical .vz-simlab-verdict-icon { background: #d97706; }
+.vz-simlab-verdict-label { font-size: 13px; font-weight: 700; color: #0b1220; }
+.vz-simlab-verdict-line { font-size: 12px; line-height: 1.5; color: #475569; margin-top: 2px; }
+.vz-simlab-verdict-actions {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  margin-top: 0; flex-basis: 100%;
+}
+.vz-simlab-verdict { flex-wrap: wrap; }
+.vz-simlab-verdict-actions { margin-top: 10px; }
+.vz-simlab-replay {
+  font-size: 11.5px; font-weight: 600; color: #64748b;
+  background: none; border: none; cursor: pointer; padding: 4px 8px; margin-left: auto;
+}
+.vz-simlab-replay:hover { color: #475569; }
+
+/* ── EVA Studio Journey (acoplamento chat + simulação na jornada) ────────── */
+
+/* Componentes standalone entram embutidos no conteúdo da casca */
+.vz-convo--embedded { max-width: none; padding: 0; }
+.vz-simlab--embedded { max-width: none; padding: 0; }
+.vz-convo--embedded .vz-convo-body { height: min(62vh, 560px); }
+
+/* Selo de julgamento já feito no veredito do campo de provas */
+.vz-simlab-judged {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11.5px; font-weight: 700;
+  padding: 5px 12px; border-radius: 999px;
+}
+.vz-simlab-judged--approve { background: rgba(22, 163, 74, 0.1); color: #15803d; }
+.vz-simlab-judged--adjust { background: #f5f3ff; color: #6d28d9; }
+
+/* Cobriu os 5 níveis → convite pros casos reais */
+.vz-simlab-done {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+  margin: 0 16px 16px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(124, 58, 237, 0.22);
+  background: linear-gradient(135deg, #f5f3ff, #fbfaff);
+  animation: vz-evassist-in 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.vz-simlab-done-title { font-size: 13px; font-weight: 700; color: #0b1220; }
+.vz-simlab-done-sub { font-size: 12px; line-height: 1.5; color: #475569; margin-top: 2px; }
+.vz-simlab-done-cta {
+  display: inline-flex; align-items: center; gap: 7px;
+  flex-shrink: 0;
+  font-size: 12.5px; font-weight: 700; color: #ffffff;
+  background: linear-gradient(135deg, #534ab7, #7c3aed);
+  border: none; cursor: pointer;
+  padding: 9px 16px; border-radius: 10px;
+  box-shadow: 0 6px 16px -8px rgba(124, 58, 237, 0.6);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.vz-simlab-done-cta:hover { transform: translateY(-1px); box-shadow: 0 8px 20px -8px rgba(124, 58, 237, 0.7); }
+
+/* Seletor de modo dentro de um passo (Ensinar / Provar) */
+.vz-studiomode {
+  display: flex; align-items: center; gap: 6px;
+  margin-bottom: 18px;
+  padding: 3px;
+  border-radius: 11px;
+  border: 1px solid #eef2f6;
+  background: #f8fafc;
+  width: fit-content;
+}
+.vz-studiomode-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 12px; font-weight: 600; color: #64748b;
+  background: none; border: none; cursor: pointer;
+  padding: 7px 14px; border-radius: 8px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.vz-studiomode-btn:hover { color: #334155; }
+.vz-studiomode-btn--on {
+  background: #ffffff; color: #4c1d95; font-weight: 700;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
+}
+.vz-studiomode-badge {
+  font-size: 10px; font-weight: 800;
+  min-width: 17px; height: 17px; padding: 0 5px;
+  border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: #ede9fe; color: #6d28d9;
+}
+.vz-studiomode-btn--on .vz-studiomode-badge { background: #7c3aed; color: #ffffff; }
+
+/* Vista secundária (Memória / Insights) por cima do passo */
+.vz-journey-aside { animation: vz-evassist-in 0.28s cubic-bezier(0.22, 1, 0.36, 1); }
+.vz-journey-back {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600; color: #64748b;
+  background: none; border: none; cursor: pointer;
+  padding: 4px 0; margin-bottom: 10px;
+  transition: color 0.15s ease;
+}
+.vz-journey-back:hover { color: #4c1d95; }
+.vz-journey-aside-head { margin-bottom: 18px; }
+.vz-journey-aside-title {
+  font-size: 17px; font-weight: 800; letter-spacing: -0.02em; color: #0b1220;
+}
+.vz-journey-aside-sub { font-size: 12.5px; color: #64748b; margin-top: 2px; }
+.vz-studioshell-secondary-link--on {
+  color: #4c1d95; font-weight: 700;
+  background: #f5f3ff; border-radius: 8px;
+}
+
+/* Rodapé de avanço de passo (modo revisão do Ensinar) */
+.vz-journey-footnav {
+  display: flex; justify-content: flex-end;
+  margin-top: 18px; padding-top: 16px;
+  border-top: 1px solid #eef2f6;
+}
+.vz-journey-footnav-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 12.5px; font-weight: 700; color: #4c1d95;
+  background: #f5f3ff; border: 1px solid rgba(124, 58, 237, 0.22);
+  cursor: pointer; padding: 9px 16px; border-radius: 10px;
+  transition: background 0.15s ease;
+}
+.vz-journey-footnav-btn:hover { background: #ede9fe; }
+
+/* Selo "prévia" no pill do chat (capacidade ainda não real → selo honesto) */
+.vz-studiomode-tag {
+  font-size: 9px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 6px; border-radius: 5px;
+  background: #fffbeb; color: #b45309; border: 1px solid rgba(217, 119, 6, 0.25);
+}
+
+/* ── EVA Studio Motion (micro + macro) ─────────────────────────────────────
+   Macro: o palco remonta a cada troca de passo/vista (key) e entra com
+   fade+rise; a prontidão desliza; a linha do stepper cresce ao acender.
+   Micro: checks "pop", o passo atual respira, pills têm press, a ativação
+   tem um único momento de celebração (anel + orb). Tudo desligável via
+   prefers-reduced-motion. */
+
+@keyframes vz-stage-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.vz-journey-stage { animation: vz-stage-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Prontidão: o ganho desliza em vez de saltar */
+.vz-studioshell-readiness-fill { transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1); }
+
+/* Checks de passo/trilha nascem com pop */
+@keyframes vz-pop-in {
+  0% { transform: scale(0.3); opacity: 0; }
+  60% { transform: scale(1.18); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.vz-studioshell-stepper-node--done .vz-studioshell-stepper-dot,
+.vz-studioshell-rail-item--done .vz-studioshell-rail-mark,
+.vz-studiomode-badge,
+.vz-simlab-judged {
+  animation: vz-pop-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.vz-simlab-level-avatar svg { animation: vz-pop-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* O passo atual respira de leve — "você está aqui" vivo, sem gritar */
+@keyframes vz-dot-breathe {
+  0%, 100% { box-shadow: 0 4px 12px -4px rgba(124, 58, 237, 0.5); }
+  50% { box-shadow: 0 4px 20px -2px rgba(124, 58, 237, 0.8); }
+}
+.vz-studioshell-stepper-node--current .vz-studioshell-stepper-dot {
+  animation: vz-dot-breathe 2.8s ease-in-out infinite;
+}
+
+/* Linha do stepper cresce quando o trecho acende */
+@keyframes vz-line-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.vz-studioshell-stepper-line--on {
+  transform-origin: left center;
+  animation: vz-line-grow 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Pills com press tátil */
+.vz-studiomode-btn:active { transform: scale(0.97); }
+
+/* Ativação: um momento só de celebração contida (anel que expande + orb) */
+@keyframes vz-activate-ring {
+  0% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.35); }
+  100% { box-shadow: 0 0 0 22px rgba(124, 58, 237, 0); }
+}
+.vz-journey-activate-orb {
+  flex-shrink: 0;
+  width: 64px; height: 64px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: #f5f3ff; border: 1px solid rgba(124, 58, 237, 0.18);
+}
+.vz-journey-activate-orb--on { animation: vz-activate-ring 1.1s ease-out 2; }
+.vz-journey-activate--on { border-color: rgba(22, 163, 74, 0.35); }
+
+@media (prefers-reduced-motion: reduce) {
+  .vz-journey-stage,
+  .vz-studioshell-stepper-node--done .vz-studioshell-stepper-dot,
+  .vz-studioshell-rail-item--done .vz-studioshell-rail-mark,
+  .vz-studiomode-badge,
+  .vz-simlab-judged,
+  .vz-simlab-level-avatar svg,
+  .vz-studioshell-stepper-node--current .vz-studioshell-stepper-dot,
+  .vz-studioshell-stepper-line--on,
+  .vz-journey-activate-orb--on {
+    animation: none !important;
+  }
+  .vz-studioshell-readiness-fill { transition: none; }
+  .vz-studiomode-btn:active { transform: none; }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   LP.4 (2026-06-09) — "O FIO DA CONVERSA" · design system da landing
+   Conceito: a página se comporta como o produto — um console comercial
+   lendo uma conversa. Três vozes tipográficas:
+     · Satoshi 900  = voz da marca (headlines compactas)
+     · Sentient it. = voz humana (a dor, acentos, carta do fundador)
+     · monospace    = telemetria da EVA (eyebrows, labels, números)
+   Superfície: papel quente + grade técnica fina + hairlines de tinta.
+   Sem glow/blob/blur. Animações transform/opacity em loop CSS (sem IO).
+   ════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --lp-paper: #faf9f5;
+  --lp-white: #ffffff;
+  --lp-ink: #0d1421;
+  --lp-ink-90: rgba(13, 20, 33, 0.9);
+  --lp-ink-70: rgba(13, 20, 33, 0.7);
+  --lp-ink-55: rgba(13, 20, 33, 0.55);
+  --lp-ink-40: rgba(13, 20, 33, 0.4);
+  --lp-blue: #1556c0;
+  --lp-blue-deep: #0e3e8a;
+  --lp-live: #008a52;
+  --lp-eva: #6d28d9;
+  --lp-line: rgba(13, 20, 33, 0.14);
+  --lp-line-soft: rgba(13, 20, 33, 0.08);
+  --lp-serif: 'Sentient', 'Georgia', serif;
+  --lp-mono: 'Cascadia Mono', 'SFMono-Regular', ui-monospace, 'Consolas', monospace;
+  --lp-radius: 10px;
+}
+
+/* ── Superfícies ── */
+.lp-paper {
+  background-color: var(--lp-paper);
+  background-image:
+    linear-gradient(var(--lp-line-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--lp-line-soft) 1px, transparent 1px);
+  background-size: 112px 112px;
+}
+.lp-paper--fine {
+  background-image:
+    linear-gradient(rgba(13, 20, 33, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(13, 20, 33, 0.045) 1px, transparent 1px),
+    linear-gradient(var(--lp-line-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--lp-line-soft) 1px, transparent 1px);
+  background-size: 28px 28px, 28px 28px, 112px 112px, 112px 112px;
+}
+.lp-ink-band {
+  background-color: var(--lp-ink);
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 112px 112px;
+}
+
+/* ── Vozes tipográficas ── */
+.lp-mono {
+  font-family: var(--lp-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.lp-serif {
+  font-family: var(--lp-serif);
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+/* ── Estação do fio (header de seção): nó + régua + label mono ── */
+.lp-station {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.lp-station-node {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--lp-blue);
+  box-shadow: 0 0 0 4px rgba(21, 86, 192, 0.14);
+  flex-shrink: 0;
+}
+.lp-station-rule {
+  height: 1px;
+  flex: 1;
+  background: var(--lp-line);
+}
+
+/* Numeral fantasma (índice editorial gigante atrás dos headers) */
+.lp-index {
+  font-family: var(--font-satoshi);
+  font-weight: 900;
+  line-height: 0.8;
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(13, 20, 33, 0.13);
+  user-select: none;
+  pointer-events: none;
+}
+.lp-ink-band .lp-index { -webkit-text-stroke-color: rgba(255, 255, 255, 0.14); }
+
+/* ── Cartões de tinta: hairline + sombra dura no hover (print-like) ── */
+.lp-card {
+  background: var(--lp-white);
+  border: 1px solid var(--lp-line);
+  border-radius: var(--lp-radius);
+}
+.lp-press {
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.lp-press:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 0 rgba(13, 20, 33, 0.92);
+}
+.lp-press--blue:hover { box-shadow: 5px 5px 0 0 var(--lp-blue); }
+.lp-press--light:hover { box-shadow: 5px 5px 0 0 rgba(250, 249, 245, 0.92); }
+
+/* Marcas de corte (crop marks) nos 4 cantos de molduras-chave */
+.lp-frame { position: relative; }
+.lp-frame::before,
+.lp-frame::after {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+}
+.lp-frame::before {
+  top: -7px;
+  left: -7px;
+  border-top: 2px solid var(--lp-ink);
+  border-left: 2px solid var(--lp-ink);
+}
+.lp-frame::after {
+  bottom: -7px;
+  right: -7px;
+  border-bottom: 2px solid var(--lp-ink);
+  border-right: 2px solid var(--lp-ink);
+}
+
+/* ── Marquee de segmentos (Para quem é) ── */
+@keyframes lp-marquee {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-50%, 0, 0); }
+}
+.lp-marquee {
+  display: flex;
+  width: max-content;
+  animation: lp-marquee 36s linear infinite;
+}
+.lp-marquee:hover { animation-play-state: paused; }
+
+/* ── Hero: a EVA lendo a conversa (loop 9s, time-based — sem IO) ── */
+@keyframes lp-read-msg {
+  0% { opacity: 0; transform: translate3d(0, 10px, 0); }
+  4%, 96% { opacity: 1; transform: translate3d(0, 0, 0); }
+  100% { opacity: 0; transform: translate3d(0, 0, 0); }
+}
+@keyframes lp-read-scan {
+  0%, 6% { transform: scaleX(0); opacity: 1; }
+  16% { transform: scaleX(1); opacity: 1; }
+  22%, 100% { transform: scaleX(1); opacity: 0; }
+}
+@keyframes lp-read-pill-1 {
+  0%, 16% { opacity: 0; transform: translate3d(0, 6px, 0) scale(0.96); }
+  21%, 94% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  100% { opacity: 0; }
+}
+@keyframes lp-read-pill-2 {
+  0%, 23% { opacity: 0; transform: translate3d(0, 6px, 0) scale(0.96); }
+  28%, 94% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  100% { opacity: 0; }
+}
+@keyframes lp-read-pill-3 {
+  0%, 30% { opacity: 0; transform: translate3d(0, 6px, 0) scale(0.96); }
+  35%, 94% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  100% { opacity: 0; }
+}
+@keyframes lp-read-suggest {
+  0%, 42% { opacity: 0; transform: translate3d(0, 12px, 0); }
+  49%, 94% { opacity: 1; transform: translate3d(0, 0, 0); }
+  100% { opacity: 0; }
+}
+@keyframes lp-read-approve {
+  0%, 60% { transform: scale(1); }
+  63% { transform: scale(0.94); }
+  66%, 100% { transform: scale(1); }
+}
+@keyframes lp-read-stamp {
+  0%, 64% { opacity: 0; transform: translate3d(0, 4px, 0) scale(0.92) rotate(-2deg); }
+  69%, 94% { opacity: 1; transform: translate3d(0, 0, 0) scale(1) rotate(-2deg); }
+  100% { opacity: 0; }
+}
+.lp-read-msg { animation: lp-read-msg 9s cubic-bezier(0.22, 1, 0.36, 1) infinite; }
+.lp-read-scan {
+  transform-origin: left center;
+  animation: lp-read-scan 9s linear infinite;
+}
+.lp-read-pill-1 { animation: lp-read-pill-1 9s cubic-bezier(0.22, 1, 0.36, 1) infinite; }
+.lp-read-pill-2 { animation: lp-read-pill-2 9s cubic-bezier(0.22, 1, 0.36, 1) infinite; }
+.lp-read-pill-3 { animation: lp-read-pill-3 9s cubic-bezier(0.22, 1, 0.36, 1) infinite; }
+.lp-read-suggest { animation: lp-read-suggest 9s cubic-bezier(0.22, 1, 0.36, 1) infinite; }
+.lp-read-approve { animation: lp-read-approve 9s ease-out infinite; }
+.lp-read-stamp { animation: lp-read-stamp 9s cubic-bezier(0.22, 1, 0.36, 1) infinite; }
+
+/* Cursor de leitura piscando (telemetria viva) */
+@keyframes lp-blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+.lp-blink { animation: lp-blink 1.1s steps(1) infinite; }
+
+/* Ponto "ao vivo" */
+@keyframes lp-live-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 138, 82, 0.35); }
+  60% { box-shadow: 0 0 0 6px rgba(0, 138, 82, 0); }
+}
+.lp-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--lp-live);
+  animation: lp-live-pulse 2.4s ease-out infinite;
+}
+
+/* Sublinha viva do acento serif do hero */
+@keyframes lp-underline-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.lp-underline {
+  position: relative;
+  white-space: nowrap;
+}
+.lp-underline::after {
+  content: "";
+  position: absolute;
+  left: 0.02em;
+  right: 0.02em;
+  bottom: 0.02em;
+  height: 0.08em;
+  background: var(--lp-blue);
+  transform-origin: left center;
+  animation: lp-underline-grow 0.7s 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-marquee,
+  .lp-read-msg,
+  .lp-read-scan,
+  .lp-read-pill-1,
+  .lp-read-pill-2,
+  .lp-read-pill-3,
+  .lp-read-suggest,
+  .lp-read-approve,
+  .lp-read-stamp,
+  .lp-blink,
+  .lp-live-dot,
+  .lp-underline::after {
+    animation: none !important;
+  }
+  .lp-read-scan { transform: scaleX(1); opacity: 0; }
+  .lp-press,
+  .lp-press:hover {
+    transition: none;
+    transform: none;
+  }
 }

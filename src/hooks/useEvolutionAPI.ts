@@ -20,6 +20,8 @@ export interface Chat {
     lastMessage?: {
         text: string;
         time: string;
+        /** Epoch ms da última mensagem — base do "esperando há X" do Inbox. */
+        at?: number;
         isMe: boolean;
     };
     phone?: string;
@@ -303,6 +305,7 @@ export const useEvolutionIntegration = () => {
                 lastMessage: {
                     text: (row.body as string) || "",
                     time: ts.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                    at: ts.getTime(),
                     isMe: row.direction === "outbound",
                 },
             });
@@ -448,6 +451,11 @@ export const useEvolutionIntegration = () => {
                         lastMessage: {
                             text: lastText,
                             time: safeTime(c.updatedAt ? Math.floor(new Date(c.updatedAt).getTime() / 1000) : c.timestamp || c.conversationTimestamp),
+                            at: c.updatedAt
+                                ? new Date(c.updatedAt).getTime()
+                                : (c.timestamp || c.conversationTimestamp)
+                                    ? Number(c.timestamp || c.conversationTimestamp) * 1000
+                                    : undefined,
                             isMe: lastMsg?.key?.fromMe || false,
                         },
                         phone: number ? `+${number}` : undefined,

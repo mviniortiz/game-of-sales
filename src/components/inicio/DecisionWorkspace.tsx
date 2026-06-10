@@ -11,18 +11,26 @@
 // Só dados reais. Campos sem fonte (impacto, reincidência) são derivados do que
 // existe (nível, nº de conversas, tempo) ou omitidos — nunca inventados.
 // ─────────────────────────────────────────────────────────────────────────────
+import { useState } from "react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
     ArrowRight,
     ArrowUp,
     CalendarBlank as Calendar,
     ChatCircle as MessageCircle,
+    Check,
     CheckCircle,
+    CircleNotch,
     Clock,
+    ClockCounterClockwise,
     Funnel,
+    PaperPlaneRight,
     Sparkle as Sparkles,
     Target,
     Warning,
+    X,
 } from "@phosphor-icons/react";
+import { EvaEntity } from "@/components/eva/EvaEntity";
 import type {
     DailyPriority,
     EvaHighlight,
@@ -63,12 +71,49 @@ function describeActivity(item: RecentActivityItem): string {
 }
 
 // Nível (azul/laranja/coral/cinza por papel de cor do produto).
-const LEVEL: Record<DailyPriority["priority"], { label: string; color: string; chipBg: string; soft: string; border: string }> = {
-    critical: { label: "Crítico", color: "#BE123C", chipBg: "rgba(244,63,94,0.10)",   soft: "#FFF6F7", border: "rgba(244,63,94,0.28)" },
-    high:     { label: "Alto",    color: "#B45309", chipBg: "rgba(245,158,11,0.12)",  soft: "#FFFBF2", border: "rgba(245,158,11,0.30)" },
-    medium:   { label: "Médio",   color: "#1D4ED8", chipBg: "rgba(37,99,235,0.10)",   soft: "#F6F9FF", border: "rgba(37,99,235,0.22)" },
-    low:      { label: "Baixo",   color: "#64748B", chipBg: "rgba(148,163,184,0.15)", soft: "#FFFFFF", border: "#E2E8F0" },
+//  - color/chipBg/bar: usados na fila secundária e badges (escala única).
+//  - heroBg/heroBorder/heroBtn: o card HERÓI satura a cor do seu nível pra
+//    dominar a tela. O herói é o único lugar com volume forte de cor.
+interface LevelTone {
+    label: string;
+    color: string;
+    chipBg: string;
+    bar: string;
+    heroBg: string;
+    heroBorder: string;
+    heroBtn: string;
+    heroBtnHover: string;
+}
+const LEVEL: Record<DailyPriority["priority"], LevelTone> = {
+    critical: { label: "Crítico", color: "#BE123C", chipBg: "rgba(244,63,94,0.10)",   bar: "#F43F5E", heroBg: "linear-gradient(135deg, #FFF1EC 0%, #FBDCD1 100%)", heroBorder: "#EDA591", heroBtn: "#CB4327", heroBtnHover: "#AF3820" },
+    high:     { label: "Alto",    color: "#B45309", chipBg: "rgba(245,158,11,0.12)",  bar: "#F59E0B", heroBg: "linear-gradient(135deg, #FFF8EC 0%, #FCEED0 100%)", heroBorder: "#E9CB89", heroBtn: "#B45309", heroBtnHover: "#92400E" },
+    medium:   { label: "Médio",   color: "#1D4ED8", chipBg: "rgba(37,99,235,0.10)",   bar: "#3B82F6", heroBg: "linear-gradient(135deg, #F4F8FF 0%, #E3EDFD 100%)", heroBorder: "#AFC7F0", heroBtn: "#1D4ED8", heroBtnHover: "#1E40AF" },
+    low:      { label: "Baixo",   color: "#475569", chipBg: "rgba(148,163,184,0.15)", bar: "#94A3B8", heroBg: "#F8FAFC",                                          heroBorder: "#E2E8F0", heroBtn: "#475569", heroBtnHover: "#334155" },
 };
+
+function hoursSince(iso?: string | null): number {
+    if (!iso) return 0;
+    return (Date.now() - new Date(iso).getTime()) / 3_600_000;
+}
+
+// Badge de severidade padronizado (escala única Crítico/Alto/Médio/Baixo):
+// sólido só pra Crítico; os demais como texto colorido discreto + ponto (não-cor
+// pra daltônicos). Mesma escala em toda a fila.
+function SeverityBadge({ priority }: { priority: DailyPriority["priority"] }) {
+    const lv = LEVEL[priority];
+    if (priority === "critical") {
+        return (
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded text-white" style={{ background: "#BE123C", letterSpacing: "0.05em" }}>
+                <Warning size={10} weight="fill" /> {lv.label}
+            </span>
+        );
+    }
+    return (
+        <span className="inline-flex items-center gap-1 text-[10.5px] font-bold uppercase" style={{ color: lv.color, letterSpacing: "0.04em" }}>
+            <span className="h-1.5 w-1.5 rounded-full" style={{ background: lv.color }} /> {lv.label}
+        </span>
+    );
+}
 
 const TYPE_META: Record<DailyPriority["source"], { icon: typeof MessageCircle; label: string }> = {
     conversation: { icon: MessageCircle, label: "Conversa" },
@@ -80,7 +125,7 @@ const TYPE_META: Record<DailyPriority["source"], { icon: typeof MessageCircle; l
 const SEV: Record<EvaHighlight["severity"], { label: string; color: string; bg: string }> = {
     high:   { label: "Alta",  color: "#BE123C", bg: "rgba(244,63,94,0.10)" },
     medium: { label: "Média", color: "#B45309", bg: "rgba(245,158,11,0.12)" },
-    low:    { label: "Baixa", color: "#64748B", bg: "rgba(148,163,184,0.15)" },
+    low:    { label: "Baixa", color: "#475569", bg: "rgba(148,163,184,0.15)" },
 };
 
 function resolveHighlightRoute(it: EvaHighlight): { href: string | null; cta: string | null } {
@@ -108,20 +153,12 @@ function CardShell({ title, subtitle, badge, children }: { title: string; subtit
             <div className="px-5 sm:px-6 pt-5 pb-4 border-b" style={{ borderColor: "#F1F5F9" }}>
                 <div className="flex items-center gap-2">
                     {badge}
-                    <h3 className="text-[15px] font-bold" style={{ color: "#0B1220", letterSpacing: "-0.012em" }}>{title}</h3>
+                    <h3 className="text-[16px] font-bold" style={{ color: "#0B1220", letterSpacing: "-0.015em" }}>{title}</h3>
                 </div>
-                {subtitle && <p className="text-[12px] mt-0.5" style={{ color: "#64748B" }}>{subtitle}</p>}
+                {subtitle && <p className="text-[12px] mt-0.5" style={{ color: "#475569" }}>{subtitle}</p>}
             </div>
             <div className="p-4 sm:p-5">{children}</div>
         </div>
-    );
-}
-
-function EvaBadge() {
-    return (
-        <span className="h-5 w-5 rounded-full flex items-center justify-center text-white text-[10px] font-bold shrink-0 leading-none" style={{ background: "#7C3AED" }}>
-            E
-        </span>
     );
 }
 
@@ -129,10 +166,10 @@ function EmptyState({ icon: Icon, title, text }: { icon: typeof Target; title: s
     return (
         <div className="flex flex-col items-center text-center py-7 px-4">
             <div className="h-10 w-10 rounded-xl flex items-center justify-center mb-2.5" style={{ background: "rgba(148,163,184,0.12)" }}>
-                <Icon size={20} weight="duotone" style={{ color: "#64748B" }} />
+                <Icon size={20} weight="duotone" style={{ color: "#475569" }} />
             </div>
             <p className="text-[13px] font-semibold mb-0.5" style={{ color: "#0B1220" }}>{title}</p>
-            <p className="text-[11.5px]" style={{ color: "#64748B", maxWidth: 260, lineHeight: 1.5 }}>{text}</p>
+            <p className="text-[11.5px]" style={{ color: "#475569", maxWidth: 260, lineHeight: 1.5 }}>{text}</p>
         </div>
     );
 }
@@ -147,132 +184,372 @@ function Skeleton({ rows = 3, h = 64 }: { rows?: number; h?: number }) {
     );
 }
 
-// ── 1) Fila de ação ───────────────────────────────────────────────────────────
+// ── 1) Fila de ação — sistema de 3 pesos ──────────────────────────────────────
+// Herói (1º, cor saturada do nível, domina) + secundários (brancos, barra
+// lateral codificando severidade). Cada item resolve/adia/responde de verdade.
 
-function ActionHero({ item, rank, onNavigate }: { item: DailyPriority; rank: number; onNavigate: (href: string) => void }) {
+export interface QueueHandlers {
+    onNavigate: (href: string) => void;
+    onResolve: (id: string) => void;
+    onSnooze: (id: string) => void;
+    /** Enviar resposta direta (Evolution). Ausente = sem "Responder rápido". */
+    sendReply?: (chatJid: string, text: string) => Promise<void>;
+    replyConnected?: boolean;
+}
+
+// "194h parada" — peso temporal forte no herói: lead parado é dinheiro vazando.
+function HeroElapsed({ iso, color }: { iso?: string | null; color: string }) {
+    if (!iso) return null;
+    const hrs = Math.floor(hoursSince(iso));
+    const stale = hrs >= 48;
+    return (
+        <span className="inline-flex items-center gap-1 text-[12px] tabular-nums shrink-0" style={{ color: stale ? color : "#475569", fontWeight: stale ? 700 : 500 }}>
+            <Clock size={12} weight={stale ? "fill" : "duotone"} /> {stale ? `${hrs}h parada` : relativeTime(iso)}
+        </span>
+    );
+}
+
+// ── Tempos da cadeia ao resolver (segundos) — calibrar de olho AQUI ──────────
+// Regra: a EVA tem onset IMEDIATO (o texto antigo já sai no instante do resolve)
+// e fecha junto com o reflow, pra ler como "reação" e não "atraso/trailing".
+// Se o swap da EVA terminar muito depois do reflow assentar, vira ruído.
+const CHAIN = {
+    reflow: 0.22,    // linhas de baixo sobem pra preencher
+    heroGrow: 0.24,  // o próximo cresce e vira o herói
+    evaSwap: 0.13,   // cada fase (out/in) do swap da EVA — rápido, sem trailing
+    stateSwap: 0.2,  // o vazio cedendo lugar (fade/scale) antes do novo entrar
+    arrive: 0.34,    // card urgente entrando no vazio — com presença (o pulso faz o resto)
+};
+
+// Resolver com micro-recompensa: check "pop" + linha esmaecendo antes de sair
+// da fila ("o dia encolhendo"). Em reduced-motion, resolve na hora, sem delay.
+function prefersReducedMotion(): boolean {
+    return typeof window !== "undefined" && !!window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+function useResolveTransition(onResolve: (id: string) => void, id: string) {
+    const [resolving, setResolving] = useState(false);
+    const resolve = () => {
+        if (resolving) return;
+        if (prefersReducedMotion()) { onResolve(id); return; }
+        setResolving(true);
+        window.setTimeout(() => onResolve(id), 300);
+    };
+    return { resolving, resolve };
+}
+
+function ActionHero({ item, onNavigate, onResolve, onSnooze, sendReply, replyConnected }: { item: DailyPriority } & QueueHandlers) {
     const lv = LEVEL[item.priority];
     const tp = TYPE_META[item.source];
     const TypeIcon = tp.icon;
+    const canQuickReply = !!item.chatJid && !!sendReply;
+    const isCritical = item.priority === "critical";
+    const { resolving, resolve } = useResolveTransition(onResolve, item.id);
+
+    const [replyOpen, setReplyOpen] = useState(false);
+    const [text, setText] = useState("");
+    const [sending, setSending] = useState(false);
+    const [err, setErr] = useState<string | null>(null);
+
+    const handleSend = async () => {
+        if (!item.chatJid || !sendReply || !text.trim() || sending) return;
+        setSending(true);
+        setErr(null);
+        try {
+            await sendReply(item.chatJid, text.trim());
+            setReplyOpen(false);
+            setText("");
+            onResolve(item.id); // respondeu = ação resolvida
+        } catch (e) {
+            setErr(e instanceof Error ? e.message : "Falha ao enviar. Tente abrir a conversa.");
+        } finally {
+            setSending(false);
+        }
+    };
+
     return (
-        <div className="rounded-xl p-4 sm:p-5 flex flex-col" style={{ background: lv.soft, border: `1px solid ${lv.border}`, boxShadow: "0 1px 3px rgba(15,23,42,0.05)" }}>
-            <div className="flex items-center gap-2 mb-2 flex-wrap">
-                <span className="inline-flex items-center justify-center h-6 min-w-[26px] px-1.5 rounded-md text-[12px] font-bold tabular-nums text-white" style={{ background: "#0B1220" }}>
-                    #{rank}
+        <div className={`rounded-2xl p-4 sm:p-5 flex flex-col ${isCritical ? "vz-pulse-critical" : ""} ${resolving ? "vz-resolving" : ""}`} style={{ background: lv.heroBg, border: `1.5px solid ${lv.heroBorder}`, boxShadow: "0 2px 4px rgba(15,23,42,0.04), 0 12px 28px -10px rgba(15,23,42,0.12)" }}>
+            <div className="flex items-center gap-2 mb-2.5 flex-wrap">
+                <SeverityBadge priority={item.priority} />
+                <span className="inline-flex items-center gap-1 text-[11px]" style={{ color: "#475569" }}>
+                    <TypeIcon size={12} weight="duotone" /> {item.contactName || tp.label}
                 </span>
-                <span className="inline-flex items-center text-[10px] font-bold uppercase px-2 py-0.5 rounded" style={{ background: lv.chipBg, color: lv.color, letterSpacing: "0.05em" }}>
-                    {lv.label}
-                </span>
-                <span className="inline-flex items-center gap-1 text-[11px]" style={{ color: "#64748B" }}>
-                    <TypeIcon size={12} weight="duotone" /> {tp.label}
-                </span>
-                {item.contactName && <span className="text-[11px] truncate" style={{ color: "#94A3B8" }}>· {item.contactName}</span>}
-                {item.createdAt && (
-                    <span className="ml-auto inline-flex items-center gap-1 text-[11px] tabular-nums" style={{ color: "#94A3B8" }}>
-                        <Clock size={11} weight="duotone" /> {relativeTime(item.createdAt)}
-                    </span>
-                )}
+                {item.createdAt && <span className="ml-auto"><HeroElapsed iso={item.createdAt} color={lv.heroBtn} /></span>}
             </div>
-            <p className="text-[16px] sm:text-[17px] font-bold leading-snug" style={{ color: "#0B1220", letterSpacing: "-0.015em" }}>{item.title}</p>
-            <p className="text-[12.5px] mt-1" style={{ color: "#475569", lineHeight: 1.5 }}>{item.description}</p>
-            <p className="text-[11.5px] mt-1.5" style={{ color: "#94A3B8" }}>
-                <span style={{ fontWeight: 600 }}>Por que:</span> {item.reason}
-            </p>
-            {item.href && (
-                <div className="mt-3.5 pt-3.5 border-t flex items-center justify-between gap-3 flex-wrap" style={{ borderColor: "#F1F5F9" }}>
-                    <span className="text-[11.5px]" style={{ color: "#64748B" }}>Próxima ação</span>
+            <p className="vz-row-title text-[17px] sm:text-[19px] font-bold leading-snug" style={{ color: "#0B1220", letterSpacing: "-0.02em" }}>{item.title}</p>
+            <p className="text-[13px] mt-1.5" style={{ color: "#334155", lineHeight: 1.55 }}>{item.description}</p>
+            {item.reason && (
+                <p className="text-[11.5px] mt-1.5" style={{ color: "#475569" }}>
+                    <span style={{ fontWeight: 600 }}>Por que agora:</span> {item.reason}
+                </p>
+            )}
+
+            {/* Linha de ação — Abrir (primário saturado) + Responder rápido + Adiar + Resolver */}
+            <div className="mt-4 pt-3.5 border-t flex items-center gap-2 flex-wrap" style={{ borderColor: "rgba(15,23,42,0.07)" }}>
+                {item.href && (
                     <button
                         type="button"
                         onClick={() => onNavigate(item.href!)}
-                        className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg text-[12.5px] font-semibold text-white transition-all hover:brightness-110"
-                        style={{ background: "#2563EB", boxShadow: "0 6px 14px -6px rgba(37,99,235,0.45)" }}
+                        className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg text-[12.5px] font-semibold text-white transition-all hover:brightness-105"
+                        style={{ background: lv.heroBtn, boxShadow: `0 6px 14px -6px ${lv.heroBtn}99` }}
                     >
                         {item.actionLabel}
                         <ArrowRight size={12} weight="bold" />
                     </button>
+                )}
+                {canQuickReply && (
+                    <button
+                        type="button"
+                        onClick={() => setReplyOpen((o) => !o)}
+                        className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-lg text-[12.5px] font-semibold transition-colors"
+                        style={{ background: "#FFFFFF", border: `1px solid ${lv.heroBorder}`, color: "#334155" }}
+                    >
+                        <PaperPlaneRight size={12} weight="duotone" /> Responder rápido
+                    </button>
+                )}
+                <span className="ml-auto flex items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={() => onSnooze(item.id)}
+                        title="Adiar para amanhã"
+                        className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-[12px] font-semibold transition-colors hover:bg-white/70"
+                        style={{ color: "#475569" }}
+                    >
+                        <ClockCounterClockwise size={13} weight="duotone" /> Adiar
+                    </button>
+                    <button
+                        type="button"
+                        onClick={resolve}
+                        disabled={resolving}
+                        title="Marcar como resolvido"
+                        className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-[12px] font-semibold transition-colors hover:bg-white/70 disabled:opacity-80"
+                        style={{ color: "#047857" }}
+                    >
+                        <CheckCircle size={14} weight={resolving ? "fill" : "duotone"} className={resolving ? "vz-check-pop" : ""} /> {resolving ? "Resolvido" : "Resolver"}
+                    </button>
+                </span>
+            </div>
+
+            {/* Composer inline — envia de verdade via Evolution */}
+            {replyOpen && canQuickReply && (
+                <div className="mt-3 rounded-xl p-3" style={{ background: "#FFFFFF", border: "1px solid #E4E9F2" }}>
+                    {!replyConnected && (
+                        <p className="text-[11.5px] mb-2 px-1" style={{ color: "#B45309" }}>
+                            WhatsApp pode estar desconectado. Se falhar, abra a conversa pra responder.
+                        </p>
+                    )}
+                    <textarea
+                        value={text}
+                        onChange={(e) => setText(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void handleSend(); } }}
+                        placeholder={`Responder ${item.contactName || "o lead"}…`}
+                        rows={2}
+                        autoFocus
+                        disabled={sending}
+                        className="w-full resize-none text-[13px] outline-none px-1 py-1 disabled:opacity-60"
+                        style={{ color: "#0B1220", background: "transparent" }}
+                    />
+                    {err && <p className="text-[11.5px] mt-1 px-1" style={{ color: "#B91C1C" }}>{err}</p>}
+                    <div className="flex items-center justify-end gap-2 mt-2">
+                        <button type="button" onClick={() => { setReplyOpen(false); setText(""); setErr(null); }} className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg text-[12px] font-semibold transition-colors hover:bg-[#F1F5F9]" style={{ color: "#475569" }}>
+                            <X size={12} weight="bold" /> Cancelar
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => void handleSend()}
+                            disabled={!text.trim() || sending}
+                            className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg text-[12px] font-semibold text-white transition-all disabled:opacity-40"
+                            style={{ background: lv.heroBtn }}
+                        >
+                            {sending ? <CircleNotch size={13} weight="bold" className="animate-spin" /> : <PaperPlaneRight size={13} weight="fill" />}
+                            {sending ? "Enviando…" : "Enviar"}
+                        </button>
+                    </div>
                 </div>
             )}
         </div>
     );
 }
 
-function ActionItem({ item, rank, onNavigate }: { item: DailyPriority; rank: number; onNavigate: (href: string) => void }) {
+function ActionItem({ item, onNavigate, onResolve }: { item: DailyPriority } & Pick<QueueHandlers, "onNavigate" | "onResolve">) {
     const lv = LEVEL[item.priority];
-    const tp = TYPE_META[item.source];
-    const TypeIcon = tp.icon;
     const clickable = !!item.href;
+    const shortLabel = (item.actionLabel || "Abrir").split(" ")[0];
+    const { resolving, resolve } = useResolveTransition(onResolve, item.id);
     return (
         <div
-            className={`rounded-xl p-3.5 flex items-start gap-3 transition-colors ${clickable ? "cursor-pointer hover:bg-[#F8FAFC]" : ""}`}
-            style={{ background: "#FFFFFF", border: "1px solid #E2E8F0" }}
-            onClick={() => { if (item.href) onNavigate(item.href); }}
+            className={`relative rounded-xl pl-4 pr-3 py-3 flex items-center gap-3 bg-white border border-[#E4E9F2] transition duration-150 ease-out hover:bg-[#FCFDFE] hover:border-[#D9E2EC] ${clickable ? "hover:translate-x-[3px]" : ""} ${resolving ? "vz-resolving" : ""}`}
         >
-            <span className="text-[12px] font-bold tabular-nums shrink-0 pt-0.5 w-6 text-center" style={{ color: "#CBD5E1" }}>#{rank}</span>
-            <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: lv.chipBg }}>
-                <TypeIcon size={15} weight="duotone" style={{ color: lv.color }} />
-            </div>
+            <span className="absolute left-0 top-2.5 bottom-2.5 w-[3px] rounded-full" style={{ background: lv.bar }} aria-hidden />
             <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-[13.5px] font-semibold truncate" style={{ color: "#0B1220" }}>{item.title}</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded shrink-0" style={{ background: lv.chipBg, color: lv.color, fontWeight: 700, letterSpacing: "0.04em" }}>
-                        {lv.label.toUpperCase()}
-                    </span>
+                    <span className="vz-row-title text-[13.5px] font-semibold truncate" style={{ color: "#0B1220" }}>{item.title}</span>
+                    <span className="shrink-0"><SeverityBadge priority={item.priority} /></span>
                 </div>
-                <p className="text-[11.5px] truncate" style={{ color: "#64748B" }}>{item.reason}</p>
+                <p className="text-[11.5px] truncate" style={{ color: "#475569" }}>{item.reason || item.description}</p>
             </div>
-            <div className="flex flex-col items-end gap-1 shrink-0">
-                {item.createdAt && <span className="text-[10.5px] tabular-nums" style={{ color: "#94A3B8" }}>{relativeTime(item.createdAt)}</span>}
+            <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                    type="button"
+                    onClick={resolve}
+                    disabled={resolving}
+                    title="Marcar como resolvido"
+                    className="inline-flex items-center justify-center h-8 w-8 rounded-lg transition-colors hover:bg-[#ECFDF5]"
+                    style={{ border: `1px solid ${resolving ? "#3B6D11" : "#E4E9F2"}`, background: resolving ? "#3B6D11" : "transparent", color: resolving ? "#FFFFFF" : "#047857" }}
+                >
+                    <Check size={14} weight="bold" className={resolving ? "vz-check-pop" : ""} />
+                </button>
                 {clickable && (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold" style={{ color: "#2563EB" }}>
-                        {item.actionLabel}
+                    <button
+                        type="button"
+                        onClick={() => onNavigate(item.href!)}
+                        className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-semibold transition-colors hover:bg-[#F1F5F9]"
+                        style={{ border: "1px solid #E2E8F0", color: "#334155" }}
+                    >
+                        {shortLabel}
                         <ArrowRight size={11} weight="bold" />
-                    </span>
+                    </button>
                 )}
             </div>
         </div>
     );
 }
 
-function ActionQueue({ priorities, loading, onNavigate }: { priorities: DailyPriority[]; loading: boolean; onNavigate: (href: string) => void }) {
-    const subtitle = loading
-        ? "Carregando…"
-        : priorities.length === 0
-            ? "Sem ações críticas agora."
-            : `${priorities.length} ${priorities.length === 1 ? "ação na fila" : "ações na fila"} · ordenadas por prioridade`;
-    return (
-        <CardShell title="Fila de ação" subtitle={subtitle}>
-            {loading ? (
-                <Skeleton rows={3} h={72} />
-            ) : priorities.length === 0 ? (
-                <EmptyState icon={Target} title="Tudo em dia" text="Nada crítico agora. Continuo de olho nas conversas e te aviso quando surgir uma ação urgente." />
-            ) : (
-                <div className="flex flex-col gap-3">
-                    <ActionHero item={priorities[0]} rank={1} onNavigate={onNavigate} />
-                    {priorities.slice(1).map((p, i) => (
-                        <ActionItem key={p.id} item={p} rank={i + 2} onNavigate={onNavigate} />
-                    ))}
-                </div>
-            )}
-        </CardShell>
+function QueueLabel({ children, muted = false, className = "" }: { children: React.ReactNode; muted?: boolean; className?: string }) {
+    return muted ? (
+        <p className={`text-[11px] uppercase ${className}`} style={{ color: "#1E293B", fontWeight: 700, letterSpacing: "0.06em" }}>{children}</p>
+    ) : (
+        <h3 className={`text-[15px] font-bold ${className}`} style={{ color: "#0B1220", letterSpacing: "-0.015em" }}>{children}</h3>
     );
 }
 
-// ── 2) Leitura da EVA (sidebar editorial) ─────────────────────────────────────
+function QueueEmptyCard({ children }: { children: React.ReactNode }) {
+    return <div className="rounded-2xl" style={CARD_STYLE}>{children}</div>;
+}
+
+function ActionQueue({ queue, loading, dayComplete, filterActive, handlers }: { queue: DailyPriority[]; loading: boolean; dayComplete: boolean; filterActive: boolean; handlers: QueueHandlers }) {
+    const reduce = useReducedMotion();
+    if (loading) {
+        return (
+            <QueueEmptyCard>
+                <div className="p-5"><Skeleton rows={3} h={84} /></div>
+            </QueueEmptyCard>
+        );
+    }
+    // Três estados sob UM AnimatePresence (mode="wait"): cheio ↔ vazio.
+    //  - 1ª montagem (initial={false}): sem entrada, a vz-stagger da página cuida.
+    //  - cheio→vazio (resolveu a última): a fila cede lugar, "Missão concluída" entra.
+    //  - VAZIO→CHEIO (a EVA detecta algo urgente): o vazio sai e o card sobe com
+    //    presença (CHAIN.arrive + o pulso do crítico). É o momento de interrupção,
+    //    onde a tela mais encanta ou mais quebra — aqui ele NÃO popa seco.
+    // Dentro do "cheio", um 2º AnimatePresence (popLayout) faz a cadeia ao resolver:
+    // item sai → os de baixo sobem (layout) → o próximo cresce e vira herói (mesma
+    // key, sem fantasma). Tudo congelado em reduced-motion.
+    return (
+        <AnimatePresence mode="wait" initial={false}>
+            {queue.length === 0 ? (
+                <motion.div
+                    key="empty"
+                    initial={reduce ? false : { opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.98 }}
+                    transition={{ duration: reduce ? 0 : CHAIN.stateSwap, ease: "easeOut" }}
+                >
+                    <QueueEmptyCard>
+                        {filterActive ? (
+                            <EmptyState icon={Funnel} title="Nada com esses filtros" text="Nenhuma ação bate com os filtros selecionados. Ajuste ou limpe os filtros pra ver a fila completa." />
+                        ) : dayComplete ? (
+                            <EmptyState icon={CheckCircle} title="Missão do dia concluída" text="Você resolveu todas as ações de hoje. A EVA te avisa quando surgir algo novo." />
+                        ) : (
+                            <EmptyState icon={Target} title="Tudo em dia" text="Nada crítico agora. Continuo de olho nas conversas e te aviso quando surgir uma ação urgente." />
+                        )}
+                    </QueueEmptyCard>
+                </motion.div>
+            ) : (
+                <motion.div
+                    key="filled"
+                    className="flex flex-col gap-3"
+                    initial={reduce ? false : { opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.98 }}
+                    transition={{ duration: reduce ? 0 : CHAIN.arrive, ease: "easeOut" }}
+                >
+                    <QueueLabel>Comece por aqui</QueueLabel>
+                    <AnimatePresence mode="popLayout" initial={false}>
+                        <motion.div
+                            key={queue[0].id}
+                            layout={!reduce}
+                            initial={false}
+                            exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.97 }}
+                            transition={{ duration: reduce ? 0 : CHAIN.heroGrow, ease: "easeOut" }}
+                        >
+                            <ActionHero item={queue[0]} {...handlers} />
+                        </motion.div>
+                        {queue.length > 1 && (
+                            <motion.div
+                                key="lbl-depois"
+                                layout={!reduce}
+                                className="mt-2"
+                                transition={{ duration: reduce ? 0 : CHAIN.heroGrow, ease: "easeOut" }}
+                            >
+                                <QueueLabel muted>Depois resolva</QueueLabel>
+                            </motion.div>
+                        )}
+                        {queue.slice(1).map((p) => (
+                            <motion.div
+                                key={p.id}
+                                layout={!reduce}
+                                initial={false}
+                                exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}
+                                transition={{ duration: reduce ? 0 : CHAIN.reflow, ease: "easeOut" }}
+                            >
+                                <ActionItem item={p} onNavigate={handlers.onNavigate} onResolve={handlers.onResolve} />
+                            </motion.div>
+                        ))}
+                    </AnimatePresence>
+                </motion.div>
+            )}
+        </AnimatePresence>
+    );
+}
+
+// ── 2) EVA unificada (direita): síntese + gargalos + chat numa voz só ─────────
 
 function ReadingLine({ icon: Icon, color, label, children }: { icon: typeof Warning; color: string; label: string; children: React.ReactNode }) {
     return (
-        <div className="flex items-start gap-2.5 py-2.5">
+        <div className="flex items-start gap-2.5 py-2">
             <div className="h-6 w-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${color}1A` }}>
                 <Icon size={13} weight="duotone" style={{ color }} />
             </div>
             <div className="min-w-0">
-                <p className="text-[10px] uppercase mb-0.5" style={{ color: "#94A3B8", fontWeight: 700, letterSpacing: "0.06em" }}>{label}</p>
+                <p className="text-[10px] uppercase mb-0.5" style={{ color: "#1E293B", fontWeight: 700, letterSpacing: "0.06em" }}>{label}</p>
                 <p className="text-[12.5px] leading-snug" style={{ color: "#334155" }}>{children}</p>
             </div>
         </div>
     );
 }
 
-function EvaReading({ priorities, highlights, recentActivity, loading }: { priorities: DailyPriority[]; highlights: EvaHighlight[]; recentActivity: RecentActivityItem[]; loading: boolean }) {
+// A EVA "fala a próxima frase": quando o risco/recomendação muda (ex: você
+// resolveu a ação crítica), o texto antigo desliza pra fora e o novo pra dentro
+// (mode="wait"), em vez de trocar seco. Só anima quando o swapKey muda.
+function SwapText({ swapKey, children }: { swapKey: string; children: React.ReactNode }) {
+    const reduce = useReducedMotion();
+    return (
+        <AnimatePresence mode="wait" initial={false}>
+            <motion.span
+                key={swapKey}
+                className="block"
+                initial={reduce ? false : { opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={reduce ? { opacity: 0 } : { opacity: 0, y: -5 }}
+                transition={{ duration: reduce ? 0 : CHAIN.evaSwap, ease: "easeOut" }}
+            >
+                {children}
+            </motion.span>
+        </AnimatePresence>
+    );
+}
+
+function EvaSynthesis({ priorities, highlights, recentActivity }: { priorities: DailyPriority[]; highlights: EvaHighlight[]; recentActivity: RecentActivityItem[] }) {
     const risk = priorities.find((p) => p.priority === "critical") ?? priorities.find((p) => p.priority === "high") ?? priorities[0] ?? null;
     const sevRank: Record<EvaHighlight["severity"], number> = { high: 3, medium: 2, low: 1 };
     const bottleneck = [...highlights].sort((a, b) => (sevRank[b.severity] - sevRank[a.severity]) || ((b.count ?? 0) - (a.count ?? 0)))[0] ?? null;
@@ -282,87 +559,103 @@ function EvaReading({ priorities, highlights, recentActivity, loading }: { prior
         : bottleneck
             ? <>Complete o contexto sobre <strong style={{ color: "#0B1220" }}>{bottleneck.title.toLowerCase()}</strong>.</>
             : <>Acompanhe as novas conversas do dia.</>;
-
     return (
-        <CardShell title="Leitura da EVA" subtitle="Síntese estratégica do dia" badge={<EvaBadge />}>
-            {loading ? (
-                <Skeleton rows={4} h={36} />
-            ) : (
-                <div className="divide-y" style={{ borderColor: "#F1F5F9" }}>
-                    <ReadingLine icon={Warning} color="#F43F5E" label="Maior risco">
-                        {risk ? risk.title : "Nenhum risco crítico no momento."}
-                    </ReadingLine>
-                    <ReadingLine icon={Funnel} color="#F59E0B" label="Maior gargalo">
-                        {bottleneck ? bottleneck.title : "Sem gargalos relevantes detectados."}
-                    </ReadingLine>
-                    <ReadingLine icon={CheckCircle} color="#10B981" label="Sinal positivo">
-                        {repliesSent > 0 ? `Time enviou ${repliesSent} ${repliesSent === 1 ? "resposta" : "respostas"} recentemente.` : "Operação seguindo o ritmo."}
-                    </ReadingLine>
-                    <ReadingLine icon={ArrowUp} color="#7C3AED" label="Recomendação do dia">
-                        {recommendation}
-                    </ReadingLine>
-                </div>
-            )}
-        </CardShell>
+        <div className="divide-y" style={{ borderColor: "#F1F5F9" }}>
+            <ReadingLine icon={Warning} color="#F43F5E" label="Maior risco">
+                <SwapText swapKey={risk?.id ?? "none"}>
+                    {risk ? risk.title : "Nenhum risco crítico no momento."}
+                </SwapText>
+            </ReadingLine>
+            <ReadingLine icon={Funnel} color="#F59E0B" label="Maior gargalo">
+                {bottleneck ? bottleneck.title : "Sem gargalos relevantes detectados."}
+            </ReadingLine>
+            <ReadingLine icon={CheckCircle} color="#10B981" label="Sinal positivo">
+                {repliesSent > 0 ? `Time enviou ${repliesSent} ${repliesSent === 1 ? "resposta" : "respostas"} recentemente.` : "Operação seguindo o ritmo."}
+            </ReadingLine>
+            <ReadingLine icon={ArrowUp} color="#7C3AED" label="Recomendação do dia">
+                <SwapText swapKey={risk?.id ?? bottleneck?.id ?? "none"}>
+                    {recommendation}
+                </SwapText>
+            </ReadingLine>
+        </div>
     );
 }
 
-// ── 3) Gargalos e lacunas de contexto ─────────────────────────────────────────
-
-function BottleneckCard({ item, onNavigate }: { item: EvaHighlight; onNavigate: (href: string) => void }) {
-    const sev = SEV[item.severity];
-    const route = resolveHighlightRoute(item);
-    const affects = item.count ?? (item.items?.length ?? 0);
-    const clickable = !!route.href;
+// Gargalos condensados — "o que a EVA está vendo", lista compacta dentro do
+// próprio território da EVA (não mais um card gigante separado embaixo).
+function EvaBottlenecksSection({ items, onNavigate }: { items: EvaHighlight[]; onNavigate: (href: string) => void }) {
+    const top = items.slice(0, 4);
     return (
-        <div
-            className={`rounded-xl p-4 flex flex-col transition-colors ${clickable ? "cursor-pointer hover:bg-[#FBFAFF]" : ""}`}
-            style={{ background: "#FFFFFF", border: "1px solid #ECE6FB" }}
-            onClick={() => { if (route.href) onNavigate(route.href); }}
-        >
-            <div className="flex items-center gap-2 mb-2">
-                <div className="h-7 w-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(124,58,237,0.10)" }}>
-                    <Sparkles size={14} weight="duotone" style={{ color: "#6D28D9" }} />
-                </div>
-                <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded" style={{ background: sev.bg, color: sev.color, fontWeight: 700, letterSpacing: "0.04em" }}>
-                    <span className="h-1 w-1 rounded-full" style={{ background: sev.color }} /> {sev.label}
-                </span>
-                {affects > 0 && (
-                    <span className="ml-auto text-[10.5px] tabular-nums" style={{ color: "#94A3B8" }}>
-                        afeta {affects} {affects === 1 ? "conversa" : "conversas"}
-                    </span>
-                )}
-            </div>
-            <p className="text-[13.5px] font-semibold" style={{ color: "#0B1220", letterSpacing: "-0.01em" }}>{item.title}</p>
-            <p className="text-[12px] mt-0.5 flex-1" style={{ color: "#64748B", lineHeight: 1.5 }}>{item.description}</p>
-            {route.cta && (
-                <span className="inline-flex items-center gap-1 text-[11.5px] font-semibold mt-2.5 self-start" style={{ color: "#6D28D9" }}>
-                    {route.cta}
-                    <ArrowRight size={12} weight="bold" />
-                </span>
+        <div className="mt-1 pt-3 border-t" style={{ borderColor: "#F1F5F9" }}>
+            <p className="px-5 text-[10px] uppercase mb-1" style={{ color: "#1E293B", fontWeight: 700, letterSpacing: "0.06em" }}>O que estou vendo</p>
+            {top.length === 0 ? (
+                <p className="px-5 pb-1 text-[12px]" style={{ color: "#475569" }}>Sem gargalos estruturais hoje.</p>
+            ) : (
+                top.map((it) => {
+                    const sev = SEV[it.severity];
+                    const route = resolveHighlightRoute(it);
+                    const affects = it.count ?? (it.items?.length ?? 0);
+                    const clickable = !!route.href;
+                    return (
+                        <button
+                            key={it.id}
+                            type="button"
+                            disabled={!clickable}
+                            onClick={() => { if (route.href) onNavigate(route.href); }}
+                            className={`w-full flex items-start gap-2.5 px-5 py-2 text-left transition-colors ${clickable ? "hover:bg-[#FBFAFF] cursor-pointer" : "cursor-default"}`}
+                        >
+                            <span className="h-2 w-2 rounded-full mt-[5px] shrink-0" style={{ background: sev.color }} />
+                            <span className="min-w-0 flex-1">
+                                <span className="flex items-center gap-2">
+                                    <span className="text-[12.5px] font-semibold truncate" style={{ color: "#0B1220" }}>{it.title}</span>
+                                    {affects > 0 && <span className="text-[10.5px] tabular-nums shrink-0" style={{ color: "#475569" }}>· {affects}</span>}
+                                </span>
+                                <span className="block text-[11px] truncate" style={{ color: "#475569" }}>{it.description}</span>
+                            </span>
+                            {clickable && <ArrowRight size={12} weight="bold" className="shrink-0 mt-1" style={{ color: "#64748B" }} />}
+                        </button>
+                    );
+                })
             )}
         </div>
     );
 }
 
-function Bottlenecks({ items, loading, onNavigate }: { items: EvaHighlight[]; loading: boolean; onNavigate: (href: string) => void }) {
-    const subtitle = loading
-        ? "Carregando…"
-        : items.length === 0
-            ? "Sem gargalos estruturais hoje."
-            : `${items.length} ${items.length === 1 ? "tema" : "temas"} que a EVA identificou na operação`;
+// ── A EVA unificada: uma voz, um lugar (síntese + gargalos + chat). ───────────
+function EvaPanel({ priorities, highlights, recentActivity, loading, onNavigate, evaChat }: {
+    priorities: DailyPriority[];
+    highlights: EvaHighlight[];
+    recentActivity: RecentActivityItem[];
+    loading: boolean;
+    onNavigate: (href: string) => void;
+    evaChat?: React.ReactNode;
+}) {
     return (
-        <CardShell title="Gargalos e lacunas de contexto" subtitle={subtitle} badge={<EvaBadge />}>
-            {loading ? (
-                <Skeleton rows={2} h={96} />
-            ) : items.length === 0 ? (
-                <EmptyState icon={Sparkles} title="Sem gargalos por enquanto" text="Quando a EVA acumular sinais sobre ICP, serviços, preço ou captação, os temas aparecem aqui." />
-            ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {items.map((it) => <BottleneckCard key={it.id} item={it} onNavigate={onNavigate} />)}
+        <div
+            className="rounded-2xl overflow-hidden"
+            style={{
+                background: "linear-gradient(180deg, rgba(124,58,237,0.05) 0%, #FFFFFF 20%)",
+                border: "1px solid #E7E1FA",
+                boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 10px 30px rgba(15,23,42,0.05)",
+            }}
+        >
+            <div className="px-5 pt-5 pb-4 flex items-center gap-3">
+                <EvaEntity size={28} state="idle" />
+                <div className="min-w-0">
+                    <h3 className="text-[16px] font-bold leading-tight" style={{ color: "#0B1220", letterSpacing: "-0.015em" }}>EVA</h3>
+                    <p className="text-[11.5px]" style={{ color: "#475569" }}>Leu conversas, oportunidades e sinais</p>
+                </div>
+            </div>
+            <div className="px-5 pb-1">
+                {loading ? <Skeleton rows={4} h={30} /> : <EvaSynthesis priorities={priorities} highlights={highlights} recentActivity={recentActivity} />}
+            </div>
+            {!loading && <EvaBottlenecksSection items={highlights} onNavigate={onNavigate} />}
+            {evaChat && (
+                <div className="px-5 pt-4 pb-5 mt-1 border-t" style={{ borderColor: "#F1F5F9" }}>
+                    {evaChat}
                 </div>
             )}
-        </CardShell>
+        </div>
     );
 }
 
@@ -392,7 +685,7 @@ function ActivityTimeline({ items, loading, onNavigate }: { items: RecentActivit
                                 <p className="flex-1 min-w-0 text-[12px] truncate pl-1.5" style={{ color: "#475569" }}>
                                     {describeActivity(it)}
                                 </p>
-                                <span className="text-[10.5px] tabular-nums shrink-0" style={{ color: "#94A3B8" }}>{relativeTime(it.timestamp)}</span>
+                                <span className="text-[10.5px] tabular-nums shrink-0" style={{ color: "#475569" }}>{relativeTime(it.timestamp)}</span>
                             </li>
                         );
                     })}
@@ -405,26 +698,62 @@ function ActivityTimeline({ items, loading, onNavigate }: { items: RecentActivit
 // ── Composição ────────────────────────────────────────────────────────────────
 
 export interface DecisionWorkspaceProps {
+    /** Pendentes do dia (sem resolvidos/adiados, sem filtro de UI). Alimenta a
+     *  Leitura da EVA — síntese do que ainda falta, não do recorte filtrado. */
     priorities: DailyPriority[];
+    /** Fila de ação já filtrada pela UI. Default = priorities. */
+    queuePriorities?: DailyPriority[];
+    filterActive?: boolean;
+    /** true = havia ações hoje e todas foram resolvidas (missão concluída). */
+    dayComplete?: boolean;
     highlights: EvaHighlight[];
     recentActivity: RecentActivityItem[];
     loading: boolean;
     onNavigate: (href: string) => void;
+    onResolve: (id: string) => void;
+    onSnooze: (id: string) => void;
+    sendReply?: (chatJid: string, text: string) => Promise<void>;
+    replyConnected?: boolean;
+    /** Chat da EVA — renderizado dentro do território unificado da EVA (direita). */
+    evaChat?: React.ReactNode;
 }
 
-export function DecisionWorkspace({ priorities, highlights, recentActivity, loading, onNavigate }: DecisionWorkspaceProps) {
+export function DecisionWorkspace({
+    priorities,
+    queuePriorities,
+    filterActive = false,
+    dayComplete = false,
+    highlights,
+    recentActivity,
+    loading,
+    onNavigate,
+    onResolve,
+    onSnooze,
+    sendReply,
+    replyConnected,
+    evaChat,
+}: DecisionWorkspaceProps) {
+    const queue = queuePriorities ?? priorities;
+    const handlers: QueueHandlers = { onNavigate, onResolve, onSnooze, sendReply, replyConnected };
     return (
-        <div className="space-y-5">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-                <div className="lg:col-span-8">
-                    <ActionQueue priorities={priorities} loading={loading} onNavigate={onNavigate} />
-                </div>
-                <aside className="lg:col-span-4 flex flex-col gap-5">
-                    <EvaReading priorities={priorities} highlights={highlights} recentActivity={recentActivity} loading={loading} />
-                    <ActivityTimeline items={recentActivity} loading={loading} onNavigate={onNavigate} />
-                </aside>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+            {/* Esquerda: o plano do dia (onde se age) + atividade no pé (preenche
+                o vazio quando a fila é curta e libera a direita pra ser só EVA). */}
+            <div className="lg:col-span-7 flex flex-col gap-4">
+                <ActionQueue queue={queue} loading={loading} dayComplete={dayComplete} filterActive={filterActive} handlers={handlers} />
+                <ActivityTimeline items={recentActivity} loading={loading} onNavigate={onNavigate} />
             </div>
-            <Bottlenecks items={highlights} loading={loading} onNavigate={onNavigate} />
+            {/* Direita: a EVA unificada — síntese + gargalos + chat (o copiloto) */}
+            <aside className="lg:col-span-5">
+                <EvaPanel
+                    priorities={priorities}
+                    highlights={highlights}
+                    recentActivity={recentActivity}
+                    loading={loading}
+                    onNavigate={onNavigate}
+                    evaChat={evaChat}
+                />
+            </aside>
         </div>
     );
 }

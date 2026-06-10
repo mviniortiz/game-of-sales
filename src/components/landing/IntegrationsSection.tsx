@@ -1,4 +1,5 @@
 import { Plug, Sparkles, Webhook } from "lucide-react";
+import { IntegrationHub } from "./IntegrationHub";
 
 import asaasLogo from "@/assets/integrations/asaas.svg";
 import braipLogo from "@/assets/integrations/braip.webp";
@@ -170,6 +171,11 @@ export const IntegrationsSection = () => {
                     >
                         Centralize dados, reduza tarefas manuais e conecte sua rotina comercial às plataformas que já fazem parte da operação.
                     </p>
+                </div>
+
+                {/* Hub visual: Vyzon no centro + integrações orbitando */}
+                <div className="mb-14 sm:mb-20 landing-fade-in-up landing-delay-100">
+                    <IntegrationHub />
                 </div>
 
                 {/* Disponíveis */}

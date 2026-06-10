@@ -1,12 +1,47 @@
 # Vyzon - robots.txt
 # https://vyzon.com.br
 
-# Search engines
+# ── Motores de busca ──────────────────────────────────────────────
+# Bloqueiam fluxos funcionais (onboarding/checkout/senha), relatórios
+# públicos por token (/r/, dado de cliente) e páginas de preview internas.
+# Cada bot só obedece ao próprio grupo, então as regras são repetidas
+# por motor de busca (robots.txt não herda entre grupos).
+
 User-agent: Googlebot
 Allow: /
+Disallow: /onboarding
+Disallow: /checkout
+Disallow: /recuperar-senha
+Disallow: /redefinir-senha
+Disallow: /r/
+Disallow: /eva-entity-test
+Disallow: /eva-assist-preview
+Disallow: /inbox-list-preview
+Disallow: /eva-studio-preview
 
 User-agent: Bingbot
 Allow: /
+Disallow: /onboarding
+Disallow: /checkout
+Disallow: /recuperar-senha
+Disallow: /redefinir-senha
+Disallow: /r/
+Disallow: /eva-entity-test
+Disallow: /eva-assist-preview
+Disallow: /inbox-list-preview
+Disallow: /eva-studio-preview
+
+User-agent: Applebot
+Allow: /
+Disallow: /onboarding
+Disallow: /checkout
+Disallow: /recuperar-senha
+Disallow: /redefinir-senha
+Disallow: /r/
+Disallow: /eva-entity-test
+Disallow: /eva-assist-preview
+Disallow: /inbox-list-preview
+Disallow: /eva-studio-preview
 
 User-agent: Twitterbot
 Allow: /
@@ -51,9 +86,6 @@ Allow: /
 User-agent: cohere-ai
 Allow: /
 
-User-agent: Applebot
-Allow: /
-
 User-agent: Applebot-Extended
 Allow: /
 
@@ -72,9 +104,18 @@ Allow: /
 User-agent: Meta-ExternalAgent
 Allow: /
 
-# Fallback
+# Fallback — crawlers sem grupo próprio seguem estas regras.
 User-agent: *
 Allow: /
+Disallow: /onboarding
+Disallow: /checkout
+Disallow: /recuperar-senha
+Disallow: /redefinir-senha
+Disallow: /r/
+Disallow: /eva-entity-test
+Disallow: /eva-assist-preview
+Disallow: /inbox-list-preview
+Disallow: /eva-studio-preview
 
 # Sitemap
 Sitemap: https://vyzon.com.br/sitemap.xml

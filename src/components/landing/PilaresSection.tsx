@@ -1,8 +1,6 @@
-import { Building2 } from "lucide-react";
-
-// LP.2.3 2026-05-25: "Para quem é" — título + framing curto + chips de segmento
-// (os chips vieram do hero, que foi enxugado). Export mantido (PilaresSection)
-// pra não tocar o import da LandingPage.
+// LP.2.3 2026-05-25: "Para quem é" — título + framing curto + chips de segmento.
+// LP.4 2026-06-09: chips viram letreiro contínuo (marquee CSS, pausa no hover,
+// desliga em prefers-reduced-motion). Export mantido (PilaresSection).
 const SEGMENTOS = [
     "Tráfego pago",
     "Full service",
@@ -14,66 +12,86 @@ const SEGMENTOS = [
     "Agências nichadas",
 ] as const;
 
+const Chip = ({ label }: { label: string }) => (
+    <span
+        className="inline-flex items-center gap-3 px-6 py-3 mr-3 text-[14px] sm:text-[15px] whitespace-nowrap"
+        style={{
+            border: "1px solid var(--lp-line)",
+            borderRadius: 8,
+            color: "var(--lp-ink-70)",
+            fontWeight: 500,
+            background: "var(--lp-white)",
+        }}
+    >
+        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: "var(--lp-blue)" }} />
+        {label}
+    </span>
+);
+
 export const PilaresSection = () => {
     return (
-        <section className="relative py-24 sm:py-28 px-4 sm:px-6 lg:px-8 bg-white overflow-hidden">
-            <div className="relative max-w-3xl mx-auto text-center landing-fade-in-up">
-                <span
-                    className="inline-flex items-center gap-2 text-[11px] rounded-full px-4 py-1.5 mb-6"
-                    style={{
-                        fontWeight: 500,
-                        letterSpacing: "0.04em",
-                        background: "rgba(10,10,10,0.04)",
-                        color: "rgba(10,10,10,0.6)",
-                        border: "1px solid rgba(10,10,10,0.08)",
-                    }}
-                >
-                    <Building2 className="h-3 w-3" strokeWidth={2} />
-                    Para quem é
-                </span>
+        <section className="lp-paper relative py-24 sm:py-28 overflow-hidden">
+            <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+                {/* Estação do fio */}
+                <div className="lp-station mb-12 sm:mb-14 landing-fade-in-up">
+                    <span className="lp-station-node" />
+                    <span className="lp-mono" style={{ color: "var(--lp-ink-55)" }}>
+                        05 · para quem é
+                    </span>
+                    <span className="lp-station-rule" />
+                </div>
 
-                <h2
-                    className="font-satoshi mx-auto"
-                    style={{
-                        fontWeight: 700,
-                        fontSize: "clamp(1.9rem, 5vw, 3rem)",
-                        lineHeight: 1.05,
-                        letterSpacing: "-0.04em",
-                        color: "#0A0A0A",
-                        maxWidth: "720px",
-                    }}
-                >
-                    Feito para agências que vendem <span style={{ color: "rgba(10,10,10,0.5)" }}>por conversa</span>.
-                </h2>
-
-                <p
-                    className="mt-5 mx-auto max-w-xl"
-                    style={{
-                        fontSize: "clamp(0.95rem, 1.8vw, 1.125rem)",
-                        lineHeight: 1.65,
-                        color: "rgba(10,10,10,0.6)",
-                        fontWeight: 400,
-                    }}
-                >
-                    Se os seus leads chegam pelo WhatsApp e o time precisa responder rápido, qualificar melhor e não deixar follow-up morrer, o Vyzon foi feito pra você.
-                </p>
-
-                {/* Chips de segmento */}
-                <div className="mt-9 flex flex-wrap items-center justify-center gap-2.5 sm:gap-3">
-                    {SEGMENTOS.map((seg) => (
-                        <span
-                            key={seg}
-                            className="inline-flex items-center rounded-full px-4 py-2 text-[13px] sm:text-[14px] hover-lift"
-                            style={{
-                                background: "rgba(10,10,10,0.025)",
-                                border: "1px solid rgba(10,10,10,0.1)",
-                                color: "rgba(10,10,10,0.72)",
-                                fontWeight: 500,
-                                letterSpacing: "-0.005em",
-                            }}
-                        >
-                            {seg}
+                <div className="landing-fade-in-up">
+                    <h2
+                        className="font-satoshi"
+                        style={{
+                            fontWeight: 900,
+                            fontSize: "clamp(1.9rem, 5vw, 3.1rem)",
+                            lineHeight: 1.04,
+                            letterSpacing: "-0.04em",
+                            color: "var(--lp-ink)",
+                            maxWidth: "720px",
+                        }}
+                    >
+                        Feito para agências que vendem{" "}
+                        <span className="lp-serif" style={{ color: "var(--lp-blue)", fontWeight: 500 }}>
+                            por conversa
                         </span>
+                        .
+                    </h2>
+
+                    <p
+                        className="mt-5 max-w-xl"
+                        style={{
+                            fontSize: "clamp(0.95rem, 1.8vw, 1.125rem)",
+                            lineHeight: 1.65,
+                            color: "var(--lp-ink-70)",
+                            fontWeight: 400,
+                        }}
+                    >
+                        Se os seus leads chegam pelo WhatsApp e o time precisa responder rápido, qualificar melhor e não deixar follow-up morrer, o Vyzon foi feito pra você.
+                    </p>
+                </div>
+            </div>
+
+            {/* Letreiro de segmentos — full-bleed, conteúdo duplicado pro loop */}
+            <div
+                className="mt-12 landing-fade-in-up landing-delay-200"
+                style={{
+                    borderTop: "1px solid var(--lp-line)",
+                    borderBottom: "1px solid var(--lp-line)",
+                    paddingTop: 14,
+                    paddingBottom: 14,
+                    overflow: "hidden",
+                }}
+            >
+                <div className="lp-marquee" aria-hidden="false">
+                    {[0, 1].map((dup) => (
+                        <div key={dup} className="flex" aria-hidden={dup === 1}>
+                            {SEGMENTOS.map((seg) => (
+                                <Chip key={`${dup}-${seg}`} label={seg} />
+                            ))}
+                        </div>
                     ))}
                 </div>
             </div>

@@ -105,6 +105,9 @@ export interface DailyPriority {
     dealId?: string;
     contactName?: string;
     createdAt?: string;
+    /** JID/telefone do contato — só em prioridades de conversa. Habilita o
+     *  "Responder rápido" (envio direto via Evolution). */
+    chatJid?: string;
 }
 
 export interface CommandCenterData {
@@ -1059,6 +1062,7 @@ async function fetchCommandCenterData(companyId: string): Promise<CommandCenterD
     // na query lá em cima). Protege contra qualquer site que esqueça de
     // validar id no futuro.
     const validConvIds = new Set(convs.map((c) => c.id).filter(Boolean));
+    const convById = new Map(convs.map((c) => [c.id, c]));
     const dailyAll = Array.from(dailyMap.values())
         .filter((p) => {
             if (p.source !== "conversation") return true;
@@ -1067,6 +1071,13 @@ async function fetchCommandCenterData(companyId: string): Promise<CommandCenterD
         })
         .map((p) => ({
             ...p,
+            // chatJid pra prioridades de conversa (habilita Responder rápido).
+            chatJid:
+                p.source === "conversation" && p.conversationId
+                    ? convById.get(p.conversationId)?.channel_contacts?.external_contact_id ||
+                      convById.get(p.conversationId)?.channel_contacts?.phone_e164 ||
+                      undefined
+                    : undefined,
             actionLabel: p.actionLabel || "—",
             // se href aponta pra inbox mas id deixou de existir (defensivo redundante),
             // remove o link pra UI não mostrar CTA quebrado

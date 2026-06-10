@@ -16,6 +16,7 @@ const getPageTitle = (pathname: string) => {
   if (pathname.startsWith("/inbox") || pathname.startsWith("/pulse") || pathname.startsWith("/whatsapp")) return "Inbox";
   if (pathname.startsWith("/pipeline") || pathname.startsWith("/crm")) return "Pipeline";
   if (pathname.startsWith("/agenda") || pathname.startsWith("/calendario")) return "Agenda";
+  if (pathname.startsWith("/eva-studio")) return "EVA Studio";
   if (pathname.startsWith("/eva") || pathname.startsWith("/agente")) return "EVA";
   if (pathname.startsWith("/performance")) return "Performance";
   if (pathname.startsWith("/calls")) return "Performance · Calls";

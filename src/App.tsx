@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { CanonicalManager } from "@/components/CanonicalManager";
 import { Loader2 } from "lucide-react";
 import LandingPage from "./pages/LandingPage";
 
@@ -20,11 +21,26 @@ const VsPipedrive = lazy(() => import("./pages/alternativas/VsPipedrive"));
 const VsAgendor = lazy(() => import("./pages/alternativas/VsAgendor"));
 const AlternativasHub = lazy(() => import("./pages/alternativas/AlternativasHub"));
 
-// SEO landing pages (segmentadas por keyword). Renderizam SeoLandingPage
-// com configs em src/pages/seo/configs/. Adicionar novas é só criar config + rota.
-const CrmGamificado = lazy(() => import("./pages/seo/CrmGamificado"));
-const CrmComRanking = lazy(() => import("./pages/seo/CrmComRanking"));
-const CrmParaTimes = lazy(() => import("./pages/seo/CrmParaTimes"));
+// SEO landings /crm-* DESPUBLICADAS (2026-06-10): posicionamento antigo
+// ("CRM gamificado/ranking"), conflita com o foco atual em agências/conversa.
+// Rotas viram 301 → home no vercel.json. Componentes/configs em src/pages/seo/
+// preservados pra eventual republicação. Reativar = descomentar import + rota
+// + remover redirect + readicionar ao sitemap e à allowlist do CanonicalManager.
+// const CrmGamificado = lazy(() => import("./pages/seo/CrmGamificado"));
+// const CrmComRanking = lazy(() => import("./pages/seo/CrmComRanking"));
+// const CrmParaTimes = lazy(() => import("./pages/seo/CrmParaTimes"));
+
+// Página temporária de calibração da EvaEntity (remover depois de plugar à lógica).
+const EvaEntityTest = lazy(() => import("./pages/EvaEntityTest"));
+
+// Página temporária de validação da nova lateral da EVA na Inbox (remover após integrar).
+const EvaAssistPreview = lazy(() => import("./pages/EvaAssistPreview"));
+
+// Página temporária de validação da nova lista de conversas do Inbox (remover após integrar).
+const InboxListPreview = lazy(() => import("./pages/InboxListPreview"));
+
+// Página temporária de validação do novo EVA Studio, frente a frente (remover após integrar).
+const EvaStudioPreview = lazy(() => import("./pages/EvaStudioPreview"));
 
 const LazyFallback = () => (
   <div className="flex items-center justify-center min-h-screen">
@@ -35,6 +51,7 @@ const LazyFallback = () => (
 const App = () => (
   <ErrorBoundary>
     <BrowserRouter>
+      <CanonicalManager />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/landing" element={<LandingPage />} />
@@ -120,27 +137,36 @@ const App = () => (
             </Suspense>
           }
         />
+        {/* Rotas /crm-* despublicadas 2026-06-10 — 301 → home no vercel.json. */}
         <Route
-          path="/crm-gamificado"
+          path="/eva-entity-test"
           element={
             <Suspense fallback={<LazyFallback />}>
-              <CrmGamificado />
+              <EvaEntityTest />
             </Suspense>
           }
         />
         <Route
-          path="/crm-com-ranking-de-vendas"
+          path="/eva-assist-preview"
           element={
             <Suspense fallback={<LazyFallback />}>
-              <CrmComRanking />
+              <EvaAssistPreview />
             </Suspense>
           }
         />
         <Route
-          path="/crm-para-times-comerciais"
+          path="/inbox-list-preview"
           element={
             <Suspense fallback={<LazyFallback />}>
-              <CrmParaTimes />
+              <InboxListPreview />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/eva-studio-preview"
+          element={
+            <Suspense fallback={<LazyFallback />}>
+              <EvaStudioPreview />
             </Suspense>
           }
         />

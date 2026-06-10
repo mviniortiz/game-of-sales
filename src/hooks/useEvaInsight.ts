@@ -54,6 +54,12 @@ export interface EvaInsightResult {
   legacy: boolean;
 }
 
+/** Erro de rate limit enriquecido com o corpo do 429 da edge. */
+export interface RateLimitError extends Error {
+  code?: "RATE_LIMITED";
+  resetAt?: string | null;
+}
+
 interface SavedAnalysisRow {
   cached_analysis: Record<string, unknown> | null;
   qualification: Record<string, unknown> | null;
@@ -181,7 +187,26 @@ export function useEvaInsight({
         dailyLimit?: number;
       }>("whatsapp-copilot", { body: payload });
 
-      if (error) throw new Error(error.message || "Falha ao chamar EVA");
+      if (error) {
+        // F4E.4.5.2 — supabase-js empacota respostas não-2xx em FunctionsHttpError
+        // com `.message` genérico ("non-2xx status code"). O corpo real (mensagem
+        // de rate limit, código, resetAt) vive em `error.context` (a Response).
+        // Sem ler esse corpo, o usuário nunca via "Limite diário atingido".
+        let body: { error?: string; code?: string; resetAt?: string; remaining?: number } | null = null;
+        try {
+          const ctx = (error as { context?: Response }).context;
+          if (ctx && typeof ctx.json === "function") body = await ctx.clone().json();
+        } catch {
+          /* corpo não-JSON ou já consumido — cai no fallback abaixo */
+        }
+        if (body?.code === "RATE_LIMITED") {
+          const e = new Error(body.error || "Limite diário de análises da EVA atingido.");
+          (e as RateLimitError).code = "RATE_LIMITED";
+          (e as RateLimitError).resetAt = body.resetAt ?? null;
+          throw e;
+        }
+        throw new Error(body?.error || error.message || "Falha ao chamar EVA");
+      }
       if (!data?.success || !data.analysis) throw new Error("Resposta inválida da EVA");
 
       const analysis = data.analysis;
@@ -266,6 +291,14 @@ export function useEvaInsight({
     isStaleByContext,
     lastAnalyzedAt,
     newMessagesCount,
+    /** Análises restantes hoje. Só disponível após uma análise nesta sessão
+     *  (a leitura salva não bate na edge, então vem null até o 1º analyze). */
+    remaining: result?.remaining ?? null,
+    /** Teto diário de análises por usuário (vem junto do remaining). */
+    dailyLimit: result?.dailyLimit ?? null,
+    /** ISO de quando o limite reseta — preenchido quando o erro é RATE_LIMITED. */
+    rateLimitResetAt:
+      (analyzeMutation.error as RateLimitError | null)?.resetAt ?? null,
     /** Análise inicial: NÃO força (pode pegar cache válido do backend) */
     analyze: () => analyzeMutation.mutate({ force: false }),
     /** Reanálise: força nova IA mesmo se cache existir */

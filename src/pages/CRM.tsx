@@ -101,16 +101,18 @@ const ICON_MAP: Record<string, LucideIcon> = {
   x: XCircle,
 };
 
-// Color mapping
+// Color mapping — LP-PIPE.1 2026-06-09: tons -600 (light-first; os -400 eram
+// da era dark e ficavam lavados em fundo claro). Indigo/purple deixam de
+// colapsar em emerald: cada estágio ganha matiz próprio.
 const COLOR_MAP: Record<string, { color: string; bgColor: string; borderColor: string }> = {
-  gray: { color: "text-gray-400", bgColor: "bg-gray-500/10", borderColor: "border-gray-500/30" },
-  blue: { color: "text-blue-400", bgColor: "bg-blue-500/10", borderColor: "border-blue-500/30" },
-  indigo: { color: "text-emerald-400", bgColor: "bg-emerald-500/10", borderColor: "border-emerald-500/30" },
-  purple: { color: "text-emerald-400", bgColor: "bg-emerald-500/10", borderColor: "border-emerald-500/30" },
-  amber: { color: "text-amber-400", bgColor: "bg-amber-500/10", borderColor: "border-amber-500/30" },
-  emerald: { color: "text-emerald-400", bgColor: "bg-emerald-500/10", borderColor: "border-emerald-500/30" },
-  rose: { color: "text-rose-400", bgColor: "bg-rose-500/10", borderColor: "border-rose-500/30" },
-  cyan: { color: "text-cyan-400", bgColor: "bg-cyan-500/10", borderColor: "border-cyan-500/30" },
+  gray: { color: "text-slate-500", bgColor: "bg-slate-500/10", borderColor: "border-slate-500/30" },
+  blue: { color: "text-blue-600", bgColor: "bg-blue-500/10", borderColor: "border-blue-500/30" },
+  indigo: { color: "text-indigo-600", bgColor: "bg-indigo-500/10", borderColor: "border-indigo-500/30" },
+  purple: { color: "text-violet-600", bgColor: "bg-violet-500/10", borderColor: "border-violet-500/30" },
+  amber: { color: "text-amber-600", bgColor: "bg-amber-500/10", borderColor: "border-amber-500/30" },
+  emerald: { color: "text-emerald-600", bgColor: "bg-emerald-500/10", borderColor: "border-emerald-500/30" },
+  rose: { color: "text-rose-600", bgColor: "bg-rose-500/10", borderColor: "border-rose-500/30" },
+  cyan: { color: "text-cyan-600", bgColor: "bg-cyan-500/10", borderColor: "border-cyan-500/30" },
 };
 
 // Valid database stage IDs - must match deal_stage enum in Supabase
@@ -1836,7 +1838,7 @@ export default function CRM() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 h-8 text-xs sm:text-sm"
+                className="text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-500/10 h-8 text-xs sm:text-sm"
                 onClick={() => setShowBulkDeleteConfirm(true)}
               >
                 <Trash2 className="h-4 w-4 mr-1.5" />
@@ -1848,7 +1850,7 @@ export default function CRM() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-rose-400 hover:bg-rose-500/20 h-7 px-2 text-xs font-bold"
+                  className="text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 h-7 px-2 text-xs font-bold"
                   onClick={() => {
                     bulkDeleteMutation.mutate(Array.from(selectedDeals));
                   }}

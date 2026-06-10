@@ -1,33 +1,33 @@
-import { Inbox, Sparkle, Workflow, Gauge } from "lucide-react";
 import { LandingButton } from "./LandingButton";
 
-// LP.1 2026-05-25: seção repurposed de "Agent Studio" (mockup foto+sidebar)
-// para "Solução" — a central que conecta conversa, EVA e pipeline. Mantém o
-// shell dark (contraste com as sections white) e o export AgentStudioSection.
+// LP.1 2026-05-25: seção repurposed de "Agent Studio" para "Solução".
+// LP.3 2026-06-09: absorve os resultados da CentralComercialSection (removida).
+// LP.4 2026-06-09: vira a "sala de comando" — única banda ink da página.
+// Módulos como cartões de console numerados, hairlines brancas, sem glow.
 const MODULES = [
     {
-        icon: Inbox,
+        n: "01",
         title: "Inbox Comercial",
-        body: "Centralize conversas e veja quem precisa de resposta.",
-        accent: "#4A8CE8",
+        body: "Centralize conversas e responda antes do lead esfriar.",
+        note: "conversas: 1 lugar",
     },
     {
-        icon: Sparkle,
+        n: "02",
         title: "EVA Comercial",
-        body: "Analise intenção, fit, objeções e próximo passo.",
-        accent: "#A78BFA",
+        body: "Analisa intenção, fit, urgência e objeções, e aponta quem está pronto pra avançar.",
+        note: "leitura assistida",
     },
     {
-        icon: Workflow,
+        n: "03",
         title: "Pipeline Contextual",
-        body: "Acompanhe oportunidades com conversa e leitura da EVA.",
-        accent: "#2563EB",
+        body: "Cada oportunidade carrega a conversa e a próxima ação. Nenhum follow-up fica esquecido.",
+        note: "conversa anexada",
     },
     {
-        icon: Gauge,
+        n: "04",
         title: "Central de Comando",
-        body: "Veja o que precisa de atenção hoje.",
-        accent: "#10B981",
+        body: "Mostra o que precisa de atenção hoje, sem depender de cobrança no grupo.",
+        note: "atenção do dia",
     },
 ] as const;
 
@@ -37,117 +37,92 @@ interface AgentStudioSectionProps {
 
 export const AgentStudioSection = ({ onCTAClick }: AgentStudioSectionProps) => {
     return (
-        <section className="relative overflow-hidden" style={{ background: "#0A0A0A" }}>
-            {/* Background atmosférico — gradiente azul direcional no topo */}
-            <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-                <div
-                    className="absolute inset-x-0 top-0 h-[600px]"
-                    style={{
-                        background:
-                            "radial-gradient(ellipse 70% 55% at 50% 0%, rgba(21,86,192,0.20) 0%, rgba(21,86,192,0.06) 42%, transparent 78%)",
-                    }}
-                />
-                <div
-                    className="absolute inset-0 opacity-[0.03]"
-                    style={{
-                        backgroundImage:
-                            "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
-                        backgroundSize: "72px 72px",
-                    }}
-                />
-            </div>
+        <section className="lp-ink-band relative overflow-hidden">
+            <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 pb-24 sm:pb-28">
+                {/* Estação do fio (versão clara) */}
+                <div className="lp-station mb-12 sm:mb-16 landing-fade-in-up">
+                    <span className="lp-station-node" style={{ background: "#FAF9F5", boxShadow: "0 0 0 4px rgba(250,249,245,0.16)" }} />
+                    <span className="lp-mono" style={{ color: "rgba(250,249,245,0.6)" }}>
+                        03 · como o vyzon resolve
+                    </span>
+                    <span className="lp-station-rule" style={{ background: "rgba(250,249,245,0.18)" }} />
+                </div>
 
-            <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 sm:pt-32 pb-28 sm:pb-32">
-                {/* Header */}
-                <div className="text-center mb-14 sm:mb-16 landing-fade-in-up">
-                    <div className="inline-flex items-center gap-3 mb-6">
-                        <img
-                            src="/landing/pilares/eva-marca.png"
-                            alt=""
-                            className="h-8 w-8 rounded-full object-cover"
-                            loading="lazy"
-                        />
-                        <span
-                            className="text-[11px] uppercase"
-                            style={{
-                                letterSpacing: "0.18em",
-                                color: "rgba(255,255,255,0.7)",
-                                fontWeight: 600,
-                            }}
-                        >
-                            Como o Vyzon resolve
-                        </span>
-                    </div>
-
+                {/* Header assimétrico */}
+                <div className="relative mb-14 sm:mb-16 landing-fade-in-up">
+                    <span
+                        className="lp-index absolute -top-8 right-0 hidden md:block"
+                        style={{ fontSize: "clamp(8rem, 18vw, 13rem)" }}
+                        aria-hidden="true"
+                    >
+                        03
+                    </span>
                     <h2
-                        className="font-satoshi mx-auto mb-6"
+                        className="font-satoshi relative mb-6"
                         style={{
-                            fontSize: "clamp(2rem, 5.5vw, 3.5rem)",
-                            lineHeight: 1.04,
+                            fontSize: "clamp(2rem, 5.5vw, 3.6rem)",
+                            lineHeight: 1.02,
                             letterSpacing: "-0.045em",
-                            color: "#FFFFFF",
-                            fontWeight: 700,
-                            maxWidth: "880px",
+                            color: "#FAF9F5",
+                            fontWeight: 900,
+                            maxWidth: "760px",
                         }}
                     >
-                        Uma Central Comercial para organizar conversa, prioridade e pipeline.
+                        Uma Central Comercial para organizar{" "}
+                        <span className="lp-serif" style={{ fontWeight: 400, color: "#7FA8E8" }}>
+                            conversa, prioridade e pipeline
+                        </span>
+                        .
                     </h2>
 
                     <p
-                        className="mx-auto mb-8"
+                        className="mb-9"
                         style={{
                             fontSize: "clamp(0.95rem, 1.8vw, 1.125rem)",
                             lineHeight: 1.65,
-                            color: "rgba(255,255,255,0.65)",
+                            color: "rgba(250,249,245,0.66)",
                             fontWeight: 400,
-                            maxWidth: "720px",
+                            maxWidth: "640px",
                         }}
                     >
                         O Vyzon reúne a operação comercial da agência em um fluxo simples: conversa entra, EVA analisa, o time aprova o próximo passo e a oportunidade segue no pipeline.
                     </p>
 
-                    <div className="flex justify-center">
-                        <LandingButton
-                            as="button"
-                            onClick={onCTAClick}
-                            variant="primary"
-                            size="lg"
-                            showArrow
-                        >
-                            Agendar demonstração
-                        </LandingButton>
-                    </div>
+                    <LandingButton
+                        as="button"
+                        onClick={onCTAClick}
+                        variant="primary"
+                        size="lg"
+                        showArrow
+                        className="lp-press--light"
+                    >
+                        Agendar demonstração
+                    </LandingButton>
                 </div>
 
-                {/* 4 cards de módulo */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 landing-fade-in-up landing-delay-200">
-                    {MODULES.map(({ icon: Icon, title, body, accent }) => (
+                {/* Cartões de console */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-px landing-fade-in-up landing-delay-200" style={{ background: "rgba(250,249,245,0.14)", border: "1px solid rgba(250,249,245,0.14)" }}>
+                    {MODULES.map(({ n, title, body, note }) => (
                         <div
                             key={title}
-                            className="rounded-2xl p-7 sm:p-8 hover-lift"
-                            style={{
-                                background: "rgba(255,255,255,0.03)",
-                                boxShadow:
-                                    "inset 0 0 0 1px rgba(255,255,255,0.07), 0 24px 60px -20px rgba(0,0,0,0.6)",
-                            }}
+                            className="p-7 sm:p-9"
+                            style={{ background: "var(--lp-ink)" }}
                         >
-                            <div
-                                className="h-12 w-12 rounded-xl flex items-center justify-center mb-5"
-                                style={{
-                                    background: `${accent}1F`,
-                                    border: `1px solid ${accent}55`,
-                                    color: accent,
-                                }}
-                            >
-                                <Icon className="h-5 w-5" strokeWidth={2.1} />
+                            <div className="flex items-baseline justify-between gap-3 mb-5">
+                                <span className="lp-mono" style={{ color: "#7FA8E8", fontSize: 13 }}>
+                                    {n}
+                                </span>
+                                <span className="lp-mono" style={{ color: "rgba(250,249,245,0.35)", textTransform: "none", letterSpacing: "0.03em" }}>
+                                    {note}
+                                </span>
                             </div>
                             <h3
-                                className="font-heading mb-2.5"
+                                className="font-satoshi mb-2.5"
                                 style={{
-                                    fontSize: "clamp(1.125rem, 2vw, 1.375rem)",
-                                    lineHeight: 1.25,
+                                    fontSize: "clamp(1.25rem, 2.2vw, 1.5rem)",
+                                    lineHeight: 1.2,
                                     letterSpacing: "-0.025em",
-                                    color: "#FFFFFF",
+                                    color: "#FAF9F5",
                                     fontWeight: 700,
                                 }}
                             >
@@ -157,7 +132,7 @@ export const AgentStudioSection = ({ onCTAClick }: AgentStudioSectionProps) => {
                                 className="text-sm sm:text-[15px]"
                                 style={{
                                     lineHeight: 1.6,
-                                    color: "rgba(255,255,255,0.7)",
+                                    color: "rgba(250,249,245,0.62)",
                                     fontWeight: 400,
                                 }}
                             >

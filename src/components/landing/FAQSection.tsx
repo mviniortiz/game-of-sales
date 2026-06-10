@@ -31,35 +31,62 @@ const FAQS = [
         q: "A EVA aprende com os materiais da minha agência?",
         a: "Sim. Você pode adicionar serviços, FAQs, objeções, ICP e playbooks para a EVA usar como contexto. Nada é aplicado sem aprovação.",
     },
+    // LP.3 2026-06-09: objeções práticas que não eram respondidas em lugar
+    // nenhum da página (número atual, setup, CRM existente, dados, cancelar).
+    {
+        q: "Preciso trocar meu número de WhatsApp atual?",
+        a: "Não. Você conecta o número que sua agência já usa, direto por QR code, e continua atendendo normalmente. O Vyzon organiza essas conversas na Inbox Comercial.",
+    },
+    {
+        q: "Quanto tempo leva para configurar?",
+        a: "A conexão do WhatsApp leva poucos minutos. Pipeline e time você monta no mesmo dia, e o contexto da EVA pode começar simples e crescer com o uso. Na demo, a gente mostra esse caminho com o seu cenário.",
+    },
+    {
+        q: "Preciso abandonar meu CRM ou planilha atual?",
+        a: "Não de imediato. O Vyzon organiza o atendimento e o pipeline das conversas. Muitas operações começam por aí e trazem o restante do processo no próprio ritmo.",
+    },
+    {
+        q: "Quem vê minhas conversas e dados?",
+        a: "Só o seu time. Os dados de cada agência ficam isolados na própria conta, e a EVA usa as conversas apenas para gerar análises e sugestões dentro da sua operação.",
+    },
+    {
+        q: "O que acontece se eu cancelar?",
+        a: "Você pode cancelar quando quiser, direto na plataforma, sem fidelidade. Seu número de WhatsApp continua seu e pode ser desconectado a qualquer momento.",
+    },
 ];
 
 function FAQItem({
     q,
     a,
+    index,
     isOpen,
     onToggle,
 }: {
     q: string;
     a: string;
+    index: number;
     isOpen: boolean;
     onToggle: () => void;
 }) {
     return (
         <div
-            className="border-b last:border-b-0 px-1"
-            style={{ borderColor: "rgba(10,10,10,0.06)" }}
+            className="border-b"
+            style={{ borderColor: "var(--lp-line)" }}
         >
             <button
                 type="button"
                 onClick={onToggle}
-                className="flex w-full items-center justify-between gap-4 py-5 text-left cursor-pointer group"
+                className="grid grid-cols-[40px_minmax(0,1fr)_auto] w-full items-baseline gap-3 py-5 text-left cursor-pointer group"
                 aria-expanded={isOpen}
             >
+                <span className="lp-mono" style={{ color: isOpen ? "var(--lp-blue)" : "var(--lp-ink-40)", fontSize: 12 }}>
+                    {String(index + 1).padStart(2, "0")}
+                </span>
                 <span
-                    className="text-[15px] sm:text-[15.5px] leading-snug transition-colors"
+                    className="text-[15px] sm:text-[16px] leading-snug transition-colors"
                     style={{
                         fontWeight: 600,
-                        color: isOpen ? "#0B1220" : "rgba(10,10,10,0.82)",
+                        color: isOpen ? "var(--lp-ink)" : "var(--lp-ink-90)",
                     }}
                 >
                     {q}
@@ -67,10 +94,12 @@ function FAQItem({
                 <motion.span
                     animate={{ rotate: isOpen ? 180 : 0 }}
                     transition={{ duration: 0.25, ease: "easeInOut" }}
-                    className="flex h-7 w-7 items-center justify-center rounded-full flex-shrink-0"
+                    className="flex h-7 w-7 items-center justify-center flex-shrink-0 self-center"
                     style={{
-                        background: isOpen ? "rgba(37,99,235,0.10)" : "rgba(10,10,10,0.04)",
-                        color: isOpen ? "#2563EB" : "rgba(10,10,10,0.35)",
+                        border: "1px solid var(--lp-line)",
+                        borderRadius: 6,
+                        color: isOpen ? "var(--lp-blue)" : "var(--lp-ink-40)",
+                        background: isOpen ? "rgba(21,86,192,0.06)" : "transparent",
                     }}
                 >
                     <ChevronDown className="h-3.5 w-3.5" strokeWidth={2.4} />
@@ -87,8 +116,8 @@ function FAQItem({
                         className="overflow-hidden"
                     >
                         <p
-                            className="pb-5 pr-10 text-[14px] leading-relaxed"
-                            style={{ color: "rgba(10,10,10,0.58)" }}
+                            className="pb-6 pr-10 pl-[52px] text-[14px] leading-relaxed"
+                            style={{ color: "var(--lp-ink-70)" }}
                         >
                             {a}
                         </p>
@@ -103,58 +132,51 @@ export const FAQSection = () => {
     const [open, setOpen] = useState<number | null>(0);
 
     return (
-        <section className="py-24 sm:py-28 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: "#FFFFFF" }}>
-            <div className="mx-auto max-w-2xl">
-                {/* Header — F2.11: usa Reveal padrão (opacity + Y) */}
-                <Reveal className="text-center mb-12 sm:mb-14">
-                    <span
-                        className="inline-flex items-center text-[10.5px] sm:text-[11px] uppercase rounded-full px-3 py-1 mb-5"
-                        style={{
-                            background: "rgba(37,99,235,0.08)",
-                            border: "1px solid rgba(37,99,235,0.22)",
-                            color: "#1D4ED8",
-                            fontWeight: 700,
-                            letterSpacing: "0.15em",
-                        }}
-                    >
-                        Perguntas frequentes
+        <section className="py-24 sm:py-28 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: "var(--lp-white)" }}>
+            <div className="mx-auto max-w-3xl">
+                {/* Estação do fio */}
+                <div className="lp-station mb-12 sm:mb-14 landing-fade-in-up">
+                    <span className="lp-station-node" />
+                    <span className="lp-mono" style={{ color: "var(--lp-ink-55)" }}>
+                        09 · perguntas frequentes
                     </span>
+                    <span className="lp-station-rule" />
+                </div>
+
+                <Reveal className="mb-10 sm:mb-12">
                     <h2
                         className="font-satoshi"
                         style={{
-                            fontWeight: 700,
-                            fontSize: "clamp(1.85rem, 4.5vw, 2.4rem)",
-                            lineHeight: 1.1,
+                            fontWeight: 900,
+                            fontSize: "clamp(1.85rem, 4.5vw, 2.6rem)",
+                            lineHeight: 1.06,
                             letterSpacing: "-0.04em",
-                            color: "#0B1220",
+                            color: "var(--lp-ink)",
                         }}
                     >
-                        Dúvidas? A gente responde.
+                        Dúvidas?{" "}
+                        <span className="lp-serif" style={{ color: "var(--lp-blue)", fontWeight: 500 }}>
+                            A gente responde.
+                        </span>
                     </h2>
                     <p
                         className="mt-3 text-[14.5px]"
-                        style={{ color: "rgba(10,10,10,0.52)" }}
+                        style={{ color: "var(--lp-ink-55)" }}
                     >
                         Tudo o que você precisa saber antes de começar.
                     </p>
                 </Reveal>
 
-                {/* Accordion — F2.11: Reveal no card + stagger nos items */}
+                {/* Accordion — lista de hairlines, sem card */}
                 <Reveal delay={0.05}>
-                    <div
-                        className="rounded-2xl bg-white"
-                        style={{
-                            border: "1px solid #D9E2EC",
-                            boxShadow:
-                                "0 1px 2px rgba(15,23,42,0.04), 0 14px 40px -12px rgba(15,23,42,0.08)",
-                        }}
-                    >
-                        <StaggerContainer className="px-6 sm:px-7" stagger={0.06} duration={0.45} amount={0.05}>
+                    <div className="border-t" style={{ borderColor: "var(--lp-line)" }}>
+                        <StaggerContainer stagger={0.05} duration={0.4} amount={0.05}>
                             {FAQS.map((faq, i) => (
                                 <FAQItem
                                     key={i}
                                     q={faq.q}
                                     a={faq.a}
+                                    index={i}
                                     isOpen={open === i}
                                     onToggle={() => setOpen(open === i ? null : i)}
                                 />

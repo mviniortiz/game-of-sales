@@ -47,6 +47,21 @@
             "has": [{ "type": "host", "value": "www.gamesales.com.br" }],
             "destination": "https://vyzon.com.br/:path*",
             "permanent": true
+        },
+        {
+            "source": "/crm-gamificado",
+            "destination": "/",
+            "permanent": true
+        },
+        {
+            "source": "/crm-com-ranking-de-vendas",
+            "destination": "/",
+            "permanent": true
+        },
+        {
+            "source": "/crm-para-times-comerciais",
+            "destination": "/",
+            "permanent": true
         }
     ],
     "rewrites": [

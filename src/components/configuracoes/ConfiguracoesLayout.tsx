@@ -12,6 +12,7 @@ import {
   Link2,
   FileText,
   Webhook,
+  Tag,
 } from "lucide-react";
 import { EvaIcon } from "@/components/icons/EvaAvatar";
 import { cn } from "@/lib/utils";
@@ -51,6 +52,7 @@ const GROUPS: NavGroup[] = [
     label: "Dados",
     items: [
       { id: "integracoes", label: "Integrações", path: "/configuracoes/integracoes", icon: Plug, adminOnly: true },
+      { id: "tags", label: "Tags", path: "/configuracoes/tags", icon: Tag, adminOnly: true },
       { id: "importar", label: "Importar", path: "/configuracoes/importar", icon: Upload, adminOnly: true },
     ],
   },
@@ -82,6 +84,7 @@ const TITLES: Record<string, { title: string; subtitle: string }> = {
   time: { title: "Acesso", subtitle: "Gestão da equipe centralizada em Gestão → Equipe" },
   faturamento: { title: "Faturamento", subtitle: "Plano, uso e histórico" },
   integracoes: { title: "Integrações", subtitle: "Checkouts, webhooks e automações" },
+  tags: { title: "Tags", subtitle: "Marcadores do time para deals, conversas e contatos" },
   importar: { title: "Importar", subtitle: "Traga deals e vendas de fora" },
   "relatorios-publicos": {
     title: "Relatórios públicos",

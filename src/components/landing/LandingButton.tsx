@@ -35,24 +35,26 @@ const ARROW_CLASS: Record<Size, string> = {
     lg: "h-4 w-4",
 };
 
+// LP.4 2026-06-09: vocabulário editorial — raio menor, hairline de tinta no
+// secundário e "press" com sombra dura (lp-press) no lugar de glow.
 const PRIMARY_STYLE: React.CSSProperties = {
-    background: "#1556C0",
+    background: "var(--lp-blue, #1556C0)",
     color: "#FFFFFF",
-    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.15), 0 1px 2px rgba(21,86,192,0.20)",
+    border: "1px solid var(--lp-blue-deep, #0E3E8A)",
     fontWeight: 600,
     letterSpacing: "-0.01em",
 };
 
 const SECONDARY_STYLE: React.CSSProperties = {
-    background: "rgba(10,10,10,0.03)",
-    color: "#0A0A0A",
-    boxShadow: "inset 0 0 0 1px rgba(10,10,10,0.12)",
+    background: "var(--lp-white, #FFFFFF)",
+    color: "var(--lp-ink, #0D1421)",
+    border: "1px solid var(--lp-line, rgba(13,20,33,0.14))",
     fontWeight: 500,
     letterSpacing: "-0.01em",
 };
 
 const baseClass =
-    "lbtn group relative inline-flex items-center justify-center rounded-[20px] no-underline whitespace-nowrap transition-[filter,box-shadow,background] duration-[180ms] ease-out";
+    "lbtn lp-press group relative inline-flex items-center justify-center rounded-[10px] no-underline whitespace-nowrap";
 
 export const LandingButton = forwardRef<
     HTMLAnchorElement | HTMLButtonElement,

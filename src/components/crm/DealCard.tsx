@@ -49,10 +49,11 @@ interface DealCardProps {
 }
 
 // F5P.2 — Mapeamento visual de temperatura EVA pros badges
+// LP-PIPE.1: tons duais light-first (os -300 eram da era dark).
 const EVA_TEMP_STYLES: Record<string, { label: string; bg: string; color: string }> = {
-  quente:  { label: "Quente", bg: "bg-rose-500/15",    color: "text-rose-300" },
-  morno:   { label: "Morno",  bg: "bg-amber-500/15",   color: "text-amber-300" },
-  frio:    { label: "Frio",   bg: "bg-sky-500/15",     color: "text-sky-300" },
+  quente:  { label: "Quente", bg: "bg-rose-500/10",    color: "text-rose-600 dark:text-rose-300" },
+  morno:   { label: "Morno",  bg: "bg-amber-500/10",   color: "text-amber-600 dark:text-amber-300" },
+  frio:    { label: "Frio",   bg: "bg-sky-500/10",     color: "text-sky-600 dark:text-sky-300" },
   unknown: { label: "EVA não analisou", bg: "bg-muted/40", color: "text-muted-foreground" },
 };
 
@@ -441,7 +442,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
         <>
           {clampedOffset > 0 && stageNeighbors?.next && (
             <div className={`absolute inset-0 rounded-xl flex items-center justify-end pr-4 transition-colors ${swipe.pastThreshold ? "bg-emerald-500/20" : "bg-emerald-500/10"}`}>
-              <div className="flex items-center gap-1.5 text-emerald-400">
+              <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400">
                 <span className="text-xs font-semibold">{stageNeighbors.next.title}</span>
                 <ChevronRight className="h-4 w-4" />
               </div>
@@ -449,7 +450,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
           )}
           {clampedOffset < 0 && stageNeighbors?.prev && (
             <div className={`absolute inset-0 rounded-xl flex items-center justify-start pl-4 transition-colors ${swipe.pastThreshold ? "bg-blue-500/20" : "bg-blue-500/10"}`}>
-              <div className="flex items-center gap-1.5 text-blue-400">
+              <div className="flex items-center gap-1.5 text-blue-700 dark:text-blue-400">
                 <ChevronLeft className="h-4 w-4" />
                 <span className="text-xs font-semibold">{stageNeighbors.prev.title}</span>
               </div>
@@ -523,7 +524,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
                 top: actionsCoords.top,
                 left: actionsCoords.left,
               }}
-              className="flex items-center gap-0.5 px-2 py-1.5 rounded-xl bg-secondary shadow-xl shadow-black/40 ring-1 ring-border z-[9999] whitespace-nowrap"
+              className="flex items-center gap-0.5 px-2 py-1.5 rounded-xl bg-white dark:bg-secondary shadow-lg shadow-slate-900/15 dark:shadow-black/40 ring-1 ring-slate-200 dark:ring-border z-[9999] whitespace-nowrap"
               onMouseEnter={showActions}
               onMouseLeave={hideActionsSoon}
               onClick={e => e.stopPropagation()}
@@ -534,7 +535,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
                 title="Ligar"
                 aria-label="Ligar"
               >
-                <Phone className="h-3.5 w-3.5 text-muted-foreground group-hover/b:text-emerald-400" />
+                <Phone className="h-3.5 w-3.5 text-muted-foreground group-hover/b:text-emerald-600 dark:group-hover/b:text-emerald-400" />
               </button>
               <div className="w-px h-4 bg-border" />
               <button
@@ -543,7 +544,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
                 title="Agendar"
                 aria-label="Agendar"
               >
-                <Calendar className="h-3.5 w-3.5 text-muted-foreground group-hover/b:text-emerald-400" />
+                <Calendar className="h-3.5 w-3.5 text-muted-foreground group-hover/b:text-emerald-600 dark:group-hover/b:text-emerald-400" />
               </button>
               <div className="w-px h-4 bg-border" />
               <button
@@ -552,7 +553,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
                 title="Marcar como Ganho"
                 aria-label="Marcar como Ganho"
               >
-                <CheckCircle2 className="h-3.5 w-3.5 text-muted-foreground group-hover/b:text-emerald-400" />
+                <CheckCircle2 className="h-3.5 w-3.5 text-muted-foreground group-hover/b:text-emerald-600 dark:group-hover/b:text-emerald-400" />
               </button>
               <div className="w-px h-4 bg-border" />
               <button
@@ -561,7 +562,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
                 title="Duplicar negociação"
                 aria-label="Copiar"
               >
-                <Copy className="h-3.5 w-3.5 text-muted-foreground group-hover/b:text-blue-400" />
+                <Copy className="h-3.5 w-3.5 text-muted-foreground group-hover/b:text-blue-600 dark:group-hover/b:text-blue-400" />
               </button>
               {onDelete && (
                 <>
@@ -572,7 +573,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
                     title="Excluir negociação"
                     aria-label="Excluir"
                   >
-                    <Trash2 className="h-3.5 w-3.5 text-muted-foreground group-hover/b:text-rose-400" />
+                    <Trash2 className="h-3.5 w-3.5 text-muted-foreground group-hover/b:text-rose-600 dark:group-hover/b:text-rose-400" />
                   </button>
                 </>
               )}
@@ -622,11 +623,11 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
 
           <div className="flex items-center gap-1 flex-shrink-0">
             {deal.is_hot && (
-              <Flame className="h-3.5 w-3.5 text-orange-400" />
+              <Flame className="h-3.5 w-3.5 text-orange-500 dark:text-orange-400" />
             )}
             <Avatar className={`h-5 w-5 ring-1 ${deal.assignee_outside_company ? "ring-rose-500/40" : "ring-border"}`}>
               <AvatarImage src={deal.profiles?.avatar_url || undefined} />
-              <AvatarFallback className={`text-[9px] font-semibold ${deal.assignee_outside_company ? "bg-rose-500/10 text-rose-300" : "bg-muted text-muted-foreground"}`}>
+              <AvatarFallback className={`text-[9px] font-semibold ${deal.assignee_outside_company ? "bg-rose-500/10 text-rose-600 dark:text-rose-300" : "bg-muted text-muted-foreground"}`}>
                 {deal.assignee_outside_company ? "!" : getInitials(deal.profiles?.nome || "")}
               </AvatarFallback>
             </Avatar>
@@ -636,12 +637,12 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
         {/* ── Row 1.5: Account (empresa B2B) ─────────────── */}
         {(deal as any).account_name && (
           <div className="flex items-center gap-1.5 mb-1.5 min-h-[14px]">
-            <Building2 className="h-3 w-3 text-emerald-400/70 flex-shrink-0" />
-            <span className="text-[11px] font-semibold text-emerald-300/90 truncate max-w-[70%]">
+            <Building2 className="h-3 w-3 text-emerald-600/80 dark:text-emerald-400/70 flex-shrink-0" />
+            <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300/90 truncate max-w-[70%]">
               {(deal as any).account_name}
             </span>
             {Array.isArray((deal as any).additional_contacts) && (deal as any).additional_contacts.length > 0 && (
-              <span className="inline-flex items-center gap-0.5 px-1.5 py-0 rounded-md text-[9px] font-bold bg-emerald-500/10 text-emerald-300/80 border border-emerald-500/20">
+              <span className="inline-flex items-center gap-0.5 px-1.5 py-0 rounded-md text-[9px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300/80 border border-emerald-500/20">
                 +{(deal as any).additional_contacts.length} stakeholder{(deal as any).additional_contacts.length > 1 ? "s" : ""}
               </span>
             )}
@@ -661,7 +662,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
               onMouseDown={e => e.stopPropagation()}
               onPointerDown={e => e.stopPropagation()}
               disabled={isSaving}
-              className={`${inlineInputClass} text-[11px] text-slate-300 flex-1`}
+              className={`${inlineInputClass} text-[11px] flex-1`}
               autoFocus
             />
           ) : canInlineEdit ? (
@@ -701,10 +702,10 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
                 {/* Badge canal */}
                 <span
                   className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded font-semibold ${
-                    hasConv ? "bg-emerald-500/15 text-emerald-300" : "bg-muted/40 text-muted-foreground"
+                    hasConv ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-muted/40 text-muted-foreground"
                   }`}
                 >
-                  <span className={`h-1.5 w-1.5 rounded-full ${hasConv ? "bg-emerald-400" : "bg-slate-500"}`} />
+                  <span className={`h-1.5 w-1.5 rounded-full ${hasConv ? "bg-emerald-500" : "bg-slate-400"}`} />
                   {hasConv ? "WhatsApp" : "Sem conversa"}
                 </span>
 
@@ -720,7 +721,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
               {/* Linha EVA (próxima ação OU stale) */}
               {hasConv && evaLine && (
                 <p className={`text-[10.5px] truncate ${
-                  context.isStale ? "text-amber-300/90" : "text-muted-foreground"
+                  context.isStale ? "text-amber-600 dark:text-amber-300/90" : "text-muted-foreground"
                 }`}>
                   {evaLine}
                 </p>
@@ -788,8 +789,8 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
             if (expired) {
               return (
                 <div className="flex items-center gap-1.5 mb-2 px-2 py-1 rounded-md bg-red-500/10 border border-red-500/30">
-                  <AlertTriangle className="h-3 w-3 text-red-400 flex-shrink-0" />
-                  <span className="text-[10px] font-bold text-red-300 uppercase tracking-wider">
+                  <AlertTriangle className="h-3 w-3 text-red-600 dark:text-red-400 flex-shrink-0" />
+                  <span className="text-[10px] font-bold text-red-600 dark:text-red-300 uppercase tracking-wider">
                     SLA vencido há {Math.abs(Math.round(hoursLeft))}h
                   </span>
                 </div>
@@ -798,8 +799,8 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
             if (urgent) {
               return (
                 <div className="flex items-center gap-1.5 mb-2 px-2 py-1 rounded-md bg-amber-500/10 border border-amber-500/30">
-                  <Clock className="h-3 w-3 text-amber-400 flex-shrink-0" />
-                  <span className="text-[10px] font-bold text-amber-300 uppercase tracking-wider">
+                  <Clock className="h-3 w-3 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+                  <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 uppercase tracking-wider">
                     SLA em {Math.round(hoursLeft)}h
                   </span>
                 </div>
@@ -822,12 +823,12 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
               onMouseDown={e => e.stopPropagation()}
               onPointerDown={e => e.stopPropagation()}
               disabled={isSaving}
-              className={`${inlineInputClass} text-[20px] font-bold text-emerald-400 tabular-nums w-36`}
+              className={`${inlineInputClass} text-[20px] font-bold text-emerald-600 dark:text-emerald-400 tabular-nums w-36`}
               autoFocus
             />
           ) : canInlineEdit ? (
             <button
-              className="text-[20px] font-bold text-emerald-400 tabular-nums tracking-tight group/value inline-flex items-center gap-1.5 cursor-text rounded hover:bg-muted/40 transition-colors px-0.5 -mx-0.5"
+              className="text-[20px] font-bold text-emerald-600 dark:text-emerald-400 tabular-nums tracking-tight group/value inline-flex items-center gap-1.5 cursor-text rounded hover:bg-muted/40 transition-colors px-0.5 -mx-0.5"
               onClick={e => startEditing("value", e)}
               onMouseDown={e => e.stopPropagation()}
               onPointerDown={e => e.stopPropagation()}
@@ -836,7 +837,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
               <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover/value:opacity-100 transition-opacity flex-shrink-0" />
             </button>
           ) : (
-            <span className="text-[20px] font-bold text-emerald-400 tabular-nums tracking-tight">
+            <span className="text-[20px] font-bold text-emerald-600 dark:text-emerald-400 tabular-nums tracking-tight">
               {formatCurrency(deal.value)}
             </span>
           )}
@@ -854,7 +855,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
 
           {/* Previsão de fechamento (prefixo "Prev." pra contextualizar a data) */}
           {deal.expected_close_date && (
-            <span className={`inline-flex items-center gap-1 tabular-nums flex-shrink-0 ${isOverdue ? "text-rose-400 font-semibold" : ""}`}>
+            <span className={`inline-flex items-center gap-1 tabular-nums flex-shrink-0 ${isOverdue ? "text-rose-600 dark:text-rose-400 font-semibold" : ""}`}>
               <Calendar className="h-2.5 w-2.5" strokeWidth={2.2} />
               {isOverdue ? "Venceu" : "Prev."} {format(parseISO(deal.expected_close_date), "dd MMM", { locale: ptBR })}
             </span>
@@ -883,7 +884,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
         </div>
 
         {deal.assignee_outside_company && (
-          <div className="mt-2 pt-2 border-t border-rose-500/20 text-[10px] text-rose-300/90 truncate">
+          <div className="mt-2 pt-2 border-t border-rose-500/20 text-[10px] text-rose-600 dark:text-rose-300/90 truncate">
             Responsável de outra organização
           </div>
         )}

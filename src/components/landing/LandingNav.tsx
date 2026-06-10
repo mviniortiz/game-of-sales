@@ -79,29 +79,11 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
             <header
                 className="fixed top-0 inset-x-0 z-50 landing-fade-in"
                 style={{
-                    background: scrolled
-                        ? "rgba(255,255,255,0.55)"
-                        : "transparent",
-                    backdropFilter: scrolled
-                        ? "blur(24px) saturate(180%) brightness(1.04)"
-                        : "none",
-                    WebkitBackdropFilter: scrolled
-                        ? "blur(24px) saturate(180%) brightness(1.04)"
-                        : "none",
+                    // LP.4: papel sólido + hairline de tinta (sem glass/blur)
+                    background: scrolled ? "#FAF9F5" : "transparent",
                     borderBottom: scrolled
-                        ? "1px solid rgba(255,255,255,0.4)"
+                        ? "1px solid var(--lp-line)"
                         : "1px solid transparent",
-                    boxShadow: scrolled
-                        ? [
-                            // highlight especular no topo (simula reflexo do glass)
-                            "inset 0 1px 0 rgba(255,255,255,0.65)",
-                            // borda interna inferior bem sutil
-                            "inset 0 -1px 0 rgba(10,10,10,0.06)",
-                            // sombra projetada suave que dá sensação de "flutuando"
-                            "0 1px 0 rgba(10,10,10,0.04)",
-                            "0 8px 32px -8px rgba(10,10,10,0.08)",
-                        ].join(", ")
-                        : "none",
                 }}
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">

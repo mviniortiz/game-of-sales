@@ -24,6 +24,7 @@ import {
     ArrowRight,
     BarChart3,
     CheckCircle2,
+    ChevronRight,
     Clock,
     Copy,
     Edit3,
@@ -33,11 +34,11 @@ import {
     Loader2,
     Plus,
     RefreshCw,
-    Sparkles,
     ThermometerSun,
     UserCog,
     Workflow,
 } from "lucide-react";
+import { EvaNode } from "@/components/landing/EvaNode";
 import { toast } from "sonner";
 import { EvaPhotoAvatar } from "@/components/eva/EvaPhotoAvatar";
 import { NovaOportunidadeModal } from "@/components/deals/NovaOportunidadeModal";
@@ -50,6 +51,7 @@ import { useEvaInsight, type EvaInsightResult } from "@/hooks/useEvaInsight";
 import { useEntityTags } from "@/hooks/useDealsTags";
 import { getTagColorClass, isHexColor } from "@/lib/tags";
 import type { Tag } from "@/types/tags";
+import { EvaStudioRules } from "@/components/eva/EvaStudioRules";
 import type {
     FitSugerido,
     KnowledgeGap,
@@ -163,12 +165,21 @@ function LoadingState({ message }: { message?: string }) {
 function ErrorState({
     error,
     onRetry,
+    resetAt,
 }: {
     error: Error;
     onRetry: () => void;
+    resetAt?: string | null;
 }) {
+    // FIO 4 — distingue limite diário (esperado, recupera sozinho) de falha real.
+    const code = (error as { code?: string }).code;
     const msg = error.message || "Não foi possível analisar agora.";
-    const isRateLimit = msg.toLowerCase().includes("limite") || msg.toLowerCase().includes("rate");
+    const isRateLimit =
+        code === "RATE_LIMITED" ||
+        msg.toLowerCase().includes("limite") ||
+        msg.toLowerCase().includes("rate");
+    const resetLabel = isRateLimit ? formatResetAt(resetAt ?? null) : null;
+
     return (
         <div className="flex-1 flex flex-col items-center justify-center px-5 text-center gap-3">
             <div
@@ -179,35 +190,43 @@ function ErrorState({
                         : "rgba(220,38,38,0.10)",
                 }}
             >
-                <AlertCircle
-                    className="h-5 w-5"
-                    style={{ color: isRateLimit ? "#B45309" : "#DC2626" }}
-                />
+                {isRateLimit ? (
+                    <Clock className="h-5 w-5" style={{ color: "#B45309" }} />
+                ) : (
+                    <AlertCircle className="h-5 w-5" style={{ color: "#DC2626" }} />
+                )}
             </div>
             <div>
                 <p className="text-[13px] font-semibold mb-1" style={{ color: "#0B1220" }}>
-                    Não foi possível analisar agora
+                    {isRateLimit ? "Limite diário de análises atingido" : "Não foi possível analisar agora"}
                 </p>
                 <p
                     className="text-[11.5px]"
                     style={{ color: "#64748B", lineHeight: 1.55, maxWidth: "260px" }}
                 >
-                    {msg}
+                    {isRateLimit
+                        ? resetLabel
+                            ? `A EVA volta a analisar ${resetLabel}. As análises já salvas continuam visíveis.`
+                            : "A EVA volta a analisar amanhã. As análises já salvas continuam visíveis."
+                        : msg}
                 </p>
             </div>
-            <button
-                type="button"
-                onClick={onRetry}
-                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-[11.5px] font-semibold transition-colors"
-                style={{
-                    background: "rgba(37,99,235,0.08)",
-                    color: "#1D4ED8",
-                    border: "1px solid rgba(37,99,235,0.20)",
-                }}
-            >
-                <RefreshCw className="h-3 w-3" />
-                Tentar novamente
-            </button>
+            {/* Retry só faz sentido em falha real; no rate limit ele falharia de novo. */}
+            {!isRateLimit && (
+                <button
+                    type="button"
+                    onClick={onRetry}
+                    className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-[11.5px] font-semibold transition-colors"
+                    style={{
+                        background: "rgba(37,99,235,0.08)",
+                        color: "#1D4ED8",
+                        border: "1px solid rgba(37,99,235,0.20)",
+                    }}
+                >
+                    <RefreshCw className="h-3 w-3" />
+                    Tentar novamente
+                </button>
+            )}
         </div>
     );
 }
@@ -351,8 +370,24 @@ function PanelContent({
                         <RefreshCw className="h-3 w-3" />
                     </button>
                 )}
+                {/* FIO 4 — avisa preventivamente quando o limite diário está acabando. */}
+                {insight.remaining !== null && insight.remaining <= 10 && (
+                    <span
+                        className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded shrink-0 tabular-nums"
+                        title={`Restam ${insight.remaining} de ${insight.dailyLimit ?? "—"} análises da EVA hoje`}
+                        style={{
+                            background: insight.remaining <= 3 ? "rgba(220,38,38,0.10)" : "rgba(245,158,11,0.12)",
+                            color: insight.remaining <= 3 ? "#DC2626" : "#B45309",
+                            fontWeight: 700,
+                        }}
+                    >
+                        <Clock className="h-2.5 w-2.5" />
+                        {insight.remaining} {insight.remaining === 1 ? "análise" : "análises"}
+                    </span>
+                )}
                 <span
                     className="inline-flex items-center gap-1 text-[9.5px] px-1.5 py-0.5 rounded uppercase shrink-0"
+                    title="A EVA sugere. Seu time aprova antes de qualquer ação."
                     style={{
                         background: "rgba(124,58,237,0.10)",
                         color: "#6D28D9",
@@ -360,8 +395,8 @@ function PanelContent({
                         letterSpacing: "0.06em",
                     }}
                 >
-                    <Sparkles className="h-2.5 w-2.5" />
-                    Preview
+                    <EvaNode size={10} color="#6D28D9" />
+                    Assistida
                 </span>
             </div>
 
@@ -376,8 +411,9 @@ function PanelContent({
                 onOpenDeal={(id) => navigate(`/deals/${id}`)}
             />
 
-            {/* Conteúdo */}
-            <div className="flex-1 overflow-y-auto px-5 py-5 space-y-7">
+            {/* Conteúdo — LP-INBOX.1: fundo levemente rebaixado pra dar
+                profundidade ao cartão-herói; ritmo vertical mais curto. */}
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4" style={{ background: "#F8FAFD" }}>
                 {/* Loading inicial do SELECT (sem custo de IA) */}
                 {insight.loading && !insight.hasAnalysis && (
                     <LoadingState message="Buscando análise salva…" />
@@ -387,6 +423,7 @@ function PanelContent({
                 {insight.error && !insight.analyzing && (
                     <ErrorState
                         error={insight.error}
+                        resetAt={insight.rateLimitResetAt}
                         onRetry={() => {
                             insight.clearAnalyzeError();
                             insight.analyze();
@@ -487,27 +524,25 @@ function DealLinkBanner({
     onLinkExisting: () => void;
     onOpenDeal: (dealId: string) => void;
 }) {
+    // LP-INBOX.1 2026-06-09: banner → régua fina de status. Um estado por
+    // linha, ações como links compactos. Mesmos handlers e estados.
+
     // Estado 1 — vínculo OFICIAL (channel_conversations.deal_id)
     if (hasLinkedOpportunity && effectiveDealId) {
         return (
             <div
-                className="px-5 py-3 shrink-0 flex items-center gap-2.5"
-                style={{ borderBottom: "1px solid #D9E2EC", background: "rgba(16,185,129,0.05)" }}
+                className="px-4 py-2 shrink-0 flex items-center gap-2"
+                style={{ borderBottom: "1px solid #E5EAF1", background: "#FFFFFF" }}
             >
-                <CheckCircle2 className="h-4 w-4 shrink-0" style={{ color: "#047857" }} />
-                <div className="flex-1 min-w-0">
-                    <p className="text-[12.5px] font-semibold leading-tight" style={{ color: "#0B1220" }}>
-                        Oportunidade vinculada
-                    </p>
-                    <p className="text-[11px] mt-0.5" style={{ color: "#64748B" }}>
-                        Esta conversa já está no pipeline.
-                    </p>
-                </div>
+                <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: "#10B981" }} />
+                <p className="text-[11.5px] font-semibold flex-1 min-w-0 truncate" style={{ color: "#0B1220" }}>
+                    No pipeline
+                </p>
                 <button
                     type="button"
                     onClick={() => onOpenDeal(effectiveDealId)}
-                    className="inline-flex items-center gap-1 h-8 px-3 rounded-md text-[11.5px] font-semibold shrink-0 transition-colors hover:brightness-105"
-                    style={{ background: "rgba(37,99,235,0.08)", color: "#1D4ED8", border: "1px solid rgba(37,99,235,0.20)" }}
+                    className="inline-flex items-center gap-1 text-[11.5px] font-semibold shrink-0 transition-colors hover:underline"
+                    style={{ color: "#1D4ED8" }}
                 >
                     Abrir oportunidade
                     <ArrowRight className="h-3 w-3" />
@@ -520,42 +555,37 @@ function DealLinkBanner({
     if (matchedNotLinked && effectiveDealId) {
         return (
             <div
-                className="px-5 py-3 shrink-0"
-                style={{ borderBottom: "1px solid #D9E2EC", background: "rgba(245,158,11,0.06)" }}
+                className="px-4 py-2 shrink-0 flex items-center gap-2 flex-wrap"
+                style={{ borderBottom: "1px solid #E5EAF1", background: "rgba(245,158,11,0.05)" }}
             >
-                <div className="flex items-start gap-2.5">
-                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" style={{ color: "#B45309" }} />
-                    <div className="flex-1 min-w-0">
-                        <p className="text-[12.5px] font-semibold leading-tight" style={{ color: "#0B1220" }}>
-                            Possível oportunidade existente
-                        </p>
-                        <p className="text-[11px] mt-0.5" style={{ color: "#64748B" }}>
-                            Encontramos uma oportunidade com este contato, mas ela ainda não está vinculada a esta conversa.
-                        </p>
-                    </div>
-                </div>
-                <div className="flex items-center gap-2 mt-2.5 flex-wrap">
-                    {canLinkExisting && (
-                        <button
-                            type="button"
-                            onClick={onLinkExisting}
-                            className="inline-flex items-center gap-1 h-8 px-3 rounded-md text-[11.5px] font-semibold text-white transition-all hover:brightness-110"
-                            style={{ background: "linear-gradient(135deg, #2563EB, #4A8CE8)" }}
-                        >
-                            <Link2 className="h-3 w-3" />
-                            Vincular existente
-                        </button>
-                    )}
+                <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: "#F59E0B" }} />
+                <p
+                    className="text-[11.5px] font-semibold flex-1 min-w-0 truncate"
+                    style={{ color: "#0B1220" }}
+                    title="Encontramos uma oportunidade com este contato, mas ela ainda não está vinculada a esta conversa."
+                >
+                    Possível oportunidade existente
+                </p>
+                {canLinkExisting && (
                     <button
                         type="button"
-                        onClick={() => onOpenDeal(effectiveDealId)}
-                        className="inline-flex items-center gap-1 h-8 px-3 rounded-md text-[11.5px] font-semibold transition-colors hover:bg-white"
-                        style={{ background: "transparent", color: "#1D4ED8", border: "1px solid rgba(37,99,235,0.20)" }}
+                        onClick={onLinkExisting}
+                        className="inline-flex items-center gap-1 text-[11.5px] font-semibold shrink-0 transition-colors hover:underline"
+                        style={{ color: "#B45309" }}
                     >
-                        Abrir oportunidade
-                        <ArrowRight className="h-3 w-3" />
+                        <Link2 className="h-3 w-3" />
+                        Vincular
                     </button>
-                </div>
+                )}
+                <button
+                    type="button"
+                    onClick={() => onOpenDeal(effectiveDealId)}
+                    className="inline-flex items-center gap-1 text-[11.5px] font-semibold shrink-0 transition-colors hover:underline"
+                    style={{ color: "#1D4ED8" }}
+                >
+                    Abrir
+                    <ArrowRight className="h-3 w-3" />
+                </button>
             </div>
         );
     }
@@ -563,42 +593,33 @@ function DealLinkBanner({
     // Estado 3 — sem oportunidade
     return (
         <div
-            className="px-5 py-3 shrink-0"
-            style={{ borderBottom: "1px solid #D9E2EC", background: "#F8FAFC" }}
+            className="px-4 py-2 shrink-0 flex items-center gap-2 flex-wrap"
+            style={{ borderBottom: "1px solid #E5EAF1", background: "#FFFFFF" }}
         >
-            <div className="flex items-start gap-2.5">
-                <Workflow className="h-4 w-4 shrink-0 mt-0.5" style={{ color: "#64748B" }} />
-                <div className="flex-1 min-w-0">
-                    <p className="text-[12.5px] font-semibold leading-tight" style={{ color: "#0B1220" }}>
-                        Ainda não está no pipeline
-                    </p>
-                    <p className="text-[11px] mt-0.5" style={{ color: "#64748B" }}>
-                        Crie uma oportunidade ou vincule a uma que já existe.
-                    </p>
-                </div>
-            </div>
-            <div className="flex items-center gap-2 mt-2.5 flex-wrap">
+            <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: "#CBD5E1" }} />
+            <p className="text-[11.5px] font-semibold flex-1 min-w-0 truncate" style={{ color: "#64748B" }}>
+                Fora do pipeline
+            </p>
+            <button
+                type="button"
+                onClick={onCreate}
+                className="inline-flex items-center gap-1 text-[11.5px] font-semibold shrink-0 transition-colors hover:underline"
+                style={{ color: "#1D4ED8" }}
+            >
+                <Plus className="h-3 w-3" />
+                Criar oportunidade
+            </button>
+            {canLinkExisting && (
                 <button
                     type="button"
-                    onClick={onCreate}
-                    className="inline-flex items-center gap-1 h-8 px-3 rounded-md text-[11.5px] font-semibold text-white transition-all hover:brightness-110"
-                    style={{ background: "linear-gradient(135deg, #2563EB, #4A8CE8)" }}
+                    onClick={onLinkExisting}
+                    className="inline-flex items-center gap-1 text-[11.5px] font-semibold shrink-0 transition-colors hover:underline"
+                    style={{ color: "#64748B" }}
                 >
-                    <Plus className="h-3 w-3" />
-                    Criar oportunidade no pipeline
+                    <Link2 className="h-3 w-3" />
+                    Vincular
                 </button>
-                {canLinkExisting && (
-                    <button
-                        type="button"
-                        onClick={onLinkExisting}
-                        className="inline-flex items-center gap-1 h-8 px-3 rounded-md text-[11.5px] font-semibold transition-colors hover:bg-white"
-                        style={{ background: "transparent", color: "#475569", border: "1px solid #D9E2EC" }}
-                    >
-                        <Link2 className="h-3 w-3" />
-                        Vincular existente
-                    </button>
-                )}
-            </div>
+            )}
         </div>
     );
 }
@@ -615,6 +636,22 @@ function formatTimeAgo(date: Date): string {
     if (h < 24) return `há ${h}h`;
     const d = Math.floor(h / 24);
     return `há ${d}d`;
+}
+
+// FIO 4 — quando o limite diário renova, em linguagem humana.
+function formatResetAt(iso: string | null): string | null {
+    if (!iso) return null;
+    const reset = new Date(iso);
+    if (Number.isNaN(reset.getTime())) return null;
+    const hhmm = reset.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    const now = new Date();
+    const sameDay = reset.toDateString() === now.toDateString();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(now.getDate() + 1);
+    const isTomorrow = reset.toDateString() === tomorrow.toDateString();
+    if (sameDay) return `às ${hhmm}`;
+    if (isTomorrow) return `amanhã às ${hhmm}`;
+    return reset.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }) + ` às ${hhmm}`;
 }
 
 function NoAnalysisState({ onAnalyze }: { onAnalyze: () => void }) {
@@ -639,9 +676,15 @@ function NoAnalysisState({ onAnalyze }: { onAnalyze: () => void }) {
                     boxShadow: "0 6px 16px -4px rgba(37,99,235,0.40), 0 1px 0 rgba(255,255,255,0.20) inset",
                 }}
             >
-                <Sparkles className="h-3.5 w-3.5" />
+                <EvaNode size={13} color="#FFFFFF" />
                 Analisar conversa
             </button>
+            {/* FIO 3 — a análise é manual por escolha de produto (EVA assistida).
+                Deixar explícito responde a expectativa de "automático" sem abrir
+                mão do controle do time. */}
+            <p className="text-[10.5px] mt-3" style={{ color: "#94A3B8", lineHeight: 1.5, maxWidth: "260px" }}>
+                Nada roda sozinho: você decide quando a EVA analisa.
+            </p>
         </div>
     );
 }
@@ -724,149 +767,195 @@ function RealContent({
         (g) => g.type === "agency_context",
     );
 
+    const gaps = qualification.knowledge_gaps.filter((g) => g.type !== "agency_context");
+    const hasInfo = qualification.info_coletada.length > 0 || qualification.info_faltante.length > 0;
+
+    // LP-INBOX.1 2026-06-09: de pilha de formulários → decision stack.
+    // 1 herói (próxima ação + resposta), 1 régua de leitura, alertas finos e
+    // o resto vira dossiê expansível (progressive disclosure). Lógica intocada.
     return (
         <>
-            {/* Aviso contexto incompleto */}
+            {/* Avisos finos */}
             {hasAgencyGap && <ContextGapBanner />}
-
-            {/* Legacy fallback notice (cached_analysis antigo sem qualification) */}
             {legacy && (
                 <div
-                    className="rounded-lg px-3 py-2 flex items-start gap-2"
+                    className="px-3 py-2 flex items-start gap-2 rounded-md"
                     style={{
                         background: "rgba(245,158,11,0.06)",
-                        border: "1px solid rgba(245,158,11,0.22)",
+                        borderLeft: "2px solid rgba(245,158,11,0.5)",
                     }}
                 >
-                    <Info
-                        className="h-3.5 w-3.5 mt-0.5 shrink-0"
-                        style={{ color: "#B45309" }}
-                    />
-                    <p
-                        className="text-[11.5px]"
-                        style={{ color: "#92400E", lineHeight: 1.4 }}
-                    >
+                    <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" style={{ color: "#B45309" }} />
+                    <p className="text-[11.5px]" style={{ color: "#92400E", lineHeight: 1.4 }}>
                         Esta conversa ainda usa análise no formato antigo. A próxima
                         reanálise traz qualificação completa.
                     </p>
                 </div>
             )}
 
-            {/* 1. Próxima ação */}
-            {(proximaAcaoLabel || analysis.nextAction) && (
-                <Section title="Próxima ação">
-                    <div
-                        className="rounded-lg px-3 py-3 flex items-start gap-2.5"
-                        style={{
-                            background: "rgba(37,99,235,0.05)",
-                            border: "1px solid rgba(37,99,235,0.18)",
-                        }}
-                    >
-                        <ArrowRight
-                            className="h-3.5 w-3.5 mt-0.5 shrink-0"
-                            style={{ color: "#2563EB" }}
-                        />
-                        <div className="flex-1 min-w-0">
+            {/* ── HERÓI: a vez da EVA (próxima ação + resposta sugerida) ── */}
+            {(proximaAcaoLabel || analysis.nextAction || qualification.resposta_sugerida || analysis.draft) && (
+                <div
+                    className="rounded-xl overflow-hidden"
+                    style={{
+                        background: "#FFFFFF",
+                        border: "1px solid #D9E2EC",
+                        boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 12px 32px -16px rgba(37,99,235,0.18)",
+                    }}
+                >
+                    {(proximaAcaoLabel || analysis.nextAction) && (
+                        <div className="px-4 pt-3.5">
                             <p
-                                className="text-[12.5px]"
-                                style={{ color: "#0B1220", lineHeight: 1.5, fontWeight: 500 }}
+                                className="text-[10px] uppercase inline-flex items-center gap-1.5 mb-1.5"
+                                style={{ color: "#6D28D9", fontWeight: 700, letterSpacing: "0.08em" }}
+                            >
+                                <EvaNode size={10} color="#6D28D9" />
+                                Próxima ação
+                            </p>
+                            <p
+                                className="text-[14px] font-semibold"
+                                style={{ color: "#0B1220", lineHeight: 1.35 }}
                             >
                                 {proximaAcaoLabel || analysis.nextAction}
                             </p>
                             {proximaAcaoLabel && analysis.nextAction && analysis.nextAction !== proximaAcaoLabel && (
-                                <p
-                                    className="text-[11px] mt-1"
-                                    style={{ color: "#64748B", lineHeight: 1.4 }}
-                                >
+                                <p className="text-[11.5px] mt-1" style={{ color: "#64748B", lineHeight: 1.45 }}>
                                     {analysis.nextAction}
                                 </p>
                             )}
                         </div>
-                    </div>
-                </Section>
+                    )}
+                    {(qualification.resposta_sugerida || analysis.draft) && (
+                        <SuggestedReply
+                            text={qualification.resposta_sugerida || analysis.draft || ""}
+                        />
+                    )}
+                </div>
             )}
 
-            {/* 2. Resposta sugerida */}
-            {(qualification.resposta_sugerida || analysis.draft) && (
-                <Section title="Resposta sugerida">
-                    <SuggestedReply
-                        text={qualification.resposta_sugerida || analysis.draft || ""}
-                    />
-                </Section>
-            )}
-
-            {/* 3. Qualificação — score, fit, temperatura, urgência, intenção */}
-            <Section title="Qualificação">
-                <QualificationBlock qualification={qualification} />
-            </Section>
-
-            {/* F6T.3 — Marcadores comerciais (tags da conversa/deal vinculado) */}
-            <EvaTagsSection
-                conversationId={chat.conversationId}
-                dealId={dealState.effectiveDealId}
-            />
-
-            {/* Resumo (secundário) */}
-            <Section title="Resumo EVA">
-                <p
-                    className="text-[12.5px]"
-                    style={{ color: "#0B1220", lineHeight: 1.55 }}
-                >
-                    {summary}
-                </p>
-                {analysis.stage && (
-                    <p
-                        className="text-[11px] mt-1.5"
-                        style={{ color: "#64748B" }}
-                    >
-                        Estágio sugerido: <strong style={{ color: "#0B1220" }}>{analysis.stage}</strong>
-                    </p>
-                )}
-            </Section>
-
-            {/* Já sabemos / Falta descobrir (secundário) */}
-            {(qualification.info_coletada.length > 0 || qualification.info_faltante.length > 0) && (
-                <Section title="Informações">
-                    <InfoLists
-                        coletada={qualification.info_coletada}
-                        faltante={qualification.info_faltante}
-                    />
-                </Section>
-            )}
-
-            {/* Recomendação de handoff — criar oportunidade já vive no banner do topo */}
+            {/* Handoff — alerta importante, logo abaixo do herói */}
             {qualification.deve_fazer_handoff && (
-                <Section title="Recomendações da EVA">
-                    <RecommendationCallout
-                        icon={UserCog}
-                        tone="amber"
-                        title="A EVA recomenda handoff humano"
-                        body="Esta conversa bate em regras de handoff cadastradas. Considere passar para um vendedor."
-                    />
-                </Section>
-            )}
-
-            {/* 4. Lacunas de contexto (exceto agency, que já mostramos em banner) */}
-            {qualification.knowledge_gaps.filter((g) => g.type !== "agency_context").length > 0 && (
-                <Section title="Lacunas de contexto">
-                    <KnowledgeGapsList
-                        gaps={qualification.knowledge_gaps.filter(
-                            (g) => g.type !== "agency_context",
-                        )}
-                    />
-                </Section>
-            )}
-
-            {/* 5. CRM block — mesma fonte de verdade do banner */}
-            <Section title="CRM">
-                <CrmBlock
-                    matchedDeal={dealState.matchedDeal}
-                    hasLinkedOpportunity={dealState.hasLinkedOpportunity}
-                    effectiveDealId={dealState.effectiveDealId}
-                    loading={dealState.loading}
+                <RecommendationCallout
+                    icon={UserCog}
+                    tone="amber"
+                    title="A EVA recomenda handoff humano"
+                    body="Esta conversa bate em regras de handoff cadastradas. Considere passar para um vendedor."
                 />
-            </Section>
+            )}
+
+            {/* ── LEITURA: score + sinais, sem caixa ── */}
+            <QualificationBlock qualification={qualification} />
+
+            {/* ── DOSSIÊ: o resto em linhas expansíveis ── */}
+            <div
+                className="rounded-xl px-4"
+                style={{ background: "#FFFFFF", border: "1px solid #E5EAF1" }}
+            >
+                <DossierRow title="Resumo da conversa" defaultOpen>
+                    <p className="text-[12.5px]" style={{ color: "#334155", lineHeight: 1.6 }}>
+                        {summary}
+                    </p>
+                    {analysis.stage && (
+                        <p className="text-[11px] mt-1.5" style={{ color: "#64748B" }}>
+                            Estágio sugerido: <strong style={{ color: "#0B1220" }}>{analysis.stage}</strong>
+                        </p>
+                    )}
+                </DossierRow>
+
+                {hasInfo && (
+                    <DossierRow
+                        title="Informações do lead"
+                        count={qualification.info_coletada.length + qualification.info_faltante.length}
+                    >
+                        <InfoLists
+                            coletada={qualification.info_coletada}
+                            faltante={qualification.info_faltante}
+                        />
+                    </DossierRow>
+                )}
+
+                {gaps.length > 0 && (
+                    <DossierRow title="Lacunas de contexto" count={gaps.length}>
+                        <KnowledgeGapsList gaps={gaps} />
+                    </DossierRow>
+                )}
+
+                {/* F6T.3 — Marcadores comerciais (tags da conversa/deal vinculado) */}
+                <EvaTagsSection
+                    conversationId={chat.conversationId}
+                    dealId={dealState.effectiveDealId}
+                />
+
+                <DossierRow title="Oportunidade no CRM">
+                    <CrmBlock
+                        matchedDeal={dealState.matchedDeal}
+                        hasLinkedOpportunity={dealState.hasLinkedOpportunity}
+                        effectiveDealId={dealState.effectiveDealId}
+                        loading={dealState.loading}
+                    />
+                </DossierRow>
+            </div>
+
+            {/* EVA.STUDIO.7 — regras aplicadas no EVA Studio (só leitura) */}
+            <EvaStudioRules />
         </>
+    );
+}
+
+// ─── Dossiê: linha expansível (progressive disclosure) ──────────────────────
+
+function DossierRow({
+    title,
+    count,
+    defaultOpen = false,
+    children,
+}: {
+    title: string;
+    count?: number;
+    defaultOpen?: boolean;
+    children: React.ReactNode;
+}) {
+    const [open, setOpen] = useState(defaultOpen);
+    return (
+        <div className="border-b last:border-b-0" style={{ borderColor: "#EEF2F6" }}>
+            <button
+                type="button"
+                onClick={() => setOpen((o) => !o)}
+                aria-expanded={open}
+                className="w-full flex items-center gap-2 py-3 text-left group"
+            >
+                <ChevronRight
+                    className="h-3.5 w-3.5 shrink-0 transition-transform duration-150"
+                    style={{
+                        color: open ? "#2563EB" : "#94A3B8",
+                        transform: open ? "rotate(90deg)" : "none",
+                    }}
+                />
+                <span
+                    className="text-[11px] uppercase flex-1"
+                    style={{
+                        color: open ? "#0B1220" : "#475569",
+                        fontWeight: 700,
+                        letterSpacing: "0.07em",
+                    }}
+                >
+                    {title}
+                </span>
+                {typeof count === "number" && count > 0 && (
+                    <span
+                        className="text-[10px] tabular-nums px-1.5 py-0.5 rounded-full shrink-0"
+                        style={{
+                            background: "rgba(37,99,235,0.08)",
+                            color: "#1D4ED8",
+                            fontWeight: 700,
+                        }}
+                    >
+                        {count}
+                    </span>
+                )}
+            </button>
+            {open && <div className="pb-3.5 pl-[22px]">{children}</div>}
+        </div>
     );
 }
 
@@ -877,10 +966,10 @@ function RealContent({
 function ContextGapBanner() {
     return (
         <div
-            className="rounded-lg px-3 py-2.5 flex items-start gap-2"
+            className="rounded-md px-3 py-2.5 flex items-start gap-2"
             style={{
                 background: "rgba(245,158,11,0.06)",
-                border: "1px solid rgba(245,158,11,0.22)",
+                borderLeft: "2px solid rgba(245,158,11,0.5)",
             }}
         >
             <AlertTriangle
@@ -923,43 +1012,52 @@ function QualificationBlock({ qualification }: { qualification: Qualification })
     const temp = qualification.temperatura ? TEMPERATURA_META[qualification.temperatura] : null;
     const urg = qualification.urgencia ? URGENCIA_META[qualification.urgencia] : null;
 
+    // LP-INBOX.1: leitura da EVA como régua aberta — score grande tabular +
+    // barra de progresso fina + sinais em pills. Sem caixa dentro de caixa.
     return (
-        <div className="space-y-2.5">
-            {/* Score grande */}
-            <div
-                className="rounded-lg px-3 py-3 flex items-center gap-3"
-                style={{
-                    background: "rgba(37,99,235,0.04)",
-                    border: "1px solid rgba(37,99,235,0.16)",
-                }}
+        <div className="px-0.5">
+            <p
+                className="text-[10px] uppercase mb-2.5"
+                style={{ color: "#64748B", fontWeight: 700, letterSpacing: "0.08em" }}
             >
-                <div
-                    className="h-11 w-11 rounded-lg flex items-center justify-center text-[15px] tabular-nums font-bold"
-                    style={{
-                        background: "#FFFFFF",
-                        color: score !== null ? "#1D4ED8" : "#94A3B8",
-                        border: "1px solid rgba(37,99,235,0.22)",
-                    }}
-                >
-                    {score !== null ? score : "—"}
+                Leitura da EVA
+            </p>
+            <div className="flex items-center gap-3.5">
+                <div className="flex items-baseline gap-1 shrink-0">
+                    <span
+                        className="text-[26px] leading-none tabular-nums"
+                        style={{ color: score !== null ? "#1D4ED8" : "#94A3B8", fontWeight: 800, letterSpacing: "-0.03em" }}
+                    >
+                        {score !== null ? score : "—"}
+                    </span>
+                    <span className="text-[11px]" style={{ color: "#94A3B8", fontWeight: 600 }}>
+                        /100
+                    </span>
                 </div>
                 <div className="flex-1 min-w-0">
-                    <p className="text-[12.5px] font-semibold" style={{ color: "#0B1220" }}>
+                    <div
+                        className="h-[5px] rounded-full overflow-hidden mb-1.5"
+                        style={{ background: "rgba(13,20,33,0.07)" }}
+                    >
+                        <div
+                            className="h-full rounded-full transition-[width] duration-500"
+                            style={{
+                                width: `${score ?? 0}%`,
+                                background: "linear-gradient(90deg, #2563EB, #4A8CE8)",
+                            }}
+                        />
+                    </div>
+                    <p className="text-[11.5px] font-semibold" style={{ color: "#0B1220" }}>
                         {fit ? `Fit ${fit.label.toLowerCase()}` : "Score em análise"}
                     </p>
-                    {qualification.score_justificativa && (
-                        <p
-                            className="text-[11px] mt-0.5"
-                            style={{ color: "#64748B", lineHeight: 1.4 }}
-                        >
-                            {qualification.score_justificativa}
-                        </p>
-                    )}
                 </div>
             </div>
-
-            {/* Pills row */}
-            <div className="flex flex-wrap gap-1.5">
+            {qualification.score_justificativa && (
+                <p className="text-[11px] mt-2" style={{ color: "#64748B", lineHeight: 1.5 }}>
+                    {qualification.score_justificativa}
+                </p>
+            )}
+            <div className="flex flex-wrap gap-1.5 mt-3">
                 {temp && <TonePill tone={temp.tone} icon={temp.icon} label={`Temperatura: ${temp.label}`} />}
                 {urg && <TonePill tone={urg.tone} label={`Urgência: ${urg.label}`} />}
                 {qualification.intencao && (
@@ -1089,67 +1187,62 @@ function SuggestedReply({ text }: { text: string }) {
         }
     };
 
+    // LP-INBOX.1: a resposta vive DENTRO do cartão-herói como rascunho de
+    // mensagem (bolha de chat), não como campo de formulário.
     return (
-        <div
-            className="rounded-lg p-3"
-            style={{
-                background: "rgba(124,58,237,0.04)",
-                border: "1px solid rgba(124,58,237,0.18)",
-            }}
-        >
+        <div className="px-4 pb-4 pt-3">
             {edited === null ? (
-                <p
-                    className="text-[12px] mb-3"
-                    style={{ color: "#0B1220", lineHeight: 1.55 }}
+                <div
+                    className="px-3.5 py-3 text-[12.5px]"
+                    style={{
+                        background: "#F7F5FE",
+                        border: "1px solid rgba(124,58,237,0.16)",
+                        borderRadius: "12px 12px 12px 4px",
+                        color: "#1E1B2E",
+                        lineHeight: 1.55,
+                    }}
                 >
                     {text}
-                </p>
+                </div>
             ) : (
                 <textarea
                     value={edited}
                     onChange={(e) => setEdited(e.target.value)}
-                    className="w-full text-[12px] mb-3 rounded-md px-2 py-1.5 outline-none resize-y min-h-[72px]"
+                    autoFocus
+                    className="w-full text-[12.5px] px-3.5 py-3 outline-none resize-y min-h-[88px]"
                     style={{
                         background: "#FFFFFF",
-                        border: "1px solid #D9E2EC",
-                        color: "#0B1220",
+                        border: "1px solid rgba(124,58,237,0.35)",
+                        borderRadius: "12px 12px 12px 4px",
+                        color: "#1E1B2E",
                         lineHeight: 1.55,
+                        boxShadow: "0 0 0 3px rgba(124,58,237,0.08)",
                     }}
                 />
             )}
-            <div className="flex items-center gap-1.5 flex-wrap">
+            <div className="flex items-center gap-1.5 flex-wrap mt-2.5">
                 <button
                     type="button"
                     onClick={handleCopy}
-                    className="inline-flex items-center gap-1 h-7 px-2.5 rounded-md text-[11px] font-semibold transition-colors"
-                    style={{
-                        background: "linear-gradient(135deg, #2563EB, #4A8CE8)",
-                        color: "#FFFFFF",
-                    }}
+                    className="inline-flex items-center gap-1.5 h-7.5 px-3 py-1.5 rounded-lg text-[11.5px] font-semibold text-white transition-all hover:brightness-110"
+                    style={{ background: "linear-gradient(135deg, #2563EB, #4A8CE8)" }}
                 >
                     <Copy className="h-3 w-3" />
-                    Copiar
+                    Copiar resposta
                 </button>
                 <button
                     type="button"
                     onClick={() => setEdited(edited === null ? text : null)}
-                    className="inline-flex items-center gap-1 h-7 px-2.5 rounded-md text-[11px] font-semibold transition-colors"
-                    style={{
-                        background: "rgba(124,58,237,0.08)",
-                        color: "#6D28D9",
-                        border: "1px solid rgba(124,58,237,0.22)",
-                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11.5px] font-semibold transition-colors hover:bg-[#F7F5FE]"
+                    style={{ color: "#6D28D9", border: "1px solid rgba(124,58,237,0.22)" }}
                 >
                     <Edit3 className="h-3 w-3" />
                     {edited === null ? "Editar" : "Cancelar edição"}
                 </button>
+                <span className="text-[10px] ml-auto" style={{ color: "#94A3B8" }}>
+                    Você aprova antes de enviar.
+                </span>
             </div>
-            <p
-                className="text-[10px] mt-2"
-                style={{ color: "#94A3B8", fontStyle: "italic" }}
-            >
-                A EVA sugere. Seu time aprova antes de enviar.
-            </p>
         </div>
     );
 }
@@ -1287,7 +1380,7 @@ function EvaTagsSection({
     if (tags.length === 0) return null;
 
     return (
-        <Section title="Marcadores comerciais">
+        <DossierRow title="Marcadores comerciais" count={tags.length}>
             <div className="flex items-center gap-1.5 flex-wrap">
                 {tags.map((tag) => {
                     const useHex = isHexColor(tag.color);
@@ -1317,33 +1410,7 @@ function EvaTagsSection({
             >
                 Marcadores aplicados pelo time. A EVA não aplica tags sozinha.
             </p>
-        </Section>
-    );
-}
-
-function Section({
-    title,
-    children,
-}: {
-    title: string;
-    children: React.ReactNode;
-}) {
-    return (
-        <section>
-            <div className="flex items-center gap-1.5 mb-2">
-                <p
-                    className="text-[10.5px] uppercase"
-                    style={{
-                        color: "#64748B",
-                        fontWeight: 700,
-                        letterSpacing: "0.08em",
-                    }}
-                >
-                    {title}
-                </p>
-            </div>
-            {children}
-        </section>
+        </DossierRow>
     );
 }
 

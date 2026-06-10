@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
-    Sparkles, PanelRightOpen, PanelRightClose, Phone, Brain, TrendingUp, Target,
+    PanelRightOpen, PanelRightClose, Phone, TrendingUp, Target,
     AlertCircle, Loader2, ChevronRight, Plus, Clock, History,
-    Flame, Snowflake, ThermometerSun, Zap, Copy, ArrowRight, StickyNote,
-    DollarSign, FileText, ClipboardList, SendHorizonal, Wand2
+    Flame, Snowflake, ThermometerSun, ArrowRight, StickyNote,
+    DollarSign, FileText, ClipboardList, Brain, Zap, RefreshCw
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -20,22 +20,21 @@ import { RegisterSaleForm } from "./RegisterSaleForm";
 import { CreateProposalForm } from "./CreateProposalForm";
 import { useCrmLookup, updateDealStage, addNoteToDeal } from "./useCrmLookup";
 import { PIPELINE_STAGES, getStageInfo, tempColor } from "./helpers";
+import { EvaEntity } from "@/components/eva/EvaEntity";
+import {
+    EvaAssistColumn,
+    type EvaAssistData,
+    type EvaAssistTemperatura,
+} from "@/components/inbox/EvaAssistColumn";
+import {
+    recordSuggestionFeedback,
+    type SuggestionOutcome,
+} from "@/lib/eva/suggestionFeedback";
 
 const TempIcon = ({ temp }: { temp: string }) => {
     if (temp === "quente") return <Flame className="w-3 h-3" />;
     if (temp === "frio") return <Snowflake className="w-3 h-3" />;
     return <ThermometerSun className="w-3 h-3" />;
-};
-
-// EVA AVATAR — minimalist mark (no gradient/glow)
-const EvaAvatar = ({ size = "md", pulse = false }: { size?: "sm" | "md" | "lg"; pulse?: boolean }) => {
-    const dim = size === "sm" ? "h-6 w-6" : size === "lg" ? "h-9 w-9" : "h-7 w-7";
-    const icon = size === "sm" ? "w-3 h-3" : size === "lg" ? "w-4 h-4" : "w-3.5 h-3.5";
-    return (
-        <div className={`${dim} shrink-0 rounded-md bg-violet-500/10 border border-violet-500/25 flex items-center justify-center ${pulse ? 'animate-pulse' : ''}`}>
-            <Sparkles className={`${icon} text-violet-300`} strokeWidth={2} />
-        </div>
-    );
 };
 
 const buildEvaSpeech = (suggestion: any, leadName: string): string => {
@@ -56,6 +55,7 @@ export const CopilotSidebar = ({
     rateLimited,
     onAnalyze,
     onUseDraft,
+    onSendDirect,
     sidebarOpen,
     onToggle,
     containerClassName,
@@ -68,6 +68,8 @@ export const CopilotSidebar = ({
     rateLimited: boolean;
     onAnalyze: () => void;
     onUseDraft: () => void;
+    /** Envia a mensagem DIRETO no WhatsApp (clique humano). Sem ele, cai no onUseDraft. */
+    onSendDirect?: (text: string) => Promise<void> | void;
     sidebarOpen: boolean;
     onToggle: () => void;
     containerClassName?: string;
@@ -84,7 +86,6 @@ export const CopilotSidebar = ({
     const [creatingDeal, setCreatingDeal] = useState(false);
     const [showSaleForm, setShowSaleForm] = useState(false);
     const [showProposalForm, setShowProposalForm] = useState(false);
-    const [askInput, setAskInput] = useState("");
 
     useEffect(() => {
         setShowCreateDeal(false);
@@ -93,7 +94,6 @@ export const CopilotSidebar = ({
         setNoteText("");
         setShowSaleForm(false);
         setShowProposalForm(false);
-        setAskInput("");
     }, [chat?.id]);
 
     const handleStageChange = async (newStage: string) => {
@@ -165,12 +165,69 @@ export const CopilotSidebar = ({
         }
     };
 
-    const handleAskEva = () => {
-        if (!askInput.trim()) return;
-        toast.info("Em breve você poderá conversar direto com a Eva", {
-            description: "Por enquanto, use 'Analisar com Eva' para insights desta conversa.",
-        });
-        setAskInput("");
+    // ── EVA como máquina de resposta (EVA.INBOX.1 integrado) ──
+    // A análise do whatsapp-copilot vira EvaAssistData: CONFIA (resposta pronta)
+    // quando há sugestão com confiança razoável; SE CALA (descoberta) quando não.
+    const qual = (aiSuggestion?.qualification ?? {}) as Record<string, any>;
+    const confianca: number | null = typeof qual.confianca === "number" ? qual.confianca : null;
+
+    const assistData: EvaAssistData | null = useMemo(() => {
+        if (!aiSuggestion || !chat) return null;
+        const suggestion = String(qual.resposta_sugerida || aiSuggestion.draft || "").trim();
+        const mode: EvaAssistData["mode"] =
+            suggestion && (confianca === null || confianca >= 0.5) ? "suggest" : "discover";
+        const questions: string[] = Array.isArray(qual.info_faltante)
+            ? qual.info_faltante.filter(Boolean).map(String).slice(0, 2)
+            : [];
+        const chips: string[] = [];
+        if (qual.fit_sugerido) chips.push(`Fit ${qual.fit_sugerido}`);
+        if (qual.urgencia && qual.urgencia !== "indefinida") chips.push(`Urgência ${qual.urgencia}`);
+        if (qual.orcamento && qual.orcamento !== "nao_informado") chips.push(`Orçamento ${String(qual.orcamento).replace("_", " ")}`);
+        const t = qual.temperatura || aiSuggestion.temperature;
+        const temperatura: EvaAssistTemperatura | null =
+            t === "quente" || t === "morno" || t === "frio" ? t : null;
+        return {
+            leadName: chat.name,
+            stateLine: aiSuggestion.sentiment || "Conversa analisada",
+            mode,
+            suggestion: suggestion || null,
+            questions,
+            context: {
+                summary: qual.score_justificativa || aiSuggestion.sentiment || "Sem leitura ainda.",
+                score: typeof qual.score_sugerido === "number" ? qual.score_sugerido : null,
+                temperatura,
+                chips,
+            },
+            nextAction: aiSuggestion.nextAction || "Acompanhar a resposta do lead.",
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [aiSuggestion, chat?.id, chat?.name]);
+
+    // Envio REAL + loop de aprendizado: accepted/edited cai em eva_suggestion_feedback.
+    const handleAssistSend = async (text: string, outcome: SuggestionOutcome | null) => {
+        if (!onSendDirect) {
+            onUseDraft();
+            return;
+        }
+        try {
+            await onSendDirect(text);
+            const cid = activeCompanyId || companyId;
+            if (outcome && cid) {
+                void recordSuggestionFeedback({
+                    companyId: cid,
+                    chatPhone: chat?.phone ?? null,
+                    confidence: confianca,
+                    outcome,
+                });
+            }
+            toast.success(
+                outcome?.outcome === "edited"
+                    ? "Enviado do seu jeito. Eu aprendo com a sua correção."
+                    : "Mensagem enviada.",
+            );
+        } catch {
+            toast.error("Não consegui enviar. Tenta de novo.");
+        }
     };
 
     const noteHistory = useMemo(() => {
@@ -199,7 +256,7 @@ export const CopilotSidebar = ({
                 <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <button className="h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground/70 hover:text-foreground hover:bg-white/[0.04] transition-colors" onClick={onToggle}>
+                            <button className="h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground/70 hover:text-foreground hover:bg-muted/60 transition-colors" onClick={onToggle}>
                                 <PanelRightOpen className="h-4 w-4" />
                             </button>
                         </TooltipTrigger>
@@ -216,13 +273,13 @@ export const CopilotSidebar = ({
             <div className={`${containerClassName || 'hidden md:flex'} w-[320px] shrink-0 flex-col border-l border-border bg-background`}>
                 <div className="flex items-center justify-between px-4 h-14 border-b border-border shrink-0">
                     <div className="flex items-center gap-2">
-                        <EvaAvatar size="sm" />
+                        <EvaEntity size={24} state="listening" />
                         <div className="flex flex-col leading-none">
-                            <span className="text-[12px] font-semibold text-foreground tracking-tight">Eva</span>
+                            <span className="text-[12px] font-semibold text-foreground tracking-tight">EVA</span>
                             <span className="text-[10px] text-muted-foreground/50 mt-0.5">copiloto</span>
                         </div>
                     </div>
-                    <button className="h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground/70 hover:text-foreground hover:bg-white/[0.04] transition-colors" onClick={onToggle}>
+                    <button className="h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground/70 hover:text-foreground hover:bg-muted/60 transition-colors" onClick={onToggle}>
                         <PanelRightClose className="h-4 w-4" />
                     </button>
                 </div>
@@ -240,24 +297,24 @@ export const CopilotSidebar = ({
     // ─── Full sidebar ───
     return (
         <div className={`${containerClassName || 'hidden md:flex'} w-[320px] shrink-0 flex-col border-l border-border bg-background overflow-hidden`}>
-            {/* ── Header: Eva brand ── */}
+            {/* ── Header: EVA brand ── */}
             <div className="flex items-center justify-between px-4 h-14 border-b border-border shrink-0">
                 <div className="flex items-center gap-2">
-                    <EvaAvatar size="sm" pulse={aiThinking} />
+                    <EvaEntity size={24} state={aiThinking ? "thinking" : aiSuggestion ? "idle" : "listening"} />
                     <div className="flex flex-col leading-none">
-                        <span className="text-[12px] font-semibold text-foreground tracking-tight">Eva</span>
+                        <span className="text-[12px] font-semibold text-foreground tracking-tight">EVA</span>
                         <span className="text-[10px] text-muted-foreground/50 mt-0.5">
-                            {aiThinking ? "analisando..." : "copiloto"}
+                            {aiThinking ? "lendo a conversa…" : "copiloto"}
                         </span>
                     </div>
                 </div>
                 <div className="flex items-center gap-1">
                     {remaining !== null && (
-                        <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded bg-white/[0.03] border ${remaining <= 2 ? "border-orange-500/25 text-orange-400" : "border-border text-muted-foreground/70"}`}>
+                        <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted/40 border ${remaining <= 2 ? "border-orange-500/25 text-orange-600" : "border-border text-muted-foreground/70"}`}>
                             {remaining}/10
                         </span>
                     )}
-                    <button className="h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground/70 hover:text-foreground hover:bg-white/[0.04] transition-colors" onClick={onToggle}>
+                    <button className="h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground/70 hover:text-foreground hover:bg-muted/60 transition-colors" onClick={onToggle}>
                         <PanelRightClose className="h-4 w-4" />
                     </button>
                 </div>
@@ -270,7 +327,7 @@ export const CopilotSidebar = ({
                         <div className="flex items-center gap-2.5">
                             <Avatar className="h-9 w-9 rounded-md shrink-0">
                                 {chat.profilePicUrl && <AvatarImage src={chat.profilePicUrl} className="rounded-md" />}
-                                <AvatarFallback className="bg-white/[0.04] text-muted-foreground text-[11px] font-semibold rounded-md">
+                                <AvatarFallback className="bg-muted/60 text-muted-foreground text-[11px] font-semibold rounded-md">
                                     {chat.name.substring(0, 2).toUpperCase()}
                                 </AvatarFallback>
                             </Avatar>
@@ -286,19 +343,19 @@ export const CopilotSidebar = ({
                         {(aiSuggestion?.temperature || deal || stageInfo) && (
                             <div className="flex flex-wrap gap-1 mt-2">
                                 {aiSuggestion?.temperature && (
-                                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded bg-white/[0.03] border border-white/[0.06] flex items-center gap-1 ${tempColor(aiSuggestion.temperature).split(' ').filter(c => c.startsWith('text-')).join(' ') || 'text-muted-foreground'}`}>
+                                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted/40 border border-border flex items-center gap-1 ${tempColor(aiSuggestion.temperature).split(' ').filter(c => c.startsWith('text-')).join(' ') || 'text-muted-foreground'}`}>
                                         <TempIcon temp={aiSuggestion.temperature} />
                                         {aiSuggestion.temperature?.charAt(0).toUpperCase() + aiSuggestion.temperature?.slice(1)}
                                     </span>
                                 )}
                                 {deal && (
-                                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-white/[0.03] border border-white/[0.06] text-emerald-400 flex items-center gap-1">
+                                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted/40 border border-border text-emerald-600 flex items-center gap-1">
                                         <Target className="w-2.5 h-2.5" />
                                         {deal.value.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}
                                     </span>
                                 )}
                                 {stageInfo && (
-                                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded bg-white/[0.03] border border-white/[0.06] flex items-center gap-1 ${stageInfo.color}`}>
+                                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted/40 border border-border flex items-center gap-1 ${stageInfo.color}`}>
                                         <div className={`w-1.5 h-1.5 rounded-full ${stageInfo.bgColor.replace('/10', '/70')}`} />
                                         {stageInfo.title}
                                     </span>
@@ -307,94 +364,57 @@ export const CopilotSidebar = ({
                         )}
                     </div>
 
-                    {/* ── Eva hero ── */}
-                    <div className="px-4 py-3.5 border-b border-border">
-                        {aiSuggestion && !aiThinking && evaSpeech && (
-                            <div className="flex items-start gap-2 mb-3">
-                                <EvaAvatar size="sm" />
-                                <p className="flex-1 text-[12px] text-foreground/85 leading-[1.5] pt-0.5">
-                                    {evaSpeech}
-                                </p>
+                    {/* ── EVA: zona de resposta (a máquina de resposta, EVA.INBOX.1) ── */}
+                    <div className="px-3 py-3 border-b border-border">
+                        {aiThinking ? (
+                            <div className="flex items-center gap-2.5 px-1 py-1">
+                                <EvaEntity size={24} state="thinking" />
+                                <span className="text-[11.5px] text-violet-700/70 italic">Deixa eu ler essa conversa…</span>
                             </div>
-                        )}
-
-                        {aiThinking && (
-                            <div className="flex items-center gap-2 mb-3">
-                                <EvaAvatar size="sm" pulse />
-                                <span className="text-[11px] text-violet-300/70 italic pt-0.5">Deixa eu ler essa conversa...</span>
-                            </div>
-                        )}
-
-                        {!aiSuggestion && !aiThinking && (
-                            <div className="flex items-start gap-2 mb-3">
-                                <EvaAvatar size="sm" />
-                                <p className="flex-1 text-[12px] text-foreground/75 leading-[1.5] pt-0.5">
-                                    Oi! Quer que eu analise essa conversa?
-                                </p>
-                            </div>
-                        )}
-
-                        {/* Draft */}
-                        {aiSuggestion?.draft && !aiThinking && (
-                            <div className="rounded-md bg-violet-500/[0.04] border border-violet-500/20 p-2.5">
-                                <div className="flex items-center gap-1.5 mb-1.5">
-                                    <Wand2 className="w-3 h-3 text-violet-300" />
-                                    <span className="text-[9.5px] font-semibold text-violet-300/80 uppercase tracking-wider">Sugestão</span>
-                                </div>
-                                <p className="text-[12px] text-foreground/85 leading-[1.5] mb-2.5">
-                                    "{aiSuggestion.draft}"
-                                </p>
-                                <div className="flex gap-1.5">
-                                    <button
-                                        className="flex-1 h-7 rounded-md text-[11px] font-medium bg-violet-500/90 text-white hover:bg-violet-500 transition-colors flex items-center justify-center gap-1.5"
-                                        onClick={onUseDraft}
-                                    >
-                                        <SendHorizonal className="w-3 h-3" /> Usar mensagem
-                                    </button>
-                                    <button
-                                        className="h-7 w-7 rounded-md text-muted-foreground/70 hover:text-foreground hover:bg-white/[0.04] transition-colors flex items-center justify-center"
-                                        onClick={() => {
-                                            navigator.clipboard.writeText(aiSuggestion.draft);
-                                            toast.success("Copiado");
-                                        }}
-                                        title="Copiar"
-                                    >
-                                        <Copy className="w-3 h-3" />
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Analyze trigger */}
-                        {!aiSuggestion && (
-                            <button
-                                className={`w-full h-8 rounded-md text-[11.5px] font-medium flex items-center justify-center gap-1.5 transition-colors ${
-                                    aiThinking
-                                        ? "bg-violet-500/5 text-violet-300 border border-violet-500/20"
-                                        : rateLimited
-                                        ? "bg-white/[0.02] text-muted-foreground/50 cursor-not-allowed border border-border"
-                                        : "bg-violet-500/90 text-white hover:bg-violet-500"
-                                }`}
-                                onClick={onAnalyze}
-                                disabled={aiThinking || rateLimited}
-                            >
-                                {aiThinking ? (
-                                    <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Analisando...</>
-                                ) : rateLimited ? (
-                                    <><AlertCircle className="w-3.5 h-3.5" /> Limite atingido (10/dia)</>
-                                ) : (
-                                    <><Sparkles className="w-3.5 h-3.5" /> Analisar com Eva</>
+                        ) : assistData ? (
+                            <>
+                                {evaSpeech && (
+                                    <div className="flex items-start gap-2 px-1 pb-2.5">
+                                        <EvaEntity size={22} state="idle" />
+                                        <p className="flex-1 text-[12px] text-foreground/85 leading-[1.5]">
+                                            {evaSpeech}
+                                        </p>
+                                    </div>
                                 )}
-                            </button>
-                        )}
-
-                        {aiSuggestion && !aiThinking && !rateLimited && (
-                            <button
-                                className="mt-2 w-full h-6 rounded-md text-[10.5px] text-muted-foreground/60 hover:text-foreground hover:bg-white/[0.04] transition-colors flex items-center justify-center gap-1.5"
-                                onClick={onAnalyze}
-                            >
-                                <Sparkles className="w-3 h-3" /> Reanalisar
-                            </button>
+                                <EvaAssistColumn hideHeader data={assistData} onSend={handleAssistSend} />
+                                {!rateLimited && (
+                                    <button
+                                        className="mt-2 w-full h-6 rounded-md text-[10.5px] text-muted-foreground/60 hover:text-foreground hover:bg-muted/60 transition-colors flex items-center justify-center gap-1.5"
+                                        onClick={onAnalyze}
+                                    >
+                                        <RefreshCw className="w-3 h-3" /> Reanalisar
+                                    </button>
+                                )}
+                            </>
+                        ) : (
+                            <div className="px-1 py-1">
+                                <div className="flex items-start gap-2.5 mb-3">
+                                    <EvaEntity size={24} state="listening" />
+                                    <p className="flex-1 text-[12px] text-foreground/75 leading-[1.5] pt-0.5">
+                                        Quer que eu leia essa conversa e já te deixe a resposta pronta?
+                                    </p>
+                                </div>
+                                <button
+                                    className={`w-full h-8 rounded-md text-[11.5px] font-medium flex items-center justify-center gap-1.5 transition-colors ${
+                                        rateLimited
+                                            ? "bg-muted/40 text-muted-foreground/50 cursor-not-allowed border border-border"
+                                            : "bg-violet-600 text-white hover:bg-violet-700"
+                                    }`}
+                                    onClick={onAnalyze}
+                                    disabled={rateLimited}
+                                >
+                                    {rateLimited ? (
+                                        <><AlertCircle className="w-3.5 h-3.5" /> Limite atingido (10/dia)</>
+                                    ) : (
+                                        "Analisar com a EVA"
+                                    )}
+                                </button>
+                            </div>
                         )}
                     </div>
 
@@ -403,8 +423,8 @@ export const CopilotSidebar = ({
                         <SidebarSection title="Insights" icon={Brain} defaultOpen={false}>
                             <div className="space-y-2">
                                 {aiSuggestion.nextAction && (
-                                    <div className="flex items-start gap-2 rounded-md bg-white/[0.02] border border-border px-2.5 py-2">
-                                        <Target className="w-3 h-3 text-violet-300 shrink-0 mt-0.5" />
+                                    <div className="flex items-start gap-2 rounded-md bg-muted/40 border border-border px-2.5 py-2">
+                                        <Target className="w-3 h-3 text-violet-600 shrink-0 mt-0.5" />
                                         <div className="flex-1">
                                             <span className="text-[9.5px] font-semibold text-muted-foreground/60 uppercase tracking-wider block mb-0.5">Próximo passo</span>
                                             <span className="text-[11px] text-foreground/85 leading-snug">{aiSuggestion.nextAction}</span>
@@ -416,8 +436,8 @@ export const CopilotSidebar = ({
                                     <div className="space-y-1">
                                         <span className="text-[9.5px] font-semibold text-muted-foreground/60 uppercase tracking-wider">Estratégia</span>
                                         {aiSuggestion.strategy.map((s: string, i: number) => (
-                                            <div key={i} className="flex items-start gap-2 rounded-md bg-white/[0.02] border border-border px-2.5 py-1.5">
-                                                <Zap className="w-3 h-3 text-violet-300/70 shrink-0 mt-0.5" />
+                                            <div key={i} className="flex items-start gap-2 rounded-md bg-muted/40 border border-border px-2.5 py-1.5">
+                                                <Zap className="w-3 h-3 text-violet-600/70 shrink-0 mt-0.5" />
                                                 <span className="text-[10.5px] text-foreground/70 leading-snug">{s}</span>
                                             </div>
                                         ))}
@@ -427,11 +447,11 @@ export const CopilotSidebar = ({
                                 {aiSuggestion.objections?.length > 0 && (
                                     <div className="space-y-1">
                                         <span className="text-[9.5px] font-semibold text-muted-foreground/60 uppercase tracking-wider flex items-center gap-1">
-                                            <AlertCircle className="w-3 h-3 text-orange-400" />
+                                            <AlertCircle className="w-3 h-3 text-orange-600" />
                                             Objeções
                                         </span>
                                         {aiSuggestion.objections.map((obj: string, i: number) => (
-                                            <p key={i} className="text-[10.5px] text-orange-300/70 pl-2.5 border-l-2 border-orange-500/20 leading-snug">{obj}</p>
+                                            <p key={i} className="text-[10.5px] text-orange-700/80 pl-2.5 border-l-2 border-orange-500/20 leading-snug">{obj}</p>
                                         ))}
                                     </div>
                                 )}
@@ -445,11 +465,11 @@ export const CopilotSidebar = ({
                         icon={ClipboardList}
                         defaultOpen={false}
                         badge={deal ? (
-                            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-600">
                                 Vinculado
                             </span>
                         ) : crmSearched ? (
-                            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-400">
+                            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-600">
                                 Novo
                             </span>
                         ) : null}
@@ -462,28 +482,28 @@ export const CopilotSidebar = ({
                         ) : deal ? (
                             <div className="space-y-2.5">
                                 {/* Deal Card */}
-                                <div className="rounded-md bg-white/[0.02] border border-border overflow-hidden">
+                                <div className="rounded-md bg-muted/40 border border-border overflow-hidden">
                                     <div className="px-2.5 pt-2.5 pb-2">
                                         <div className="flex items-start justify-between gap-2 mb-2">
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-1.5">
                                                     <h4 className="text-[12.5px] font-semibold text-foreground truncate tracking-tight">{deal.title}</h4>
-                                                    {deal.is_hot && <Flame className="w-3 h-3 text-orange-400 shrink-0" />}
+                                                    {deal.is_hot && <Flame className="w-3 h-3 text-orange-600 shrink-0" />}
                                                 </div>
                                             </div>
-                                            <span className="text-[13px] font-bold text-emerald-400 tabular-nums shrink-0">
+                                            <span className="text-[13px] font-bold text-emerald-600 tabular-nums shrink-0">
                                                 {deal.value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
                                             </span>
                                         </div>
                                         <div className="flex items-center justify-between gap-2">
                                             {stageInfo && (
-                                                <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded bg-white/[0.03] border border-white/[0.06] flex items-center gap-1 ${stageInfo.color}`}>
+                                                <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted/40 border border-border flex items-center gap-1 ${stageInfo.color}`}>
                                                     <div className={`w-1.5 h-1.5 rounded-full ${stageInfo.bgColor.replace('/10', '/70')}`} />
                                                     {stageInfo.title}
                                                 </span>
                                             )}
                                             <div className="flex items-center gap-1.5">
-                                                <div className="w-12 h-1 bg-white/[0.04] rounded-full overflow-hidden">
+                                                <div className="w-12 h-1 bg-muted/60 rounded-full overflow-hidden">
                                                     <div
                                                         className={`h-full rounded-full ${deal.probability >= 70 ? 'bg-emerald-500' : deal.probability >= 40 ? 'bg-amber-500' : 'bg-emerald-500/60'}`}
                                                         style={{ width: `${deal.probability}%` }}
@@ -511,7 +531,7 @@ export const CopilotSidebar = ({
 
                                     <div className="px-2.5 py-1.5 border-t border-border flex gap-1">
                                         <button
-                                            className="flex-1 h-7 rounded-md text-[10.5px] font-medium text-muted-foreground hover:text-emerald-400 hover:bg-emerald-500/[0.06] transition-colors flex items-center justify-center gap-1"
+                                            className="flex-1 h-7 rounded-md text-[10.5px] font-medium text-muted-foreground hover:text-emerald-600 hover:bg-emerald-500/[0.06] transition-colors flex items-center justify-center gap-1"
                                             onClick={() => { setShowSaleForm(true); setShowProposalForm(false); }}>
                                             <DollarSign className="w-3 h-3" /> Venda
                                         </button>
@@ -521,7 +541,7 @@ export const CopilotSidebar = ({
                                             <FileText className="w-3 h-3" /> Proposta
                                         </button>
                                         <button
-                                            className="h-7 w-7 rounded-md text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors flex items-center justify-center"
+                                            className="h-7 w-7 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors flex items-center justify-center"
                                             onClick={() => window.open(`/deals/${deal.id}`, '_blank')} title="Pipeline">
                                             <ArrowRight className="w-3 h-3" />
                                         </button>
@@ -547,18 +567,18 @@ export const CopilotSidebar = ({
                                                 className={`flex-1 h-1 rounded-full transition-opacity ${
                                                     idx <= currentStageIdx
                                                         ? s.id === "closed_lost" ? "bg-rose-500/70" : "bg-emerald-500/70"
-                                                        : "bg-white/[0.06]"
+                                                        : "bg-muted"
                                                 } hover:opacity-80`}
                                                 title={s.title} />
                                         ))}
                                     </div>
                                     <Select value={deal.stage} onValueChange={handleStageChange} disabled={stageUpdating}>
-                                        <SelectTrigger className="h-7 bg-white/[0.02] border-border text-[11px] text-foreground rounded-md">
+                                        <SelectTrigger className="h-7 bg-muted/40 border-border text-[11px] text-foreground rounded-md">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent className="bg-popover border-border">
                                             {PIPELINE_STAGES.map(s => (
-                                                <SelectItem key={s.id} value={s.id} className="text-foreground focus:bg-white/[0.04] text-[11px]">
+                                                <SelectItem key={s.id} value={s.id} className="text-foreground focus:bg-muted/60 text-[11px]">
                                                     <div className="flex items-center gap-2">
                                                         <div className={`w-1.5 h-1.5 rounded-full ${s.bgColor.replace('/10', '/70')}`} />
                                                         {s.title}
@@ -571,7 +591,7 @@ export const CopilotSidebar = ({
 
                                 {canMoveNext && (
                                     <button
-                                        className="w-full h-7 rounded-md text-[10.5px] font-medium text-muted-foreground hover:text-emerald-400 hover:bg-emerald-500/[0.06] border border-border transition-colors flex items-center justify-center gap-1"
+                                        className="w-full h-7 rounded-md text-[10.5px] font-medium text-muted-foreground hover:text-emerald-600 hover:bg-emerald-500/[0.06] border border-border transition-colors flex items-center justify-center gap-1"
                                         onClick={handleMoveNext} disabled={stageUpdating}>
                                         <ChevronRight className="w-3 h-3" />
                                         Avançar para {PIPELINE_STAGES[currentStageIdx + 1]?.title}
@@ -585,10 +605,10 @@ export const CopilotSidebar = ({
                                     </label>
                                     <div className="flex gap-1">
                                         <Input value={noteText} onChange={(e) => setNoteText(e.target.value)} placeholder="Escreva uma nota..."
-                                            className="h-7 text-[11px] bg-white/[0.02] border-border text-foreground placeholder:text-muted-foreground/40 flex-1 rounded-md"
+                                            className="h-7 text-[11px] bg-muted/40 border-border text-foreground placeholder:text-muted-foreground/40 flex-1 rounded-md"
                                             onKeyDown={(e) => e.key === "Enter" && handleAddNote()} />
                                         <button
-                                            className="h-7 w-7 rounded-md text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors flex items-center justify-center shrink-0 disabled:opacity-40"
+                                            className="h-7 w-7 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors flex items-center justify-center shrink-0 disabled:opacity-40"
                                             onClick={handleAddNote} disabled={addingNote || !noteText.trim()}>
                                             {addingNote ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
                                         </button>
@@ -597,7 +617,7 @@ export const CopilotSidebar = ({
                             </div>
                         ) : crmSearched ? (
                             <div className="space-y-2.5">
-                                <div className="rounded-md bg-white/[0.02] border border-dashed border-border p-3 text-center">
+                                <div className="rounded-md bg-muted/40 border border-dashed border-border p-3 text-center">
                                     <p className="text-[11px] text-muted-foreground/60 mb-0.5">Contato não está no CRM</p>
                                     <p className="text-[10px] text-muted-foreground/40">Crie um lead para acompanhar</p>
                                 </div>
@@ -610,14 +630,14 @@ export const CopilotSidebar = ({
                                         Adicionar ao CRM
                                     </button>
                                 ) : (
-                                    <div className="space-y-2 rounded-md bg-white/[0.02] border border-border p-2.5">
+                                    <div className="space-y-2 rounded-md bg-muted/40 border border-border p-2.5">
                                         <Input value={newDealTitle} onChange={(e) => setNewDealTitle(e.target.value)} placeholder="Título do deal"
-                                            className="h-7 text-[11px] bg-white/[0.02] border-border text-foreground placeholder:text-muted-foreground/40 rounded-md" />
+                                            className="h-7 text-[11px] bg-muted/40 border-border text-foreground placeholder:text-muted-foreground/40 rounded-md" />
                                         <Input value={newDealValue} onChange={(e) => setNewDealValue(e.target.value)} placeholder="Valor (R$)"
-                                            className="h-7 text-[11px] bg-white/[0.02] border-border text-foreground placeholder:text-muted-foreground/40 rounded-md" />
+                                            className="h-7 text-[11px] bg-muted/40 border-border text-foreground placeholder:text-muted-foreground/40 rounded-md" />
                                         <div className="flex gap-1.5">
                                             <button
-                                                className="flex-1 h-7 rounded-md text-[10.5px] text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors border border-border"
+                                                className="flex-1 h-7 rounded-md text-[10.5px] text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors border border-border"
                                                 onClick={() => setShowCreateDeal(false)}>Cancelar</button>
                                             <button
                                                 className="flex-1 h-7 rounded-md text-[10.5px] font-medium bg-emerald-500/90 text-white hover:bg-emerald-500 transition-colors flex items-center justify-center disabled:opacity-60"
@@ -660,31 +680,6 @@ export const CopilotSidebar = ({
                 </div>
             </ScrollArea>
 
-            {/* ── Ask Eva ── */}
-            <div className="shrink-0 px-3 py-2.5 border-t border-border">
-                <div className="flex items-center gap-1.5 rounded-md bg-white/[0.02] border border-border focus-within:border-violet-500/30 transition-colors px-2.5 py-1">
-                    <Sparkles className="w-3 h-3 text-violet-400/70 shrink-0" />
-                    <input
-                        type="text"
-                        value={askInput}
-                        onChange={(e) => setAskInput(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && handleAskEva()}
-                        placeholder="Pergunte à Eva..."
-                        className="flex-1 bg-transparent text-[11.5px] text-foreground placeholder:text-muted-foreground/40 focus:outline-none py-1"
-                    />
-                    {askInput.trim() && (
-                        <button
-                            onClick={handleAskEva}
-                            className="h-5 w-5 rounded bg-violet-500/90 text-white flex items-center justify-center hover:bg-violet-500 transition-colors shrink-0"
-                        >
-                            <SendHorizonal className="w-2.5 h-2.5" />
-                        </button>
-                    )}
-                </div>
-                <p className="text-[9.5px] text-muted-foreground/40 text-center mt-1.5">
-                    Em breve — Eva aprendendo com você
-                </p>
-            </div>
         </div>
     );
 };

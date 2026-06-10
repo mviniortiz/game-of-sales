@@ -1,309 +1,176 @@
-import { motion, useAnimationFrame } from "framer-motion";
-import {
-    MessageCircle,
-    Globe,
-    Headphones,
-    BarChart3,
-    CreditCard,
-} from "lucide-react";
+// Hub visual de integrações para a landing (estilo "processador central + trilhas").
+// Vyzon no centro, logos reais orbitando, trilhas SVG com pulso de dados.
+// Dark theme (combina com IntegrationsSection). Sem opacity:0 em scroll-reveal
+// (evita bug de WebView, ver feedback_whileinview_opacity); respeita
+// prefers-reduced-motion. Inserido dentro da IntegrationsSection, abaixo do título.
 
-import kiwifyLogo from "@/assets/integrations/kiwify-logo-png_seeklogo-537186.webp";
-import greennLogo from "@/assets/integrations/greenn.webp";
-import hotmartLogo from "@/assets/integrations/hotmart-logo-png_seeklogo-485917.webp";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
 
-interface ItemCardProps {
-    item: {
-        name: string;
-        logo?: string;
-        icon?: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
-        color?: string;
-        hasLogo: boolean;
-    };
-    delay: number;
-}
+import asaasLogo from "@/assets/integrations/asaas.svg";
+import braipLogo from "@/assets/integrations/braip.webp";
+import caktoLogo from "@/assets/integrations/cakto.webp";
+import discordLogo from "@/assets/integrations/discord.svg";
+import eduzzLogo from "@/assets/integrations/eduzz.webp";
+import googleCalendarLogo from "@/assets/integrations/google-calendar.webp";
+import googleSheetsLogo from "@/assets/integrations/google-sheets.svg";
+import greennLogo from "@/assets/integrations/greenn.webp";
+import hotmartLogo from "@/assets/integrations/hotmart-logo-png_seeklogo-485917.webp";
+import kiwifyLogo from "@/assets/integrations/kiwify-logo-png_seeklogo-537186.webp";
+import mercadopagoLogo from "@/assets/integrations/mercadopago.webp";
+import monetizzeLogo from "@/assets/integrations/monetizze.webp";
+import notazzLogo from "@/assets/integrations/notazz.png";
+import rdstationLogo from "@/assets/integrations/rdstation.svg";
+import slackLogo from "@/assets/integrations/slack.svg";
+import zapierLogo from "@/assets/integrations/zapier.svg";
 
-const ItemCard = ({ item, delay }: ItemCardProps) => {
-    const Icon = item.icon;
-    return (
-        <motion.div
-            className="px-3 sm:px-4 py-2.5 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center sm:justify-start gap-2 hover:bg-gray-200 transition-all cursor-pointer whitespace-nowrap"
-            initial={{ scale: 0.9 }}
-            whileInView={{ scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay, duration: 0.3 }}
-            whileHover={{ scale: 1.03, y: -2 }}
-        >
-            {item.hasLogo ? (
-                <img src={item.logo} alt={item.name} className="w-5 h-5 object-contain" />
-            ) : (
-                Icon && <Icon className="w-4 h-4" style={{ color: item.color }} />
-            )}
-            <span className="text-sm font-medium text-gray-300">{item.name}</span>
-        </motion.div>
-    );
-};
+// Ordenado pra distribuir bem visualmente no anel (alterna marcas largas/quadradas).
+const HUB: { name: string; logo: string }[] = [
+    { name: "Hotmart", logo: hotmartLogo },
+    { name: "Kiwify", logo: kiwifyLogo },
+    { name: "Mercado Pago", logo: mercadopagoLogo },
+    { name: "Asaas", logo: asaasLogo },
+    { name: "Slack", logo: slackLogo },
+    { name: "Zapier", logo: zapierLogo },
+    { name: "Google Calendar", logo: googleCalendarLogo },
+    { name: "Eduzz", logo: eduzzLogo },
+    { name: "Greenn", logo: greennLogo },
+    { name: "RD Station", logo: rdstationLogo },
+    { name: "Google Sheets", logo: googleSheetsLogo },
+    { name: "Discord", logo: discordLogo },
+    { name: "Monetizze", logo: monetizzeLogo },
+    { name: "Cakto", logo: caktoLogo },
+    { name: "Braip", logo: braipLogo },
+    { name: "Notazz", logo: notazzLogo },
+];
+
+const R = 41; // raio do anel em % do container
+const nodes = HUB.map((it, i) => {
+    const angle = (-90 + (360 / HUB.length) * i) * (Math.PI / 180);
+    return {
+        ...it,
+        x: 50 + R * Math.cos(angle),
+        y: 50 + R * Math.sin(angle),
+    };
+});
 
 export const IntegrationHub = () => {
-    const leftItems = [
-        { name: "Kiwify", logo: kiwifyLogo, hasLogo: true },
-        { name: "Greenn", logo: greennLogo, hasLogo: true },
-    ];
-
-    const rightItems = [
-        { name: "Hotmart", logo: hotmartLogo, hasLogo: true },
-        { name: "Stripe", icon: CreditCard, color: "#1556C0", hasLogo: false },
-        { name: "Website", icon: Globe, color: "#1556C0", hasLogo: false },
-    ];
-
-    const bottomItems = [
-        { name: "WhatsApp", icon: MessageCircle, color: "#25d366", hasLogo: false },
-        { name: "Suporte", icon: Headphones, color: "#ec4899", hasLogo: false },
-        { name: "Analytics", icon: BarChart3, color: "#06b6d4", hasLogo: false },
-    ];
-
     return (
-        <section className="py-20 sm:py-28 px-4 relative overflow-hidden bg-gray-50">
-            <div className="max-w-4xl mx-auto">
-                {/* Header */}
-                <motion.div
-                    initial={{ y: 20 }}
-                    whileInView={{ y: 0 }}
-                    viewport={{ once: true }}
-                    className="text-center mb-16"
+        <div
+            className="relative mx-auto w-full"
+            style={{ maxWidth: 560, aspectRatio: "1 / 1" }}
+            role="img"
+            aria-label="Vyzon no centro conectada às integrações: Hotmart, Kiwify, Mercado Pago, Asaas, Slack, Zapier, Google Calendar, Eduzz, Greenn, RD Station, Google Sheets, Discord, Monetizze, Cakto, Braip e Notazz."
+        >
+            <style>{`
+                @keyframes vyzHubFlow { to { stroke-dashoffset: 6; } }
+                @keyframes vyzHubSpin { to { transform: rotate(360deg); } }
+                .vyz-hub-flow { animation: vyzHubFlow 1.8s linear infinite; }
+                .vyz-hub-ring { animation: vyzHubSpin 26s linear infinite; }
+                @media (prefers-reduced-motion: reduce) {
+                    .vyz-hub-flow, .vyz-hub-ring { animation: none !important; }
+                }
+            `}</style>
+
+            {/* Glow central */}
+            <div
+                className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+                aria-hidden="true"
+                style={{
+                    width: "60%",
+                    height: "60%",
+                    background:
+                        "radial-gradient(circle, rgba(0,227,122,0.16) 0%, rgba(0,227,122,0.04) 40%, transparent 70%)",
+                }}
+            />
+
+            {/* Trilhas */}
+            <svg
+                viewBox="0 0 100 100"
+                className="absolute inset-0 h-full w-full"
+                preserveAspectRatio="xMidYMid meet"
+                aria-hidden="true"
+            >
+                {/* base estática */}
+                {nodes.map((n) => (
+                    <line
+                        key={`base-${n.name}`}
+                        x1="50"
+                        y1="50"
+                        x2={n.x}
+                        y2={n.y}
+                        stroke="rgba(255,255,255,0.08)"
+                        strokeWidth="0.35"
+                    />
+                ))}
+                {/* pulso de dados */}
+                {nodes.map((n, i) => (
+                    <line
+                        key={`flow-${n.name}`}
+                        x1="50"
+                        y1="50"
+                        x2={n.x}
+                        y2={n.y}
+                        stroke="rgba(0,227,122,0.6)"
+                        strokeWidth="0.4"
+                        strokeLinecap="round"
+                        strokeDasharray="1.5 4.5"
+                        className="vyz-hub-flow"
+                        style={{ animationDelay: `${(i % 8) * 0.18}s` }}
+                    />
+                ))}
+            </svg>
+
+            {/* Nós (logos) */}
+            {nodes.map((n) => (
+                <div
+                    key={n.name}
+                    className="absolute"
+                    style={{ left: `${n.x}%`, top: `${n.y}%`, transform: "translate(-50%, -50%)" }}
+                    title={n.name}
                 >
-                    <h2 className="font-satoshi text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 tracking-tight">
-                        Uma ferramenta que{" "}
-                        <span className="text-blue-700">
-                            conecta tudo
-                        </span>
-                    </h2>
-                </motion.div>
-
-                {/* Mobile layout */}
-                <div className="md:hidden space-y-5">
-                    <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-                        <div className="flex items-center justify-center gap-3 mb-3">
-                            <div
-                                className="w-12 h-12 rounded-full flex items-center justify-center bg-white border border-gray-200"
-                                style={{ boxShadow: "0 0 20px rgba(0, 227, 122, 0.18)" }}
-                            >
-                                <ThemeLogo iconOnly className="w-7 h-7" />
-                            </div>
-                            <div className="text-left">
-                                <p className="text-gray-900 text-sm font-semibold">Vyzon</p>
-                                <p className="text-xs text-gray-400">Junta vendas, pagamentos e operação num só lugar</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div className="rounded-xl border border-emerald-500/20 bg-blue-600/5 p-3">
-                            <p className="text-xs font-semibold text-blue-700 mb-2">Vendas</p>
-                            <div className="space-y-2">
-                                {leftItems.map((item, i) => (
-                                    <ItemCard key={item.name} item={item} delay={0.1 + i * 0.05} />
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="rounded-xl border border-pink-500/20 bg-pink-500/5 p-3">
-                            <p className="text-xs font-semibold text-pink-400 mb-2">Pagamentos</p>
-                            <div className="space-y-2">
-                                {rightItems.map((item, i) => (
-                                    <ItemCard key={item.name} item={item} delay={0.2 + i * 0.05} />
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="rounded-xl border border-orange-500/20 bg-orange-500/5 p-3">
-                        <p className="text-xs font-semibold text-orange-400 mb-2 text-center">Operação</p>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                            {bottomItems.map((item, i) => (
-                                <ItemCard key={item.name} item={item} delay={0.3 + i * 0.05} />
-                            ))}
-                        </div>
+                    <div
+                        className="flex h-10 w-10 items-center justify-center rounded-xl bg-white sm:h-[52px] sm:w-[52px]"
+                        style={{ boxShadow: "0 6px 18px rgba(0,0,0,0.35)" }}
+                    >
+                        <img
+                            src={n.logo}
+                            alt=""
+                            loading="lazy"
+                            decoding="async"
+                            className="h-5 w-5 object-contain sm:h-7 sm:w-7"
+                        />
                     </div>
                 </div>
+            ))}
 
-                {/* Desktop mind map */}
-                <div className="relative hidden md:grid grid-cols-[1fr_auto_1fr] gap-x-8 items-center justify-items-center">
-
-                    {/* === LEFT COLUMN === */}
-                    <div className="flex flex-col items-end gap-4 relative">
-                        {/* Branch label */}
-                        <span className="absolute -right-12 top-1/2 -translate-y-1/2 text-xs font-semibold text-blue-700">
-                            Vendas
-                        </span>
-
-                        {leftItems.map((item, i) => (
-                            <div key={item.name} className="relative">
-                                {/* Line to card */}
-                                <motion.div
-                                    className="absolute right-full top-1/2 h-[2px] bg-gradient-to-r from-blue-500 to-emerald-500"
-                                    style={{ width: "60px", marginRight: "-4px" }}
-                                    initial={{ scaleX: 0 }}
-                                    whileInView={{ scaleX: 1 }}
-                                    viewport={{ once: true }}
-                                    transition={{ delay: 0.4 + i * 0.1, duration: 0.4 }}
-                                />
-                                <ItemCard item={item} delay={0.5 + i * 0.1} />
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* === CENTER HUB === */}
-                    <div className="relative py-8">
-                        {/* Main horizontal line going left */}
-                        <motion.div
-                            className="absolute right-full top-1/2 h-[2px] w-16 bg-gradient-to-r from-emerald-300 to-emerald-500"
-                            style={{ marginRight: "12px" }}
-                            initial={{ scaleX: 0 }}
-                            whileInView={{ scaleX: 1 }}
-                            viewport={{ once: true }}
-                            transition={{ delay: 0.2, duration: 0.5 }}
-                        />
-
-                        {/* Main horizontal line going right */}
-                        <motion.div
-                            className="absolute left-full top-1/2 h-[2px] w-16 bg-gradient-to-l from-pink-300 to-pink-500"
-                            style={{ marginLeft: "12px" }}
-                            initial={{ scaleX: 0 }}
-                            whileInView={{ scaleX: 1 }}
-                            viewport={{ once: true }}
-                            transition={{ delay: 0.2, duration: 0.5 }}
-                        />
-
-                        {/* Vertical line going down */}
-                        <motion.div
-                            className="absolute top-full left-1/2 -translate-x-1/2 w-[2px] h-24 bg-gradient-to-b from-orange-400 to-orange-500"
-                            style={{ marginTop: "12px" }}
-                            initial={{ scaleY: 0 }}
-                            whileInView={{ scaleY: 1 }}
-                            viewport={{ once: true }}
-                            transition={{ delay: 0.3, duration: 0.5 }}
-                        />
-
-                        {/* Hub circles */}
-                        <motion.div
-                            initial={{ scale: 0 }}
-                            whileInView={{ scale: 1 }}
-                            viewport={{ once: true }}
-                            transition={{ type: "spring", delay: 0.1 }}
-                            className="relative"
-                        >
-                            <motion.div
-                                className="absolute inset-[-16px] rounded-full border-2 border-emerald-500/30"
-                                animate={{ rotate: 360 }}
-                                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                            />
-                            <div className="absolute inset-[-28px] rounded-full border border-emerald-500/20" />
-                            <div
-                                className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center bg-white border border-gray-200"
-                                style={{ boxShadow: "0 0 30px rgba(0, 227, 122, 0.25)" }}
-                            >
-                                <ThemeLogo iconOnly className="w-12 h-12 sm:w-14 sm:h-14" />
-                            </div>
-                        </motion.div>
-                    </div>
-
-                    {/* === RIGHT COLUMN === */}
-                    <div className="flex flex-col items-start gap-4 relative">
-                        {/* Branch label */}
-                        <span className="absolute -left-16 top-1/2 -translate-y-1/2 text-xs font-semibold text-pink-500">
-                            Pagamentos
-                        </span>
-
-                        {rightItems.map((item, i) => (
-                            <div key={item.name} className="relative">
-                                {/* Line to card */}
-                                <motion.div
-                                    className="absolute left-full top-1/2 h-[2px] bg-gradient-to-l from-pink-400 to-pink-500"
-                                    style={{ width: "60px", marginLeft: "-4px", right: "100%" }}
-                                    initial={{ scaleX: 0 }}
-                                    whileInView={{ scaleX: 1 }}
-                                    viewport={{ once: true }}
-                                    transition={{ delay: 0.4 + i * 0.1, duration: 0.4 }}
-                                />
-                                <ItemCard item={item} delay={0.5 + i * 0.1} />
-                            </div>
-                        ))}
+            {/* Centro: Vyzon */}
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                <div className="relative">
+                    {/* anéis */}
+                    <div
+                        className="vyz-hub-ring absolute rounded-full"
+                        style={{ inset: "-18px", border: "1.5px dashed rgba(0,227,122,0.35)" }}
+                        aria-hidden="true"
+                    />
+                    <div
+                        className="absolute rounded-full"
+                        style={{ inset: "-30px", border: "1px solid rgba(0,227,122,0.15)" }}
+                        aria-hidden="true"
+                    />
+                    {/* chip */}
+                    <div
+                        className="relative flex h-[88px] w-[88px] items-center justify-center rounded-2xl sm:h-24 sm:w-24"
+                        style={{
+                            background: "linear-gradient(135deg, #0F1828 0%, #0B1018 100%)",
+                            border: "1px solid rgba(0,227,122,0.45)",
+                            boxShadow: "0 0 44px rgba(0,227,122,0.28), inset 0 1px 0 rgba(255,255,255,0.06)",
+                        }}
+                    >
+                        <ThemeLogo iconOnly className="h-12 w-12 sm:h-14 sm:w-14" />
                     </div>
                 </div>
-
-                {/* === BOTTOM SECTION === */}
-                <div className="relative mt-20 flex flex-col items-center">
-                    {/* Branch label */}
-                    <span className="text-xs font-semibold text-orange-500 mb-4">
-                        Operação
-                    </span>
-
-                    {/* Horizontal spreading lines */}
-                    <div className="relative w-full max-w-lg mb-4">
-                        <svg className="w-full h-8" viewBox="0 0 400 32" preserveAspectRatio="xMidYMid meet">
-                            {/* Center vertical stub coming from above */}
-                            <motion.line
-                                x1="200" y1="0" x2="200" y2="16"
-                                stroke="#f97316"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                initial={{ pathLength: 0 }}
-                                whileInView={{ pathLength: 1 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: 0.4, duration: 0.3 }}
-                            />
-                            {/* Curved branches */}
-                            <motion.path
-                                d="M 200 16 Q 120 16 80 32"
-                                stroke="#f97316"
-                                strokeWidth="2"
-                                fill="none"
-                                strokeLinecap="round"
-                                initial={{ pathLength: 0 }}
-                                whileInView={{ pathLength: 1 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: 0.5, duration: 0.4 }}
-                            />
-                            <motion.path
-                                d="M 200 16 Q 200 24 200 32"
-                                stroke="#f97316"
-                                strokeWidth="2"
-                                fill="none"
-                                strokeLinecap="round"
-                                initial={{ pathLength: 0 }}
-                                whileInView={{ pathLength: 1 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: 0.55, duration: 0.4 }}
-                            />
-                            <motion.path
-                                d="M 200 16 Q 280 16 320 32"
-                                stroke="#f97316"
-                                strokeWidth="2"
-                                fill="none"
-                                strokeLinecap="round"
-                                initial={{ pathLength: 0 }}
-                                whileInView={{ pathLength: 1 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: 0.6, duration: 0.4 }}
-                            />
-                        </svg>
-                    </div>
-
-                    {/* Bottom cards row */}
-                    <div className="flex gap-4 justify-center flex-wrap">
-                        {bottomItems.map((item, i) => (
-                            <ItemCard key={item.name} item={item} delay={0.7 + i * 0.1} />
-                        ))}
-                    </div>
-                </div>
-
-                {/* Footer text */}
-                <p className="text-center mt-12 text-gray-500 text-sm">
-                    Vendas integradas automaticamente • Sem trabalho manual
-                </p>
             </div>
-        </section>
+        </div>
     );
 };
 

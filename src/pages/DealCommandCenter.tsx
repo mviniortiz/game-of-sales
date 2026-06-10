@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { EvaStudioRules } from "@/components/eva/EvaStudioRules";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -1056,6 +1057,9 @@ export default function DealCommandCenter() {
                                     window.open(`https://wa.me/${wa}${text}`, "_blank", "noopener,noreferrer");
                                 }}
                             />
+
+                            {/* EVA.STUDIO.7.1 — regras do EVA Studio orientando a recomendação (só leitura) */}
+                            <EvaStudioRules />
 
                             {/* Activity panel */}
                             <div className="bg-card/50 rounded-2xl border border-border overflow-hidden">

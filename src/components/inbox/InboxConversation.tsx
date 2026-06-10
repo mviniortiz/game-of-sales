@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import {
     ArrowLeft,
     ArrowRight,
+    ArrowUp,
     Calendar,
     CheckCircle2,
     Loader2,
@@ -9,11 +10,10 @@ import {
     MoreHorizontal,
     Paperclip,
     RefreshCw,
-    Send,
-    Sparkles,
     UserCheck,
     X,
 } from "lucide-react";
+import { EvaNode } from "@/components/landing/EvaNode";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AudioMessagePlayer } from "@/components/whatsapp/AudioMessagePlayer";
 import { MediaMessageBubble } from "@/components/whatsapp/MediaMessageBubble";
@@ -650,7 +650,7 @@ function EvaSuggestionBox({
                                 letterSpacing: "0.06em",
                             }}
                         >
-                            <Sparkles className="h-2.5 w-2.5 inline -mt-px mr-0.5" />
+                            <EvaNode size={10} color="#6D28D9" className="inline -mt-px mr-0.5" />
                             Preview
                         </span>
                     </div>
@@ -778,26 +778,23 @@ function Composer({
                     </button>
                 )}
 
+                {/* Enviar = seta-pra-cima circular (brand Vyzon, estilo Claude) */}
                 <button
                     type="button"
                     onClick={onSend}
                     disabled={!value.trim() || sending}
-                    className="h-9 inline-flex items-center gap-1.5 px-3.5 rounded-lg text-[12.5px] font-semibold text-white transition-all hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                    aria-label={sending ? "Enviando mensagem" : "Enviar mensagem"}
+                    title="Enviar"
+                    className="h-9 w-9 rounded-full flex items-center justify-center text-white transition-all hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
                     style={{
                         background: "linear-gradient(135deg, #2563EB, #4A8CE8)",
                         boxShadow: "0 4px 12px -4px rgba(37,99,235,0.4)",
                     }}
                 >
                     {sending ? (
-                        <>
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            Enviando
-                        </>
+                        <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                        <>
-                            <Send className="h-3.5 w-3.5" />
-                            Enviar
-                        </>
+                        <ArrowUp className="h-4 w-4" strokeWidth={2.6} />
                     )}
                 </button>
             </div>

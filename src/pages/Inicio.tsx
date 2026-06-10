@@ -1,6 +1,7 @@
-import { useMemo, useState, Fragment, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { recordMetricSnapshot, getMetricTrend, type MetricTrend } from "@/lib/metricHistory";
 // F5C.5.3 — Phosphor duotone (mesmo set da sidebar e do pipeline /pipeline).
 // Alias mantém os mesmos nomes locais (AlertTriangle, ArrowRight, …) pra não
 // reescrever cada call site — só adicionei weight="duotone" no JSX.
@@ -9,22 +10,21 @@ import {
     ArrowRight,
     ArrowUp,
     CaretRight as ChevronRight,
+    CaretDown as ChevronDown,
     CalendarBlank as Calendar,
+    Check,
+    CheckCircle,
     CircleNotch,
     Clock,
     Funnel as Filter,
     FireSimple as Flame,
-    Tray as InboxIcon,
     ChatCircle as MessageCircle,
-    ChatText as MessageSquare,
     DotsThree as MoreHorizontal,
     ArrowsClockwise as RefreshCw,
     Sparkle as Sparkles,
-    Plus,
     Target,
 } from "@phosphor-icons/react";
-import { EvaPhotoAvatar } from "@/components/eva/EvaPhotoAvatar";
-import { useInicioData, PIPELINE_STAGE_KEYS, type PipelineStageData } from "@/hooks/useInicioData";
+import { useInicioData } from "@/hooks/useInicioData";
 import {
     useCommandCenterData,
     type AttentionItem,
@@ -39,6 +39,16 @@ import {
     type EvaResponse,
 } from "@/hooks/useCentralEvaAssistant";
 import { DecisionWorkspace } from "@/components/inicio/DecisionWorkspace";
+import { useEvolutionSender } from "@/hooks/useEvolutionSender";
+import {
+    loadLiveActions,
+    resolvePriority,
+    snoozePriority,
+    startOfTomorrowIso,
+    isResolved,
+    isSnoozed,
+    type PriorityActionState,
+} from "@/lib/priorityActions";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Central de Comando — F5C.1 (2026-05-20)
@@ -49,14 +59,6 @@ import { DecisionWorkspace } from "@/components/inicio/DecisionWorkspace";
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ─── Helpers visuais ────────────────────────────────────────────────────────
-
-const formatCompactBRL = (v: number): string => {
-    if (!v) return "R$ 0";
-    const abs = Math.abs(v);
-    if (abs >= 1_000_000) return `R$ ${(v / 1_000_000).toFixed(v >= 10_000_000 ? 0 : 1)}M`;
-    if (abs >= 1_000) return `R$ ${(v / 1_000).toFixed(v >= 10_000 ? 0 : 1)}k`;
-    return `R$ ${v.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}`;
-};
 
 function relativeTime(iso: string | null | undefined): string {
     if (!iso) return "";
@@ -98,7 +100,7 @@ function describeActivity(item: RecentActivityItem): string {
 const PRIORITY_TONE: Record<AttentionItem["priority"], { bg: string; color: string; label: string }> = {
     high:   { bg: "rgba(220,38,38,0.10)",  color: "#B91C1C", label: "Urgente" },
     medium: { bg: "rgba(245,158,11,0.10)", color: "#B45309", label: "Atenção" },
-    low:    { bg: "rgba(148,163,184,0.15)", color: "#64748B", label: "Baixa" },
+    low:    { bg: "rgba(148,163,184,0.15)", color: "#475569", label: "Baixa" },
 };
 
 const ATTENTION_ICON: Record<AttentionItem["type"], typeof MessageCircle> = {
@@ -111,320 +113,111 @@ const ATTENTION_ICON: Record<AttentionItem["type"], typeof MessageCircle> = {
 
 // ─── Building blocks ────────────────────────────────────────────────────────
 
-function SectionCard({
-    title,
-    subtitle,
-    action,
-    children,
-    className = "",
-}: {
-    title: string;
-    subtitle?: string;
-    action?: React.ReactNode;
-    children: React.ReactNode;
-    className?: string;
-}) {
-    return (
-        <div
-            className={`rounded-2xl ${className}`}
-            style={{
-                background: "#FFFFFF",
-                border: "1px solid #D9E2EC",
-                boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 10px 30px rgba(15,23,42,0.05)",
-            }}
-        >
-            <div className="px-6 sm:px-8 pt-6 pb-5 flex items-start justify-between gap-3">
-                <div>
-                    <h3 className="font-semibold text-[16px] sm:text-[18px]"
-                        style={{ color: "#0B1220", letterSpacing: "-0.018em" }}>
-                        {title}
-                    </h3>
-                    {subtitle && (
-                        <p className="text-[13px] mt-1" style={{ color: "#64748B" }}>
-                            {subtitle}
-                        </p>
-                    )}
-                </div>
-                {action && <div className="shrink-0">{action}</div>}
-            </div>
-            <div className="px-6 sm:px-8 pb-6 sm:pb-8">{children}</div>
-        </div>
-    );
-}
-
-interface KpiCardProps {
+// COMMAND.UI.2 — faixa densa de KPIs (substitui os 4 cards gigantes).
+// Glance bar: número + label, clicável (leva ao filtro/seção). Sem trend/sparkline
+// porque não há histórico real (regra: sem mocks de métrica).
+interface KpiStripItem {
     label: string;
     value: string;
-    icon: React.ComponentType<{ className?: string; strokeWidth?: number; style?: React.CSSProperties }>;
-    hint?: string;
+    icon: typeof MessageCircle;
+    accent: string;
+    href: string;
+    metricKey: string;
+    /** true = subir é bom (conversas/leads/oportunidades); false = subir é ruim (aguardando). */
+    goodWhenUp: boolean;
     loading?: boolean;
-    accent?: string;
 }
 
-function KpiCard({ label, value, icon: Icon, hint, loading, accent = "#2563EB" }: KpiCardProps) {
+// Sparkline minúscula a partir do histórico real (≥2 dias). Sem dado → não renderiza.
+function Sparkline({ series, color }: { series: number[]; color: string }) {
+    if (series.length < 2) return null;
+    const w = 46, h = 16;
+    const min = Math.min(...series), max = Math.max(...series);
+    const span = max - min || 1;
+    const pts = series.map((v, i) => `${(i / (series.length - 1)) * w},${h - ((v - min) / span) * (h - 2) - 1}`).join(" ");
+    return (
+        <svg width={w} height={h} aria-hidden className="shrink-0">
+            <polyline points={pts} fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" opacity={0.85} />
+        </svg>
+    );
+}
+
+function KpiStrip({ items, trends, onNavigate }: { items: KpiStripItem[]; trends: Record<string, MetricTrend>; onNavigate: (href: string) => void }) {
     return (
         <div
-            className="rounded-2xl p-6 sm:p-7"
+            className="rounded-2xl overflow-hidden flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-[#EAF0F6]"
             style={{
                 background: "#FFFFFF",
                 border: "1px solid #D9E2EC",
                 boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 10px 30px rgba(15,23,42,0.05)",
             }}
         >
-            <div className="flex items-start justify-between mb-4">
-                <div
-                    className="h-11 w-11 rounded-xl flex items-center justify-center"
-                    style={{
-                        background: `${accent}14`,
-                        border: `1px solid ${accent}29`,
-                    }}
-                >
-                    <Icon size={20} weight="duotone" style={{ color: accent }} />
-                </div>
-                {hint && (
-                    <span className="text-[11px] uppercase"
-                        style={{ color: "#94A3B8", fontWeight: 600, letterSpacing: "0.08em" }}>
-                        {hint}
-                    </span>
-                )}
-            </div>
-            <p className="text-[12px] uppercase mb-2"
-                style={{ color: "#475569", fontWeight: 600, letterSpacing: "0.08em" }}>
-                {label}
-            </p>
-            <div className="flex items-baseline gap-2.5">
-                {loading ? (
-                    <span className="inline-block h-8 sm:h-10 w-20 rounded-md"
-                        style={{ background: "#EAF0F6" }} aria-label="Carregando" />
-                ) : (
-                    <span className="text-[30px] sm:text-[38px] font-bold tabular-nums leading-none"
-                        style={{ color: "#0B1220", letterSpacing: "-0.03em" }}>
-                        {value}
-                    </span>
-                )}
-            </div>
-        </div>
-    );
-}
-
-// ─── Panorama do Pipeline (COMMAND.UI.1) ────────────────────────────────────
-// Síntese executiva e acionável: fluxo de etapas conectado + uma etapa em foco
-// + leitura da EVA, tudo num card único. Operacional (não analítico como
-// Performance). Sem kanban, donut ou funil. Dados reais (usePipelineStages).
-
-// Próximo passo recomendado por etapa em foco (movimenta o funil pra frente).
-const STAGE_NEXT_REC: Record<string, string> = {
-    lead: "qualificar esses leads para destravar o funil",
-    qualification: "revisar oportunidades paradas e avançar para proposta",
-    proposal: "acompanhar as propostas enviadas e abrir negociação",
-    negotiation: "priorizar o fechamento das negociações em aberto",
-};
-
-// Célula de uma etapa no fluxo. Peso = barra discreta proporcional ao count.
-function StageCell({
-    name,
-    count,
-    value,
-    color,
-    weightPct,
-    focus,
-    won,
-}: {
-    name: string;
-    count: number;
-    value: string;
-    color: string;
-    weightPct: number;
-    focus: boolean;
-    won: boolean;
-}) {
-    return (
-        <div
-            className="flex-1 min-w-0 rounded-xl px-3.5 py-3.5 border transition-colors"
-            style={
-                focus
-                    ? { background: "#EFF6FF", border: "1px solid rgba(37,99,235,0.35)" }
-                    : { background: "#F8FAFC", border: "1px solid #E2E8F0" }
-            }
-        >
-            <div className="flex items-center gap-1.5 mb-2">
-                <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: color }} />
-                <span className="text-[11px] font-semibold truncate" style={{ color: "#475569", letterSpacing: "0.01em" }}>
-                    {name}
-                </span>
-            </div>
-            <p className="text-[22px] sm:text-[24px] font-bold tabular-nums leading-none" style={{ color: "#0B1220", letterSpacing: "-0.02em" }}>
-                {count}
-            </p>
-            <p className="text-[11.5px] mt-1" style={{ color: "#64748B" }}>{value}</p>
-            <div className="mt-2.5 h-1 rounded-full overflow-hidden" style={{ background: "#E2E8F0" }}>
-                <div
-                    className="h-full rounded-full transition-all"
-                    style={{ width: `${Math.max(count > 0 ? 6 : 0, weightPct)}%`, background: won ? "#10B981" : focus ? "#2563EB" : "#94A3B8" }}
-                />
-            </div>
-        </div>
-    );
-}
-
-function PipelineFlowSkeleton() {
-    return (
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-1.5">
-            {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="flex-1 rounded-xl px-3.5 py-3.5" style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }}>
-                    <div className="h-2.5 w-16 rounded mb-3" style={{ background: "#EAF0F6" }} />
-                    <div className="h-6 w-10 rounded mb-2" style={{ background: "#EAF0F6" }} />
-                    <div className="h-2.5 w-12 rounded" style={{ background: "#EAF0F6" }} />
-                </div>
-            ))}
-        </div>
-    );
-}
-
-function PipelinePanoramaCard({
-    rawStages,
-    total,
-    loading,
-    onOpen,
-}: {
-    rawStages: PipelineStageData[];
-    total: number;
-    loading: boolean;
-    onOpen: () => void;
-}) {
-    const view = useMemo(() => {
-        const openStages = rawStages.filter((s) => s.key !== "closed_won");
-        const won = rawStages.find((s) => s.key === "closed_won") ?? null;
-        const openCount = openStages.reduce((a, s) => a + s.count, 0);
-        const openValue = openStages.reduce((a, s) => a + s.totalValue, 0);
-        const maxCount = Math.max(1, ...rawStages.map((s) => s.count));
-
-        // Etapa em foco (determinística): maior count → maior valor → mais cedo no funil.
-        let focusKey: string | null = null;
-        if (openCount > 0) {
-            const ranked = [...openStages].sort((a, b) => {
-                if (b.count !== a.count) return b.count - a.count;
-                if (b.totalValue !== a.totalValue) return b.totalValue - a.totalValue;
-                return PIPELINE_STAGE_KEYS.indexOf(a.key) - PIPELINE_STAGE_KEYS.indexOf(b.key);
-            });
-            focusKey = ranked[0] && ranked[0].count > 0 ? ranked[0].key : null;
-        }
-        const focusStage = focusKey ? openStages.find((s) => s.key === focusKey) ?? null : null;
-        const focusPct = focusStage && openCount > 0 ? Math.round((focusStage.count / openCount) * 100) : 0;
-
-        return { won, openCount, openValue, maxCount, focusKey, focusStage, focusPct };
-    }, [rawStages]);
-
-    const wonValue = view.won?.totalValue ?? 0;
-    const wonStr = formatCompactBRL(wonValue);
-    const isEmpty = !loading && total === 0;
-
-    const subtitle = loading
-        ? "Carregando…"
-        : `${view.openCount} ${view.openCount === 1 ? "oportunidade" : "oportunidades"} em movimento · ${formatCompactBRL(view.openValue)} em aberto`;
-
-    // Leitura da EVA — integrada, acionável.
-    const wonClause = wonValue > 0
-        ? <> Ganho registrado: <strong style={{ color: "#0B1220" }}>{wonStr}</strong>.</>
-        : null;
-    const focusStage = view.focusStage;
-    let evaBody: ReactNode;
-    if (view.openCount === 0) {
-        evaBody = <>Nenhuma oportunidade em aberto no momento.{wonClause}</>;
-    } else if (view.openCount === 1 || !focusStage) {
-        evaBody = <>Histórico ainda inicial. Acompanhe o avanço entre etapas nos próximos dias.{wonClause}</>;
-    } else {
-        const rec = STAGE_NEXT_REC[focusStage.key] ?? "revisar as oportunidades paradas";
-        evaBody = (
-            <>
-                <strong style={{ color: "#0B1220" }}>{view.focusPct}%</strong> dos deals abertos estão em{" "}
-                <strong style={{ color: "#0B1220" }}>{focusStage.name}</strong>. Recomendação: {rec}.{wonClause}
-            </>
-        );
-    }
-
-    return (
-        <SectionCard
-            title="Panorama do Pipeline"
-            subtitle={subtitle}
-            action={
-                isEmpty ? undefined : (
+            {items.map((it) => {
+                const Icon = it.icon;
+                const t = trends[it.metricKey];
+                const delta = t?.delta ?? null;
+                const improving = delta != null && delta !== 0 && ((delta > 0) === it.goodWhenUp);
+                const deltaColor = delta == null || delta === 0 ? "#475569" : improving ? "#047857" : "#B91C1C";
+                return (
                     <button
-                        onClick={onOpen}
-                        className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold h-9 px-3 rounded-lg transition-colors hover:bg-[#F1F5F9]"
-                        style={{ color: "#2563EB" }}
-                    >
-                        Ver pipeline
-                        <ArrowRight size={12} weight="bold" />
-                    </button>
-                )
-            }
-        >
-            {loading ? (
-                <PipelineFlowSkeleton />
-            ) : isEmpty ? (
-                <div className="flex flex-col items-center justify-center text-center py-8 gap-3">
-                    <p className="text-[13.5px]" style={{ color: "#475569" }}>Ainda não há oportunidades em movimento.</p>
-                    <button
-                        onClick={onOpen}
-                        className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg text-[12.5px] font-semibold text-white transition-colors hover:opacity-90"
-                        style={{ background: "#2563EB" }}
-                    >
-                        <Plus size={13} weight="bold" /> Criar oportunidade
-                    </button>
-                </div>
-            ) : (
-                <>
-                    {/* Fluxo horizontal conectado: Novo lead → … → Ganho */}
-                    <div className="flex flex-col sm:flex-row sm:items-stretch">
-                        {rawStages.map((s, i) => (
-                            <Fragment key={s.key}>
-                                <StageCell
-                                    name={s.name}
-                                    count={s.count}
-                                    value={formatCompactBRL(s.totalValue)}
-                                    color={s.color}
-                                    weightPct={Math.round((s.count / view.maxCount) * 100)}
-                                    focus={s.key === view.focusKey}
-                                    won={s.key === "closed_won"}
-                                />
-                                {i < rawStages.length - 1 && (
-                                    <div className="flex items-center justify-center shrink-0 py-1 sm:py-0 sm:px-0.5">
-                                        <ChevronRight size={14} weight="bold" className="rotate-90 sm:rotate-0" style={{ color: "#CBD5E1" }} />
-                                    </div>
-                                )}
-                            </Fragment>
-                        ))}
-                    </div>
-
-                    {/* Leitura da EVA — integrada ao card */}
-                    <div
-                        className="mt-4 rounded-xl px-4 py-3 flex items-start gap-2.5"
-                        style={{ background: "rgba(124,58,237,0.04)", border: "1px solid rgba(124,58,237,0.12)" }}
+                        key={it.label}
+                        type="button"
+                        onClick={() => onNavigate(it.href)}
+                        className="flex-1 min-w-0 flex items-center gap-3 px-4 sm:px-5 py-3.5 text-left transition-all hover:brightness-[0.97]"
+                        style={{ borderColor: "#EAF0F6", background: `${it.accent}0A` }}
+                        aria-label={`${it.label}: ${it.value}`}
                     >
                         <span
-                            className="h-5 w-5 rounded-full flex items-center justify-center text-white text-[10px] font-bold shrink-0 mt-px leading-none"
-                            style={{ background: "#7C3AED" }}
+                            className="h-9 w-9 rounded-lg flex items-center justify-center shrink-0"
+                            style={{ background: `${it.accent}1F`, border: `1px solid ${it.accent}3D` }}
                         >
-                            E
+                            <Icon size={17} weight="duotone" style={{ color: it.accent }} />
                         </span>
-                        <p className="text-[12.5px] leading-relaxed flex-1" style={{ color: "#475569" }}>
-                            <span className="font-semibold" style={{ color: "#0B1220" }}>Leitura da EVA:</span> {evaBody}
-                        </p>
-                    </div>
-                </>
-            )}
-        </SectionCard>
+                        <div className="min-w-0 flex-1">
+                            {it.loading ? (
+                                <span className="inline-block h-6 w-12 rounded" style={{ background: "#EAF0F6" }} aria-label="Carregando" />
+                            ) : (
+                                <div className="flex items-baseline gap-1.5">
+                                    <p className="text-[24px] sm:text-[26px] font-bold tabular-nums leading-none" style={{ color: "#0B1220", letterSpacing: "-0.03em" }}>
+                                        {it.value}
+                                    </p>
+                                    {delta != null && delta !== 0 && (
+                                        <span className="text-[11px] font-bold tabular-nums leading-none" style={{ color: deltaColor }} title="vs. dia anterior">
+                                            {delta > 0 ? "↑" : "↓"}{Math.abs(delta)}
+                                        </span>
+                                    )}
+                                    {delta === 0 && (
+                                        <span className="text-[10.5px] font-semibold leading-none" style={{ color: "#475569" }} title="sem mudança vs. dia anterior">
+                                            estável
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+                            <p className="text-[11px] uppercase mt-1.5 truncate" style={{ color: "#1E293B", fontWeight: 600, letterSpacing: "0.06em" }}>
+                                {it.label}
+                            </p>
+                        </div>
+                        {!it.loading && <Sparkline series={t?.series ?? []} color={it.accent} />}
+                        <ChevronRight size={14} weight="bold" className="shrink-0" style={{ color: "#64748B" }} />
+                    </button>
+                );
+            })}
+        </div>
     );
 }
+
+// ─── Pipeline removido de /inicio (COMMAND.UI.6) ────────────────────────────
+// O funil é view analítica e vive em /pipeline (linkado pelo KPI "Oportunidades
+// abertas"); deal parado já vira item da fila. Tirado daqui pra não competir
+// com o plano do dia. O dado do pipeline segue alimentando o cérebro da EVA
+// (evaInput.pipelineStages), só não tem mais card próprio.
 
 // ─── Seções de Atenção / Movimentos / Leituras da EVA: agora vivem em
 //     components/inicio/DecisionWorkspace.tsx (COMMAND.UI). ──────────────────
 
-// ─── F5C.5 — EvaCommandCard (card dominante) ───────────────────────────────
-//
-// Domina a primeira dobra da Central. Não chama IA; apenas exibe priorities
-// já carregadas e oferece um input visual (preview honesto).
+// ─── EvaChat — o chat da EVA, renderizado dentro do território unificado ─────
+// (EvaPanel, à direita). Sem card próprio: a identidade é do painel. Não chama
+// IA externa; responde com dados já carregados via useCentralEvaAssistant.
 
 // F5C.6 — confiança legível
 const CONFIDENCE_LABEL: Record<EvaResponse["confidence"], string> = {
@@ -433,41 +226,14 @@ const CONFIDENCE_LABEL: Record<EvaResponse["confidence"], string> = {
     low: "Baixa",
 };
 
-function EvaCommandCard({
-    priorities,
-    gapsCount,
-    loading,
-    onNavigate,
-    evaInput,
-}: {
-    priorities: DailyPriority[];
-    gapsCount: number;
-    loading: boolean;
-    onNavigate: (href: string) => void;
-    evaInput: CentralEvaInput;
-}) {
+// EvaChat — só o chat (composer + chips + resposta). Vive DENTRO do território
+// unificado da EVA (EvaPanel), por isso não tem card/avatar/narração próprios:
+// a identidade já é dada pelo painel. Antes era um 2º card "EVA Comercial".
+function EvaChat({ evaInput, onNavigate }: { evaInput: CentralEvaInput; onNavigate: (href: string) => void }) {
     const [composer, setComposer] = useState("");
     const [showAllCommands, setShowAllCommands] = useState(false);
-    // F5C.6 — assistente determinístico (sem IA): responde com dados já carregados.
     const assistant = useCentralEvaAssistant(evaInput);
-
-    // V1.1 — avatar "pensando" enquanto a EVA lê a operação.
     const isThinking = assistant.state === "loading";
-
-    const total = priorities.length;
-    const criticalCount = priorities.filter((p) => p.priority === "critical").length;
-
-    // Linha-resumo (leitura em 5s): quantas, quantas críticas, quantas lacunas.
-    const summaryParts: ReactNode[] = [];
-    if (loading || isThinking) {
-        summaryParts.push("Lendo a operação…");
-    } else if (total === 0) {
-        summaryParts.push("Nenhuma prioridade crítica agora");
-    } else {
-        summaryParts.push(`${total} ${total === 1 ? "prioridade detectada" : "prioridades detectadas"}`);
-        if (criticalCount > 0) summaryParts.push(<span style={{ color: "#BE123C", fontWeight: 600 }}>{criticalCount} {criticalCount === 1 ? "crítica" : "críticas"}</span>);
-        if (gapsCount > 0) summaryParts.push(<span style={{ color: "#475569", fontWeight: 600 }}>{gapsCount} {gapsCount === 1 ? "lacuna de contexto" : "lacunas de contexto"}</span>);
-    }
 
     const handleAsk = (e: React.FormEvent) => {
         e.preventDefault();
@@ -479,130 +245,94 @@ function EvaCommandCard({
     const hasMore = assistant.commands.length > 4;
 
     return (
-        <div
-            className="rounded-2xl"
-            style={{
-                background: "linear-gradient(180deg, rgba(124,58,237,0.022) 0%, #FFFFFF 30%)",
-                border: "1px solid #E4E9F2",
-                boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 10px 30px rgba(15,23,42,0.05)",
-            }}
-        >
-            <div className="px-5 sm:px-7 pt-6 pb-6">
-                {/* 1. Header compacto */}
-                <div className="flex items-start gap-3.5 mb-5">
-                    <EvaPhotoAvatar size="md" ring="glow" thinking={isThinking} />
-                    <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                            <h2 className="text-[16px] sm:text-[17px] font-bold tracking-tight"
-                                style={{ color: "#0B1220", letterSpacing: "-0.02em" }}>
-                                EVA Comercial
-                            </h2>
-                            <span className="inline-flex items-center text-[9.5px] uppercase px-1.5 py-0.5 rounded"
-                                style={{ background: "rgba(124,58,237,0.10)", color: "#6D28D9", fontWeight: 700, letterSpacing: "0.08em" }}>
-                                Prévia
-                            </span>
-                        </div>
-                        <p className="text-[14px] sm:text-[15px] font-semibold leading-snug"
-                            style={{ color: "#0B1220", letterSpacing: "-0.01em" }}>
-                            {summaryParts.map((part, i) => (
-                                <Fragment key={i}>
-                                    {i > 0 && <span style={{ color: "#CBD5E1" }}> · </span>}
-                                    {part}
-                                </Fragment>
-                            ))}
-                        </p>
-                        <p className="text-[12px] mt-0.5" style={{ color: "#64748B" }}>
-                            A EVA leu conversas, oportunidades e sinais da operação.
-                        </p>
-                    </div>
-                </div>
+        <div>
+            <p className="text-[10px] uppercase mb-2" style={{ color: "#1E293B", fontWeight: 700, letterSpacing: "0.06em" }}>
+                Pergunte à EVA
+            </p>
+            <form onSubmit={handleAsk} className="relative">
+                <input
+                    type="text"
+                    value={composer}
+                    onChange={(e) => setComposer(e.target.value)}
+                    placeholder="Pergunte sobre operação, pipeline ou conversas"
+                    disabled={isThinking}
+                    className="w-full h-11 pl-4 pr-14 rounded-xl text-[13px] outline-none transition-all focus:border-[#7C3AED]/40 disabled:opacity-70"
+                    style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", color: "#0B1220" }}
+                />
+                <button
+                    type="submit"
+                    disabled={!composer.trim() || isThinking}
+                    aria-label="Perguntar à EVA"
+                    className={`eva-send-btn absolute right-1.5 top-1.5 inline-flex items-center justify-center h-8 w-8 rounded-full text-white disabled:opacity-40 disabled:shadow-none ${composer.trim() && !isThinking ? "eva-send-idle" : ""}`}
+                    style={{ background: "linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)" }}
+                >
+                    {isThinking
+                        ? <CircleNotch size={15} weight="bold" className="animate-spin" />
+                        : <ArrowUp size={15} weight="bold" />}
+                </button>
+            </form>
 
-                {/* Command bar — botão ícone-only (acento roxo da EVA) */}
-                <form onSubmit={handleAsk} className="mt-5 relative">
-                    <input
-                        type="text"
-                        value={composer}
-                        onChange={(e) => setComposer(e.target.value)}
-                        placeholder="Pergunte à EVA sobre a operação, pipeline ou conversas"
-                        disabled={isThinking}
-                        className="w-full h-11 pl-4 pr-14 rounded-xl text-[13px] outline-none transition-all focus:border-[#7C3AED]/40 disabled:opacity-70"
-                        style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", color: "#0B1220" }}
-                    />
+            {/* Chips: no máximo 4 + "Mais ações" */}
+            <div className="mt-3 flex flex-wrap gap-2">
+                {visibleCommands.map((c) => (
                     <button
-                        type="submit"
-                        disabled={!composer.trim() || isThinking}
-                        aria-label="Perguntar à EVA"
-                        className={`eva-send-btn absolute right-1.5 top-1.5 inline-flex items-center justify-center h-8 w-8 rounded-full text-white disabled:opacity-40 disabled:shadow-none ${composer.trim() && !isThinking ? "eva-send-idle" : ""}`}
-                        style={{ background: "linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)" }}
-                    >
-                        {isThinking
-                            ? <CircleNotch size={15} weight="bold" className="animate-spin" />
-                            : <ArrowUp size={15} weight="bold" />}
-                    </button>
-                </form>
-
-                {/* Chips: no máximo 4 + "Mais ações" */}
-                <div className="mt-3 flex flex-wrap gap-2">
-                    {visibleCommands.map((c) => (
-                        <button
-                            key={c.id}
-                            type="button"
-                            disabled={isThinking}
-                            onClick={() => {
-                                setComposer(c.label);
-                                assistant.ask(c.label, c.id);
-                            }}
-                            className="text-[12px] px-3 py-1.5 rounded-full transition-colors hover:bg-[#F1F5F9] disabled:opacity-50"
-                            style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", color: "#475569", fontWeight: 500 }}
-                        >
-                            {c.label}
-                        </button>
-                    ))}
-                    {hasMore && !showAllCommands && (
-                        <button
-                            type="button"
-                            onClick={() => setShowAllCommands(true)}
-                            className="inline-flex items-center gap-1 text-[12px] px-3 py-1.5 rounded-full transition-colors hover:brightness-105"
-                            style={{ background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.18)", color: "#6D28D9", fontWeight: 600 }}
-                        >
-                            Mais ações
-                            <MoreHorizontal size={13} weight="bold" />
-                        </button>
-                    )}
-                </div>
-
-                {/* Resposta da EVA — loading / answered / error / out_of_scope */}
-                {isThinking && (
-                    <div className="mt-4 flex items-center gap-2.5 px-4 py-3 rounded-xl"
-                        style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.14)" }}>
-                        <Sparkles size={15} weight="duotone" className="animate-pulse" style={{ color: "#6D28D9" }} />
-                        <span className="text-[13px]" style={{ color: "#475569" }}>EVA analisando sua operação…</span>
-                    </div>
-                )}
-
-                {assistant.state === "answered" && assistant.response && (
-                    <EvaAnswerBlock
-                        response={assistant.response}
-                        onNavigate={onNavigate}
-                        onReset={() => {
-                            assistant.reset();
-                            setComposer("");
+                        key={c.id}
+                        type="button"
+                        disabled={isThinking}
+                        onClick={() => {
+                            setComposer(c.label);
+                            assistant.ask(c.label, c.id);
                         }}
-                    />
-                )}
-
-                {assistant.state === "error" && (
-                    <EvaStatusRow tone="error" onReset={() => { assistant.reset(); setComposer(""); }}>
-                        Não consegui ler sua operação agora. Tente atualizar.
-                    </EvaStatusRow>
-                )}
-
-                {assistant.state === "out_of_scope" && (
-                    <EvaStatusRow tone="neutral" onReset={() => { assistant.reset(); setComposer(""); }}>
-                        Consigo te ajudar com conversas, oportunidades, pipeline e prioridades comerciais.
-                    </EvaStatusRow>
+                        className="text-[12px] px-3 py-1.5 rounded-full transition-colors hover:bg-[#F1F5F9] disabled:opacity-50"
+                        style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", color: "#475569", fontWeight: 500 }}
+                    >
+                        {c.label}
+                    </button>
+                ))}
+                {hasMore && !showAllCommands && (
+                    <button
+                        type="button"
+                        onClick={() => setShowAllCommands(true)}
+                        className="inline-flex items-center gap-1 text-[12px] px-3 py-1.5 rounded-full transition-colors hover:brightness-105"
+                        style={{ background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.18)", color: "#6D28D9", fontWeight: 600 }}
+                    >
+                        Mais ações
+                        <MoreHorizontal size={13} weight="bold" />
+                    </button>
                 )}
             </div>
+
+            {/* Resposta da EVA — loading / answered / error / out_of_scope */}
+            {isThinking && (
+                <div className="mt-4 flex items-center gap-2.5 px-4 py-3 rounded-xl"
+                    style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.14)" }}>
+                    <Sparkles size={15} weight="duotone" className="animate-pulse" style={{ color: "#6D28D9" }} />
+                    <span className="text-[13px]" style={{ color: "#475569" }}>EVA analisando sua operação…</span>
+                </div>
+            )}
+
+            {assistant.state === "answered" && assistant.response && (
+                <EvaAnswerBlock
+                    response={assistant.response}
+                    onNavigate={onNavigate}
+                    onReset={() => {
+                        assistant.reset();
+                        setComposer("");
+                    }}
+                />
+            )}
+
+            {assistant.state === "error" && (
+                <EvaStatusRow tone="error" onReset={() => { assistant.reset(); setComposer(""); }}>
+                    Não consegui ler sua operação agora. Tente atualizar.
+                </EvaStatusRow>
+            )}
+
+            {assistant.state === "out_of_scope" && (
+                <EvaStatusRow tone="neutral" onReset={() => { assistant.reset(); setComposer(""); }}>
+                    Consigo te ajudar com conversas, oportunidades, pipeline e prioridades comerciais.
+                </EvaStatusRow>
+            )}
         </div>
     );
 }
@@ -638,7 +368,7 @@ function EvaAnswerBlock({
                             type="button"
                             onClick={() => onNavigate(a.href)}
                             className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-semibold transition-all hover:brightness-105"
-                            style={{ background: "#FFFFFF", border: "1px solid rgba(37,99,235,0.30)", color: "#1D4ED8" }}
+                            style={{ background: "#FFFFFF", border: "1px solid rgba(124,58,237,0.28)", color: "#6D28D9" }}
                         >
                             {a.label}
                             <ArrowRight size={12} weight="bold" />
@@ -648,7 +378,7 @@ function EvaAnswerBlock({
             )}
             <div className="flex items-center justify-between mt-3 pl-[38px]">
                 <span className="text-[10px] uppercase"
-                    style={{ color: "#94A3B8", fontWeight: 700, letterSpacing: "0.06em" }}>
+                    style={{ color: "#1E293B", fontWeight: 700, letterSpacing: "0.06em" }}>
                     Confiança: {CONFIDENCE_LABEL[response.confidence]}
                 </span>
                 <button type="button" onClick={onReset} className="text-[11px] font-semibold" style={{ color: "#6D28D9" }}>
@@ -682,11 +412,248 @@ function EvaStatusRow({
     );
 }
 
+// ─── Filtros da Fila de ação ────────────────────────────────────────────────
+// Popover client-side: filtra dailyPriorities por nível e origem. Sem query
+// nova — opera sobre dados já carregados (read-only da Central).
+
+type PriorityLevel = DailyPriority["priority"];
+type PrioritySource = DailyPriority["source"];
+
+const LEVEL_OPTIONS: { key: PriorityLevel; label: string; color: string }[] = [
+    { key: "critical", label: "Crítico", color: "#BE123C" },
+    { key: "high",     label: "Alto",    color: "#B45309" },
+    { key: "medium",   label: "Médio",   color: "#1D4ED8" },
+    { key: "low",      label: "Baixo",   color: "#475569" },
+];
+
+// Só as origens que o gerador de prioridades realmente produz (sem "calendar").
+const SOURCE_OPTIONS: { key: PrioritySource; label: string }[] = [
+    { key: "conversation", label: "Conversa" },
+    { key: "deal",         label: "Oportunidade" },
+    { key: "eva",          label: "Insight da EVA" },
+];
+
+export interface CentralFilters {
+    levels: Set<PriorityLevel>;
+    sources: Set<PrioritySource>;
+}
+
+function FilterCheckRow({
+    label,
+    dot,
+    checked,
+    onToggle,
+}: {
+    label: string;
+    dot?: string;
+    checked: boolean;
+    onToggle: () => void;
+}) {
+    return (
+        <button
+            type="button"
+            onClick={onToggle}
+            className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors hover:bg-[#F1F5F9]"
+        >
+            <span
+                className="h-[18px] w-[18px] rounded-[5px] flex items-center justify-center shrink-0 transition-colors"
+                style={{
+                    background: checked ? "#2563EB" : "#FFFFFF",
+                    border: `1.5px solid ${checked ? "#2563EB" : "#CBD5E1"}`,
+                }}
+            >
+                {checked && <Check size={12} weight="bold" style={{ color: "#FFFFFF" }} />}
+            </span>
+            {dot && <span className="h-2 w-2 rounded-full shrink-0" style={{ background: dot }} />}
+            <span className="text-[13px]" style={{ color: "#334155", fontWeight: 500 }}>{label}</span>
+        </button>
+    );
+}
+
+function FilterMenu({
+    filters,
+    onChange,
+    activeCount,
+}: {
+    filters: CentralFilters;
+    onChange: (next: CentralFilters) => void;
+    activeCount: number;
+}) {
+    const [open, setOpen] = useState(false);
+    const ref = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!open) return;
+        const onDown = (e: MouseEvent) => {
+            if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+        };
+        const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+        document.addEventListener("mousedown", onDown);
+        document.addEventListener("keydown", onKey);
+        return () => {
+            document.removeEventListener("mousedown", onDown);
+            document.removeEventListener("keydown", onKey);
+        };
+    }, [open]);
+
+    const toggleLevel = (k: PriorityLevel) => {
+        const next = new Set(filters.levels);
+        if (next.has(k)) next.delete(k); else next.add(k);
+        onChange({ ...filters, levels: next });
+    };
+    const toggleSource = (k: PrioritySource) => {
+        const next = new Set(filters.sources);
+        if (next.has(k)) next.delete(k); else next.add(k);
+        onChange({ ...filters, sources: next });
+    };
+    const clear = () => onChange({ levels: new Set(), sources: new Set() });
+
+    return (
+        <div className="relative" ref={ref}>
+            <button
+                onClick={() => setOpen((o) => !o)}
+                aria-expanded={open}
+                aria-haspopup="true"
+                className="inline-flex items-center gap-2 h-10 px-4 rounded-xl text-[13px] font-medium transition-colors hover:bg-white shrink-0"
+                style={{
+                    background: activeCount > 0 ? "#FFFFFF" : "rgba(255,255,255,0.85)",
+                    backdropFilter: "blur(8px)",
+                    WebkitBackdropFilter: "blur(8px)",
+                    border: `1px solid ${activeCount > 0 ? "#BFD3F2" : "#D9E2EC"}`,
+                    color: "#475569",
+                }}
+            >
+                <Filter size={14} weight="duotone" style={{ color: activeCount > 0 ? "#2563EB" : "#475569" }} />
+                Filtros
+                {activeCount > 0 && (
+                    <span
+                        className="inline-flex items-center justify-center h-5 min-w-[20px] px-1 rounded-full text-[11px] font-bold tabular-nums text-white"
+                        style={{ background: "#2563EB" }}
+                    >
+                        {activeCount}
+                    </span>
+                )}
+                <ChevronDown size={13} weight="bold" className="transition-transform" style={{ color: "#94A3B8", transform: open ? "rotate(180deg)" : "none" }} />
+            </button>
+
+            {open && (
+                <div
+                    className="absolute right-0 mt-2 z-40 w-[244px] rounded-xl p-3"
+                    style={{
+                        background: "#FFFFFF",
+                        border: "1px solid #D9E2EC",
+                        boxShadow: "0 4px 12px rgba(15,23,42,0.08), 0 18px 40px rgba(15,23,42,0.12)",
+                    }}
+                >
+                    <div className="flex items-center justify-between px-1 pb-1.5">
+                        <span className="text-[11px] uppercase" style={{ color: "#1E293B", fontWeight: 700, letterSpacing: "0.05em" }}>
+                            Filtrar fila de ação
+                        </span>
+                        {activeCount > 0 && (
+                            <button type="button" onClick={clear} className="text-[11px] font-semibold" style={{ color: "#2563EB" }}>
+                                Limpar
+                            </button>
+                        )}
+                    </div>
+
+                    <p className="text-[10px] uppercase px-2.5 mt-1 mb-0.5" style={{ color: "#1E293B", fontWeight: 700, letterSpacing: "0.06em" }}>
+                        Nível
+                    </p>
+                    {LEVEL_OPTIONS.map((o) => (
+                        <FilterCheckRow key={o.key} label={o.label} dot={o.color} checked={filters.levels.has(o.key)} onToggle={() => toggleLevel(o.key)} />
+                    ))}
+
+                    <div className="h-px my-1.5" style={{ background: "#F1F5F9" }} />
+
+                    <p className="text-[10px] uppercase px-2.5 mb-0.5" style={{ color: "#1E293B", fontWeight: 700, letterSpacing: "0.06em" }}>
+                        Origem
+                    </p>
+                    {SOURCE_OPTIONS.map((o) => (
+                        <FilterCheckRow key={o.key} label={o.label} checked={filters.sources.has(o.key)} onToggle={() => toggleSource(o.key)} />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ─── Saudação + Progresso do dia ────────────────────────────────────────────
+
+function getHourlyGreeting(hour: number): string {
+    if (hour >= 5 && hour < 12) return "Bom dia";
+    if (hour >= 12 && hour < 18) return "Boa tarde";
+    return "Boa noite";
+}
+
+const PRIORITY_BAR_COLOR: Record<PriorityLevel, string> = {
+    critical: "#F43F5E",
+    high: "#F59E0B",
+    medium: "#3B82F6",
+    low: "#94A3B8",
+};
+
+// Barra-missão do dia: um segmento por ação, cor = severidade. Resolvido fica
+// sólido; pendente fica esmaecido. O avanço é o "plano com fim" da tela.
+function DayProgress({ items, state }: { items: DailyPriority[]; state: PriorityActionState }) {
+    const total = items.length;
+    if (total === 0) return null;
+    const resolved = items.filter((p) => isResolved(state, p.id)).length;
+    const allDone = resolved === total;
+    return (
+        <div className="rounded-2xl px-5 sm:px-6 py-4" style={{ background: "#FFFFFF", border: "1px solid #D9E2EC", boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}>
+            <div className="flex items-center justify-between mb-2">
+                <span className="text-[12.5px] font-bold" style={{ color: "#0B1220" }}>Progresso do dia</span>
+                <span className="text-[12px] font-semibold tabular-nums inline-flex items-center gap-1.5" style={{ color: allDone ? "#047857" : "#475569" }}>
+                    {allDone && <CheckCircle size={14} weight="fill" />}
+                    {resolved} de {total} {resolved === 1 ? "resolvida" : "resolvidas"}
+                </span>
+            </div>
+            <div className="flex items-center gap-1">
+                {items.map((p) => {
+                    const done = isResolved(state, p.id);
+                    const c = PRIORITY_BAR_COLOR[p.priority];
+                    return (
+                        <div
+                            key={p.id}
+                            className="h-2 flex-1 rounded-full"
+                            style={{ background: done ? c : `${c}33`, transition: "background-color 0.45s cubic-bezier(0.4,0,0.2,1)" }}
+                            title={`${p.title}${done ? " · resolvida" : ""}`}
+                        />
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
+
+// Estado persistido de resolver/adiar (localStorage por empresa).
+function usePriorityActions(companyId: string | null | undefined) {
+    const [state, setState] = useState<PriorityActionState>({ resolved: {}, snoozed: {} });
+    useEffect(() => {
+        setState(loadLiveActions(companyId, Date.now()));
+    }, [companyId]);
+    const resolve = useCallback(
+        (id: string) => {
+            if (!companyId) return;
+            setState(resolvePriority(companyId, id, new Date().toISOString()));
+        },
+        [companyId],
+    );
+    const snooze = useCallback(
+        (id: string) => {
+            if (!companyId) return;
+            setState(snoozePriority(companyId, id, startOfTomorrowIso()));
+        },
+        [companyId],
+    );
+    return { state, resolve, snooze };
+}
+
 // ─── Main page ──────────────────────────────────────────────────────────────
 
 const Inicio = () => {
     const navigate = useNavigate();
-    const { profile } = useAuth();
+    const { profile, companyId } = useAuth();
 
     // Pipeline real (mantém)
     const { pipeline, totalPipeline } = useInicioData();
@@ -696,13 +663,73 @@ const Inicio = () => {
 
     const metrics: CommandCenterMetrics | null = cc.metrics;
 
-    // Lacunas de contexto detectadas (dado já carregado, só leitura) — alimenta a
-    // linha-resumo da EVA. Max evita dupla contagem entre as duas fontes.
-    const gapsCount = useMemo(() => {
-        const fromHighlights = cc.evaHighlights.filter((h) => h.source === "knowledge_gap" || h.type === "missing_information").length;
-        const fromAttention = cc.attentionItems.filter((a) => a.type === "knowledge_gap").length;
-        return Math.max(fromHighlights, fromAttention);
-    }, [cc.evaHighlights, cc.attentionItems]);
+    // Atualizar: refresca a Central inteira (métricas + pipeline), não só o cc.
+    const [manualRefreshing, setManualRefreshing] = useState(false);
+    const handleRefresh = useCallback(async () => {
+        setManualRefreshing(true);
+        try {
+            await Promise.all([cc.refetch(), pipeline.refetch()]);
+        } finally {
+            setManualRefreshing(false);
+        }
+    }, [cc, pipeline]);
+    const refreshing = manualRefreshing || cc.isFetching || pipeline.isFetching;
+
+    // Filtros da Fila de ação (client-side, sobre dados já carregados).
+    const [filters, setFilters] = useState<CentralFilters>({ levels: new Set(), sources: new Set() });
+    const activeFilterCount = filters.levels.size + filters.sources.size;
+
+    // Ações persistidas (resolver/adiar) + envio direto (Responder rápido).
+    const actions = usePriorityActions(companyId);
+    const sender = useEvolutionSender();
+    const handleQuickReply = useCallback(
+        async (chatJid: string, text: string) => {
+            await sender.sendMessage(chatJid, text);
+            void cc.refetch(); // reflete a resposta enviada
+        },
+        [sender, cc],
+    );
+
+    // Plano do dia: tira adiados; separa resolvidos de pendentes.
+    const { dayItems, pendingAll } = useMemo(() => {
+        const nowMs = Date.now();
+        const day = cc.dailyPriorities.filter((p) => !isSnoozed(actions.state, p.id, nowMs));
+        const pending = day.filter((p) => !isResolved(actions.state, p.id));
+        return { dayItems: day, pendingAll: pending };
+    }, [cc.dailyPriorities, actions.state]);
+
+    // Fila visível = pendentes + filtro de UI.
+    const queue = useMemo(
+        () =>
+            pendingAll.filter((p) => {
+                if (filters.levels.size && !filters.levels.has(p.priority)) return false;
+                if (filters.sources.size && !filters.sources.has(p.source)) return false;
+                return true;
+            }),
+        [pendingAll, filters],
+    );
+
+    const criticalCount = useMemo(() => pendingAll.filter((p) => p.priority === "critical").length, [pendingAll]);
+    const dayComplete = dayItems.length > 0 && pendingAll.length === 0;
+
+    // COMMAND.UI.4 — tendência REAL: grava snapshot diário e lê delta/série.
+    // Só aparece quando há histórico (≥2 dias). Nada fabricado.
+    const [trends, setTrends] = useState<Record<string, MetricTrend>>({});
+    useEffect(() => {
+        if (cc.loading || !metrics || !companyId) return;
+        recordMetricSnapshot(companyId, {
+            activeConversations: metrics.activeConversations,
+            hotLeads: metrics.hotLeads,
+            needsFollowUp: metrics.needsFollowUp,
+            opportunitiesOpen: metrics.opportunitiesOpen,
+        });
+        setTrends({
+            activeConversations: getMetricTrend(companyId, "activeConversations"),
+            hotLeads: getMetricTrend(companyId, "hotLeads"),
+            needsFollowUp: getMetricTrend(companyId, "needsFollowUp"),
+            opportunitiesOpen: getMetricTrend(companyId, "opportunitiesOpen"),
+        });
+    }, [cc.loading, metrics, companyId]);
 
     // F5C.6 — entrada do assistente da EVA (dados já carregados, read-only)
     const evaInput: CentralEvaInput = useMemo(
@@ -719,52 +746,29 @@ const Inicio = () => {
         [cc.metrics, cc.attentionItems, cc.dailyPriorities, cc.evaHighlights, cc.recentActivity, cc.error, pipeline.data, totalPipeline],
     );
 
-    const kpiCards: KpiCardProps[] = useMemo(() => {
+    const kpiCards: KpiStripItem[] = useMemo(() => {
         const safe = (n: number | null | undefined) => (n == null ? "—" : String(n));
         return [
-            {
-                label: "Conversas ativas",
-                value: safe(metrics?.activeConversations),
-                icon: MessageCircle,
-                hint: "em aberto",
-                loading: cc.loading,
-                accent: "#2563EB",
-            },
-            {
-                label: "Leads quentes",
-                value: safe(metrics?.hotLeads),
-                icon: Flame,
-                hint: "segundo a EVA",
-                loading: cc.loading,
-                accent: "#DC2626",
-            },
-            {
-                label: "Aguardando resposta",
-                value: safe(metrics?.needsFollowUp),
-                icon: Clock,
-                hint: "conversas na fila",
-                loading: cc.loading,
-                accent: "#B45309",
-            },
-            {
-                label: "Oportunidades abertas",
-                value: safe(metrics?.opportunitiesOpen),
-                icon: Target,
-                hint: "no pipeline",
-                loading: cc.loading,
-                accent: "#10B981",
-            },
+            { label: "Conversas ativas", value: safe(metrics?.activeConversations), icon: MessageCircle, accent: "#2563EB", href: "/inbox", metricKey: "activeConversations", goodWhenUp: true, loading: cc.loading },
+            { label: "Leads quentes", value: safe(metrics?.hotLeads), icon: Flame, accent: "#DC2626", href: "/inbox", metricKey: "hotLeads", goodWhenUp: true, loading: cc.loading },
+            { label: "Aguardando resposta", value: safe(metrics?.needsFollowUp), icon: Clock, accent: "#B45309", href: "/inbox", metricKey: "needsFollowUp", goodWhenUp: false, loading: cc.loading },
+            { label: "Oportunidades abertas", value: safe(metrics?.opportunitiesOpen), icon: Target, accent: "#10B981", href: "/pipeline", metricKey: "opportunitiesOpen", goodWhenUp: true, loading: cc.loading },
         ];
     }, [metrics, cc.loading]);
 
     const firstName = (profile?.nome || "").split(" ")[0] || "";
-    const totalAttention = metrics?.needsFollowUp ?? 0;
+    const greeting = getHourlyGreeting(new Date().getHours());
+    const narration = cc.loading
+        ? "A EVA está lendo sua operação…"
+        : pendingAll.length === 0
+            ? "A EVA leu sua operação. Nada pendente agora, tudo em dia."
+            : `A EVA leu sua operação. Você tem ${pendingAll.length} ${pendingAll.length === 1 ? "ação" : "ações"} hoje${criticalCount > 0 ? `, ${criticalCount} não ${criticalCount === 1 ? "pode" : "podem"} esperar` : ""}.`;
 
     return (
-        <div className="space-y-6 sm:space-y-8 mx-auto w-full max-w-[1880px] 2xl:px-4">
+        <div className="vz-stagger space-y-5 sm:space-y-6 mx-auto w-full max-w-[1880px] 2xl:px-4">
             {/* Header */}
             <div
-                className="rounded-2xl px-7 sm:px-9 py-7 sm:py-9 flex flex-col sm:flex-row sm:items-end justify-between gap-4 relative overflow-hidden"
+                className="rounded-2xl px-7 sm:px-9 py-6 sm:py-7 flex flex-col sm:flex-row sm:items-end justify-between gap-4 relative overflow-hidden"
                 style={{
                     background: "linear-gradient(135deg, rgba(37,99,235,0.07) 0%, rgba(74,140,232,0.04) 45%, rgba(16,185,129,0.05) 100%)",
                     border: "1px solid rgba(148,163,184,0.26)",
@@ -781,29 +785,31 @@ const Inicio = () => {
                     <div className="flex items-center gap-3 mb-2">
                         <h1 className="text-[28px] sm:text-[36px] font-bold tracking-tight leading-[1.05]"
                             style={{ color: "#0B1220", letterSpacing: "-0.028em" }}>
-                            Central de Comando
+                            {greeting}{firstName ? `, ${firstName}` : ""}
                         </h1>
-                        {totalAttention > 0 && (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10.5px] font-semibold uppercase"
+                        {criticalCount > 0 && (
+                            <button
+                                onClick={() => navigate("/inbox")}
+                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase transition-transform hover:scale-[1.03] active:scale-95"
                                 style={{
-                                    background: "rgba(245,158,11,0.14)",
-                                    color: "#B45309",
-                                    border: "1px solid rgba(245,158,11,0.30)",
-                                    letterSpacing: "0.10em",
+                                    background: "#CB4327",
+                                    color: "#FFFFFF",
+                                    letterSpacing: "0.06em",
+                                    boxShadow: "0 4px 12px -3px rgba(203,67,39,0.5)",
                                 }}>
-                                <AlertTriangle size={12} weight="duotone" />
-                                {totalAttention} pra agir
-                            </span>
+                                <AlertTriangle size={12} weight="fill" />
+                                {criticalCount} {criticalCount === 1 ? "urgente" : "urgentes"}
+                            </button>
                         )}
                     </div>
                     <p className="text-[14.5px] sm:text-[15.5px]" style={{ color: "#475569" }}>
-                        Acompanhe conversas, oportunidades e prioridades comerciais em tempo real{firstName ? `, ${firstName}` : ""}.
+                        {narration}
                     </p>
                 </div>
                 <div className="relative z-10 flex items-center gap-2">
                     <button
-                        onClick={() => void cc.refetch()}
-                        disabled={cc.isFetching}
+                        onClick={() => void handleRefresh()}
+                        disabled={refreshing}
                         className="inline-flex items-center gap-2 h-10 px-4 rounded-xl text-[13px] font-medium transition-colors hover:bg-white shrink-0 disabled:opacity-60"
                         style={{
                             background: "rgba(255,255,255,0.85)",
@@ -813,58 +819,34 @@ const Inicio = () => {
                             color: "#475569",
                         }}
                     >
-                        <RefreshCw size={14} weight="duotone" className={cc.isFetching ? "animate-spin" : ""} />
-                        Atualizar
+                        <RefreshCw size={14} weight="duotone" className={refreshing ? "animate-spin" : ""} />
+                        {refreshing ? "Atualizando…" : "Atualizar"}
                     </button>
-                    <button
-                        className="inline-flex items-center gap-2 h-10 px-4 rounded-xl text-[13px] font-medium transition-colors hover:bg-white shrink-0"
-                        style={{
-                            background: "rgba(255,255,255,0.85)",
-                            backdropFilter: "blur(8px)",
-                            WebkitBackdropFilter: "blur(8px)",
-                            border: "1px solid #D9E2EC",
-                            color: "#475569",
-                        }}
-                    >
-                        <Filter size={14} weight="duotone" />
-                        Filtros
-                        <MoreHorizontal size={14} weight="bold" />
-                    </button>
+                    <FilterMenu filters={filters} onChange={setFilters} activeCount={activeFilterCount} />
                 </div>
             </div>
 
-            {/* F5C.5/F5C.6 — Card EVA dominante + assistente funcional */}
-            <EvaCommandCard
-                priorities={cc.dailyPriorities}
-                gapsCount={gapsCount}
-                loading={cc.loading}
-                onNavigate={navigate}
-                evaInput={evaInput}
-            />
+            {/* Barra-missão do dia: plano com fim, não fluxo infinito. */}
+            <DayProgress items={dayItems} state={actions.state} />
 
-            {/* F5C.5 — Pilar 2: Acompanhar (4 KPIs principais) */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-                {kpiCards.map((kpi) => (
-                    <KpiCard key={kpi.label} {...kpi} />
-                ))}
-            </div>
+            {/* COMMAND.UI.2 — Faixa densa de KPIs (clicável), suporte no topo. */}
+            <KpiStrip items={kpiCards} trends={trends} onNavigate={navigate} />
 
-            {/* COMMAND.UI.1 — Panorama do Pipeline (fluxo + foco + leitura da EVA) */}
-            <PipelinePanoramaCard
-                rawStages={pipeline.data || []}
-                total={totalPipeline}
-                loading={pipeline.isLoading}
-                onOpen={() => navigate("/pipeline")}
-            />
-
-            {/* COMMAND.UI — Decision workspace: fila de ação + leitura da EVA +
-                gargalos + atividade. Substitui as 3 listas planas anteriores. */}
+            {/* COMMAND.UI — Decisão primeiro: herói saturado + fila + leitura da EVA. */}
             <DecisionWorkspace
-                priorities={cc.dailyPriorities}
+                priorities={pendingAll}
+                queuePriorities={queue}
+                filterActive={activeFilterCount > 0}
+                dayComplete={dayComplete}
                 highlights={cc.evaHighlights}
                 recentActivity={cc.recentActivity}
                 loading={cc.loading}
                 onNavigate={navigate}
+                onResolve={actions.resolve}
+                onSnooze={actions.snooze}
+                sendReply={handleQuickReply}
+                replyConnected={sender.connected}
+                evaChat={<EvaChat evaInput={evaInput} onNavigate={navigate} />}
             />
 
             {/* Error inline */}
@@ -875,7 +857,7 @@ const Inicio = () => {
                 </div>
             )}
 
-            <div className="text-center text-[11.5px] py-4" style={{ color: "#94A3B8" }}>
+            <div className="text-center text-[11.5px] py-4" style={{ color: "#475569" }}>
                 Dados em tempo real {cc.lastUpdatedAt ? `· atualizado ${relativeTime(cc.lastUpdatedAt.toISOString())}` : ""}
             </div>
         </div>

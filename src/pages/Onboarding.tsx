@@ -21,6 +21,7 @@ import {
     Phone,
     Briefcase,
     LayoutDashboard,
+    MessageCircle,
     Package,
     BarChart3,
     X,
@@ -1690,22 +1691,25 @@ export default function Onboarding() {
                         </p>
 
                         <div className="grid gap-3">
+                            {/* FIO 1 — conectar o WhatsApp é o que ativa a Inbox e a EVA.
+                                Vira a ação destacada do fim do onboarding; abre o modal
+                                de conexão direto via deep link `?connect=1`. */}
                             <motion.button
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.3 }}
-                                onClick={() => handleComplete("crm")}
+                                onClick={() => handleComplete("inbox?connect=1")}
                                 className="group flex items-center gap-4 px-5 py-4 rounded-2xl border border-[rgba(37,99,235,0.30)] bg-[rgba(37,99,235,0.08)] hover:bg-[rgba(37,99,235,0.16)] transition-all text-left"
                             >
                                 <div className="p-2.5 rounded-lg bg-[rgba(37,99,235,0.16)]">
-                                    <LayoutDashboard className="h-5 w-5 text-[#2563EB]" />
+                                    <MessageCircle className="h-5 w-5 text-[#2563EB]" />
                                 </div>
                                 <div className="flex-1">
                                     <p className="text-sm font-semibold text-[#2563EB]">
-                                        Ir ao Pipeline
+                                        Conectar o WhatsApp
                                     </p>
                                     <p className="text-xs text-[#94A3B8]">
-                                        Comece a adicionar seus deals
+                                        Traga suas conversas pra Inbox e deixe a EVA ajudar
                                     </p>
                                 </div>
                                 <ArrowRight className="h-4 w-4 text-[#2563EB] group-hover:translate-x-1 transition-transform" />
@@ -1715,6 +1719,27 @@ export default function Onboarding() {
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.4 }}
+                                onClick={() => handleComplete("crm")}
+                                className="group flex items-center gap-4 px-5 py-4 rounded-2xl border border-[#E6EDF5] bg-white hover:bg-[#F1F5F9] hover:border-[#D7DEE9] transition-all text-left"
+                            >
+                                <div className="p-2.5 rounded-lg bg-[#F1F5F9]">
+                                    <LayoutDashboard className="h-5 w-5 text-[#2563EB]" />
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-sm font-semibold text-[#0B1220]">
+                                        Ir ao Pipeline
+                                    </p>
+                                    <p className="text-xs text-[#94A3B8]">
+                                        Comece a adicionar seus deals
+                                    </p>
+                                </div>
+                                <ArrowRight className="h-4 w-4 text-[#94A3B8] group-hover:translate-x-1 transition-transform" />
+                            </motion.button>
+
+                            <motion.button
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.5 }}
                                 onClick={() => handleComplete("nova-venda")}
                                 className="group flex items-center gap-4 px-5 py-4 rounded-2xl border border-[#E6EDF5] bg-white hover:bg-[#F1F5F9] hover:border-[#D7DEE9] transition-all text-left"
                             >
@@ -1735,7 +1760,7 @@ export default function Onboarding() {
                             <motion.button
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.5 }}
+                                transition={{ delay: 0.6 }}
                                 onClick={() => handleComplete("dashboard")}
                                 className="group flex items-center gap-4 px-5 py-4 rounded-2xl border border-[#E6EDF5] bg-white hover:bg-[#F1F5F9] hover:border-[#D7DEE9] transition-all text-left"
                             >

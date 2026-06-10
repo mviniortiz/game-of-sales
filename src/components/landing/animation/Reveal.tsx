@@ -24,9 +24,12 @@ import type { ReactElement, ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import type { Variants } from "framer-motion";
 
+// LP.4 2026-06-09: variants transform-only — opacity:0 + whileInView deixa
+// conteúdo invisível quando o IntersectionObserver não dispara (WebView do
+// YouTube). Ver memory feedback_whileinview_opacity.
 const REVEAL_VARIANTS: Variants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: { opacity: 1, y: 0 },
+  hidden: { y: 24 },
+  visible: { y: 0 },
 };
 
 interface RevealProps {
@@ -98,8 +101,8 @@ interface StaggerContainerProps {
 }
 
 const ITEM_VARIANTS: Variants = {
-  hidden: { opacity: 0, y: 18 },
-  visible: { opacity: 1, y: 0 },
+  hidden: { y: 18 },
+  visible: { y: 0 },
 };
 
 export function StaggerContainer({

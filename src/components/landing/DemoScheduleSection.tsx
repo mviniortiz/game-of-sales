@@ -219,87 +219,56 @@ export const DemoScheduleSection = ({
 
     return (
         <section
-            className="relative py-24 sm:py-32 px-4 sm:px-6 lg:px-8 overflow-hidden"
-            style={{ background: "#FFFFFF" }}
+            className="lp-paper lp-paper--fine relative py-24 sm:py-32 px-4 sm:px-6 lg:px-8 overflow-hidden"
         >
-            <div
-                className="absolute top-[-15%] left-[10%] w-[60%] h-[80%] rounded-full pointer-events-none"
-                style={{
-                    background: "radial-gradient(circle, rgba(21,86,192,0.05) 0%, transparent 55%)",
-                }}
-            />
-            <div
-                className="absolute inset-0 opacity-[0.02] pointer-events-none"
-                style={{
-                    backgroundImage: `
-                        linear-gradient(rgba(10,10,10,0.1) 1px, transparent 1px),
-                        linear-gradient(90deg, rgba(10,10,10,0.1) 1px, transparent 1px)
-                    `,
-                    backgroundSize: "60px 60px",
-                }}
-            />
-
             <div className="relative max-w-5xl mx-auto">
-                {/* Section header */}
-                <div className="text-center mb-12 landing-fade-in-up">
-                    <div className="inline-flex items-center gap-2 mb-6">
-                        <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
-                        <span
-                            className="text-xs text-blue-700"
-                            style={{ fontWeight: 600, letterSpacing: "0.12em" }}
-                        >
-                            DEMONSTRAÇÃO PERSONALIZADA
-                        </span>
-                    </div>
+                {/* Estação do fio */}
+                <div className="lp-station mb-12 sm:mb-14 landing-fade-in-up">
+                    <span className="lp-station-node" />
+                    <span className="lp-mono" style={{ color: "var(--lp-ink-55)" }}>
+                        07 · demonstração personalizada
+                    </span>
+                    <span className="lp-station-rule" />
+                </div>
 
+                {/* Section header */}
+                <div className="mb-12 landing-fade-in-up">
                     <h2
-                        className="font-satoshi mb-5 max-w-3xl mx-auto"
+                        className="font-satoshi mb-5 max-w-3xl"
                         style={{
-                            fontWeight: 700,
-                            fontSize: "clamp(1.6rem, 5vw, 3rem)",
-                            lineHeight: 1.08,
+                            fontWeight: 900,
+                            fontSize: "clamp(1.7rem, 5vw, 3.1rem)",
+                            lineHeight: 1.04,
                             letterSpacing: "-0.04em",
-                            color: "rgba(10,10,10,0.92)",
+                            color: "var(--lp-ink)",
                         }}
                     >
                         Vamos montar uma demo{" "}
-                        <span
-                            style={{
-                                background: "linear-gradient(135deg, #1556C0, #2E78E0)",
-                                WebkitBackgroundClip: "text",
-                                WebkitTextFillColor: "transparent",
-                            }}
-                        >
+                        <span className="lp-serif" style={{ color: "var(--lp-blue)", fontWeight: 500 }}>
                             sob medida
                         </span>{" "}
                         pro seu comercial
                     </h2>
 
                     <p
-                        className="max-w-xl mx-auto"
-                        style={{ color: "rgba(10,10,10,0.48)", fontSize: "1rem", lineHeight: 1.7 }}
+                        className="max-w-xl"
+                        style={{ color: "var(--lp-ink-70)", fontSize: "1rem", lineHeight: 1.7 }}
                     >
                         Escolhe um horário livre, deixa seu contato e a gente prepara a sessão focada no seu contexto. Sem pitch genérico.
                     </p>
                 </div>
 
                 {/* Card container */}
+                <div className="lp-frame relative landing-fade-in-up landing-delay-100">
                 <div
                     id="demo-form-start"
-                    className="relative rounded-2xl overflow-hidden landing-fade-in-up landing-delay-100"
+                    className="relative rounded-[10px] overflow-hidden"
                     style={{
-                        background: "rgba(10,10,10,0.04)",
-                        boxShadow:
-                            "0 0 0 1px rgba(10,10,10,0.08), 0 8px 24px rgba(0,0,0,0.3), 0 40px 80px -16px rgba(0,0,0,0.4)",
+                        background: "var(--lp-white)",
+                        border: "1px solid var(--lp-line)",
+                        boxShadow: "0 24px 64px -32px rgba(13,20,33,0.22)",
                     }}
                 >
-                    <div
-                        className="absolute top-0 inset-x-0 h-px"
-                        style={{
-                            background:
-                                "linear-gradient(90deg, transparent, rgba(21,86,192,0.5) 30%, rgba(20,184,166,0.4) 70%, transparent)",
-                        }}
-                    />
 
                     {/* ── STEP 1: SCHEDULE (calendar-first) ─────── */}
                     {step === "schedule" && (
@@ -590,16 +559,17 @@ export const DemoScheduleSection = ({
                         </div>
                     )}
                 </div>
+                </div>
 
                 {/* Trust signals */}
-                <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-8">
+                <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-9">
                     {["Sem cartão de crédito", "Demonstração personalizada", "Atendimento humano"].map((t) => (
                         <div
                             key={t}
-                            className="flex items-center gap-1.5"
-                            style={{ color: "rgba(10,10,10,0.45)", fontSize: "0.75rem", fontWeight: 500 }}
+                            className="lp-mono flex items-center gap-1.5"
+                            style={{ color: "var(--lp-ink-55)", textTransform: "none", letterSpacing: "0.03em" }}
                         >
-                            <Check className="h-3 w-3 text-blue-600/50" strokeWidth={2.5} />
+                            <Check className="h-3 w-3" strokeWidth={2.5} style={{ color: "var(--lp-live)" }} />
                             {t}
                         </div>
                     ))}

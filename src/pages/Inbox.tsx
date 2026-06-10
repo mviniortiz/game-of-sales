@@ -172,6 +172,16 @@ const Inbox = () => {
         setSearchParams,
     ]);
 
+    // FIO 1 — deep link `?connect=1` (vindo do fim do onboarding) abre direto
+    // o modal de conexão do WhatsApp. Limpa o param pra não reabrir ao navegar.
+    useEffect(() => {
+        if (searchParams.get("connect") !== "1") return;
+        setConnectModalOpen(true);
+        const sp = new URLSearchParams(searchParams);
+        sp.delete("connect");
+        setSearchParams(sp, { replace: true });
+    }, [searchParams, setSearchParams]);
+
     // F4W.4.3 — Sincroniza o ref do hook ANTES de qualquer fetch.
     // Garante que Realtime sempre veja o id correto, sem race condition.
     useEffect(() => {

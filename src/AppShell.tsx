@@ -33,6 +33,7 @@ const ConfOrganizacao = lazy(() => import("./pages/configuracoes/Organizacao"));
 const ConfTime = lazy(() => import("./pages/configuracoes/Time"));
 const ConfFaturamento = lazy(() => import("./pages/configuracoes/Faturamento"));
 const ConfIntegracoes = lazy(() => import("./pages/configuracoes/Integracoes"));
+const ConfTags = lazy(() => import("./pages/configuracoes/Tags"));
 const ConfImportar = lazy(() => import("./pages/configuracoes/Importar"));
 const ConfRelatoriosPublicos = lazy(() => import("./pages/configuracoes/RelatoriosPublicos"));
 const ConfEvaContexto = lazy(() => import("./pages/configuracoes/EvaContexto"));
@@ -44,6 +45,7 @@ const Inbox = lazy(() => import("./pages/Inbox"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 const SalesPerformanceCenter = lazy(() => import("./pages/SalesPerformanceCenter"));
 const AgenteRelatorios = lazy(() => import("./pages/AgenteRelatorios"));
+const EvaStudio = lazy(() => import("./pages/EvaStudio"));
 const Upgrade = lazy(() => import("./pages/Upgrade"));
 const Docs = lazy(() => import("./pages/Docs"));
 const Suporte = lazy(() => import("./pages/admin/Suporte"));
@@ -182,6 +184,19 @@ const AppShell = () => (
                 }
               />
               <Route path="/agente" element={<Navigate to="/eva" replace />} />
+              {/* EVA.STUDIO.1 — EVA Studio (dark isolado). Dentro do AppLayout, admin-only. */}
+              <Route
+                path="/eva-studio"
+                element={
+                  <ProtectedRoute>
+                    <AdminRoute>
+                      <AppLayout>
+                        <EvaStudio />
+                      </AppLayout>
+                    </AdminRoute>
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="/admin"
                 element={
@@ -272,6 +287,14 @@ const AppShell = () => (
                   element={
                     <AdminRoute>
                       <ConfIntegracoes />
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="tags"
+                  element={
+                    <AdminRoute>
+                      <ConfTags />
                     </AdminRoute>
                   }
                 />

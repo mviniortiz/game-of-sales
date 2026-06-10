@@ -94,7 +94,7 @@ const mainNavItems: NavItem[] = [
   { title: "Inbox", url: "/inbox", icon: ChatCircleText },
   { title: "Pipeline", url: "/pipeline", icon: KanbanIcon, badge: "rotting" },
   { title: "Agenda", url: "/agenda", icon: CalendarBlank },
-  { title: "EVA", url: "/eva", icon: SparkleIcon, adminOnly: true, feature: "eva" },
+  { title: "EVA Studio", url: "/eva-studio", icon: SparkleIcon, adminOnly: true, feature: "eva" },
   { title: "Performance", url: "/performance", icon: ChartLineUp },
   { title: "Metas", url: "/metas", icon: Target },
   { title: "Ranking", url: "/ranking", icon: Trophy },

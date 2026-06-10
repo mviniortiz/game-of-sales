@@ -1,73 +1,74 @@
-import { AlertCircle, Clock, MessageSquare, TrendingDown, Users } from "lucide-react";
-
-// LP.2 2026-05-25: PROBLEMA simplificado — só as dores (a solução vive em
-// "Como o Vyzon resolve"), pra cortar redundância dor→solução na mesma seção.
+// LP.4 2026-06-09: PROBLEMA em formato razão (ledger) editorial — as 4 dores
+// em Sentient itálica (voz humana, a realidade bagunçada) separadas por
+// hairlines, cada uma anotada pela EVA em mono à direita (voz da máquina).
+// Copy LP.3 intocada.
 const PAINS = [
     {
         n: "01",
-        icon: Clock,
         title: "Lead quente fica sem resposta.",
+        note: "tempo de resposta > 4h",
     },
     {
         n: "02",
-        icon: MessageSquare,
         title: "Follow-up depende de cobrança no grupo.",
+        note: "follow-up: na memória",
     },
     {
         n: "03",
-        icon: TrendingDown,
         title: "Pipeline não acompanha o que aconteceu no WhatsApp.",
+        note: "pipeline ≠ conversa",
     },
     {
         n: "04",
-        icon: Users,
-        title: "Cada vendedor responde de um jeito.",
+        title: "Você só descobre que o lead esfriou quando já era.",
+        note: "esfriou · detectado tarde",
     },
 ];
 
 export const PainPoints = () => {
     return (
-        <section className="relative py-28 sm:py-32 px-4 sm:px-6 lg:px-8 overflow-hidden bg-white">
+        <section className="relative py-24 sm:py-32 px-4 sm:px-6 lg:px-8 overflow-hidden" style={{ background: "var(--lp-white)" }}>
             <div className="relative max-w-5xl mx-auto">
-                {/* Header */}
-                <div className="text-center mb-16 sm:mb-20 landing-fade-in-up">
-                    <span
-                        className="inline-flex items-center gap-2 text-[11px] rounded-full px-4 py-1.5 mb-6"
-                        style={{
-                            fontWeight: 500,
-                            letterSpacing: "0.04em",
-                            background: "rgba(10,10,10,0.04)",
-                            color: "rgba(10,10,10,0.6)",
-                            border: "1px solid rgba(10,10,10,0.08)",
-                        }}
-                    >
-                        <AlertCircle className="h-3 w-3" strokeWidth={2} />
-                        O que trava a operação
+                {/* Estação do fio */}
+                <div className="lp-station mb-12 sm:mb-16 landing-fade-in-up">
+                    <span className="lp-station-node" />
+                    <span className="lp-mono" style={{ color: "var(--lp-ink-55)" }}>
+                        01 · o que trava a operação
                     </span>
+                    <span className="lp-station-rule" />
+                </div>
 
+                {/* Header assimétrico com numeral fantasma */}
+                <div className="relative mb-14 sm:mb-20 landing-fade-in-up">
+                    <span
+                        className="lp-index absolute -top-10 right-0 hidden md:block"
+                        style={{ fontSize: "clamp(8rem, 18vw, 13rem)" }}
+                        aria-hidden="true"
+                    >
+                        01
+                    </span>
                     <h2
-                        className="font-satoshi mx-auto"
+                        className="font-satoshi relative"
                         style={{
-                            fontWeight: 700,
-                            fontSize: "clamp(1.9rem, 5vw, 3.25rem)",
-                            lineHeight: 1.05,
+                            fontWeight: 900,
+                            fontSize: "clamp(2rem, 5vw, 3.4rem)",
+                            lineHeight: 1.02,
                             letterSpacing: "-0.04em",
-                            color: "#0A0A0A",
-                            maxWidth: "860px",
+                            color: "var(--lp-ink)",
+                            maxWidth: "680px",
                         }}
                     >
                         Sua agência gera lead.{" "}
-                        <span style={{ color: "rgba(10,10,10,0.5)" }}>
+                        <span className="lp-serif" style={{ color: "var(--lp-ink-55)", fontWeight: 400 }}>
                             Mas a oportunidade se perde no caminho.
                         </span>
                     </h2>
-
                     <p
-                        className="mt-5 mx-auto text-[15px] sm:text-[17px]"
+                        className="mt-6 text-[15px] sm:text-[17px]"
                         style={{
-                            lineHeight: 1.6,
-                            color: "rgba(10,10,10,0.55)",
-                            maxWidth: "720px",
+                            lineHeight: 1.65,
+                            color: "var(--lp-ink-70)",
+                            maxWidth: "560px",
                             fontWeight: 400,
                         }}
                     >
@@ -77,69 +78,49 @@ export const PainPoints = () => {
                     </p>
                 </div>
 
-                {/* Dores — grid 2x2 */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
-                    {PAINS.map(({ n, icon: Icon, title }, i) => (
+                {/* Ledger de dores */}
+                <div className="border-t" style={{ borderColor: "var(--lp-line)" }}>
+                    {PAINS.map(({ n, title, note }, i) => (
                         <div
                             key={n}
-                            className={`flex items-start gap-5 rounded-2xl p-6 sm:p-7 landing-fade-in-up ${i === 0 ? "" : i === 1 ? "landing-delay-100" : "landing-delay-200"}`}
-                            style={{
-                                background: "rgba(10,10,10,0.025)",
-                                border: "1px solid rgba(10,10,10,0.08)",
-                            }}
+                            className={`grid grid-cols-[44px_minmax(0,1fr)] sm:grid-cols-[72px_minmax(0,1fr)_auto] items-baseline gap-x-4 sm:gap-x-8 gap-y-1 py-6 sm:py-7 border-b landing-fade-in-up ${i === 0 ? "" : i === 1 ? "landing-delay-100" : i === 2 ? "landing-delay-200" : "landing-delay-300"}`}
+                            style={{ borderColor: "var(--lp-line)" }}
                         >
                             <span
-                                className="font-heading shrink-0"
-                                style={{
-                                    fontSize: "clamp(1.75rem, 4vw, 2.5rem)",
-                                    lineHeight: 1,
-                                    letterSpacing: "-0.04em",
-                                    color: "rgba(10,10,10,0.14)",
-                                    fontWeight: 700,
-                                    fontVariantNumeric: "tabular-nums",
-                                }}
+                                className="lp-mono"
+                                style={{ color: "var(--lp-blue)", fontSize: 13 }}
                             >
                                 {n}
                             </span>
-                            <div className="flex items-start gap-3.5 pt-1">
-                                <div
-                                    className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
-                                    style={{
-                                        background: "rgba(10,10,10,0.04)",
-                                        border: "1px solid rgba(10,10,10,0.08)",
-                                    }}
-                                >
-                                    <Icon className="h-5 w-5" strokeWidth={1.8} style={{ color: "#0A0A0A" }} />
-                                </div>
-                                <h3
-                                    className="font-heading"
-                                    style={{
-                                        fontSize: "clamp(1.0625rem, 2vw, 1.25rem)",
-                                        lineHeight: 1.3,
-                                        letterSpacing: "-0.02em",
-                                        color: "#0A0A0A",
-                                        fontWeight: 700,
-                                    }}
-                                >
-                                    {title}
-                                </h3>
-                            </div>
+                            <h3
+                                className="lp-serif"
+                                style={{
+                                    fontSize: "clamp(1.25rem, 3vw, 1.875rem)",
+                                    lineHeight: 1.25,
+                                    color: "var(--lp-ink)",
+                                    fontWeight: 400,
+                                }}
+                            >
+                                {title}
+                            </h3>
+                            <span
+                                className="lp-mono col-start-2 sm:col-start-3"
+                                style={{ color: "var(--lp-ink-40)", textTransform: "none", letterSpacing: "0.03em" }}
+                            >
+                                {note}
+                            </span>
                         </div>
                     ))}
                 </div>
 
-                {/* Footer hint */}
-                <div className="mt-16 sm:mt-20 text-center landing-fade-in-up landing-delay-300">
+                {/* Fechamento */}
+                <div className="mt-12 sm:mt-14 landing-fade-in-up landing-delay-300">
                     <p
-                        className="text-base sm:text-lg"
-                        style={{
-                            fontWeight: 500,
-                            color: "rgba(10,10,10,0.6)",
-                        }}
+                        className="font-satoshi text-lg sm:text-2xl"
+                        style={{ fontWeight: 700, letterSpacing: "-0.03em", color: "var(--lp-ink)" }}
                     >
-                        <span style={{ color: "#0A0A0A", fontWeight: 700 }}>Menos lead perdido.</span>{" "}
-                        <span style={{ color: "#0A0A0A", fontWeight: 700 }}>Menos cobrança manual.</span>{" "}
-                        <span style={{ color: "#0A0A0A", fontWeight: 700 }}>Mais oportunidade andando.</span>
+                        Menos lead perdido. Menos cobrança manual.{" "}
+                        <span style={{ color: "var(--lp-blue)" }}>Mais oportunidade andando.</span>
                     </p>
                 </div>
             </div>
