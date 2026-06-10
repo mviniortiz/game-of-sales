@@ -22,6 +22,7 @@ import {
     AlertCircle,
     AlertTriangle,
     ArrowRight,
+    ArrowUp,
     BarChart3,
     CheckCircle2,
     ChevronRight,
@@ -108,13 +109,18 @@ interface EvaPanelProps {
     /** V1.1 — chamado após criar+vincular oportunidade, pra Inbox refetchar
      *  channel_conversations e refletir o novo deal_id. */
     onDealLinked?: (dealId: string) => void;
+    /** PROSPECT.1 — quando presente, a resposta sugerida ganha "Enviar"
+     *  (aprovar-e-enviar com 1 toque), além de Copiar. Usado na prospecção. */
+    onSendReply?: (text: string) => Promise<void>;
+    /** PROSPECT.1 — objetivo da conversa repassado à EVA (ex.: marcar demo). */
+    objective?: string;
 }
 
-export function EvaPanel({ chat, messages, onDealLinked }: EvaPanelProps) {
+export function EvaPanel({ chat, messages, onDealLinked, onSendReply, objective }: EvaPanelProps) {
     if (!chat) return <EmptyPanel reason="no-chat" />;
     // key={chat.id} — remonta por conversa pra não vazar estado local
     // (createOpen / localLinkedDealId) entre chats diferentes.
-    return <PanelContent key={chat.id} chat={chat} messages={messages} onDealLinked={onDealLinked} />;
+    return <PanelContent key={chat.id} chat={chat} messages={messages} onDealLinked={onDealLinked} onSendReply={onSendReply} objective={objective} />;
 }
 
 // ─── Empty / loading / error states ─────────────────────────────────────────
@@ -237,10 +243,14 @@ function PanelContent({
     chat,
     messages,
     onDealLinked,
+    onSendReply,
+    objective,
 }: {
     chat: Chat;
     messages: MessageLine[];
     onDealLinked?: (dealId: string) => void;
+    onSendReply?: (text: string) => Promise<void>;
+    objective?: string;
 }) {
     const navigate = useNavigate();
     const chatPhone = chat.phone || chat.id;
@@ -249,6 +259,7 @@ function PanelContent({
         contactName: chat.name,
         messages,
         enabled: messages.length > 0,
+        objective,
     });
 
     // V1.1 — vínculo conversa→deal. Só dá pra vincular no modo channel-first
@@ -469,6 +480,7 @@ function PanelContent({
                                 effectiveDealId,
                                 loading: crmLoading,
                             }}
+                            onSendReply={onSendReply}
                         />
                     </>
                 )}
@@ -751,10 +763,12 @@ function RealContent({
     chat,
     insight,
     dealState,
+    onSendReply,
 }: {
     chat: Chat;
     insight: EvaInsightResult;
     dealState: CrmDealState;
+    onSendReply?: (text: string) => Promise<void>;
 }) {
     const { analysis, qualification, legacy } = insight;
     const summary = analysis.sentiment || "Análise da EVA disponível.";
@@ -828,6 +842,7 @@ function RealContent({
                     {(qualification.resposta_sugerida || analysis.draft) && (
                         <SuggestedReply
                             text={qualification.resposta_sugerida || analysis.draft || ""}
+                            onSend={onSendReply}
                         />
                     )}
                 </div>
@@ -1174,8 +1189,9 @@ function InfoLists({
     );
 }
 
-function SuggestedReply({ text }: { text: string }) {
+function SuggestedReply({ text, onSend }: { text: string; onSend?: (text: string) => Promise<void> }) {
     const [edited, setEdited] = useState<string | null>(null);
+    const [sending, setSending] = useState(false);
     const display = edited ?? text;
 
     const handleCopy = async () => {
@@ -1184,6 +1200,23 @@ function SuggestedReply({ text }: { text: string }) {
             toast.success("Resposta copiada");
         } catch {
             toast.error("Não foi possível copiar");
+        }
+    };
+
+    // PROSPECT.1 — aprovar-e-enviar com 1 toque (envia o texto, já editado se for o caso).
+    const handleSend = async () => {
+        if (!onSend || sending) return;
+        const msg = display.trim();
+        if (!msg) return;
+        setSending(true);
+        try {
+            await onSend(msg);
+            toast.success("Resposta enviada");
+            setEdited(null);
+        } catch {
+            toast.error("Não foi possível enviar");
+        } finally {
+            setSending(false);
         }
     };
 
@@ -1221,11 +1254,25 @@ function SuggestedReply({ text }: { text: string }) {
                 />
             )}
             <div className="flex items-center gap-1.5 flex-wrap mt-2.5">
+                {onSend && (
+                    <button
+                        type="button"
+                        onClick={handleSend}
+                        disabled={sending}
+                        className="inline-flex items-center gap-1.5 h-7.5 px-3 py-1.5 rounded-lg text-[11.5px] font-semibold text-white transition-all hover:brightness-110 disabled:opacity-60"
+                        style={{ background: "linear-gradient(135deg, #10B981, #34D399)" }}
+                    >
+                        <ArrowUp className="h-3 w-3" />
+                        {sending ? "Enviando..." : "Enviar resposta"}
+                    </button>
+                )}
                 <button
                     type="button"
                     onClick={handleCopy}
-                    className="inline-flex items-center gap-1.5 h-7.5 px-3 py-1.5 rounded-lg text-[11.5px] font-semibold text-white transition-all hover:brightness-110"
-                    style={{ background: "linear-gradient(135deg, #2563EB, #4A8CE8)" }}
+                    className="inline-flex items-center gap-1.5 h-7.5 px-3 py-1.5 rounded-lg text-[11.5px] font-semibold transition-all hover:brightness-110"
+                    style={onSend
+                        ? { color: "#1D4ED8", border: "1px solid rgba(37,99,235,0.25)" }
+                        : { background: "linear-gradient(135deg, #2563EB, #4A8CE8)", color: "#FFFFFF" }}
                 >
                     <Copy className="h-3 w-3" />
                     Copiar resposta

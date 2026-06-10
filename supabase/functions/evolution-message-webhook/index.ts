@@ -535,6 +535,32 @@ serve(async (req) => {
 
   const companyId: string | null = profile?.company_id || null;
 
+  // PROSPECT.1 — Modo prospecção desta instância (wa_<userId>). Quando ativo,
+  // SÓ números na prospecting_allowlist passam; grupos e qualquer não-listado
+  // (inclusive contatos pessoais do dono do número) são descartados ANTES de
+  // gravar. É a trava que mantém a vida pessoal fora do Vyzon.
+  let prospectingActive = false;
+  const allowlistTails = new Set<string>();
+  {
+    const { data: pInst } = await (admin as any)
+      .from("prospecting_instances")
+      .select("user_id")
+      .eq("user_id", userId)
+      .eq("is_active", true)
+      .maybeSingle();
+    if (pInst) {
+      prospectingActive = true;
+      const { data: al } = await (admin as any)
+        .from("prospecting_allowlist")
+        .select("phone_tail")
+        .eq("user_id", userId)
+        .eq("is_active", true);
+      for (const r of (al || []) as any[]) {
+        if (r?.phone_tail) allowlistTails.add(r.phone_tail as string);
+      }
+    }
+  }
+
   const inserted: string[] = [];
   const skipped: string[] = [];
   // F4W.3 — contadores observáveis pra dual-write
@@ -569,6 +595,20 @@ serve(async (req) => {
     const isGroup = remoteJid.includes("@g.us");
     const chatPhone = extractDigits(remoteJid);
     const phoneTail = chatPhone.slice(-10);
+
+    // PROSPECT.1 — trava: em modo prospecção, descarta grupos e qualquer
+    // número fora da allowlist (não grava em whatsapp_messages nem channel_*).
+    // Vale pros dois sentidos (inbound da agência e outbound enviado por nós).
+    if (prospectingActive) {
+      if (isGroup) {
+        skipped.push("prospecting_group_blocked");
+        continue;
+      }
+      if (!allowlistTails.has(phoneTail)) {
+        skipped.push("prospecting_not_allowlisted");
+        continue;
+      }
+    }
 
     const body = parseTextFromMessage(msg);
     const meta = detectMessageType(msg);

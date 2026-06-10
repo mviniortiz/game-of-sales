@@ -548,13 +548,16 @@ serve(async (req) => {
 
         // ─── Body parse ──────────────────────────────────────────────────────
         const body = await req.json();
-        const { messages, contactName, contactPhone, force } = body as {
+        const { messages, contactName, contactPhone, force, objective } = body as {
             messages: Array<{ text: string; sender: string }>;
             contactName?: string;
             contactPhone?: string;
             /** F4E.4.5 — quando true, pula a checagem de cache e força nova
              *  análise (consome do rate limit). Default false. */
             force?: boolean;
+            /** PROSPECT.1 — objetivo da conversa (ex.: prospecção, marcar demo).
+             *  Quando presente, orienta a resposta_sugerida pra esse fim. */
+            objective?: string;
         };
 
         if (!messages || !Array.isArray(messages) || messages.length === 0) {
@@ -710,10 +713,16 @@ serve(async (req) => {
         const contextBlock = buildContextBlock(evaContext);
         const contextEmpty = !evaContext || contextBlock.trim().length === 0;
 
+        // PROSPECT.1 — bloco de objetivo opcional (ex.: prospecção fria → demo).
+        // Orienta a resposta_sugerida sem mudar o schema nem o caráter assistido.
+        const objectiveBlock = objective && objective.trim()
+            ? `\n\nOBJETIVO DESTA CONVERSA: ${objective.trim()}\nDirecione a resposta_sugerida e a proxima_acao para esse objetivo, sem ser invasivo. Resolva objeção antes de avançar quando houver. Nunca prometa preço/condição fora do contexto da agência.`
+            : "";
+
         const userPrompt = `Contato: ${contactName || "Desconhecido"}${contactPhone ? ` (${contactPhone})` : ""}
 
 Conversa recente:
-${conversationText}${memoryContext}${contextBlock}
+${conversationText}${memoryContext}${contextBlock}${objectiveBlock}
 
 Analise a conversa e retorne o JSON estrito com sua análise e o objeto qualification.${
             contextEmpty

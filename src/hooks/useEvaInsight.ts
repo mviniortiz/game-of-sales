@@ -71,6 +71,9 @@ interface UseEvaInsightArgs {
   contactName?: string | null;
   messages: MessageLine[];
   enabled?: boolean;
+  /** PROSPECT.1 — objetivo da conversa (ex.: "prospecção fria, marcar demo").
+   *  Repassado ao whatsapp-copilot pra orientar a resposta_sugerida. */
+  objective?: string;
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -107,6 +110,7 @@ export function useEvaInsight({
   contactName,
   messages,
   enabled = true,
+  objective,
 }: UseEvaInsightArgs) {
   const qc = useQueryClient();
   const normalizedChatPhone = chatPhone || null;
@@ -175,6 +179,7 @@ export function useEvaInsight({
         contactName: contactName ?? undefined,
         contactPhone: normalizedChatPhone,
         force,
+        objective: objective ?? undefined,
       };
 
       const { data, error } = await supabase.functions.invoke<{

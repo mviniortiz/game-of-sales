@@ -8,6 +8,7 @@ import { useEvolutionSender } from "@/hooks/useEvolutionSender";
 import { useWhatsAppInboxDb } from "@/hooks/useWhatsAppInboxDb";
 import { useChannelInbox } from "@/hooks/useChannelInbox";
 import { useInboxConnectionStatus } from "@/hooks/useInboxConnectionStatus";
+import { useProspectingMode, PROSPECTING_OBJECTIVE } from "@/hooks/useProspectingMode";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -52,6 +53,9 @@ const Inbox = () => {
     const { activeCompanyId } = useTenant();
     const [connectModalOpen, setConnectModalOpen] = useState(false);
     const [historySyncing, setHistorySyncing] = useState(false);
+    // PROSPECT.1 — quando o número está em modo prospecção, o EvaPanel ganha
+    // "aprovar-e-enviar" e a EVA mira em marcar demo.
+    const prospectingMode = useProspectingMode();
 
     // ── Sources: channel (primário) + legacy (fallback DEFERRED) ──────────
     const channelInbox = useChannelInbox();
@@ -412,6 +416,10 @@ const Inbox = () => {
                                 void channelInbox.refreshAll(selectedChatId);
                             }
                         }}
+                        onSendReply={prospectingMode && selectedChatId
+                            ? (text) => handleSendText(selectedChatId, text)
+                            : undefined}
+                        objective={prospectingMode ? PROSPECTING_OBJECTIVE : undefined}
                     />
                 </aside>
             )}

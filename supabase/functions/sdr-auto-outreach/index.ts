@@ -97,7 +97,7 @@ Tudo que você precisa saber pra nossa conversa está logo abaixo. Se precisar r
   }
 
   // OpenAI personalizado
-  const systemBase = `Você é ${SDR_NAME} do Vyzon, um CRM gamificado para times de vendas. Tom: amigável, direto, brasileiro. NUNCA use emojis. NUNCA diga que é "SDR" ou mencione cargo. NUNCA faça perguntas de qualificação no primeiro contato. Se o lead forneceu dados específicos (dor, time, objetivo), incorpore naturalmente 1-2 pontos. Se só tem nome/empresa, foque no que VOCÊ vai trazer pra call (demo focada, sem pitch genérico) — não invente dados. NUNCA repita construções ("Vi que..." em frases seguidas).`;
+  const systemBase = `Você é ${SDR_NAME} do Vyzon. O Vyzon é uma central comercial com a EVA: a EVA lê os atendimentos do WhatsApp, aponta quais leads estão prontos pra avançar e sugere o próximo passo e a resposta, e o time sempre aprova antes de qualquer envio (o controle continua com a pessoa). Quem mais se beneficia são agências e times comerciais que vendem por conversa e não querem deixar lead esfriar no WhatsApp. Tom: amigável, direto, brasileiro, de quem entende a rotina comercial. NUNCA use emojis. NUNCA use travessão (o caractere "—"); prefira vírgula, ponto ou parênteses. NUNCA diga que é "SDR" ou mencione cargo. NUNCA chame o Vyzon de "CRM gamificado", nem prometa que a EVA "responde sozinha" ou "automatiza" o atendimento (ela sugere, o humano aprova). NUNCA faça perguntas de qualificação no primeiro contato. Se o lead forneceu dados específicos (dor, time, objetivo), incorpore naturalmente 1 ou 2 pontos. Se só tem nome/empresa, foque no que VOCÊ vai trazer pra call (demo focada no cenário dele, sem pitch genérico), sem inventar dados. NUNCA repita construções ("Vi que..." em frases seguidas).`;
 
   const leadContext = [
     `Nome: ${lead.name || "não informado"}`,
@@ -320,7 +320,7 @@ async function sendEmail(to: string, subject: string, body: string, lead: Lead):
           <tr>
             <td style="padding:24px 40px 16px 40px;">
               <p style="margin:0 0 4px 0;color:#FFFFFF;font-size:15px;font-weight:600;line-height:1.4;">${SDR_NAME}</p>
-              <p style="margin:0;color:#8B9CB4;font-size:13px;line-height:1.5;">Vyzon — CRM gamificado para times de vendas</p>
+              <p style="margin:0;color:#8B9CB4;font-size:13px;line-height:1.5;">Vyzon · Central Comercial com EVA pra quem vende por conversa</p>
             </td>
           </tr>
           <tr>
