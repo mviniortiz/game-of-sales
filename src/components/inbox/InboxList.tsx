@@ -78,6 +78,12 @@ interface InboxListProps {
     historySyncing?: boolean;
     /** F4W.7.1 — microcopy de escopo pra admin ("Minhas conversas") */
     adminScopeLabel?: string;
+    /** INBOX.STATUS — re-aplica o webhook (ativa checks) sem reconectar */
+    onResyncWebhook?: () => void;
+    resyncing?: boolean;
+    /** INBOX.STATUS — desconecta o número (logout da instância) */
+    onDisconnect?: () => void;
+    disconnecting?: boolean;
 }
 
 export function InboxList({
@@ -94,6 +100,10 @@ export function InboxList({
     onSyncHistory,
     historySyncing,
     adminScopeLabel,
+    onResyncWebhook,
+    resyncing,
+    onDisconnect,
+    disconnecting,
 }: InboxListProps) {
     const [query, setQuery] = useState("");
 
@@ -194,6 +204,10 @@ export function InboxList({
                         onSyncHistory={onSyncHistory}
                         historySyncing={historySyncing}
                         adminScopeLabel={adminScopeLabel}
+                        onResyncWebhook={onResyncWebhook}
+                        resyncing={resyncing}
+                        onDisconnect={onDisconnect}
+                        disconnecting={disconnecting}
                     />
                 )}
 
@@ -267,12 +281,20 @@ function ConnectionStatusCard({
     onSyncHistory,
     historySyncing,
     adminScopeLabel,
+    onResyncWebhook,
+    onDisconnect,
+    resyncing,
+    disconnecting,
 }: {
     status: InboxConnectionStatus;
     onConnectClick?: () => void;
     onSyncHistory?: () => void;
     historySyncing?: boolean;
     adminScopeLabel?: string;
+    onResyncWebhook?: () => void;
+    onDisconnect?: () => void;
+    resyncing?: boolean;
+    disconnecting?: boolean;
 }) {
     const showSync = status.status === "connected" && status.provider === "evolution" && !!onSyncHistory;
     const tone =
@@ -362,6 +384,35 @@ function ConnectionStatusCard({
                             <p className="text-[10px] mt-1.5 leading-snug" style={{ color: "#94A3B8" }}>
                                 A Inbox usa histórico salvo. Sincronize para importar conversas recentes do WhatsApp.
                             </p>
+                        </div>
+                    )}
+                    {status.status === "connected" && (onResyncWebhook || onDisconnect) && (
+                        <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                            {onResyncWebhook && (
+                                <button
+                                    type="button"
+                                    onClick={onResyncWebhook}
+                                    disabled={resyncing}
+                                    title="Re-aplica a configuração do webhook (ativa os checks de entrega/leitura sem reconectar)"
+                                    className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[11px] font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                                    style={{ background: "rgba(37,99,235,0.06)", color: "#1D4ED8", border: "1px solid rgba(37,99,235,0.18)" }}
+                                >
+                                    {resyncing ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                                    Re-sincronizar webhook
+                                </button>
+                            )}
+                            {onDisconnect && (
+                                <button
+                                    type="button"
+                                    onClick={onDisconnect}
+                                    disabled={disconnecting}
+                                    className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[11px] font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                                    style={{ background: "rgba(244,63,94,0.06)", color: "#BE123C", border: "1px solid rgba(244,63,94,0.20)" }}
+                                >
+                                    {disconnecting ? <Loader2 className="h-3 w-3 animate-spin" /> : <WifiOff className="h-3 w-3" />}
+                                    Desconectar
+                                </button>
+                            )}
                         </div>
                     )}
                     {adminScopeLabel && (

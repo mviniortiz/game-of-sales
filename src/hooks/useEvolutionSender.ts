@@ -31,7 +31,9 @@ type ProxyAction =
     | "send"
     | "sendAudio"
     | "sendMedia"
-    | "getMedia";
+    | "getMedia"
+    | "logout"
+    | "resyncWebhook";
 
 interface AudioMediaResult {
     base64?: string;
@@ -246,6 +248,17 @@ export function useEvolutionSender(): UseEvolutionSender {
 
     const clearError = useCallback(() => setError(null), []);
 
+    // Desconecta o número (logout da instância). Depois atualiza o status.
+    const disconnect = useCallback(async () => {
+        await invokeProxy("logout");
+        await refreshStatus();
+    }, [invokeProxy, refreshStatus]);
+
+    // Re-aplica o webhook config (eventos atuais, ex. MESSAGES_UPDATE) sem reconectar.
+    const resyncWebhook = useCallback(async () => {
+        await invokeProxy("resyncWebhook");
+    }, [invokeProxy]);
+
     return {
         connected,
         connecting,
@@ -257,5 +270,7 @@ export function useEvolutionSender(): UseEvolutionSender {
         getAudioMedia,
         refreshStatus,
         clearError,
+        disconnect,
+        resyncWebhook,
     };
 }

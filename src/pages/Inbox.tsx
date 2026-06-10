@@ -87,7 +87,40 @@ const Inbox = () => {
         sendAudioMessage,
         getAudioMedia,
         refreshStatus,
+        disconnect,
+        resyncWebhook,
     } = useEvolutionSender();
+    const [resyncing, setResyncing] = useState(false);
+    const [disconnecting, setDisconnecting] = useState(false);
+
+    // INBOX.STATUS — re-aplica o webhook (liga os checks de entrega/leitura sem reconectar).
+    const handleResyncWebhook = async () => {
+        if (resyncing) return;
+        setResyncing(true);
+        try {
+            await resyncWebhook();
+            toast.success("Webhook re-sincronizado. Os checks de entrega/leitura já valem nas próximas mensagens.");
+        } catch {
+            toast.error("Não foi possível re-sincronizar o webhook agora.");
+        } finally {
+            setResyncing(false);
+        }
+    };
+
+    // INBOX.STATUS — desconecta o número (logout). Pede confirmação.
+    const handleDisconnect = async () => {
+        if (disconnecting) return;
+        if (!confirm("Desconectar o WhatsApp? Você precisará ler o QR Code de novo pra reconectar.")) return;
+        setDisconnecting(true);
+        try {
+            await disconnect();
+            toast.success("WhatsApp desconectado.");
+        } catch {
+            toast.error("Não foi possível desconectar agora.");
+        } finally {
+            setDisconnecting(false);
+        }
+    };
 
     const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -374,6 +407,10 @@ const Inbox = () => {
                     onSyncHistory={handleSyncHistory}
                     historySyncing={historySyncing}
                     adminScopeLabel={isAdmin ? "Minhas conversas" : undefined}
+                    onResyncWebhook={handleResyncWebhook}
+                    resyncing={resyncing}
+                    onDisconnect={handleDisconnect}
+                    disconnecting={disconnecting}
                 />
             </aside>
 

@@ -892,6 +892,14 @@ serve(async (req) => {
       return json(200, { success: true, instanceName });
     }
 
+    // INBOX.STATUS — re-aplica o webhook config (com os eventos atuais, ex.
+    // MESSAGES_UPDATE) na instância do próprio usuário, sem precisar reconectar.
+    if (action === "resyncWebhook") {
+      const r = await ensureWebhook(instanceName);
+      if (!r.ok) return json(500, { error: r.error || "failed to set webhook", instanceName });
+      return json(200, { success: true, instanceName });
+    }
+
     if (action === "instances") {
       if (!isAdmin) {
         return json(403, { error: "Only admins can list instances" });
