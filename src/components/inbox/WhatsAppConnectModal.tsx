@@ -60,13 +60,22 @@ export function WhatsAppConnectModal({ open, onClose, onConnected }: WhatsAppCon
         onConnectedRef.current?.();
     }, [clearTimers]);
 
+    // Invoke com timeout — o servidor Evolution pode estar lento/fora; sem isto o
+    // modal fica "Gerando QR Code…" pra sempre, sem dizer o que houve.
+    const invokeWA = useCallback(async (action: string, ms: number) => {
+        return (await Promise.race([
+            supabase.functions.invoke("evolution-whatsapp", {
+                body: { action, companyId: effectiveCompanyId },
+            }),
+            new Promise((_, reject) => setTimeout(() => reject(new Error("__timeout__")), ms)),
+        ])) as Awaited<ReturnType<typeof supabase.functions.invoke>>;
+    }, [effectiveCompanyId]);
+
     const callConnect = useCallback(async () => {
         setState("loading");
         setErrorMsg("");
         try {
-            const { data, error } = await supabase.functions.invoke("evolution-whatsapp", {
-                body: { action: "connect", companyId: effectiveCompanyId },
-            });
+            const { data, error } = await invokeWA("connect", 20000);
             if (error) throw error;
             const payload = data as { connected?: boolean; qrCodeBase64?: string | null } | null;
             if (payload?.connected) {
@@ -82,22 +91,25 @@ export function WhatsAppConnectModal({ open, onClose, onConnected }: WhatsAppCon
                 setState("error");
             }
         } catch (err) {
-            setErrorMsg(err instanceof Error ? err.message : "Falha ao iniciar a conexão.");
+            const timedOut = err instanceof Error && err.message === "__timeout__";
+            setErrorMsg(
+                timedOut
+                    ? "O servidor do WhatsApp não respondeu. Ele pode estar fora do ar — verifique se o servidor Evolution está rodando."
+                    : err instanceof Error ? err.message : "Falha ao iniciar a conexão.",
+            );
             setState("error");
         }
-    }, [effectiveCompanyId, markConnected]);
+    }, [invokeWA, markConnected]);
 
     const checkStatus = useCallback(async () => {
         try {
-            const { data, error } = await supabase.functions.invoke("evolution-whatsapp", {
-                body: { action: "status", companyId: effectiveCompanyId },
-            });
+            const { data, error } = await invokeWA("status", 10000);
             if (error) return;
             if ((data as { connected?: boolean } | null)?.connected) markConnected();
         } catch {
             /* silencioso — segue tentando no próximo tick */
         }
-    }, [effectiveCompanyId, markConnected]);
+    }, [invokeWA, markConnected]);
 
     // F4W.7.2 — reset: logout limpa a sessão Baileys travada (ex.: instância
     // que ficou "presa" após linkar em outro lugar) e então gera um QR fresco.
@@ -107,14 +119,12 @@ export function WhatsAppConnectModal({ open, onClose, onConnected }: WhatsAppCon
         setState("loading");
         setErrorMsg("");
         try {
-            await supabase.functions.invoke("evolution-whatsapp", {
-                body: { action: "logout", companyId: effectiveCompanyId },
-            });
+            await invokeWA("logout", 8000);
         } catch {
             /* best-effort — segue pro connect mesmo se o logout falhar */
         }
         await callConnect();
-    }, [effectiveCompanyId, callConnect, clearTimers]);
+    }, [invokeWA, callConnect, clearTimers]);
 
     // Abre → inicia conexão. Fecha → limpa timers.
     useEffect(() => {
