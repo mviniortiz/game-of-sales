@@ -505,9 +505,11 @@ async function validateChatOwnership(
             .limit(1);
         return (count ?? 0) > 0;
     } catch (e) {
-        console.warn("[whatsapp-copilot] validateChatOwnership exception:", e);
-        // Em caso de erro DB, permitir (não bloqueia o fluxo) mas logar.
-        return true;
+        console.error("[whatsapp-copilot] validateChatOwnership exception (fail-closed):", e);
+        // SEGURANÇA: fail-CLOSED. Em erro de DB NÃO presumimos posse — bloqueia a
+        // análise (o usuário pode tentar de novo). Antes retornava true (fail-open),
+        // o que deixaria analisar uma conversa sem provar posse se o DB falhasse.
+        return false;
     }
 }
 
