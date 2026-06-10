@@ -4,6 +4,8 @@ import {
     ArrowRight,
     ArrowUp,
     Calendar,
+    Check,
+    CheckCheck,
     CheckCircle2,
     Loader2,
     Mic,
@@ -591,10 +593,24 @@ function MessageBubble({
                 )}
 
                 <p
-                    className="text-[10.5px] mt-1 tabular-nums text-right"
+                    className="text-[10.5px] mt-1 tabular-nums flex items-center justify-end gap-0.5"
                     style={{ color: isMe ? "rgba(255,255,255,0.7)" : "#94A3B8" }}
                 >
-                    {isPending ? "Enviando…" : formatTime(message.time)}
+                    <span>{isPending ? "Enviando…" : formatTime(message.time)}</span>
+                    {/* INBOX.STATUS — checks de entrega/leitura (só nas mensagens enviadas) */}
+                    {isMe && !isPending && message.status && message.status !== "received" && message.status !== "queued" && (
+                        message.status === "failed" ? (
+                            <span title="Falha no envio" style={{ color: "#FCA5A5", fontWeight: 700 }}>!</span>
+                        ) : message.status === "sent" ? (
+                            <Check className="h-3 w-3" strokeWidth={2.5} style={{ color: "rgba(255,255,255,0.7)" }} />
+                        ) : (
+                            <CheckCheck
+                                className="h-3 w-3"
+                                strokeWidth={2.5}
+                                style={{ color: message.status === "read" ? "#7DD3FC" : "rgba(255,255,255,0.7)" }}
+                            />
+                        )
+                    )}
                 </p>
             </div>
         </div>

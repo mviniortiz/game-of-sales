@@ -460,7 +460,7 @@ serve(async (req) => {
             url: `${WEBHOOK_RECEIVER_URL}?secret=${EVOLUTION_WEBHOOK_SECRET}`,
             byEvents: false,
             base64: false,
-            events: ["MESSAGES_UPSERT"],
+            events: ["MESSAGES_UPSERT", "MESSAGES_UPDATE"],
           };
         }
         const createRes = await evolutionRequest("/instance/create", {

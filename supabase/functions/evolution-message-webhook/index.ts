@@ -482,6 +482,55 @@ type EvolutionPayload = {
   data?: any;
 };
 
+// ── INBOX.STATUS — checks de entrega/leitura (evento messages.update) ───────
+// Mapa do status numérico do WhatsApp (Baileys) → nosso enum, com rank pra
+// impedir downgrade (read nunca volta pra delivered).
+const WA_ACK_STATUS: Record<number, { status: string; rank: number }> = {
+  0: { status: "failed", rank: 0 },
+  2: { status: "sent", rank: 1 },       // SERVER_ACK (✓)
+  3: { status: "delivered", rank: 2 },  // DELIVERY_ACK (✓✓)
+  4: { status: "read", rank: 3 },       // READ (✓✓ azul)
+  5: { status: "read", rank: 3 },       // PLAYED (áudio ouvido) → tratado como lido
+};
+const CH_STATUS_RANK: Record<string, number> = {
+  queued: 0, failed: 0, received: 1, sent: 1, delivered: 2, read: 3,
+};
+
+async function handleMessagesUpdate(payload: any): Promise<Response> {
+  const instanceName: string | undefined = payload.instance || payload.data?.instance;
+  if (!instanceName) return json(200, { ok: true, ignored: "no_instance" });
+  const userId = instanceNameToUserId(instanceName);
+  if (!userId) return json(200, { ok: true, ignored: "instance_not_mapped" });
+
+  const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  const { data: profile } = await (admin as any)
+    .from("profiles").select("company_id").eq("id", userId).single();
+  const companyId: string | null = profile?.company_id || null;
+  if (!companyId) return json(200, { ok: true, ignored: "no_company" });
+
+  const updates: any[] = Array.isArray(payload.data) ? payload.data : [payload.data];
+  let applied = 0;
+  for (const u of updates) {
+    const id = u?.key?.id;
+    const waStatus = u?.update?.status;
+    if (!id || typeof waStatus !== "number") continue;
+    const mapped = WA_ACK_STATUS[waStatus];
+    if (!mapped) continue;
+    // só-sobe: atualiza apenas mensagens cujo status atual tem rank MENOR que o novo.
+    const allowedFrom = Object.entries(CH_STATUS_RANK)
+      .filter(([, r]) => r < mapped.rank).map(([s]) => s);
+    if (allowedFrom.length === 0) continue;
+    const { error, count } = await (admin as any)
+      .from("channel_messages")
+      .update({ status: mapped.status }, { count: "exact" })
+      .eq("company_id", companyId)
+      .eq("provider_message_id", id)
+      .in("status", allowedFrom);
+    if (!error && typeof count === "number") applied += count;
+  }
+  return json(200, { ok: true, status_updates_applied: applied });
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: corsHeaders });
@@ -507,6 +556,12 @@ serve(async (req) => {
   }
 
   const event = payload?.event || "";
+
+  // INBOX.STATUS — atualiza os checks (entregue/lido) das mensagens enviadas.
+  if (event === "messages.update") {
+    return await handleMessagesUpdate(payload);
+  }
+
   if (event !== "messages.upsert") {
     return json(200, { ok: true, ignored: event || "unknown" });
   }

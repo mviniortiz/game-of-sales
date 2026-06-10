@@ -76,6 +76,7 @@ interface ChannelMessageRow {
     media_ref: Record<string, unknown> | null;
     message_timestamp: string;
     metadata: Record<string, unknown> | null;
+    status?: string | null;
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -181,6 +182,7 @@ function rowToMessage(row: ChannelMessageRow): MessageLine {
         mediaType: mediaTypeOf(row.message_type, mimetype || null),
         mediaCaption: caption,
         mediaMimetype: mimetype,
+        status: (row.status as MessageLine["status"]) || undefined,
     };
 }
 
@@ -479,7 +481,7 @@ export function useChannelInbox(): UseChannelInbox {
                 // nas mensagens mais antigas.
                 const { data, error: e } = await supabase
                     .from("channel_messages")
-                    .select("id, conversation_id, direction, message_type, body, media_ref, message_timestamp, metadata")
+                    .select("id, conversation_id, direction, message_type, body, media_ref, message_timestamp, metadata, status")
                     .eq("conversation_id", conversationId)
                     .order("message_timestamp", { ascending: false })
                     .limit(MESSAGES_FETCH_LIMIT);
@@ -660,7 +662,9 @@ export function useChannelInbox(): UseChannelInbox {
             .on(
                 "postgres_changes",
                 {
-                    event: "INSERT",
+                    // INBOX.STATUS — "*" captura INSERT (msg nova) E UPDATE (mudança
+                    // de status: entregue/lido), pros checks atualizarem ao vivo.
+                    event: "*",
                     schema: "public",
                     table: "channel_messages",
                     filter: `connection_id=eq.${connectionId}`,

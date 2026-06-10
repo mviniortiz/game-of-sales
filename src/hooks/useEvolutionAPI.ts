@@ -60,6 +60,9 @@ export interface MessageLine {
     /** UI-only: mensagem outbound otimista aguardando confirmação do webhook.
      *  Nunca persistida no banco. */
     pending?: boolean;
+    /** Status de entrega da mensagem enviada (checks do WhatsApp). Só relevante
+     *  pra sender "me". Vem de channel_messages.status (sent/delivered/read). */
+    status?: "queued" | "sent" | "delivered" | "read" | "failed" | "received";
 }
 
 
