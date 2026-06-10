@@ -85,13 +85,21 @@ export function useEvolutionSender(): UseEvolutionSender {
     // ── Proxy comum pra Evolution edge function ───────────────────────────
     const invokeProxy = useCallback(
         async (action: ProxyAction, payload: Record<string, unknown> = {}) => {
-            const response = await supabase.functions.invoke("evolution-whatsapp", {
+            // Timeout defensivo: o servidor Evolution pode estar lento/fora; sem isto
+            // a UI fica pendurada indefinidamente numa ação (ex.: logout, status).
+            const invokePromise = supabase.functions.invoke("evolution-whatsapp", {
                 body: {
                     action,
                     companyId: activeCompanyId,
                     ...payload,
                 },
             });
+            const response = (await Promise.race([
+                invokePromise,
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error("Tempo esgotado ao falar com o WhatsApp")), 15000)
+                ),
+            ])) as Awaited<typeof invokePromise>;
             if (response.error) {
                 let detail = response.error.message;
                 try {
@@ -248,11 +256,16 @@ export function useEvolutionSender(): UseEvolutionSender {
 
     const clearError = useCallback(() => setError(null), []);
 
-    // Desconecta o número (logout da instância). Depois atualiza o status.
+    // Desconecta o número. OTIMISTA: marca desconectado na hora (o servidor
+    // Evolution pode estar lento/fora e a UI não pode travar). O logout roda em
+    // background, best-effort — se falhar, o reconnect resolve de qualquer jeito.
     const disconnect = useCallback(async () => {
-        await invokeProxy("logout");
-        await refreshStatus();
-    }, [invokeProxy, refreshStatus]);
+        setConnected(false);
+        setLastStatusCheckedAt(new Date());
+        void invokeProxy("logout").catch((err) =>
+            console.warn("[EvolutionSender] logout best-effort falhou:", err),
+        );
+    }, [invokeProxy]);
 
     // Re-aplica o webhook config (eventos atuais, ex. MESSAGES_UPDATE) sem reconectar.
     const resyncWebhook = useCallback(async () => {
