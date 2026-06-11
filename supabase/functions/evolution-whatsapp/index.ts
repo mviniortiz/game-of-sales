@@ -163,13 +163,19 @@ function extractQrBase64(payload: any): string | null {
 async function evolutionRequest(
   path: string,
   init: RequestInit = {},
+  timeoutMs?: number,
 ) {
   if (!EVOLUTION_API_URL || !EVOLUTION_API_KEY) {
     throw new Error("Evolution API não configurada no servidor");
   }
 
+  // Timeout adaptativo: a VM grátis da Oracle é lenta em operações de leitura
+  // pesadas (listar todos os chats / mensagens de um número com histórico
+  // grande pode passar de 20s). Operações leves (status/send/logout) ficam
+  // curtas pra não pendurar a UI. Default conservador de 8s.
+  const effectiveTimeout = timeoutMs ?? 8000;
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 8000);
+  const timeoutId = setTimeout(() => controller.abort(), effectiveTimeout);
 
   let response: Response;
   try {
@@ -185,7 +191,9 @@ async function evolutionRequest(
   } catch (err: any) {
     clearTimeout(timeoutId);
     if (err.name === "AbortError") {
-      throw new Error(`Evolution API timeout after 8s: ${path}`);
+      throw new Error(
+        `Evolution API timeout after ${Math.round(effectiveTimeout / 1000)}s: ${path}`,
+      );
     }
     throw err;
   } finally {
@@ -407,11 +415,33 @@ serve(async (req) => {
           method: "GET",
         });
         const state = data?.instance?.state || data?.state || "unknown";
+        const isOpen = String(state).toLowerCase() === "open";
+
+        // INBOX.STATUS — persiste o estado real no banco. O webhook só SOBE
+        // status pra "active" e NUNCA rebaixa; sem isto a connection fica
+        // "active" eterno mesmo com a sessão caída (a UI mostra "conectado"
+        // mas nenhuma mensagem chega). O check da UI (mount/focus) passa por
+        // aqui, então persistir aqui já reconcilia. Best-effort: falha não
+        // derruba a resposta.
+        try {
+          await adminSupabase
+            .from("channel_connections")
+            .update(
+              isOpen
+                ? { status: "active", last_seen_at: new Date().toISOString() }
+                : { status: "disconnected" },
+            )
+            .eq("provider", "evolution")
+            .eq("external_id", instanceName);
+        } catch (persistErr: any) {
+          console.warn("[status] persist failed:", persistErr?.message);
+        }
+
         return json(200, {
           success: true,
           instanceName,
           state,
-          connected: String(state).toLowerCase() === "open",
+          connected: isOpen,
         });
       } catch (error: any) {
         const errStatus = Number((error as any)?.status);
@@ -503,7 +533,7 @@ serve(async (req) => {
       const chats = await evolutionRequest(`/chat/findChats/${instanceName}`, {
         method: "POST",
         body: JSON.stringify({}),
-      });
+      }, 25000);
       return json(200, { success: true, instanceName, chats });
     }
 
@@ -528,7 +558,7 @@ serve(async (req) => {
         chatsRaw = await evolutionRequest(`/chat/findChats/${instanceName}`, {
           method: "POST",
           body: JSON.stringify({}),
-        });
+        }, 25000);
       } catch (err: any) {
         return json(502, { error: `Falha ao buscar conversas: ${err?.message || err}` });
       }
@@ -577,7 +607,7 @@ serve(async (req) => {
           const msgsRaw = await evolutionRequest(`/chat/findMessages/${instanceName}`, {
             method: "POST",
             body: JSON.stringify({ where: { key: { remoteJid } }, limit }),
-          });
+          }, 25000);
           const msgs: any[] = Array.isArray(msgsRaw)
             ? msgsRaw
             : Array.isArray(msgsRaw?.messages)
@@ -722,7 +752,7 @@ serve(async (req) => {
           where: { key: { remoteJid: body.chatId } },
           limit,
         }),
-      });
+      }, 25000);
 
       // Normalize: Evolution API v2.3.7 may return messages in different formats
       let messages: any[];

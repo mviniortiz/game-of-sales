@@ -253,6 +253,25 @@ const Inbox = () => {
         return () => clearInterval(interval);
     }, []);
 
+    // Resync de fallback (rede de segurança): a cada 20s, com a aba visível,
+    // refaz a carga do Inbox a partir do banco. O Inbox só tinha carga inicial
+    // + Realtime, sem fallback — se o Realtime perde um evento (ou o webhook
+    // grava sem notificar), a mensagem só aparecia no refresh manual. O Pulse
+    // já tinha um resync; o Inbox não. Lê do Supabase (barato), NÃO martela o
+    // Evolution. Refs evitam recriar o timer a cada troca de chat/source.
+    const resyncRef = useRef<{
+        refreshAll: (conversationId?: string | null) => Promise<void>;
+        selectedChatId: string | null;
+    }>({ refreshAll: activeInbox.refreshAll, selectedChatId });
+    resyncRef.current = { refreshAll: activeInbox.refreshAll, selectedChatId };
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (typeof document !== "undefined" && document.hidden) return;
+            void resyncRef.current.refreshAll(resyncRef.current.selectedChatId);
+        }, 20_000);
+        return () => clearInterval(interval);
+    }, []);
+
     // Mobile
     const showListOnMobile = isMobile && !selectedChatId;
     const showDetailOnMobile = isMobile && selectedChatId;
