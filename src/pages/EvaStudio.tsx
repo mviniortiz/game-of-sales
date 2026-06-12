@@ -25,6 +25,7 @@ import { useEvaMemory } from "@/hooks/useEvaMemory";
 import { useEvaSimulationResults } from "@/hooks/useEvaSimulationResults";
 import { useEvaReplayMoments } from "@/hooks/useEvaReplayMoments";
 import { useEvaContextSuggestions } from "@/hooks/useEvaContextSuggestions";
+import { useHybridAutoCreate } from "@/hooks/useHybridAutoCreate";
 import { computeApproval, type Verdict } from "@/lib/eva/approval";
 import { EvaStudioJourney } from "@/components/eva-studio/EvaStudioJourney";
 import { EvaMemoryView } from "@/components/eva-studio/EvaMemoryTab";
@@ -39,6 +40,7 @@ export default function EvaStudio() {
     const { results: simResults, save: saveSim } = useEvaSimulationResults();
     const replay = useEvaReplayMoments();
     const ctxBuilder = useEvaContextSuggestions();
+    const hybrid = useHybridAutoCreate();
 
     // Aprovação feita nesta sessão (o hook só reflete depois do reload)
     const [approvedNow, setApprovedNow] = useState(false);
@@ -171,6 +173,75 @@ export default function EvaStudio() {
                 memoryContent={<EvaMemoryView memory={memory} loading={memoryLoading} />}
                 insightsContent={<EvaInsightsTab hideHeader approval={approval} memory={memory} lastSimAt={lastSimAt} />}
             />
+
+            {/* VYZON.AGENTS.2 (híbrido) — auto-criação de oportunidade. Só após
+                a EVA estar aprovada; admin liga/desliga. Saída de mensagem segue
+                sempre humana (aprovar-e-enviar), independente deste flag. */}
+            {isApproved && (
+                <HybridAutoCreateToggle
+                    value={hybrid.autoCreate}
+                    saving={hybrid.saving}
+                    canEdit={canEdit}
+                    onChange={async (v) => {
+                        if (!requireEdit("Apenas administradores mudam o modo de criação.")) return;
+                        try {
+                            await hybrid.setAutoCreate(v);
+                            toast.success(v
+                                ? "Modo híbrido ligado: a EVA cria a oportunidade ao qualificar."
+                                : "Modo híbrido desligado: criação volta a ser manual.");
+                        } catch (e) {
+                            toast.error(`Não consegui salvar: ${String((e as Error)?.message ?? e)}`);
+                        }
+                    }}
+                />
+            )}
+        </div>
+    );
+}
+
+// ── Toggle do modo híbrido (auto-criação de oportunidade no pipeline) ─────────
+function HybridAutoCreateToggle({
+    value,
+    saving,
+    canEdit,
+    onChange,
+}: {
+    value: boolean;
+    saving: boolean;
+    canEdit: boolean;
+    onChange: (v: boolean) => void;
+}) {
+    return (
+        <div className="px-6 pb-10">
+            <div
+                className="rounded-xl px-5 py-4 flex items-start gap-4"
+                style={{ background: "#FFFFFF", border: "1px solid #E5EAF1" }}
+            >
+                <div className="flex-1 min-w-0">
+                    <p className="text-[13.5px] font-semibold" style={{ color: "#0B1220" }}>
+                        Criar oportunidade automaticamente (modo híbrido)
+                    </p>
+                    <p className="text-[12px] mt-1" style={{ color: "#64748B", lineHeight: 1.55 }}>
+                        Quando a EVA qualificar um lead que chegou e recomendar avançar, o card
+                        entra no pipeline sozinho, com os campos preenchidos. Mensagens de saída
+                        continuam sempre com a sua aprovação (aprovar-e-enviar).
+                    </p>
+                </div>
+                <button
+                    type="button"
+                    role="switch"
+                    aria-checked={value}
+                    disabled={!canEdit || saving}
+                    onClick={() => onChange(!value)}
+                    className="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-50"
+                    style={{ background: value ? "#7C3AED" : "#CBD5E1" }}
+                >
+                    <span
+                        className="inline-block h-5 w-5 rounded-full bg-white transition-transform"
+                        style={{ transform: value ? "translateX(22px)" : "translateX(2px)" }}
+                    />
+                </button>
+            </div>
         </div>
     );
 }
