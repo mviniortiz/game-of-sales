@@ -14,6 +14,7 @@ const prefersReducedMotion = () =>
 export function ConversationThread() {
     const lineRef = useRef<HTMLDivElement>(null);
     const dotRef = useRef<HTMLDivElement>(null);
+    const barRef = useRef<HTMLDivElement>(null);
     const [disabled] = useState(prefersReducedMotion);
 
     useEffect(() => {
@@ -22,14 +23,19 @@ export function ConversationThread() {
 
         const update = () => {
             raf = 0;
-            const line = lineRef.current;
-            const dot = dotRef.current;
-            if (!line || !dot) return;
             const doc = document.documentElement;
             const max = doc.scrollHeight - window.innerHeight;
             const p = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
-            line.style.transform = `scaleY(${p.toFixed(4)})`;
-            dot.style.top = `${(p * 100).toFixed(3)}%`;
+
+            // Barra de progresso (todas as telas — o fio no topo, no mobile)
+            const bar = barRef.current;
+            if (bar) bar.style.transform = `scaleX(${p.toFixed(4)})`;
+
+            // Fio vertical + nó viajante (xl+)
+            const line = lineRef.current;
+            const dot = dotRef.current;
+            if (line) line.style.transform = `scaleY(${p.toFixed(4)})`;
+            if (dot) dot.style.top = `${(p * 100).toFixed(3)}%`;
         };
 
         const onScroll = () => {
@@ -49,46 +55,67 @@ export function ConversationThread() {
     if (disabled) return null;
 
     return (
-        <div
-            aria-hidden="true"
-            className="hidden xl:block fixed pointer-events-none"
-            style={{ left: 26, top: 88, bottom: 28, width: 9, zIndex: 30 }}
-        >
-            {/* Trilho pontilhado (o fio ainda não percorrido) */}
+        <>
+            {/* Barra de progresso do fio — fixa abaixo do nav, visível em toda tela */}
             <div
-                className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-px"
-                style={{
-                    background:
-                        "repeating-linear-gradient(180deg, var(--lp-line) 0 6px, transparent 6px 12px)",
-                }}
-            />
-            {/* Fio percorrido — desenha com o scroll */}
+                aria-hidden="true"
+                className="fixed left-0 right-0 pointer-events-none"
+                style={{ top: 0, height: 2, zIndex: 60, background: "var(--lp-line-soft)" }}
+            >
+                <div
+                    ref={barRef}
+                    className="h-full w-full"
+                    style={{
+                        background: "var(--lp-blue)",
+                        transform: "scaleX(0)",
+                        transformOrigin: "left center",
+                        willChange: "transform",
+                    }}
+                />
+            </div>
+
+            {/* Fio vertical + nó viajante (xl+) */}
             <div
-                ref={lineRef}
-                className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-px"
-                style={{
-                    background: "var(--lp-blue)",
-                    transform: "scaleY(0)",
-                    transformOrigin: "top center",
-                    willChange: "transform",
-                }}
-            />
-            {/* Nó viajante — mesma linguagem do lp-station-node */}
-            <div
-                ref={dotRef}
-                className="absolute left-1/2"
-                style={{
-                    top: 0,
-                    width: 9,
-                    height: 9,
-                    marginLeft: -4.5,
-                    marginTop: -4.5,
-                    borderRadius: 999,
-                    background: "var(--lp-blue)",
-                    boxShadow: "0 0 0 4px rgba(21, 86, 192, 0.14)",
-                    willChange: "top",
-                }}
-            />
-        </div>
+                aria-hidden="true"
+                className="hidden xl:block fixed pointer-events-none"
+                style={{ left: 26, top: 88, bottom: 28, width: 9, zIndex: 30 }}
+            >
+                {/* Trilho pontilhado (o fio ainda não percorrido) */}
+                <div
+                    className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-px"
+                    style={{
+                        background:
+                            "repeating-linear-gradient(180deg, var(--lp-line) 0 6px, transparent 6px 12px)",
+                    }}
+                />
+                {/* Fio percorrido — desenha com o scroll */}
+                <div
+                    ref={lineRef}
+                    className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-px"
+                    style={{
+                        background: "var(--lp-blue)",
+                        transform: "scaleY(0)",
+                        transformOrigin: "top center",
+                        willChange: "transform",
+                    }}
+                />
+                {/* Nó viajante — mesma linguagem do lp-station-node */}
+                <div
+                    ref={dotRef}
+                    className="absolute left-1/2"
+                    style={{
+                        top: 0,
+                        width: 9,
+                        height: 9,
+                        marginLeft: -4.5,
+                        marginTop: -4.5,
+                        borderRadius: 999,
+                        background: "var(--lp-blue)",
+                        boxShadow: "0 0 0 4px rgba(21, 86, 192, 0.14)",
+                        willChange: "top",
+                    }}
+                />
+            </div>
+        </>
     );
 }
