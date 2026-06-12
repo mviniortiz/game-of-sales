@@ -9,6 +9,8 @@ import { PainPoints } from "@/components/landing/PainPoints";
 import { TrustNoteSection } from "@/components/landing/TrustNoteSection";
 import { ProductShowcase } from "@/components/landing/ProductShowcase";
 import { LandingNav } from "@/components/landing/LandingNav";
+import { ConversationThread } from "@/components/landing/ConversationThread";
+import { EvaEasterEgg } from "@/components/landing/EvaEasterEgg";
 import { NavigatingOverlay } from "@/components/landing/sections/NavigatingOverlay";
 import { scrollToLazyAnchor, smoothScrollToId, useHashScrollOnMount } from "@/hooks/useLandingAnchor";
 
@@ -51,6 +53,16 @@ const LandingPage = () => {
         const wasDark = html.classList.contains("dark");
         html.classList.remove("dark");
         trackEvent(FUNNEL_EVENTS.LANDING_VIEW);
+        // LP.5: dica do easter egg pra quem abre o console (a EVA lê com você)
+        try {
+            console.log(
+                "%c EVA %c estou lendo esta página com você. quer me ver? digite e·v·a — em qualquer lugar.",
+                "background:#6d28d9;color:#fff;font-weight:700;border-radius:3px;padding:2px 6px;",
+                "color:#6d28d9;font-weight:500;"
+            );
+        } catch {
+            /* console nunca quebra UX */
+        }
         return () => {
             if (wasDark) html.classList.add("dark");
         };
@@ -111,6 +123,10 @@ const LandingPage = () => {
     return (
         <div className="min-h-screen w-full selection:bg-blue-700/20" style={{ background: "var(--lp-paper)", color: "var(--lp-ink)" }}>
             {isNavigating && <NavigatingOverlay plan={selectedPlan} />}
+
+            {/* LP.5: fio da conversa desenhando com o scroll (xl+) + easter egg da EVA */}
+            <ConversationThread />
+            <EvaEasterEgg />
 
             <LandingNav
                 onCTAClick={() => scrollToDemo("nav")}

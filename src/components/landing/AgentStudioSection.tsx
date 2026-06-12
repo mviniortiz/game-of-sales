@@ -1,9 +1,12 @@
 import { LandingButton } from "./LandingButton";
+import { Rise } from "./animation/Rise";
 
 // LP.1 2026-05-25: seção repurposed de "Agent Studio" para "Solução".
 // LP.3 2026-06-09: absorve os resultados da CentralComercialSection (removida).
 // LP.4 2026-06-09: vira a "sala de comando" — única banda ink da página.
 // Módulos como cartões de console numerados, hairlines brancas, sem glow.
+// LP.5 2026-06-12: reveals por scroll (Rise) e módulos que acendem no hover
+// (.lp-console-card) — o console responde ao operador.
 const MODULES = [
     {
         n: "01",
@@ -40,16 +43,19 @@ export const AgentStudioSection = ({ onCTAClick }: AgentStudioSectionProps) => {
         <section className="lp-ink-band relative overflow-hidden">
             <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 pb-24 sm:pb-28">
                 {/* Estação do fio (versão clara) */}
-                <div className="lp-station mb-12 sm:mb-16 landing-fade-in-up">
-                    <span className="lp-station-node" style={{ background: "#FAF9F5", boxShadow: "0 0 0 4px rgba(250,249,245,0.16)" }} />
-                    <span className="lp-mono" style={{ color: "rgba(250,249,245,0.6)" }}>
-                        03 · como o vyzon resolve
-                    </span>
-                    <span className="lp-station-rule" style={{ background: "rgba(250,249,245,0.18)" }} />
-                </div>
+                <Rise>
+                    <div className="lp-station mb-12 sm:mb-16">
+                        <span className="lp-station-node" style={{ background: "#FAF9F5", boxShadow: "0 0 0 4px rgba(250,249,245,0.16)" }} />
+                        <span className="lp-mono" style={{ color: "rgba(250,249,245,0.6)" }}>
+                            03 · como o vyzon resolve
+                        </span>
+                        <span className="lp-station-rule" style={{ background: "rgba(250,249,245,0.18)" }} />
+                    </div>
+                </Rise>
 
                 {/* Header assimétrico */}
-                <div className="relative mb-14 sm:mb-16 landing-fade-in-up">
+                <Rise delay={0.08}>
+                <div className="relative mb-14 sm:mb-16">
                     <span
                         className="lp-index absolute -top-8 right-0 hidden md:block"
                         style={{ fontSize: "clamp(8rem, 18vw, 13rem)" }}
@@ -99,20 +105,21 @@ export const AgentStudioSection = ({ onCTAClick }: AgentStudioSectionProps) => {
                         Agendar demonstração
                     </LandingButton>
                 </div>
+                </Rise>
 
                 {/* Cartões de console */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-px landing-fade-in-up landing-delay-200" style={{ background: "rgba(250,249,245,0.14)", border: "1px solid rgba(250,249,245,0.14)" }}>
+                <Rise delay={0.12}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-px" style={{ background: "rgba(250,249,245,0.14)", border: "1px solid rgba(250,249,245,0.14)" }}>
                     {MODULES.map(({ n, title, body, note }) => (
                         <div
                             key={title}
-                            className="p-7 sm:p-9"
-                            style={{ background: "var(--lp-ink)" }}
+                            className="lp-console-card p-7 sm:p-9"
                         >
                             <div className="flex items-baseline justify-between gap-3 mb-5">
                                 <span className="lp-mono" style={{ color: "#7FA8E8", fontSize: 13 }}>
                                     {n}
                                 </span>
-                                <span className="lp-mono" style={{ color: "rgba(250,249,245,0.35)", textTransform: "none", letterSpacing: "0.03em" }}>
+                                <span className="lp-mono lp-console-note" style={{ color: "rgba(250,249,245,0.35)", textTransform: "none", letterSpacing: "0.03em" }}>
                                     {note}
                                 </span>
                             </div>
@@ -141,6 +148,7 @@ export const AgentStudioSection = ({ onCTAClick }: AgentStudioSectionProps) => {
                         </div>
                     ))}
                 </div>
+                </Rise>
             </div>
         </section>
     );
