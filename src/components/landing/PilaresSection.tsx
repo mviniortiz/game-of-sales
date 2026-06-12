@@ -1,6 +1,9 @@
 // LP.2.3 2026-05-25: "Para quem é" — título + framing curto + chips de segmento.
 // LP.4 2026-06-09: chips viram letreiro contínuo (marquee CSS, pausa no hover,
 // desliga em prefers-reduced-motion). Export mantido (PilaresSection).
+// LP.5 2026-06-12: reveals por scroll (Rise) no lugar dos fades de mount.
+import { Rise } from "./animation/Rise";
+
 const SEGMENTOS = [
     "Tráfego pago",
     "Full service",
@@ -33,15 +36,17 @@ export const PilaresSection = () => {
         <section className="lp-paper relative py-24 sm:py-28 overflow-hidden">
             <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Estação do fio */}
-                <div className="lp-station mb-12 sm:mb-14 landing-fade-in-up">
-                    <span className="lp-station-node" />
-                    <span className="lp-mono" style={{ color: "var(--lp-ink-55)" }}>
-                        05 · para quem é
-                    </span>
-                    <span className="lp-station-rule" />
-                </div>
+                <Rise>
+                    <div className="lp-station mb-12 sm:mb-14">
+                        <span className="lp-station-node" />
+                        <span className="lp-mono" style={{ color: "var(--lp-ink-55)" }}>
+                            05 · para quem é
+                        </span>
+                        <span className="lp-station-rule" />
+                    </div>
+                </Rise>
 
-                <div className="landing-fade-in-up">
+                <Rise delay={0.08}>
                     <h2
                         className="font-satoshi"
                         style={{
@@ -71,12 +76,12 @@ export const PilaresSection = () => {
                     >
                         Se os seus leads chegam pelo WhatsApp e o time precisa responder rápido, qualificar melhor e não deixar follow-up morrer, o Vyzon foi feito pra você.
                     </p>
-                </div>
+                </Rise>
             </div>
 
             {/* Letreiro de segmentos — full-bleed, conteúdo duplicado pro loop */}
             <div
-                className="mt-12 landing-fade-in-up landing-delay-200"
+                className="mt-12"
                 style={{
                     borderTop: "1px solid var(--lp-line)",
                     borderBottom: "1px solid var(--lp-line)",

@@ -3451,3 +3451,131 @@ All colors MUST be HSL.
     transform: none;
   }
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+   LP.5 2026-06-12 — camada de motion interativo
+   Rise (reveal-on-scroll transform-only), tilt do hero, razão de dores
+   interativa, console hover, shine do CTA e o easter egg da EVA.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* ── Rise: reveal-on-scroll sem framer (transform-only, nunca opacity) ── */
+.lp-rise {
+  transform: translate3d(0, 26px, 0);
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.lp-rise-in { transform: translate3d(0, 0, 0); }
+
+/* ── Tilt do cartão do hero (mouse fino; JS injeta o transform) ── */
+.lp-tilt {
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+/* ── Razão de dores interativa: hover risca a dor e revela a resolução ── */
+.lp-ledger-row {
+  transition: background-color 0.25s ease;
+}
+.lp-ledger-row:hover { background-color: rgba(21, 86, 192, 0.035); }
+.lp-strike { position: relative; }
+.lp-strike::after {
+  content: "";
+  position: absolute;
+  left: -1%;
+  right: -1%;
+  top: 52%;
+  height: 2px;
+  background: var(--lp-blue);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+.lp-ledger-row:hover .lp-strike::after { transform: scaleX(1); }
+.lp-note-swap { position: relative; display: inline-block; }
+.lp-note-pain,
+.lp-note-fix {
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.lp-note-fix {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: translate3d(0, 5px, 0);
+  white-space: nowrap;
+  color: var(--lp-live);
+}
+.lp-ledger-row:hover .lp-note-pain { opacity: 0; }
+.lp-ledger-row:hover .lp-note-fix { opacity: 1; transform: translate3d(0, 0, 0); }
+
+/* ── Cartões de console (Sala de Comando): hover acende o módulo ── */
+.lp-console-card {
+  background: var(--lp-ink);
+  transition: background-color 0.3s ease;
+}
+.lp-console-card:hover { background: #121d31; }
+.lp-console-card .lp-console-note {
+  transition: color 0.3s ease;
+}
+.lp-console-card:hover .lp-console-note { color: #7fa8e8 !important; }
+
+/* ── Shine sweep no CTA primário (micro-delight, uma passada por hover) ── */
+.lbtn-primary { overflow: hidden; }
+.lbtn-primary::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 34%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.22), transparent);
+  transform: skewX(-18deg) translateX(-160%);
+  pointer-events: none;
+}
+.lbtn-primary:hover::before {
+  transform: skewX(-18deg) translateX(440%);
+  transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ── Easter egg da EVA ── */
+@keyframes lp-egg-veil { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lp-egg-card {
+  from { transform: translate3d(0, 18px, 0) scale(0.97); }
+  to { transform: translate3d(0, 0, 0) scale(1); }
+}
+@keyframes lp-egg-pop {
+  from { opacity: 0; transform: translate3d(0, 6px, 0) scale(0.96); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+@keyframes lp-egg-node-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(109, 40, 217, 0.3); }
+  60% { box-shadow: 0 0 0 10px rgba(109, 40, 217, 0); }
+}
+.lp-egg-veil { animation: lp-egg-veil 0.3s ease-out both; }
+.lp-egg-card { animation: lp-egg-card 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.lp-egg-pop { animation: lp-egg-pop 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.lp-egg-node { border-radius: 999px; animation: lp-egg-node-pulse 2.4s ease-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-rise,
+  .lp-rise-in {
+    transform: none;
+    transition: none;
+  }
+  .lp-ledger-row,
+  .lp-strike::after,
+  .lp-note-pain,
+  .lp-note-fix,
+  .lp-console-card,
+  .lp-console-card .lp-console-note {
+    transition: none;
+  }
+  .lp-egg-veil,
+  .lp-egg-card,
+  .lp-egg-pop,
+  .lp-egg-node {
+    animation: none !important;
+  }
+  .lp-egg-pop { opacity: 1; }
+  .lbtn-primary::before { display: none; }
+  .lp-tilt { transform: none !important; }
+}
