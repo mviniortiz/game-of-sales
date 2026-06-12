@@ -41,7 +41,7 @@ import {
 } from "lucide-react";
 import { EvaNode } from "@/components/landing/EvaNode";
 import { toast } from "sonner";
-import { EvaPhotoAvatar } from "@/components/eva/EvaPhotoAvatar";
+import { EvaCoreVisual, type EvaCoreState } from "@/components/eva-studio/EvaCoreVisual";
 import { NovaOportunidadeModal } from "@/components/deals/NovaOportunidadeModal";
 import { VincularDealModal } from "@/components/deals/VincularDealModal";
 import { sanitizeDisplayName } from "@/lib/displayName";
@@ -136,7 +136,7 @@ function EmptyPanel({ reason }: { reason: "no-chat" | "no-messages" }) {
     };
     return (
         <div className="flex-1 flex flex-col items-center justify-center px-5 text-center">
-            <EvaPhotoAvatar size="md" ring="glow" className="mb-4" />
+            <EvaCoreVisual className="w-[68px] mb-4" state="idle" showStatus={false} />
             <p className="text-[13px] font-semibold mb-1" style={{ color: "#0B1220" }}>
                 Aguardando contexto
             </p>
@@ -153,11 +153,7 @@ function EmptyPanel({ reason }: { reason: "no-chat" | "no-messages" }) {
 function LoadingState({ message }: { message?: string }) {
     return (
         <div className="flex-1 flex flex-col items-center justify-center px-5 text-center">
-            <EvaPhotoAvatar size="md" ring="glow" className="mb-4" />
-            <Loader2
-                className="h-4 w-4 animate-spin mb-2"
-                style={{ color: "#2563EB" }}
-            />
+            <EvaCoreVisual className="w-[72px] mb-4" state="analyzing" showStatus={false} />
             <p className="text-[13px] font-semibold mb-1" style={{ color: "#0B1220" }}>
                 {message || "EVA analisando conversa…"}
             </p>
@@ -414,7 +410,19 @@ function PanelContent({
                     background: "#FFFFFF",
                 }}
             >
-                <EvaPhotoAvatar size="sm" ring="subtle" />
+                <EvaCoreVisual
+                    className="w-9 shrink-0"
+                    state={
+                        (insight.analyzing
+                            ? "analyzing"
+                            : insight.error
+                            ? "attention"
+                            : insight.data
+                            ? "ready"
+                            : "idle") as EvaCoreState
+                    }
+                    showStatus={false}
+                />
                 <div className="flex-1 min-w-0">
                     <p
                         className="text-[13px] font-semibold leading-tight"
@@ -728,7 +736,7 @@ function formatResetAt(iso: string | null): string | null {
 function NoAnalysisState({ onAnalyze }: { onAnalyze: () => void }) {
     return (
         <div className="flex flex-col items-center justify-center text-center py-8 px-2">
-            <EvaPhotoAvatar size="md" ring="subtle" className="mb-4" />
+            <EvaCoreVisual className="w-[72px] mb-4" state="idle" showStatus={false} />
             <p className="text-[13.5px] font-semibold mb-2" style={{ color: "#0B1220" }}>
                 A EVA ainda não analisou esta conversa.
             </p>
