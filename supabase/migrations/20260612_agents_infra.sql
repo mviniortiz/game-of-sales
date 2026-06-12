@@ -21,6 +21,15 @@ alter table public.eva_simulation_results
 comment on column public.eva_simulation_results.agent_key is
   'VYZON.AGENTS.2: chave do agente dono do cenário (cenários do qualifier são namespaced q_*).';
 
+-- Flag do modelo HÍBRIDO: quando true, a EVA cria/atualiza o card no pipeline
+-- automaticamente ao recomendar (deve_criar_oportunidade) em lead inbound.
+-- Default FALSE: opt-in por empresa (cultura do produto). Mensagens de saída
+-- NUNCA dependem deste flag — seguem sempre em aprovar-e-enviar.
+alter table public.eva_blueprints
+  add column if not exists auto_create_opportunity boolean not null default false;
+comment on column public.eva_blueprints.auto_create_opportunity is
+  'VYZON.AGENTS.2 (híbrido): se true, qualificação inbound cria card no pipeline automaticamente. Saída de mensagem segue sempre humana (aprovar-e-enviar).';
+
 -- ── 2) Log de sugestões dos agentes (auditoria + runtime) ───────────────────
 -- Generaliza eva_deal_suggestions (que é específico de follow-up por deal).
 -- Cobre Inbox e Deal; registra aceito/ajustado/rejeitado e o que foi aplicado.
