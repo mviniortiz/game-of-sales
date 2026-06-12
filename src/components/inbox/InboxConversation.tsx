@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, memo } from "react";
 import {
     ArrowLeft,
     ArrowRight,
@@ -516,7 +516,11 @@ function MessageThread({
     );
 }
 
-function MessageBubble({
+// INBOX.PERF.1 — memoizado. A thread re-renderiza a cada tick de status/insert;
+// sem memo, as 200 bolhas recalculam todas. O comparador olha só os campos que
+// mudam a renderização da bolha e ignora a identidade de getAudioMedia (a
+// função é estável em comportamento; comparar por identidade reabriria a cascata).
+const MessageBubble = memo(function MessageBubble({
     message,
     getAudioMedia,
 }: {
@@ -615,7 +619,22 @@ function MessageBubble({
             </div>
         </div>
     );
-}
+}, (prev, next) => {
+    const a = prev.message;
+    const b = next.message;
+    // Re-renderiza só quando algo visível muda. getAudioMedia é ignorado de
+    // propósito (estável em comportamento).
+    return (
+        a.id === b.id &&
+        a.status === b.status &&
+        a.text === b.text &&
+        a.pending === b.pending &&
+        a.time === b.time &&
+        a.mediaType === b.mediaType &&
+        a.audioUrl === b.audioUrl &&
+        a.mediaCaption === b.mediaCaption
+    );
+});
 
 // ─── Sugestão EVA Preview ────────────────────────────────────────────────
 

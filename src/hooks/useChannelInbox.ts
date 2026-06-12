@@ -648,6 +648,79 @@ export function useChannelInbox(): UseChannelInbox {
         });
     }, []);
 
+    // ── 6b. PERF (INBOX.PERF.1) — update incremental vindo do Realtime ────────
+    // Em vez de re-buscar 200 mensagens a cada evento, aplicamos a row do
+    // payload direto no estado. O consistency check no refetchChats (debounced)
+    // continua de rede de segurança caso algo divirja.
+    const normalizeRow = (row: Partial<ChannelMessageRow>): ChannelMessageRow => {
+        const r = { ...row } as ChannelMessageRow;
+        if (typeof (r.media_ref as unknown) === "string") {
+            try { r.media_ref = JSON.parse(r.media_ref as unknown as string); } catch { r.media_ref = {}; }
+        }
+        if (typeof (r.metadata as unknown) === "string") {
+            try { r.metadata = JSON.parse(r.metadata as unknown as string); } catch { r.metadata = {}; }
+        }
+        return r;
+    };
+
+    // INSERT: anexa a mensagem nova mantendo ordem cronológica. Retorna false
+    // se não conseguiu aplicar (→ caller faz fallback pro fetch completo).
+    const applyRealtimeInsert = useCallback((raw: Partial<ChannelMessageRow>): boolean => {
+        try {
+            const row = normalizeRow(raw);
+            if (!row.id || !row.conversation_id) return false;
+            if (!isRenderableMessage(row)) return true; // nada a renderizar, sem refetch
+            const msg = rowToMessage(row);
+            setPersistedMessages((prev) => {
+                if (prev.some((m) => m.id === msg.id)) return prev; // dedupe
+                const next = [...prev];
+                let i = next.length;
+                while (i > 0 && next[i - 1].timestamp > msg.timestamp) i--;
+                next.splice(i, 0, msg);
+                return next;
+            });
+            const iso = new Date(row.message_timestamp).toISOString();
+            const prevRef = lastThreadTsRef.current;
+            if (!prevRef || prevRef.convId !== row.conversation_id || !prevRef.ts || iso > prevRef.ts) {
+                lastThreadTsRef.current = { convId: row.conversation_id, ts: iso };
+            }
+            // Reconcilia pending quando o outbound recém-enviado chega persistido.
+            if (msg.sender === "me") {
+                const convId = row.conversation_id;
+                const t = (msg.text || "").trim();
+                setPendingByConv((prev) => {
+                    const current = prev[convId];
+                    if (!current || current.length === 0) return prev;
+                    const stillPending = current.filter((p) => p.text.trim() !== t);
+                    if (stillPending.length === current.length) return prev;
+                    return { ...prev, [convId]: stillPending };
+                });
+            }
+            return true;
+        } catch (e) {
+            if (import.meta.env.DEV) console.warn("[ChannelInbox] applyRealtimeInsert failed:", e);
+            return false;
+        }
+    }, []);
+
+    // UPDATE: só muda status (entregue/lido) — patch in-place, sem refetch.
+    const applyRealtimeStatusUpdate = useCallback((raw: Partial<ChannelMessageRow>): void => {
+        const id = raw?.id;
+        const status = raw?.status;
+        if (!id || !status) return;
+        setPersistedMessages((prev) => {
+            let changed = false;
+            const next = prev.map((m) => {
+                if (m.id === id && m.status !== status) {
+                    changed = true;
+                    return { ...m, status: status as MessageLine["status"] };
+                }
+                return m;
+            });
+            return changed ? next : prev;
+        });
+    }, []);
+
     // ── 7. Carga inicial dos chats ────────────────────────────────────────
     useEffect(() => {
         if (!connectionId) return;
@@ -669,27 +742,32 @@ export function useChannelInbox(): UseChannelInbox {
                     table: "channel_messages",
                     filter: `connection_id=eq.${connectionId}`,
                 },
-                (payload: { new: Record<string, unknown> }) => {
+                (payload: { eventType?: string; new: Record<string, unknown>; old?: Record<string, unknown> }) => {
                     const row = payload?.new as Partial<ChannelMessageRow> | undefined;
-                    const convId = row?.conversation_id;
+                    const convId = row?.conversation_id as string | undefined;
                     if (!convId) {
                         if (import.meta.env.DEV) {
-                            console.warn("[ChannelInbox] realtime_message_insert missing conversation_id");
+                            console.warn("[ChannelInbox] realtime_event missing conversation_id");
                         }
                         scheduleRefetchChats();
                         return;
                     }
-                    const selected = selectedConversationIdRef.current;
-                    const shouldFetchThread = convId === selected;
-                    if (import.meta.env.DEV) {
-                        console.log(
-                            `[ChannelInbox] realtime_message_insert conversation_id=${convId} ` +
-                            `selected=${selected ?? "none"} should_fetch_thread=${shouldFetchThread}`,
-                        );
+                    const isSelected = convId === selectedConversationIdRef.current;
+
+                    // UPDATE = mudança de status (entregue/lido). Patch in-place na
+                    // thread aberta; NÃO mexe na sidebar (status não reordena lista).
+                    if (payload?.eventType === "UPDATE") {
+                        if (isSelected) applyRealtimeStatusUpdate(row);
+                        return;
                     }
-                    if (shouldFetchThread) {
-                        scheduleFetchMessages(convId);
+
+                    // INSERT = mensagem nova. Anexa direto do payload (sem refetch
+                    // de 200 linhas); só cai pro fetch completo se não der pra aplicar.
+                    if (isSelected) {
+                        const applied = applyRealtimeInsert(row);
+                        if (!applied) scheduleFetchMessages(convId);
                     }
+                    // Sidebar: reordena + unread (debounced; consistency check embutido).
                     scheduleRefetchChats();
                 },
             )
