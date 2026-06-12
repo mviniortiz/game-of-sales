@@ -635,13 +635,62 @@ function MessageThread({
             className="flex-1 overflow-y-auto px-3 sm:px-5 py-4"
             style={{ background: "#F4F7FB" }}
         >
-            {/* F4C.3: limita largura interna da thread pra leitura confortável em ultrawide.
-                Coluna central inteira continua flex-1 — só o conteúdo afina. */}
-            <div className="max-w-[720px] mx-auto space-y-2.5">
-                {messages.map((msg) => (
-                    <MessageBubble key={msg.id} message={msg} getAudioMedia={getAudioMedia} />
-                ))}
+            {/* F4C.3: limita largura interna da thread pra leitura confortável em ultrawide. */}
+            <div className="max-w-[720px] mx-auto">
+                {(() => {
+                    // INBOX.UX — separadores de dia + agrupamento de bolhas do mesmo
+                    // remetente em janela curta (estilo WhatsApp). Tudo derivado do
+                    // próprio array (sem estado), barato.
+                    const items: React.ReactNode[] = [];
+                    let lastDay = "";
+                    messages.forEach((msg, i) => {
+                        const day = new Date(msg.timestamp * 1000).toDateString();
+                        if (day !== lastDay) {
+                            items.push(<DayDivider key={`day-${day}`} timestamp={msg.timestamp} />);
+                            lastDay = day;
+                        }
+                        const prev = messages[i - 1];
+                        const grouped =
+                            !!prev &&
+                            prev.sender === msg.sender &&
+                            new Date(prev.timestamp * 1000).toDateString() === day &&
+                            msg.timestamp - prev.timestamp < 120; // 2 min
+                        items.push(
+                            <MessageBubble
+                                key={msg.id}
+                                message={msg}
+                                grouped={grouped}
+                                getAudioMedia={getAudioMedia}
+                            />,
+                        );
+                    });
+                    return items;
+                })()}
             </div>
+        </div>
+    );
+}
+
+// Separador de dia — pílula central (Hoje / Ontem / data).
+function DayDivider({ timestamp }: { timestamp: number }) {
+    const d = new Date(timestamp * 1000);
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+    const sameDay = (a: Date, b: Date) => a.toDateString() === b.toDateString();
+    const label = sameDay(d, today)
+        ? "Hoje"
+        : sameDay(d, yesterday)
+        ? "Ontem"
+        : d.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: d.getFullYear() === today.getFullYear() ? undefined : "numeric" });
+    return (
+        <div className="flex justify-center my-3">
+            <span
+                className="text-[10.5px] font-semibold px-2.5 py-1 rounded-full"
+                style={{ background: "#E8EEF6", color: "#64748B", letterSpacing: "0.02em" }}
+            >
+                {label}
+            </span>
         </div>
     );
 }
@@ -652,9 +701,11 @@ function MessageThread({
 // função é estável em comportamento; comparar por identidade reabriria a cascata).
 const MessageBubble = memo(function MessageBubble({
     message,
+    grouped = false,
     getAudioMedia,
 }: {
     message: MessageLine;
+    grouped?: boolean;
     getAudioMedia: (messageId: string) => Promise<string | null>;
 }) {
     const isMe = message.sender === "me";
@@ -662,8 +713,14 @@ const MessageBubble = memo(function MessageBubble({
     const hasMedia = message.mediaType === "image" || message.mediaType === "video" || message.mediaType === "sticker";
     const hasAudio = message.mediaType === "audio" || !!message.audioUrl;
 
+    // Agrupamento estilo WhatsApp: bolhas consecutivas do mesmo remetente ficam
+    // mais juntas e o "rabinho" (canto reto) só aparece na primeira do grupo.
+    const tail = isMe
+        ? { borderTopRightRadius: grouped ? 8 : 16, borderBottomRightRadius: 6 }
+        : { borderTopLeftRadius: grouped ? 8 : 16, borderBottomLeftRadius: 6 };
+
     return (
-        <div className={cn("flex", isMe ? "justify-end" : "justify-start")}>
+        <div className={cn("flex", grouped ? "mt-0.5" : "mt-2.5", isMe ? "justify-end" : "justify-start")}>
             <div
                 className="max-w-[85%] sm:max-w-[70%] rounded-2xl px-3.5 py-2.5"
                 style={
@@ -671,7 +728,7 @@ const MessageBubble = memo(function MessageBubble({
                         ? {
                               background: "linear-gradient(135deg, #2563EB, #4A8CE8)",
                               color: "#FFFFFF",
-                              borderBottomRightRadius: 6,
+                              ...tail,
                               boxShadow: "0 1px 2px rgba(37,99,235,0.18), 0 4px 12px -4px rgba(37,99,235,0.18)",
                               opacity: isPending ? 0.7 : 1,
                           }
@@ -679,7 +736,7 @@ const MessageBubble = memo(function MessageBubble({
                               background: "#FFFFFF",
                               color: "#0B1220",
                               border: "1px solid #E2E8F0",
-                              borderBottomLeftRadius: 6,
+                              ...tail,
                               boxShadow: "0 1px 2px rgba(15,23,42,0.04)",
                           }
                 }
@@ -755,6 +812,7 @@ const MessageBubble = memo(function MessageBubble({
     // Re-renderiza só quando algo visível muda. getAudioMedia é ignorado de
     // propósito (estável em comportamento).
     return (
+        prev.grouped === next.grouped &&
         a.id === b.id &&
         a.status === b.status &&
         a.text === b.text &&
