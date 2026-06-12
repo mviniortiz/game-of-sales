@@ -2,606 +2,304 @@
 
 This file provides guidance to Claude Code when working in this repository.
 
+> **Atualizado em 2026-06-12.** Substitui o posicionamento horizontal antigo
+> ("CRM gamificado") pelo posicionamento atual em produção: **Central Comercial
+> com EVA para agências que vendem por conversa**. Sempre verifique no código
+> antes de afirmar capacidades (ver "Claims Policy").
+
 ## Project Overview
 
-Vyzon is a SaaS CRM focused on commercial performance.
+**Vyzon** é a **Central Comercial com EVA** para **agências que vendem por
+conversa**. O lead chega pelo WhatsApp/Instagram/formulário, a **EVA** (a
+camada de inteligência da plataforma) lê cada atendimento, aponta quem está
+pronto para avançar e sugere o próximo passo. O time aprova e a oportunidade
+segue no pipeline.
 
-The product helps sales teams increase CRM adoption, track goals, visualize pipelines, follow rankings in real time, and automate parts of the sales routine.
+Posicionamento canônico (em produção em `index.html` / homepage):
 
-The core positioning is:
+> **Pare de perder leads no WhatsApp.**
+> A Central Comercial para agências que vendem por conversa. A EVA lê cada
+> atendimento, aponta quem está pronto para avançar e sugere o próximo passo.
+> Seu time aprova e a oportunidade segue no pipeline.
 
-> The CRM your sales team actually uses.
+O produto resolve a dor central das agências: **lead frio porque ninguém
+respondeu a tempo, qualificação ruim, follow-up esquecido e pipeline que não
+reflete o que aconteceu na conversa.**
 
-Vyzon should not be positioned only as a CRM for infoproduct businesses. The homepage and main product messaging should be horizontal around a specific commercial pain:
+### Princípio inegociável — agentes assistidos
 
-- salespeople do not update the CRM;
-- managers lack visibility into the sales operation;
-- goals are tracked too late;
-- rankings are managed manually;
-- follow-ups are forgotten;
-- pipelines do not reflect reality;
-- teams depend on spreadsheets, screenshots, and WhatsApp reminders.
+A EVA e seus agentes são **assistidos, com humano no controle das mensagens
+de saída**. O modelo de autonomia vigente é **HÍBRIDO** (decisão do produto,
+2026-06-12):
 
-Gamification is the mechanism, not the final benefit.
+- **Pode ser automático:** criar/atualizar o card de oportunidade no pipeline
+  a partir de um lead que **já entrou** (inbound), com os campos qualificados
+  preenchidos. Isso é trabalho interno sobre dado que já chegou.
+- **Sempre exige aprovação humana:** qualquer **mensagem de saída** para o lead
+  (abordagem, follow-up, resposta) — padrão "aprovar-e-enviar". Nenhum agente
+  dispara mensagem sozinho.
+- **Nunca:** scraping/enriquecimento por fonte externa (Google/LinkedIn),
+  promessa de resultado, ou substituir o vendedor na condução da conversa.
 
-The final benefit is:
-
-- higher sales team adoption;
-- clearer management;
-- better sales rhythm;
-- more predictable pipeline;
-- more goals hit.
+Isso está cristalizado na marca: **"A EVA sugere, seu time aprova."**
 
 ## Brand
 
-Vyzon should feel like a premium modern SaaS.
+Vyzon deve parecer um SaaS B2B premium, moderno e editorial-técnico.
 
-Preferred brand direction:
+Direção de marca: clean, afiada, premium, confiante (não lúdica), focada em
+performance comercial. A landing usa uma linguagem editorial ("o fio da
+conversa"): papel, tinta, hairlines, voz serif itálica (humano) + mono
+(máquina/telemetria).
 
-- clean;
-- sharp;
-- high-conversion;
-- premium;
-- modern B2B;
-- confident, not playful;
-- commercial-performance focused.
+### Design tokens reais da landing (`src/index.css`, namespace `--lp-*`)
 
-Core colors, when available in the codebase:
+- Papel (fundo): `--lp-paper: #faf9f5`
+- Tinta / navy (texto): `--lp-ink: #0d1421`
+- Azul elétrico (CTA/acento primário): `--lp-blue: #1556c0` (deep `#0e3e8a`)
+- Roxo da EVA (IA): `--lp-eva: #6d28d9`
+- Verde "ao vivo": `--lp-live: #008a52`
+- Hairlines: `--lp-line` / `--lp-line-soft`; raio: `--lp-radius: 10px`
 
-- Dark navy: `#0D1421`
-- Emerald/green: `#00E37A`
-- Electric blue: `#1556C0`
-- Off-white / white backgrounds for clean sections
+Fontes: **Satoshi** (headlines), **Sentient** itálica (voz humana/serif),
+**Sora**/**Inter** (UI), **mono** (telemetria). Tokens de app em `--vyz-*`
+com dark mode (`.dark`). Não introduzir um estilo visual não relacionado sem
+pedido explícito.
 
-Do not introduce a completely unrelated design style unless explicitly requested.
+## ICP (Ideal Customer Profile)
 
-## Primary Positioning
+**Agências de marketing e serviços digitais brasileiras que vendem por
+conversa** (ver `docs/product/vyzon_agents_for_agencies.md` e
+`docs/vendas/01-ICP-ideal-customer-profile.md`).
 
-Use this as the main homepage direction:
+- **Tipo:** tráfego pago, social media, criação de sites/landing, lançamentos,
+  branding, consultorias e produtoras de conteúdo.
+- **Tamanho:** 3 a 30 pessoas; comercial feito por 1–5 (dono + closer + SDR
+  informal).
+- **Canais:** WhatsApp (principal), Instagram/DM, formulário, indicação,
+  tráfego pago. Entrada quase toda por **conversa**, não por formulário.
+- **Maturidade:** baixa/média — "tem CRM no nome" mas usa planilha + WhatsApp +
+  memória; sem playbook, sem SLA de resposta, sem critério de qualificação.
 
-### Main headline
-
-`O CRM que seu time comercial realmente usa`
-
-### Main subheadline
-
-`Metas, ranking ao vivo, pipeline visual e automações para gestores que querem mais adesão do time, mais clareza da operação e mais vendas todos os meses.`
-
-### Primary CTA
-
-`Agendar demonstração`
-
-### Secondary CTA
-
-`Testar grátis por 14 dias`
-
-### CTA microcopy
-
-`Sem planilhas. Sem ranking manual. Sem vendedor perdido no WhatsApp.`
-
-## ICP Strategy
-
-Do not lock Vyzon into only one ICP such as “infoproduct creators”.
-
-The homepage should be horizontal by pain and then segment by use case.
-
-Primary horizontal ICP:
-
-> Sales teams with 3 to 30 salespeople, SDRs, closers, representatives, or account executives that need better CRM adoption, goal tracking, pipeline visibility, and sales performance routines.
-
-Relevant segments:
-
-1. Infoproduct businesses, mentorships, and high-ticket operations
-2. Agencies and co-producers
-3. Industries and distributors
-4. SDR/Closer B2B teams
-5. Other sales teams that live by goals and pipeline discipline
-
-## Copy Principles
-
-Use pain-driven copy, not feature-only copy.
-
-Avoid leading with generic phrases like:
-
-- “CRM gamificado”
-- “Venda mais”
-- “Automatize suas vendas”
-- “Controle seu time”
-
-Prefer specific pain and outcome:
-
-- “Seu CRM virou só mais uma ferramenta que o vendedor ignora?”
-- “Pare de gerenciar vendas por planilha, print e cobrança manual.”
-- “Veja quem está perto da meta antes do fim do mês.”
-- “Transforme ranking, metas e follow-up em uma rotina que o time realmente acompanha.”
-- “Dê ao gestor clareza e ao vendedor ritmo.”
-
-Gamification should be framed as commercial performance infrastructure.
-
-Good framing:
-
-`Ranking ao vivo, metas e rotina visual para aumentar adesão do time e previsibilidade comercial.`
-
-Bad framing:
-
-`Um CRM divertido para gamificar suas vendas.`
+Segmentos adjacentes citados no ICP de vendas (imobiliárias, corretoras,
+energia solar, infoprodutos, SaaS B2B) existem como expansão, mas a **mensagem
+principal é agências**. Páginas de persona já existem: `/para-infoprodutores`,
+`/para-saas-b2b`.
 
 ## Messaging Hierarchy
 
-The homepage should answer these questions quickly:
+A homepage deve responder rápido (≤5s):
 
-1. What is Vyzon?
-2. Who is it for?
-3. What pain does it solve?
-4. Why is it different?
-5. How does it work?
-6. What should the user do next?
+1. O que é Vyzon? → Central Comercial com EVA.
+2. Para quem? → Agências que vendem por conversa.
+3. Que dor resolve? → Lead perdido no WhatsApp, follow-up esquecido, pipeline
+   desconectado da conversa.
+4. Por que é diferente? → A EVA lê a conversa e sugere; o time aprova.
+5. Como funciona? → Inbox → EVA analisa → time aprova → pipeline.
+6. Próximo passo? → Agendar demo gratuita / Testar grátis 14 dias.
 
-The user should understand the value proposition in less than 5 seconds.
+## Copy Principles
 
-## Recommended Homepage Structure
+Copy orientada a dor e à conversa, nunca feature seca. Evitar "CRM
+gamificado", "venda mais", "automatize suas vendas", "robô que vende sozinho".
 
-Use or preserve existing sections when possible, but the ideal structure is:
+Preferir: "Pare de perder leads no WhatsApp", "A EVA lê a conversa e aponta
+quem está pronto", "Follow-up que não depende de cobrança no grupo",
+"O pipeline finalmente reflete o que aconteceu na conversa".
 
-1. Header
-2. Hero section
-3. Problem section
-4. Solution/mechanism section
-5. ICP/use-case section
-6. Feature section
-7. Integrations section
-8. Comparison section
-9. CTA section
-10. FAQ
-11. Footer
+Enquadrar a IA como **camada assistida** ("a EVA sugere, seu time aprova"),
+nunca como automação total ou substituição do vendedor.
 
-## Header
+## EVA & Agentes (núcleo do produto)
 
-Include:
-
-- Vyzon logo
-- Navigation links:
-  - Produto
-  - Para quem é
-  - Funcionalidades
-  - Integrações
-  - FAQ
-- CTA:
-  - Agendar demonstração
-
-The header must be responsive and accessible.
-
-## Hero Section
-
-Required content:
-
-Badge:
-
-`CRM de performance comercial com gamificação`
-
-H1:
-
-`O CRM que seu time comercial realmente usa`
-
-Subheadline:
-
-`Metas, ranking ao vivo, pipeline visual e automações para gestores que querem mais adesão do time, mais clareza da operação e mais vendas todos os meses.`
-
-CTAs:
-
-- `Agendar demonstração`
-- `Testar grátis por 14 dias`
-
-Microcopy:
-
-`Sem planilhas. Sem ranking manual. Sem vendedor perdido no WhatsApp.`
-
-Suggested visual cards:
-
-- `Meta atingida`
-- `Ranking ao vivo`
-- `Pipeline atualizado`
-- `Follow-up pendente`
-- `R$ 84.300 em pipeline`
-- `128% da meta`
-
-Prefer HTML/CSS visual UI cards over static images when practical, so the content remains accessible and lightweight.
-
-## Problem Section
-
-Title:
-
-`Seu CRM virou só mais uma ferramenta que o vendedor ignora?`
-
-Pain cards:
-
-- `O time não atualiza o CRM`
-- `O gestor cobra tudo no WhatsApp`
-- `O ranking é manual`
-- `A meta só aparece no fim do mês`
-- `Follow-ups se perdem`
-- `O pipeline não mostra a realidade`
-
-Closing line:
-
-`A Vyzon transforma a rotina comercial em uma experiência clara, visual e orientada por metas.`
-
-## Solution Section
-
-Title:
-
-`Uma operação comercial mais clara, visual e competitiva`
-
-Explain Vyzon through mechanisms:
-
-- Pipeline visual
-- Metas individuais e por equipe
-- Ranking ao vivo
-- Automações comerciais
-- Integrações com plataformas de venda
-
-Connect each feature to a management outcome.
-
-Examples:
-
-- Ranking ao vivo → seller sees progress; manager sees who needs attention.
-- Metas → team tracks pace before the end of the month.
-- Pipeline → manager sees where each opportunity is stuck.
-- Automations → fewer manual tasks and fewer forgotten follow-ups.
-
-## Use-Case Section
-
-Title:
-
-`Feito para times comerciais que vivem de meta`
-
-Cards:
-
-### Infoprodutores e mentorias
-
-`Controle closers, leads, follow-ups e vendas de produtos digitais com uma rotina comercial mais previsível.`
-
-### Agências e coprodutoras
-
-`Acompanhe múltiplas operações, campanhas e times comerciais com metas, ranking e pipeline em tempo real.`
-
-### Indústrias e distribuidoras
-
-`Dê mais visibilidade para vendedores, representantes, carteiras e oportunidades B2B.`
-
-### Times SDR/Closer B2B
-
-`Organize prospecção, qualificação, oportunidades e performance em um fluxo simples para o time usar.`
-
-## Feature Section
-
-Title:
-
-`Toda a rotina comercial em um só lugar`
-
-Feature examples:
-
-- Pipeline visual
-- Ranking ao vivo
-- Metas e comissões
-- Automações de vendas
-- Gestão de follow-up
-- Dashboard do gestor
-- Visão do vendedor
-- Integrações
-
-Each feature must have short benefit-oriented copy.
-
-## Integrations Section
-
-Title:
-
-`Conecte a Vyzon às ferramentas que sua operação já usa`
-
-Body:
-
-`Integre plataformas de venda, automação e canais comerciais para centralizar dados e reduzir trabalho manual.`
-
-Important:
-
-Do not invent integrations.
-
-Use only integrations that are real in the product, repository, environment, documentation, or existing website copy.
-
-If an integration is not confirmed, use one of:
-
-- `Em breve`
-- `Sob consulta`
-- `Integração via API/Webhook`
-
-Never claim an integration is available if there is no evidence.
-
-Known integrations mentioned in current positioning may include:
-
-- Hotmart
-- Kiwify
-- Greenn
-
-Verify before claiming.
-
-## Comparison Section
-
-Title:
-
-`Pare de gerenciar vendas por planilha, print e cobrança manual`
-
-Comparison:
-
-### Sem Vyzon
-
-- Ranking manual
-- Leads perdidos
-- CRM ignorado
-- Gestor sem visibilidade
-- Follow-up esquecido
-- Meta acompanhada tarde
-
-### Com Vyzon
-
-- Ranking ao vivo
-- Pipeline organizado
-- Rotina gamificada
-- Performance em tempo real
-- Alertas e automações
-- Meta acompanhada todos os dias
-
-## CTA Section
-
-Title:
-
-`Veja como a Vyzon pode organizar sua operação comercial`
-
-Body:
-
-`Em uma demonstração rápida, mostramos como metas, ranking, pipeline e automações podem funcionar dentro da sua rotina de vendas.`
-
-CTAs:
-
-- `Agendar demonstração`
-- `Começar teste grátis`
-
-## FAQ
-
-Include these questions when appropriate:
-
-### A Vyzon é só para infoprodutores?
-
-`Não. A Vyzon atende times comerciais que precisam de mais adesão, clareza de metas e gestão de pipeline. Infoprodutores, agências, indústrias, distribuidoras e times B2B podem usar a plataforma.`
-
-### O que significa CRM gamificado?
-
-`Significa transformar metas, ranking, tarefas e evolução comercial em uma experiência mais visual e engajadora, para que o time acompanhe sua performance diariamente.`
-
-### Preciso substituir meu processo comercial atual?
-
-`Não necessariamente. A Vyzon pode organizar pipeline, metas e rotina comercial com integrações e fluxos adaptados ao processo existente.`
-
-### A Vyzon integra com quais plataformas?
-
-Only answer with verified integrations.
-
-Do not invent.
-
-### Serve para times pequenos?
-
-`Sim. A Vyzon faz mais sentido para operações com metas claras e pelo menos alguns vendedores, SDRs ou closers, mas também pode ser usada por times em crescimento.`
-
-## SEO Requirements
-
-The site must expose real crawlable HTML text.
-
-Do not rely on images, canvas, or inaccessible JavaScript-only content for core copy.
-
-Required:
-
-- one clear H1 per page;
-- semantic HTML;
-- descriptive title;
-- meta description;
-- Open Graph tags when supported;
-- Twitter card tags when supported;
-- alt text for informative images;
-- empty alt for decorative images;
-- readable page structure;
-- internal anchor links that work.
-
-Suggested homepage title:
-
-`Vyzon | CRM de Performance Comercial com Ranking, Metas e Pipeline`
-
-Suggested homepage meta description:
-
-`A Vyzon é um CRM de performance comercial com ranking ao vivo, metas, pipeline visual, automações e integrações para times que vivem de vendas.`
-
-If structured data is already supported, add JSON-LD for `SoftwareApplication`.
-
-Do not invent:
-
-- ratings;
-- reviews;
-- pricing;
-- awards;
-- customers;
-- integrations;
-- performance metrics.
-
-## Accessibility Requirements
-
-Required:
-
-- adequate color contrast;
-- visible focus states;
-- keyboard navigation;
-- clear button labels;
-- semantic sections;
-- accessible forms;
-- no critical information communicated only through color;
-- reduced motion support when animations exist.
-
-Use `prefers-reduced-motion` when adding animations.
-
-## Performance Requirements
-
-Do not add heavy dependencies unless absolutely necessary.
-
-Prefer:
-
-- lightweight components;
-- CSS/HTML UI visuals;
-- optimized images;
-- lazy loading for below-the-fold media;
-- minimal animation cost;
-- responsive layout without layout shifts.
-
-The page must perform well on mobile.
-
-## Responsive Design
-
-The homepage must work on:
-
-- small mobile screens;
-- large mobile screens;
-- tablets;
-- desktop;
-- wide screens.
-
-On mobile:
-
-- H1 must remain readable;
-- CTA must appear early;
-- hero visual must not push the CTA too far down;
-- cards should stack cleanly;
-- navigation should be usable.
-
-## Engineering Rules
-
-Before making changes:
-
-1. Inspect the repository.
-2. Identify stack, framework, routing, styling system, and build process.
-3. Identify current landing page files.
-4. Identify existing components and design tokens.
-5. Identify existing CTA links and forms.
-6. Identify confirmed integrations.
-
-During changes:
-
-- preserve existing architecture;
-- reuse components when appropriate;
-- avoid duplication;
-- avoid unnecessary dependencies;
-- keep code idiomatic;
-- keep components modular;
-- preserve legal pages and links;
-- preserve existing analytics/tracking unless broken;
-- do not remove functional code without reason;
-- do not invent backend behavior.
-
-After changes:
-
-- run available checks:
-  - install if needed;
-  - lint;
-  - typecheck;
-  - tests;
-  - build.
-- fix errors when possible.
-- report remaining issues honestly.
+A EVA é a camada-mãe de inteligência. Os **agentes** são especializações dela,
+configurados pelo gestor e amarrados ao **contexto da empresa**.
+
+### Contexto da empresa (o que alimenta a EVA)
+
+Configurado em **Configurações → EVA** (`src/components/configuracoes/eva/*`):
+serviços, ICP, tom de voz, objeções, playbooks e materiais aprovados (base de
+conhecimento). Nada entra no contexto da EVA sem aprovação. Tabelas `eva_*`
+(`eva_blueprints`, `eva_business_context`, `eva_simulation_results`,
+`eva_deal_suggestions`, `eva_training_documents`, etc.).
+
+### Agent Studio (EVA Studio evoluído)
+
+O motor do EVA Studio (blueprint persistente + memória + regras + simulações +
+aprovação) configura **agentes especializados**. Dimensão `agent_key`
+(`qualifier`, `followup`, `objection`, `proposal`, `manager`). MVP = **Agente
+Qualificador**. Specs de referência: `docs/product/vyzon_agents_for_agencies.md`
+(VYZON.AGENTS.1) e `vyzon_qualifier_agent_spec.md` (VYZON.AGENTS.2).
+
+### Agente Qualificador (MVP)
+
+Lê a conversa do lead e produz um **diagnóstico**: campos detectados
+(orçamento, segmento, urgência, decisor, prazo…), score (verde/amarelo/
+vermelho), tags sugeridas, perguntas recomendadas e próxima ação. No modelo
+**híbrido**: ao qualificar um lead inbound, **cria/atualiza o card no pipeline
+com os campos preenchidos**; qualquer mensagem de saída fica como rascunho na
+fila "aprovar-e-enviar". Toda geração é proposta auditável (`agent_suggestions`).
+
+### Ciclo de vida e auditoria
+
+- **Config do agente** (`eva_blueprints.status`): `draft → in_review →
+  ready_to_test → prepared → published_preview`. Só publica sugestões ao vivo
+  quando preparado/aprovado.
+- **Sugestão em runtime** (`agent_suggestions.status`): `pending → accepted |
+  adjusted | rejected | expired`, com `applied_payload` e `feedback`.
+- Permissões: **admin** configura/aprova; **membro** usa e registra desfecho;
+  **super_admin** bypassa. RLS por `company_id` (padrão do projeto).
+
+### Prospecção outbound supervisionada (existente)
+
+`prospecting_instances` + `prospecting_allowlist` (PROSPECT.1): um número em
+modo prospecção só conversa com a allowlist; tudo fora é descartado no webhook
+(`evolution-message-webhook`), protegendo a vida pessoal. Envio é
+**aprovar-e-enviar**. `validateChatOwnership` é fail-CLOSED.
+
+## Pricing (verificado em `src/data/landing/pricing.ts`)
+
+3 planos, assinatura via Mercado Pago. **Verificar o arquivo antes de citar
+valores em copy** — eles mudam:
+
+- **Starter** — R$ 147/mês
+- **Plus** — R$ 397/mês (popular)
+- **Pro** — R$ 797/mês ("Falar com especialista" → booking externo)
+
+14 dias grátis sem cartão (`/onboarding?plan=plus`).
+
+## Integrations (verificado em `src/config/integrationsConfig.ts`)
+
+**Nunca inventar integração.** As reais (webhooks/conectores no código):
+
+- **Vendas/infoproduto:** Hotmart, Kiwify, Greenn, Cakto, Braip, Monetizze,
+  Eduzz.
+- **B2B / cobrança / pagamento:** RD Station, Asaas, Mercado Pago.
+- **Produtividade / genérico:** Zapier, Notazz, Webhooks/API por token.
+- **Canal nativo:** WhatsApp via **Evolution API** (`evolution-whatsapp`,
+  `evolution-message-webhook`).
+- **Em roadmap / sob consulta:** Stripe, Pagar.me.
+
+Se uma integração não estiver confirmada no código, usar "Em breve", "Sob
+consulta" ou "Integração via API/Webhook".
+
+## Stack & Architecture
+
+- **Frontend:** Vite + React 18 + TypeScript + Tailwind + shadcn/ui (Radix).
+  Roteamento: React Router v6 (`src/App.tsx`). Estado de servidor:
+  `@tanstack/react-query`. Formulários: react-hook-form + zod. Animação:
+  framer-motion (seletivo) + CSS (landing).
+- **Backend:** Supabase (Postgres + RLS + Edge Functions em `supabase/functions/`).
+  Cliente em `src/integrations/supabase/`. Migrations em `supabase/migrations/`.
+- **Pagamentos:** Mercado Pago (assinaturas). **Analytics:** GA4 + Google Ads +
+  Meta Pixel + Clarity (carregados após 1ª interação).
+- **Vídeo:** Remotion (`remotion/`). **Build:** `vite build` +
+  `scripts/prerender-seo.mjs` (HTML por slug para crawlers).
+
+### Rotas públicas principais
+
+`/` (landing), `/auth`, `/onboarding?plan=starter|plus|pro`,
+`/para-infoprodutores`, `/para-saas-b2b`, `/alternativa-*`, `/alternativas`,
+`/changelog`, `/politica-privacidade`, `/termos-de-servico`. App autenticado
+em catch-all (`AppShell`): Inbox, Pipeline, Deal (`DealCommandCenter`), EVA
+(`/eva`), EVA/Agent Studio, Configurações, Performance, Metas.
+
+## Database conventions (migrations)
+
+- Aplicar **sempre** via `npx supabase db query --linked -f <arquivo>` —
+  **NUNCA `db push`**.
+- **GRANT antes de habilitar RLS** (`grant ... to authenticated; grant all to
+  service_role;` depois `enable row level security`).
+- Helpers de RLS: `public.is_super_admin()`, `public.get_my_company_id()`,
+  `public.has_role(auth.uid(), 'admin'::public.app_role)`.
+- Trigger de timestamp: `public.update_updated_at()`.
+- Escopo por `company_id`. Mudanças **aditivas** e backward-compatible; colunas
+  novas com `default` para não quebrar linhas existentes.
 
 ## CTA Rules
 
-Before changing CTA URLs, inspect existing links.
+- "Agendar demo gratuita" → seção/fluxo de agendamento (`#agendar-demo`,
+  `DemoScheduleSection`).
+- "Testar grátis por 14 dias" / "Começar teste grátis" → `/onboarding?plan=plus`.
+- "Falar com especialista" (Pro) → link de booking externo definido em
+  `pricing.ts`. Não inventar URLs; reusar rotas existentes e marcar TODO se
+  faltar.
 
-If a demo scheduling URL exists, use it for:
+## SEO Requirements
 
-`Agendar demonstração`
+HTML real e rastreável. Requisitos: um H1 por página; HTML semântico; title e
+meta description descritivos; Open Graph + Twitter card; alt text (vazio em
+decorativas); JSON-LD (`SoftwareApplication`, `Organization`, `FAQPage`) já
+presente em `index.html`; `<noscript>` rico mantido em sincronia.
 
-If a trial/signup URL exists, use it for:
+Title atual: `Vyzon | Central Comercial com EVA para agências que vendem por
+conversa`. Não inventar ratings, reviews, pricing, clientes, integrações ou
+métricas em dados estruturados.
 
-`Testar grátis por 14 dias`
+## Accessibility Requirements
 
-If no URL exists, reuse the safest existing route and add a clear TODO in code.
+Contraste adequado; foco visível; navegação por teclado; labels claros; seções
+semânticas; formulários acessíveis; nada crítico só por cor; `prefers-reduced-
+motion` em toda animação (a landing já respeita — ver `src/index.css`).
 
-Do not invent external URLs.
+## Performance Requirements
+
+Sem dependências pesadas desnecessárias. Preferir componentes leves, visuais
+CSS/HTML, lazy-load abaixo da dobra (`LazyOnVisible`), animação barata,
+layout sem CLS. Boa performance no mobile é obrigatória.
+
+## Responsive Design
+
+Funcionar de mobile pequeno a wide. No mobile: H1 legível, CTA cedo, hero não
+empurra CTA pra baixo demais, cards empilham, navegação usável.
+
+## Engineering Rules
+
+Antes de mudar: inspecionar repo; identificar stack, rotas, design system,
+componentes e tokens; identificar CTAs/forms e integrações confirmadas.
+
+Durante: preservar arquitetura; reusar componentes; evitar duplicação e deps
+desnecessárias; código idiomático e modular; preservar páginas legais,
+analytics e código funcional; não inventar comportamento de backend.
+
+Depois: rodar checks disponíveis (instalar se preciso → lint → typecheck →
+testes → build); corrigir o que der; reportar pendências honestamente.
+
+Comandos: `npm run lint`, `npx tsc -p tsconfig.app.json --noEmit`,
+`npm test` (vitest), `npm run test:e2e` (playwright), `npm run build`.
 
 ## Claims Policy
 
-Do not claim:
+**Não afirmar** resultados de clientes, aumento de conversão/receita, nº de
+usuários/clientes, ratings, depoimentos, integrações, features de IA,
+capacidades de WhatsApp/automação/pagamento — **a menos que verificadas** no
+código, documentação, env, copy existente ou fornecidas pelo usuário. Na
+dúvida, linguagem cautelosa.
 
-- customer results;
-- conversion increases;
-- revenue increases;
-- number of users;
-- number of customers;
-- ratings;
-- testimonials;
-- integrations;
-- AI features;
-- WhatsApp capabilities;
-- payment integrations;
-- automation capabilities;
-
-unless they are verified in the codebase, documentation, environment variables, existing copy, or provided by the user.
-
-When unsure, use cautious language.
-
-## Future Landing Pages
-
-If the repository architecture makes it easy and the task scope allows, prepare structure for future pages:
-
-- `/crm-para-infoprodutores`
-- `/crm-para-agencias`
-- `/crm-para-industrias`
-- `/crm-para-sdr-closer`
-
-Do not prioritize these over the homepage unless explicitly requested.
+Em especial: descrever a IA como **assistida (híbrida)** conforme o princípio
+acima. Não prometer "agente que vende/aborda sozinho" — a abordagem de saída
+sempre passa por aprovação humana.
 
 ## Definition of Done
 
-A task is done only when:
-
-1. The homepage communicates the positioning clearly.
-2. The value proposition is understandable in 5 seconds.
-3. The copy is pain-driven.
-4. The page does not lock Vyzon into only infoproduct businesses.
-5. The ICP/use-case section is clear.
-6. CTAs are visible and repeated.
-7. Core content is crawlable HTML.
-8. SEO basics are implemented.
-9. Accessibility basics are implemented.
-10. Mobile layout works.
-11. Existing legal links remain accessible.
-12. No unverified claim is introduced.
-13. Build passes, or any failure is documented with cause.
+1. Comunica o posicionamento (Central Comercial com EVA para agências) com
+   clareza, entendível em ≤5s.
+2. Copy orientada a dor/conversa; IA enquadrada como assistida/híbrida.
+3. ICP de agências claro; CTAs visíveis e repetidos.
+4. Conteúdo core em HTML rastreável; SEO e acessibilidade básicos.
+5. Mobile funciona; links legais acessíveis.
+6. Nenhuma claim não verificada introduzida.
+7. Migrations aditivas com GRANT+RLS por empresa; nada vai a produção sem OK.
+8. `tsc --noEmit` e `vite build` passam (ou falha documentada com causa).
 
 ## Final Report Format
 
-After completing any task, provide:
-
-- Summary of changes
-- Files changed
-- Positioning/copy decisions
-- Technical decisions
-- SEO/accessibility improvements
-- Commands run
-- Build/lint/test status
-- Risks or assumptions
-- Recommended next steps
+Após qualquer tarefa: Resumo das mudanças; Arquivos alterados; Decisões de
+posicionamento/copy; Decisões técnicas; SEO/acessibilidade; Comandos rodados;
+Status de build/lint/test; Riscos/assunções; Próximos passos.
 
 ## Operating Principle
 
-Prioritize conversion and clarity over decorative complexity.
-
-Every section should answer at least one of:
-
-- Who is this for?
-- What pain does it solve?
-- Why does it matter?
-- How does it work?
-- Why trust it?
-- What should the visitor do next?
+Priorizar conversão e clareza sobre complexidade decorativa. Cada seção deve
+responder ao menos uma de: para quem é? que dor resolve? por que importa? como
+funciona? por que confiar? qual o próximo passo?
