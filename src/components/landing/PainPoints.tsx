@@ -5,7 +5,15 @@
 // LP.5 2026-06-12: reveals por scroll (Rise) e razão interativa — o hover
 // risca a dor (linha azul) e a anotação da EVA troca pela resolução em verde.
 // A página encena o produto: a EVA resolvendo cada dor diante do gestor.
+// LP.5.1 2026-06-12: em telas de toque (sem hover) cada linha se risca sozinha
+// ao entrar na viewport, com stagger — o efeito-chave passa a existir no mobile.
+import { useEffect, useRef } from "react";
 import { Rise } from "./animation/Rise";
+
+const prefersReducedMotion = () =>
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 const PAINS = [
     {
@@ -35,6 +43,32 @@ const PAINS = [
 ];
 
 export const PainPoints = () => {
+    const ledgerRef = useRef<HTMLDivElement>(null);
+
+    // Touch (hover: none): risca cada linha ao entrar na tela, com stagger.
+    useEffect(() => {
+        if (prefersReducedMotion()) return;
+        if (typeof window.matchMedia !== "function" || !window.matchMedia("(hover: none)").matches) return;
+        const root = ledgerRef.current;
+        if (!root || typeof IntersectionObserver === "undefined") return;
+
+        const rows = Array.from(root.querySelectorAll<HTMLElement>(".lp-ledger-row"));
+        const io = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((e) => {
+                    if (!e.isIntersecting) return;
+                    const el = e.target as HTMLElement;
+                    const i = rows.indexOf(el);
+                    window.setTimeout(() => el.classList.add("lp-ledger-row--seen"), Math.max(0, i) * 140);
+                    io.unobserve(el);
+                });
+            },
+            { threshold: 0.6, rootMargin: "0px 0px -10% 0px" }
+        );
+        rows.forEach((r) => io.observe(r));
+        return () => io.disconnect();
+    }, []);
+
     return (
         <section className="relative py-24 sm:py-32 px-4 sm:px-6 lg:px-8 overflow-hidden" style={{ background: "var(--lp-white)" }}>
             <div className="relative max-w-5xl mx-auto">
@@ -91,8 +125,8 @@ export const PainPoints = () => {
                     </div>
                 </Rise>
 
-                {/* Ledger de dores — hover risca a dor e revela a resolução */}
-                <div className="border-t" style={{ borderColor: "var(--lp-line)" }}>
+                {/* Ledger de dores — hover (ou scroll no touch) risca a dor e revela a resolução */}
+                <div ref={ledgerRef} className="border-t" style={{ borderColor: "var(--lp-line)" }}>
                     {PAINS.map(({ n, title, note, fix }, i) => (
                         <Rise key={n} delay={i * 0.08}>
                             <div

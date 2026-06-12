@@ -3507,6 +3507,12 @@ All colors MUST be HSL.
 .lp-ledger-row:hover .lp-note-pain { opacity: 0; }
 .lp-ledger-row:hover .lp-note-fix { opacity: 1; transform: translate3d(0, 0, 0); }
 
+/* LP.5.1: estado "visto" (touch, via IntersectionObserver) espelha o hover */
+.lp-ledger-row--seen { background-color: rgba(21, 86, 192, 0.035); }
+.lp-ledger-row--seen .lp-strike::after { transform: scaleX(1); }
+.lp-ledger-row--seen .lp-note-pain { opacity: 0; }
+.lp-ledger-row--seen .lp-note-fix { opacity: 1; transform: translate3d(0, 0, 0); }
+
 /* ── Cartões de console (Sala de Comando): hover acende o módulo ── */
 .lp-console-card {
   background: var(--lp-ink);
