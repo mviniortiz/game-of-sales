@@ -186,19 +186,19 @@ export const DemoScheduleSection = ({
         try {
             const attribution = getAttribution() || {};
             const phoneE164 = phoneDigits ? `+55${phoneDigits}` : form.phone;
-            const { data, error } = await supabase
-                .from("demo_requests")
-                .insert({
+            // RPC SECURITY DEFINER: insere e devolve o id. Insert direto com
+            // .select() falhava pra visitante anônimo porque o RETURNING é
+            // checado contra a policy de SELECT (que só existe p/ authenticated).
+            const { data, error } = await supabase.rpc("submit_demo_request", {
+                payload: {
                     name: form.name.trim() || "Lead",
                     email: form.email.trim().toLowerCase(),
                     company: null,
                     phone: phoneE164,
                     source: "landing_page",
-                    status: "pending",
                     ...attribution,
-                } as any)
-                .select("id")
-                .single();
+                },
+            });
 
             if (error) {
                 logStep("insert_failed", {
@@ -208,7 +208,7 @@ export const DemoScheduleSection = ({
                 return null;
             }
 
-            const id = (data as { id: string } | null)?.id || null;
+            const id = (data as string | null) || null;
             logStep("insert_success", { id: id ? "ok" : "null" });
             return id;
         } catch (err) {

@@ -91,6 +91,29 @@ const TAG_COLOR_CLASSES: Record<string, string> = {
 
 const DEFAULT_TAG_COLOR_CLASS = TAG_COLOR_CLASSES.slate;
 
+// Paleta única de cores de tag (nome semântico + hex p/ swatch + rótulo PT-BR).
+// Fonte única reusada pelo picker e pela gestão de tags. `tag.color` guarda o
+// NOME (ex.: "emerald"); o card resolve via getTagColorClass.
+export const TAG_PALETTE: ReadonlyArray<{ name: string; hex: string; label: string }> = [
+  { name: "emerald", hex: "#10B981", label: "Verde" },
+  { name: "blue", hex: "#3B82F6", label: "Azul" },
+  { name: "sky", hex: "#0EA5E9", label: "Ciano" },
+  { name: "violet", hex: "#8B5CF6", label: "Violeta" },
+  { name: "purple", hex: "#A855F7", label: "Roxo" },
+  { name: "amber", hex: "#F59E0B", label: "Âmbar" },
+  { name: "orange", hex: "#F97316", label: "Laranja" },
+  { name: "rose", hex: "#F43F5E", label: "Rosa" },
+  { name: "red", hex: "#EF4444", label: "Vermelho" },
+  { name: "slate", hex: "#64748B", label: "Cinza" },
+];
+
+/** Hex correspondente a um nome de cor da paleta (fallback cinza). */
+export function tagHex(color?: string | null): string {
+  if (!color) return "#64748B";
+  if (isHexColor(color)) return color;
+  return TAG_PALETTE.find((c) => c.name === color.trim().toLowerCase())?.hex ?? "#64748B";
+}
+
 /**
  * Retorna classes Tailwind para uma cor semântica (e.g. "emerald") ou
  * fallback neutro. Para hex puro, caller deve aplicar via style inline.

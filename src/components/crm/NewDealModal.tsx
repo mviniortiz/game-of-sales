@@ -42,20 +42,7 @@ import {
   Loader2, Target, User, DollarSign, Phone, Mail,
   Calendar, Flame, CheckCircle2, ChevronDown, CalendarIcon
 } from "lucide-react";
-import type { Stage } from "@/pages/CRM";
-
-// Stage → probability
-const STAGE_PROB: Record<string, number> = {
-  lead: 10,
-  qualification: 25,
-  qualificacao: 25,
-  proposal: 55,
-  proposta: 55,
-  negotiation: 80,
-  negociacao: 80,
-  closed_won: 100,
-  fechado: 100,
-};
+import { type Stage, deriveLegacyStage } from "@/lib/pipelineStyles";
 
 const schema = z.object({
   title: z.string().min(1, "Título é obrigatório"),
@@ -80,6 +67,7 @@ interface NewDealModalProps {
   onClose: () => void;
   onSuccess: () => void;
   stages: Stage[];
+  pipelineId?: string | null;
 }
 
 // Format BRL as user types
@@ -93,7 +81,7 @@ const formatBRL = (raw: string) => {
 const parseBRL = (formatted: string) =>
   parseFloat(formatted.replace(/[^\d,]/g, "").replace(",", ".")) || 0;
 
-export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalProps) => {
+export const NewDealModal = ({ open, onClose, onSuccess, stages, pipelineId }: NewDealModalProps) => {
   const { user, companyId } = useAuth();
   const [displayValue, setDisplayValue] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -119,7 +107,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
 
   const watchedStage = form.watch("stage");
   const watchedHot = form.watch("is_hot");
-  const probability = STAGE_PROB[watchedStage] ?? 10;
+  const probability = stages.find((s) => s.id === watchedStage)?.defaultProbability ?? 10;
 
   const probColor =
     probability >= 70 ? { bar: "bg-emerald-500", text: "text-emerald-400" } :
@@ -146,10 +134,17 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
       if (!user) throw new Error("Não autenticado");
       const numValue = parseBRL(data.value);
 
-      const { data: existing } = await supabase
+      // data.stage é o stage_id (uuid). Grava o stage legado em dual-write.
+      const selected = stages.find((s) => s.id === data.stage);
+      const legacyStage = deriveLegacyStage(selected);
+
+      // Próxima posição dentro do estágio/funil de destino.
+      let posQuery = supabase
         .from("deals").select("position")
-        .eq("stage", data.stage as any)
+        .eq("stage_id", data.stage)
         .order("position", { ascending: false }).limit(1);
+      if (pipelineId) posQuery = posQuery.eq("pipeline_id", pipelineId);
+      const { data: existing } = await posQuery;
 
       const nextPos = existing?.[0]?.position != null ? existing[0].position + 1 : 0;
 
@@ -162,7 +157,12 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages }: NewDealModalP
         account_name: data.account_name || null,
         account_website: data.account_website || null,
         account_industry: data.account_industry || null,
-        stage: data.stage as any,
+        stage: legacyStage as any,
+        // Sem funil ainda: deixa stage_id/pipeline_id nulos p/ o trigger
+        // set_deal_default_pipeline resolver casando legacy_key = stage.
+        stage_id: pipelineId ? data.stage : null,
+        pipeline_id: pipelineId ?? null,
+        is_active: true,
         product_id: data.product_id || null,
         notes: data.notes || null,
         expected_close_date: data.expected_close_date || null,

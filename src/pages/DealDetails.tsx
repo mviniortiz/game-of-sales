@@ -24,6 +24,7 @@ import { ptBR } from "date-fns/locale";
 import {
   ArrowLeft,
   Save,
+  Download,
   Trophy,
   XCircle,
   Check,
@@ -60,24 +61,41 @@ import {
   Star,
 } from "lucide-react";
 import { LostDealModal } from "@/components/crm/LostDealModal";
+import { usePipelineStages } from "@/hooks/usePipelines";
+import { configToStage, deriveLegacyStage, AVAILABLE_COLORS, type StageKind } from "@/lib/pipelineStyles";
 import { AddReminderForm } from "@/components/crm/AddReminderForm";
 import { DealTagPicker } from "@/components/crm/DealTagPicker";
 import { syncWonDealToSale } from "@/utils/salesSync";
 import { DealProducts } from "@/components/crm/DealProducts";
 import { CustomFieldsSection } from "@/components/crm/CustomFieldsSection";
-import { ProposalPDFButton } from "@/components/crm/ProposalPDFGenerator";
+import { ProposalPDFButton, generateProposalPDF } from "@/components/crm/ProposalPDFGenerator";
+import { NovaPropostaModal } from "@/components/crm/NovaPropostaModal";
+import { useProposals } from "@/hooks/useProposals";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { BellRing } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Pipeline stages configuration
-const PIPELINE_STAGES = [
-  { id: "lead", title: "Lead", shortTitle: "Lead", color: "text-slate-400", bgColor: "bg-slate-500/10", borderColor: "border-slate-500/30", dotColor: "bg-slate-400" },
-  { id: "qualification", title: "Qualificação", shortTitle: "Qualif.", color: "text-blue-400", bgColor: "bg-blue-500/10", borderColor: "border-blue-500/30", dotColor: "bg-blue-400" },
-  { id: "proposal", title: "Proposta", shortTitle: "Prop.", color: "text-violet-400", bgColor: "bg-violet-500/10", borderColor: "border-violet-500/30", dotColor: "bg-violet-400" },
-  { id: "negotiation", title: "Negociação", shortTitle: "Negoc.", color: "text-amber-400", bgColor: "bg-amber-500/10", borderColor: "border-amber-500/30", dotColor: "bg-amber-400" },
-  { id: "closed_won", title: "Ganho", shortTitle: "Ganho", color: "text-emerald-400", bgColor: "bg-emerald-500/10", borderColor: "border-emerald-500/30", dotColor: "bg-emerald-400" },
-  { id: "closed_lost", title: "Perdido", shortTitle: "Perdido", color: "text-rose-400", bgColor: "bg-rose-500/10", borderColor: "border-rose-500/30", dotColor: "bg-rose-400" },
+// Fallback de estágios (funil legado de 6) — usado quando o deal ainda não tem
+// pipeline_id ou enquanto os estágios do funil carregam.
+interface StepStage {
+  id: string;
+  title: string;
+  shortTitle: string;
+  color: string;
+  bgColor: string;
+  borderColor: string;
+  dotColor: string;
+  kind: StageKind;
+  legacyKey?: string | null;
+}
+
+const DEFAULT_PIPELINE_STAGES: StepStage[] = [
+  { id: "lead", title: "Lead", shortTitle: "Lead", color: "text-slate-400", bgColor: "bg-slate-500/10", borderColor: "border-slate-500/30", dotColor: "bg-slate-400", kind: "open", legacyKey: "lead" },
+  { id: "qualification", title: "Qualificação", shortTitle: "Qualif.", color: "text-blue-400", bgColor: "bg-blue-500/10", borderColor: "border-blue-500/30", dotColor: "bg-blue-400", kind: "open", legacyKey: "qualification" },
+  { id: "proposal", title: "Proposta", shortTitle: "Prop.", color: "text-violet-400", bgColor: "bg-violet-500/10", borderColor: "border-violet-500/30", dotColor: "bg-violet-400", kind: "open", legacyKey: "proposal" },
+  { id: "negotiation", title: "Negociação", shortTitle: "Negoc.", color: "text-amber-400", bgColor: "bg-amber-500/10", borderColor: "border-amber-500/30", dotColor: "bg-amber-400", kind: "open", legacyKey: "negotiation" },
+  { id: "closed_won", title: "Ganho", shortTitle: "Ganho", color: "text-emerald-400", bgColor: "bg-emerald-500/10", borderColor: "border-emerald-500/30", dotColor: "bg-emerald-400", kind: "won", legacyKey: "closed_won" },
+  { id: "closed_lost", title: "Perdido", shortTitle: "Perdido", color: "text-rose-400", bgColor: "bg-rose-500/10", borderColor: "border-rose-500/30", dotColor: "bg-rose-400", kind: "lost", legacyKey: "closed_lost" },
 ];
 
 interface DealActivity {
@@ -113,6 +131,7 @@ export default function DealDetails() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [showLostModal, setShowLostModal] = useState(false);
+  const [showProposta, setShowProposta] = useState(false);
   const [newNote, setNewNote] = useState("");
   const [editedDeal, setEditedDeal] = useState<any>(null);
 
@@ -132,6 +151,43 @@ export default function DealDetails() {
     },
     enabled: !!id,
   });
+
+  // Propostas do deal + nome da empresa (emissor no PDF)
+  const { proposals, deleteProposal } = useProposals(id);
+  const { data: companyBrand } = useQuery({
+    queryKey: ["company-brand", deal?.company_id],
+    enabled: !!deal?.company_id,
+    queryFn: async () => {
+      const { data } = await supabase.from("companies").select("name, logo_url").eq("id", deal!.company_id).single();
+      return { name: (data?.name as string) || undefined, logoUrl: (data?.logo_url as string) || null };
+    },
+  });
+  const companyName = companyBrand?.name;
+  const companyLogo = companyBrand?.logoUrl ?? null;
+
+  // Estágios do funil do deal (fallback p/ os 6 legados enquanto carrega/sem funil)
+  const { data: dealStageConfigs = [] } = usePipelineStages(deal?.pipeline_id);
+  const usingDynamicStages = dealStageConfigs.length > 0;
+  const PIPELINE_STAGES = useMemo<StepStage[]>(() => {
+    if (!usingDynamicStages) return DEFAULT_PIPELINE_STAGES;
+    return dealStageConfigs.map((c) => {
+      const r = configToStage(c);
+      const dot = AVAILABLE_COLORS.find((x) => x.id === c.colorId)?.dotColor ?? "bg-slate-400";
+      return {
+        id: c.id,
+        title: c.title,
+        shortTitle: c.title.length > 9 ? `${c.title.slice(0, 8)}…` : c.title,
+        color: r.color,
+        bgColor: r.bgColor,
+        borderColor: r.borderColor,
+        dotColor: dot,
+        kind: c.kind,
+        legacyKey: c.legacyKey,
+      };
+    });
+  }, [dealStageConfigs, usingDynamicStages]);
+  // Chave do estágio atual: stage_id quando há funil; senão o stage legado.
+  const currentStageKey = usingDynamicStages ? (deal?.stage_id ?? "") : (deal?.stage ?? "");
 
   // Fetch seller profile
   const { data: sellerProfile } = useQuery({
@@ -340,9 +396,16 @@ export default function DealDetails() {
     },
   });
 
-  // Handle stage change
-  const handleStageChange = async (newStage: string) => {
-    if (newStage === "closed_lost") {
+  // Grava stage_id (quando há funil) + stage legado em dual-write.
+  const stagePatch = (s: StepStage | undefined) => ({
+    stage: deriveLegacyStage(s) as string,
+    ...(usingDynamicStages && s ? { stage_id: s.id } : {}),
+  });
+
+  // Handle stage change (newStageId é stage_id quando dinâmico; senão legacy)
+  const handleStageChange = async (newStageId: string) => {
+    const target = PIPELINE_STAGES.find((s) => s.id === newStageId);
+    if (target?.kind === "lost") {
       setShowLostModal(true);
       return;
     }
@@ -353,12 +416,14 @@ export default function DealDetails() {
       .eq("id", id)
       .single();
     if (!freshDeal) return;
-    updateDealMutation.mutate({ stage: newStage, syncDeal: freshDeal });
+    updateDealMutation.mutate({ ...stagePatch(target), syncDeal: freshDeal });
   };
 
   // Handle lost deal
   const handleLostDeal = async (reason: string) => {
+    const lostStage = PIPELINE_STAGES.find((s) => s.kind === "lost");
     await updateDealMutation.mutateAsync({
+      ...stagePatch(lostStage),
       stage: "closed_lost",
       loss_reason: reason,
     });
@@ -374,7 +439,8 @@ export default function DealDetails() {
       .eq("id", id)
       .single();
     if (!freshDeal) return;
-    updateDealMutation.mutate({ stage: "closed_won", syncDeal: freshDeal });
+    const wonStage = PIPELINE_STAGES.find((s) => s.kind === "won");
+    updateDealMutation.mutate({ ...stagePatch(wonStage), stage: "closed_won", syncDeal: freshDeal });
   };
 
   // Handle save
@@ -461,9 +527,9 @@ export default function DealDetails() {
     );
   }
 
-  const currentStageIndex = PIPELINE_STAGES.findIndex((s) => s.id === deal.stage);
-  const stageConfig = getStageConfig(deal.stage);
-  const isClosed = deal.stage === "closed_won" || deal.stage === "closed_lost";
+  const currentStageIndex = PIPELINE_STAGES.findIndex((s) => s.id === currentStageKey);
+  const stageConfig = getStageConfig(currentStageKey);
+  const isClosed = stageConfig.kind !== "open";
 
   return (
     <>
@@ -593,9 +659,9 @@ export default function DealDetails() {
             {/* Row 2: Pipeline Stepper */}
             <div className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
               {PIPELINE_STAGES.map((stage, index) => {
-                const isActive = stage.id === deal.stage;
+                const isActive = stage.id === currentStageKey;
                 const isPast = index < currentStageIndex;
-                const isStageClosed = stage.id === "closed_won" || stage.id === "closed_lost";
+                const isStageClosed = stage.kind !== "open";
 
                 return (
                   <div key={stage.id} className="flex items-center flex-1 min-w-[50px]">
@@ -1101,6 +1167,18 @@ export default function DealDetails() {
                       )}
                     </TabsTrigger>
                     <TabsTrigger
+                      value="proposals"
+                      className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-emerald-500 data-[state=active]:text-foreground rounded-none px-4 sm:px-5 py-3 text-xs sm:text-sm gap-1.5"
+                    >
+                      <FileText className="h-3.5 w-3.5" />
+                      Propostas
+                      {proposals.length > 0 && (
+                        <span className="ml-1 px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-500 text-[10px] font-bold tabular-nums">
+                          {proposals.length}
+                        </span>
+                      )}
+                    </TabsTrigger>
+                    <TabsTrigger
                       value="history"
                       className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-emerald-500 data-[state=active]:text-foreground rounded-none px-4 sm:px-5 py-3 text-xs sm:text-sm gap-1.5"
                     >
@@ -1210,6 +1288,85 @@ export default function DealDetails() {
                     )}
                   </TabsContent>
 
+                  {/* ── Proposals Tab ──────────────────────────── */}
+                  <TabsContent value="proposals" className="p-4 sm:p-5 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground">Propostas geradas para este negócio</p>
+                      <Button onClick={() => setShowProposta(true)} className="gap-1.5 bg-blue-600 hover:bg-blue-500 text-white">
+                        <FileText className="h-4 w-4" /> Nova proposta
+                      </Button>
+                    </div>
+
+                    {proposals.length === 0 ? (
+                      <div className="text-center py-12 text-muted-foreground">
+                        <FileText className="h-10 w-10 mx-auto mb-3 opacity-20" />
+                        <p className="text-sm font-medium">Nenhuma proposta ainda</p>
+                        <p className="text-xs text-muted-foreground/60 mt-1">Monte os itens e gere um PDF profissional num clique</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {proposals.map((p) => {
+                          const statusMeta: Record<string, { label: string; cls: string }> = {
+                            rascunho: { label: "Rascunho", cls: "bg-slate-500/10 text-slate-600" },
+                            enviada: { label: "Enviada", cls: "bg-blue-500/10 text-blue-600" },
+                            aceita: { label: "Aceita", cls: "bg-emerald-500/10 text-emerald-600" },
+                            recusada: { label: "Recusada", cls: "bg-rose-500/10 text-rose-600" },
+                          };
+                          const sm = statusMeta[p.status] || statusMeta.rascunho;
+                          return (
+                            <div key={p.id} className="flex items-center gap-3 p-3 rounded-xl border border-border bg-card">
+                              <div className="p-2 rounded-lg bg-blue-500/10">
+                                <FileText className="h-4 w-4 text-blue-600" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm font-semibold text-foreground truncate">{p.title}</p>
+                                <p className="text-[11px] text-muted-foreground">
+                                  {(p.items?.length ?? 0)} {(p.items?.length ?? 0) === 1 ? "item" : "itens"} ·{" "}
+                                  {format(new Date(p.created_at), "dd MMM yyyy", { locale: ptBR })}
+                                </p>
+                              </div>
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${sm.cls}`}>{sm.label}</span>
+                              <span className="text-sm font-bold text-blue-600 tabular-nums">
+                                {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(p.total || 0)}
+                              </span>
+                              <Button
+                                size="icon" variant="ghost"
+                                title="Baixar PDF"
+                                onClick={() => { void generateProposalPDF({
+                                  companyName,
+                                  logoUrl: companyLogo,
+                                  brandColor: p.brand_color || undefined,
+                                  dealTitle: deal.title,
+                                  customerName: p.customer_name || deal.customer_name || "Cliente",
+                                  customerEmail: p.customer_email || undefined,
+                                  customerPhone: p.customer_phone || undefined,
+                                  items: p.items || [],
+                                  discountPercent: p.discount_percent,
+                                  conditions: p.conditions || undefined,
+                                  validityDays: p.validity_days,
+                                  intro: p.intro || undefined,
+                                  about: p.about || undefined,
+                                  sections: p.sections || undefined,
+                                }); }}
+                                className="text-muted-foreground hover:text-blue-600"
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="icon" variant="ghost"
+                                title="Excluir"
+                                onClick={() => deleteProposal.mutate(p.id)}
+                                className="text-muted-foreground hover:text-rose-500"
+                              >
+                                <XCircle className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </TabsContent>
+
                   {/* ── History Tab ────────────────────────────── */}
                   <TabsContent value="history" className="p-4 sm:p-5">
                     {activities.length === 0 ? (
@@ -1292,6 +1449,20 @@ export default function DealDetails() {
         onClose={() => setShowLostModal(false)}
         onConfirm={handleLostDeal}
         dealTitle={deal.title}
+      />
+
+      <NovaPropostaModal
+        open={showProposta}
+        onClose={() => setShowProposta(false)}
+        deal={{
+          id: deal.id,
+          title: deal.title,
+          customer_name: deal.customer_name,
+          customer_email: deal.customer_email,
+          customer_phone: deal.customer_phone,
+        }}
+        companyName={companyName}
+        logoUrl={companyLogo}
       />
     </>
   );

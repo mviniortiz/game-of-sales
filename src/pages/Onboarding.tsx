@@ -141,6 +141,13 @@ const PLAN_ICONS: Record<string, LucideIcon> = {
     pro: Rocket,
 };
 
+// Resumo curto do que cada plano entrega — exibido no card de seleção (Step 5)
+const PLAN_TAGLINE: Record<string, string> = {
+    starter: "Dashboard, metas e registro de vendas",
+    plus: "Pipeline, ranking e relatórios completos",
+    pro: "CRM completo, integrações e multi-empresa",
+};
+
 const registerSchema = z.object({
     nome: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
     email: z.string().email("Email inválido"),
@@ -1374,8 +1381,8 @@ export default function Onboarding() {
                             </button>
                         </div>
 
-                        {/* Plan cards com hierarquia — popular destacado */}
-                        <div className="grid gap-2.5 mb-6">
+                        {/* Plan cards com hierarquia — selecionado em destaque forte */}
+                        <div className="grid gap-2.5 mb-6 pt-1">
                             {["starter", "plus", "pro"].map((planId) => {
                                 const plan = PLANS[planId];
                                 const PlanIcon = PLAN_ICONS[planId];
@@ -1384,30 +1391,41 @@ export default function Onboarding() {
                                 const monthlyDisplay = billingCycle === "annual"
                                     ? Math.round(getAnnualMonthlyEquivalent(plan))
                                     : plan.monthlyPrice;
+                                const sellersLabel = plan.limits.sellers === 1
+                                    ? "1 vendedor"
+                                    : `Até ${plan.limits.sellers} vendedores`;
 
                                 return (
                                     <motion.button
                                         key={planId}
                                         type="button"
                                         onClick={() => setSelectedPlan(planId)}
-                                        whileHover={{ y: -1 }}
-                                        className={`relative flex items-center gap-4 px-4 rounded-2xl border text-left overflow-visible ${
-                                            isPopular ? "py-4" : "py-3.5"
-                                        } ${
+                                        aria-pressed={isSelected}
+                                        whileHover={{ scale: isSelected ? 1 : 1.01 }}
+                                        whileTap={{ scale: 0.99 }}
+                                        className={`relative flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-left transition-all duration-200 ${
                                             isSelected
-                                                ? isPopular
-                                                    ? "bg-gradient-to-br from-[rgba(37,99,235,0.12)] to-[rgba(37,99,235,0.04)] border-[rgba(37,99,235,0.55)] shadow-[0_0_24px_-4px_rgba(37,99,235,0.4)]"
-                                                    : "bg-[rgba(37,99,235,0.08)] border-[rgba(37,99,235,0.45)] shadow-[0_0_15px_-5px_rgba(37,99,235,0.3)]"
+                                                ? "bg-[rgba(37,99,235,0.07)] ring-2 ring-[#2563EB] shadow-[0_6px_22px_-8px_rgba(37,99,235,0.5)]"
                                                 : isPopular
-                                                    ? "bg-[rgba(37,99,235,0.04)] border-[rgba(37,99,235,0.2)] hover:border-[rgba(37,99,235,0.40)]"
-                                                    : "bg-white border-[#E6EDF5] hover:border-[#D7DEE9]"
+                                                    ? "bg-white ring-1 ring-[rgba(37,99,235,0.35)] hover:ring-[rgba(37,99,235,0.6)]"
+                                                    : "bg-white ring-1 ring-[#E6EDF5] hover:ring-[#C9D4E3]"
                                         }`}
                                     >
                                         {isPopular && (
-                                            <div className="absolute -top-2 right-4 px-2 py-0.5 rounded-full bg-[#2563EB] text-white text-[9px] font-bold uppercase tracking-wider shadow-[0_0_10px_rgba(37,99,235,0.4)]">
-                                                Popular
+                                            <div className="absolute -top-2 right-4 px-2 py-0.5 rounded-full bg-[#2563EB] text-white text-[9px] font-bold uppercase tracking-wider shadow-[0_2px_8px_rgba(37,99,235,0.4)]">
+                                                Mais popular
                                             </div>
                                         )}
+
+                                        {/* Radio à esquerda — affordance clara de seleção */}
+                                        <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-all ${
+                                            isSelected
+                                                ? "bg-[#2563EB] ring-2 ring-[rgba(37,99,235,0.25)]"
+                                                : "bg-white ring-2 ring-[#D7DEE9]"
+                                        }`}>
+                                            {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                                        </div>
+
                                         <div className={`p-2 rounded-lg shrink-0 ${
                                             isSelected
                                                 ? "bg-[rgba(37,99,235,0.16)]"
@@ -1423,30 +1441,36 @@ export default function Onboarding() {
                                                         : "text-[#64748B]"
                                             }`} />
                                         </div>
+
                                         <div className="flex-1 min-w-0">
-                                            <p className={`font-bold text-sm ${
-                                                isSelected ? "text-[#2563EB]" : "text-[#0B1220]"
-                                            }`}>
-                                                {plan.name}
-                                            </p>
-                                            <p className="text-xs text-[#94A3B8] mt-0.5">
-                                                {plan.description}
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <p className={`font-bold text-sm ${
+                                                    isSelected ? "text-[#2563EB]" : "text-[#0B1220]"
+                                                }`}>
+                                                    {plan.name}
+                                                </p>
+                                                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${
+                                                    isSelected
+                                                        ? "bg-[rgba(37,99,235,0.12)] text-[#2563EB]"
+                                                        : "bg-[#F1F5F9] text-[#64748B]"
+                                                }`}>
+                                                    {sellersLabel}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-[#94A3B8] mt-0.5 truncate">
+                                                {PLAN_TAGLINE[planId]}
                                             </p>
                                         </div>
+
                                         <div className="text-right shrink-0">
-                                            <p className={`font-bold ${isPopular ? "text-xl" : "text-lg"} ${
+                                            <p className={`font-bold leading-none ${isPopular ? "text-xl" : "text-lg"} ${
                                                 isSelected ? "text-[#2563EB]" : "text-[#0B1220]"
                                             }`}>
                                                 R$ {monthlyDisplay}
                                             </p>
-                                            <p className="text-[10px] text-[#94A3B8]">/mês</p>
-                                        </div>
-                                        <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-opacity ${
-                                            isSelected
-                                                ? "bg-[#2563EB] opacity-100"
-                                                : "bg-[#F1F5F9] opacity-60"
-                                        }`}>
-                                            {isSelected && <Check className="w-3 h-3 text-white" />}
+                                            <p className="text-[10px] text-[#94A3B8] mt-1">
+                                                /mês{billingCycle === "annual" ? " no anual" : ""}
+                                            </p>
                                         </div>
                                     </motion.button>
                                 );
@@ -1546,7 +1570,7 @@ export default function Onboarding() {
                                     </>
                                 ) : (
                                     <span className="flex items-center justify-center gap-2">
-                                        Começar teste grátis
+                                        Testar {currentPlan?.name || "grátis"} por 14 dias
                                         <ArrowRight className="h-5 w-5" />
                                     </span>
                                 )}

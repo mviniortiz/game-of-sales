@@ -224,14 +224,17 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
       case "duplicate":
         (async () => {
           try {
-            // Get max position in same stage
-            const { data: maxPosData } = await supabase
+            // Get max position in same stage (mesmo funil/estágio)
+            let posQuery = supabase
               .from("deals")
               .select("position")
-              .eq("stage", deal.stage)
               .eq("user_id", user?.id ?? "")
               .order("position", { ascending: false })
               .limit(1);
+            posQuery = deal.stage_id
+              ? posQuery.eq("stage_id", deal.stage_id)
+              : posQuery.eq("stage", deal.stage);
+            const { data: maxPosData } = await posQuery;
             const newPosition = (maxPosData?.[0]?.position ?? 0) + 1;
 
             const { error } = await supabase.from("deals").insert({
@@ -241,6 +244,9 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
               customer_email: deal.customer_email ?? null,
               customer_phone: deal.customer_phone ?? null,
               stage: deal.stage,
+              stage_id: deal.stage_id ?? null,
+              pipeline_id: deal.pipeline_id ?? null,
+              is_active: deal.is_active ?? true,
               product_id: deal.product_id ?? null,
               notes: deal.notes ?? null,
               expected_close_date: deal.expected_close_date ?? null,

@@ -7,6 +7,7 @@ import {
     Check,
     CheckCheck,
     CheckCircle2,
+    FileText,
     Loader2,
     Mic,
     MoreHorizontal,
@@ -15,6 +16,8 @@ import {
     UserCheck,
     X,
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { TemplatePicker } from "@/components/whatsapp/TemplatePicker";
 import { EvaNode } from "@/components/landing/EvaNode";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AudioMessagePlayer } from "@/components/whatsapp/AudioMessagePlayer";
@@ -320,6 +323,8 @@ function ConversationView({
                     onOpenAudio={() => setShowAudio(true)}
                     sending={sending}
                     canSendAudio={!!onSendAudio}
+                    contactName={chat.name}
+                    contactPhone={chat.phone}
                 />
             )}
         </>
@@ -732,6 +737,8 @@ interface ComposerProps {
     sending: boolean;
     canSendAudio: boolean;
     inputRef: React.RefObject<HTMLTextAreaElement>;
+    contactName?: string;
+    contactPhone?: string;
 }
 
 function Composer({
@@ -743,7 +750,19 @@ function Composer({
     sending,
     canSendAudio,
     inputRef,
+    contactName,
+    contactPhone,
 }: ComposerProps) {
+    const { user, companyId } = useAuth();
+    const [showTemplates, setShowTemplates] = useState(false);
+
+    // Insere o template no composer (anexa se já houver texto) e foca o input.
+    const handleInsertTemplate = (text: string) => {
+        onChange(value.trim() ? `${value.trim()} ${text}` : text);
+        setShowTemplates(false);
+        requestAnimationFrame(() => inputRef.current?.focus());
+    };
+
     return (
         <div
             className="px-3 sm:px-5 py-3"
@@ -753,6 +772,16 @@ function Composer({
             }}
         >
             <div className="max-w-[720px] mx-auto">
+            {showTemplates && (
+                <TemplatePicker
+                    companyId={companyId}
+                    userId={user?.id}
+                    onSelect={handleInsertTemplate}
+                    onClose={() => setShowTemplates(false)}
+                    contactName={contactName}
+                    contactPhone={contactPhone}
+                />
+            )}
             <div
                 className="flex items-end gap-2 rounded-xl px-2 py-2"
                 style={{
@@ -768,6 +797,17 @@ function Composer({
                     aria-label="Anexar mídia"
                 >
                     <Paperclip className="h-4 w-4" />
+                </button>
+
+                <button
+                    type="button"
+                    onClick={() => setShowTemplates((v) => !v)}
+                    className="h-8 w-8 rounded-lg flex items-center justify-center transition-colors shrink-0 hover:bg-white"
+                    style={{ color: showTemplates ? "#2563EB" : "#94A3B8" }}
+                    title="Templates de mensagem"
+                    aria-label="Templates de mensagem"
+                >
+                    <FileText className="h-4 w-4" />
                 </button>
 
                 <textarea

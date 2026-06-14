@@ -80,6 +80,10 @@ const LostDealModal = lazy(() => import("@/components/crm/LostDealModal").then((
 const Confetti = lazy(() => import("@/components/crm/Confetti").then((m) => ({ default: m.Confetti })));
 const NovaTarefaModal = lazy(() => import("@/components/crm/NovaTarefaModal").then((m) => ({ default: m.NovaTarefaModal })));
 import { DealProducts } from "@/components/crm/DealProducts";
+import { NovaPropostaModal } from "@/components/crm/NovaPropostaModal";
+import { generateProposalPDF } from "@/components/crm/ProposalPDFGenerator";
+import { useProposals } from "@/hooks/useProposals";
+import { FileText as FileTextIcon, Download as DownloadIcon, Trash2 as Trash2Icon } from "lucide-react";
 import { CustomFieldsSection } from "@/components/crm/CustomFieldsSection";
 import { usePlan } from "@/hooks/usePlan";
 // F6T.2 — tags transversais (sistema F6T.1)
@@ -583,6 +587,18 @@ export default function DealCommandCenter() {
             return data;
         },
         enabled: !!id,
+    });
+
+    // Propostas + marca da empresa (logo/nome p/ o PDF)
+    const [showProposta, setShowProposta] = useState(false);
+    const { proposals, deleteProposal } = useProposals(id);
+    const { data: companyBrand } = useQuery({
+        queryKey: ["company-brand", deal?.company_id],
+        enabled: !!deal?.company_id,
+        queryFn: async () => {
+            const { data } = await supabase.from("companies").select("name, logo_url").eq("id", deal!.company_id).single();
+            return { name: (data?.name as string) || undefined, logoUrl: (data?.logo_url as string) || null };
+        },
     });
 
     const { data: companyCallsAddon } = useQuery({
@@ -1465,16 +1481,72 @@ export default function DealCommandCenter() {
 
                                         {/* â"€â"€ Produtos/Proposta â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
                                         {activeTab === "propostas" && (
-                                            <div className="p-5">
-                                                {deal?.company_id ? (
-                                                    <DealProducts
-                                                        dealId={id!}
-                                                        companyId={deal.company_id}
-                                                        deal={{ id: deal.id, title: deal.title, customer_name: deal.customer_name, customer_email: deal.customer_email, customer_phone: deal.customer_phone }}
-                                                    />
-                                                ) : (
-                                                    <div className="flex items-center justify-center py-12 text-muted-foreground">
-                                                        <Loader2 className="h-6 w-6 animate-spin" />
+                                            <div className="p-5 space-y-5">
+                                                {/* Propostas (editor + lista) */}
+                                                <div className="space-y-3">
+                                                    <div className="flex items-center justify-between">
+                                                        <p className="text-sm font-semibold text-foreground">Propostas</p>
+                                                        <Button onClick={() => setShowProposta(true)} size="sm" className="gap-1.5 bg-blue-600 hover:bg-blue-500 text-white">
+                                                            <FileTextIcon className="h-4 w-4" /> Nova proposta
+                                                        </Button>
+                                                    </div>
+                                                    {proposals.length === 0 ? (
+                                                        <div className="text-center py-8 text-muted-foreground rounded-xl border border-dashed border-border">
+                                                            <FileTextIcon className="h-8 w-8 mx-auto mb-2 opacity-20" />
+                                                            <p className="text-sm font-medium">Nenhuma proposta ainda</p>
+                                                            <p className="text-xs text-muted-foreground/60 mt-1">Monte os itens, personalize (logo/cor/seções) e gere o PDF</p>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="space-y-2">
+                                                            {proposals.map((p) => {
+                                                                const statusMeta: Record<string, { label: string; cls: string }> = {
+                                                                    rascunho: { label: "Rascunho", cls: "bg-slate-500/10 text-slate-600" },
+                                                                    enviada: { label: "Enviada", cls: "bg-blue-500/10 text-blue-600" },
+                                                                    aceita: { label: "Aceita", cls: "bg-emerald-500/10 text-emerald-600" },
+                                                                    recusada: { label: "Recusada", cls: "bg-rose-500/10 text-rose-600" },
+                                                                };
+                                                                const sm = statusMeta[p.status] || statusMeta.rascunho;
+                                                                return (
+                                                                    <div key={p.id} className="flex items-center gap-3 p-3 rounded-xl border border-border bg-card">
+                                                                        <div className="p-2 rounded-lg bg-blue-500/10"><FileTextIcon className="h-4 w-4 text-blue-600" /></div>
+                                                                        <div className="min-w-0 flex-1">
+                                                                            <p className="text-sm font-semibold text-foreground truncate">{p.title}</p>
+                                                                            <p className="text-[11px] text-muted-foreground">
+                                                                                {(p.items?.length ?? 0)} {(p.items?.length ?? 0) === 1 ? "item" : "itens"} · {format(new Date(p.created_at), "dd MMM yyyy", { locale: ptBR })}
+                                                                            </p>
+                                                                        </div>
+                                                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${sm.cls}`}>{sm.label}</span>
+                                                                        <span className="text-sm font-bold text-blue-600 tabular-nums">
+                                                                            {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(p.total || 0)}
+                                                                        </span>
+                                                                        <Button size="icon" variant="ghost" title="Baixar PDF" className="text-muted-foreground hover:text-blue-600"
+                                                                            onClick={() => { void generateProposalPDF({
+                                                                                companyName: companyBrand?.name, logoUrl: companyBrand?.logoUrl, brandColor: p.brand_color || undefined,
+                                                                                dealTitle: deal.title, customerName: p.customer_name || deal.customer_name || "Cliente",
+                                                                                customerEmail: p.customer_email || undefined, customerPhone: p.customer_phone || undefined,
+                                                                                items: p.items || [], discountPercent: p.discount_percent, conditions: p.conditions || undefined,
+                                                                                validityDays: p.validity_days, intro: p.intro || undefined, about: p.about || undefined, sections: p.sections || undefined,
+                                                                            }); }}>
+                                                                            <DownloadIcon className="h-4 w-4" />
+                                                                        </Button>
+                                                                        <Button size="icon" variant="ghost" title="Excluir" className="text-muted-foreground hover:text-rose-500" onClick={() => deleteProposal.mutate(p.id)}>
+                                                                            <Trash2Icon className="h-4 w-4" />
+                                                                        </Button>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Produtos do deal */}
+                                                {deal?.company_id && (
+                                                    <div className="pt-4 border-t border-border">
+                                                        <DealProducts
+                                                            dealId={id!}
+                                                            companyId={deal.company_id}
+                                                            deal={{ id: deal.id, title: deal.title, customer_name: deal.customer_name, customer_email: deal.customer_email, customer_phone: deal.customer_phone }}
+                                                        />
                                                     </div>
                                                 )}
                                             </div>
@@ -1804,6 +1876,16 @@ export default function DealCommandCenter() {
                             dealTitle={deal.title}
                         />
                     </Suspense>
+                )}
+
+                {deal && (
+                    <NovaPropostaModal
+                        open={showProposta}
+                        onClose={() => setShowProposta(false)}
+                        deal={{ id: deal.id, title: deal.title, customer_name: deal.customer_name, customer_email: deal.customer_email, customer_phone: deal.customer_phone }}
+                        companyName={companyBrand?.name}
+                        logoUrl={companyBrand?.logoUrl}
+                    />
                 )}
             </div>
         </>

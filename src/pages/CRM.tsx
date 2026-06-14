@@ -23,7 +23,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FilterSelect, FilterChip } from "@/components/filters";
+import { FilterSelect, FilterChip, MultiSelectFilter } from "@/components/filters";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
@@ -53,6 +53,7 @@ import {
   ChevronDown,
   CheckSquare,
   ArrowRightCircle,
+  ArrowDownUp,
   UserPlus,
   CheckCheck,
 } from "lucide-react";
@@ -79,77 +80,36 @@ import { KanbanColumn } from "@/components/crm/KanbanColumn";
 import { DealCard } from "@/components/crm/DealCard";
 import { NewDealModal } from "@/components/crm/NewDealModal";
 import { KanbanSkeleton } from "@/components/crm/KanbanSkeleton";
-import { PipelineConfigModal, StageConfig } from "@/components/crm/PipelineConfigModal";
+import { PipelineConfigModal } from "@/components/crm/PipelineConfigModal";
 import { LostDealModal } from "@/components/crm/LostDealModal";
 import { WinCelebration } from "@/components/crm/WinCelebration";
 import { useDealTags } from "@/hooks/useDealTags";
 import { usePipelineContextData } from "@/hooks/usePipelineContextData";
 import { useDealsTags } from "@/hooks/useDealsTags";
-import { stageLabelFor } from "@/lib/demoPipeline";
+import {
+  configToStage,
+  deriveLegacyStage,
+  type StageConfig,
+  type Stage,
+  type StageKind,
+} from "@/lib/pipelineStyles";
+import {
+  usePipelines,
+  usePipelineStages,
+  useUpdatePipeline,
+  useCreatePipeline,
+  useSetDefaultPipeline,
+  useArchivePipeline,
+  useStageDealCounts,
+  DEFAULT_STAGE_CONFIGS,
+} from "@/hooks/usePipelines";
 
-// Icon mapping
-const ICON_MAP: Record<string, LucideIcon> = {
-  target: Target,
-  users: Users,
-  dollar: DollarSign,
-  trending: TrendingUp,
-  check: CheckCircle,
-  alert: AlertCircle,
-  sparkles: Sparkles,
-  zap: Zap,
-  star: Star,
-  x: XCircle,
-};
+// ICON_MAP, COLOR_MAP, configToStage, Stage e StageConfig agora vivem em
+// @/lib/pipelineStyles (compartilhados entre CRM, DealDetails, dashboards).
 
-// Color mapping — LP-PIPE.1 2026-06-09: tons -600 (light-first; os -400 eram
-// da era dark e ficavam lavados em fundo claro). Indigo/purple deixam de
-// colapsar em emerald: cada estágio ganha matiz próprio.
-const COLOR_MAP: Record<string, { color: string; bgColor: string; borderColor: string }> = {
-  gray: { color: "text-slate-500", bgColor: "bg-slate-500/10", borderColor: "border-slate-500/30" },
-  blue: { color: "text-blue-600", bgColor: "bg-blue-500/10", borderColor: "border-blue-500/30" },
-  indigo: { color: "text-indigo-600", bgColor: "bg-indigo-500/10", borderColor: "border-indigo-500/30" },
-  purple: { color: "text-violet-600", bgColor: "bg-violet-500/10", borderColor: "border-violet-500/30" },
-  amber: { color: "text-amber-600", bgColor: "bg-amber-500/10", borderColor: "border-amber-500/30" },
-  emerald: { color: "text-emerald-600", bgColor: "bg-emerald-500/10", borderColor: "border-emerald-500/30" },
-  rose: { color: "text-rose-600", bgColor: "bg-rose-500/10", borderColor: "border-rose-500/30" },
-  cyan: { color: "text-cyan-600", bgColor: "bg-cyan-500/10", borderColor: "border-cyan-500/30" },
-};
-
-// Valid database stage IDs - must match deal_stage enum in Supabase
-const VALID_DB_STAGES = ["lead", "qualification", "proposal", "negotiation", "closed_won", "closed_lost"] as const;
-type ValidDbStage = typeof VALID_DB_STAGES[number];
-
-// Default stages configuration - IDs must match database enum
-const DEFAULT_STAGES: StageConfig[] = [
-  { id: "lead", title: "Lead", iconId: "target", colorId: "gray" },
-  { id: "qualification", title: "Qualificação", iconId: "users", colorId: "blue" },
-  { id: "proposal", title: "Proposta", iconId: "dollar", colorId: "indigo" },
-  { id: "negotiation", title: "Negociação", iconId: "trending", colorId: "amber" },
-  { id: "closed_won", title: "Ganho", iconId: "check", colorId: "emerald" },
-  { id: "closed_lost", title: "Perdido", iconId: "target", colorId: "gray" },
-];
-
-// Convert StageConfig to Stage with icon and colors
-const configToStage = (config: StageConfig) => {
-  const colors = COLOR_MAP[config.colorId] || COLOR_MAP.gray;
-  return {
-    id: config.id,
-    title: config.title,
-    icon: ICON_MAP[config.iconId] || Target,
-    ...colors,
-  };
-};
-
+// stage_id é um UUID de pipeline_stages. `stage` permanece como o valor LEGADO
+// (lead..closed_lost) em dual-write, ainda lido por triggers/webhooks/RPCs.
 export type StageId = string;
-
-export interface Stage {
-  id: string;
-  title: string;
-  icon: LucideIcon;
-  color: string;
-  bgColor: string;
-  borderColor: string;
-}
 
 export interface DealLastActivity {
   type: "note" | "call" | "stage_change" | "update";
@@ -164,7 +124,10 @@ export interface Deal {
   customer_name: string;
   customer_email?: string | null;
   customer_phone?: string | null;
-  stage: StageId;
+  stage: string;          // legado (closed_won, ...) — dual-write
+  stage_id?: string | null; // chave de coluna (pipeline_stages.id)
+  pipeline_id?: string | null;
+  is_active?: boolean;
   position: number;
   user_id: string;
   company_id?: string | null;
@@ -182,27 +145,6 @@ export interface Deal {
   assignee_outside_company?: boolean;
   lastActivity?: DealLastActivity | null;
 }
-
-// LocalStorage key for pipeline config - now includes company ID
-const PIPELINE_CONFIG_KEY_PREFIX = "vyzon_pipeline_config_v3_";
-const LEGACY_PIPELINE_KEYS = ["vyzon_pipeline_config_v2", "vyzon_pipeline_config_v2"];
-
-// Helper to get company-specific key
-const getPipelineConfigKey = (companyId: string | null) =>
-  companyId ? `${PIPELINE_CONFIG_KEY_PREFIX}${companyId}` : null;
-
-// Validate that loaded stages have valid structure (no longer filtering by enum)
-const validateStages = (stages: StageConfig[]): StageConfig[] => {
-  // Filter stages that have valid structure (id, title, iconId, colorId)
-  const validStages = stages.filter(s => s.id && s.title && s.iconId && s.colorId);
-
-  // If no valid stages, return defaults
-  if (validStages.length === 0) {
-    return DEFAULT_STAGES;
-  }
-
-  return validStages;
-};
 
 export default function CRM() {
   const { user, isSuperAdmin, companyId } = useAuth();
@@ -227,8 +169,15 @@ export default function CRM() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [celebrationMessage, setCelebrationMessage] = useState("");
   const [celebrationValue, setCelebrationValue] = useState(0);
-  const [selectedSeller, setSelectedSeller] = useState<string>("all");
+  const [selectedSellers, setSelectedSellers] = useState<string[]>([]); // vazio = todos
+  const [filterStatusKind, setFilterStatusKind] = useState<"all" | "open" | "won" | "lost">("all");
+  const [filterActive, setFilterActive] = useState<"all" | "active" | "inactive">("all");
+  const [sortBy, setSortBy] = useState<"position" | "az" | "za" | "value_desc" | "value_asc" | "created" | "updated">("position");
   const [dealToDelete, setDealToDelete] = useState<Deal | null>(null);
+
+  // Múltiplos funis (pipelines)
+  const [selectedPipelineId, setSelectedPipelineId] = useState<string | null>(null);
+  const [showNewPipeline, setShowNewPipeline] = useState(false);
 
   // Advanced filter state
   const [filterHotDeals, setFilterHotDeals] = useState(false);
@@ -272,6 +221,8 @@ export default function CRM() {
     setFilterProbability("all");
     setFilterDateRange("all");
     setFilterTagIds([]);
+    setFilterStatusKind("all");
+    setFilterActive("all");
   }, []);
 
   // Fetch deal-tag assignments for filtering
@@ -358,44 +309,111 @@ export default function CRM() {
     return result;
   }, [filterHotDeals, filterRottingDeals, filterProbability, filterDateRange, filterTagIds, dealTagMap]);
 
-  // Load stages from localStorage based on company - defaults if none found
-  const [stageConfigs, setStageConfigs] = useState<StageConfig[]>(DEFAULT_STAGES);
+  // ── Funis (pipelines) — substituem o antigo localStorage de estágios ───────
+  const { data: pipelines = [] } = usePipelines(effectiveCompanyId);
+  const updatePipeline = useUpdatePipeline(effectiveCompanyId);
+  const createPipeline = useCreatePipeline(effectiveCompanyId);
+  const setDefaultPipeline = useSetDefaultPipeline(effectiveCompanyId);
+  const archivePipeline = useArchivePipeline(effectiveCompanyId);
 
-  // Reload stages when company changes
+  // Seleciona o funil quando a lista carrega ou muda a company. Restaura o
+  // último funil escolhido (localStorage por company); senão cai no default.
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const configKey = getPipelineConfigKey(effectiveCompanyId);
-
-    if (!configKey) {
-      // No company context - use defaults
-      setStageConfigs(DEFAULT_STAGES);
+    if (!pipelines.length) {
+      setSelectedPipelineId(null);
       return;
     }
+    setSelectedPipelineId((prev) => {
+      if (prev && pipelines.some((p) => p.id === prev)) return prev;
+      const saved = effectiveCompanyId
+        ? localStorage.getItem(`vyzon_selected_pipeline_${effectiveCompanyId}`)
+        : null;
+      if (saved && pipelines.some((p) => p.id === saved)) return saved;
+      const def = pipelines.find((p) => p.is_default) ?? pipelines[0];
+      return def.id;
+    });
+  }, [pipelines, effectiveCompanyId]);
 
-    const saved = localStorage.getItem(configKey);
-
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        const validated = validateStages(parsed);
-        setStageConfigs(validated);
-      } catch {
-        setStageConfigs(DEFAULT_STAGES);
-      }
-    } else {
-      // No saved config for this company - use defaults
-      setStageConfigs(DEFAULT_STAGES);
+  // Persiste o funil selecionado pra restaurar ao voltar na aba.
+  useEffect(() => {
+    if (effectiveCompanyId && selectedPipelineId) {
+      localStorage.setItem(`vyzon_selected_pipeline_${effectiveCompanyId}`, selectedPipelineId);
     }
+  }, [selectedPipelineId, effectiveCompanyId]);
 
-    // Clean up legacy keys (one-time migration)
-    LEGACY_PIPELINE_KEYS.forEach((key) => localStorage.removeItem(key));
-  }, [effectiveCompanyId]);
+  const { data: stageConfigs = [] } = usePipelineStages(selectedPipelineId);
 
-  // Convert configs to full stage objects
-  const STAGES = useMemo(
-    () => stageConfigs.map((c) => configToStage({ ...c, title: stageLabelFor(effectiveCompanyId, c.id, c.title) })),
-    [stageConfigs, effectiveCompanyId],
+  const selectedPipeline = useMemo(
+    () => pipelines.find((p) => p.id === selectedPipelineId) ?? null,
+    [pipelines, selectedPipelineId],
+  );
+
+  const { data: stageDealCounts = {} } = useStageDealCounts(selectedPipelineId);
+
+  // Estágios resolvidos (ícone + cor). Fallback p/ defaults só enquanto carrega
+  // ou se o funil não tiver estágios — nesse caso não há deals para deslocar.
+  const STAGES = useMemo<Stage[]>(
+    () => (stageConfigs.length ? stageConfigs : DEFAULT_STAGE_CONFIGS).map(configToStage),
+    [stageConfigs],
+  );
+
+  // Lookups por stage_id (kind + valor legado p/ dual-write).
+  const stageById = useMemo(() => {
+    const m = new Map<string, Stage>();
+    STAGES.forEach((s) => m.set(s.id, s));
+    return m;
+  }, [STAGES]);
+  const configById = useMemo(() => {
+    const m = new Map<string, StageConfig>();
+    (stageConfigs.length ? stageConfigs : DEFAULT_STAGE_CONFIGS).forEach((c) => m.set(c.id, c));
+    return m;
+  }, [stageConfigs]);
+  const kindOf = useCallback(
+    (stageId?: string | null): StageKind => stageById.get(stageId ?? "")?.kind ?? "open",
+    [stageById],
+  );
+  const legacyOf = useCallback(
+    (stageId?: string | null) => deriveLegacyStage(configById.get(stageId ?? "")),
+    [configById],
+  );
+  const firstStageId = STAGES[0]?.id;
+
+  // Ordenação compartilhada (kanban por coluna + lista). "position" = ordem manual.
+  const sortDeals = useCallback(
+    (arr: Deal[]): Deal[] => {
+      const a = [...arr];
+      const ts = (d: Deal, f: "created_at" | "updated_at") => new Date(d[f] || d.created_at || 0).getTime();
+      switch (sortBy) {
+        case "az": return a.sort((x, y) => x.title.localeCompare(y.title, "pt-BR"));
+        case "za": return a.sort((x, y) => y.title.localeCompare(x.title, "pt-BR"));
+        case "value_desc": return a.sort((x, y) => (Number(y.value) || 0) - (Number(x.value) || 0));
+        case "value_asc": return a.sort((x, y) => (Number(x.value) || 0) - (Number(y.value) || 0));
+        case "created": return a.sort((x, y) => ts(y, "created_at") - ts(x, "created_at"));
+        case "updated": return a.sort((x, y) => ts(y, "updated_at") - ts(x, "updated_at"));
+        case "position":
+        default: return a.sort((x, y) => x.position - y.position);
+      }
+    },
+    [sortBy],
+  );
+
+  // Pipeline único de filtragem (vendedor multi + busca + avançados + status + ativo).
+  // Usado por dealsByStage, stageTotals, filteredDeals e allVisibleDealIds.
+  const filterDeals = useCallback(
+    (list: Deal[]): Deal[] => {
+      let r = selectedSellers.length === 0 ? list : list.filter((d) => selectedSellers.includes(d.user_id));
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        r = r.filter((d) => d.title.toLowerCase().includes(q) || d.customer_name.toLowerCase().includes(q));
+      }
+      r = applyAdvancedFilters(r);
+      if (filterStatusKind !== "all") r = r.filter((d) => kindOf(d.stage_id) === filterStatusKind);
+      if (filterActive !== "all") {
+        r = r.filter((d) => (filterActive === "active" ? d.is_active !== false : d.is_active === false));
+      }
+      return r;
+    },
+    [selectedSellers, searchQuery, applyAdvancedFilters, filterStatusKind, filterActive, kindOf],
   );
 
   // Optimized sensors for fast, responsive drag
@@ -407,18 +425,15 @@ export default function CRM() {
     })
   );
 
-  // Save stages to localStorage when they change - now company-specific
+  // Persiste os estágios do funil atual (editor). Substitui o localStorage.
   const handleSaveStages = (newConfigs: StageConfig[]) => {
-    setStageConfigs(newConfigs);
-    const configKey = getPipelineConfigKey(effectiveCompanyId);
-    if (configKey) {
-      localStorage.setItem(configKey, JSON.stringify(newConfigs));
-    }
+    if (!selectedPipelineId) return;
+    updatePipeline.mutate({ pipelineId: selectedPipelineId, stages: newConfigs });
   };
 
-  // Fetch deals
+  // Fetch deals (escopados ao funil selecionado)
   const { data: deals = [], isLoading } = useQuery({
-    queryKey: ["deals", effectiveCompanyId],
+    queryKey: ["deals", effectiveCompanyId, selectedPipelineId],
     queryFn: async () => {
       let query = supabase
         .from("deals")
@@ -427,6 +442,9 @@ export default function CRM() {
 
       if (effectiveCompanyId) {
         query = query.eq("company_id", effectiveCompanyId);
+      }
+      if (selectedPipelineId) {
+        query = query.eq("pipeline_id", selectedPipelineId);
       }
 
       const { data, error } = await query;
@@ -522,6 +540,9 @@ export default function CRM() {
         customer_email: d.customer_email,
         customer_phone: d.customer_phone,
         stage: d.stage,
+        stage_id: d.stage_id ?? null,
+        pipeline_id: d.pipeline_id ?? null,
+        is_active: d.is_active ?? true,
         position: d.position || 0,
         user_id: d.user_id,
         company_id: d.company_id,
@@ -544,7 +565,7 @@ export default function CRM() {
 
   useEffect(() => {
     setLocalDeals(deals);
-    queryClient.setQueryData(["deals", effectiveCompanyId], deals);
+    queryClient.setQueryData(["deals", effectiveCompanyId, selectedPipelineId], deals);
   }, [deals, queryClient, effectiveCompanyId]);
 
   // Fetch vendors for filter
@@ -618,18 +639,10 @@ export default function CRM() {
   }, []);
 
   // All visible deals (after filters)
-  const allVisibleDealIds = useMemo(() => {
-    let dealsToShow = selectedSeller === "all" ? localDeals : localDeals.filter((d) => d.user_id === selectedSeller);
-    if (searchQuery.trim()) {
-      dealsToShow = dealsToShow.filter(
-        (d) =>
-          d.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          d.customer_name.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-    dealsToShow = applyAdvancedFilters(dealsToShow);
-    return dealsToShow.map((d) => d.id);
-  }, [localDeals, selectedSeller, searchQuery, applyAdvancedFilters]);
+  const allVisibleDealIds = useMemo(
+    () => filterDeals(localDeals).map((d) => d.id),
+    [localDeals, filterDeals],
+  );
 
   const selectAll = useCallback(() => {
     setSelectedDeals(new Set(allVisibleDealIds));
@@ -657,9 +670,10 @@ export default function CRM() {
   // ── Bulk mutations ─────────────────────────────────────
   const bulkMoveMutation = useMutation({
     mutationFn: async ({ dealIds, targetStage }: { dealIds: string[]; targetStage: string }) => {
+      // targetStage é o stage_id; grava também o stage legado (dual-write).
       const { error } = await supabase
         .from("deals")
-        .update({ stage: targetStage as any })
+        .update({ stage_id: targetStage, stage: legacyOf(targetStage) as any })
         .in("id", dealIds);
       if (error) throw error;
       return dealIds.length;
@@ -733,13 +747,15 @@ export default function CRM() {
     const draggedIndex = working.findIndex((d) => d.id === draggedId);
     if (draggedIndex === -1) return currentDeals;
 
-    const dragged = { ...working[draggedIndex], stage: targetStage };
+    // targetStage é o stage_id de destino; mantém o stage legado coerente.
+    const dragged = { ...working[draggedIndex], stage_id: targetStage, stage: legacyOf(targetStage) };
     working.splice(draggedIndex, 1);
 
     const grouped: Record<string, Deal[]> = {};
     working.forEach((d) => {
-      if (!grouped[d.stage]) grouped[d.stage] = [];
-      grouped[d.stage].push(d);
+      const key = d.stage_id || "";
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(d);
     });
 
     const stageList = grouped[targetStage] || [];
@@ -772,16 +788,21 @@ export default function CRM() {
     const previousDeals = localDeals;
     const reordered = reorderDealsOptimistic(previousDeals, draggedId, targetStage, targetPosition);
     setLocalDeals(reordered);
-    queryClient.setQueryData(["deals", effectiveCompanyId], reordered);
+    queryClient.setQueryData(["deals", effectiveCompanyId, selectedPipelineId], reordered);
     return previousDeals;
   };
 
   // Update deal mutation
   const updateDealMutation = useMutation({
     mutationFn: async ({ id, stage, position, deal }: { id: string; stage: string; position: number; deal?: Deal; previousDeals?: Deal[] }) => {
+      // `stage` aqui é o stage_id de destino; grava o stage legado em dual-write.
+      const targetStageId = stage;
+      const targetKind = kindOf(targetStageId);
+      const originKind = kindOf(deal?.stage_id);
+
       const { error } = await supabase
         .from("deals")
-        .update({ stage: stage as any, position })
+        .update({ stage_id: targetStageId, stage: legacyOf(targetStageId) as any, position })
         .eq("id", id);
 
       if (error) {
@@ -789,7 +810,7 @@ export default function CRM() {
         throw error;
       }
 
-      if (stage === "closed_won" && deal) {
+      if (targetKind === "won" && deal) {
         // Trigger celebration
         setCelebrationMessage(deal.title);
         setCelebrationValue(deal.value || 0);
@@ -804,7 +825,7 @@ export default function CRM() {
         }
       }
 
-      if (deal?.stage === "closed_won" && stage !== "closed_won") {
+      if (originKind === "won" && targetKind !== "won") {
         try {
           await unsyncDealSale(deal.id, deal.user_id, queryClient);
           toast.success("Negociação removida das vendas sincronizadas.");
@@ -820,7 +841,7 @@ export default function CRM() {
     onError: (_err, _vars, context) => {
       if (context?.previousDeals) {
         setLocalDeals(context.previousDeals);
-        queryClient.setQueryData(["deals", effectiveCompanyId], context.previousDeals);
+        queryClient.setQueryData(["deals", effectiveCompanyId, selectedPipelineId], context.previousDeals);
       }
       toast.error("Erro ao mover negociação");
     },
@@ -838,41 +859,26 @@ export default function CRM() {
       grouped[stage.id] = [];
     });
 
-    // First filter by seller
-    let dealsToFilter = selectedSeller === "all"
-      ? localDeals
-      : localDeals.filter(deal => deal.user_id === selectedSeller);
+    const dealsToFilter = filterDeals(localDeals);
 
-    // Then filter by search query
-    if (searchQuery.trim()) {
-      dealsToFilter = dealsToFilter.filter(deal =>
-        deal.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        deal.customer_name.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    // Apply advanced filters
-    dealsToFilter = applyAdvancedFilters(dealsToFilter);
-
-    // Group deals
+    // Group deals by stage_id (chave de coluna)
     dealsToFilter.forEach((deal) => {
-      if (grouped[deal.stage]) {
-        grouped[deal.stage].push(deal);
-      } else {
-        // If deal has unknown stage, put in first stage
-        if (STAGES.length > 0) {
-          grouped[STAGES[0].id].push(deal);
-        }
+      const key = deal.stage_id || "";
+      if (grouped[key]) {
+        grouped[key].push(deal);
+      } else if (STAGES.length > 0) {
+        // stage_id desconhecido (deal não migrado): cai no 1º estágio
+        grouped[STAGES[0].id].push(deal);
       }
     });
 
-    // Sort each stage by position
+    // Ordena cada coluna conforme o sort selecionado (manual = position)
     Object.keys(grouped).forEach((stage) => {
-      grouped[stage].sort((a, b) => a.position - b.position);
+      grouped[stage] = sortDeals(grouped[stage]);
     });
 
     return grouped;
-  }, [localDeals, STAGES, searchQuery, selectedSeller, applyAdvancedFilters]);
+  }, [localDeals, STAGES, filterDeals, sortDeals]);
 
   // Calculate totals per stage (from filtered deals)
   const stageTotals = useMemo(() => {
@@ -882,39 +888,31 @@ export default function CRM() {
       totals[stage.id] = { count: 0, value: 0 };
     });
 
-    // Use the same filtering as dealsByStage
-    let dealsToCount = selectedSeller === "all"
-      ? localDeals
-      : localDeals.filter(deal => deal.user_id === selectedSeller);
-
-    if (searchQuery.trim()) {
-      dealsToCount = dealsToCount.filter(deal =>
-        deal.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        deal.customer_name.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    // Apply advanced filters
-    dealsToCount = applyAdvancedFilters(dealsToCount);
+    const dealsToCount = filterDeals(localDeals);
 
     dealsToCount.forEach((deal) => {
-      if (totals[deal.stage]) {
-        totals[deal.stage].count++;
-        totals[deal.stage].value += Number(deal.value) || 0;
+      const key = deal.stage_id || "";
+      if (totals[key]) {
+        totals[key].count++;
+        totals[key].value += Number(deal.value) || 0;
+      } else if (STAGES.length > 0) {
+        const fallback = STAGES[0].id;
+        totals[fallback].count++;
+        totals[fallback].value += Number(deal.value) || 0;
       }
     });
 
     return totals;
-  }, [localDeals, STAGES, selectedSeller, searchQuery, applyAdvancedFilters]);
+  }, [localDeals, STAGES, filterDeals]);
 
   // Count rotting deals (3+ days without update, excluding closed stages)
   const rottingDealsCount = useMemo(() => {
     return localDeals.filter((deal) => {
-      if (deal.stage === "closed_won" || deal.stage === "closed_lost") return false;
+      if (kindOf(deal.stage_id) !== "open") return false; // exclui ganho/perdido
       const days = deal.updated_at ? differenceInDays(new Date(), new Date(deal.updated_at)) : 0;
       return days > 3;
     }).length;
-  }, [localDeals]);
+  }, [localDeals, kindOf]);
 
   // Get the active deal for drag overlay
   const activeDeal = activeId ? localDeals.find((d) => d.id === activeId) : null;
@@ -966,14 +964,14 @@ export default function CRM() {
     const overDeal = localDeals.find((d) => d.id === overId);
     if (!overDeal) return null;
 
-    targetStage = overDeal.stage;
+    targetStage = overDeal.stage_id || "";
     const targetList = dealsByStage[targetStage] || [];
     const idx = targetList.findIndex((d) => d.id === overId);
     targetIndex = idx >= 0 ? idx : targetList.length;
 
     // If dragging within the same stage and hovering after itself, normalize index
     const draggedDeal = localDeals.find((d) => d.id === draggedId);
-    if (draggedDeal?.stage === targetStage) {
+    if (draggedDeal?.stage_id === targetStage) {
       const currentIndex = targetList.findIndex((d) => d.id === draggedId);
       if (currentIndex >= 0 && currentIndex < targetIndex) {
         targetIndex -= 1;
@@ -1013,7 +1011,7 @@ export default function CRM() {
     if (!draggedDeal) return;
 
     // Only update if stage changed (optimistic update)
-    if (draggedDeal.stage !== targetStage) {
+    if ((draggedDeal.stage_id || "") !== targetStage) {
       const previousDeals = applyOptimisticMove(draggedId, targetStage, targetIndex);
       updateDealMutation.mutate({
         id: draggedId,
@@ -1045,17 +1043,8 @@ export default function CRM() {
     }).format(value);
   };
 
-  // Filter deals by selected seller + advanced filters
-  const filteredDeals = useMemo(() => {
-    let result = selectedSeller === "all" ? localDeals : localDeals.filter(deal => deal.user_id === selectedSeller);
-    if (searchQuery.trim()) {
-      result = result.filter(deal =>
-        deal.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        deal.customer_name.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-    return applyAdvancedFilters(result);
-  }, [localDeals, selectedSeller, searchQuery, applyAdvancedFilters]);
+  // Filter deals (vendedor multi + busca + avançados + status/ativo)
+  const filteredDeals = useMemo(() => filterDeals(localDeals), [localDeals, filterDeals]);
 
   // F5P.2 — Contexto comercial (conversa + EVA) por deal
   const pipelineContext = usePipelineContextData(
@@ -1071,12 +1060,14 @@ export default function CRM() {
   const pipelineTotal = filteredDeals.reduce((acc, deal) => acc + (Number(deal.value) || 0), 0);
 
   const sortedDealsForList = useMemo(() => {
-    return [...filteredDeals].sort((a, b) => {
-      const aDate = new Date(a.updated_at || a.created_at || 0).getTime();
-      const bDate = new Date(b.updated_at || b.created_at || 0).getTime();
-      return bDate - aDate;
-    });
-  }, [filteredDeals]);
+    // Na lista não há posição visual; ordem manual cai em "atualização recente".
+    if (sortBy === "position") {
+      return [...filteredDeals].sort(
+        (a, b) => new Date(b.updated_at || b.created_at || 0).getTime() - new Date(a.updated_at || a.created_at || 0).getTime(),
+      );
+    }
+    return sortDeals(filteredDeals);
+  }, [filteredDeals, sortBy, sortDeals]);
 
   const renderStageBadge = (stageId: string) => {
     const stage = STAGES.find((s) => s.id === stageId);
@@ -1092,7 +1083,7 @@ export default function CRM() {
   return (
     <>
       {/* F5P.4f — fundo com gradient sutil pra tirar cinza chapado, sem ruído */}
-      <div className="h-[calc(100vh-64px)] flex flex-col text-foreground bg-gradient-to-b from-background via-background to-slate-50/40 dark:to-card/20">
+      <div className="h-[calc(100vh-64px)] flex flex-col text-foreground bg-gradient-to-b from-background via-background to-slate-50/40 dark:to-card/20 min-w-0 max-w-full overflow-hidden">
         {/* F5P.4e — Header com Phosphor duotone + toolbar reestruturada.
             Row 1 = título / stats / ações. Row 2 = search à esquerda, controles à direita (sem spacer flex-1 que squeezava o search). */}
         <div className="flex flex-col gap-2.5 px-4 sm:px-6 py-3 sm:py-3.5 border-b border-border bg-card shadow-sm">
@@ -1226,16 +1217,90 @@ export default function CRM() {
                 })}
               </div>
 
-              <FilterSelect
-                value={selectedSeller}
-                onChange={setSelectedSeller}
-                options={[
-                  { value: "all", label: "Todos vendedores" },
-                  ...vendors.map((v: any) => ({ value: v.id, label: v.nome })),
-                ]}
+              {/* Seletor de funil (pipeline) */}
+              {pipelines.length > 0 ? (
+                <FilterSelect
+                  value={selectedPipelineId ?? ""}
+                  onChange={(val) => {
+                    if (val === "__new__") {
+                      setShowNewPipeline(true);
+                      return;
+                    }
+                    setSelectedPipelineId(val);
+                  }}
+                  options={[
+                    ...pipelines.map((p) => ({ value: p.id, label: p.name })),
+                    { value: "__new__", label: "+ Novo funil" },
+                  ]}
+                  icon={Filter}
+                  minWidth="170px"
+                />
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowNewPipeline(true)}
+                  className="border-border hover:bg-muted text-foreground h-9"
+                >
+                  <Filter className="h-3.5 w-3.5 sm:mr-2" />
+                  <span className="hidden sm:inline">Criar funil</span>
+                </Button>
+              )}
+
+              {/* Negociações (responsável) */}
+              <MultiSelectFilter
+                selected={selectedSellers}
+                onChange={setSelectedSellers}
+                options={vendors.map((v: any) => ({ value: v.id, label: v.nome }))}
                 icon={User}
+                allLabel="Todas as negociações"
+                minWidth="170px"
+              />
+
+              {/* Status (tipo de estágio + ativo/inativo) */}
+              <FilterSelect
+                value={filterStatusKind !== "all" ? filterStatusKind : filterActive !== "all" ? filterActive : "all"}
+                onChange={(v) => {
+                  if (v === "open" || v === "won" || v === "lost") {
+                    setFilterStatusKind(v);
+                    setFilterActive("all");
+                  } else if (v === "active" || v === "inactive") {
+                    setFilterActive(v);
+                    setFilterStatusKind("all");
+                  } else {
+                    setFilterStatusKind("all");
+                    setFilterActive("all");
+                  }
+                }}
+                options={[
+                  { value: "all", label: "Todos os status" },
+                  { value: "open", label: "Em aberto" },
+                  { value: "won", label: "Ganhos" },
+                  { value: "lost", label: "Perdidos" },
+                  { value: "active", label: "Ativos" },
+                  { value: "inactive", label: "Inativos" },
+                ]}
+                icon={CheckCircle}
                 neutralValue="all"
                 minWidth="160px"
+              />
+
+              {/* Ordenação */}
+              <FilterSelect
+                value={sortBy}
+                onChange={(v) => setSortBy(v as typeof sortBy)}
+                options={[
+                  { value: "position", label: "Ordem manual" },
+                  { value: "created", label: "Criadas por último" },
+                  { value: "updated", label: "Atualização recente" },
+                  { value: "value_desc", label: "Maior valor" },
+                  { value: "value_asc", label: "Menor valor" },
+                  { value: "az", label: "Nome (A-Z)" },
+                  { value: "za", label: "Nome (Z-A)" },
+                ]}
+                icon={ArrowDownUp}
+                neutralValue="position"
+                minWidth="170px"
               />
             </div>
           </div>
@@ -1244,6 +1309,12 @@ export default function CRM() {
         {/* Advanced Filters Bar — F5P.4d: bg-muted/30 light + card/30 dark pra tier visual */}
         <div className="px-4 sm:px-6 py-2 border-b border-border bg-muted/30 dark:bg-card/30">
           <div className="flex items-center gap-2 flex-wrap">
+            {/* Contador de negociações (estilo RD) */}
+            <span className="text-[12.5px] font-semibold text-foreground tabular-nums">
+              {filteredDeals.length} {filteredDeals.length === 1 ? "negociação" : "negociações"}
+            </span>
+            <div className="w-px h-5 bg-border mx-0.5" />
+
             {/* Toggle filters button */}
             <button
               onClick={() => setShowFilters(!showFilters)}
@@ -1407,6 +1478,8 @@ export default function CRM() {
                   </>
                 )}
 
+                {/* Status e Ativo/Inativo agora vivem no dropdown "Status" da toolbar. */}
+
                 {activeFilterCount > 0 && (
                   <>
                     <div className="w-px h-5 bg-border" />
@@ -1456,7 +1529,7 @@ export default function CRM() {
         )}
 
         {/* Content Area */}
-        <div className="flex-1 overflow-x-auto overflow-y-auto sm:overflow-y-hidden scrollbar-thin">
+        <div className="flex-1 min-w-0 overflow-x-auto overflow-y-auto sm:overflow-y-hidden scrollbar-thin">
           {isLoading ? (
             <KanbanSkeleton />
           ) : viewMode === "kanban" ? (
@@ -1630,7 +1703,7 @@ export default function CRM() {
                           {deal.title || "Sem título"}
                         </div>
                       </div>
-                      {renderStageBadge(deal.stage)}
+                      {renderStageBadge(deal.stage_id || "")}
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-sm text-foreground">
                       <div className="flex flex-col">
@@ -1685,14 +1758,65 @@ export default function CRM() {
           queryClient.invalidateQueries({ queryKey: ["deals"] });
         }}
         stages={STAGES}
+        pipelineId={selectedPipelineId}
       />
 
       {/* Pipeline Config Modal */}
       <PipelineConfigModal
         open={showConfig}
         onClose={() => setShowConfig(false)}
+        mode="edit"
+        name={selectedPipeline?.name ?? "Pipeline de Vendas"}
         stages={stageConfigs}
-        onSave={handleSaveStages}
+        stageDealCounts={stageDealCounts}
+        busy={updatePipeline.isPending}
+        isDefault={!!selectedPipeline?.is_default}
+        canArchive={pipelines.length > 1 && !selectedPipeline?.is_default}
+        onSetDefault={
+          selectedPipelineId && !selectedPipeline?.is_default
+            ? () => setDefaultPipeline.mutate(selectedPipelineId)
+            : undefined
+        }
+        onArchive={
+          selectedPipelineId && pipelines.length > 1 && !selectedPipeline?.is_default
+            ? () => {
+                archivePipeline.mutate(selectedPipelineId, {
+                  onSuccess: () => {
+                    setShowConfig(false);
+                    setSelectedPipelineId(null);
+                  },
+                });
+              }
+            : undefined
+        }
+        onSubmit={({ name, stages }) => {
+          if (!selectedPipelineId) return;
+          updatePipeline.mutate(
+            { pipelineId: selectedPipelineId, name, stages },
+            { onSuccess: () => setShowConfig(false) },
+          );
+        }}
+      />
+
+      {/* Criar novo funil */}
+      <PipelineConfigModal
+        open={showNewPipeline}
+        onClose={() => setShowNewPipeline(false)}
+        mode="create"
+        name=""
+        stages={DEFAULT_STAGE_CONFIGS}
+        busy={createPipeline.isPending}
+        onSubmit={({ name, stages }) => {
+          createPipeline.mutate(
+            { name, stages, makeDefault: pipelines.length === 0 },
+            {
+              onSuccess: (newId) => {
+                setSelectedPipelineId(newId);
+                setShowNewPipeline(false);
+              },
+            },
+          );
+        }}
       />
 
       {/* Lost Deal Modal */}
@@ -1704,10 +1828,13 @@ export default function CRM() {
         }}
         onConfirm={async (reason) => {
           if (!dealToLose) return;
-          const wasWon = dealToLose.stage === "closed_won";
+          const wasWon = kindOf(dealToLose.stage_id) === "won";
+          // Move para o estágio 'lost' do funil atual (dual-write stage legado).
+          const lostStage = STAGES.find((s) => s.kind === "lost");
           await supabase
             .from("deals")
             .update({
+              ...(lostStage ? { stage_id: lostStage.id } : {}),
               stage: "closed_lost" as any,
               loss_reason: reason
             })

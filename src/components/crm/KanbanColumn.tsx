@@ -3,7 +3,8 @@ import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DealCard, StageNeighbors } from "./DealCard";
-import type { Deal, Stage } from "@/pages/CRM";
+import type { Deal } from "@/pages/CRM";
+import type { Stage } from "@/lib/pipelineStyles";
 import type { PipelineDealContext } from "@/hooks/usePipelineContextData";
 import type { Tag } from "@/types/tags";
 // F5P.4e — Phosphor duotone padronizado (consistente com sidebar e header).
