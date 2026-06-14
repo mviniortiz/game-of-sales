@@ -8,6 +8,10 @@ import {
     Mail,
     Phone,
     Loader2,
+    Briefcase,
+    Target,
+    Package,
+    MessageSquare,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { trackEvent, trackDemoConversion } from "@/lib/analytics";
@@ -22,7 +26,7 @@ interface DemoScheduleSectionProps {
 // Flow flipado (calendar-first): user escolhe horário ANTES de preencher dados.
 // Reduz atrito (67% drop rendered→form_start no flow antigo) e segue padrão
 // Calendly/Cal.com onde commitment escalona (slot < email < WhatsApp).
-type Step = "schedule" | "contact" | "done";
+type Step = "schedule" | "contact" | "context" | "done";
 
 interface FormState {
     name: string;
@@ -69,6 +73,10 @@ export const DemoScheduleSection = ({
     const [errors, setErrors] = useState<Partial<Record<"email" | "phone" | "name", string>>>({});
     const [pickedSlot, setPickedSlot] = useState<PickedSlot | null>(null);
     const [bookError, setBookError] = useState<string | null>(null);
+    // Etapa de contexto: lead descreve a empresa → gera demo personalizada
+    const [leadId, setLeadId] = useState<string | null>(null);
+    const [ctx, setCtx] = useState({ company: "", segment: "", offer: "", pain: "" });
+    const [ctxLoading, setCtxLoading] = useState(false);
 
     useEffect(() => {
         logStep("rendered", { path: window.location.pathname, variant: "schedule_first" });
@@ -167,7 +175,8 @@ export const DemoScheduleSection = ({
             } catch {
                 /* analytics never breaks UX */
             }
-            setStep("done");
+            setLeadId(id);
+            setStep("context");
         } catch (err) {
             logStep("book_failed", { err: String(err).slice(0, 120) });
             setBookError(
@@ -215,6 +224,36 @@ export const DemoScheduleSection = ({
             logStep("insert_threw", { err: String(err).slice(0, 120) });
             return null;
         }
+    };
+
+    // Lead descreve a empresa → dispara a montagem da demo personalizada.
+    // Não bloqueia nada: a demo já está agendada; o resultado vai pro time por email.
+    const handleContextSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!leadId || ctx.company.trim().length < 2) {
+            setStep("done");
+            return;
+        }
+        setCtxLoading(true);
+        try {
+            logStep("context_submit", {
+                has_segment: !!ctx.segment, has_offer: !!ctx.offer, has_pain: !!ctx.pain,
+            });
+            await supabase.functions.invoke("create-personalized-demo", {
+                body: {
+                    demo_request_id: leadId,
+                    company_name: ctx.company.trim(),
+                    segment: ctx.segment.trim() || null,
+                    offer: ctx.offer.trim() || null,
+                    pain: ctx.pain.trim() || null,
+                },
+            });
+            try { trackEvent("demo_context_submitted", { source: "landing" }); } catch { /* noop */ }
+        } catch (err) {
+            logStep("context_failed", { err: String(err).slice(0, 120) });
+        }
+        setCtxLoading(false);
+        setStep("done");
     };
 
     return (
@@ -512,7 +551,107 @@ export const DemoScheduleSection = ({
                         </div>
                     )}
 
-                    {/* ── STEP 3: DONE ─────────────────────── */}
+                    {/* ── STEP 3: CONTEXT (monta a demo personalizada) ───── */}
+                    {step === "context" && (
+                        <div className="p-6 sm:p-10 md:p-12 landing-fade-in">
+                            <div
+                                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-5"
+                                style={{ background: "rgba(21,86,192,0.08)", border: "1px solid rgba(21,86,192,0.15)" }}
+                            >
+                                <Check className="h-3.5 w-3.5 text-blue-700" strokeWidth={3} />
+                                <span className="text-xs text-blue-700" style={{ fontWeight: 600 }}>
+                                    Demo confirmada
+                                </span>
+                            </div>
+
+                            <h3
+                                className="font-heading mb-2"
+                                style={{ fontWeight: 700, fontSize: "1.5rem", lineHeight: 1.2, letterSpacing: "-0.03em", color: "rgba(10,10,10,0.9)" }}
+                            >
+                                Quer já chegar com tudo montado?
+                            </h3>
+                            <p className="mb-7 max-w-lg" style={{ color: "rgba(10,10,10,0.55)", fontSize: "0.95rem", lineHeight: 1.6 }}>
+                                Conta rápido sobre sua empresa e a gente prepara um ambiente da Vyzon com a cara do seu negócio pra mostrar na call. Leva 20 segundos.
+                            </p>
+
+                            <form onSubmit={handleContextSubmit} className="flex flex-col gap-3.5 max-w-lg" noValidate>
+                                <FormField icon={Briefcase}>
+                                    <input
+                                        type="text"
+                                        required
+                                        placeholder="Nome da sua empresa"
+                                        value={ctx.company}
+                                        onChange={(e) => setCtx((p) => ({ ...p, company: e.target.value }))}
+                                        className="demo-input"
+                                        autoFocus
+                                    />
+                                </FormField>
+                                <FormField icon={Target} hint="Ex: tráfego pago, social media, criação de sites">
+                                    <input
+                                        type="text"
+                                        placeholder="Seu segmento / nicho"
+                                        value={ctx.segment}
+                                        onChange={(e) => setCtx((p) => ({ ...p, segment: e.target.value }))}
+                                        className="demo-input"
+                                    />
+                                </FormField>
+                                <FormField icon={Package}>
+                                    <input
+                                        type="text"
+                                        placeholder="O que você vende"
+                                        value={ctx.offer}
+                                        onChange={(e) => setCtx((p) => ({ ...p, offer: e.target.value }))}
+                                        className="demo-input"
+                                    />
+                                </FormField>
+                                <FormField icon={MessageSquare} hint="O que mais te incomoda hoje no comercial">
+                                    <input
+                                        type="text"
+                                        placeholder="Sua principal dor comercial"
+                                        value={ctx.pain}
+                                        onChange={(e) => setCtx((p) => ({ ...p, pain: e.target.value }))}
+                                        className="demo-input"
+                                    />
+                                </FormField>
+
+                                <div className="flex items-center gap-3 mt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setStep("done")}
+                                        disabled={ctxLoading}
+                                        className="px-4 py-3 rounded-xl text-sm transition-colors disabled:opacity-50"
+                                        style={{ background: "rgba(10,10,10,0.05)", color: "rgba(10,10,10,0.55)", fontWeight: 600 }}
+                                    >
+                                        Pular
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={ctxLoading || ctx.company.trim().length < 2}
+                                        className="relative flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                                        style={{
+                                            background: "linear-gradient(135deg, #1556C0 0%, #0E3E92 100%)",
+                                            boxShadow: "0 0 0 1px rgba(21,86,192,0.3), 0 4px 24px rgba(21,86,192,0.3)",
+                                            fontWeight: 700, fontSize: "0.95rem",
+                                        }}
+                                    >
+                                        {ctxLoading ? (
+                                            <>
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                Preparando seu ambiente...
+                                            </>
+                                        ) : (
+                                            <>
+                                                Preparar minha demo
+                                                <ArrowRight className="h-4 w-4" />
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    )}
+
+                    {/* ── STEP 4: DONE ─────────────────────── */}
                     {step === "done" && (
                         <div className="py-16 sm:py-24 px-6 text-center landing-fade-in">
                             <div

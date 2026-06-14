@@ -103,6 +103,75 @@ export type Database = {
           },
         ]
       }
+      agent_suggestions: {
+        Row: {
+          agent_key: string
+          applied_payload: Json | null
+          company_id: string
+          conversation_id: string | null
+          created_at: string
+          created_by: string | null
+          deal_id: string | null
+          feedback: string | null
+          id: string
+          input_summary: Json
+          kind: string
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          suggestion: Json
+        }
+        Insert: {
+          agent_key?: string
+          applied_payload?: Json | null
+          company_id: string
+          conversation_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          deal_id?: string | null
+          feedback?: string | null
+          id?: string
+          input_summary?: Json
+          kind?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          suggestion?: Json
+        }
+        Update: {
+          agent_key?: string
+          applied_payload?: Json | null
+          company_id?: string
+          conversation_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          deal_id?: string | null
+          feedback?: string | null
+          id?: string
+          input_summary?: Json
+          kind?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          suggestion?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_suggestions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_suggestions_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       api_rate_limit_counters: {
         Row: {
           bucket: string
@@ -197,6 +266,313 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      channel_connections: {
+        Row: {
+          capabilities: Json
+          channel_type: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          credentials_ref: string | null
+          display_name: string | null
+          external_id: string
+          id: string
+          last_seen_at: string | null
+          metadata: Json
+          provider: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          capabilities?: Json
+          channel_type: string
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          credentials_ref?: string | null
+          display_name?: string | null
+          external_id: string
+          id?: string
+          last_seen_at?: string | null
+          metadata?: Json
+          provider: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          capabilities?: Json
+          channel_type?: string
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          credentials_ref?: string | null
+          display_name?: string | null
+          external_id?: string
+          id?: string
+          last_seen_at?: string | null
+          metadata?: Json
+          provider?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_connections_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      channel_contacts: {
+        Row: {
+          company_id: string
+          connection_id: string
+          created_at: string
+          external_contact_id: string
+          id: string
+          is_group: boolean
+          metadata: Json
+          name: string | null
+          phone_e164: string | null
+          phone_tail: string | null
+          profile_pic_url: string | null
+          updated_at: string
+          username: string | null
+        }
+        Insert: {
+          company_id: string
+          connection_id: string
+          created_at?: string
+          external_contact_id: string
+          id?: string
+          is_group?: boolean
+          metadata?: Json
+          name?: string | null
+          phone_e164?: string | null
+          phone_tail?: string | null
+          profile_pic_url?: string | null
+          updated_at?: string
+          username?: string | null
+        }
+        Update: {
+          company_id?: string
+          connection_id?: string
+          created_at?: string
+          external_contact_id?: string
+          id?: string
+          is_group?: boolean
+          metadata?: Json
+          name?: string | null
+          phone_e164?: string | null
+          phone_tail?: string | null
+          profile_pic_url?: string | null
+          updated_at?: string
+          username?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_contacts_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_contacts_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "channel_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      channel_conversations: {
+        Row: {
+          assignee_id: string | null
+          company_id: string
+          connection_id: string
+          contact_id: string
+          created_at: string
+          deal_id: string | null
+          id: string
+          last_inbound_at: string | null
+          last_message_at: string | null
+          last_outbound_at: string | null
+          metadata: Json
+          status: string
+          unread_count: number
+          updated_at: string
+        }
+        Insert: {
+          assignee_id?: string | null
+          company_id: string
+          connection_id: string
+          contact_id: string
+          created_at?: string
+          deal_id?: string | null
+          id?: string
+          last_inbound_at?: string | null
+          last_message_at?: string | null
+          last_outbound_at?: string | null
+          metadata?: Json
+          status?: string
+          unread_count?: number
+          updated_at?: string
+        }
+        Update: {
+          assignee_id?: string | null
+          company_id?: string
+          connection_id?: string
+          contact_id?: string
+          created_at?: string
+          deal_id?: string | null
+          id?: string
+          last_inbound_at?: string | null
+          last_message_at?: string | null
+          last_outbound_at?: string | null
+          metadata?: Json
+          status?: string
+          unread_count?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_conversations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_conversations_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "channel_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_conversations_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "channel_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_conversations_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      channel_messages: {
+        Row: {
+          body: string | null
+          company_id: string
+          connection_id: string
+          contact_id: string | null
+          conversation_id: string
+          created_at: string
+          direction: string
+          id: string
+          media_ref: Json
+          message_timestamp: string
+          message_type: string
+          metadata: Json
+          provider_message_id: string
+          raw_payload: Json | null
+          raw_payload_expires_at: string | null
+          raw_payload_redacted: boolean
+          reply_to_message_id: string | null
+          sent_by_user_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          body?: string | null
+          company_id: string
+          connection_id: string
+          contact_id?: string | null
+          conversation_id: string
+          created_at?: string
+          direction: string
+          id?: string
+          media_ref?: Json
+          message_timestamp: string
+          message_type: string
+          metadata?: Json
+          provider_message_id: string
+          raw_payload?: Json | null
+          raw_payload_expires_at?: string | null
+          raw_payload_redacted?: boolean
+          reply_to_message_id?: string | null
+          sent_by_user_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string | null
+          company_id?: string
+          connection_id?: string
+          contact_id?: string | null
+          conversation_id?: string
+          created_at?: string
+          direction?: string
+          id?: string
+          media_ref?: Json
+          message_timestamp?: string
+          message_type?: string
+          metadata?: Json
+          provider_message_id?: string
+          raw_payload?: Json | null
+          raw_payload_expires_at?: string | null
+          raw_payload_redacted?: boolean
+          reply_to_message_id?: string | null
+          sent_by_user_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_messages_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_messages_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "channel_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_messages_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "channel_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "channel_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_messages_reply_to_message_id_fkey"
+            columns: ["reply_to_message_id"]
+            isOneToOne: false
+            referencedRelation: "channel_messages"
             referencedColumns: ["id"]
           },
         ]
@@ -450,6 +826,7 @@ export type Database = {
           messages_hash: string | null
           next_action: string | null
           objections: string[] | null
+          qualification: Json
           sentiment: string | null
           stage_suggestion: string | null
           strategy: string[] | null
@@ -473,6 +850,7 @@ export type Database = {
           messages_hash?: string | null
           next_action?: string | null
           objections?: string[] | null
+          qualification?: Json
           sentiment?: string | null
           stage_suggestion?: string | null
           strategy?: string[] | null
@@ -496,6 +874,7 @@ export type Database = {
           messages_hash?: string | null
           next_action?: string | null
           objections?: string[] | null
+          qualification?: Json
           sentiment?: string | null
           stage_suggestion?: string | null
           strategy?: string[] | null
@@ -977,72 +1356,151 @@ export type Database = {
       }
       deals: {
         Row: {
+          account_industry: string | null
+          account_name: string | null
+          account_website: string | null
+          additional_contacts: Json
+          closer_id: string | null
           company_id: string | null
           created_at: string | null
           customer_email: string | null
           customer_name: string
           customer_phone: string | null
           expected_close_date: string | null
+          handoff_at: string | null
           id: string
+          is_active: boolean
           is_hot: boolean | null
           lead_source: string | null
           loss_reason: string | null
           notes: string | null
+          pipeline_id: string | null
           position: number | null
           probability: number | null
           product_id: string | null
+          sdr_id: string | null
+          sla_breach_at: string | null
+          sla_hours: number
           source_data: Json | null
           stage: string
+          stage_id: string | null
           title: string
           updated_at: string | null
           user_id: string
           value: number | null
         }
         Insert: {
+          account_industry?: string | null
+          account_name?: string | null
+          account_website?: string | null
+          additional_contacts?: Json
+          closer_id?: string | null
           company_id?: string | null
           created_at?: string | null
           customer_email?: string | null
           customer_name: string
           customer_phone?: string | null
           expected_close_date?: string | null
+          handoff_at?: string | null
           id?: string
+          is_active?: boolean
           is_hot?: boolean | null
           lead_source?: string | null
           loss_reason?: string | null
           notes?: string | null
+          pipeline_id?: string | null
           position?: number | null
           probability?: number | null
           product_id?: string | null
+          sdr_id?: string | null
+          sla_breach_at?: string | null
+          sla_hours?: number
           source_data?: Json | null
           stage?: string
+          stage_id?: string | null
           title: string
           updated_at?: string | null
           user_id: string
           value?: number | null
         }
         Update: {
+          account_industry?: string | null
+          account_name?: string | null
+          account_website?: string | null
+          additional_contacts?: Json
+          closer_id?: string | null
           company_id?: string | null
           created_at?: string | null
           customer_email?: string | null
           customer_name?: string
           customer_phone?: string | null
           expected_close_date?: string | null
+          handoff_at?: string | null
           id?: string
+          is_active?: boolean
           is_hot?: boolean | null
           lead_source?: string | null
           loss_reason?: string | null
           notes?: string | null
+          pipeline_id?: string | null
           position?: number | null
           probability?: number | null
           product_id?: string | null
+          sdr_id?: string | null
+          sla_breach_at?: string | null
+          sla_hours?: number
           source_data?: Json | null
           stage?: string
+          stage_id?: string | null
           title?: string
           updated_at?: string | null
           user_id?: string
           value?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "deals_closer_id_fkey"
+            columns: ["closer_id"]
+            isOneToOne: false
+            referencedRelation: "contribuicao_vendedores"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "deals_closer_id_fkey"
+            columns: ["closer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_pipeline_id_fkey"
+            columns: ["pipeline_id"]
+            isOneToOne: false
+            referencedRelation: "pipelines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_sdr_id_fkey"
+            columns: ["sdr_id"]
+            isOneToOne: false
+            referencedRelation: "contribuicao_vendedores"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "deals_sdr_id_fkey"
+            columns: ["sdr_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "pipeline_stages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       demo_requests: {
         Row: {
@@ -1051,7 +1509,12 @@ export type Database = {
           biggest_pain: string | null
           calendly_event_uri: string | null
           company: string | null
+          company_context: string | null
+          company_offer: string | null
+          company_segment: string | null
           created_at: string | null
+          demo_company_id: string | null
+          demo_credentials_sent_at: string | null
           email: string
           fbclid: string | null
           gclid: string | null
@@ -1082,7 +1545,12 @@ export type Database = {
           biggest_pain?: string | null
           calendly_event_uri?: string | null
           company?: string | null
+          company_context?: string | null
+          company_offer?: string | null
+          company_segment?: string | null
           created_at?: string | null
+          demo_company_id?: string | null
+          demo_credentials_sent_at?: string | null
           email: string
           fbclid?: string | null
           gclid?: string | null
@@ -1113,7 +1581,12 @@ export type Database = {
           biggest_pain?: string | null
           calendly_event_uri?: string | null
           company?: string | null
+          company_context?: string | null
+          company_offer?: string | null
+          company_segment?: string | null
           created_at?: string | null
+          demo_company_id?: string | null
+          demo_credentials_sent_at?: string | null
           email?: string
           fbclid?: string | null
           gclid?: string | null
@@ -1138,7 +1611,372 @@ export type Database = {
           utm_source?: string | null
           utm_term?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "demo_requests_demo_company_id_fkey"
+            columns: ["demo_company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      eva_blueprints: {
+        Row: {
+          agent_key: string
+          agent_name: string | null
+          applied_at: string | null
+          applied_by: string | null
+          applied_sections: Json
+          approved_at: string | null
+          approved_by: string | null
+          auto_create_opportunity: boolean
+          company_id: string
+          created_at: string
+          created_by: string | null
+          detected_fields: Json
+          id: string
+          knowledge_gaps: Json
+          objective: string | null
+          pipeline_stages: Json
+          segment: string | null
+          simulation_scenarios: Json
+          status: string
+          suggested_rules: Json
+          suggested_tags: Json
+          updated_at: string
+        }
+        Insert: {
+          agent_key?: string
+          agent_name?: string | null
+          applied_at?: string | null
+          applied_by?: string | null
+          applied_sections?: Json
+          approved_at?: string | null
+          approved_by?: string | null
+          auto_create_opportunity?: boolean
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          detected_fields?: Json
+          id?: string
+          knowledge_gaps?: Json
+          objective?: string | null
+          pipeline_stages?: Json
+          segment?: string | null
+          simulation_scenarios?: Json
+          status?: string
+          suggested_rules?: Json
+          suggested_tags?: Json
+          updated_at?: string
+        }
+        Update: {
+          agent_key?: string
+          agent_name?: string | null
+          applied_at?: string | null
+          applied_by?: string | null
+          applied_sections?: Json
+          approved_at?: string | null
+          approved_by?: string | null
+          auto_create_opportunity?: boolean
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          detected_fields?: Json
+          id?: string
+          knowledge_gaps?: Json
+          objective?: string | null
+          pipeline_stages?: Json
+          segment?: string | null
+          simulation_scenarios?: Json
+          status?: string
+          suggested_rules?: Json
+          suggested_tags?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eva_blueprints_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      eva_business_context: {
+        Row: {
+          agency: Json
+          company_id: string
+          created_at: string
+          icp: Json
+          id: string
+          last_edited_by: string | null
+          playbooks: Json
+          services: Json
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          agency?: Json
+          company_id: string
+          created_at?: string
+          icp?: Json
+          id?: string
+          last_edited_by?: string | null
+          playbooks?: Json
+          services?: Json
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          agency?: Json
+          company_id?: string
+          created_at?: string
+          icp?: Json
+          id?: string
+          last_edited_by?: string | null
+          playbooks?: Json
+          services?: Json
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eva_business_context_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eva_business_context_last_edited_by_fkey"
+            columns: ["last_edited_by"]
+            isOneToOne: false
+            referencedRelation: "contribuicao_vendedores"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "eva_business_context_last_edited_by_fkey"
+            columns: ["last_edited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      eva_context_suggestions: {
+        Row: {
+          applied_at: string | null
+          applied_by: string | null
+          company_id: string
+          confidence: number | null
+          content: Json
+          created_at: string
+          document_id: string | null
+          id: string
+          status: string
+          suggestion_type: string
+          title: string
+        }
+        Insert: {
+          applied_at?: string | null
+          applied_by?: string | null
+          company_id: string
+          confidence?: number | null
+          content: Json
+          created_at?: string
+          document_id?: string | null
+          id?: string
+          status?: string
+          suggestion_type: string
+          title: string
+        }
+        Update: {
+          applied_at?: string | null
+          applied_by?: string | null
+          company_id?: string
+          confidence?: number | null
+          content?: Json
+          created_at?: string
+          document_id?: string | null
+          id?: string
+          status?: string
+          suggestion_type?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eva_context_suggestions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eva_context_suggestions_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "eva_training_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      eva_deal_suggestions: {
+        Row: {
+          company_id: string
+          created_at: string
+          days_stale: number | null
+          deal_id: string
+          final_message: string | null
+          generated_at: string
+          id: string
+          message_draft: string
+          reason: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          sent_via: string | null
+          sla_context: string | null
+          status: string
+          suggestion_text: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          days_stale?: number | null
+          deal_id: string
+          final_message?: string | null
+          generated_at?: string
+          id?: string
+          message_draft: string
+          reason?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          sent_via?: string | null
+          sla_context?: string | null
+          status?: string
+          suggestion_text: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          days_stale?: number | null
+          deal_id?: string
+          final_message?: string | null
+          generated_at?: string
+          id?: string
+          message_draft?: string
+          reason?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          sent_via?: string | null
+          sla_context?: string | null
+          status?: string
+          suggestion_text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eva_deal_suggestions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eva_deal_suggestions_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eva_deal_suggestions_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "contribuicao_vendedores"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "eva_deal_suggestions_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      eva_knowledge_gaps: {
+        Row: {
+          company_id: string
+          created_at: string
+          detected_at: string
+          fix_target: string | null
+          gap_description: string
+          id: string
+          occurrence_count: number
+          resolved_at: string | null
+          resolved_by: string | null
+          source_chat_phone: string | null
+          source_message: string | null
+          source_type: string
+          status: string
+          suggested_fix: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          detected_at?: string
+          fix_target?: string | null
+          gap_description: string
+          id?: string
+          occurrence_count?: number
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source_chat_phone?: string | null
+          source_message?: string | null
+          source_type: string
+          status?: string
+          suggested_fix?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          detected_at?: string
+          fix_target?: string | null
+          gap_description?: string
+          id?: string
+          occurrence_count?: number
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source_chat_phone?: string | null
+          source_message?: string | null
+          source_type?: string
+          status?: string
+          suggested_fix?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eva_knowledge_gaps_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eva_knowledge_gaps_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "contribuicao_vendedores"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "eva_knowledge_gaps_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       eva_memory: {
         Row: {
@@ -1186,6 +2024,274 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "eva_memory_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      eva_replay_moments: {
+        Row: {
+          company_id: string
+          context: string
+          conversation_id: string | null
+          created_at: string
+          critical: boolean
+          deal_id: string | null
+          eva_reply: string
+          generated_at: string
+          id: string
+          lead_message: string
+          lead_name: string
+          model: string | null
+          outcome: string
+          outcome_detail: string
+          seller_reply: string | null
+          source_message_id: string | null
+          tension: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          context: string
+          conversation_id?: string | null
+          created_at?: string
+          critical?: boolean
+          deal_id?: string | null
+          eva_reply: string
+          generated_at?: string
+          id?: string
+          lead_message: string
+          lead_name: string
+          model?: string | null
+          outcome: string
+          outcome_detail: string
+          seller_reply?: string | null
+          source_message_id?: string | null
+          tension: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          context?: string
+          conversation_id?: string | null
+          created_at?: string
+          critical?: boolean
+          deal_id?: string | null
+          eva_reply?: string
+          generated_at?: string
+          id?: string
+          lead_message?: string
+          lead_name?: string
+          model?: string | null
+          outcome?: string
+          outcome_detail?: string
+          seller_reply?: string | null
+          source_message_id?: string | null
+          tension?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eva_replay_moments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eva_replay_moments_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "channel_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eva_replay_moments_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eva_replay_moments_source_message_id_fkey"
+            columns: ["source_message_id"]
+            isOneToOne: false
+            referencedRelation: "channel_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      eva_simulation_results: {
+        Row: {
+          agent_key: string
+          blueprint_id: string | null
+          company_id: string
+          created_at: string
+          evaluated_at: string
+          evaluated_by: string | null
+          feedback: string | null
+          id: string
+          is_critical: boolean
+          result: string
+          scenario_id: string
+          scenario_title: string
+          updated_at: string
+        }
+        Insert: {
+          agent_key?: string
+          blueprint_id?: string | null
+          company_id: string
+          created_at?: string
+          evaluated_at?: string
+          evaluated_by?: string | null
+          feedback?: string | null
+          id?: string
+          is_critical?: boolean
+          result: string
+          scenario_id: string
+          scenario_title: string
+          updated_at?: string
+        }
+        Update: {
+          agent_key?: string
+          blueprint_id?: string | null
+          company_id?: string
+          created_at?: string
+          evaluated_at?: string
+          evaluated_by?: string | null
+          feedback?: string | null
+          id?: string
+          is_critical?: boolean
+          result?: string
+          scenario_id?: string
+          scenario_title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eva_simulation_results_blueprint_id_fkey"
+            columns: ["blueprint_id"]
+            isOneToOne: false
+            referencedRelation: "eva_blueprints"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eva_simulation_results_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      eva_suggestion_feedback: {
+        Row: {
+          chat_phone: string | null
+          company_id: string
+          confidence: number | null
+          conversation_id: string | null
+          created_at: string
+          id: string
+          outcome: string
+          sent_text: string
+          similarity: number | null
+          suggestion_text: string
+          user_id: string
+        }
+        Insert: {
+          chat_phone?: string | null
+          company_id: string
+          confidence?: number | null
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          outcome: string
+          sent_text: string
+          similarity?: number | null
+          suggestion_text: string
+          user_id?: string
+        }
+        Update: {
+          chat_phone?: string | null
+          company_id?: string
+          confidence?: number | null
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          outcome?: string
+          sent_text?: string
+          similarity?: number | null
+          suggestion_text?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eva_suggestion_feedback_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eva_suggestion_feedback_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "channel_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      eva_training_documents: {
+        Row: {
+          company_id: string
+          created_at: string
+          error_message: string | null
+          file_name: string
+          file_size: number | null
+          file_type: string
+          id: string
+          metadata: Json
+          processed_at: string | null
+          raw_text: string | null
+          status: string
+          storage_path: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          error_message?: string | null
+          file_name: string
+          file_size?: number | null
+          file_type: string
+          id?: string
+          metadata?: Json
+          processed_at?: string | null
+          raw_text?: string | null
+          status?: string
+          storage_path?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          error_message?: string | null
+          file_name?: string
+          file_size?: number | null
+          file_type?: string
+          id?: string
+          metadata?: Json
+          processed_at?: string | null
+          raw_text?: string | null
+          status?: string
+          storage_path?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eva_training_documents_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
@@ -1401,6 +2507,64 @@ export type Database = {
           },
         ]
       }
+      message_status_events: {
+        Row: {
+          company_id: string
+          connection_id: string
+          created_at: string
+          id: string
+          message_id: string | null
+          occurred_at: string
+          provider_message_id: string | null
+          raw_payload: Json | null
+          status: string
+        }
+        Insert: {
+          company_id: string
+          connection_id: string
+          created_at?: string
+          id?: string
+          message_id?: string | null
+          occurred_at?: string
+          provider_message_id?: string | null
+          raw_payload?: Json | null
+          status: string
+        }
+        Update: {
+          company_id?: string
+          connection_id?: string
+          created_at?: string
+          id?: string
+          message_id?: string | null
+          occurred_at?: string
+          provider_message_id?: string | null
+          raw_payload?: Json | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_status_events_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_status_events_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "channel_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_status_events_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "channel_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       metas: {
         Row: {
           company_id: string | null
@@ -1500,6 +2664,95 @@ export type Database = {
           },
         ]
       }
+      pipeline_stages: {
+        Row: {
+          color_id: string
+          company_id: string
+          created_at: string
+          default_probability: number | null
+          icon_id: string
+          id: string
+          kind: string
+          legacy_key: string | null
+          pipeline_id: string
+          position: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          color_id?: string
+          company_id: string
+          created_at?: string
+          default_probability?: number | null
+          icon_id?: string
+          id?: string
+          kind?: string
+          legacy_key?: string | null
+          pipeline_id: string
+          position?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          color_id?: string
+          company_id?: string
+          created_at?: string
+          default_probability?: number | null
+          icon_id?: string
+          id?: string
+          kind?: string
+          legacy_key?: string | null
+          pipeline_id?: string
+          position?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pipeline_stages_pipeline_id_fkey"
+            columns: ["pipeline_id"]
+            isOneToOne: false
+            referencedRelation: "pipelines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pipelines: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_archived: boolean
+          is_default: boolean
+          name: string
+          position: number
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_archived?: boolean
+          is_default?: boolean
+          name: string
+          position?: number
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_archived?: boolean
+          is_default?: boolean
+          name?: string
+          position?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       produtos: {
         Row: {
           ativo: boolean
@@ -1561,6 +2814,7 @@ export type Database = {
           phone: string | null
           pontos: number
           role: string | null
+          sales_role: string
           updated_at: string
         }
         Insert: {
@@ -1582,6 +2836,7 @@ export type Database = {
           phone?: string | null
           pontos?: number
           role?: string | null
+          sales_role?: string
           updated_at?: string
         }
         Update: {
@@ -1603,11 +2858,183 @@ export type Database = {
           phone?: string | null
           pontos?: number
           role?: string | null
+          sales_role?: string
           updated_at?: string
         }
         Relationships: [
           {
             foreignKeyName: "profiles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      proposals: {
+        Row: {
+          about: string | null
+          brand_color: string
+          company_id: string
+          conditions: string | null
+          created_at: string
+          created_by: string | null
+          customer_email: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          deal_id: string | null
+          discount_percent: number
+          id: string
+          intro: string | null
+          items: Json
+          sections: Json | null
+          status: string
+          title: string
+          total: number
+          updated_at: string
+          validity_days: number
+        }
+        Insert: {
+          about?: string | null
+          brand_color?: string
+          company_id: string
+          conditions?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          deal_id?: string | null
+          discount_percent?: number
+          id?: string
+          intro?: string | null
+          items?: Json
+          sections?: Json | null
+          status?: string
+          title: string
+          total?: number
+          updated_at?: string
+          validity_days?: number
+        }
+        Update: {
+          about?: string | null
+          brand_color?: string
+          company_id?: string
+          conditions?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          deal_id?: string | null
+          discount_percent?: number
+          id?: string
+          intro?: string | null
+          items?: Json
+          sections?: Json | null
+          status?: string
+          title?: string
+          total?: number
+          updated_at?: string
+          validity_days?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposals_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prospecting_allowlist: {
+        Row: {
+          agency_name: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          instagram: string | null
+          is_active: boolean
+          metadata: Json
+          niche: string | null
+          phone_e164: string | null
+          phone_tail: string
+          source_url: string | null
+          user_id: string
+        }
+        Insert: {
+          agency_name?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          instagram?: string | null
+          is_active?: boolean
+          metadata?: Json
+          niche?: string | null
+          phone_e164?: string | null
+          phone_tail: string
+          source_url?: string | null
+          user_id: string
+        }
+        Update: {
+          agency_name?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          instagram?: string | null
+          is_active?: boolean
+          metadata?: Json
+          niche?: string | null
+          phone_e164?: string | null
+          phone_tail?: string
+          source_url?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prospecting_allowlist_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prospecting_instances: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          label: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prospecting_instances_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
@@ -1724,6 +3151,107 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tag_assignments: {
+        Row: {
+          company_id: string
+          confidence: number | null
+          created_at: string
+          created_by: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          metadata: Json
+          source: string
+          tag_id: string
+        }
+        Insert: {
+          company_id: string
+          confidence?: number | null
+          created_at?: string
+          created_by?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          metadata?: Json
+          source?: string
+          tag_id: string
+        }
+        Update: {
+          company_id?: string
+          confidence?: number | null
+          created_at?: string
+          created_by?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          metadata?: Json
+          source?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tag_assignments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tag_assignments_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tags: {
+        Row: {
+          category: string | null
+          color: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          color?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          color?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tags_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -2099,6 +3627,14 @@ export type Database = {
         }
         Returns: Json
       }
+      clone_demo_environment: {
+        Args: {
+          p_new_name: string
+          p_segment?: string
+          p_source_company: string
+        }
+        Returns: string
+      }
       consume_rate_limit: {
         Args: { p_bucket: string; p_limit: number; p_window_seconds: number }
         Returns: {
@@ -2132,6 +3668,10 @@ export type Database = {
       delete_company_cascade: {
         Args: { target_company_id: string }
         Returns: Json
+      }
+      delete_demo_environment: {
+        Args: { p_company: string }
+        Returns: undefined
       }
       eva_daily_cleanup: { Args: never; Returns: Json }
       eva_smart_insert_memory: {
@@ -2210,6 +3750,10 @@ export type Database = {
         Args: { p_month_start: string }
         Returns: undefined
       }
+      submit_demo_request: { Args: { payload: Json }; Returns: string }
+      trigger_eva_stale_followup: { Args: never; Returns: number }
+      trigger_evolution_keepwarm: { Args: never; Returns: number }
+      trigger_whatsapp_session_heartbeat: { Args: never; Returns: number }
     }
     Enums: {
       app_role: "vendedor" | "admin"
