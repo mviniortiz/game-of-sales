@@ -1,7 +1,13 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Calendar, Check } from "lucide-react";
 import { LandingButton } from "./LandingButton";
 import { trackEvent } from "@/lib/analytics";
+
+// LP.5 2026-06-12: tilt 3D sutil no cartão da EVA (só mouse fino, rAF, sem
+// re-render) + gatilho mobile do easter egg: 5 toques rápidos na telemetria
+// "EVA · lendo a conversa" disparam o CustomEvent "vyzon:eva-egg".
+const TILT_MAX_X = 4; // graus
+const TILT_MAX_Y = 6;
 
 // LP.4 2026-06-09: hero "O Fio da Conversa" — layout assimétrico. Esquerda:
 // headline Satoshi 900 com acento Sentient itálica. Direita: o artefato-
@@ -29,15 +35,56 @@ interface HeroSectionProps {
 }
 
 export const HeroSection = ({ onCTAClick, onScheduleDemoClick }: HeroSectionProps) => {
+    const tiltRef = useRef<HTMLDivElement>(null);
+    const tiltFrame = useRef(0);
+    const taps = useRef({ count: 0, at: 0 });
+
     useEffect(() => {
         try {
             trackEvent("hero_variant_shown", { variant: "fio_da_conversa_lp4" });
         } catch {
             /* analytics never breaks UX */
         }
+        return () => cancelAnimationFrame(tiltFrame.current);
     }, []);
 
     const onSchedule = onScheduleDemoClick || onCTAClick;
+
+    const handleTiltMove = (e: React.PointerEvent<HTMLDivElement>) => {
+        if (e.pointerType !== "mouse") return;
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        const el = tiltRef.current;
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        const px = (e.clientX - rect.left) / rect.width - 0.5;
+        const py = (e.clientY - rect.top) / rect.height - 0.5;
+        cancelAnimationFrame(tiltFrame.current);
+        tiltFrame.current = requestAnimationFrame(() => {
+            el.style.transition = "none";
+            el.style.transform = `perspective(900px) rotateX(${(-py * TILT_MAX_X).toFixed(2)}deg) rotateY(${(px * TILT_MAX_Y).toFixed(2)}deg)`;
+        });
+    };
+
+    const handleTiltLeave = () => {
+        const el = tiltRef.current;
+        if (!el) return;
+        cancelAnimationFrame(tiltFrame.current);
+        el.style.transition = "transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)";
+        el.style.transform = "";
+    };
+
+    // 5 toques rápidos na telemetria acordam a EVA (easter egg, ver EvaEasterEgg)
+    const handleTelemetryTap = () => {
+        const now = Date.now();
+        taps.current =
+            now - taps.current.at > 1600
+                ? { count: 1, at: now }
+                : { count: taps.current.count + 1, at: now };
+        if (taps.current.count >= 5) {
+            taps.current = { count: 0, at: 0 };
+            window.dispatchEvent(new CustomEvent("vyzon:eva-egg"));
+        }
+    };
 
     return (
         <section className="lp-paper lp-paper--fine relative overflow-hidden">
@@ -117,9 +164,18 @@ export const HeroSection = ({ onCTAClick, onScheduleDemoClick }: HeroSectionProp
 
                     {/* ── DIREITA: a EVA lendo uma conversa (loop CSS 9s) ── */}
                     <div className="relative landing-fade-in-up landing-delay-300" aria-hidden="true">
-                        <div className="lp-card lp-frame p-5 sm:p-6 max-w-[440px] mx-auto lg:mx-0 lg:ml-auto">
-                            {/* Header de telemetria */}
-                            <div className="flex items-center gap-2.5 pb-4 border-b" style={{ borderColor: "var(--lp-line-soft)" }}>
+                        <div
+                            ref={tiltRef}
+                            onPointerMove={handleTiltMove}
+                            onPointerLeave={handleTiltLeave}
+                            className="lp-card lp-frame lp-tilt p-5 sm:p-6 max-w-[440px] mx-auto lg:mx-0 lg:ml-auto"
+                        >
+                            {/* Header de telemetria (5 toques: easter egg) */}
+                            <div
+                                className="flex items-center gap-2.5 pb-4 border-b select-none"
+                                style={{ borderColor: "var(--lp-line-soft)" }}
+                                onClick={handleTelemetryTap}
+                            >
                                 <span className="lp-live-dot shrink-0" />
                                 <span className="lp-mono" style={{ color: "var(--lp-ink-55)" }}>
                                     EVA · lendo a conversa

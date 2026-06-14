@@ -16,7 +16,7 @@
 // `deve_criar_oportunidade` e `deve_fazer_handoff` são apenas callouts
 // recomendando ao humano. CTA "Criar oportunidade" continua manual.
 // ─────────────────────────────────────────────────────────────────────────────
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
     AlertCircle,
@@ -41,7 +41,7 @@ import {
 } from "lucide-react";
 import { EvaNode } from "@/components/landing/EvaNode";
 import { toast } from "sonner";
-import { EvaPhotoAvatar } from "@/components/eva/EvaPhotoAvatar";
+import { EvaCoreVisual, type EvaCoreState } from "@/components/eva-studio/EvaCoreVisual";
 import { NovaOportunidadeModal } from "@/components/deals/NovaOportunidadeModal";
 import { VincularDealModal } from "@/components/deals/VincularDealModal";
 import { sanitizeDisplayName } from "@/lib/displayName";
@@ -49,6 +49,9 @@ import { useCrmLookup } from "@/components/whatsapp/useCrmLookup";
 import type { CrmDeal } from "@/components/whatsapp/helpers";
 import type { Chat, MessageLine } from "@/hooks/useEvolutionAPI";
 import { useEvaInsight, type EvaInsightResult } from "@/hooks/useEvaInsight";
+import { useHybridAutoCreate } from "@/hooks/useHybridAutoCreate";
+import { useCreateOpportunityFromConversation } from "@/hooks/useCreateOpportunityFromConversation";
+import { useAgentSuggestionLog } from "@/hooks/useAgentSuggestionLog";
 import { useEntityTags } from "@/hooks/useDealsTags";
 import { getTagColorClass, isHexColor } from "@/lib/tags";
 import type { Tag } from "@/types/tags";
@@ -133,7 +136,7 @@ function EmptyPanel({ reason }: { reason: "no-chat" | "no-messages" }) {
     };
     return (
         <div className="flex-1 flex flex-col items-center justify-center px-5 text-center">
-            <EvaPhotoAvatar size="md" ring="glow" className="mb-4" />
+            <EvaCoreVisual className="w-[68px] mb-4" state="idle" showStatus={false} />
             <p className="text-[13px] font-semibold mb-1" style={{ color: "#0B1220" }}>
                 Aguardando contexto
             </p>
@@ -150,11 +153,7 @@ function EmptyPanel({ reason }: { reason: "no-chat" | "no-messages" }) {
 function LoadingState({ message }: { message?: string }) {
     return (
         <div className="flex-1 flex flex-col items-center justify-center px-5 text-center">
-            <EvaPhotoAvatar size="md" ring="glow" className="mb-4" />
-            <Loader2
-                className="h-4 w-4 animate-spin mb-2"
-                style={{ color: "#2563EB" }}
-            />
+            <EvaCoreVisual className="w-[72px] mb-4" state="analyzing" showStatus={false} />
             <p className="text-[13px] font-semibold mb-1" style={{ color: "#0B1220" }}>
                 {message || "EVA analisando conversa…"}
             </p>
@@ -308,6 +307,62 @@ function PanelContent({
         };
     }, [chat.name, chat.phone, qual?.servico_interesse, qual?.proxima_acao]);
 
+    // ── VYZON.AGENTS.2 (híbrido) — auto-criação de oportunidade ──────────────
+    // Quando a empresa optou pelo modo híbrido (auto_create_opportunity) E a EVA
+    // (aprovada) recomenda criar oportunidade (deve_criar_oportunidade), criamos
+    // o card no pipeline AUTOMATICAMENTE, com os campos qualificados, e
+    // registramos em agent_suggestions. Mensagens de saída NUNCA passam por aqui
+    // (seguem em aprovar-e-enviar). Gate defensivo: só com conversationId, sem
+    // vínculo e sem duplicado por telefone; dispara uma única vez por conversa.
+    const hybrid = useHybridAutoCreate();
+    const { createOpportunity } = useCreateOpportunityFromConversation();
+    const agentLog = useAgentSuggestionLog();
+    const autoCreateFiredRef = useRef(false);
+
+    useEffect(() => {
+        if (autoCreateFiredRef.current) return;
+        if (!hybrid.ready || !hybrid.approved || !hybrid.autoCreate) return;
+        if (!conversationId) return;
+        if (hasLinkedOpportunity || matchedDealByPhone || crmLoading) return;
+        if (!qual?.deve_criar_oportunidade) return;
+
+        autoCreateFiredRef.current = true; // trava antes do await (sem corrida)
+        (async () => {
+            try {
+                const dealId = await createOpportunity({
+                    customerName: prefill.clienteNome,
+                    title: prefill.titulo,
+                    stage: "qualification",
+                    phone: prefill.clienteTelefone || null,
+                    leadSource: "whatsapp",
+                    notes: `${prefill.observacoes} (Card criado automaticamente pela EVA — modo híbrido.)`,
+                    conversationId,
+                });
+                setLocalLinkedDealId(dealId);
+                onDealLinked?.(dealId);
+                try {
+                    await agentLog.record({
+                        kind: "qualification",
+                        conversationId,
+                        dealId,
+                        inputSummary: { source: "whatsapp", trigger: "deve_criar_oportunidade" },
+                        suggestion: { score: qual?.score_sugerido ?? null, servico: qual?.servico_interesse ?? null },
+                        status: "accepted",
+                        appliedPayload: { dealId, title: prefill.titulo, stage: "qualification" },
+                    });
+                } catch { /* auditoria nunca quebra o fluxo */ }
+                toast.success("EVA adicionou ao pipeline", {
+                    description: prefill.titulo,
+                    action: { label: "Abrir", onClick: () => navigate(`/deals/${dealId}`) },
+                });
+            } catch (e) {
+                autoCreateFiredRef.current = false; // permite retry se falhou
+                console.error("[hybrid] auto-create falhou:", e);
+            }
+        })();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [hybrid.ready, hybrid.approved, hybrid.autoCreate, conversationId, hasLinkedOpportunity, matchedDealByPhone, crmLoading, qual?.deve_criar_oportunidade]);
+
     // V1.1: criar abre modal local (com vínculo); se já vinculado, vai pro deal
     // (anti-duplicidade da mesma conversa); em legacy, mantém evento global.
     const handleCreateOpp = () => {
@@ -355,7 +410,19 @@ function PanelContent({
                     background: "#FFFFFF",
                 }}
             >
-                <EvaPhotoAvatar size="sm" ring="subtle" />
+                <EvaCoreVisual
+                    className="w-9 shrink-0"
+                    state={
+                        (insight.analyzing
+                            ? "analyzing"
+                            : insight.error
+                            ? "attention"
+                            : insight.data
+                            ? "ready"
+                            : "idle") as EvaCoreState
+                    }
+                    showStatus={false}
+                />
                 <div className="flex-1 min-w-0">
                     <p
                         className="text-[13px] font-semibold leading-tight"
@@ -669,7 +736,7 @@ function formatResetAt(iso: string | null): string | null {
 function NoAnalysisState({ onAnalyze }: { onAnalyze: () => void }) {
     return (
         <div className="flex flex-col items-center justify-center text-center py-8 px-2">
-            <EvaPhotoAvatar size="md" ring="subtle" className="mb-4" />
+            <EvaCoreVisual className="w-[72px] mb-4" state="idle" showStatus={false} />
             <p className="text-[13.5px] font-semibold mb-2" style={{ color: "#0B1220" }}>
                 A EVA ainda não analisou esta conversa.
             </p>

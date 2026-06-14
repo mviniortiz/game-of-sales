@@ -63,6 +63,10 @@ export interface UseEvolutionSender {
     getAudioMedia: (messageId: string) => Promise<string | null>;
     refreshStatus: () => Promise<boolean>;
     clearError: () => void;
+    /** Desconecta o número (best-effort, otimista). */
+    disconnect: () => Promise<void>;
+    /** Re-aplica o webhook config (ex.: liga MESSAGES_UPDATE) sem reconectar. */
+    resyncWebhook: () => Promise<void>;
 }
 
 /** Janela mínima entre refreshs on-focus pra evitar abuso (60s) */

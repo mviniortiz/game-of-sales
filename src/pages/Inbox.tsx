@@ -85,6 +85,7 @@ const Inbox = () => {
         lastStatusCheckedAt,
         sendMessage,
         sendAudioMessage,
+        sendMediaMessage,
         getAudioMedia,
         refreshStatus,
         disconnect,
@@ -394,6 +395,28 @@ const Inbox = () => {
         }, 2000);
     };
 
+    // INBOX.MEDIA — envio de imagem/vídeo/documento. Mesmo padrão do áudio:
+    // envia via Evolution e refaz fetch (imediato + atrasado) pra trazer a row
+    // persistida com a mídia. base64 é puro (sem prefixo data:), preparado no composer.
+    const handleSendMedia = async (
+        chatIdFromCallback: string,
+        base64: string,
+        mimetype: string,
+        opts?: { caption?: string; fileName?: string },
+    ) => {
+        const target = chats.find((c) => c.id === chatIdFromCallback) || selectedChat;
+        const jid = target?.chatJid;
+        if (!jid) {
+            console.warn("[Inbox] handleSendMedia: missing chatJid for", chatIdFromCallback);
+            return;
+        }
+        await sendMediaMessage(jid, base64, mimetype, opts);
+        void activeInbox.fetchMessages(target!.id);
+        window.setTimeout(() => {
+            if (target?.id) void activeInbox.fetchMessages(target.id);
+        }, 2000);
+    };
+
     return (
         <div
             className="flex w-full overflow-hidden -mx-3 -my-3 sm:-mx-4 sm:-my-4 md:-mx-6 md:-my-6"
@@ -448,6 +471,7 @@ const Inbox = () => {
                     messages={selectedChatMessages}
                     onSendText={handleSendText}
                     onSendAudio={handleSendAudio}
+                    onSendMedia={handleSendMedia}
                     getAudioMedia={getAudioMedia}
                     isLoading={isLoadingMessages}
                     onBack={isMobile ? () => setSelectedChatId(null) : undefined}

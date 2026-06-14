@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, memo } from "react";
 import {
     ArrowLeft,
     ArrowRight,
@@ -25,6 +25,7 @@ import { MediaMessageBubble } from "@/components/whatsapp/MediaMessageBubble";
 import { AudioRecorder } from "@/components/whatsapp/AudioRecorder";
 import { EvaPhotoAvatar } from "@/components/eva/EvaPhotoAvatar";
 import type { Chat, MessageLine } from "@/hooks/useEvolutionAPI";
+import { useProfilePic } from "@/hooks/useProfilePic";
 import { cn } from "@/lib/utils";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -122,6 +123,12 @@ interface InboxConversationProps {
     messages: MessageLine[];
     onSendText: (chatId: string, text: string) => Promise<void> | void;
     onSendAudio?: (chatId: string, base64: string) => Promise<void> | void;
+    onSendMedia?: (
+        chatId: string,
+        base64: string,
+        mimetype: string,
+        opts?: { caption?: string; fileName?: string },
+    ) => Promise<void> | void;
     getAudioMedia: (messageId: string) => Promise<string | null>;
     isLoading?: boolean;
     onBack?: () => void;
@@ -135,6 +142,7 @@ export function InboxConversation({
     messages,
     onSendText,
     onSendAudio,
+    onSendMedia,
     getAudioMedia,
     isLoading,
     onBack,
@@ -151,6 +159,7 @@ export function InboxConversation({
             messages={messages}
             onSendText={onSendText}
             onSendAudio={onSendAudio}
+            onSendMedia={onSendMedia}
             getAudioMedia={getAudioMedia}
             isLoading={isLoading}
             onBack={onBack}
@@ -183,11 +192,25 @@ function EmptyConversation() {
 
 // ─── ConversationView (chat selecionado) ─────────────────────────────────
 
+interface PendingMedia {
+    file: File;
+    previewUrl: string;
+    kind: "image" | "video" | "document";
+}
+
+type SendMediaFn = (
+    chatId: string,
+    base64: string,
+    mimetype: string,
+    opts?: { caption?: string; fileName?: string },
+) => Promise<void> | void;
+
 interface ConversationViewProps {
     chat: Chat;
     messages: MessageLine[];
     onSendText: (chatId: string, text: string) => Promise<void> | void;
     onSendAudio?: (chatId: string, base64: string) => Promise<void> | void;
+    onSendMedia?: SendMediaFn;
     getAudioMedia: (messageId: string) => Promise<string | null>;
     isLoading?: boolean;
     onBack?: () => void;
@@ -195,11 +218,37 @@ interface ConversationViewProps {
     isRefreshing?: boolean;
 }
 
+// INBOX.MEDIA — limites e leitura de arquivo. 16MB é o teto prático do WhatsApp
+// pra mídia comum; documentos vão até 100MB mas mantemos 16MB pra não estourar
+// o payload base64 do edge function.
+const MEDIA_MAX_BYTES = 16 * 1024 * 1024;
+
+function fileKind(file: File): PendingMedia["kind"] {
+    if (file.type.startsWith("image/")) return "image";
+    if (file.type.startsWith("video/")) return "video";
+    return "document";
+}
+
+// File → base64 PURO (sem o prefixo data:...;base64,) que o Evolution espera.
+function fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            const result = String(reader.result || "");
+            const comma = result.indexOf(",");
+            resolve(comma >= 0 ? result.slice(comma + 1) : result);
+        };
+        reader.onerror = () => reject(reader.error || new Error("Falha ao ler arquivo"));
+        reader.readAsDataURL(file);
+    });
+}
+
 function ConversationView({
     chat,
     messages,
     onSendText,
     onSendAudio,
+    onSendMedia,
     getAudioMedia,
     isLoading,
     onBack,
@@ -210,8 +259,12 @@ function ConversationView({
     const [sending, setSending] = useState(false);
     const [showAudio, setShowAudio] = useState(false);
     const [showSuggestion, setShowSuggestion] = useState(true);
+    const [pendingMedia, setPendingMedia] = useState<PendingMedia | null>(null);
+    const [mediaCaption, setMediaCaption] = useState("");
+    const [sendingMedia, setSendingMedia] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // V1.0.1 — origin/status/score mock removidos do header (eram MOCK_F4C
     // baseados em hash determinístico do phone). Sem fonte real, esconde.
@@ -229,7 +282,22 @@ function ConversationView({
         setComposer("");
         setShowSuggestion(true);
         setShowAudio(false);
+        setPendingMedia((prev) => {
+            if (prev) URL.revokeObjectURL(prev.previewUrl);
+            return null;
+        });
+        setMediaCaption("");
     }, [chat.id]);
+
+    // Revoga o object URL do preview ao desmontar (evita leak de memória).
+    useEffect(() => {
+        return () => {
+            setPendingMedia((prev) => {
+                if (prev) URL.revokeObjectURL(prev.previewUrl);
+                return null;
+            });
+        };
+    }, []);
 
     const handleSend = useCallback(async () => {
         const text = composer.trim();
@@ -262,6 +330,47 @@ function ConversationView({
             console.error("[InboxConversation] audio send error:", err);
         }
     }, [onSendAudio, chat.id]);
+
+    // INBOX.MEDIA — seleção de arquivo → preview (estilo WhatsApp).
+    const handleFilePick = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        e.target.value = ""; // permite re-selecionar o mesmo arquivo depois
+        if (!file) return;
+        if (file.size > MEDIA_MAX_BYTES) {
+            console.warn("[InboxConversation] arquivo acima do limite de 16MB");
+            return;
+        }
+        setPendingMedia((prev) => {
+            if (prev) URL.revokeObjectURL(prev.previewUrl);
+            return { file, previewUrl: URL.createObjectURL(file), kind: fileKind(file) };
+        });
+        setMediaCaption("");
+    }, []);
+
+    const handleMediaCancel = useCallback(() => {
+        setPendingMedia((prev) => {
+            if (prev) URL.revokeObjectURL(prev.previewUrl);
+            return null;
+        });
+        setMediaCaption("");
+    }, []);
+
+    const handleMediaSend = useCallback(async () => {
+        if (!pendingMedia || !onSendMedia || sendingMedia) return;
+        setSendingMedia(true);
+        try {
+            const base64 = await fileToBase64(pendingMedia.file);
+            await onSendMedia(chat.id, base64, pendingMedia.file.type || "application/octet-stream", {
+                caption: mediaCaption.trim() || undefined,
+                fileName: pendingMedia.file.name,
+            });
+            handleMediaCancel();
+        } catch (err) {
+            console.error("[InboxConversation] media send error:", err);
+        } finally {
+            setSendingMedia(false);
+        }
+    }, [pendingMedia, onSendMedia, sendingMedia, chat.id, mediaCaption, handleMediaCancel]);
 
     const handleUseSuggestion = () => {
         setComposer(suggestion);
@@ -299,8 +408,26 @@ function ConversationView({
                 do nome do contato, não da IA). A análise real da EVA já vive no
                 EvaPanel à direita via useEvaInsight. */}
 
+            {/* INBOX.MEDIA — input escondido, sempre montado */}
+            <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,video/*,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
+                className="hidden"
+                onChange={handleFilePick}
+            />
+
             {/* Composer */}
-            {showAudio ? (
+            {pendingMedia ? (
+                <MediaPreviewBar
+                    media={pendingMedia}
+                    caption={mediaCaption}
+                    onCaptionChange={setMediaCaption}
+                    onSend={handleMediaSend}
+                    onCancel={handleMediaCancel}
+                    sending={sendingMedia}
+                />
+            ) : showAudio ? (
                 <div
                     className="px-4 py-3"
                     style={{
@@ -321,6 +448,7 @@ function ConversationView({
                     onSend={handleSend}
                     onKeyDown={handleKeyDown}
                     onOpenAudio={() => setShowAudio(true)}
+                    onAttach={onSendMedia ? () => fileInputRef.current?.click() : undefined}
                     sending={sending}
                     canSendAudio={!!onSendAudio}
                     contactName={chat.name}
@@ -344,6 +472,7 @@ function ConversationHeader({
     onRefresh?: () => void;
     isRefreshing?: boolean;
 }) {
+    const picUrl = useProfilePic(chat.phone, chat.profilePicUrl);
     return (
         <div
             className="px-4 sm:px-5 py-3.5 flex items-center gap-3"
@@ -364,7 +493,7 @@ function ConversationHeader({
             )}
 
             <Avatar className="h-10 w-10 shrink-0">
-                {chat.profilePicUrl && <AvatarImage src={chat.profilePicUrl} alt={chat.name} />}
+                {picUrl && <AvatarImage src={picUrl} alt={chat.name} />}
                 <AvatarFallback
                     className="text-[12px] font-semibold text-white"
                     style={{ background: "linear-gradient(135deg, #2563EB, #4A8CE8)" }}
@@ -510,22 +639,77 @@ function MessageThread({
             className="flex-1 overflow-y-auto px-3 sm:px-5 py-4"
             style={{ background: "#F4F7FB" }}
         >
-            {/* F4C.3: limita largura interna da thread pra leitura confortável em ultrawide.
-                Coluna central inteira continua flex-1 — só o conteúdo afina. */}
-            <div className="max-w-[720px] mx-auto space-y-2.5">
-                {messages.map((msg) => (
-                    <MessageBubble key={msg.id} message={msg} getAudioMedia={getAudioMedia} />
-                ))}
+            {/* F4C.3: limita largura interna da thread pra leitura confortável em ultrawide. */}
+            <div className="max-w-[720px] mx-auto">
+                {(() => {
+                    // INBOX.UX — separadores de dia + agrupamento de bolhas do mesmo
+                    // remetente em janela curta (estilo WhatsApp). Tudo derivado do
+                    // próprio array (sem estado), barato.
+                    const items: React.ReactNode[] = [];
+                    let lastDay = "";
+                    messages.forEach((msg, i) => {
+                        const day = new Date(msg.timestamp * 1000).toDateString();
+                        if (day !== lastDay) {
+                            items.push(<DayDivider key={`day-${day}`} timestamp={msg.timestamp} />);
+                            lastDay = day;
+                        }
+                        const prev = messages[i - 1];
+                        const grouped =
+                            !!prev &&
+                            prev.sender === msg.sender &&
+                            new Date(prev.timestamp * 1000).toDateString() === day &&
+                            msg.timestamp - prev.timestamp < 120; // 2 min
+                        items.push(
+                            <MessageBubble
+                                key={msg.id}
+                                message={msg}
+                                grouped={grouped}
+                                getAudioMedia={getAudioMedia}
+                            />,
+                        );
+                    });
+                    return items;
+                })()}
             </div>
         </div>
     );
 }
 
-function MessageBubble({
+// Separador de dia — pílula central (Hoje / Ontem / data).
+function DayDivider({ timestamp }: { timestamp: number }) {
+    const d = new Date(timestamp * 1000);
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+    const sameDay = (a: Date, b: Date) => a.toDateString() === b.toDateString();
+    const label = sameDay(d, today)
+        ? "Hoje"
+        : sameDay(d, yesterday)
+        ? "Ontem"
+        : d.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: d.getFullYear() === today.getFullYear() ? undefined : "numeric" });
+    return (
+        <div className="flex justify-center my-3">
+            <span
+                className="text-[10.5px] font-semibold px-2.5 py-1 rounded-full"
+                style={{ background: "#E8EEF6", color: "#64748B", letterSpacing: "0.02em" }}
+            >
+                {label}
+            </span>
+        </div>
+    );
+}
+
+// INBOX.PERF.1 — memoizado. A thread re-renderiza a cada tick de status/insert;
+// sem memo, as 200 bolhas recalculam todas. O comparador olha só os campos que
+// mudam a renderização da bolha e ignora a identidade de getAudioMedia (a
+// função é estável em comportamento; comparar por identidade reabriria a cascata).
+const MessageBubble = memo(function MessageBubble({
     message,
+    grouped = false,
     getAudioMedia,
 }: {
     message: MessageLine;
+    grouped?: boolean;
     getAudioMedia: (messageId: string) => Promise<string | null>;
 }) {
     const isMe = message.sender === "me";
@@ -533,8 +717,14 @@ function MessageBubble({
     const hasMedia = message.mediaType === "image" || message.mediaType === "video" || message.mediaType === "sticker";
     const hasAudio = message.mediaType === "audio" || !!message.audioUrl;
 
+    // Agrupamento estilo WhatsApp: bolhas consecutivas do mesmo remetente ficam
+    // mais juntas e o "rabinho" (canto reto) só aparece na primeira do grupo.
+    const tail = isMe
+        ? { borderTopRightRadius: grouped ? 8 : 16, borderBottomRightRadius: 6 }
+        : { borderTopLeftRadius: grouped ? 8 : 16, borderBottomLeftRadius: 6 };
+
     return (
-        <div className={cn("flex", isMe ? "justify-end" : "justify-start")}>
+        <div className={cn("flex", grouped ? "mt-0.5" : "mt-2.5", isMe ? "justify-end" : "justify-start")}>
             <div
                 className="max-w-[85%] sm:max-w-[70%] rounded-2xl px-3.5 py-2.5"
                 style={
@@ -542,7 +732,7 @@ function MessageBubble({
                         ? {
                               background: "linear-gradient(135deg, #2563EB, #4A8CE8)",
                               color: "#FFFFFF",
-                              borderBottomRightRadius: 6,
+                              ...tail,
                               boxShadow: "0 1px 2px rgba(37,99,235,0.18), 0 4px 12px -4px rgba(37,99,235,0.18)",
                               opacity: isPending ? 0.7 : 1,
                           }
@@ -550,7 +740,7 @@ function MessageBubble({
                               background: "#FFFFFF",
                               color: "#0B1220",
                               border: "1px solid #E2E8F0",
-                              borderBottomLeftRadius: 6,
+                              ...tail,
                               boxShadow: "0 1px 2px rgba(15,23,42,0.04)",
                           }
                 }
@@ -620,7 +810,23 @@ function MessageBubble({
             </div>
         </div>
     );
-}
+}, (prev, next) => {
+    const a = prev.message;
+    const b = next.message;
+    // Re-renderiza só quando algo visível muda. getAudioMedia é ignorado de
+    // propósito (estável em comportamento).
+    return (
+        prev.grouped === next.grouped &&
+        a.id === b.id &&
+        a.status === b.status &&
+        a.text === b.text &&
+        a.pending === b.pending &&
+        a.time === b.time &&
+        a.mediaType === b.mediaType &&
+        a.audioUrl === b.audioUrl &&
+        a.mediaCaption === b.mediaCaption
+    );
+});
 
 // ─── Sugestão EVA Preview ────────────────────────────────────────────────
 
@@ -726,6 +932,92 @@ function EvaSuggestionBox({
     );
 }
 
+// ─── Media preview (estilo WhatsApp: prévia + legenda antes de enviar) ──────
+
+function MediaPreviewBar({
+    media,
+    caption,
+    onCaptionChange,
+    onSend,
+    onCancel,
+    sending,
+}: {
+    media: PendingMedia;
+    caption: string;
+    onCaptionChange: (v: string) => void;
+    onSend: () => void;
+    onCancel: () => void;
+    sending: boolean;
+}) {
+    const sizeKb = media.file.size / 1024;
+    const sizeLabel = sizeKb >= 1024 ? `${(sizeKb / 1024).toFixed(1)} MB` : `${Math.round(sizeKb)} KB`;
+    return (
+        <div className="px-3 sm:px-5 py-3" style={{ borderTop: "1px solid #D9E2EC", background: "#FFFFFF" }}>
+            <div className="max-w-[720px] mx-auto">
+                <div className="flex items-start gap-3 rounded-xl p-3" style={{ background: "#F4F7FB", border: "1px solid #D9E2EC" }}>
+                    {/* Prévia */}
+                    <div className="shrink-0 rounded-lg overflow-hidden" style={{ width: 72, height: 72, background: "#E2E8F0" }}>
+                        {media.kind === "image" ? (
+                            <img src={media.previewUrl} alt={media.file.name} className="w-full h-full object-cover" />
+                        ) : media.kind === "video" ? (
+                            <video src={media.previewUrl} className="w-full h-full object-cover" muted />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                                <FileText className="h-7 w-7" style={{ color: "#64748B" }} />
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Legenda + meta */}
+                    <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1.5">
+                            <p className="text-[12px] font-semibold truncate" style={{ color: "#0B1220" }}>
+                                {media.file.name}
+                            </p>
+                            <span className="text-[10.5px] tabular-nums shrink-0" style={{ color: "#94A3B8" }}>
+                                {sizeLabel}
+                            </span>
+                        </div>
+                        <input
+                            value={caption}
+                            onChange={(e) => onCaptionChange(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); onSend(); } }}
+                            placeholder="Adicione uma legenda…"
+                            autoFocus
+                            className="w-full bg-white outline-none text-[13px] px-2.5 py-2 rounded-lg"
+                            style={{ color: "#0B1220", border: "1px solid #D9E2EC" }}
+                        />
+                    </div>
+
+                    {/* Ações */}
+                    <div className="flex flex-col gap-1.5 shrink-0">
+                        <button
+                            type="button"
+                            onClick={onSend}
+                            disabled={sending}
+                            aria-label="Enviar mídia"
+                            className="h-9 w-9 rounded-full flex items-center justify-center text-white transition-all hover:brightness-110 disabled:opacity-50"
+                            style={{ background: "linear-gradient(135deg, #2563EB, #4A8CE8)", boxShadow: "0 4px 12px -4px rgba(37,99,235,0.4)" }}
+                        >
+                            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUp className="h-4 w-4" strokeWidth={2.6} />}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={onCancel}
+                            disabled={sending}
+                            aria-label="Cancelar"
+                            className="h-9 w-9 rounded-full flex items-center justify-center transition-colors hover:bg-white disabled:opacity-50"
+                            style={{ color: "#64748B", border: "1px solid #D9E2EC" }}
+                        >
+                            <X className="h-4 w-4" />
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 // ─── Composer ────────────────────────────────────────────────────────────
 
 interface ComposerProps {
@@ -734,6 +1026,7 @@ interface ComposerProps {
     onSend: () => void;
     onKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
     onOpenAudio: () => void;
+    onAttach?: () => void;
     sending: boolean;
     canSendAudio: boolean;
     inputRef: React.RefObject<HTMLTextAreaElement>;
@@ -747,6 +1040,7 @@ function Composer({
     onSend,
     onKeyDown,
     onOpenAudio,
+    onAttach,
     sending,
     canSendAudio,
     inputRef,
@@ -791,9 +1085,11 @@ function Composer({
             >
                 <button
                     type="button"
-                    className="h-8 w-8 rounded-lg flex items-center justify-center transition-colors shrink-0 hover:bg-white"
-                    style={{ color: "#94A3B8" }}
-                    title="Anexar mídia (em breve)"
+                    onClick={onAttach}
+                    disabled={!onAttach}
+                    className="h-8 w-8 rounded-lg flex items-center justify-center transition-colors shrink-0 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed"
+                    style={{ color: "#64748B" }}
+                    title={onAttach ? "Anexar imagem, vídeo ou documento" : "Anexo indisponível"}
                     aria-label="Anexar mídia"
                 >
                     <Paperclip className="h-4 w-4" />

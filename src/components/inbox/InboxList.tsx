@@ -3,6 +3,7 @@ import { Search, MessageCircle, Users, Loader2, RefreshCw, Wifi, WifiOff, QrCode
 import { InboxListSkeleton } from "@/components/ui/skeletons";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { useProfilePic } from "@/hooks/useProfilePic";
 import type { Chat } from "@/hooks/useEvolutionAPI";
 import type { InboxConnectionStatus } from "@/hooks/useInboxConnectionStatus";
 
@@ -435,6 +436,7 @@ interface LeadCardProps {
 }
 
 function LeadCard({ chat, isSelected, onSelect }: LeadCardProps) {
+    const picUrl = useProfilePic(chat.phone, chat.profilePicUrl);
     return (
         <li>
             <button
@@ -453,8 +455,8 @@ function LeadCard({ chat, isSelected, onSelect }: LeadCardProps) {
                 }
             >
                 <Avatar className="h-10 w-10 shrink-0 rounded-full">
-                    {chat.profilePicUrl && (
-                        <AvatarImage src={chat.profilePicUrl} alt={chat.name} className="rounded-full" />
+                    {picUrl && (
+                        <AvatarImage src={picUrl} alt={chat.name} className="rounded-full" />
                     )}
                     <AvatarFallback
                         className="text-[12px] font-semibold rounded-full text-white"
