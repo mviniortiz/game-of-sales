@@ -1,65 +1,22 @@
-// Upgrade Lock Page - Full screen blocker when trial expires
-import { useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
-import { Lock, AlertTriangle, Check, Sparkles, Crown, Zap } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { trackEvent, FUNNEL_EVENTS } from '@/lib/analytics';
-import { ThemeLogo } from '@/components/ui/ThemeLogo';
+// Upgrade Lock — tela cheia quando o trial expira.
+// Light-first, azul da marca, planos do config central (sem preço/feature
+// hardcoded), sem blur blobs nem ícones Sparkles/Zap.
+import { useEffect } from "react";
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import { Lock, Check, Star, Crown, Rocket, ArrowRight, type LucideIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { trackEvent, FUNNEL_EVENTS } from "@/lib/analytics";
+import { ThemeLogo } from "@/components/ui/ThemeLogo";
+import { PLANS, formatPrice } from "@/config/plans";
 
-const plans = [
-    {
-        id: 'starter',
-        name: 'Starter',
-        price: 'R$ 147',
-        period: '/mês',
-        description: 'Para times iniciando',
-        icon: Zap,
-        color: 'from-blue-500 to-cyan-500',
-        features: [
-            'Até 2 vendedores',
-            'Dashboard básico',
-            'CRM simplificado',
-            'Suporte por email'
-        ],
-        highlight: false
-    },
-    {
-        id: 'plus',
-        name: 'Plus',
-        price: 'R$ 397',
-        period: '/mês',
-        description: 'Para times em crescimento',
-        icon: Sparkles,
-        color: 'from-emerald-500 to-emerald-500',
-        features: [
-            'Até 10 vendedores',
-            'Relatórios avançados',
-            'Gamificação completa',
-            'Integrações premium',
-            'Suporte prioritário'
-        ],
-        highlight: true
-    },
-    {
-        id: 'pro',
-        name: 'Pro',
-        price: 'R$ 797',
-        period: '/mês',
-        description: 'Para operações robustas',
-        icon: Crown,
-        color: 'from-amber-500 to-orange-500',
-        features: [
-            'Vendedores ilimitados',
-            'API de automação',
-            'White-label disponível',
-            'Onboarding dedicado',
-            'SLA garantido',
-            'Suporte 24/7'
-        ],
-        highlight: false
-    }
-];
+const PLAN_ICONS: Record<string, LucideIcon> = {
+    starter: Star,
+    plus: Crown,
+    pro: Rocket,
+};
+
+const PLAN_ORDER = ["starter", "plus", "pro"] as const;
 
 export default function UpgradeLock() {
     useEffect(() => {
@@ -67,121 +24,147 @@ export default function UpgradeLock() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col">
-            {/* Background effects */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-red-500/10 rounded-full blur-3xl" />
-                <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl" />
-            </div>
+        <div className="min-h-screen flex flex-col" style={{ background: "#F8FAFC" }}>
+            <div className="flex-1 flex flex-col items-center justify-center px-4 py-12 sm:py-16">
+                <ThemeLogo className="h-9 mb-8" />
 
-            {/* Content */}
-            <div className="relative z-10 flex-1 flex flex-col items-center justify-center p-4 sm:p-8">
-                {/* Logo */}
-                <ThemeLogo className="h-10 mb-8" />
-
-                {/* Lock Icon */}
+                {/* Selo de bloqueio — sóbrio, convite a continuar (azul, não alarme) */}
                 <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: 'spring', stiffness: 200 }}
-                    className="w-24 h-24 rounded-full bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center mb-6 shadow-xl shadow-red-500/30"
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 220, damping: 18 }}
+                    className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6"
+                    style={{ background: "rgba(37,99,235,0.08)", border: "1px solid rgba(37,99,235,0.2)" }}
                 >
-                    <Lock className="h-12 w-12 text-white" />
+                    <Lock className="h-7 w-7" style={{ color: "#2563EB" }} />
                 </motion.div>
 
-                {/* Title */}
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 14 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="text-center mb-10"
+                    transition={{ delay: 0.1 }}
+                    className="text-center mb-10 max-w-lg"
                 >
-                    <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-3">
+                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2.5" style={{ color: "#0B1220" }}>
                         Seu período de teste acabou
                     </h1>
-                    <p className="text-muted-foreground text-lg max-w-md mx-auto">
-                        Escolha um plano para continuar usando o Vyzon e potencializar suas vendas.
+                    <p className="text-[15px] leading-relaxed" style={{ color: "#64748B" }}>
+                        Escolha um plano pra continuar com o Vyzon. Seus dados, pipeline e
+                        conversas continuam salvos, é só reativar.
                     </p>
                 </motion.div>
 
-                {/* Pricing Cards */}
-                <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="grid md:grid-cols-3 gap-6 max-w-5xl w-full"
-                >
-                    {plans.map((plan, index) => {
-                        const Icon = plan.icon;
+                {/* Planos — do config central, Plus em destaque */}
+                <div className="grid md:grid-cols-3 gap-4 sm:gap-5 max-w-5xl w-full">
+                    {PLAN_ORDER.map((id, index) => {
+                        const plan = PLANS[id];
+                        const Icon = PLAN_ICONS[id];
+                        const popular = !!plan.highlight;
+                        const sellers =
+                            plan.limits.sellers === 1
+                                ? "1 vendedor"
+                                : `Até ${plan.limits.sellers} vendedores`;
+
                         return (
                             <motion.div
-                                key={plan.id}
-                                initial={{ opacity: 0, y: 20 }}
+                                key={id}
+                                initial={{ opacity: 0, y: 18 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.4 + index * 0.1 }}
-                                className={`relative rounded-2xl p-6 ${plan.highlight
-                                        ? 'bg-muted border-2 border-emerald-400/50 shadow-xl shadow-emerald-500/20'
-                                        : 'bg-muted/50 border border-border'
-                                    }`}
+                                transition={{ delay: 0.2 + index * 0.08 }}
+                                className="relative rounded-2xl p-6 bg-white flex flex-col"
+                                style={{
+                                    boxShadow: popular
+                                        ? "0 0 0 2px #2563EB, 0 18px 40px -20px rgba(37,99,235,0.45)"
+                                        : "0 0 0 1px #E6EDF5, 0 10px 30px -22px rgba(15,23,42,0.25)",
+                                }}
                             >
-                                {plan.highlight && (
-                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                                        <span className="bg-gradient-to-r from-emerald-500 to-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                                            Mais Popular
+                                {popular && (
+                                    <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
+                                        <span
+                                            className="text-[10px] font-bold uppercase tracking-wider text-white px-2.5 py-1 rounded-full"
+                                            style={{ background: "#2563EB", letterSpacing: "0.08em" }}
+                                        >
+                                            Mais popular
                                         </span>
                                     </div>
                                 )}
 
-                                {/* Plan Header */}
-                                <div className="text-center mb-6">
-                                    <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${plan.color} flex items-center justify-center mx-auto mb-4`}>
-                                        <Icon className="h-7 w-7 text-white" />
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div
+                                        className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+                                        style={{
+                                            background: popular ? "rgba(37,99,235,0.1)" : "#F1F5F9",
+                                        }}
+                                    >
+                                        <Icon className="h-5 w-5" style={{ color: popular ? "#2563EB" : "#64748B" }} />
                                     </div>
-                                    <h3 className="text-xl font-bold text-foreground mb-1">{plan.name}</h3>
-                                    <p className="text-muted-foreground text-sm">{plan.description}</p>
+                                    <div>
+                                        <h3 className="text-base font-bold" style={{ color: "#0B1220" }}>
+                                            {plan.name}
+                                        </h3>
+                                        <p className="text-xs" style={{ color: "#94A3B8" }}>
+                                            {plan.description}
+                                        </p>
+                                    </div>
                                 </div>
 
-                                {/* Price */}
-                                <div className="text-center mb-6">
-                                    <span className="text-3xl font-bold text-foreground">{plan.price}</span>
-                                    <span className="text-muted-foreground">{plan.period}</span>
+                                <div className="flex items-baseline gap-1 mb-1">
+                                    <span className="text-3xl font-bold tracking-tight" style={{ color: "#0B1220" }}>
+                                        {formatPrice(plan.monthlyPrice)}
+                                    </span>
+                                    <span className="text-sm" style={{ color: "#94A3B8" }}>
+                                        /mês
+                                    </span>
                                 </div>
+                                <p className="text-xs font-semibold mb-5" style={{ color: "#2563EB" }}>
+                                    {sellers}
+                                </p>
 
-                                {/* Features */}
-                                <ul className="space-y-3 mb-6">
-                                    {plan.features.map((feature, i) => (
-                                        <li key={i} className="flex items-center gap-2 text-foreground/80 text-sm">
-                                            <Check className={`h-4 w-4 flex-shrink-0 ${plan.highlight ? 'text-emerald-400' : 'text-green-400'}`} />
+                                <ul className="space-y-2.5 mb-6 flex-1">
+                                    {plan.features.map((feature) => (
+                                        <li key={feature} className="flex items-start gap-2 text-[13px]" style={{ color: "#334155" }}>
+                                            <span
+                                                className="mt-0.5 w-4 h-4 rounded-full flex items-center justify-center shrink-0"
+                                                style={{ background: "rgba(37,99,235,0.1)" }}
+                                            >
+                                                <Check className="h-2.5 w-2.5" style={{ color: "#2563EB" }} strokeWidth={3} />
+                                            </span>
                                             {feature}
                                         </li>
                                     ))}
                                 </ul>
 
-                                {/* CTA Button */}
-                                <Link to={`/upgrade?plan=${plan.id}`} className="block" onClick={() => trackEvent(FUNNEL_EVENTS.UPGRADE_CLICK, { plan: plan.id })}>
+                                <Link
+                                    to={`/upgrade?plan=${id}`}
+                                    className="block mt-auto"
+                                    onClick={() => trackEvent(FUNNEL_EVENTS.UPGRADE_CLICK, { plan: id })}
+                                >
                                     <Button
-                                        className={`w-full h-12 font-semibold ${plan.highlight
-                                                ? 'bg-gradient-to-r from-emerald-500 to-emerald-500 hover:opacity-90 text-white'
-                                                : 'bg-muted hover:bg-muted text-foreground border border-border'
-                                            }`}
+                                        className="w-full h-11 font-semibold text-[14px] rounded-xl border-none text-white"
+                                        style={
+                                            popular
+                                                ? { background: "linear-gradient(135deg, #2563EB, #1D4ED8)" }
+                                                : { background: "#0B1220" }
+                                        }
                                     >
                                         Assinar {plan.name}
+                                        <ArrowRight className="ml-1.5 h-4 w-4" />
                                     </Button>
                                 </Link>
                             </motion.div>
                         );
                     })}
-                </motion.div>
+                </div>
 
-                {/* Help text */}
                 <motion.p
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 0.8 }}
-                    className="text-muted-foreground/50 text-sm mt-8 text-center"
+                    transition={{ delay: 0.6 }}
+                    className="text-[13px] mt-9 text-center"
+                    style={{ color: "#94A3B8" }}
                 >
-                    Dúvidas? Entre em contato com{' '}
-                    <a href="mailto:suporte@vyzon.com.br" className="text-emerald-400 hover:underline">
+                    Dúvidas?{" "}
+                    <a href="mailto:suporte@vyzon.com.br" className="font-semibold hover:underline" style={{ color: "#2563EB" }}>
                         suporte@vyzon.com.br
                     </a>
                 </motion.p>

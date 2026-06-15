@@ -42,6 +42,7 @@ const InboxListPreview = lazy(() => import("./pages/InboxListPreview"));
 // Página temporária de validação do novo EVA Studio, frente a frente (remover após integrar).
 const EvaStudioPreview = lazy(() => import("./pages/EvaStudioPreview"));
 const EvaNudgePreview = lazy(() => import("./pages/EvaNudgePreview"));
+const UpgradeLockPreview = lazy(() => import("./pages/admin/UpgradeLock"));
 
 const LazyFallback = () => (
   <div className="flex items-center justify-center min-h-screen">
@@ -176,6 +177,14 @@ const App = () => (
           element={
             <Suspense fallback={<LazyFallback />}>
               <EvaNudgePreview />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/upgrade-lock-preview"
+          element={
+            <Suspense fallback={<LazyFallback />}>
+              <UpgradeLockPreview />
             </Suspense>
           }
         />
