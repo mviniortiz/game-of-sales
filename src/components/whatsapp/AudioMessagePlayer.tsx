@@ -119,15 +119,15 @@ export function AudioMessagePlayer({
                 className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-all ${
                     isMe
                         ? "bg-white/20 hover:bg-white/30 hover:scale-105"
-                        : "bg-emerald-500/15 hover:bg-emerald-500/25 hover:scale-105"
+                        : "bg-blue-600/15 hover:bg-blue-600/25 hover:scale-105"
                 }`}
             >
                 {loading ? (
-                    <Loader2 className={`w-4 h-4 animate-spin ${isMe ? "text-white" : "text-emerald-500"}`} />
+                    <Loader2 className={`w-4 h-4 animate-spin ${isMe ? "text-white" : "text-blue-600"}`} />
                 ) : playing ? (
-                    <Pause className={`w-4 h-4 ${isMe ? "text-white" : "text-emerald-500"}`} />
+                    <Pause className={`w-4 h-4 ${isMe ? "text-white" : "text-blue-600"}`} />
                 ) : (
-                    <Play className={`w-4 h-4 ml-0.5 ${isMe ? "text-white" : "text-emerald-500"}`} />
+                    <Play className={`w-4 h-4 ml-0.5 ${isMe ? "text-white" : "text-blue-600"}`} />
                 )}
             </button>
             <div className="flex-1 min-w-0">
@@ -136,7 +136,7 @@ export function AudioMessagePlayer({
                     onClick={handleSeek}
                 >
                     <div
-                        className={`h-full rounded-full ${isMe ? "bg-white/70" : "bg-emerald-500"} transition-[width] duration-100`}
+                        className={`h-full rounded-full ${isMe ? "bg-white/70" : "bg-blue-600"} transition-[width] duration-100`}
                         style={{ width: `${progress}%` }}
                     />
                 </div>

@@ -162,7 +162,7 @@ function AudioRecorder({
             </div>
             <button
                 onClick={stopAndSend}
-                className="h-9 w-9 rounded-lg bg-emerald-500 hover:bg-emerald-600 flex items-center justify-center text-white transition-colors shadow-md shadow-emerald-500/20 shrink-0"
+                className="h-9 w-9 rounded-lg bg-blue-600 hover:bg-blue-700 flex items-center justify-center text-white transition-colors shadow-md shadow-blue-600/20 shrink-0"
             >
                 <Send className="h-4 w-4" />
             </button>
@@ -292,7 +292,7 @@ function AudioMessagePlayer({
         return `${m}:${String(s).padStart(2, "0")}`;
     };
 
-    const fgColor = isMe ? "bg-white/70" : "bg-emerald-500";
+    const fgColor = isMe ? "bg-white/70" : "bg-blue-600";
     const bgColor = isMe ? "bg-white/20" : "bg-foreground/15";
     const textColor = isMe ? "text-primary-foreground/70" : "text-muted-foreground";
 
@@ -314,15 +314,15 @@ function AudioMessagePlayer({
                 onClick={togglePlay}
                 disabled={loading}
                 className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-                    isMe ? "bg-white/20 hover:bg-white/30" : "bg-emerald-500/20 hover:bg-emerald-500/30"
+                    isMe ? "bg-white/20 hover:bg-white/30" : "bg-blue-600/20 hover:bg-blue-600/30"
                 }`}
             >
                 {loading ? (
-                    <Loader2 className={`w-4 h-4 animate-spin ${isMe ? "text-white" : "text-emerald-500"}`} />
+                    <Loader2 className={`w-4 h-4 animate-spin ${isMe ? "text-white" : "text-blue-600"}`} />
                 ) : playing ? (
-                    <Pause className={`w-4 h-4 ${isMe ? "text-white" : "text-emerald-500"}`} />
+                    <Pause className={`w-4 h-4 ${isMe ? "text-white" : "text-blue-600"}`} />
                 ) : (
-                    <Play className={`w-4 h-4 ml-0.5 ${isMe ? "text-white" : "text-emerald-500"}`} />
+                    <Play className={`w-4 h-4 ml-0.5 ${isMe ? "text-white" : "text-blue-600"}`} />
                 )}
             </button>
             <div className="flex-1 min-w-0">
