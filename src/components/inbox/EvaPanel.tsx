@@ -43,6 +43,7 @@ import { EvaNode } from "@/components/landing/EvaNode";
 import { toast } from "sonner";
 import { EvaCoreVisual, type EvaCoreState } from "@/components/eva-studio/EvaCoreVisual";
 import { NovaOportunidadeModal } from "@/components/deals/NovaOportunidadeModal";
+import { EvaCreateDealNudge } from "@/components/inbox/EvaCreateDealNudge";
 import { VincularDealModal } from "@/components/deals/VincularDealModal";
 import { sanitizeDisplayName } from "@/lib/displayName";
 import { useCrmLookup } from "@/components/whatsapp/useCrmLookup";
@@ -318,6 +319,7 @@ function PanelContent({
     const { createOpportunity } = useCreateOpportunityFromConversation();
     const agentLog = useAgentSuggestionLog();
     const autoCreateFiredRef = useRef(false);
+    const [quickCreating, setQuickCreating] = useState(false);
 
     useEffect(() => {
         if (autoCreateFiredRef.current) return;
@@ -375,6 +377,47 @@ function PanelContent({
             return;
         }
         window.dispatchEvent(new CustomEvent("vyzon:open-nova-oportunidade"));
+    };
+
+    // Nível 2 do upgrade de confiança: a EVA cria o card com 1 clique
+    // (mini-confirma), reusando a mesma criação do modo híbrido, mas disparada
+    // pelo humano. Registra como sugestão aceita (alimenta o score do Studio).
+    const handleQuickCreate = async () => {
+        if (!conversationId || quickCreating) return;
+        setQuickCreating(true);
+        try {
+            const dealId = await createOpportunity({
+                customerName: prefill.clienteNome,
+                title: prefill.titulo,
+                stage: "qualification",
+                phone: prefill.clienteTelefone || null,
+                leadSource: "whatsapp",
+                notes: `${prefill.observacoes} (Adicionado ao pipeline pela EVA, confirmado por você.)`,
+                conversationId,
+            });
+            setLocalLinkedDealId(dealId);
+            onDealLinked?.(dealId);
+            try {
+                await agentLog.record({
+                    kind: "qualification",
+                    conversationId,
+                    dealId,
+                    inputSummary: { source: "whatsapp", trigger: "nudge_confirmed" },
+                    suggestion: { score: qual?.score_sugerido ?? null, servico: qual?.servico_interesse ?? null },
+                    status: "accepted",
+                    appliedPayload: { dealId, title: prefill.titulo, stage: "qualification" },
+                });
+            } catch { /* auditoria nunca quebra o fluxo */ }
+            toast.success("Adicionado ao pipeline", {
+                description: prefill.titulo,
+                action: { label: "Abrir", onClick: () => navigate(`/deals/${dealId}`) },
+            });
+        } catch (e) {
+            console.error("[nudge] criação falhou:", e);
+            toast.error("Não foi possível criar a oportunidade. Tente de novo.");
+        } finally {
+            setQuickCreating(false);
+        }
     };
 
     if (messages.length === 0) return <EmptyPanel reason="no-messages" />;
@@ -913,6 +956,24 @@ function RealContent({
                         />
                     )}
                 </div>
+            )}
+
+            {/* Nível 2 do upgrade de confiança: a EVA se oferece pra criar o card.
+                Só fora do pipeline e quando o modo híbrido automático NÃO está ligado
+                (senão ela já cria sozinha). */}
+            {qual?.deve_criar_oportunidade &&
+                !hasLinkedOpportunity && !matchedDealByPhone && !crmLoading && conversationId &&
+                !(hybrid.ready && hybrid.approved && hybrid.autoCreate) && (
+                <EvaCreateDealNudge
+                    customerName={prefill.clienteNome}
+                    phone={prefill.clienteTelefone}
+                    servico={qual?.servico_interesse}
+                    score={qual?.score_sugerido}
+                    orcamento={qual?.orcamento}
+                    creating={quickCreating}
+                    onConfirm={handleQuickCreate}
+                    onAdjust={handleCreateOpp}
+                />
             )}
 
             {/* Handoff — alerta importante, logo abaixo do herói */}
