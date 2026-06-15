@@ -420,6 +420,24 @@ function PanelContent({
         }
     };
 
+    // Card do nível 2 montado aqui (onde vivem qual/prefill/handlers) e passado
+    // como slot pro RealContent renderizar abaixo do herói.
+    const createNudge: JSX.Element | null =
+        qual?.deve_criar_oportunidade &&
+        !hasLinkedOpportunity && !matchedDealByPhone && !crmLoading && conversationId &&
+        !(hybrid.ready && hybrid.approved && hybrid.autoCreate) ? (
+            <EvaCreateDealNudge
+                customerName={prefill.clienteNome}
+                phone={prefill.clienteTelefone}
+                servico={qual?.servico_interesse}
+                score={qual?.score_sugerido}
+                orcamento={qual?.orcamento}
+                creating={quickCreating}
+                onConfirm={handleQuickCreate}
+                onAdjust={handleCreateOpp}
+            />
+        ) : null;
+
     if (messages.length === 0) return <EmptyPanel reason="no-messages" />;
 
     const headerSubtitle = insight.analyzing
@@ -591,6 +609,7 @@ function PanelContent({
                                 loading: crmLoading,
                             }}
                             onSendReply={onSendReply}
+                            createNudge={createNudge}
                         />
                     </>
                 )}
@@ -874,11 +893,13 @@ function RealContent({
     insight,
     dealState,
     onSendReply,
+    createNudge,
 }: {
     chat: Chat;
     insight: EvaInsightResult;
     dealState: CrmDealState;
     onSendReply?: (text: string) => Promise<void>;
+    createNudge?: JSX.Element | null;
 }) {
     const { analysis, qualification, legacy } = insight;
     const summary = analysis.sentiment || "Análise da EVA disponível.";
@@ -958,23 +979,9 @@ function RealContent({
                 </div>
             )}
 
-            {/* Nível 2 do upgrade de confiança: a EVA se oferece pra criar o card.
-                Só fora do pipeline e quando o modo híbrido automático NÃO está ligado
-                (senão ela já cria sozinha). */}
-            {qual?.deve_criar_oportunidade &&
-                !hasLinkedOpportunity && !matchedDealByPhone && !crmLoading && conversationId &&
-                !(hybrid.ready && hybrid.approved && hybrid.autoCreate) && (
-                <EvaCreateDealNudge
-                    customerName={prefill.clienteNome}
-                    phone={prefill.clienteTelefone}
-                    servico={qual?.servico_interesse}
-                    score={qual?.score_sugerido}
-                    orcamento={qual?.orcamento}
-                    creating={quickCreating}
-                    onConfirm={handleQuickCreate}
-                    onAdjust={handleCreateOpp}
-                />
-            )}
+            {/* Nível 2 do upgrade de confiança: card "novo lead pronto pro pipeline",
+                montado no PanelContent e passado como slot. */}
+            {createNudge}
 
             {/* Handoff — alerta importante, logo abaixo do herói */}
             {qualification.deve_fazer_handoff && (
