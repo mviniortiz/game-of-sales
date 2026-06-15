@@ -193,9 +193,12 @@ function UserMenu({
           )}
           {theme === "dark" ? "Tema claro" : "Tema escuro"}
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate("/docs")} className="text-[12.5px]">
+        <DropdownMenuItem
+          onClick={() => window.open("https://docs.vyzon.com.br", "_blank", "noopener,noreferrer")}
+          className="text-[12.5px]"
+        >
           <Question size={16} weight="duotone" className="mr-2 text-muted-foreground" />
-          Ajuda & docs
+          Guias & docs
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />

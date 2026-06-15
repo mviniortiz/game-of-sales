@@ -44,7 +44,7 @@ const NAV_ITEMS = [
     { label: "Gestão", path: "/admin", icon: Shield, sub: "Usuários, permissões e configurações do time", keywords: "admin time equipe", adminOnly: true },
     { label: "Configurações", path: "/configuracoes", icon: Settings, sub: "Integrações, faturamento, preferências", keywords: "settings perfil integracoes" },
     { label: "Minha conta", path: "/configuracoes/perfil", icon: UserCog, sub: "Seu perfil, avatar e dados pessoais", keywords: "profile" },
-    { label: "Ajuda & docs", path: "/docs", icon: HelpCircle, sub: "Guias e documentação da plataforma", keywords: "help docs suporte" },
+    { label: "Guias & docs", path: "/docs", icon: HelpCircle, sub: "Documentação e guias da plataforma (abre em nova aba)", keywords: "help docs guias suporte documentacao" },
     { label: "Suporte", path: "/admin/suporte", icon: Inbox, sub: "Tickets e atendimento aos clientes", keywords: "tickets", superAdminOnly: true },
 ];
 
@@ -217,7 +217,11 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
                 icon: n.icon as React.ComponentType<{ className?: string }>,
                 onSelect: () => {
                     onOpenChange(false);
-                    navigate(n.path);
+                    if (n.path === "/docs") {
+                        window.open("https://docs.vyzon.com.br", "_blank", "noopener,noreferrer");
+                    } else {
+                        navigate(n.path);
+                    }
                 },
             });
         });
