@@ -1,0 +1,41 @@
+---
+title: "Configurações e Integrações"
+description: "Conta, empresa, equipe, faturamento e o catálogo de integrações."
+---
+
+As Configurações (`/configuracoes`) reúnem o ajuste da conta e da empresa em
+sub-seções. A maioria é **admin-only**.
+
+## Sub-seções
+
+- **Perfil:** nome, e-mail e avatar (disponível a todos).
+- **Segurança:** senha, sessões e acessos.
+- **Organização:** dados da empresa (nome, logo, segmento, CNPJ, tamanho, site).
+- **Equipe:** atalho para a gestão de pessoas (convidar vendedor, definir admin), unificada em Gestão → Equipe.
+- **Faturamento:** plano atual, uso (vendedores, produtos, vendas do mês) e histórico; assinatura via Mercado Pago, com cancelamento.
+- **Tags:** central de tags da empresa (CRUD, cores, uso e merge). Tags são transversais a oportunidade, conversa, contato e base de conhecimento.
+- **Importar:** trazer oportunidades e vendas de fora.
+- **Relatórios públicos:** criar/revogar links white-label (servidos em `/r/:token`).
+- **Contexto da EVA:** o setup estratégico da IA (ver [EVA](/produto/eva)).
+
+## Integrações
+
+O catálogo agrupa por categoria. O status vem da configuração ativa de cada uma.
+
+| Categoria | Integrações |
+|---|---|
+| Captura de leads | Google Sheets, Zapier, RD Station |
+| Checkouts de infoproduto | Hotmart, Kiwify, Greenn, Cakto, Braip, Monetizze, Eduzz |
+| Gateways de pagamento | Asaas, Mercado Pago (ativos); Celetus, Stripe, Pagar.me (em breve) |
+| Notificações (saída) | Slack, Discord — a EVA posta venda fechada e meta batida |
+| Produtividade | Google Calendar, Notazz (NF) |
+
+Os conectores de venda usam **webhooks** com uma URL única por empresa e
+autenticação por token (ou HMAC). Cada evento cria/atualiza oportunidade + venda, e
+há uma aba de "Atividade" com os logs do mês. Detalhes técnicos em
+[Webhooks de venda](/guides/webhooks).
+
+<Note>
+  O WhatsApp **não** aparece em Integrações — ele vive no [Inbox](/produto/inbox),
+  via Evolution API. Integrações é admin-only e pode exigir upgrade de plano.
+</Note>

@@ -1,0 +1,47 @@
+---
+title: "Visão geral do produto"
+description: "O que é o Vyzon e como as seções se conectam."
+---
+
+O Vyzon é a central comercial com a **EVA** (a camada de inteligência) para times
+que vendem por conversa. O fluxo central do produto é:
+
+<Steps>
+  <Step title="O lead chega">
+    Entra pelo WhatsApp (via Evolution API) ou por um webhook de lead/venda.
+  </Step>
+  <Step title="A EVA lê a conversa">
+    No [Inbox](/produto/inbox), a EVA analisa o atendimento, qualifica o lead e
+    sugere o próximo passo. **Ela sugere; o time aprova.**
+  </Step>
+  <Step title="Vira oportunidade">
+    O lead qualificado entra no [Pipeline](/produto/pipeline) e avança pelos
+    estágios até ganho ou perdido.
+  </Step>
+  <Step title="A operação é medida">
+    [Metas e Ranking](/produto/metas-ranking) acompanham o ritmo do time em tempo real.
+  </Step>
+</Steps>
+
+## Princípio inegociável: assistida, não autônoma
+
+<Note>
+  A EVA e seus agentes operam com **humano no controle das mensagens de saída**.
+  Nenhum agente dispara mensagem ao lead sozinho — o padrão é "aprovar-e-enviar".
+  O único automatismo permitido (modo híbrido, opt-in) é criar/atualizar o card de
+  oportunidade no pipeline a partir de um lead que já chegou.
+</Note>
+
+## As seções
+
+<CardGroup cols={2}>
+  <Card title="Início" href="/produto/inicio">Central de Comando: o plano do dia, o que precisa de ação agora.</Card>
+  <Card title="Inbox" href="/produto/inbox">Atendimento WhatsApp em 3 colunas com a EVA ao lado.</Card>
+  <Card title="Pipeline" href="/produto/pipeline">Funis customizáveis, Kanban e a tela de cada oportunidade.</Card>
+  <Card title="EVA" href="/produto/eva">A inteligência: copiloto da conversa + analítica de métricas.</Card>
+  <Card title="Agent Studio" href="/produto/agent-studio">Configurar e aprovar a EVA como agente especializado.</Card>
+  <Card title="Metas e Ranking" href="/produto/metas-ranking">Progresso da meta e classificação ao vivo do time.</Card>
+  <Card title="Ligações" href="/produto/ligacoes">Ligar no navegador, gravar, transcrever e gerar insights.</Card>
+  <Card title="Agenda" href="/produto/agenda">Agendamentos de call com sync ao Google Calendar.</Card>
+  <Card title="Configurações" href="/produto/configuracoes">Conta, empresa, equipe, faturamento e integrações.</Card>
+</CardGroup>

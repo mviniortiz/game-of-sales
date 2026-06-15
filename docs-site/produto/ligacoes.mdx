@@ -1,0 +1,48 @@
+---
+title: "Ligações"
+description: "Ligar no navegador, gravar, transcrever e gerar insights com a EVA."
+---
+
+O Vyzon tem duas faces de "ligações": a rota `/calls` é uma tela de
+**performance/analytics** de calls; o ato de **ligar de verdade** (no navegador,
+gravar, transcrever e gerar insights) vive **dentro de cada oportunidade**.
+
+<Note>
+  Ligações são um **add-on**: exigem plano Plus ou Pro **mais** o add-on de
+  ligações habilitado na empresa. Super admin faz bypass.
+</Note>
+
+## Performance (`/calls`)
+
+KPIs (calls realizadas, show rate, conversão, receita), funil Agendados →
+Compareceram → Vendas, volume por resultado, histórico das últimas calls e cards de
+insight (melhor dia, no-shows, follow-ups em aberto). Os números vêm de calls e
+agendamentos **registrados manualmente** — essa tela não disca.
+
+## Ligar (dentro do deal)
+
+Três modos:
+- **Demo:** cria uma ligação fictícia (transcrição fixa) só para validar a experiência.
+- **WebRTC:** liga pelo navegador via Twilio Voice SDK (discador com estados, timer, mute).
+- **Twilio (click-to-call):** liga as duas pernas reais (vendedor + cliente) numa conferência.
+
+## O pipeline de voz
+
+<Steps>
+  <Step title="Inicia a ligação">
+    O front chama a função que valida plano + add-on e cria o registro da ligação.
+  </Step>
+  <Step title="Grava">
+    A gravação é capturada via Twilio e o link salvo na ligação.
+  </Step>
+  <Step title="Transcreve">
+    A gravação é transcrita pela OpenAI Whisper (em português).
+  </Step>
+  <Step title="Gera insights">
+    A EVA resume a ligação: resumo, objeções, próximos passos, mensagem sugerida e
+    sentimento (com fallback heurístico se o modelo falhar).
+  </Step>
+</Steps>
+
+A mensagem sugerida é só sugestão (aprovar-e-enviar); o backend não envia nada
+sozinho. Cada etapa registra um evento na timeline da oportunidade.

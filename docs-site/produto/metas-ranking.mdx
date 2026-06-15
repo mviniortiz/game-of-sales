@@ -1,0 +1,33 @@
+---
+title: "Metas e Ranking"
+description: "Progresso da meta do time e classificação ao vivo dos vendedores."
+---
+
+Duas telas de acompanhamento comercial: **Metas** (`/metas`) é o cockpit de
+progresso da meta do time e da contribuição individual no mês; **Ranking**
+(`/ranking`) é a classificação ao vivo dos vendedores.
+
+## Metas
+
+- **Cockpit consolidado:** gauge de % da meta, Realizado (com delta vs. mês anterior no mesmo dia), pace diário necessário e projeção de fim de mês.
+- **Status do mês:** Sem meta / Meta batida / Acima do ritmo / No ritmo / Abaixo do ritmo.
+- **Contribuição individual:** vendedores ordenados por volume, com barra de progresso, etiqueta "Bateu meta" e % de contribuição no global.
+
+## Ranking
+
+- Selo **"Ao vivo"** que pulsa a cada mudança; toggle **Semanal / Mensal**.
+- **KPIs:** total vendido, maior venda, média por vendedor, ativos no período (no mensal, ainda a meta do time com % e dias restantes).
+- **Pódio top 3** e lista a partir do 4º, com delta de posição vs. período anterior, badge "você", **nível** (Bronze → Diamante) e "faltam R$ X para alcançar a posição acima".
+
+## Como funciona
+
+Ambas leem dados reais escopados por empresa. O realizado vem da tabela de vendas
+aprovadas no período; as metas, das tabelas de meta individual e consolidada. O
+Ranking combina atualização periódica com **Realtime**: assina mudanças no pipeline
+e atualiza na hora, disparando o pulso "ao vivo".
+
+<Note>
+  A "gamificação" aqui é pódio, níveis, deltas de posição e o selo ao vivo. Super
+  admins são filtrados das listas (não contam no ranking), exceto o próprio usuário
+  logado.
+</Note>

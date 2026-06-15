@@ -1,0 +1,40 @@
+---
+title: "Pipeline"
+description: "Funis customizáveis, Kanban e a tela de comando de cada oportunidade."
+---
+
+O Pipeline (`/pipeline`) é o funil de vendas com múltiplos funis customizáveis, em
+Kanban (drag-and-drop) ou Lista. É onde a oportunidade qualificada na conversa
+avança por estágios até ganho ou perdido.
+
+## Kanban e funis
+
+- **Kanban com arrastar-e-soltar** entre estágios, mais modo **Lista**. No mobile, swipe move o card.
+- **Múltiplos funis:** seletor de funil, criar novo, e editor de estágios — reordenar, renomear, ícone/cor e o **tipo** de cada estágio (Aberto / Ganho / Perdido). Funil padrão e arquivamento. Estágio com negócios não pode ser excluído.
+- **Filtros e ordenação:** busca, responsável, status, e avançados (hot, paradas há +3 dias, faixa de probabilidade, data, tags).
+- **Ações em lote:** mover de estágio, atribuir responsável, excluir.
+- **KPIs no header:** total de oportunidades, valor do pipeline e contador de "paradas"; taxa de conversão entre colunas e confete ao marcar ganho.
+
+## O card de oportunidade
+
+Mostra valor em destaque, responsável, flag "hot", edição inline, badge de
+"Aguardando N dias", previsão de fechamento, e o **contexto da EVA** (canal,
+temperatura, próxima ação ou "EVA desatualizada", e atalho "Abrir conversa").
+
+## A tela da oportunidade (`/deals/:id`)
+
+Stepper de estágios, gauge de probabilidade, health status (por dias sem contato),
+timeline de eventos (notas, ligações, mensagens, mudanças de etapa), produtos,
+propostas (PDF), campos customizados, tags, mapa de decisão e ações de ganhar/perder.
+
+## Como funciona
+
+Arrastar um card persiste o estágio com **dual-write** do estágio legado (para
+compatibilidade com triggers e webhooks). Mover para um estágio do tipo "Ganho"
+sincroniza uma venda; sair de "Ganho" remove a venda sincronizada.
+
+<Note>
+  Criar oportunidade pode partir da sidebar, do painel da EVA no Inbox ("Criar
+  oportunidade") ou da paleta de comandos. Quando criada a partir de uma conversa,
+  já vincula a conversa ao card.
+</Note>

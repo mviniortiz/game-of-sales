@@ -1,0 +1,38 @@
+---
+title: "Agenda"
+description: "Agendamentos de call com sincronização ao Google Calendar."
+---
+
+A Agenda (`/agenda`) é o calendário de agendamentos de call, com visões Dia / Semana
+/ Mês, sidebar com mini-calendário, próximos eventos e um widget de meta do mês.
+Inclui sincronização com o **Google Calendar**.
+
+## O que tem
+
+- Três visões (Mês em grade; Dia/Semana em timeline), responsivo.
+- Filtros por vendedor (para admins) e por status (agendado / realizado / não compareceu / cancelado).
+- Criar agendamento (modal) e arrastar para mudar a data.
+- Status de comparecimento por evento (show / no-show / pendente) com cores.
+- Widget de meta do mês.
+
+## Sincronização com o Google
+
+<Steps>
+  <Step title="Conecta">
+    O usuário conecta o Google Calendar (OAuth). O token fica no perfil — a conexão
+    é **por usuário**, não por empresa.
+  </Step>
+  <Step title="Auto-sync">
+    Ao abrir a Agenda, se há conexão, o app importa os eventos do calendário
+    principal do Google (de hoje até +30 dias) que ainda não existem.
+  </Step>
+  <Step title="Cria/edita">
+    Criar, atualizar e excluir eventos refletem no Google Calendar ("Call com
+    {cliente}", fuso de São Paulo, 1h, com lembretes).
+  </Step>
+</Steps>
+
+<Note>
+  A sincronização cobre apenas o calendário **principal** do Google, na janela de
+  hoje a +30 dias. O token é renovado automaticamente quando expira.
+</Note>

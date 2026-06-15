@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Vyzon API",
+  "name": "Vyzon Docs",
   "colors": {
     "primary": "#1556C0",
     "light": "#4A8CE8",
@@ -19,6 +19,31 @@
           {
             "group": "Guias",
             "pages": ["guides/webhooks"]
+          }
+        ]
+      },
+      {
+        "tab": "Produto",
+        "groups": [
+          {
+            "group": "Começando",
+            "pages": ["produto/visao-geral"]
+          },
+          {
+            "group": "Operação",
+            "pages": ["produto/inicio", "produto/inbox", "produto/pipeline"]
+          },
+          {
+            "group": "Inteligência (EVA)",
+            "pages": ["produto/eva", "produto/agent-studio"]
+          },
+          {
+            "group": "Performance",
+            "pages": ["produto/metas-ranking", "produto/ligacoes", "produto/agenda"]
+          },
+          {
+            "group": "Administração",
+            "pages": ["produto/configuracoes"]
           }
         ]
       },

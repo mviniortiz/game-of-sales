@@ -1,0 +1,46 @@
+---
+title: "Inbox"
+description: "Central de atendimento WhatsApp em 3 colunas, com a EVA ao lado."
+---
+
+O Inbox (`/inbox`) é a central de atendimento sobre o WhatsApp (via Evolution API),
+em três colunas: lista de leads, conversa, e o painel da EVA.
+
+## As três colunas
+
+**Esquerda — lista de leads.** Busca por nome/telefone, badge de sincronização
+(Live / Histórico salvo / Offline) e o card de conexão do WhatsApp com as ações:
+**Conectar/Reconectar** (modal de QR Code), **Sincronizar histórico**,
+**Re-sincronizar webhook** e **Desconectar**.
+
+**Centro — a conversa.** Thread da conversa com envio de texto, áudio e mídia
+(imagem/vídeo/documento com legenda).
+
+**Direita — EVA Comercial.** Análise da conversa, com o selo permanente "Assistida".
+
+## A EVA no Inbox
+
+<Note>
+  A análise é **manual por escolha de produto**: nada roda sozinho. Você decide
+  quando clicar em "Analisar conversa".
+</Note>
+
+Quando analisada, a EVA mostra:
+- **Próxima ação** e **Resposta sugerida** (rascunho com Copiar e Editar — "você aprova antes de enviar").
+- **Leitura da EVA:** score 0–100, fit, e pills de temperatura, urgência, intenção, serviço e objeção.
+- **Dossiê expansível:** resumo, "já sabemos / falta descobrir", lacunas de contexto, tags e o vínculo com a oportunidade no CRM.
+
+**Vínculo conversa ↔ oportunidade:** três estados — "No pipeline" (vinculado),
+"Possível oportunidade existente" (match por telefone) e "Fora do pipeline" (criar/vincular).
+
+## Limites importantes
+
+<Warning>
+  Nenhuma mensagem sai sozinha. As recomendações de "criar oportunidade" e "fazer
+  handoff" são sugestões ao humano. A auto-criação de card no pipeline (modo
+  híbrido) só acontece se a empresa optou — e mesmo assim só cria o card, nunca
+  envia mensagem.
+</Warning>
+
+A fonte primária é o canal atual (`channel_*`), com fallback automático para o
+WhatsApp legado se o canal falhar ou vier vazio.

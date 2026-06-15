@@ -1,0 +1,53 @@
+---
+title: "Agent Studio"
+description: "Configurar e aprovar a EVA como agente especializado antes de soltá-la no Inbox."
+---
+
+O Agent Studio (`/eva-studio`) é onde o gestor configura a EVA como **agente
+especializado** (o MVP é o Agente Qualificador) através de uma jornada de quatro
+passos, antes de liberá-la para sugerir no Inbox.
+
+## A jornada: Criar → Ensinar → Provar → Ativar
+
+<Steps>
+  <Step title="Criar">
+    Escolher o propósito do agente (hoje "vender" é o disponível; suporte e
+    pós-venda aparecem como futuros).
+  </Step>
+  <Step title="Ensinar">
+    Revisar o contexto extraído das fontes reais (WhatsApp, pipeline). Há uma
+    revisão guiada do que a EVA aprendeu.
+  </Step>
+  <Step title="Provar">
+    Rodar simulações e replay de momentos reais de conversa. O admin julga cada
+    cenário (aprovar/ajustar).
+  </Step>
+  <Step title="Ativar">
+    Confirmação final: libera a EVA a sugerir no Inbox (status do blueprint vira
+    "aprovado para uso assistido").
+  </Step>
+</Steps>
+
+## Blueprint e aprovação
+
+- **Blueprint** é a configuração do agente (objetivo, segmento, pipeline, campos, tags, regras, lacunas). É gerado de forma determinística a partir do contexto real da empresa; um blueprint salvo sempre prevalece.
+- **Score de validação (0–100)** sobre 10 critérios (objetivo definido, ICP, pipeline revisado, regras aplicadas, lacunas revisadas, respostas proibidas, handoff humano, ao menos 5 simulações testadas, nenhum cenário crítico reprovado, publicação automática desativada).
+
+## O Agente Qualificador (MVP)
+
+Lê a conversa do lead e produz um diagnóstico: campos detectados (orçamento,
+serviço, urgência, decisor), score verde/amarelo/vermelho, tags sugeridas,
+perguntas recomendadas e a próxima ação.
+
+## Limites importantes
+
+<Warning>
+  As travas de segurança **independem do score**: a aprovação é bloqueada se não
+  houver handoff humano definido, ou se houver um cenário crítico reprovado. Toda
+  detecção é só da conversa (nunca de fonte externa) e nasce marcada como "precisa
+  confirmação".
+</Warning>
+
+- **Mensagens de saída** nunca são geradas como ação: entram numa fila de "aprovar-e-enviar" como sugestão pendente e auditável.
+- **Modo híbrido:** o único automatismo permitido é criar/atualizar o card de oportunidade no pipeline para um lead que já chegou. A saída de mensagem permanece humana.
+- Configurar e aprovar é restrito a admin.

@@ -1,0 +1,46 @@
+---
+title: "EVA"
+description: "A inteligência comercial: copiloto da conversa e analítica de métricas."
+---
+
+A EVA é a camada de inteligência do Vyzon. São duas faces sobre o mesmo contexto
+de empresa: a **EVA Copiloto** (analisa uma conversa e sugere o próximo passo) e a
+**EVA Analítica** (responde perguntas sobre métricas reais). A rota `/eva` hospeda
+a face analítica.
+
+## EVA Copiloto
+
+Vive no [Inbox](/produto/inbox). Recebe as mensagens de uma conversa e retorna
+sentimento, temperatura, estágio, um **rascunho de resposta** pronto pro vendedor,
+objeções, próxima ação e uma qualificação estruturada (intenção, fit, score, info
+coletada/faltante, lacunas de conhecimento).
+
+## EVA Analítica ("Chat com dados")
+
+Na rota `/eva`. Pergunte sobre faturamento, ranking, metas, conversões e tendências.
+Ela puxa dados reais da empresa (vendas dos últimos meses, metas, produtos) mais
+contexto das conversas recentes, e responde com texto, destaques e gráficos.
+
+<Note>
+  Disponível nos planos Plus e Pro (Plus tem limite diário de consultas; Pro é ilimitado).
+</Note>
+
+## O contexto da empresa
+
+O que alimenta a EVA é cadastrado em **Configurações → EVA**: dados da agência,
+serviços, ICP (cliente ideal) e base de conhecimento (playbooks, objeções, tom de
+voz, promessas proibidas). É salvo por aba, e cada mudança incrementa uma versão —
+quando o contexto muda, a EVA reanalisa as conversas (ignora o cache antigo).
+
+## Limites importantes
+
+<Warning>
+  A EVA é **assistida, nunca autônoma**. O copiloto tem regras duras: nunca prometer
+  ação automática, nunca dizer que enviou mensagem / marcou demo / criou
+  oportunidade, e nunca inventar preço, serviço ou prazo fora do contexto. As saídas
+  são sugestões; o humano aprova e envia.
+</Warning>
+
+- Usa só dados manuais e internos (contexto cadastrado, conversas, memória). Sem enriquecimento externo (nada de scraping de Google/LinkedIn).
+- O copiloto deriva o `company_id` do login (nunca do payload) e confere que a conversa pertence ao usuário (fail-closed).
+- Editar o contexto da EVA é restrito a admin; membros veem em modo leitura.
