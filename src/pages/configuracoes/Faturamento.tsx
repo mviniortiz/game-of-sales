@@ -24,7 +24,7 @@ const PLAN_DETAILS: Record<PlanType, {
   },
   plus: {
     icon: Rocket,
-    price: "R$ 297/mês",
+    price: "R$ 397/mês",
     features: ["10 vendedores", "50 produtos", "Eva (30/dia)", "Tudo do Starter"],
   },
   pro: {
