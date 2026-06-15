@@ -1,33 +1,214 @@
 ---
 title: "Metas e Ranking"
-description: "Progresso da meta do time e classificação ao vivo dos vendedores."
+description: "O cockpit de progresso da meta do time e a classificação ao vivo dos vendedores, com pace, projeção e níveis."
 ---
 
-Duas telas de acompanhamento comercial: **Metas** (`/metas`) é o cockpit de
-progresso da meta do time e da contribuição individual no mês; **Ranking**
-(`/ranking`) é a classificação ao vivo dos vendedores.
+Duas telas de acompanhamento comercial, ligadas pela mesma fonte de verdade (as
+**vendas aprovadas**) mas com propósitos distintos:
 
-## Metas
+- **Metas** (`/metas`) é o **cockpit**: onde o time está em relação à meta do mês,
+  se está no ritmo certo e onde fim de mês deve cair se nada mudar.
+- **Ranking** (`/ranking`) é a **classificação ao vivo** dos vendedores, com pódio,
+  níveis, deltas de posição e atualização em tempo real.
 
-- **Cockpit consolidado:** gauge de % da meta, Realizado (com delta vs. mês anterior no mesmo dia), pace diário necessário e projeção de fim de mês.
-- **Status do mês:** Sem meta / Meta batida / Acima do ritmo / No ritmo / Abaixo do ritmo.
-- **Contribuição individual:** vendedores ordenados por volume, com barra de progresso, etiqueta "Bateu meta" e % de contribuição no global.
+Ambas leem dados reais escopados por `company_id`. O realizado vem sempre da tabela
+`vendas` filtrada por `status = "Aprovado"` no período; as metas, das tabelas
+`metas` (individual) e `metas_consolidadas` (do time).
 
-## Ranking
+---
 
-- Selo **"Ao vivo"** que pulsa a cada mudança; toggle **Semanal / Mensal**.
-- **KPIs:** total vendido, maior venda, média por vendedor, ativos no período (no mensal, ainda a meta do time com % e dias restantes).
-- **Pódio top 3** e lista a partir do 4º, com delta de posição vs. período anterior, badge "você", **nível** (Bronze → Diamante) e "faltam R$ X para alcançar a posição acima".
+## Metas — o cockpit
 
-## Como funciona
+A tela seleciona a meta consolidada (pills no topo: "Atual" ou um mês específico),
+calcula o realizado somando as vendas aprovadas do mês e deriva todo o cockpit a
+partir disso.
 
-Ambas leem dados reais escopados por empresa. O realizado vem da tabela de vendas
-aprovadas no período; as metas, das tabelas de meta individual e consolidada. O
-Ranking combina atualização periódica com **Realtime**: assina mudanças no pipeline
-e atualiza na hora, disparando o pulso "ao vivo".
+### As fórmulas reais
+
+Todos os cálculos vivem no `useMemo` do cockpit. Estas são as fórmulas exatas:
+
+| Métrica | Fórmula | Observação |
+| --- | --- | --- |
+| **Realizado** (`atingido`) | Soma de `valor` das vendas aprovadas do mês | — |
+| **% da meta** (`percentual`) | `atingido / total × 100` | `total` = `valor_meta` da consolidada; 0 se sem meta |
+| **% esperado hoje** (pace ideal) | `diasDecorridos / diasTotal × 100` | O ponto onde você "deveria" estar hoje |
+| **Pace diário necessário** | `max(0, (total − atingido) / diasRestantes)` | Quanto falta por dia para bater; "—" se mês encerrado |
+| **Projeção fim de mês** | `(atingido / diasDecorridos) × diasTotal` | Extrapola o ritmo atual; = `atingido` se `diasDecorridos = 0` |
+| **Delta vs. mês anterior** (MoM) | `((atingido − base) / base) × 100` | `base` = vendas do mês anterior **até o mesmo dia**; `null` se base ≤ 0 |
 
 <Note>
-  A "gamificação" aqui é pódio, níveis, deltas de posição e o selo ao vivo. Super
-  admins são filtrados das listas (não contam no ranking), exceto o próprio usuário
-  logado.
+  O delta MoM é justo por construção: ele compara o realizado de hoje com o
+  realizado do mês anterior **no mesmo número de dias decorridos** (`dia ≤
+  diasDecorridos`), não com o mês anterior fechado. Se não houver venda comparável
+  no mês anterior, o delta vira `null` e a UI mostra "de R$ X" (a meta) no lugar.
+</Note>
+
+### Quando o pace é confiável: `canJudgePace`
+
+```
+canJudgePace = diasDecorridos > 2 && diasRestantes > 0
+```
+
+Esse gate evita julgar o ritmo cedo demais. No começo do mês, dois dias fracos não
+significam nada — então a tela não rotula como "abaixo" ainda.
+
+<Warning>
+  Enquanto `canJudgePace` for falso (até o **3º dia** do mês, ou se o mês já
+  encerrou), o status do mês mostra "Início do mês" e nenhum vendedor é marcado
+  como "abaixo do ritmo". Não confie em projeção/pace nos primeiros dias.
+</Warning>
+
+### Status do mês
+
+O chip de status no topo do cockpit é decidido em cascata, na ordem abaixo (a
+primeira condição verdadeira vence):
+
+| Status | Critério | Cor |
+| --- | --- | --- |
+| **Sem meta definida** | `total ≤ 0` | Neutro |
+| **Meta batida** | `percentual ≥ 100` | Verde |
+| **Início do mês** | `!canJudgePace` (e meta existe, não batida) | Azul |
+| **Acima do ritmo** | `percentual ≥ percentualEsperadoHoje + 5` | Verde |
+| **Abaixo do ritmo** | `percentual < percentualEsperadoHoje − 15` | Âmbar |
+| **No ritmo** | Nenhuma das anteriores | Azul |
+
+<Note>
+  Os limites são assimétricos de propósito: bastam **+5pp** acima do esperado para
+  "acima do ritmo", mas é preciso ficar **−15pp** abaixo para virar "abaixo do
+  ritmo" — uma folga que evita alarme por flutuação normal de início de mês.
+</Note>
+
+### Contribuição individual
+
+Abaixo do cockpit, os vendedores aparecem ordenados por **volume vendido** (maior
+primeiro). Cada linha cruza a meta individual (`metas`) com o realizado (`vendas`
+agrupadas por `user_id`):
+
+- **% da meta individual** = `valorRealizado / valorMeta × 100`.
+- **% de contribuição no global** = `valorRealizado / valor_meta_consolidada × 100`.
+- **Falta atingir** = `max(0, valorMeta − valorRealizado)`.
+- Etiqueta **"Bateu meta"** quando `percentual ≥ 100`.
+- Etiqueta **"Npp abaixo"** quando `canJudgePace`, não bateu, e o vendedor está
+  mais de 15pp abaixo do pace ideal.
+
+<Warning>
+  Super admins são filtrados da lista de contribuição (não contam como vendedores),
+  exceto se o super admin for o próprio usuário logado. Só entram metas com
+  `valor_meta > 0` e cujo perfil pertença à empresa ativa.
+</Warning>
+
+---
+
+## Ranking — a classificação ao vivo
+
+A tela monta o ranking combinando perfis (`profiles`) com vendas aprovadas do
+período, ordenando por valor vendido, e atualiza em tempo real.
+
+### Estrutura e KPIs
+
+| Elemento | O que mostra |
+| --- | --- |
+| **Selo "Ao vivo"** | Pulsa a cada mudança detectada via Realtime |
+| **Toggle Semanal / Mensal** | Troca a janela de período (`inicioPeriodo`/`fimPeriodo`) |
+| **Total vendido** | Soma do `valor_vendido` de todos os vendedores no período |
+| **Maior venda** | `valor_vendido` do 1º colocado |
+| **Média por vendedor** | Total ÷ vendedores **ativos** (com venda > 0) |
+| **Ativos no período** | Quantos venderam algo / total de vendedores |
+| **Meta do time** | Só no Mensal e se houver consolidada: % atingido + dias restantes |
+
+O conteúdo é um **pódio top 3** (layout olímpico 2-1-3 no desktop) seguido de uma
+lista de classificação a partir do 4º lugar. Cada linha da lista traz:
+
+- **Delta de posição** vs. o período anterior (sobe/desce/igual), calculado contra
+  o ranking do mês ou semana anteriores.
+- Badge **"você"** na linha do usuário logado.
+- O **nível** do vendedor (chip).
+- **"Faltam R$ X para alcançar #N"**: o gap em valor para a pessoa logo acima.
+
+### O toggle Semanal / Mensal
+
+| Período | Janela usada |
+| --- | --- |
+| **Mensal** | Do 1º ao último dia do mês corrente |
+| **Semanal** | Da segunda ao domingo da semana corrente (`weekStartsOn: 1`) |
+
+O período anterior (para o delta de posição) é o mês ou a semana imediatamente
+anteriores, com o mesmo recorte. A "Meta do time" só aparece no modo **Mensal**.
+
+### Níveis (Bronze → Diamante)
+
+Os níveis vêm do campo **`profiles.nivel`** e definem o chip de cada vendedor:
+
+| Nível | Ícone | Origem |
+| --- | --- | --- |
+| **Bronze** | Escudo | `profiles.nivel` (padrão quando vazio) |
+| **Prata** | Medalha | `profiles.nivel` |
+| **Ouro** | Estrela | `profiles.nivel` |
+| **Platina** | Coroa | `profiles.nivel` |
+| **Diamante** | Diamante | `profiles.nivel` |
+
+<Warning>
+  O **mecanismo que atribui ou promove o nível** não está nesta tela. O Ranking
+  apenas **lê** `profiles.nivel` (e usa "Bronze" como fallback quando o campo é
+  nulo). Como o nível é calculado/atualizado (trigger, regra por volume, ação
+  manual do gestor) **não está confirmado** nos arquivos lidos.
+</Warning>
+
+### Realtime: como o "Ao vivo" funciona
+
+O Ranking assina um canal Supabase Realtime e reage a qualquer mudança na tabela
+**`deals`** da empresa:
+
+<Steps>
+  <Step title="Assinatura">
+    Inscreve-se em `postgres_changes` na tabela `deals`, filtrando por
+    `company_id`, com evento `*` (insert/update/delete).
+  </Step>
+  <Step title="Invalidação">
+    A cada mudança, invalida as queries `vendedores-ranking` e
+    `meta-consolidada-atual`, forçando refetch.
+  </Step>
+  <Step title="Pulso visual">
+    Acende o selo "Ao vivo" (`livePulse`) por ~1,2s e o ranking se reordena.
+  </Step>
+</Steps>
+
+Além do Realtime, há `refetchInterval` periódico (15–30s) como rede de segurança.
+
+<Warning>
+  **Discrepância de fonte (elo exato não confirmado).** O Realtime escuta mudanças
+  em **`deals`**, mas o valor do ranking é calculado a partir da tabela **`vendas`**
+  (status `Aprovado`). Ou seja, o gatilho de atualização e a fonte do número são
+  tabelas diferentes. A tela assume que uma mudança em `deals` (ex.: mover/fechar
+  um card no pipeline) coincide com a criação/ajuste da venda correspondente em
+  `vendas`. **Esse acoplamento `deals → vendas` não está confirmado** nos arquivos
+  lidos: se uma venda aprovada for inserida em `vendas` **sem** mudar nenhum `deal`,
+  o pulso ao vivo pode não disparar até o refetch periódico.
+</Warning>
+
+### Aviso de meta não definida
+
+No modo Mensal, se houver vendedores mas nenhuma `metas_consolidadas` para o mês,
+a tela mostra um aviso âmbar. O texto muda por papel: para **admin**, "defina em
+Metas para acompanhar o progresso global"; para membro, "aguardando o gestor
+definir a meta consolidada do mês".
+
+---
+
+## Fontes de dados (resumo)
+
+| Tabela | Usada em | Filtro-chave |
+| --- | --- | --- |
+| `vendas` | Realizado e ranking | `status = "Aprovado"` + janela de datas + `company_id` |
+| `metas_consolidadas` | Meta do time (cockpit e KPI) | `mes_referencia` + `company_id` |
+| `metas` | Meta individual | `mes_referencia` + `valor_meta > 0` + `company_id` |
+| `profiles` | Vendedores e **níveis** | `company_id` (super admins filtrados) |
+| `deals` | **Gatilho Realtime** do Ranking | `company_id` |
+
+<Note>
+  A "gamificação" aqui é estrutural e legível: pódio, níveis, deltas de posição e
+  o selo ao vivo. Nada disso inventa número — todos os valores saem de vendas
+  aprovadas e metas reais. O que é leitura direta de banco (níveis) está marcado
+  como tal; o que não está confirmado (atribuição de nível, acoplamento
+  `deals → vendas`) está sinalizado acima.
 </Note>

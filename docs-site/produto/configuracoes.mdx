@@ -1,41 +1,168 @@
 ---
 title: "Configurações e Integrações"
-description: "Conta, empresa, equipe, faturamento e o catálogo de integrações."
+description: "Conta, empresa, equipe, faturamento, tags, importação, relatórios públicos e o catálogo de integrações."
 ---
 
-As Configurações (`/configuracoes`) reúnem o ajuste da conta e da empresa em
-sub-seções. A maioria é **admin-only**.
+As Configurações (`/configuracoes`) reúnem o ajuste da **conta** e da **empresa**
+em sub-seções, num shell com sidebar. A navegação é agrupada em **Conta**,
+**Empresa**, **Dados**, **Compartilhamento** e **EVA**. A maioria das seções é
+**admin-only** — itens marcados como `adminOnly` simplesmente não aparecem na
+navegação para membros comuns. Admins ainda têm um atalho "Ir para Gestão" no pé
+da sidebar.
 
-## Sub-seções
+<Note>
+  "Admin" aqui é o papel da empresa (na tabela `user_roles`); "super admin" é
+  global (`profiles.is_super_admin`) e faz bypass. Membros comuns só acessam
+  **Perfil** e **Segurança**.
+</Note>
 
-- **Perfil:** nome, e-mail e avatar (disponível a todos).
-- **Segurança:** senha, sessões e acessos.
-- **Organização:** dados da empresa (nome, logo, segmento, CNPJ, tamanho, site).
-- **Equipe:** atalho para a gestão de pessoas (convidar vendedor, definir admin), unificada em Gestão → Equipe.
-- **Faturamento:** plano atual, uso (vendedores, produtos, vendas do mês) e histórico; assinatura via Mercado Pago, com cancelamento.
-- **Tags:** central de tags da empresa (CRUD, cores, uso e merge). Tags são transversais a oportunidade, conversa, contato e base de conhecimento.
-- **Importar:** trazer oportunidades e vendas de fora.
-- **Relatórios públicos:** criar/revogar links white-label (servidos em `/r/:token`).
-- **Contexto da EVA:** o setup estratégico da IA (ver [EVA](/produto/eva)).
+## Sub-seções, uma a uma
+
+<AccordionGroup>
+  <Accordion title="Perfil — Conta (todos)">
+    Sua identidade dentro do Vyzon: nome, e-mail e avatar. Disponível a
+    **qualquer usuário**, não exige admin.
+  </Accordion>
+  <Accordion title="Segurança — Conta (todos)">
+    Senha, sessões e acessos. Hoje a tela cobre **alterar senha** (mínimo 8
+    caracteres, com confirmação), via `supabase.auth.updateUser`. Disponível a
+    todos.
+  </Accordion>
+  <Accordion title="Organização — Empresa (admin)">
+    Dados da empresa: nome, logo, segmento, **CNPJ** (com máscara), telefone,
+    tamanho do time e site. É o cadastro institucional da conta.
+  </Accordion>
+  <Accordion title="Acesso (Equipe) — Empresa (admin)">
+    Atalho. A gestão de pessoas (convidar vendedor, definir admin, ver
+    performance/ranking) foi **unificada em Gestão → Equipe** para evitar
+    duplicação; esta página apenas aponta para lá. Para membros, mostra
+    "Apenas admins gerenciam acessos da equipe".
+  </Accordion>
+  <Accordion title="Faturamento — Empresa (admin)">
+    Plano atual (Starter / Plus / Pro), **uso** (vendedores, produtos, vendas e
+    receita do mês), status da assinatura (`active` / `trialing` / `expired` /
+    `cancelled`, com data de fim do trial) e cancelamento. A assinatura é via
+    **Mercado Pago** (`mp_subscription_id`).
+  </Accordion>
+  <Accordion title="Tags — Dados (admin)">
+    Central de tags da empresa: CRUD, cores, uso e **merge**. As tags são
+    transversais — aplicam-se a oportunidade, conversa, contato e base de
+    conhecimento (modelo polimórfico `tags` / `tag_assignments`).
+  </Accordion>
+  <Accordion title="Importar — Dados (admin)">
+    Traz oportunidades (deals) e vendas de fora para dentro do Vyzon. É um
+    wrapper sobre a tela de importação de dados.
+  </Accordion>
+  <Accordion title="Integrações — Dados (admin)">
+    O catálogo de conectores (ver seção abaixo). Admin-only e pode exigir
+    upgrade de plano — se a empresa não tem direito, renderiza o `UpgradePrompt`.
+  </Accordion>
+  <Accordion title="Relatórios públicos — Compartilhamento (admin)">
+    Cria, lista e **revoga** links white-label (tabela `public_reports`),
+    servidos publicamente em `/r/:token` sem login. Dá para escolher quais
+    métricas aparecem (pipeline, métricas core, forecast, CPL por campanha, funil
+    por origem), o período e a expiração.
+  </Accordion>
+  <Accordion title="Contexto da EVA — EVA (membro lê, admin edita)">
+    O setup estratégico da IA comercial assistida (serviços, ICP, tom, objeções,
+    playbooks, base de conhecimento). É a memória que alimenta a EVA. Detalhes em
+    [EVA](/produto/eva).
+  </Accordion>
+</AccordionGroup>
 
 ## Integrações
 
-O catálogo agrupa por categoria. O status vem da configuração ativa de cada uma.
+O catálogo agrupa os conectores por categoria, em ordem fixa: **Captura de
+leads → Checkouts → Gateways de pagamento → Notificações → Produtividade**. Cada
+card tem um status efetivo:
 
-| Categoria | Integrações |
-|---|---|
-| Captura de leads | Google Sheets, Zapier, RD Station |
-| Checkouts de infoproduto | Hotmart, Kiwify, Greenn, Cakto, Braip, Monetizze, Eduzz |
-| Gateways de pagamento | Asaas, Mercado Pago (ativos); Celetus, Stripe, Pagar.me (em breve) |
-| Notificações (saída) | Slack, Discord — a EVA posta venda fechada e meta batida |
-| Produtividade | Google Calendar, Notazz (NF) |
+- **Conectado** (`active`) — há uma config ativa em `integration_configs`
+  (ou, no caso do Google Calendar, token válido no perfil).
+- **Disponível** (`available`) — pronto para conectar.
+- **Em breve** (`roadmap`) — ainda não existe; aceita **voto** para priorização.
 
-Os conectores de venda usam **webhooks** com uma URL única por empresa e
-autenticação por token (ou HMAC). Cada evento cria/atualiza oportunidade + venda, e
-há uma aba de "Atividade" com os logs do mês. Detalhes técnicos em
-[Webhooks de venda](/guides/webhooks).
+<Warning>
+  O **WhatsApp não aparece em Integrações**. Ele é canal nativo e vive no
+  [Inbox](/produto/inbox), via Evolution API — não é um webhook deste catálogo.
+</Warning>
+
+### Captura de leads
+
+| Integração | Status | Mecanismo |
+|---|---|---|
+| Google Sheets | Disponível | Apps Script (`onEdit`) → cada linha nova vira deal. Configurado em Webhooks/Leads |
+| Zapier | Disponível | Webhook genérico, token em `x-zapier-token` (você gera o segredo); normaliza `lead_created`/`deal_won`/`deal_lost`/etc. |
+| RD Station | Disponível | Webhook, token em `x-rd-token`; eventos `WEBHOOK.CONVERTED` e `WEBHOOK.MARKED_OPPORTUNITY` |
+
+### Checkouts de infoproduto
+
+| Integração | Status | Autenticação | Header |
+|---|---|---|---|
+| Hotmart | Disponível | Token (HOTTOK) | `x-hotmart-hottok` |
+| Kiwify | Disponível | **HMAC-SHA256** | `x-kiwify-signature` |
+| Greenn | Disponível | Token | `x-greenn-token` |
+| Cakto | Disponível | Token | `x-cakto-token` |
+| Braip | Disponível | Token (postback) | `x-braip-token` |
+| Monetizze | Disponível | Token (chave de integração, exige JSON) | `x-monetizze-token` |
+| Eduzz | Disponível | Token (API key) | `x-eduzz-token` |
+
+### Gateways de pagamento
+
+| Integração | Status | Autenticação | Header |
+|---|---|---|---|
+| Asaas | Disponível | API key (access_token) | `asaas-access-token` |
+| Mercado Pago (vendas) | Disponível | Access Token | `x-mp-access-token` |
+| Celetus | Em breve | — | aberto a votos |
+| Stripe | Em breve | — | aberto a votos |
+| Pagar.me | Em breve | — | aberto a votos |
 
 <Note>
-  O WhatsApp **não** aparece em Integrações — ele vive no [Inbox](/produto/inbox),
-  via Evolution API. Integrações é admin-only e pode exigir upgrade de plano.
+  O Mercado Pago aqui é o webhook das **suas vendas** — não confundir com o MP
+  que cobra a **assinatura do próprio Vyzon** (Faturamento). Para Asaas e MP, a
+  mesma chave que valida o webhook é usada para buscar dados completos do
+  pagador via API.
+</Note>
+
+### Notificações (saída)
+
+| Integração | Status | Mecanismo |
+|---|---|---|
+| Slack | Disponível | A EVA posta no canal a **venda fechada** e a **meta batida** |
+| Discord | Disponível | Mesma ideia no servidor do time, mensagem escrita pela EVA |
+
+### Produtividade
+
+| Integração | Status | Mecanismo |
+|---|---|---|
+| Google Calendar | Disponível | OAuth por usuário, sync de agendamentos (ver [Agenda](/produto/agenda)) |
+| Notazz | Disponível | Callback de status de NF-e/NFS-e, token em `x-notazz-token`; anota o status no deal |
+
+### Como funcionam os conectores de venda
+
+Os conectores de venda usam **webhooks com uma URL única por empresa**
+(`.../functions/v1/<plataforma>-webhook`) e autenticação por **token** ou
+**HMAC** (ver tabelas). Cada evento normaliza para uma ação de pipeline: venda
+aprovada cria deal `closed_won` + venda; reembolso/cancelamento/chargeback marca
+`closed_lost`; alguns (boleto, cobrança gerada) abrem o deal em "em negociação".
+
+<AccordionGroup>
+  <Accordion title="Idempotência">
+    Eventos duplicados **não** criam deals duplicados (garantida via
+    `claim_webhook_event` / chave por `external_id` ou `payment_id`).
+  </Accordion>
+  <Accordion title="Autenticação fail-closed">
+    Requests sem o header correto (token/assinatura) são rejeitados com **401** e
+    logados. Mesmo com a URL conhecida, sem o segredo não dá para forjar eventos.
+  </Accordion>
+  <Accordion title="Atividade">
+    Há uma aba **Atividade** com os logs de webhook (`webhook_logs`): eventos do
+    mês, sucesso/erro e o último evento por plataforma. Erros aparecem em
+    destaque nas mini-stats do topo.
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  Para o passo a passo de cada plataforma (onde colar a URL, onde pegar o token,
+  quais eventos marcar), o app traz instruções no modal de cada integração. Visão
+  técnica geral em [Webhooks de venda](/guides/webhooks).
 </Note>

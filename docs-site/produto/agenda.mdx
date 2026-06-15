@@ -1,38 +1,116 @@
 ---
 title: "Agenda"
-description: "Agendamentos de call com sincronização ao Google Calendar."
+description: "Calendário de agendamentos de call com visões dia/semana/mês e sincronização com o Google Calendar."
 ---
 
-A Agenda (`/agenda`) é o calendário de agendamentos de call, com visões Dia / Semana
-/ Mês, sidebar com mini-calendário, próximos eventos e um widget de meta do mês.
-Inclui sincronização com o **Google Calendar**.
+A Agenda (`/agenda`) é o calendário de **agendamentos de call** do time. Ela
+combina um calendário central, uma sidebar com mini-calendário, próximos eventos
+e um widget de meta do mês, e sincroniza (de forma assistida) com o **Google
+Calendar** de cada usuário.
 
-## O que tem
+## As visões
 
-- Três visões (Mês em grade; Dia/Semana em timeline), responsivo.
-- Filtros por vendedor (para admins) e por status (agendado / realizado / não compareceu / cancelado).
-- Criar agendamento (modal) e arrastar para mudar a data.
-- Status de comparecimento por evento (show / no-show / pendente) com cores.
-- Widget de meta do mês.
+A barra de topo controla qual visão você está vendo. Cada uma carrega um
+intervalo de dados diferente para não puxar o calendário inteiro de uma vez.
 
-## Sincronização com o Google
+| Visão | O que mostra | Janela de dados carregada |
+|---|---|---|
+| **Dia** | Timeline de um único dia | Início ao fim do dia atual |
+| **Semana** | Timeline da semana | Início ao fim da semana (locale PT-BR) |
+| **Mês** | Grade do mês inteiro com até 3 eventos por dia (e "+N mais") | Semana que contém o 1º até a semana que contém o último dia do mês |
+
+<Note>
+  No **mobile**, a visão "Semana" cai automaticamente para "Dia" na timeline, e
+  a visão "Mês" vira uma grade compacta com bolinhas de status + lista de eventos
+  abaixo. O mini-calendário, próximos eventos e a meta ficam num painel
+  retrátil.
+</Note>
+
+### Filtros e ações
+
+<AccordionGroup>
+  <Accordion title="Filtro por vendedor (admins)">
+    Admins e super admins veem um seletor de vendedor. Com "Todos vendedores"
+    selecionado, o calendário mostra o time inteiro e exibe as iniciais de cada
+    dono ao lado do evento. Membros comuns veem só os próprios agendamentos.
+  </Accordion>
+  <Accordion title="Filtro por status">
+    Filtra por **Pendentes** (`agendado`), **Compareceu** (`realizado`), **Não
+    compareceu** (`nao_compareceu`) e **Cancelados** (`cancelado`).
+  </Accordion>
+  <Accordion title="Criar e mover">
+    "Novo" abre o formulário de agendamento. Na timeline você pode **arrastar**
+    um evento para mudar a data/hora — isso atualiza `data_agendamento`
+    diretamente.
+  </Accordion>
+  <Accordion title="Status de comparecimento">
+    Cada evento tem um status de comparecimento mapeado em cores: **show**
+    (verde), **no-show** (rosa) e **pending** (neutro). O status vem do campo
+    `status` do agendamento.
+  </Accordion>
+</AccordionGroup>
+
+### Sidebar
+
+A lateral reúne três peças: um **mini-calendário** (clicar num dia leva para a
+visão Dia, com pontinho indicando dias com evento), a lista de **próximos
+eventos** (até 8, agrupados por data, a partir de hoje) e um **widget de meta do
+mês** que compara as vendas aprovadas do mês com a meta individual e mostra o
+percentual.
+
+## Sincronização com o Google Calendar
+
+A conexão é **por usuário**, não por empresa: o token OAuth do Google fica no
+perfil de quem conectou (`profiles.google_access_token` /
+`google_refresh_token` / `google_token_expires_at`).
 
 <Steps>
-  <Step title="Conecta">
-    O usuário conecta o Google Calendar (OAuth). O token fica no perfil — a conexão
-    é **por usuário**, não por empresa.
+  <Step title="Conecta (OAuth)">
+    O usuário conecta o Google Calendar pelo modal de configuração. Ao voltar do
+    fluxo OAuth, a página de Integrações trata os retornos (`success` /
+    `error=auth_failed|invalid_state|state_expired|token_failed|db_failed|...`)
+    e os tokens são salvos no perfil.
   </Step>
-  <Step title="Auto-sync">
-    Ao abrir a Agenda, se há conexão, o app importa os eventos do calendário
-    principal do Google (de hoje até +30 dias) que ainda não existem.
+  <Step title="Auto-sync ao abrir a Agenda">
+    Se há `google_access_token` no perfil, ao abrir a Agenda o app chama
+    `google-calendar-sync` com `action: "sync_all"`. Se algo novo foi importado,
+    recarrega a lista.
   </Step>
-  <Step title="Cria/edita">
-    Criar, atualizar e excluir eventos refletem no Google Calendar ("Call com
-    {cliente}", fuso de São Paulo, 1h, com lembretes).
+  <Step title="Cria / edita / exclui">
+    Criar, atualizar e excluir agendamentos refletem no Google via as ações
+    `create_event` / `update_event` / `delete_event`.
   </Step>
 </Steps>
 
+### O que é importado vs. o que é escrito
+
+A direção do dado importa, e o comportamento não é simétrico:
+
+| Ação | Direção | Detalhe |
+|---|---|---|
+| `sync_all` | **Google → Vyzon** | Importa eventos do calendário **primary**, janela de **hoje (00:00) até +30 dias**, `singleEvents=true`. Só insere eventos **novos** (com `summary` e horário válidos), via `upsert` com `onConflict: user_id,google_event_id` e `ignoreDuplicates`. Status padrão dos importados: `agendado`. |
+| `create_event` | **Vyzon → Google** | Cria evento "Call com {cliente}", fuso `America/Sao_Paulo`, duração **1h**, com lembretes (e-mail 60 min antes, popup 10 min antes). |
+| `update_event` | **Vyzon → Google** | Atualiza summary, descrição e horário (1h) do evento existente. |
+| `delete_event` | **Vyzon → Google** | Remove o evento do Google. |
+
+<Warning>
+  O escopo de importação é **estreito de propósito**: só o calendário **primary**
+  e só a janela **hoje → +30 dias**. Eventos fora dessa janela, em outros
+  calendários, ou sem título/horário **não** entram. A importação é **one-way
+  e aditiva** (não apaga nem reescreve seus agendamentos a partir do Google) — é
+  a criação/edição/exclusão a partir do Vyzon que escreve de volta.
+</Warning>
+
 <Note>
-  A sincronização cobre apenas o calendário **principal** do Google, na janela de
-  hoje a +30 dias. O token é renovado automaticamente quando expira.
+  **Renovação de token:** antes de cada operação a função checa
+  `google_token_expires_at`. Se expirou e existe `refresh_token`, ela troca por
+  um novo `access_token` em `oauth2.googleapis.com/token` e regrava no perfil —
+  de forma transparente. Sem `access_token` a função responde "User not connected
+  to Google" (401).
 </Note>
+
+### O nome do cliente nos eventos importados
+
+Ao importar do Google, o `summary` vira `cliente_nome` removendo o prefixo "Call
+com " (a mesma convenção que o Vyzon usa ao criar eventos). Eventos sem
+descrição entram com a observação "Sincronizado do Google Calendar".

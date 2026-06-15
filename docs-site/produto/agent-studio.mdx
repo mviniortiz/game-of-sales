@@ -1,53 +1,250 @@
 ---
 title: "Agent Studio"
-description: "Configurar e aprovar a EVA como agente especializado antes de soltá-la no Inbox."
+description: "Onde o gestor configura, simula e aprova a EVA como agente especializado antes de soltá-la no Inbox — com score de validação e travas de segurança que independem do score."
 ---
 
-O Agent Studio (`/eva-studio`) é onde o gestor configura a EVA como **agente
-especializado** (o MVP é o Agente Qualificador) através de uma jornada de quatro
-passos, antes de liberá-la para sugerir no Inbox.
+O **Agent Studio** (`/eva-studio`) é o lugar onde o gestor transforma a EVA em
+um **agente especializado** e o aprova para uso **assistido** no Inbox. O MVP é
+o **Agente Qualificador**: ele lê a conversa do lead e produz um diagnóstico
+(campos detectados, score, tags, perguntas e próxima ação).
+
+A página é uma jornada de quatro passos — **Criar → Ensinar → Provar → Ativar** —
+com duas vistas secundárias (Memória e Insights) que abrem pela lateral sem sair
+da jornada.
+
+<Warning>
+  Configurar e aprovar é restrito a **admin** (membros operam em modo leitura).
+  Nada vai ao ar sozinho: a EVA só passa a sugerir no Inbox quando o blueprint é
+  aprovado para uso assistido, e mesmo assim toda mensagem de saída segue
+  **aprovar-e-enviar**.
+</Warning>
+
+---
 
 ## A jornada: Criar → Ensinar → Provar → Ativar
 
 <Steps>
   <Step title="Criar">
-    Escolher o propósito do agente (hoje "vender" é o disponível; suporte e
-    pós-venda aparecem como futuros).
+    Escolher o propósito do agente. Hoje **"vender"** está disponível; "suporte"
+    e "pós-venda" aparecem como futuros. Aqui também se mostram as fontes reais
+    que alimentam o agente: conversas do WhatsApp (conectado), pipeline e
+    oportunidades (disponível) e textos que você cola depois.
   </Step>
   <Step title="Ensinar">
-    Revisar o contexto extraído das fontes reais (WhatsApp, pipeline). Há uma
-    revisão guiada do que a EVA aprendeu.
+    Revisar o que a EVA extraiu das fontes reais. O modo padrão é a **revisão
+    guiada** (`GuidedContextBuilder`): a EVA propõe itens de contexto e lacunas,
+    e o admin confirma, ajusta ou descarta — em lote ou um a um. Há também um
+    campo para colar texto (proposta, site, pitch) que vira contexto.
   </Step>
   <Step title="Provar">
-    Rodar simulações e replay de momentos reais de conversa. O admin julga cada
-    cenário (aprovar/ajustar).
+    Testar o agente em dois modos: o **Campo de Provas** (`SimulationLab`, do
+    cenário tranquilo ao extremo) e o **Replay de casos reais**
+    (`GuidedSimulationReplay`, momentos reais das conversas com desfecho). O
+    admin julga cada cenário (aprovar / ajustar). É o replay real, com linha
+    vermelha, que **libera** a ativação.
   </Step>
   <Step title="Ativar">
-    Confirmação final: libera a EVA a sugerir no Inbox (status do blueprint vira
-    "aprovado para uso assistido").
+    Confirmação final. Libera a EVA a sugerir no Inbox: o status do blueprint vai
+    para `approved_assisted`. A partir daí, opcionalmente, o admin pode ligar o
+    **modo híbrido** (criar a oportunidade no pipeline automaticamente).
   </Step>
 </Steps>
 
-## Blueprint e aprovação
+<Note>
+  **Não confirmado / em evolução:** o chat conversacional do passo "Ensinar"
+  ainda é **roteirizado** e entra com o selo "prévia" — a EVA conversacional real
+  é backend pesado. Por isso o modo default do Ensinar é a revisão guiada (que é
+  real). A prontidão na lateral é honesta: cresce com passo concluído e
+  julgamento feito, não com clique de navegação.
+</Note>
 
-- **Blueprint** é a configuração do agente (objetivo, segmento, pipeline, campos, tags, regras, lacunas). É gerado de forma determinística a partir do contexto real da empresa; um blueprint salvo sempre prevalece.
-- **Score de validação (0–100)** sobre 10 critérios (objetivo definido, ICP, pipeline revisado, regras aplicadas, lacunas revisadas, respostas proibidas, handoff humano, ao menos 5 simulações testadas, nenhum cenário crítico reprovado, publicação automática desativada).
+---
+
+## O blueprint determinístico
+
+O **blueprint** é a configuração do agente: objetivo, segmento, pipeline,
+campos detectados, tags, regras, lacunas, cenários e status. Ele é gerado de
+forma **determinística** a partir do contexto real da empresa — heurística
+pura, **sem IA e sem chamada de rede**. A regra é simples:
+
+> **Um blueprint salvo sempre prevalece.** Sem salvo, deriva do contexto real
+> (`eva_business_context`, tags, estágios de deal, lacunas abertas). Sem contexto
+> suficiente, nasce com o Padrão de Agência no estado `seeded`. Nunca cria tags
+> ou pipeline reais — é só ponto de partida revisável.
+
+### Presets de segmento
+
+A geração detecta o segmento pelo conteúdo do contexto (por palavras-chave) e
+escolhe um preset:
+
+| Preset | Quando | Agente | Pipeline base |
+| --- | --- | --- | --- |
+| `real_estate` | Sinais de imobiliária/incorporadora (empreendimento, apartamento, financiamento…) | Qualificador imobiliário | Novo lead → Qualificação → Visita → Proposta → Reserva → Fechado |
+| `agency` | Sinais de agência/marketing (tráfego, social media, anúncios…) | Qualificador comercial | Novo lead → Diagnóstico → Proposta → Negociação → Fechado |
+| `generic` | Sem sinal claro | Qualificador comercial | Novo lead → Qualificação → Proposta → Negociação → Fechado |
+
+<Note>
+  Quando há contexto real, o blueprint nasce em `in_review`. Quando **não** há
+  nenhum contexto, nasce com o **Padrão de Agência** (`AGENCY_PACK`) já no estado
+  `seeded` — ou seja, a EVA já consegue sugerir desde o dia 1, sem o dono
+  configurar nada. A segurança nesse caso não está no blueprint: está na
+  **aprovação humana por sugestão** (1 toque).
+</Note>
+
+### Os status do blueprint
+
+O ciclo de vida do agente vai de "recém-semeado" até "aprovado para uso
+assistido". Cada status carrega um significado:
+
+| Status | Significado |
+| --- | --- |
+| `seeded` | Padrão de Agência pronto, já consegue sugerir; segurança = aprovação humana por sugestão. |
+| `draft` | Rascunho criado pelo admin (passo "Criar" concluído), ainda sem revisão. |
+| `in_review` | Em revisão — o contexto derivado está sendo conferido no "Ensinar". |
+| `ready_to_test` | Revisado, pronto para entrar no Campo de Provas. |
+| `prepared` | Preparado (contexto/regras aplicados), pronto para a etapa de simulação/replay. |
+| `published_preview` | Publicado em prévia — sugere de forma controlada antes da aprovação final. |
+| `partially_applied` | Parte do blueprint foi aplicada (algumas tags/lacunas/regras), outras pendentes. |
+| `approved_assisted` | **Aprovado para uso assistido**: a EVA sugere no Inbox. É o status que gateia a EVA. |
+
+<Tip>
+  O selo `approved_assisted` significa "afinado" — o dono ajustou e aprovou. Mas
+  a EVA não precisa estar aprovada para sugerir no `seeded`: o Padrão de Agência
+  já trabalha, com a aprovação acontecendo por sugestão individual.
+</Tip>
+
+---
+
+## O score de aprovação
+
+Antes de ativar, o Agent Studio calcula um **score de validação (0–100)** sobre
+**10 critérios**. O cálculo é local/puro. O score por si só não autoriza nada —
+as travas de segurança valem **independentemente** dele.
+
+| # | Critério | Aprovado quando |
+| --- | --- | --- |
+| 1 | Objetivo do agente definido | o blueprint tem objetivo preenchido |
+| 2 | ICP / segmento definido | o blueprint tem segmento preenchido |
+| 3 | Pipeline sugerido revisado | pipeline com ≥2 etapas **e** o blueprint avançou de estado |
+| 4 | Regras comerciais aplicadas | há regras aplicadas ao blueprint |
+| 5 | Lacunas críticas revisadas | nenhuma lacuna aberta restante |
+| 6 | Respostas proibidas definidas | as regras incluem promessa proibida / "nunca prometer" |
+| 7 | **Handoff humano definido** | as regras mencionam handoff/humano/especialista — **bloqueia** se faltar |
+| 8 | Pelo menos 5 simulações testadas | ≥5 cenários julgados |
+| 9 | **Nenhum cenário crítico reprovado** | nenhum cenário crítico em estado reprovado — **bloqueia** se houver |
+| 10 | Publicação automática desativada | sempre aprovado (não existe publicação automática) |
+
+O score é a fração de critérios "aprovados". Os estados derivados:
+
+| Estado | Quando |
+| --- | --- |
+| **Bloqueado** | há blocker (sem handoff ou cenário crítico reprovado) ou score < 50 |
+| **Em revisão** | nenhuma simulação julgada ainda |
+| **Em simulação** | entre 1 e 4 simulações julgadas |
+| **Pronto para uso assistido** | score ≥ 80 e sem blockers |
+
+---
+
+## Travas de segurança
+
+<Warning>
+  **As travas independem do score.** A aprovação é **bloqueada** se:
+
+  1. **Não houver handoff humano definido** nas regras, ou
+  2. **Houver um cenário crítico reprovado** na simulação.
+
+  Mesmo com score alto, qualquer um desses dois pontos trava a ativação até ser
+  resolvido. Além disso, o score < 50 também bloqueia.
+</Warning>
+
+E os princípios que valem em runtime, depois de aprovado:
+
+- **Mensagens de saída nunca são geradas como ação.** O rascunho de abordagem
+  nasce `requiresApproval=true` e entra na fila **aprovar-e-enviar**
+  (`agent_suggestions`, `kind=outbound_message`, `status=pending`) — auditável.
+- **Modo híbrido:** o único automatismo permitido é **criar/atualizar o card de
+  oportunidade** no pipeline para um lead que já chegou (inbound), com os campos
+  qualificados preenchidos (`kind=qualification`). A saída de mensagem permanece
+  sempre humana. O admin liga/desliga esse modo, e ele só aparece depois da EVA
+  aprovada.
+- **Toda detecção é só da conversa**, nunca de fonte externa, e nasce marcada
+  como `needsConfirmation` / `isPreview` — precisa de confirmação humana antes de
+  gravar.
+
+---
 
 ## O Agente Qualificador (MVP)
 
-Lê a conversa do lead e produz um diagnóstico: campos detectados (orçamento,
-serviço, urgência, decisor), score verde/amarelo/vermelho, tags sugeridas,
-perguntas recomendadas e a próxima ação.
+O Qualificador é uma função **pura**: recebe a conversa + o contexto do blueprint
+e devolve um diagnóstico, sem efeito colateral, sem rede, sem escrita. No MVP a
+detecção é heurística (regex/keywords sobre o texto do **lead**); o contrato é
+estável para que um edge function (Claude) possa substituí-la sem mudar nenhum
+consumidor.
 
-## Limites importantes
+### Campos detectados
+
+A partir do texto do lead, ele tenta detectar (cada campo nasce com
+`needsConfirmation=true` e `source="conversation"`):
+
+| Campo | Como detecta |
+| --- | --- |
+| **Orçamento** | valores em reais / "mil" / "por mês" / "investimento" |
+| **Serviço de interesse** | tráfego pago, social media, site/landing, lançamento, branding |
+| **Urgência** | "urgente", "essa semana", "hoje", "o quanto antes"… → marca "Alta" |
+| **Decisor** | "sou o dono", "sou sócio", "decido eu", "responsável"… |
+
+<Note>
+  Os campos que o agente busca vêm do blueprint (`detected_fields`). Os que ele
+  não detectou viram `missingFields` e geram **perguntas recomendadas** para o
+  vendedor fazer (nunca enviadas sozinhas) e **tags** como `sem-orcamento`.
+</Note>
+
+### A escala de score (verde / amarelo / vermelho)
+
+| Score | Significado | Quando |
+| --- | --- | --- |
+| 🟢 **green** | Qualificado — pronto para o closer | ≥3 campos detectados e orçamento presente |
+| 🟡 **yellow** | Em qualificação — falta 1–2 sinais | 1+ campo detectado, mas ainda incompleto |
+| 🔴 **red** | Fora do ICP / sem critério | sinais negativos de ICP (estudante, TCC, "não tenho empresa"…) |
+
+### Linhas vermelhas e próxima ação
 
 <Warning>
-  As travas de segurança **independem do score**: a aprovação é bloqueada se não
-  houver handoff humano definido, ou se houver um cenário crítico reprovado. Toda
-  detecção é só da conversa (nunca de fonte externa) e nasce marcada como "precisa
-  confirmação".
+  Se o lead **pergunta preço logo de cara** (objeção de preço nas 2 primeiras
+  mensagens), o Qualificador **não** trata isso como qualificação: marca
+  `handoff` obrigatório e recomenda levar ao closer pessoalmente — **sem
+  prometer nem aplicar desconto**. Lead verde também sugere handoff para o
+  closer assumir. Lead vermelho sugere descartar com educação.
 </Warning>
 
-- **Mensagens de saída** nunca são geradas como ação: entram numa fila de "aprovar-e-enviar" como sugestão pendente e auditável.
-- **Modo híbrido:** o único automatismo permitido é criar/atualizar o card de oportunidade no pipeline para um lead que já chegou. A saída de mensagem permanece humana.
-- Configurar e aprovar é restrito a admin.
+O diagnóstico também produz **tags sugeridas** (`lead-quente`, `lead-morno`,
+`fora-do-icp`, `indicacao`, `sem-orcamento`, `precisa-followup`), filtradas pelas
+tags do blueprint e pelas já existentes no deal, mais um `rationale` de uma linha.
+
+### O Padrão de Agência (seeded)
+
+Quando não há contexto, o agente nasce com o **Pacote Agência** (`AGENCY_PACK`):
+
+- **Campos:** Serviço de interesse, Orçamento, Decisor, Prazo, Origem do lead.
+- **Tags:** lead-quente, lead-morno, lead-frio, fora-do-icp, precisa-followup, indicacao.
+- **Regras (tom + linhas vermelhas):** falar como o comercial da agência (direto,
+  sem emojis, sem jargão); marcar lead-quente só com serviço + orçamento +
+  decisor; **nunca enviar mensagem/proposta/preço sem aprovação**; **nunca
+  prometer resultado** (faturamento, leads, ROI); sugerir handoff em pedido de
+  preço de cara ou objeção forte; lead fora do ICP não vira quente.
+- **Lacunas típicas:** tabela de serviços e preços, critérios de ICP, casos de
+  sucesso, política de desconto.
+
+---
+
+## Auditoria e permissões
+
+- **Config do agente** (`eva_blueprints.status`): segue o ciclo de vida acima;
+  só sugere ao vivo quando preparado/aprovado.
+- **Sugestão em runtime** (`agent_suggestions.status`): `pending → accepted |
+  adjusted | rejected | expired`, com `applied_payload` e `feedback`.
+- **Permissões:** admin configura e aprova; membro usa e registra o desfecho;
+  super admin tem bypass. Escopo por `company_id` (padrão de RLS do projeto).
+
+Para entender o que a EVA faz com a conversa depois de ativada (o copiloto e seus
+campos), veja a página da [EVA](/produto/eva).

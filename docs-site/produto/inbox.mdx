@@ -1,46 +1,435 @@
 ---
 title: "Inbox"
-description: "Central de atendimento WhatsApp em 3 colunas, com a EVA ao lado."
+description: "Central de atendimento sobre o WhatsApp em três colunas (leads, conversa e a EVA), com análise assistida, vínculo com o pipeline e sincronização ao vivo da Evolution API."
 ---
 
-O Inbox (`/inbox`) é a central de atendimento sobre o WhatsApp (via Evolution API),
-em três colunas: lista de leads, conversa, e o painel da EVA.
+O **Inbox Comercial** (`/inbox`) é a tela onde a agência atende leads de WhatsApp
+sem sair do Vyzon. Ele monta o atendimento em **três colunas** — a lista de
+leads à esquerda, a conversa no centro e a **EVA** à direita — e conecta cada
+conversa ao pipeline de oportunidades.
 
-## As três colunas
-
-**Esquerda — lista de leads.** Busca por nome/telefone, badge de sincronização
-(Live / Histórico salvo / Offline) e o card de conexão do WhatsApp com as ações:
-**Conectar/Reconectar** (modal de QR Code), **Sincronizar histórico**,
-**Re-sincronizar webhook** e **Desconectar**.
-
-**Centro — a conversa.** Thread da conversa com envio de texto, áudio e mídia
-(imagem/vídeo/documento com legenda).
-
-**Direita — EVA Comercial.** Análise da conversa, com o selo permanente "Assistida".
-
-## A EVA no Inbox
+O canal nativo é o **WhatsApp via Evolution API**. As mensagens são lidas do
+banco (modelo *database-first*): o webhook da Evolution grava em
+`channel_messages`/`channel_conversations` e a Inbox renderiza a partir daí,
+mantendo a tela viva por **Supabase Realtime** mais redes de segurança de
+re-sincronização. O envio (texto/áudio/mídia) é o único caminho que fala direto
+com a Evolution.
 
 <Note>
-  A análise é **manual por escolha de produto**: nada roda sozinho. Você decide
-  quando clicar em "Analisar conversa".
+**A EVA é assistida, não autônoma.** Ela lê a conversa, pontua o lead e sugere o
+próximo passo e uma resposta. Nada sai sozinho: qualquer mensagem de saída para
+o lead passa por aprovação humana. A única ação que pode ser automática é
+**criar o card de oportunidade** a partir de um lead que já entrou (modo
+híbrido), e mesmo assim ela nunca envia mensagem. Veja
+[Limites do modelo assistido](#limites-do-modelo-assistido).
 </Note>
 
-Quando analisada, a EVA mostra:
-- **Próxima ação** e **Resposta sugerida** (rascunho com Copiar e Editar — "você aprova antes de enviar").
-- **Leitura da EVA:** score 0–100, fit, e pills de temperatura, urgência, intenção, serviço e objeção.
-- **Dossiê expansível:** resumo, "já sabemos / falta descobrir", lacunas de contexto, tags e o vínculo com a oportunidade no CRM.
+## Anatomia da tela
 
-**Vínculo conversa ↔ oportunidade:** três estados — "No pipeline" (vinculado),
-"Possível oportunidade existente" (match por telefone) e "Fora do pipeline" (criar/vincular).
+A Inbox é um layout de três painéis. No desktop os três aparecem lado a lado; no
+mobile a tela alterna entre a **lista** e a **conversa** (a coluna da EVA não é
+exibida no mobile).
 
-## Limites importantes
+| Coluna | Componente | O que mostra |
+| --- | --- | --- |
+| Esquerda | `InboxList` | Lista de leads, busca, badge de sincronização e o card de conexão do WhatsApp com todas as ações de conexão. |
+| Centro | `InboxConversation` | A thread da conversa selecionada e o compositor de envio (texto, áudio, mídia). |
+| Direita | `EvaPanel` | A EVA Comercial: leitura da conversa, próxima ação, resposta sugerida, dossiê e o vínculo com a oportunidade. Apenas no desktop. |
+
+<Note>
+Existe um componente alternativo, `EvaAssistColumn` (a "máquina de resposta",
+preview em `/eva-assist-preview`), que **ainda não está ligado** na Inbox real —
+hoje quem ocupa a coluna direita é o `EvaPanel`. Trate o `EvaAssistColumn` como
+direção de design futura, não como comportamento em produção.
+</Note>
+
+## Coluna esquerda — a lista de leads
+
+### Busca e contagem
+
+O cabeçalho mostra o título "Inbox Comercial", o badge de sincronização (abaixo)
+e a contagem de leads. A **busca** filtra por **nome** ou **telefone** do
+contato (case-insensitive). Grupos de WhatsApp são sempre escondidos da lista —
+só conversas 1:1 aparecem.
+
+Cada cartão de lead traz avatar (foto de perfil quando disponível), nome (ou
+telefone), horário relativo da última mensagem, um trecho da última mensagem
+(prefixado com "Você:" quando foi a agência que falou), um selo estático
+**WhatsApp** e o contador de **não lidas** (mostra `99+` acima de 99).
+
+<Tip>
+Os badges de origem/qualificação ("Meta Ads", "Demo marcada" etc.) foram
+**removidos** dos cartões: eram mock determinístico baseado em hash do telefone e
+confundiam o usuário. O cartão só mostra dado real do canal.
+</Tip>
+
+### O badge de sincronização
+
+Um selo compacto ao lado do título comunica o quanto a tela está confiável agora.
+Ele combina três sinais: se a Evolution está conectada ao vivo, se esse status
+foi verificado recentemente (janela de **5 minutos**), e se há histórico salvo no
+banco.
+
+| Tom (`SyncTone`) | Badge | Quando aparece | O que significa |
+| --- | --- | --- | --- |
+| `live` | **Live** (verde, pulsando) | Conectado **e** status verificado há menos de 5 min | Mensagens novas chegam ao vivo; tela confiável. |
+| `stale` | **Status não verificado** (âmbar) | Conectado, mas o status não é checado há mais de 5 min | Provavelmente ok, mas convém clicar em atualizar. |
+| `offline-with-history` | **Histórico salvo** (cinza) | Desconectado **com** conversas no banco | WhatsApp caiu; você vê o histórico salvo, não o ao vivo. |
+| `offline` | **WhatsApp desconectado** (cinza) | Desconectado e sem histórico | Nada para mostrar; conecte o WhatsApp. |
+| `unknown` | **Verificando…** | Status ao vivo ainda não foi conclusivo no primeiro carregamento | Estado transitório enquanto a tela resolve a conexão. |
+
+A linha auxiliar (quando presente) traduz o tom em texto, por exemplo
+"Atualizado há 2min" ou "WhatsApp desconectado · exibindo histórico (há 5min)".
+
+### O card de conexão do WhatsApp
+
+Abaixo do cabeçalho, um card resume o estado da conexão e concentra as ações.
+O estado é derivado por `useInboxConnectionStatus`, que cruza a linha de
+`channel_connections` (banco) com o status ao vivo da Evolution.
+
+| Estado (`status`) | Rótulo | Subtítulo | Ações oferecidas |
+| --- | --- | --- | --- |
+| `connected` | WhatsApp conectado | "Histórico salvo · atualizado há X" (mais o telefone, se disponível) | Sincronizar histórico, Re-sincronizar webhook, Desconectar |
+| `pending` | Aguardando conexão | "Leia o QR Code para conectar." | Conectar (abre o modal de QR) |
+| `disconnected` | WhatsApp desconectado | "Conecte o WhatsApp para começar." ou "Você está vendo apenas o histórico salvo." | Conectar / Reconectar |
+| `unknown` | Status do WhatsApp indisponível | "Atualize ou verifique a conexão." | Reconectar |
+
+<Note>
+O check **ao vivo** da Evolution é autoritativo: se a instância está aberta, o
+estado vira `connected` mesmo que a linha de conexão no banco ainda não tenha
+sido re-resolvida (ex.: logo após o primeiro QR).
+</Note>
+
+#### Ações de conexão
+
+<AccordionGroup>
+<Accordion title="Conectar / Reconectar (QR Code)">
+Abre o `WhatsAppConnectModal`, que pede um QR Code à edge function
+`evolution-whatsapp` e mostra a imagem para o usuário ler no celular. Ao
+conectar, a Inbox dispara um refresh. **Reconectar** é o mesmo fluxo quando já
+existe uma conexão registrada mas ela caiu.
+</Accordion>
+<Accordion title="Sincronizar histórico">
+Só aparece quando a conexão está `connected` no provider Evolution. Chama
+`evolution-whatsapp` com `action: import_history`, importando conversas e
+mensagens recentes da Evolution para `channel_*`. Ao terminar, mostra quantas
+conversas e mensagens foram importadas e refaz a carga da Inbox. Use quando o
+WhatsApp tem histórico que ainda não apareceu na tela.
+</Accordion>
+<Accordion title="Re-sincronizar webhook">
+Re-aplica a configuração do webhook **sem reconectar o número**. Serve para
+reativar os *checks* de entrega/leitura (os "vistos") quando eles param de
+chegar. O efeito vale a partir das **próximas** mensagens.
+</Accordion>
+<Accordion title="Desconectar">
+Faz logout da instância (pede confirmação antes). Depois disso é preciso ler o
+QR Code de novo para reconectar. O histórico já salvo permanece visível.
+</Accordion>
+</AccordionGroup>
+
+## Coluna central — a conversa
+
+A thread renderiza as mensagens da conversa selecionada em ordem cronológica.
+Por baixo, ela busca as **200 mensagens mais recentes** (`MESSAGES_FETCH_LIMIT`),
+em ordem decrescente no banco e revertidas no cliente — conversas longas não
+ficam "presas" nas mensagens antigas.
+
+### Envio de mensagens
+
+O compositor suporta três tipos de envio. Todos passam pela Evolution via
+`useEvolutionSender` e usam o **JID** do contato (não o id da conversa) como
+destino.
+
+<Tabs>
+<Tab title="Texto">
+Ao enviar, o texto entra **otimista** na thread como mensagem *pending* (TTL de
+**30s**) e é despachado à Evolution. A Inbox refaz o fetch imediatamente e de
+novo após **1,5s**, para cobrir a latência típica do webhook (1–3s) que grava a
+mensagem persistida.
+</Tab>
+<Tab title="Áudio">
+Grava e envia áudio (base64). Como o webhook de áudio costuma ser mais lento, o
+re-fetch atrasado roda após **2s**.
+</Tab>
+<Tab title="Mídia (imagem / vídeo / documento)">
+Envia imagem, vídeo ou documento com legenda opcional. Os tipos aceitos no
+seletor de arquivo são `image/*`, `video/*` e documentos
+(`pdf, doc, docx, xls, xlsx, ppt, pptx, txt`). O base64 vai sem o prefixo
+`data:`; o re-fetch atrasado também roda após **2s**.
+</Tab>
+</Tabs>
 
 <Warning>
-  Nenhuma mensagem sai sozinha. As recomendações de "criar oportunidade" e "fazer
-  handoff" são sugestões ao humano. A auto-criação de card no pipeline (modo
-  híbrido) só acontece se a empresa optou — e mesmo assim só cria o card, nunca
-  envia mensagem.
+O envio só funciona quando a conversa tem um **JID** resolvido (`chat.chatJid`).
+No canal moderno isso é o `external_contact_id` do contato; no fallback legado é
+o próprio id do chat. Sem JID, o envio é abortado silenciosamente (com aviso no
+console) — não há fila de reenvio.
 </Warning>
 
-A fonte primária é o canal atual (`channel_*`), com fallback automático para o
-WhatsApp legado se o canal falhar ou vier vazio.
+### Como a tela se mantém ao vivo
+
+A Inbox não depende só do carregamento inicial. Há três mecanismos somados:
+
+1. **Realtime** — assina `channel_messages` filtrado por `connection_id`. Um
+   `INSERT` é aplicado direto no estado (a mensagem é inserida na posição
+   cronológica certa, sem refetch das 200 linhas); um `UPDATE` aplica só a
+   mudança de **status** (entregue/lido) in-place.
+2. **Resync de fallback** — a cada **20 segundos**, com a aba visível, refaz a
+   carga a partir do banco. É a rede de segurança para quando o Realtime perde um
+   evento ou o webhook grava sem notificar. Lê do Supabase (barato); **não**
+   martela a Evolution.
+3. **Consistency check** — se a sidebar aponta uma mensagem mais nova do que a
+   thread aberta, a Inbox dispara um fetch da conversa selecionada para
+   convergir.
+
+Os eventos de Realtime são *debounced*: **500ms** para recarregar a lista de
+chats e **300ms** para recarregar mensagens.
+
+## Coluna direita — a EVA Comercial
+
+O `EvaPanel` é onde a EVA lê a conversa e devolve um diagnóstico. Ele carrega no
+topo o selo permanente **Assistida** ("A EVA sugere. Seu time aprova antes de
+qualquer ação.").
+
+### Análise é manual por escolha de produto
+
+<Note>
+Ao abrir uma conversa, a EVA **não** chama a IA automaticamente. Ela lê a última
+análise **salva** (de `conversation_summaries`, sem custo). A análise por IA só
+roda quando você clica em **Analisar conversa** (ou **Reanalisar**). A microcopy
+na tela diz: "Nada roda sozinho: você decide quando a EVA analisa."
+</Note>
+
+O motivo é custo e controle. A leitura salva hidrata a UI de graça; o botão é o
+único caminho que consome a chamada paga à OpenAI (via a edge function
+`whatsapp-copilot`).
+
+### Estados do painel
+
+| Estado | Quando | O que aparece |
+| --- | --- | --- |
+| Sem conversa | Nenhum chat selecionado | "Selecione uma conversa para a EVA analisar." |
+| Sem mensagens | Chat sem mensagens | "Selecione uma conversa com mensagens para a EVA analisar." |
+| Sem análise | Nunca analisada | Botão "Analisar conversa" + a microcopy de controle. |
+| Carregando salva | Lendo `conversation_summaries` | "Buscando análise salva…" |
+| Analisando | A IA está rodando | "EVA analisando conversa…" |
+| Pronta | Há análise | Leitura, próxima ação, resposta sugerida e dossiê. |
+| Desatualizada | Análise existe, mas mudou algo | Banner de *stale* + botão de reanálise (ver abaixo). |
+| Erro | A chamada falhou | Mensagem de erro com "Tentar novamente". |
+| Limite atingido | Rate limit diário | "Limite diário de análises atingido" (sem retry — recupera sozinho). |
+
+### Detecção de "desatualizada" (stale)
+
+A EVA marca a análise como possivelmente velha em dois casos:
+
+- **Por mensagens** (`isStaleByMessages`): chegou mensagem nova **depois** do
+  `analyzed_at`. O banner mostra quantas mensagens novas chegaram.
+- **Por contexto** (`isStaleByContext`): a versão do contexto comercial da
+  agência (`eva_business_context.version`) avançou desde a última análise — ou
+  seja, alguém atualizou serviços/ICP/regras e a leitura antiga ficou para trás.
+
+Em ambos os casos o CTA muda: "Reanalisar agora" (mensagens novas), "Atualizar
+análise" (contexto novo) ou só "Reanalisar".
+
+### O que a EVA retorna
+
+A resposta da IA tem dois blocos: campos **legados** (compatibilidade) e o objeto
+estruturado **`qualification`** (o coração da leitura). Tudo é normalizado no
+servidor; campos inválidos viram default e nunca quebram a UI.
+
+#### Campos legados (nível da análise)
+
+| Campo | Tipo | Uso na UI |
+| --- | --- | --- |
+| `sentiment` | string | Vira o "Resumo da conversa". |
+| `temperature` | `quente \| morno \| frio` | Redundante com `qualification.temperatura`. |
+| `stage` | string | "Estágio sugerido" no dossiê. |
+| `strategy` | string[] | Dicas (persistidas; uso interno). |
+| `draft` | string | Rascunho de resposta (fallback se faltar `resposta_sugerida`). |
+| `objections` | string[] | Objeções detectadas (persistidas). |
+| `nextAction` | string | Texto livre da próxima ação. |
+| `context_version_used` | número | Versão do contexto usada (base do stale por contexto). |
+| `context_present` | boolean | Se havia contexto da agência cadastrado. |
+
+#### Objeto `qualification` (campos reais do schema)
+
+| Campo | Valores | O que é |
+| --- | --- | --- |
+| `servico_interesse` | string \| null | Serviço cadastrado que o lead parece querer. |
+| `intencao` | `preco \| demo \| duvida \| suporte \| compra \| outro \| null` | Intenção principal. |
+| `temperatura` | `frio \| morno \| quente \| null` | Temperatura do lead (pill com ícone). |
+| `fit_sugerido` | `baixo \| medio \| bom \| excelente \| null` | Aderência ao ICP. |
+| `score_sugerido` | inteiro 0–100 \| null | Score grande exibido na "Leitura da EVA". |
+| `score_justificativa` | string (≤280) \| null | Uma frase explicando o score. |
+| `urgencia` | `baixa \| media \| alta \| indefinida \| null` | Urgência (pill). |
+| `orcamento` | `informado \| nao_informado \| baixo \| adequado \| alto \| null` | Sinal de orçamento. |
+| `objecao` | string (≤240) \| null | Objeção principal (pill). |
+| `info_coletada` | string[] (até 10) | "Já sabemos" — o que a conversa já revelou. |
+| `info_faltante` | string[] (até 10) | "Falta descobrir" — o que ainda perguntar. |
+| `proxima_acao` | `responder \| qualificar \| criar_oportunidade \| marcar_demo \| handoff_humano \| aguardar \| null` | Próxima ação sugerida (rótulo traduzido). |
+| `resposta_sugerida` | string (≤1200) \| null | Rascunho de resposta (o "herói"). |
+| `deve_criar_oportunidade` | boolean | Recomendação de criar card (gatilho do modo híbrido). |
+| `deve_fazer_handoff` | boolean | Recomendação de passar para um humano (callout âmbar). |
+| `confianca` | 0.0–1.0 | Confiança do modelo na qualificação. |
+| `knowledge_gaps` | array (até 5) | Lacunas de contexto (ver abaixo). |
+
+Cada **lacuna de contexto** (`knowledge_gap`) tem: `type`
+(`agency_context \| service \| pricing \| icp \| handoff_rule \| tone \| other`),
+`description`, `suggested_fix` e `fix_target`
+(`agency \| services \| icp \| playbooks`). Quando o `type` é `agency_context`, a
+EVA mostra um aviso leve para cadastrar serviços/ICP/regras em
+Configurações → EVA — sem isso as sugestões ficam genéricas.
+
+### A "vez da EVA": próxima ação e resposta sugerida
+
+O cartão-herói reúne a **próxima ação** e a **resposta sugerida** como um
+rascunho em forma de bolha de chat. Você pode:
+
+- **Copiar resposta** — copia o texto (editado, se for o caso) para o clipboard.
+- **Editar** — abre o texto para ajuste antes de copiar/enviar.
+- **Enviar resposta** — botão de envio **só aparece no modo prospecção**
+  (`onSendReply` presente), com o padrão *aprovar-e-enviar* de um toque. Fora
+  desse modo, a coluna não envia: ela copia, e você cola no compositor.
+
+A microcopy fixa do cartão é "Você aprova antes de enviar."
+
+### O dossiê (progressive disclosure)
+
+Abaixo da leitura, o resto vira linhas expansíveis: **Resumo da conversa**
+(aberto por padrão), **Informações do lead** (já sabemos / falta descobrir),
+**Lacunas de contexto**, **Marcadores comerciais** (tags da conversa/deal) e
+**Oportunidade no CRM**. Conversas analisadas no formato antigo mostram um aviso
+de que a próxima reanálise traz a qualificação completa.
+
+## Vínculo conversa ↔ oportunidade
+
+Uma régua fina no topo do painel mostra a relação entre a conversa e o pipeline.
+A **fonte de verdade** do vínculo oficial é `channel_conversations.deal_id` (ou o
+deal recém-criado nesta sessão). Um match por telefone **nunca** conta como
+vínculo oficial — é só um possível duplicado.
+
+| Estado | Rótulo | Condição | Ações |
+| --- | --- | --- | --- |
+| Vinculado | **No pipeline** (ponto verde) | `deal_id` existe na conversa | "Abrir oportunidade" |
+| Possível duplicado | **Possível oportunidade existente** (ponto âmbar) | Há deal com o mesmo telefone, mas não vinculado a esta conversa | "Vincular" e "Abrir" |
+| Sem vínculo | **Fora do pipeline** (ponto cinza) | Sem deal vinculado e sem match por telefone | "Criar oportunidade" e "Vincular" |
+
+<Note>
+Criar e vincular oportunidade pela coluna da EVA só funciona no **modo
+channel-first** (quando a conversa tem `conversationId`). No fallback legado, o
+"Criar oportunidade" dispara o fluxo global de nova oportunidade, sem vínculo
+direto à conversa.
+</Note>
+
+Ao criar, a EVA pré-preenche o card com o que ela já sabe da conversa (nome,
+telefone, título derivado do serviço de interesse e uma observação com a origem
+WhatsApp e a próxima ação sugerida) — sem inventar dado.
+
+## Limites do modelo assistido
+
+<Warning>
+**Nenhuma mensagem sai sozinha.** As recomendações da EVA —
+`deve_criar_oportunidade` e `deve_fazer_handoff` — são *callouts* ao humano, não
+gatilhos de envio. A resposta sugerida é um rascunho para você aprovar. O próprio
+*system prompt* da EVA proíbe prometer ação automática, dizer que enviou
+mensagem, ou inventar preço/serviço/prazo fora do contexto cadastrado.
+</Warning>
+
+A única automação prevista é o **modo híbrido**: quando a empresa optou
+(`auto_create_opportunity`), a EVA está aprovada e ela recomenda criar
+oportunidade, a Inbox cria o **card no pipeline** automaticamente, com os campos
+qualificados, e registra a sugestão em `agent_suggestions`. Mesmo nesse modo:
+
+- só **cria o card** — nunca envia mensagem ao lead;
+- só dispara **uma vez por conversa**, e com salvaguardas (precisa de
+  `conversationId`, sem vínculo prévio e sem duplicado por telefone);
+- mensagens de saída continuam sempre em *aprovar-e-enviar*.
+
+## Limites numéricos de referência
+
+Valores extraídos diretamente do código (`whatsapp-copilot`, `useEvaInsight`,
+`useChannelInbox`, `Inbox`).
+
+| Limite | Valor | Onde |
+| --- | --- | --- |
+| Análises da EVA por usuário/dia | **50** (`DAILY_LIMIT_PER_USER`) | Edge `whatsapp-copilot` |
+| Janela do rate limit | **86 400s** (24h) | Edge `whatsapp-copilot` |
+| TTL do cache de análise | **60 min** (`CACHE_TTL_MINUTES`) | Edge `whatsapp-copilot` |
+| Mensagens enviadas à IA | **últimas 30** (`MAX_MESSAGES` / `slice(-30)`) | Edge + `useEvaInsight` |
+| Modelo da IA | `gpt-5.4-nano`, `max_completion_tokens: 2000` | Edge `whatsapp-copilot` |
+| Intervalo do resync de fallback | **20s** (aba visível) | `Inbox.tsx` |
+| Janela de "status fresco" | **5 min** (`STATUS_FRESH_WINDOW_MS`) | `Inbox.tsx` |
+| Conversas carregadas | **500** (`CHATS_FETCH_LIMIT`) | `useChannelInbox` |
+| Mensagens por thread | **200** (`MESSAGES_FETCH_LIMIT`) | `useChannelInbox` |
+| Debounce de Realtime (chats) | **500ms** | `useChannelInbox` |
+| Debounce de Realtime (mensagens) | **300ms** | `useChannelInbox` |
+| TTL de mensagem *pending* (otimista) | **30s** (`PENDING_TTL_MS`) | `useChannelInbox` |
+| Re-fetch após envio | texto **1,5s** · áudio/mídia **2s** | `Inbox.tsx` |
+| Aviso de limite acabando | a partir de **10** análises restantes (vermelho ≤3) | `EvaPanel` |
+
+<Warning>
+Estes números são internos e podem mudar. Os tetos de **vendedores e produtos por
+plano** são controlados em outra camada (enforce de planos) e **não** estão neste
+arquivo — não confunda o limite de análises da EVA com limites de assinatura.
+</Warning>
+
+## Fonte de dados: canal moderno com fallback legado
+
+A Inbox lê de duas fontes possíveis, com o canal moderno como primário:
+
+- **Primária — `useChannelInbox`** lê `channel_connections`,
+  `channel_conversations`, `channel_contacts` e `channel_messages`.
+- **Fallback — `useWhatsAppInboxDb`** lê o WhatsApp legado
+  (`whatsapp_messages`). Ele só "acorda" (`enabled`) depois que o canal moderno
+  sinaliza **erro** ou retorna **vazio**; antes disso fica inerte (zero queries,
+  zero Realtime).
+
+A regra de decisão da fonte ativa:
+
+<Steps>
+<Step title="Aguardar o canal moderno responder">
+Enquanto o canal não carregou e não deu erro, a Inbox espera (não cai para o
+legado prematuramente).
+</Step>
+<Step title="Canal com erro">
+Se o canal moderno der erro fatal (ex.: nenhuma conexão encontrada,
+`multiple_connections_no_user_match`), usa o legado **se** ele já tiver carregado.
+</Step>
+<Step title="Canal vazio">
+Se o canal carregou sem erro mas veio vazio **e** o legado tem conversas, usa o
+legado.
+</Step>
+<Step title="Caso contrário">
+Fica no canal moderno. Uma vez que o canal responde com dados, ele permanece como
+primário (não troca para o legado por *flicker*).
+</Step>
+</Steps>
+
+Quando a fonte troca, o chat selecionado é limpo (um id de uma fonte não existe na
+outra). O envio é independente da fonte: ambos resolvem o JID do contato e falam
+com a Evolution pelo mesmo caminho.
+
+## Deep-links
+
+A Inbox entende dois parâmetros de URL, aplicados uma vez e depois removidos da
+URL (para não reabrirem ao navegar):
+
+| Parâmetro | Origem típica | Efeito |
+| --- | --- | --- |
+| `?conversationId=<uuid>` | Central de Comando | Seleciona a conversa correspondente quando os chats carregam (se o id existir na lista atual; se não, mantém o estado padrão sem quebrar). |
+| `?connect=1` | Fim do onboarding | Abre direto o modal de conexão do WhatsApp (QR Code). |
+
+## Multi-vendedor: qual conexão a Inbox usa
+
+`useChannelInbox` resolve a conexão do vendedor em ordem endurecida para evitar
+misturar números entre vendedores da mesma agência:
+
+1. `metadata->>user_id` igual ao usuário (tag explícita);
+2. `external_id` derivado do padrão `wa_<userId sem hífens>`;
+3. *fallback* da empresa **apenas** se houver exatamente **uma** conexão ativa;
+4. com múltiplas conexões e nenhuma batendo com o usuário, **não escolhe
+   silenciosamente** — sinaliza `multiple_connections_no_user_match` (o badge
+   mostra status indisponível).
+
+Para administradores, a lista é rotulada como "Minhas conversas", deixando
+explícito o escopo do que está sendo exibido.

@@ -1,40 +1,405 @@
 ---
 title: "Pipeline"
-description: "Funis customizáveis, Kanban e a tela de comando de cada oportunidade."
+description: "O funil de vendas do Vyzon: múltiplos funis customizáveis, Kanban com arrastar-e-soltar, lista, ações em lote e a Central de Comando de cada oportunidade (stepper, gauge de probabilidade, saúde, timeline, produtos, propostas, campos customizados, tags e mapa de decisão)."
 ---
 
-O Pipeline (`/pipeline`) é o funil de vendas com múltiplos funis customizáveis, em
-Kanban (drag-and-drop) ou Lista. É onde a oportunidade qualificada na conversa
-avança por estágios até ganho ou perdido.
-
-## Kanban e funis
-
-- **Kanban com arrastar-e-soltar** entre estágios, mais modo **Lista**. No mobile, swipe move o card.
-- **Múltiplos funis:** seletor de funil, criar novo, e editor de estágios — reordenar, renomear, ícone/cor e o **tipo** de cada estágio (Aberto / Ganho / Perdido). Funil padrão e arquivamento. Estágio com negócios não pode ser excluído.
-- **Filtros e ordenação:** busca, responsável, status, e avançados (hot, paradas há +3 dias, faixa de probabilidade, data, tags).
-- **Ações em lote:** mover de estágio, atribuir responsável, excluir.
-- **KPIs no header:** total de oportunidades, valor do pipeline e contador de "paradas"; taxa de conversão entre colunas e confete ao marcar ganho.
-
-## O card de oportunidade
-
-Mostra valor em destaque, responsável, flag "hot", edição inline, badge de
-"Aguardando N dias", previsão de fechamento, e o **contexto da EVA** (canal,
-temperatura, próxima ação ou "EVA desatualizada", e atalho "Abrir conversa").
-
-## A tela da oportunidade (`/deals/:id`)
-
-Stepper de estágios, gauge de probabilidade, health status (por dias sem contato),
-timeline de eventos (notas, ligações, mensagens, mudanças de etapa), produtos,
-propostas (PDF), campos customizados, tags, mapa de decisão e ações de ganhar/perder.
-
-## Como funciona
-
-Arrastar um card persiste o estágio com **dual-write** do estágio legado (para
-compatibilidade com triggers e webhooks). Mover para um estágio do tipo "Ganho"
-sincroniza uma venda; sair de "Ganho" remove a venda sincronizada.
+O Pipeline (`/pipeline`, internamente o componente `CRM`) é onde a oportunidade
+qualificada na conversa avança por estágios até ser **ganha** ou **perdida**. É a
+visão de quem vende: o que está em aberto, quanto vale, quem é o responsável, o
+que parou e o que a EVA sugere como próximo passo. Cada card abre a **Central de
+Comando da oportunidade** (`/deals/:id`), que reúne todo o contexto de um negócio
+em uma tela só.
 
 <Note>
-  Criar oportunidade pode partir da sidebar, do painel da EVA no Inbox ("Criar
-  oportunidade") ou da paleta de comandos. Quando criada a partir de uma conversa,
-  já vincula a conversa ao card.
+  Vocabulário. No produto e na interface, a unidade do pipeline é a
+  **"oportunidade"** ou **"negociação"** (em código, `deal`). Os dois termos são
+  usados de forma intercambiável. "Funil" e "pipeline" também são sinônimos: você
+  pode ter vários funis por conta.
 </Note>
+
+## Visão geral da tela
+
+A tela tem duas formas de visualizar os mesmos dados, alternadas pelo seletor
+**Kanban / Lista** na barra de ferramentas:
+
+<Tabs>
+  <Tab title="Kanban">
+    Uma coluna por estágio, com cards arrastáveis entre colunas. Cada coluna mostra
+    o nome do estágio, a contagem de oportunidades e o **valor total** somado. Entre
+    as colunas aparece um pequeno conector de funil com a **taxa de conversão** do
+    estágio anterior para o atual (escondida quando o ratio passaria de 100%, o que
+    acontece em funis com poucos negócios). No mobile, as colunas viram um carrossel
+    com snap, pílulas de estágio no topo e indicadores de página embaixo; o card é
+    movido por **swipe** (deslizar) para o estágio vizinho.
+  </Tab>
+  <Tab title="Lista">
+    Cada oportunidade vira uma linha com título, badge do estágio, cliente, valor,
+    probabilidade e data de atualização, mais atalhos para excluir e "Ver detalhes".
+    É a visão padrão em telas pequenas (abaixo de 640px). Quando a ordenação está em
+    "Ordem manual", a lista cai para "atualização mais recente" (não há posição
+    visual a respeitar numa lista plana).
+  </Tab>
+</Tabs>
+
+### KPIs e sinais no cabeçalho
+
+O cabeçalho mostra, ao vivo (a query refaz a cada 30s), a contagem de
+oportunidades, o **valor total** do funil filtrado e um contador de **paradas**
+(oportunidades em aberto sem atualização há mais de 3 dias). Marcar uma
+oportunidade como ganha dispara uma animação de **confete** com o título e o valor.
+
+<Note>
+  O valor do funil e todos os KPIs respeitam os filtros ativos. Se você filtrar por
+  um vendedor, o total no topo é o total **daquele vendedor**, não da conta inteira.
+</Note>
+
+## Estágios e o conceito de "tipo" (kind)
+
+Cada estágio tem um **tipo** (`kind`) que define seu comportamento no funil. O tipo
+é o que diz ao sistema se aquela coluna representa um negócio ainda em andamento,
+um negócio fechado com sucesso ou um negócio perdido. Você escolhe o tipo de cada
+estágio no editor de funil.
+
+| Tipo (kind) | Rótulo na UI | O que significa | Efeito ao mover uma oportunidade para um estágio desse tipo |
+|---|---|---|---|
+| `open` | Aberto | Negócio ainda em andamento. | Nenhum efeito colateral. A oportunidade entra na contagem de "paradas" se ficar sem atualização. |
+| `won` | Ganho | Negócio fechado com sucesso. | Dispara o confete e **sincroniza uma venda** (ver "Sincronização ganho → venda"). |
+| `lost` | Perdido | Negócio perdido. | Marca a oportunidade como perdida; abre o modal de motivo da perda. Se vinha de "Ganho", a venda sincronizada é **removida**. |
+
+<Warning>
+  O tipo é o que importa para a lógica, não o **nome** do estágio. Você pode chamar
+  um estágio de "Fechado", "Contrato assinado" ou "Cliente" — desde que o tipo dele
+  seja `Ganho`, ele sincroniza a venda. Um funil **sem nenhum estágio do tipo
+  Ganho** não sincroniza vendas: o editor avisa isso ao salvar.
+</Warning>
+
+### Estágios padrão de um funil novo
+
+Ao criar um funil sem customizar, ele nasce com seis estágios que espelham o
+modelo clássico de vendas. A coluna "Probabilidade padrão" é a probabilidade
+sugerida automaticamente quando você cria uma oportunidade já naquele estágio.
+
+| Estágio | Tipo | Probabilidade padrão |
+|---|---|---|
+| Lead | Aberto | 10% |
+| Qualificação | Aberto | 25% |
+| Proposta | Aberto | 55% |
+| Negociação | Aberto | 80% |
+| Ganho | Ganho | 100% |
+| Perdido | Perdido | 0% |
+
+## Múltiplos funis (pipelines)
+
+Funis e seus estágios são **por conta** (compartilhados pelo time inteiro da
+empresa). Você pode ter mais de um funil — por exemplo, um para inbound de tráfego
+pago e outro para distribuição B2B — e alternar entre eles pelo seletor na barra de
+ferramentas.
+
+<AccordionGroup>
+  <Accordion title="Selecionar e lembrar o funil ativo">
+    O seletor lista todos os funis não arquivados. O funil escolhido fica salvo por
+    conta no navegador, então ao voltar à aba você cai no mesmo funil. Sem
+    preferência salva, o sistema usa o funil **padrão**; sem padrão, o primeiro da
+    lista. A opção "+ Novo funil" no seletor abre o editor em modo de criação.
+  </Accordion>
+  <Accordion title="Editar estágios">
+    O modal de configuração permite renomear o funil e, para cada estágio:
+    reordenar (arrastar pela alça), renomear, escolher **ícone** e **cor**, e definir
+    o **tipo** (Aberto / Ganho / Perdido). É possível adicionar estágios e removê-los.
+    Regras: o funil precisa de **no mínimo 2 estágios**; todo estágio precisa de nome;
+    e um estágio **não pode ser excluído enquanto tiver oportunidades** (o botão de
+    remover fica bloqueado e mostra quantos negócios precisam ser movidos primeiro).
+  </Accordion>
+  <Accordion title="Funil padrão e arquivamento">
+    Um funil pode ser marcado como **padrão** (só um por vez). O funil padrão **não
+    pode ser arquivado** — para arquivar, marque outro como padrão antes. Arquivar é
+    um soft-delete: o funil some do seletor mas não é apagado. Arquivar só é oferecido
+    quando há mais de um funil e o atual não é o padrão.
+  </Accordion>
+</AccordionGroup>
+
+<Warning>
+  Oportunidade com `stage_id` desconhecido. Se uma oportunidade tem um
+  `stage_id` que não pertence ao funil atual (por exemplo, um negócio antigo ainda
+  não migrado, ou movido entre funis), ela **cai automaticamente na primeira coluna**
+  do funil ao ser exibida, em vez de desaparecer. É um fallback de exibição: o dado
+  no banco não é reescrito só por isso.
+</Warning>
+
+## O card de oportunidade (Kanban)
+
+O card foi desenhado para responder "vale a pena agir agora?" de relance.
+
+| Elemento | O que mostra |
+|---|---|
+| Título | Nome da oportunidade. **Editável inline** (clique para editar, Enter salva). |
+| Cliente | Nome do contato. Também editável inline. |
+| Valor | Em destaque, formatado em BRL. Editável inline. |
+| Avatar do responsável | Foto/iniciais do vendedor. Borda **vermelha com "!"** se o responsável for de outra organização. |
+| Flag "hot" | Ícone de chama (laranja) quando a oportunidade está marcada como prioritária. |
+| Conta (B2B) | Nome da empresa e contador de stakeholders, quando preenchidos. |
+| Contexto da EVA | Badge de canal (WhatsApp / "Sem conversa"), badge de **temperatura** (Quente/Morno/Frio), a linha "EVA: \<próxima ação\>" ou "EVA desatualizada", e o atalho **"Abrir conversa"**. |
+| Tags | Até 2 chips de tag + "+N". |
+| "Aguardando N dias" | Aparece em oportunidades **abertas** sem atualização há mais de 3 dias. |
+| Previsão | Data de fechamento esperada; vira "Venceu \<data\>" em vermelho se estiver no passado. |
+| Última atividade | Ícone por tipo (nota, ligação, mudança de etapa, atualização) + "há X tempo". |
+| Badge de SLA | Quando há prazo de handoff ativo: "SLA em Xh" (urgente) ou "SLA vencido há Xh". |
+
+Ao **passar o mouse**, o card mostra uma barra flutuante de ações rápidas: Ligar,
+Agendar, Marcar como Ganho, Duplicar e Excluir. Clicar no card (clique curto, sem
+arrastar) abre a Central de Comando.
+
+<Note>
+  Saúde / "rotting" no card. A faixa colorida à esquerda e o badge "Aguardando"
+  usam o mesmo critério de dias sem atualização: até 3 dias = ok; mais de 3 dias =
+  atenção (âmbar claro); mais de 7 dias = atenção forte (âmbar). O contador de
+  "paradas" do cabeçalho conta apenas oportunidades **abertas** com mais de 3 dias.
+</Note>
+
+## Filtros e ordenação
+
+A barra de ferramentas e a barra de filtros avançados combinam vários cortes. Todos
+operam sobre o conjunto já escopado ao funil selecionado.
+
+| Filtro | Opções | Critério |
+|---|---|---|
+| Busca | texto livre | Casa com o **título** ou o **nome do cliente**. |
+| Responsável | multi-seleção de vendedores | Vazio = todas as oportunidades. |
+| Status | Em aberto / Ganhos / Perdidos | Pelo **tipo** do estágio atual da oportunidade. |
+| Ativo | Ativos / Inativos | Pelo flag `is_active`. |
+| Hot | liga/desliga | Só oportunidades marcadas como "hot". |
+| Paradas | "Parados 3+ dias" | Oportunidades sem atualização há mais de 3 dias (o limiar é **3 dias**). |
+| Probabilidade | Alta / Média / Baixa | Alta ≥ 70%; Média 30–69%; Baixa < 30%. |
+| Data | Esta semana / Este mês / Vencidos | Por data de criação ("esta semana"/"este mês") ou por previsão no passado ("vencidos"). |
+| Tags | uma ou mais tags | A oportunidade precisa ter **todas** as tags selecionadas (AND). |
+
+| Ordenação | Comportamento |
+|---|---|
+| Ordem manual | Respeita a posição arrastada (no Kanban). Na Lista, cai para "atualização recente". |
+| Criadas por último | Mais recentes primeiro, por data de criação. |
+| Atualização recente | Mais recentes primeiro, por data de atualização. |
+| Maior valor / Menor valor | Por valor. |
+| Nome (A-Z / Z-A) | Alfabético, locale pt-BR. |
+
+<Tip>
+  Quando há oportunidades paradas, um **banner âmbar** aparece logo abaixo da
+  toolbar resumindo quantas estão sem atualização há mais de 3 dias. Clicar no banner
+  liga o filtro "Paradas"; o "X" o dispensa.
+</Tip>
+
+## Ações em lote
+
+O botão **Selecionar** entra em modo de seleção (com "Selecionar/Desmarcar todos").
+Com oportunidades selecionadas, uma barra flutuante na base da tela oferece:
+
+- **Mover para...** — move todas para um estágio escolhido do funil.
+- **Atribuir a...** — troca o responsável de todas.
+- **Deletar** — exclui em lote (com confirmação "Sim/Não" inline).
+
+<Warning>
+  Excluir uma oportunidade que havia gerado uma venda sincronizada (porque estava
+  em "Ganho") **remove a venda** antes de apagar a oportunidade, para manter
+  dashboards e metas consistentes. Isso vale tanto na exclusão individual quanto em
+  lote.
+</Warning>
+
+## Criar uma oportunidade
+
+O botão **Nova Negociação** abre um modal. A oportunidade também pode nascer de
+fora do pipeline:
+
+<Note>
+  De onde uma oportunidade pode partir. Além do botão na própria tela, ela pode
+  ser criada a partir de uma conversa (painel da EVA no Inbox, "Criar oportunidade"),
+  e — no modelo híbrido de autonomia — **a EVA pode criar/atualizar o card
+  automaticamente** ao qualificar um lead que já entrou (inbound), com os campos
+  preenchidos. Mensagens de saída ao lead seguem sempre o padrão "aprovar-e-enviar":
+  nenhum agente dispara mensagem sozinho.
+</Note>
+
+### Campos do modal "Nova Negociação"
+
+| Campo | Obrigatório | Observação |
+|---|---|---|
+| Título | Sim | Nome da oportunidade. |
+| Valor | Sim | Formatado em BRL à medida que você digita. |
+| Estágio | Sim | Estágios do funil atual. Define a probabilidade. |
+| Probabilidade | (automática) | Não é digitada: vem da **probabilidade padrão** do estágio escolhido, com barra de cor (verde ≥70%, âmbar ≥30%, cinza abaixo). |
+| Nome do contato | Sim | — |
+| Email do contato | Não | Validado como email se preenchido. |
+| Telefone do contato | Não | Usado para WhatsApp/ligação depois. |
+| Conta (nome, site, setor) | Não | Bloco opcional para B2B. |
+| Produto | Não | Lista de produtos ativos da conta. |
+| Previsão de fechamento | Não | Seletor de data. |
+| Hot Deal | Não | Marca como prioridade alta. |
+| Observações | Não | Texto livre. |
+
+## A Central de Comando da oportunidade (`/deals/:id`)
+
+Clicar em um card abre a tela completa do negócio: cabeçalho com ações, uma coluna
+principal de atividade à esquerda e uma barra lateral de propriedades à direita.
+
+### Cabeçalho: stepper de estágios e ganhar/perder
+
+O cabeçalho traz o título, o cliente, o valor e os botões **Ganho** e **Perdido**
+(escondidos quando o negócio já está fechado, substituídos por um badge de
+"Ganho"/"Perdido"). Logo abaixo fica o **stepper** de estágios — chips clicáveis
+que marcam os estágios já passados com check, destacam o atual e permitem avançar
+ou voltar com um clique. Escolher um estágio de perda no stepper abre o modal de
+motivo da perda.
+
+<Note>
+  O stepper do cabeçalho exibe um conjunto fixo de 5 etapas de referência (Lead,
+  Qualificação, Proposta, Negociação, Ganho), com rótulos que podem ser substituídos
+  por nomes customizados da conta. Os nomes de estágio **totalmente customizados** do
+  editor de funil aparecem nas colunas do Kanban; a Central de Comando usa essa
+  régua de referência para o passo-a-passo.
+</Note>
+
+### Card de foco: a próxima ação
+
+No topo da coluna de atividade fica o **card de foco** com a próxima ação
+recomendada. A origem é explícita:
+
+- **Sugerida pela EVA** — vem da análise da conversa (`proxima_acao`), com badge
+  roxo. Pode trazer uma **resposta sugerida** e o botão "Responder", que abre o
+  WhatsApp já com o texto.
+- **Tarefa do time** / **Manual** — quando não há sugestão da EVA, cai num próximo
+  passo registrado no negócio ou num genérico "Definir o próximo passo com o lead".
+
+Ao concluir, o time registra **o que rolou** (Pediu proposta, Demonstrou interesse,
+Pediu para retornar, Sem resposta, Levantou objeção, Avançou, Sem fit). Cada
+resultado define deterministicamente o **próximo passo** sugerido — sem custo de IA —
+e grava uma nota na timeline.
+
+### Status e saúde + gauge de probabilidade
+
+A barra lateral abre com o cartão "Status e saúde", que combina o **estado de
+saúde** do negócio com um **gauge** (velocímetro semicircular) da probabilidade de
+ganho.
+
+A saúde é calculada por **dias sem contato** (desde a última atualização):
+
+| Estado | Critério | Cor |
+|---|---|---|
+| Saudável | até 3 dias sem contato | Verde |
+| Atenção | mais de 3 dias | Âmbar |
+| Crítico | mais de 7 dias | Vermelho |
+
+O gauge anima de 0 até o valor da probabilidade da oportunidade, na cor do estado
+de saúde.
+
+### Timeline de eventos
+
+A aba **Histórico** mostra uma timeline vertical. Os eventos vêm das notas do
+negócio (`deal_notes`) e das últimas mensagens da conversa de WhatsApp vinculada;
+o tipo de uma nota é inferido pelo conteúdo para ganhar ícone e cor.
+
+| Tipo de evento | Ícone / origem | Quando aparece |
+|---|---|---|
+| `note` | Nota | Nota de texto adicionada manualmente (padrão). |
+| `call` | Ligação | Nota cujo texto menciona ligação/chamada. |
+| `message` | Mensagem (WhatsApp) | Mensagens recentes da conversa vinculada (entrada e saída). |
+| `email` | E-mail | Nota cujo texto menciona e-mail. |
+| `stage_change` | Mudança de etapa | Mudança de estágio registrada. |
+| `task_completed` | Ação concluída | Conclusão de uma ação do card de foco. |
+
+Embaixo da timeline há um **compositor** fixo para adicionar uma nota rápida (Enter
+envia).
+
+### Demais abas da coluna de atividade
+
+<AccordionGroup>
+  <Accordion title="Ligações">
+    Registrar chamadas, transcrever e gerar insights por IA. Recurso **gated**:
+    exige plano elegível (Plus/Pro) **e** o add-on de Ligações ativo; caso contrário
+    a aba mostra um aviso de upgrade. Suporta modo demo (chamada simulada),
+    click-to-call e ligar pelo navegador (WebRTC), com status ao vivo via realtime e
+    transcrição/insights por chamada.
+  </Accordion>
+  <Accordion title="Tarefas">
+    Criar e acompanhar tarefas ligadas ao negócio (modal "Nova tarefa").
+  </Accordion>
+  <Accordion title="Arquivos">
+    Anexos do negócio.
+  </Accordion>
+  <Accordion title="Produtos / Proposta">
+    Gerencia os **produtos** do negócio e as **propostas**. Cada proposta tem status
+    (Rascunho, Enviada, Aceita, Recusada), itens e total, e pode ser **exportada em
+    PDF** com a marca da empresa (nome, logo, cor). Há ação de excluir proposta.
+  </Accordion>
+</AccordionGroup>
+
+### Barra lateral: contato, dados, mapa de decisão, tags e campos customizados
+
+- **Ações rápidas** — Ligar, WhatsApp, Email e Nova tarefa (desabilitadas quando
+  faltam telefone/email/plano).
+- **Contato** — nome, telefone (com ícone de WhatsApp), e-mail, origem e último
+  contato.
+- **Dados do negócio** — valor da proposta, fonte, datas de criação/atualização.
+  Para o caso imobiliário, exibe um bloco estruturado de interesse (empreendimento,
+  tipo de imóvel, faixa de orçamento, etc.) lido de `source_data`.
+- **Mapa de decisão** — quem influencia a compra, editável em qualquer negócio. Os
+  papéis disponíveis são: **Lead principal, Decisor financeiro, Influenciador,
+  Apoia entrada, Apoio financeiro**.
+- **Tags** — tags comerciais aplicadas ao negócio (até 8 chips + "+N").
+- **Campos customizados** — seção recolhível com os campos extras da conta.
+
+<Warning>
+  Mapa de decisão é manual. Os dados do mapa vêm **só de fontes internas**
+  (conversas e notas do negócio) e da edição do time. Não há scraping de
+  Google/LinkedIn nem enriquecimento automático: a EVA **sugere** a partir da
+  conversa, e o time **aprova** antes de adicionar uma pessoa ao mapa.
+</Warning>
+
+## Como funciona por baixo
+
+### Dual-write: `stage_id` (novo) e `stage` (legado)
+
+Cada oportunidade guarda **duas** referências de estágio: `stage_id`, que é o UUID
+de um estágio de um funil customizável (a chave de coluna do Kanban), e `stage`, um
+valor legado de um conjunto fixo de seis chaves (`lead`, `qualification`,
+`proposal`, `negotiation`, `closed_won`, `closed_lost`).
+
+Toda escrita de estágio grava os dois (dual-write): ao arrastar um card, mover em
+lote ou criar uma oportunidade, o sistema salva o `stage_id` de destino **e** deriva
+o valor legado correspondente. A derivação usa a chave legada explícita do estágio
+quando existe; senão, mapeia pelo tipo (`open` → `qualification`, `won` →
+`closed_won`, `lost` → `closed_lost`), e nunca grava um valor fora dos seis legados.
+
+<Note>
+  Por que o estágio legado existe. Triggers, webhooks e RPCs do backend ainda
+  leem o campo `stage` legado. Manter o dual-write garante que esses fluxos continuem
+  funcionando enquanto a UI usa os estágios customizáveis. É compatibilidade
+  retroativa, não duplicação acidental.
+</Note>
+
+### Sincronização ganho → venda
+
+Mover uma oportunidade para um estágio do tipo **Ganho** dispara o confete e
+**sincroniza uma venda** a partir do negócio (alimentando dashboards e metas). O
+inverso também vale: **sair** de um estágio Ganho (mover para Aberto ou Perdido)
+**remove** a venda sincronizada. Marcar como Perdido a partir de um negócio que
+estava Ganho também desfaz a venda.
+
+### Fluxo resumido
+
+<Steps>
+  <Step title="Criar a oportunidade">
+    Pela tela ("Nova Negociação"), por uma conversa no Inbox, ou automaticamente pela
+    EVA ao qualificar um lead inbound. A probabilidade vem do estágio inicial.
+  </Step>
+  <Step title="Avançar pelo funil">
+    Arraste o card entre colunas (ou use o swipe no mobile, ou o stepper na Central
+    de Comando). Cada movimento persiste `stage_id` + `stage` legado e mantém a ordem
+    dentro da coluna.
+  </Step>
+  <Step title="Trabalhar a oportunidade">
+    Registre notas e ligações, gere propostas, preencha o mapa de decisão e siga as
+    próximas ações sugeridas pela EVA (o time aprova e executa).
+  </Step>
+  <Step title="Fechar">
+    Mova para **Ganho** (sincroniza a venda, confete) ou marque **Perdido** (registra
+    o motivo da perda). Sair de Ganho desfaz a venda.
+  </Step>
+</Steps>

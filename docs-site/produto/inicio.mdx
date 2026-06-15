@@ -1,29 +1,258 @@
 ---
 title: "Início (Central de Comando)"
-description: "O plano do dia comercial: o que precisa de ação agora."
+description: "O plano do dia comercial: a EVA lê sua operação e ordena o que precisa de ação agora, sem você caçar nada."
 ---
 
-A tela inicial (`/inicio`) é o "plano do dia": agrega os dados reais da operação
-(conversas, oportunidades, leituras da EVA) e mostra o que precisa de ação hoje,
-sem o usuário caçar nada. É **somente leitura** sobre dados já persistidos.
+A tela inicial (`/inicio`) é o **plano do dia** da operação comercial. Ela agrega,
+em paralelo, os dados reais já persistidos (conversas, oportunidades, resumos e
+lacunas de contexto da EVA, agendamentos) e devolve uma única coisa: **o que
+precisa de ação hoje**, em ordem de urgência, com o caminho mais curto para
+resolver cada item.
 
-## O que tem na tela
-
-- **Saudação + narração da EVA** resumindo quantas ações há hoje e quantas são críticas.
-- **Progresso do dia:** barra-missão com um segmento por ação (cor por severidade) e "X de Y resolvidas".
-- **Faixa de KPIs clicáveis:** Conversas ativas, Leads quentes, Aguardando resposta (→ Inbox) e Oportunidades abertas (→ Pipeline). O delta vs. ontem e o sparkline aparecem **só quando há histórico real de 2+ dias** (nunca inventa tendência).
-- **Fila de ação:** até 5 prioridades do dia (crítico/alto/médio/baixo), cada uma com motivo curto, CTA e deep-link. Por item: **Resolver**, **Adiar** (some até amanhã) e, em conversa, **Responder rápido** (envio via WhatsApp).
-- **Leituras da EVA:** cards derivados de dados persistidos (leads quentes sem deal, pediram reunião sem agendamento, alta intenção sem resposta, objeções recorrentes…).
-- **Chat "Pergunte à EVA":** responde sobre a operação usando os dados já carregados, com nível de confiança (Alta/Média/Baixa) e botões que navegam.
-
-## Como funciona
-
-O hook carrega, em paralelo e escopado por empresa, conversas, mensagens, contatos,
-resumos de conversa, oportunidades, lacunas de contexto e agendamentos. A partir
-disso calcula as métricas e monta as prioridades do dia por regras encadeadas.
+A premissa de produto é forte e deve ser entendida antes de tudo: a Central é
+**somente leitura** sobre dados que já chegaram. Ela não dispara análise nova da
+EVA, não chama o WhatsApp/Evolution, não chama a Meta, não roda edge function.
+A **única** ação que escreve algo é o "Responder rápido" (envio de mensagem).
+Tudo o mais é cálculo client-side sobre `SELECT`s.
 
 <Note>
-  A tela não dispara análise nova da EVA nem chama serviços externos. A única ação
-  que escreve algo é o "Responder rápido". Adiar/resolver fica salvo localmente por
-  empresa (não no servidor).
+  "A EVA lê sua operação" aqui é literal: a narração no topo e a fila de ação são
+  derivadas dos mesmos dados que já existem no banco. Não há um modelo sendo
+  chamado quando você abre `/inicio`. O cérebro da EVA (`evaInput`) é montado a
+  partir dessas leituras e só é consultado quando você pergunta algo no chat.
 </Note>
+
+## Anatomia da tela
+
+A página se lê de cima para baixo como uma missão com fim, não como um feed
+infinito.
+
+<Steps>
+  <Step title="Saudação + narração da EVA">
+    Cabeçalho com saudação por horário ("Bom dia/Boa tarde/Boa noite" + primeiro
+    nome) e uma frase da EVA resumindo a carga do dia: quantas ações pendentes e
+    quantas são críticas. Se houver críticas, um chip vermelho "N urgente(s)"
+    aparece e leva direto ao Inbox.
+  </Step>
+  <Step title="Progresso do dia">
+    Barra-missão: um segmento por ação do dia, colorido por severidade. Resolvido
+    fica sólido; pendente fica esmaecido. O contador mostra "X de Y resolvidas".
+    Só aparece se houver pelo menos uma prioridade.
+  </Step>
+  <Step title="Faixa de KPIs clicáveis">
+    Quatro métricas densas (número + rótulo), cada uma um botão que leva ao filtro
+    ou seção correspondente. Delta vs. ontem e sparkline aparecem só com histórico.
+  </Step>
+  <Step title="Decision Workspace">
+    O território principal: a **fila de ação** (até 5 prioridades), as **leituras
+    da EVA** (highlights) e o chat **"Pergunte à EVA"** convivem aqui.
+  </Step>
+  <Step title="Rodapé de frescor">
+    "Dados em tempo real · atualizado há Xmin", mais o erro inline caso alguma
+    query falhe.
+  </Step>
+</Steps>
+
+A narração da EVA muda conforme o estado:
+
+| Estado | Texto exibido |
+| --- | --- |
+| Carregando | "A EVA está lendo sua operação…" |
+| Nada pendente | "A EVA leu sua operação. Nada pendente agora, tudo em dia." |
+| Há pendências | "A EVA leu sua operação. Você tem N ações hoje[, M não podem esperar]." |
+
+O trecho "não podem esperar" só entra quando há prioridades **críticas** na fila.
+
+## Fila de ação: os 4 níveis de prioridade
+
+O coração da tela. As prioridades do dia são geradas por **regras encadeadas**
+sobre os dados carregados, deduplicadas (uma conversa/deal/tópico só vira um item,
+ficando com a maior severidade) e limitadas a **5 itens**. Cada nível tem uma cor
+e responde a condições específicas.
+
+| Nível | Cor | O que significa | Quando sobe para este nível |
+| --- | --- | --- | --- |
+| **Crítico** | Vermelho (`#F43F5E`) | Janela quente, não pode esperar | Alta intenção + lead falou por último sem resposta; lead quente com mensagem não lida; lead quente sem oportunidade aberta e sem resposta sua recente |
+| **Alto** | Âmbar (`#F59E0B`) | Importante hoje | Pediu reunião/demo sem agendamento futuro; deal marcado como quente parado há +7 dias; conversa sem resposta há mais de 24h |
+| **Médio** | Azul (`#3B82F6`) | Vale resolver | Deal comum (não quente) parado há +7 dias; objeção recorrente em ≥3 conversas; lacuna de contexto da EVA com reincidência ≥3× |
+| **Baixo** | Cinza (`#94A3B8`) | Sinal de fundo | Padrão de serviços mais pedidos (≥2 sinais); lacuna pontual de contexto (<3×); conversa parada >24h sem sinal de alta intenção |
+
+### As regras, em detalhe
+
+<AccordionGroup>
+  <Accordion title="Crítico — as três regras">
+    - **Alta intenção sem resposta:** a conversa tem `last_inbound_at` mais
+      recente que `last_outbound_at` (o lead falou por último) **e** o resumo
+      cruzado por telefone classifica como alta intenção (quente, ou intenção
+      "alta/alto/high/strong"). CTA: abrir a conversa.
+    - **Lead quente com mensagem pendente:** `unread_count > 0` **e** a
+      qualificação do telefone é quente (temperatura quente/hot/alta, ou score ≥ 75).
+    - **Lead quente sem oportunidade + sem resposta:** qualificação quente, a
+      conversa não tem `deal_id` e você não respondeu por último.
+  </Accordion>
+  <Accordion title="Alto — as três regras">
+    - **Reunião pedida sem agendamento:** o resumo indica intenção de reunião
+      (texto com "reuni", "demo", "agendar", "call"…) e **não** há agendamento nos
+      próximos 14 dias para um `cliente_nome` que bata com o nome do contato
+      (cross-reference heurístico — ver Aviso abaixo).
+    - **Deal quente parado:** deal com `is_hot = true`, fora de
+      `closed_won/closed_lost`, sem `updated_at` há mais de 7 dias.
+    - **Conversa sem resposta há +24h:** lead falou por último e `last_inbound_at`
+      é anterior ao corte de 24h.
+  </Accordion>
+  <Accordion title="Médio e Baixo">
+    - **Médio:** deal comum parado +7d; objeção repetida (mesma objeção somando
+      ≥3 ocorrências entre os resumos); lacuna de contexto com `occurrence_count ≥ 3`.
+    - **Baixo:** serviços mais pedidos (≥2 menções agregadas, item sem CTA/link);
+      lacuna de contexto pontual (`occurrence_count < 3`); conversa parada >24h
+      sem sinal de alta intenção (cai para baixo justamente por não ter sinal).
+  </Accordion>
+</AccordionGroup>
+
+### Constantes que definem "parado"
+
+| Constante | Valor | Onde entra |
+| --- | --- | --- |
+| `STALE_DEAL_DAYS` | 7 dias | Deal sem `updated_at` vira prioridade |
+| `STALE_CONVERSATION_HOURS` | 24 horas | Conversa sem resposta vira prioridade |
+| `DAILY_PRIORITY_LIMIT` | 5 | Teto de itens na fila |
+| Janela de agendamento | 14 dias | Cross-reference de "reunião sem agendamento" |
+
+<Warning>
+  O cross-reference de reunião é **heurístico**: a tabela `agendamentos` não tem
+  o telefone do chat, então o pareamento é feito por `cliente_nome` normalizado
+  (minúsculas, sem espaços nas pontas) contra o nome do contato. Homônimos ou
+  nomes grafados diferente podem gerar falso "sem agendamento" ou falso "já marcado".
+</Warning>
+
+### Ações por item
+
+Cada prioridade traz um CTA com deep-link e, na coluna da conversa, ações extras:
+
+| Ação | O que faz | Persistência |
+| --- | --- | --- |
+| **Abrir / Ver** (CTA) | Deep-link para `/inbox?conversationId=…`, `/deals/:id`, `/pipeline` ou contexto da EVA | — |
+| **Resolver** | Tira o item da fila e marca o segmento como sólido no progresso | `localStorage` por empresa |
+| **Adiar** | Some até o início de amanhã (snooze) | `localStorage` por empresa |
+| **Responder rápido** | Só em itens de conversa com `chatJid`: envia a mensagem via Evolution e refaz a leitura | **Mutation real** (única da tela) |
+
+<Note>
+  Resolver e Adiar **não** escrevem no servidor: ficam salvos localmente por
+  empresa (`localStorage`). Trocar de navegador ou limpar o storage reinicia esses
+  estados. O "Responder rápido" é a exceção — ele envia de fato pelo WhatsApp e só
+  fica disponível quando o sender está conectado.
+</Note>
+
+### Filtros da fila
+
+Um popover client-side filtra a fila por **Nível** (Crítico/Alto/Médio/Baixo) e
+**Origem** (Conversa / Oportunidade / Insight da EVA), operando sobre os dados já
+carregados — sem nova query. O badge no botão mostra quantos filtros estão ativos.
+
+## Os 4 KPIs da faixa
+
+A faixa densa de KPIs é o suporte de contexto no topo. Cada KPI é clicável e
+linka para onde se age sobre aquele número.
+
+| KPI | O que mede | Subir é bom? | Linka para |
+| --- | --- | --- | --- |
+| **Conversas ativas** | Conversas com `status = "open"` | Sim | `/inbox` |
+| **Leads quentes** | Resumos cuja qualificação é quente (temperatura quente/hot/alta **ou** score ≥ 75) | Sim | `/inbox` |
+| **Aguardando resposta** | Conversas onde o lead falou por último sem resposta, **ou** com `unread_count > 0` e paradas há +24h | **Não** (subir é ruim) | `/inbox` |
+| **Oportunidades abertas** | Deals fora de `closed_won/closed_lost` | Sim | `/pipeline` |
+
+O campo `goodWhenUp` controla a cor do delta: para "Aguardando resposta", uma
+queda é pintada como melhora (verde) e um aumento como piora (vermelho).
+
+## Tendência: delta e sparkline (só com histórico)
+
+A Central nunca fabrica tendência. A cada carregamento bem-sucedido ela grava um
+**snapshot diário** das 4 métricas por empresa e lê de volta o delta e a série.
+
+<Steps>
+  <Step title="Snapshot">
+    Ao terminar de carregar, grava o valor das 4 métricas do dia (um por dia, por empresa).
+  </Step>
+  <Step title="Leitura">
+    Lê a `MetricTrend` de cada métrica: o delta vs. o dia anterior e a série histórica.
+  </Step>
+  <Step title="Render condicional">
+    O sparkline só desenha com **2+ pontos** na série. Com menos, não renderiza nada.
+  </Step>
+</Steps>
+
+| Elemento | Condição para aparecer |
+| --- | --- |
+| Seta de delta (↑/↓ N) | Existe snapshot do dia anterior e o delta ≠ 0 |
+| Rótulo "estável" | Há comparação possível e o delta é exatamente 0 |
+| Sparkline | A série tem **2 ou mais** dias registrados |
+
+<Warning>
+  O histórico vive no `localStorage` da máquina/empresa, não no servidor. Em uma
+  conta nova, ou em outro navegador, os KPIs aparecem **sem** delta nem sparkline
+  até acumular 2+ dias de abertura da tela. Isso é intencional: melhor não mostrar
+  tendência do que mostrar uma inventada.
+</Warning>
+
+## Leituras da EVA (highlights)
+
+Cards derivados de dados persistidos que sintetizam padrões da operação. São no
+máximo **um por tipo**, ordenados por severidade (alta → média → baixa), limitados
+a 6. Cada tipo tem uma condição precisa.
+
+| Tipo | Severidade | Aparece quando | Fonte |
+| --- | --- | --- | --- |
+| `hot_leads_without_deal` | Alta | Há lead com qualificação quente cuja conversa não tem `deal_id` | Resumos |
+| `meeting_intent_without_meeting` | Alta | Lead sinalizou intenção de reunião/demo e não há agendamento futuro pareado | Resumos |
+| `high_intent_unanswered` | Alta | Alta intenção + lead falou por último sem resposta sua | Resumos |
+| `recurring_objection` | Média | A mesma objeção aparece em ≥2 conversas (top 3 listadas) | Resumos |
+| `missing_information` | Média | Há lacunas de contexto abertas (`eva_knowledge_gaps`) | Lacunas |
+| `services_requested` | Baixa | Há serviços citados pelos leads (top 3 por frequência) | Resumos |
+
+<Note>
+  Repare na diferença entre **highlight** e **prioridade**: o highlight é uma
+  leitura analítica ("você tem 3 leads quentes sem deal"); a prioridade é uma ação
+  concreta com deep-link ("responda a Mayara agora"). Os dois saem das mesmas
+  fontes, mas servem a momentos diferentes — um informa, o outro manda agir.
+</Note>
+
+## Chat "Pergunte à EVA"
+
+Um composer com chips de ação rápida (até 4 + "Mais ações"). A EVA responde sobre
+**conversas, oportunidades, pipeline e prioridades comerciais** usando os dados
+**já carregados** na tela (`evaInput`), sem chamar serviço externo. A resposta traz
+o nível de **Confiança** (Alta/Média/Baixa) e, quando faz sentido, botões que
+navegam direto para a ação.
+
+Estados possíveis do chat: pensando ("EVA analisando sua operação…"), respondido
+(com ações + confiança), erro ("Não consegui ler sua operação agora") e fora de
+escopo (quando a pergunta sai do comercial).
+
+## Fontes de dados consultadas
+
+Todas as queries são escopadas por `company_id` e rodam em paralelo. Read-only.
+
+| Tabela | Alimenta |
+| --- | --- |
+| `channel_conversations` | Métricas, "aguardando resposta", atenção, prioridades, atividade |
+| `channel_messages` | Atividade recente (últimas 12) |
+| `channel_contacts` | Nome/telefone do contato (com sanitização de nomes ruins) |
+| `conversation_summaries` | Leads quentes, highlights e prioridades (campo `qualification` jsonb) |
+| `deals` | Oportunidades abertas, deals parados |
+| `eva_knowledge_gaps` | Lacunas de contexto (highlight + prioridade) |
+| `agendamentos` | Reuniões de hoje e cross-reference de "reunião sem agendamento" (14 dias) |
+
+<Note>
+  O campo `qualification` é um jsonb cujo schema evoluiu (PT-BR vs EN, snake vs
+  camel). A leitura é **defensiva**: aceita aliases (`temperatura`/`temperature`,
+  `intencao`/`intent`, `objecao`/`objection`, `score`/`lead_score`…) em vez de
+  quebrar quando o shape varia. Nomes de contato passam por sanitização para não
+  vazar "Pobre", "Admin", JIDs ou nomes de grupo nos cards.
+</Note>
+
+## Atualização
+
+O botão "Atualizar" refaz a Central inteira (métricas + pipeline) ao mesmo tempo.
+A query tem `staleTime` de 30s; o rodapé mostra desde quando os dados estão frescos.
+Se alguma query crítica falhar, um aviso inline aparece com a mensagem de erro;
+falhas em lacunas/agendamentos são toleradas silenciosamente (só logam em dev).

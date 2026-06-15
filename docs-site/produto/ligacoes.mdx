@@ -1,48 +1,175 @@
 ---
 title: "Ligações"
-description: "Ligar no navegador, gravar, transcrever e gerar insights com a EVA."
+description: "Ligar no navegador, gravar, transcrever e gerar insights com a EVA — e a tela de performance de calls."
 ---
 
-O Vyzon tem duas faces de "ligações": a rota `/calls` é uma tela de
-**performance/analytics** de calls; o ato de **ligar de verdade** (no navegador,
-gravar, transcrever e gerar insights) vive **dentro de cada oportunidade**.
+O Vyzon tem **duas faces** de "ligações", e elas não são a mesma coisa:
+
+1. A rota `/calls` é uma tela de **performance/analytics** — KPIs, funil,
+   histórico. Ela **não disca**: lê calls e agendamentos que foram registrados.
+2. O ato de **ligar de verdade** (no navegador, gravar, transcrever e gerar
+   insights com a EVA) vive **dentro de cada oportunidade** (deal), via discador.
 
 <Note>
-  Ligações são um **add-on**: exigem plano Plus ou Pro **mais** o add-on de
-  ligações habilitado na empresa. Super admin faz bypass.
+  Ligações são um **add-on**, não uma feature do plano base. Para discar é
+  preciso: plano **Plus** ou **Pro** **e** o add-on de ligações habilitado na
+  empresa (`company_addons.calls_enabled = true`). Super admin faz bypass de
+  ambos os checks.
 </Note>
 
-## Performance (`/calls`)
+## Performance de Calls (`/calls`)
 
-KPIs (calls realizadas, show rate, conversão, receita), funil Agendados →
-Compareceram → Vendas, volume por resultado, histórico das últimas calls e cards de
-insight (melhor dia, no-shows, follow-ups em aberto). Os números vêm de calls e
-agendamentos **registrados manualmente** — essa tela não disca.
+### O que é e por que existe
 
-## Ligar (dentro do deal)
+`/calls` é a tela de **leitura** do esforço de calls do time. Ela responde a
+"como estamos convertendo em ligação?": show rate, conversão, receita, em quais
+dias as vendas se concentram, quem não compareceu e quais follow-ups ficaram em
+aberto. É o painel que o gestor abre para revisar a operação, não para operar.
 
-Três modos:
-- **Demo:** cria uma ligação fictícia (transcrição fixa) só para validar a experiência.
-- **WebRTC:** liga pelo navegador via Twilio Voice SDK (discador com estados, timer, mute).
-- **Twilio (click-to-call):** liga as duas pernas reais (vendedor + cliente) numa conferência.
+### O que ela mostra
+
+<AccordionGroup>
+  <Accordion title="KPIs do período">
+    Quatro cartões no topo: **Calls realizadas**, **Show rate** (compareceram /
+    realizadas), **Conversão** (vendas / realizadas) e **Receita gerada** (soma
+    das vendas aprovadas no período). O período é controlado por um seletor de
+    data; o padrão é do dia 1º do mês até hoje.
+  </Accordion>
+  <Accordion title="Tira de insights derivados">
+    Três cards calculados a partir dos dados da semana, sem IA: **Melhor dia**
+    (o dia da semana que concentra vendas), **No-shows** (quantos não
+    apareceram, com atalho para revisar agendamentos) e **Follow-ups** (calls
+    marcadas como "reagendar" que precisam de retorno).
+  </Accordion>
+  <Accordion title="Volume por resultado + funil">
+    Um gráfico de barras empilhadas dos últimos 7 dias (Venda / Follow-up /
+    Perdido / No-show) e um funil vertical **Agendados → Compareceram →
+    Vendas** com Show Rate e Conversão.
+  </Accordion>
+  <Accordion title="Histórico recente">
+    As **últimas 10 calls** registradas, com vendedor, cliente, status (venda,
+    perdido, no-show, follow-up, agendado), data/hora e duração.
+  </Accordion>
+</AccordionGroup>
+
+<Warning>
+  Os números de `/calls` vêm das tabelas `calls`, `agendamentos` e `vendas` —
+  preenchidas por **registro manual** (botões "Agendamento" e "Registrar
+  resultado") e pelo restante da operação. Essa tela **não** lê as ligações do
+  discador (`deal_calls`) nem dispara chamadas. São dois mundos de dados
+  diferentes.
+</Warning>
+
+A própria página de `/calls` exige o add-on: se a empresa não tem direito a
+ligações, ela renderiza o `UpgradePrompt` no lugar do dashboard.
+
+## Ligar de verdade: o discador no deal
+
+O discador in-browser vive **dentro da oportunidade**. Ele recebe o `dealId`, o
+telefone e o nome do cliente, e expõe estados claros de UI: `idle →
+fetching-token → ready → connecting → ringing → connected → disconnected`, com
+timer, botão de mudo e indicador de áudio.
+
+### Os três modos
+
+| Modo | O que faz | Pré-requisito | Persistência |
+|---|---|---|---|
+| **Demo** | Cria uma ligação **fictícia** com transcrição fixa em PT-BR (~187s) só para validar a experiência ponta a ponta. Não toca a rede de voz. | Nenhum telefone obrigatório | Grava em `deal_calls` com `provider: "demo"`, `status: "demo"`, transcrição já marcada `completed` |
+| **WebRTC** | Liga **pelo navegador** via Twilio Voice SDK. O front pega um token (`twilio-generate-token`), registra o `Device` e conecta numa conferência `deal-call-<id>`. | Telefone do cliente; Twilio configurado | Cria registro `provider: "twilio"`, `status: "queued"`, `transcript_status: "pending"`; o browser faz a chamada |
+| **Twilio (click-to-call)** | Liga as **duas pernas reais** (vendedor + cliente) numa conferência server-side. O backend cria as duas chamadas via API da Twilio e as une. | Telefone do cliente **e** do vendedor; envs Twilio | Cria registro, dispara as duas legs, grava `seller_call_sid` / `customer_call_sid` e muda para `status: "dialing"` |
+
+<Note>
+  Se o modo é `twilio` mas faltam as variáveis de ambiente (`TWILIO_ACCOUNT_SID`,
+  `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`), o backend **não falha**: ele cria o
+  registro, responde `requiresSetup: true` e sugere usar o modo demo para
+  validar o fluxo.
+</Note>
+
+### Validação de acesso e códigos de erro
+
+Antes de qualquer modo, `deal-call-initiate` busca o deal (respeitando RLS),
+checa se o usuário é super admin (bypass) e, se não for, valida plano e add-on
+em sequência:
+
+| Código de erro | HTTP | Quando acontece |
+|---|---|---|
+| `PLAN_UPGRADE_REQUIRED` | 403 | O plano da empresa não é `plus` nem `pro` |
+| `CALLS_ADDON_REQUIRED` | 403 | Plano OK, mas `company_addons.calls_enabled` não é `true` |
+| `RATE_LIMITED` | 429 | Excedeu o limite de tentativas (ver abaixo), com `reset_at` |
+
+<Tip>
+  Há **rate limit** por usuário/empresa/modo: 20 tentativas a cada 10 minutos
+  para `twilio`/`webrtc` e 60 para `demo`. Transcrição e insights têm seus
+  próprios limites (ver pipeline). Telefones são normalizados para E.164 (números
+  BR de 10-11 dígitos ganham `+55`).
+</Tip>
 
 ## O pipeline de voz
 
+Cada ligação real percorre uma sequência de etapas, cada uma com sua edge
+function e serviço. A demo pula direto para uma transcrição pronta.
+
 <Steps>
-  <Step title="Inicia a ligação">
-    O front chama a função que valida plano + add-on e cria o registro da ligação.
+  <Step title="Inicia (deal-call-initiate)">
+    Valida plano + add-on, normaliza telefones, aplica rate limit e cria o
+    registro em `deal_calls`. No modo Twilio, dispara as duas legs via API da
+    Twilio e une numa conferência.
   </Step>
-  <Step title="Grava">
-    A gravação é capturada via Twilio e o link salvo na ligação.
+  <Step title="Bridge / grava (Twilio)">
+    O Twilio conecta as pernas via a função de bridge (`twilio-voice-bridge`) e
+    reporta status (`twilio-voice-status-webhook`). A gravação é capturada pela
+    Twilio e seu link salvo em `recording_url`.
   </Step>
-  <Step title="Transcreve">
-    A gravação é transcrita pela OpenAI Whisper (em português).
+  <Step title="Transcreve (deal-call-transcribe)">
+    Baixa o áudio de `recording_url` (com credenciais Twilio se necessário) e
+    envia para a **OpenAI Whisper** (modelo `whisper-1`, `language=pt`). Salva
+    `transcript_text` + `transcript_preview` e marca `transcript_status:
+    completed`. Em seguida dispara os insights (fire-and-forget).
   </Step>
-  <Step title="Gera insights">
-    A EVA resume a ligação: resumo, objeções, próximos passos, mensagem sugerida e
-    sentimento (com fallback heurístico se o modelo falhar).
+  <Step title="Gera insights (deal-call-generate-insights)">
+    A EVA analisa a transcrição com o contexto do deal (título, estágio, valor,
+    cliente) usando **gpt-4o-mini**. Se o modelo falhar, cai para um **fallback
+    heurístico** baseado em regras de palavras-chave. Grava em
+    `deal_call_insights`.
   </Step>
 </Steps>
 
-A mensagem sugerida é só sugestão (aprovar-e-enviar); o backend não envia nada
-sozinho. Cada etapa registra um evento na timeline da oportunidade.
+### Serviços e modelos por etapa
+
+| Etapa | Edge function | Serviço / modelo |
+|---|---|---|
+| Iniciar | `deal-call-initiate` | Twilio Voice (REST `/Calls.json`) |
+| Token WebRTC | `twilio-generate-token` | Twilio Voice SDK (token) |
+| Bridge | `twilio-voice-bridge` | Twilio TwiML (conferência) |
+| Status | `twilio-voice-status-webhook` | Twilio status callbacks |
+| Transcrever | `deal-call-transcribe` | OpenAI Whisper (`whisper-1`, PT) |
+| Insights | `deal-call-generate-insights` | OpenAI `gpt-4o-mini` (fallback heurístico) |
+
+<Note>
+  A transcrição é limitada a **30 por empresa por hora**; os insights, a **40
+  por usuário/empresa por hora**. A função de insights aceita chamadas tanto do
+  usuário autenticado quanto internas (service-role, vindas da transcrição) — as
+  internas pulam os checks de plano/add-on.
+</Note>
+
+### Campos de insight gerados
+
+O registro em `deal_call_insights` carrega:
+
+| Campo | O que é |
+|---|---|
+| `summary` | Resumo conciso da ligação (2-4 frases) |
+| `objections` | Objeções levantadas pelo cliente (ex.: Preço, Prazo, Suporte, Decisão compartilhada, Concorrência) |
+| `next_steps` | Próximos passos concretos |
+| `action_items` | Ações que o vendedor deve tomar |
+| `suggested_message` | Mensagem de follow-up sugerida (rascunho) |
+| `suggested_stage` | Estágio sugerido (`lead`/`qualification`/`proposal`/`negotiation`/`null`) |
+| `sentiment` | Sentimento (`positive`/`neutral`/`negative`/`mixed`) — *no fallback heurístico vem `null`* |
+| `model` | Qual gerou: `gpt-4o-mini` ou `heuristic-v1` |
+
+<Warning>
+  A `suggested_message` é **só sugestão** — segue o princípio "a EVA sugere, seu
+  time aprova". O backend **não envia nada** sozinho. Cada etapa do pipeline
+  (iniciar, transcrever, insights) registra um evento `call` na timeline da
+  oportunidade (`deal_activities`).
+</Warning>

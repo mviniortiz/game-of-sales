@@ -1,46 +1,289 @@
 ---
 title: "EVA"
-description: "A inteligência comercial: copiloto da conversa e analítica de métricas."
+description: "A camada de inteligência do Vyzon: o copiloto que lê a conversa e a analítica que responde sobre métricas reais — sempre assistida, nunca autônoma."
 ---
 
-A EVA é a camada de inteligência do Vyzon. São duas faces sobre o mesmo contexto
-de empresa: a **EVA Copiloto** (analisa uma conversa e sugere o próximo passo) e a
-**EVA Analítica** (responde perguntas sobre métricas reais). A rota `/eva` hospeda
-a face analítica.
+A **EVA** é a camada de inteligência do Vyzon. Ela não é uma marca separada nem
+um chatbot grudado por cima do CRM: nasce dentro do produto e trabalha sobre o
+mesmo **contexto de empresa** cadastrado pela agência. Tem duas faces:
+
+- **EVA Copiloto** — lê uma conversa real (WhatsApp) e devolve um diagnóstico
+  estruturado mais um rascunho de resposta pronto para o vendedor.
+- **EVA Analítica** ("Chat com dados") — responde perguntas sobre métricas reais
+  da empresa (faturamento, ranking, metas, conversões) com texto, destaques e
+  gráficos.
+
+As duas compartilham a mesma fonte de verdade (o contexto cadastrado em
+**Configurações → EVA**) e a mesma memória de aprendizados (`eva_memory`).
+
+<Warning>
+  **A EVA é assistida, nunca autônoma.** Ela analisa, sugere e marca o próximo
+  passo. Quem aprova e dispara qualquer mensagem de saída é sempre o humano. O
+  copiloto carrega regras duras no próprio system prompt para nunca prometer
+  ação automática nem inventar informação fora do contexto.
+</Warning>
+
+---
 
 ## EVA Copiloto
 
-Vive no [Inbox](/produto/inbox). Recebe as mensagens de uma conversa e retorna
-sentimento, temperatura, estágio, um **rascunho de resposta** pronto pro vendedor,
-objeções, próxima ação e uma qualificação estruturada (intenção, fit, score, info
-coletada/faltante, lacunas de conhecimento).
+A face copiloto vive no [Inbox](/produto/inbox). Recebe as mensagens de uma
+conversa, o contexto comercial da agência e a memória da EVA, e retorna um JSON
+estruturado com a leitura da conversa, um rascunho de resposta e uma
+qualificação completa do lead.
+
+### Como funciona, passo a passo
+
+<Steps>
+  <Step title="Deriva o tenant do login">
+    O `company_id` é derivado **do JWT**, nunca do payload enviado pelo cliente.
+    Em seguida o copiloto confere que a conversa (`chat_phone`) pertence ao
+    usuário antes de analisar — e essa checagem é *fail-closed*: se o banco
+    falhar, a análise é bloqueada (não presume posse).
+  </Step>
+  <Step title="Carrega o contexto da empresa">
+    Lê `eva_business_context` (agência, serviços, ICP, base de conhecimento) e
+    monta um bloco de contexto que vira a única fonte de verdade sobre o que a
+    agência vende, por quanto, para quem e com que tom.
+  </Step>
+  <Step title="Verifica o cache">
+    Se a mesma conversa já foi analisada há menos de 60 minutos **e** a versão do
+    contexto não mudou, devolve o resultado em cache (sem consumir o limite
+    diário). Se o contexto mudou de versão, o cache é descartado e a EVA
+    reanalisa.
+  </Step>
+  <Step title="Chama o modelo e normaliza">
+    Monta o prompt (conversa + memória + contexto + objetivo opcional), pede um
+    JSON estrito, normaliza o objeto `qualification` no servidor e persiste o
+    resumo, os aprendizados e as lacunas de conhecimento detectadas.
+  </Step>
+</Steps>
+
+### O que o copiloto retorna
+
+O copiloto sempre devolve um objeto com os campos de leitura da conversa e um
+sub-objeto `qualification` com a qualificação estruturada do lead.
+
+#### Campos de nível superior (leitura da conversa)
+
+| Campo | Tipo | O que é |
+| --- | --- | --- |
+| `sentiment` | string curta | O momento emocional do lead naquele ponto da conversa. |
+| `temperature` | `quente` / `morno` / `frio` | Quão pronto o lead está para avançar. |
+| `stage` | string curta | Estágio do funil em que a conversa parece estar. |
+| `strategy` | array (2–3) | Dicas curtas e diretas de como conduzir. |
+| `draft` | string | **Mensagem pronta** para o vendedor copiar e enviar (PT-BR, tom de WhatsApp). É sugestão — o humano revisa e envia. |
+| `objections` | array | Objeções detectadas na fala do lead (ou `[]`). |
+| `nextAction` | string curta | A próxima ação recomendada. |
+| `learnings` | array de objetos | Fatos/preferências/padrões aprendidos (alimentam `eva_memory`). |
+| `qualification` | objeto | A qualificação estruturada do lead (tabela abaixo). |
+
+<Note>
+  Cada item de `learnings` tem `type` (`tone_sample`, `objection_pattern`,
+  `preference`, `fact` ou `learning`), `content`, `confidence` (0–1) e `about`
+  (`seller`, `lead` ou `company`). Só os 3 mais confiáveis e válidos são
+  gravados na memória por análise.
+</Note>
+
+#### O objeto `qualification`
+
+Esse é o coração do diagnóstico estruturado. Todos os campos podem vir `null`
+quando a conversa ainda não dá sinal suficiente.
+
+| Campo | Valores | O que é |
+| --- | --- | --- |
+| `servico_interesse` | nome de serviço cadastrado / `null` | O serviço que o lead parece querer (apenas dos cadastrados). |
+| `intencao` | `preco`, `demo`, `duvida`, `suporte`, `compra`, `outro`, `null` | A intenção principal do lead. |
+| `temperatura` | `frio`, `morno`, `quente`, `null` | Temperatura do lead (espelha o nível superior). |
+| `fit_sugerido` | `baixo`, `medio`, `bom`, `excelente`, `null` | Aderência ao ICP cadastrado. |
+| `score_sugerido` | 0–100 / `null` | Score numérico sugerido. |
+| `score_justificativa` | string (1 frase) | Por que aquele score. |
+| `urgencia` | `baixa`, `media`, `alta`, `indefinida`, `null` | Urgência declarada/inferida. |
+| `orcamento` | `informado`, `nao_informado`, `baixo`, `adequado`, `alto`, `null` | Situação de orçamento. |
+| `objecao` | string (1 frase) / `null` | A objeção principal do lead. |
+| `info_coletada` | array | O que já se sabe do lead. |
+| `info_faltante` | array | O que ainda precisa ser perguntado. |
+| `proxima_acao` | `responder`, `qualificar`, `criar_oportunidade`, `marcar_demo`, `handoff_humano`, `aguardar`, `null` | Recomendação de próximo passo. |
+| `resposta_sugerida` | string | Sugestão de mensagem (igual ou diferente do `draft`). Apenas sugestão. |
+| `deve_criar_oportunidade` | boolean | Só `true` quando há clara intenção de compra **e** informação suficiente. O humano ainda decide. |
+| `deve_fazer_handoff` | boolean | `true` quando bate nas regras de handoff cadastradas. |
+| `confianca` | 0–1 | Confiança da EVA no diagnóstico. |
+| `knowledge_gaps` | array | Lacunas no contexto que impediram uma resposta melhor. |
+
+<Note>
+  Cada `knowledge_gap` traz `type` (`agency_context`, `service`, `pricing`,
+  `icp`, `handoff_rule`, `tone`, `other`), `description` (o que faltou),
+  `suggested_fix` (o que cadastrar) e `fix_target` (`agency`, `services`, `icp`
+  ou `playbooks`). Gaps são gravados em `eva_knowledge_gaps` com *dedup*: se já
+  existe um gap aberto da mesma conversa e mesmo alvo, o contador de ocorrências
+  é reforçado em vez de duplicar.
+</Note>
+
+### As regras duras do copiloto
+
+São restrições escritas no system prompt. Existem para garantir o caráter
+assistido e impedir alucinação de preço/serviço/promessa.
+
+| Regra | Por quê |
+| --- | --- |
+| Nunca prometer ação automática | A EVA sugere; ela não executa nada no produto. |
+| Nunca dizer que enviou mensagem, marcou demo, criou oportunidade ou moveu pipeline | Essas ações são do humano (e do produto), não da resposta da IA. |
+| Nunca inventar preço, serviço, prazo ou política fora do contexto cadastrado | O contexto da agência é a única fonte de verdade. |
+| Nunca sugerir uma "Promessa PROIBIDA" (nem variação) | Se o lead pedir, recusar com tato e registrar como objeção. |
+| Seguir playbooks como guia de etapas, sem inventar passos | Mantém o agente dentro do processo aprovado. |
+| Respeitar o tom de voz aprovado (ex.: "sem emojis", "sem gírias") | Consistência de marca na voz da agência. |
+| Pedido fora do ICP/serviços → `fit_sugerido=baixo` + `info_faltante` | Não infla o score nem inventa um serviço novo. |
+| Faltou contexto → registrar `knowledge_gap` em vez de presumir | Transforma a falha em tarefa de cadastro, não em chute. |
+
+<Warning>
+  As saídas do copiloto são **sugestões**. O `draft` e a `resposta_sugerida`
+  são textos prontos para copiar, mas nada é enviado: o vendedor revisa, ajusta
+  se quiser e envia pela mão. Mesmo `deve_criar_oportunidade` e
+  `deve_fazer_handoff` são recomendações — quem decide é o humano.
+</Warning>
+
+### Limites operacionais do copiloto
+
+| Limite | Valor |
+| --- | --- |
+| Limite diário por usuário | 50 análises (janela de 24h) |
+| Mensagens consideradas por análise | últimas 30 da conversa |
+| TTL do cache | 60 minutos |
+| Invalidação de cache por contexto | quando a versão de `eva_business_context` muda |
+| Aprendizados gravados por análise | até 3 (os mais confiáveis e válidos) |
+
+<Tip>
+  Quando o vendedor força uma reanálise (`force=true`), o copiloto pula o cache
+  e gera de novo — isso consome do limite diário. Útil quando o contexto acabou
+  de ser ajustado e ele quer a leitura atualizada na hora.
+</Tip>
+
+---
 
 ## EVA Analítica ("Chat com dados")
 
-Na rota `/eva`. Pergunte sobre faturamento, ranking, metas, conversões e tendências.
-Ela puxa dados reais da empresa (vendas dos últimos meses, metas, produtos) mais
-contexto das conversas recentes, e responde com texto, destaques e gráficos.
+Na rota `/eva`. É a face que responde perguntas em linguagem natural sobre os
+números reais da empresa. Perguntas típicas: "Quem mais vendeu este mês?",
+"Qual o produto mais vendido?", "Como tá o Pedro no WhatsApp?", "Quais objeções
+mais aparecem?".
+
+### O que ela puxa
+
+Antes de responder, a analítica monta um pacote de dados reais da empresa (tudo
+escopado por `company_id`) e injeta no prompt:
+
+<AccordionGroup>
+  <Accordion title="Vendas e faturamento">
+    Vendas dos últimos meses, faturamento do mês atual vs. anterior, variação
+    percentual, ticket médio (sobre vendas aprovadas) e contagem de vendas.
+  </Accordion>
+  <Accordion title="Rankings">
+    Ranking de vendedores (top 10 por faturamento, com nº de vendas e ticket
+    médio) e ranking de produtos (top 10 por faturamento e quantidade).
+  </Accordion>
+  <Accordion title="Metas">
+    Metas individuais do mês (meta, realizado, progresso) e a meta consolidada
+    da empresa com o percentual atingido.
+  </Accordion>
+  <Accordion title="Contexto de WhatsApp (cruzado)">
+    Resumos das conversas analisadas pelo Copiloto nos últimos 7 dias,
+    agrupados por vendedor: total de conversas, quantos leads quentes/mornos/
+    frios e as conversas recentes (temperatura, objeções, próxima ação,
+    estágio). É o que permite perguntar "como tá fulano no WhatsApp?".
+  </Accordion>
+  <Accordion title="Memória da EVA">
+    Fatos, preferências e padrões aprendidos sobre a empresa e cada vendedor
+    (com nível de confiança). Confiança alta (>0,7) ela afirma; média ela
+    menciona com cautela.
+  </Accordion>
+</AccordionGroup>
+
+### Formato da resposta
+
+A analítica retorna um JSON com:
+
+| Campo | O que é |
+| --- | --- |
+| `answer` | A resposta em markdown (negrito em números/nomes, listas quando houver vários itens). |
+| `type` | `insight`, `ranking`, `comparison`, `alert` ou `general`. |
+| `highlights` | 1–3 métricas-chave curtas (ex.: "Faturamento: R$ 50k"). |
+| `charts` | Até 2 gráficos (`bar`, `line` ou `pie`), no máximo 10 itens cada. |
 
 <Note>
-  Disponível nos planos Plus e Pro (Plus tem limite diário de consultas; Pro é ilimitado).
+  `bar` para rankings e comparações, `line` para evolução temporal, `pie` para
+  distribuição/participação. Valores monetários vão como número puro; os rótulos
+  são curtos (primeiro nome do vendedor, nome abreviado do produto).
 </Note>
+
+### Disponibilidade e limites por plano
+
+| Plano | Acesso | Limite diário |
+| --- | --- | --- |
+| Starter | Bloqueado (paywall com upgrade) | — |
+| Plus | Liberado | limite diário de consultas |
+| Pro | Liberado | ilimitado |
+
+<Note>
+  No Starter, a tela mostra um *preview* desfocado do chat com um cartão de
+  upgrade. Super admins não consomem limite e podem consultar qualquer empresa.
+</Note>
+
+---
 
 ## O contexto da empresa
 
-O que alimenta a EVA é cadastrado em **Configurações → EVA**: dados da agência,
-serviços, ICP (cliente ideal) e base de conhecimento (playbooks, objeções, tom de
-voz, promessas proibidas). É salvo por aba, e cada mudança incrementa uma versão —
-quando o contexto muda, a EVA reanalisa as conversas (ignora o cache antigo).
-
-## Limites importantes
+Tudo que a EVA "sabe" sobre a agência é cadastrado em **Configurações → EVA**
+(`/configuracoes`, sub-rota EVA). É um registro único por empresa
+(`eva_business_context`) dividido em abas. Cada aba salva de forma **parcial** —
+só envia a chave que edita — e cada mudança real incrementa uma **versão**
+(`v1`, `v2`, …), exibida no cabeçalho junto da data da última edição.
 
 <Warning>
-  A EVA é **assistida, nunca autônoma**. O copiloto tem regras duras: nunca prometer
-  ação automática, nunca dizer que enviou mensagem / marcou demo / criou
-  oportunidade, e nunca inventar preço, serviço ou prazo fora do contexto. As saídas
-  são sugestões; o humano aprova e envia.
+  Editar o contexto é restrito a **admin**. Membros veem em modo leitura. Quando
+  a versão muda, o copiloto descarta o cache e reanalisa as conversas para
+  refletir o novo contexto.
 </Warning>
 
-- Usa só dados manuais e internos (contexto cadastrado, conversas, memória). Sem enriquecimento externo (nada de scraping de Google/LinkedIn).
-- O copiloto deriva o `company_id` do login (nunca do payload) e confere que a conversa pertence ao usuário (fail-closed).
-- Editar o contexto da EVA é restrito a admin; membros veem em modo leitura.
+### As abas e o que cada uma alimenta
+
+| Aba | O que cadastra | O que alimenta na EVA |
+| --- | --- | --- |
+| **Contexto** | Descrição da agência, público-alvo, ticket médio, tom de voz, regras de handoff, observações, palavras e **promessas proibidas** | Tom do `draft`, regras de handoff (`deve_fazer_handoff`), restrições de promessa. |
+| **Serviços** | Lista de serviços com nome, descrição, faixa de preço, modelo de cobrança e perguntas obrigatórias | `servico_interesse`, validação de preço/escopo, perguntas de qualificação. |
+| **ICP** | Descrição do cliente ideal, critérios de bom fit e de "sem fit" | `fit_sugerido`, decisão de tratar como quente ou fora do ICP. |
+| **Base de Conhecimento** | Playbooks comerciais, objeções e respostas aprovadas, FAQs, regras de tom e promessas proibidas | Respostas a objeções/FAQ, etapas do playbook, ordem de prioridade no prompt. |
+
+<Note>
+  Na Base de Conhecimento, as **promessas proibidas** entram primeiro no prompt
+  (antes de qualquer playbook), justamente para a IA "ver" o que não pode
+  prometer antes de qualquer coisa que possa empurrá-la nessa direção. Entradas
+  com prioridade `high` ganham espaço quando há corte por tamanho.
+</Note>
+
+<Tip>
+  Quando o copiloto não encontra a informação de que precisa (preço de um
+  serviço não cadastrado, critério de ICP ausente), ele registra um
+  `knowledge_gap` apontando exatamente qual aba preencher. A Base de
+  Conhecimento e o Agent Studio transformam esses gaps em sugestões de
+  cadastro revisáveis.
+</Tip>
+
+---
+
+## Segurança e princípios
+
+<Warning>
+  **Sem fonte externa.** A EVA usa somente dados manuais e internos: o contexto
+  cadastrado, as conversas e a memória. Não há scraping nem enriquecimento por
+  Google/LinkedIn. O que ela não sabe, ela marca como lacuna — não inventa.
+</Warning>
+
+- O copiloto deriva o `company_id` do JWT e confere a posse da conversa antes de
+  analisar (*fail-closed*: em erro de banco, bloqueia).
+- O limite diário e o cache protegem custo e evitam reanálises redundantes.
+- Toda saída de mensagem é tratada como sugestão — o padrão é **aprovar-e-enviar**.
+- Editar o contexto da EVA é restrito a admin; membros operam em leitura.
+
+Para configurar a EVA como **agente especializado** (com simulações, score de
+aprovação e travas de segurança antes de soltá-la no Inbox), veja o
+[Agent Studio](/produto/agent-studio).
