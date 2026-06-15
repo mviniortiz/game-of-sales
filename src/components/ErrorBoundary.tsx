@@ -62,34 +62,38 @@ export class ErrorBoundary extends Component<Props, State> {
       const isDev = typeof import.meta !== "undefined" && import.meta.env?.DEV;
 
       return (
-        <div className="min-h-screen flex items-center justify-center bg-[#0D1421] px-4 py-6 relative overflow-hidden">
-          {/* Subtle radial glow */}
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-emerald-500/[0.04] blur-3xl" />
-          </div>
-
-          <div className="relative w-full max-w-md">
-            <div className="rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-sm p-6 sm:p-8 text-center">
+        <div className="min-h-screen flex items-center justify-center px-4 py-6" style={{ background: "#F8FAFC" }}>
+          <div className="w-full max-w-md">
+            <div
+              className="rounded-2xl bg-white p-6 sm:p-8 text-center"
+              style={{ boxShadow: "0 0 0 1px #E6EDF5, 0 18px 48px -24px rgba(15,23,42,0.3)" }}
+            >
               {/* Icon */}
-              <div className="mx-auto mb-5 w-12 h-12 rounded-full border border-white/10 bg-white/[0.03] flex items-center justify-center">
-                <AlertTriangle className="h-5 w-5 text-amber-400" strokeWidth={2} />
+              <div
+                className="mx-auto mb-5 w-12 h-12 rounded-2xl flex items-center justify-center"
+                style={{ background: "rgba(245,158,11,0.1)" }}
+              >
+                <AlertTriangle className="h-5 w-5" style={{ color: "#D97706" }} strokeWidth={2} />
               </div>
 
               {/* Title + description */}
-              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-white mb-2">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight mb-2" style={{ color: "#0B1220" }}>
                 Algo deu errado
               </h1>
-              <p className="text-sm text-white/60 leading-relaxed mb-6">
-                Ocorreu um erro inesperado. Você pode tentar novamente ou recarregar a página.
+              <p className="text-sm leading-relaxed mb-6" style={{ color: "#64748B" }}>
+                Ocorreu um erro inesperado. Você pode tentar de novo ou recarregar a página.
               </p>
 
               {/* Dev error details */}
               {isDev && errorMessage && (
-                <div className="mb-6 rounded-lg border border-red-500/20 bg-red-500/[0.04] px-3 py-2 text-left">
-                  <p className="text-[10px] uppercase tracking-wider text-red-400/80 font-medium mb-1">
+                <div
+                  className="mb-6 rounded-lg px-3 py-2 text-left"
+                  style={{ background: "rgba(220,38,38,0.05)", border: "1px solid rgba(220,38,38,0.18)" }}
+                >
+                  <p className="text-[10px] uppercase tracking-wider font-semibold mb-1" style={{ color: "#B91C1C" }}>
                     Detalhes (dev)
                   </p>
-                  <p className="text-[11px] text-red-300/90 font-mono break-words">
+                  <p className="text-[11px] font-mono break-words" style={{ color: "#B91C1C" }}>
                     {errorMessage}
                   </p>
                 </div>
@@ -99,13 +103,15 @@ export class ErrorBoundary extends Component<Props, State> {
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                 <button
                   onClick={this.handleRetry}
-                  className="inline-flex h-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] px-5 text-sm font-medium text-white/80 hover:bg-white/[0.06] hover:text-white transition-colors flex-1"
+                  className="inline-flex h-11 items-center justify-center rounded-xl px-5 text-sm font-semibold flex-1 transition-colors hover:brightness-95"
+                  style={{ background: "#F1F5F9", color: "#475569" }}
                 >
                   Tentar novamente
                 </button>
                 <button
                   onClick={this.handleReload}
-                  className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-emerald-500 px-5 text-sm font-semibold text-emerald-950 hover:bg-emerald-400 transition-colors shadow-lg shadow-emerald-500/20 flex-1"
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-bold text-white flex-1 transition-transform hover:-translate-y-px"
+                  style={{ background: "linear-gradient(135deg, #2563EB, #1D4ED8)", boxShadow: "0 4px 20px -6px rgba(37,99,235,0.5)" }}
                 >
                   <RefreshCw className="h-3.5 w-3.5" strokeWidth={2.5} />
                   Recarregar
@@ -114,8 +120,8 @@ export class ErrorBoundary extends Component<Props, State> {
             </div>
 
             {/* Support hint */}
-            <p className="mt-4 text-center text-[11px] text-white/40">
-              Se o problema persistir, contate o suporte.
+            <p className="mt-4 text-center text-[11px]" style={{ color: "#94A3B8" }}>
+              Se o problema persistir, fale com o suporte.
             </p>
           </div>
         </div>

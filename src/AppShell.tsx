@@ -62,8 +62,8 @@ const CheckoutRedirect = () => {
 };
 
 const LazyFallback = () => (
-  <div className="flex items-center justify-center min-h-[50vh]">
-    <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
+  <div className="flex items-center justify-center min-h-screen">
+    <Loader2 className="h-8 w-8 animate-spin" style={{ color: "#2563EB" }} />
   </div>
 );
 
