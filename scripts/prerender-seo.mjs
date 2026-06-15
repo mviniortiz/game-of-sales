@@ -34,6 +34,102 @@ const TEMPLATE_PATH = path.join(DIST, "index.html");
 
 const CONFIGS = [];
 
+// SEO-FIX 2026-06-15 — Search Console: "Página alternativa com tag canônica
+// adequada". As rotas client-only (personas, comparativos, changelog, legal)
+// caíam no rewrite do Vercel `/(.*) → /index.html`, herdando o canonical e o
+// title da HOME no HTML cru. O Google as tratava como alternativas da home e
+// não indexava. O CanonicalManager corrige no client, mas o crawler confia no
+// HTML inicial. Aqui pré-renderizamos cada rota com canonical/title/description
+// PRÓPRIOS no HTML servido (sem depender de JS). Títulos/descrições espelham o
+// que cada página já define em document.title/meta (mantidos em sincronia).
+// MANTER SINCRONIZADO com a allowlist do src/components/CanonicalManager.tsx.
+const SIMPLE_ROUTES = [
+    {
+        slug: "alternativas",
+        seo: {
+            title: "Alternativas Vyzon | HubSpot, Ploomes, RD Station, Kommo, Pipedrive, Agendor",
+            description: "Compare o Vyzon com HubSpot, Ploomes, RD Station, Kommo, Pipedrive e Agendor. Preço, features, WhatsApp, integrações e quando cada um faz mais sentido.",
+        },
+    },
+    {
+        slug: "alternativa-hubspot",
+        seo: {
+            title: "Alternativa ao HubSpot | Vyzon, CRM brasileiro com WhatsApp",
+            description: "Vyzon é a alternativa brasileira ao HubSpot pra times comerciais: preço em Real, WhatsApp nativo, integração Hotmart/Kiwify. Compare preço, features e quando cada um faz sentido.",
+        },
+    },
+    {
+        slug: "alternativa-ploomes",
+        seo: {
+            title: "Alternativa ao Ploomes | Vyzon, CRM com WhatsApp e Eva IA",
+            description: "Vyzon vs Ploomes: CRM brasileiro pra time ágil que vende no WhatsApp, com integração nativa Hotmart/Kiwify, ranking ao vivo e IA generativa. Compare preço, features e quando cada um faz sentido.",
+        },
+    },
+    {
+        slug: "alternativa-rd-station",
+        seo: {
+            title: "Alternativa ao RD Station | Vyzon, CRM com WhatsApp e Eva IA",
+            description: "Vyzon vs RD Station: CRM brasileiro pra fundo de funil com WhatsApp nativo, Hotmart/Kiwify, ranking ao vivo e IA generativa. Veja quando cada um faz mais sentido.",
+        },
+    },
+    {
+        slug: "alternativa-kommo",
+        seo: {
+            title: "Alternativa ao Kommo | Vyzon, CRM brasileiro com WhatsApp e Eva IA",
+            description: "Vyzon vs Kommo: CRM brasileiro com cobrança em Real, WhatsApp nativo, Hotmart/Kiwify e Eva IA generativa. Kommo é multi-canal global, Vyzon é WhatsApp-first e BR.",
+        },
+    },
+    {
+        slug: "alternativa-pipedrive",
+        seo: {
+            title: "Alternativa ao Pipedrive | Vyzon, CRM brasileiro com WhatsApp",
+            description: "Vyzon vs Pipedrive: CRM brasileiro com cobrança em Real, WhatsApp nativo, Hotmart/Kiwify e Eva IA. Veja quando cada um faz mais sentido.",
+        },
+    },
+    {
+        slug: "alternativa-agendor",
+        seo: {
+            title: "Alternativa ao Agendor | Vyzon, CRM com WhatsApp e Eva IA",
+            description: "Vyzon vs Agendor: dois CRMs brasileiros com propósitos diferentes. Vyzon é WhatsApp-first com IA generativa; Agendor é B2B tradicional com relatórios maduros.",
+        },
+    },
+    {
+        slug: "para-infoprodutores",
+        seo: {
+            title: "Vyzon para Infoprodutores | CRM com Hotmart, Kiwify e Greenn nativo",
+            description: "CRM feito pra infoprodutor: webhook Hotmart/Kiwify/Greenn, pipeline por esteira, recuperação de boleto no WhatsApp e ranking por produto. 14 dias grátis.",
+        },
+    },
+    {
+        slug: "para-saas-b2b",
+        seo: {
+            title: "Vyzon para SaaS B2B | CRM em Real com WhatsApp e Eva IA",
+            description: "CRM brasileiro pra time comercial de SaaS B2B: pipeline por conta, ranking ao vivo, Eva IA cobrando lead parado, WhatsApp nativo e cobrança em Real. Alternativa a HubSpot, Pipedrive e RD Station.",
+        },
+    },
+    {
+        slug: "changelog",
+        seo: {
+            title: "Changelog · Vyzon",
+            description: "Novidades, melhorias e correções do Vyzon — a Central Comercial com EVA para agências que vendem por conversa.",
+        },
+    },
+    {
+        slug: "politica-privacidade",
+        seo: {
+            title: "Política de Privacidade | Vyzon",
+            description: "Como o Vyzon coleta, usa e protege os dados pessoais, em conformidade com a LGPD.",
+        },
+    },
+    {
+        slug: "termos-de-servico",
+        seo: {
+            title: "Termos de Serviço | Vyzon",
+            description: "Termos e condições de uso da plataforma Vyzon.",
+        },
+    },
+];
+
 const ORIGIN = "https://vyzon.com.br";
 
 const escapeHtml = (s = "") =>
@@ -270,6 +366,24 @@ async function buildOne(config) {
     console.log(`✓ dist/${config.slug}/index.html  (${html.length.toLocaleString()} bytes)`);
 }
 
+// Prerender LEVE: só reescreve o <head> SEO (title, description, canonical,
+// OG/twitter) por rota, sem exigir os blocos ricos (pains/mechanism/faq...).
+// Remove o <noscript> genérico da home (mantém o do pixel) pra um crawler sem
+// JS não ver o conteúdo da home sob uma URL de comparativo/persona. O React
+// hidrata e renderiza a página real da rota normalmente.
+async function buildSimple(config) {
+    const template = await readFile(TEMPLATE_PATH, "utf8");
+    let html = rewriteHead(template, config);
+    // Remove noscripts que não sejam o do Meta Pixel (facebook.com/tr).
+    html = html.replace(/<noscript>([\s\S]*?)<\/noscript>/g, (match) =>
+        match.includes("facebook.com/tr") ? match : ""
+    );
+    const outDir = path.join(DIST, config.slug);
+    if (!existsSync(outDir)) await mkdir(outDir, { recursive: true });
+    await writeFile(path.join(outDir, "index.html"), html, "utf8");
+    console.log(`✓ dist/${config.slug}/index.html  (self-canonical, ${html.length.toLocaleString()} bytes)`);
+}
+
 if (!existsSync(TEMPLATE_PATH)) {
     console.error(`✗ ${TEMPLATE_PATH} não encontrado. Rode 'vite build' primeiro.`);
     process.exit(1);
@@ -278,5 +392,8 @@ if (!existsSync(TEMPLATE_PATH)) {
 console.log("Prerender SEO landings...\n");
 for (const cfg of CONFIGS) {
     await buildOne(cfg);
+}
+for (const cfg of SIMPLE_ROUTES) {
+    await buildSimple(cfg);
 }
 console.log("\nDone.");
