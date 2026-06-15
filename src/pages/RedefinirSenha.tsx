@@ -155,7 +155,7 @@ const RedefinirSenha = () => {
           ) : !sessionReady ? (
             /* Loading / waiting for session */
             <div className="text-center space-y-4 py-4">
-              <Loader2 className="h-8 w-8 animate-spin text-emerald-400 mx-auto" />
+              <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto" />
               <div>
                 <h1
                   className="text-xl font-bold mb-2"

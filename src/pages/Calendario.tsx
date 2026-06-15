@@ -929,7 +929,7 @@ export default function Calendario() {
           <main className="flex-1 overflow-hidden bg-background relative">
             {loading && (
               <div className="absolute inset-0 flex items-center justify-center bg-background/60 z-20">
-                <RefreshCw className="h-5 w-5 text-emerald-400 animate-spin" />
+                <RefreshCw className="h-5 w-5 text-blue-600 animate-spin" />
               </div>
             )}
 

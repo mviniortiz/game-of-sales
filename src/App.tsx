@@ -1,8 +1,8 @@
 import { lazy, Suspense } from "react";
+import { BrandedLoader } from "@/components/ui/BrandedLoader";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { CanonicalManager } from "@/components/CanonicalManager";
-import { Loader2 } from "lucide-react";
 import LandingPage from "./pages/LandingPage";
 
 const AppShell = lazy(() => import("./AppShell"));
@@ -44,11 +44,7 @@ const EvaStudioPreview = lazy(() => import("./pages/EvaStudioPreview"));
 const EvaNudgePreview = lazy(() => import("./pages/EvaNudgePreview"));
 const UpgradeLockPreview = lazy(() => import("./pages/admin/UpgradeLock"));
 
-const LazyFallback = () => (
-  <div className="flex items-center justify-center min-h-screen">
-    <Loader2 className="h-8 w-8 animate-spin" style={{ color: "#2563EB" }} />
-  </div>
-);
+const LazyFallback = () => <BrandedLoader />;
 
 const App = () => (
   <ErrorBoundary>

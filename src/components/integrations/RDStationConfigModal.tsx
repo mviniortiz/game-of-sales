@@ -197,7 +197,7 @@ export const RDStationConfigModal = ({ open, onClose, onSaved }: RDStationConfig
 
                 {isLoading ? (
                     <div className="flex items-center justify-center py-8">
-                        <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
+                        <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
                     </div>
                 ) : (
                     <div className="space-y-6 py-4">

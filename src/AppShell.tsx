@@ -10,7 +10,7 @@ import { TenantProvider } from "@/contexts/TenantContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminRoute } from "@/components/AdminRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Loader2 } from "lucide-react";
+import { BrandedLoader } from "@/components/ui/BrandedLoader";
 import NotFound from "./pages/NotFound";
 
 const Auth = lazy(() => import("./pages/Auth"));
@@ -61,11 +61,7 @@ const CheckoutRedirect = () => {
   return <Navigate to={`/onboarding?plan=${plan}&step=5`} replace />;
 };
 
-const LazyFallback = () => (
-  <div className="flex items-center justify-center min-h-screen">
-    <Loader2 className="h-8 w-8 animate-spin" style={{ color: "#2563EB" }} />
-  </div>
-);
+const LazyFallback = () => <BrandedLoader />;
 
 const PreProdRoute = ({ children, fallback = "/dashboard" }: { children: React.ReactNode; fallback?: string }) => {
   const { isSuperAdmin } = useAuth();

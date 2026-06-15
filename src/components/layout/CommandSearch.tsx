@@ -319,7 +319,7 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
                                 <motion.div
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
-                                    className="h-3.5 w-3.5 rounded-full border-[1.5px] border-emerald-400/30 border-t-emerald-400 animate-spin"
+                                    className="h-3.5 w-3.5 rounded-full border-[1.5px] border-blue-500/30 border-t-blue-600 animate-spin"
                                 />
                             )}
                             <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-mono text-muted-foreground/60 bg-white/[0.04] border border-white/[0.06]">

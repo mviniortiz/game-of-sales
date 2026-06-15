@@ -174,7 +174,7 @@ const Suporte = () => {
           <div className="border-r border-border">
             {isLoading ? (
               <div className="flex items-center justify-center h-64">
-                <Loader2 className="h-6 w-6 animate-spin text-emerald-400" />
+                <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
               </div>
             ) : listError ? (
               <div className="flex flex-col items-center justify-center h-64 px-6 text-center">
@@ -267,7 +267,7 @@ const Suporte = () => {
               </div>
             ) : loadingDetail ? (
               <div className="flex items-center justify-center h-full min-h-[400px]">
-                <Loader2 className="h-8 w-8 animate-spin text-emerald-400" />
+                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
               </div>
             ) : emailDetail ? (
               <div className="flex flex-col h-full">

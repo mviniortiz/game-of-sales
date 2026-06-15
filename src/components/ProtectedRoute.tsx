@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { BrandedLoader } from "@/components/ui/BrandedLoader";
 
 export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading, profile, companyId, isSuperAdmin, signOut } = useAuth();
@@ -40,14 +41,7 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }, [user, loading, profile, companyId, isSuperAdmin, navigate, signOut]);
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
-          <p className="mt-4 text-muted-foreground">Carregando...</p>
-        </div>
-      </div>
-    );
+    return <BrandedLoader label="Carregando..." />;
   }
 
   if (!user) {
@@ -56,14 +50,7 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   // Profile ainda carregando: loader amigável (effect de signOut cuida se persistir)
   if (!profile) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
-          <p className="mt-4 text-muted-foreground">Carregando perfil...</p>
-        </div>
-      </div>
-    );
+    return <BrandedLoader label="Carregando perfil..." />;
   }
 
   // Sem company — effect já redirecionou pro onboarding, renderiza nada

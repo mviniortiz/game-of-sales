@@ -183,7 +183,7 @@ export const GoogleCalendarConfigModal = ({ open, onClose, onSaved }: GoogleCale
 
                 {loading ? (
                     <div className="flex items-center justify-center py-16">
-                        <Loader2 className="w-5 h-5 animate-spin text-emerald-400" />
+                        <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
                     </div>
                 ) : (
                     <div className="p-6 space-y-5">
