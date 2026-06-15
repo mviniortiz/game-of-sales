@@ -2,48 +2,140 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Vyzon API",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "API interna do Vyzon (Edge Functions). Endpoints chamáveis pelo app autenticado. Webhooks de provedores externos são documentados nos Guias, não aqui. Spec inicial: cobre endpoints representativos e é expandida incrementalmente."
   },
   "servers": [
-    { "url": "https://{project}.supabase.co/functions/v1", "variables": { "project": { "default": "omsdkjzkphflpwnbaeye" } } }
+    {
+      "url": "https://{project}.supabase.co/functions/v1",
+      "variables": {
+        "project": {
+          "default": "omsdkjzkphflpwnbaeye"
+        }
+      }
+    }
   ],
-  "security": [{ "bearerAuth": [] }],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
   "paths": {
     "/whatsapp-copilot": {
       "post": {
         "summary": "Analisar conversa (EVA Comercial)",
         "description": "A EVA lê uma conversa de WhatsApp e devolve diagnóstico: sentimento, temperatura, estágio, rascunho de resposta, objeções e qualificação. O company_id é derivado do JWT (nunca do payload).",
-        "tags": ["EVA"],
+        "tags": [
+          "EVA"
+        ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": {
-            "type": "object",
-            "required": ["messages"],
-            "properties": {
-              "messages": { "type": "array", "description": "Histórico da conversa", "items": { "type": "object", "properties": { "text": { "type": "string" }, "sender": { "type": "string", "enum": ["contact", "me"] } } } },
-              "contactName": { "type": "string" },
-              "contactPhone": { "type": "string" },
-              "force": { "type": "boolean", "description": "Ignora cache" },
-              "objective": { "type": "string", "description": "Objetivo da abordagem (modo prospecção)" }
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "messages"
+                ],
+                "properties": {
+                  "messages": {
+                    "type": "array",
+                    "description": "Histórico da conversa",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "text": {
+                          "type": "string"
+                        },
+                        "sender": {
+                          "type": "string",
+                          "enum": [
+                            "contact",
+                            "me"
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  "contactName": {
+                    "type": "string"
+                  },
+                  "contactPhone": {
+                    "type": "string"
+                  },
+                  "force": {
+                    "type": "boolean",
+                    "description": "Ignora cache"
+                  },
+                  "objective": {
+                    "type": "string",
+                    "description": "Objetivo da abordagem (modo prospecção)"
+                  }
+                }
+              }
             }
-          } } }
+          }
         },
         "responses": {
-          "200": { "description": "Análise gerada", "content": { "application/json": { "schema": {
-            "type": "object",
-            "properties": {
-              "success": { "type": "boolean" },
-              "analysis": { "type": "object", "properties": {
-                "sentiment": { "type": "string" }, "temperature": { "type": "string" }, "stage": { "type": "string" },
-                "draft": { "type": "string" }, "objections": { "type": "array", "items": { "type": "string" } },
-                "nextAction": { "type": "string" }, "qualification": { "type": "object" }
-              } },
-              "model": { "type": "string" }, "remaining": { "type": "integer" }, "dailyLimit": { "type": "integer" }
+          "200": {
+            "description": "Análise gerada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "analysis": {
+                      "type": "object",
+                      "properties": {
+                        "sentiment": {
+                          "type": "string"
+                        },
+                        "temperature": {
+                          "type": "string"
+                        },
+                        "stage": {
+                          "type": "string"
+                        },
+                        "draft": {
+                          "type": "string"
+                        },
+                        "objections": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "nextAction": {
+                          "type": "string"
+                        },
+                        "qualification": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "model": {
+                      "type": "string"
+                    },
+                    "remaining": {
+                      "type": "integer"
+                    },
+                    "dailyLimit": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
             }
-          } } } },
-          "401": { "description": "JWT ausente ou inválido" },
-          "429": { "description": "Limite diário de uso atingido" }
+          },
+          "401": {
+            "description": "JWT ausente ou inválido"
+          },
+          "429": {
+            "description": "Limite diário de uso atingido"
+          }
         }
       }
     },
@@ -51,32 +143,76 @@
       "post": {
         "summary": "Perguntar à EVA sobre métricas",
         "description": "EVA analítica: responde perguntas do gestor sobre métricas reais da empresa (vendas, metas, produtos) com texto, destaques e gráficos.",
-        "tags": ["EVA"],
+        "tags": [
+          "EVA"
+        ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": {
-            "type": "object",
-            "required": ["question"],
-            "properties": {
-              "question": { "type": "string" },
-              "companyId": { "type": "string", "description": "Só honrado para super_admin" }
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "question"
+                ],
+                "properties": {
+                  "question": {
+                    "type": "string"
+                  },
+                  "companyId": {
+                    "type": "string",
+                    "description": "Só honrado para super_admin"
+                  }
+                }
+              }
             }
-          } } }
+          }
         },
         "responses": {
-          "200": { "description": "Análise", "content": { "application/json": { "schema": {
-            "type": "object",
-            "properties": {
-              "success": { "type": "boolean" },
-              "analysis": { "type": "object", "properties": {
-                "answer": { "type": "string" }, "type": { "type": "string" },
-                "highlights": { "type": "array", "items": { "type": "string" } },
-                "charts": { "type": "array", "items": { "type": "object" } }
-              } },
-              "remaining": { "type": "integer" }
+          "200": {
+            "description": "Análise",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "analysis": {
+                      "type": "object",
+                      "properties": {
+                        "answer": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        },
+                        "highlights": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "charts": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          }
+                        }
+                      }
+                    },
+                    "remaining": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
             }
-          } } } },
-          "401": { "description": "JWT ausente ou inválido" }
+          },
+          "401": {
+            "description": "JWT ausente ou inválido"
+          }
         }
       }
     },
@@ -84,30 +220,76 @@
       "post": {
         "summary": "Iniciar ligação no deal",
         "description": "Inicia uma ligação (modo demo, webrtc ou twilio click-to-call). Exige plano Plus/Pro com add-on de ligações habilitado.",
-        "tags": ["Calls"],
+        "tags": [
+          "Calls"
+        ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": {
-            "type": "object",
-            "required": ["dealId"],
-            "properties": {
-              "dealId": { "type": "string", "format": "uuid" },
-              "sellerPhone": { "type": "string", "nullable": true },
-              "customerPhone": { "type": "string", "nullable": true },
-              "mode": { "type": "string", "enum": ["demo", "twilio", "webrtc"], "default": "demo" }
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "dealId"
+                ],
+                "properties": {
+                  "dealId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "sellerPhone": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "customerPhone": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "demo",
+                      "twilio",
+                      "webrtc"
+                    ],
+                    "default": "demo"
+                  }
+                }
+              }
             }
-          } } }
+          }
         },
         "responses": {
-          "200": { "description": "Ligação iniciada", "content": { "application/json": { "schema": {
-            "type": "object",
-            "properties": {
-              "success": { "type": "boolean" }, "mode": { "type": "string" },
-              "call": { "type": "object" }, "requiresSetup": { "type": "boolean" }
+          "200": {
+            "description": "Ligação iniciada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "mode": {
+                      "type": "string"
+                    },
+                    "call": {
+                      "type": "object"
+                    },
+                    "requiresSetup": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
             }
-          } } } },
-          "402": { "description": "Plano sem add-on de ligações" },
-          "401": { "description": "JWT ausente ou inválido" }
+          },
+          "401": {
+            "description": "JWT ausente ou inválido"
+          },
+          "402": {
+            "description": "Plano sem add-on de ligações"
+          }
         }
       }
     },
@@ -115,20 +297,50 @@
       "post": {
         "summary": "Transcrever gravação da ligação",
         "description": "Baixa a gravação da ligação, transcreve via OpenAI Whisper e dispara a geração de insights. Pode ser chamada pelo app ou internamente (service_role).",
-        "tags": ["Calls"],
+        "tags": [
+          "Calls"
+        ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": {
-            "type": "object",
-            "required": ["callId"],
-            "properties": { "callId": { "type": "string", "format": "uuid" } }
-          } } }
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "callId"
+                ],
+                "properties": {
+                  "callId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                }
+              }
+            }
+          }
         },
         "responses": {
-          "200": { "description": "Transcrita", "content": { "application/json": { "schema": {
-            "type": "object",
-            "properties": { "success": { "type": "boolean" }, "transcript_length": { "type": "integer" }, "transcript_preview": { "type": "string" } }
-          } } } }
+          "200": {
+            "description": "Transcrita",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "transcript_length": {
+                      "type": "integer"
+                    },
+                    "transcript_preview": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -136,26 +348,63 @@
       "post": {
         "summary": "Criar vendedor",
         "description": "Cria um vendedor (auth + profile) na empresa e envia email de boas-vindas. Exige role admin ou super_admin. Respeita o limite de vendedores do plano.",
-        "tags": ["Admin"],
+        "tags": [
+          "Admin"
+        ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": {
-            "type": "object",
-            "required": ["nome", "email"],
-            "properties": {
-              "nome": { "type": "string" },
-              "email": { "type": "string", "format": "email" },
-              "sendPassword": { "type": "boolean", "default": true },
-              "companyId": { "type": "string", "description": "Só super_admin pode passar empresa diferente" }
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "nome",
+                  "email"
+                ],
+                "properties": {
+                  "nome": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "sendPassword": {
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "companyId": {
+                    "type": "string",
+                    "description": "Só super_admin pode passar empresa diferente"
+                  }
+                }
+              }
             }
-          } } }
+          }
         },
         "responses": {
-          "200": { "description": "Criado", "content": { "application/json": { "schema": {
-            "type": "object",
-            "properties": { "password": { "type": "string", "nullable": true }, "emailSent": { "type": "boolean" } }
-          } } } },
-          "403": { "description": "Sem permissão ou limite do plano atingido" }
+          "200": {
+            "description": "Criado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "password": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "emailSent": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão ou limite do plano atingido"
+          }
         }
       }
     },
@@ -163,28 +412,73 @@
       "post": {
         "summary": "Montar demo personalizada",
         "description": "Clona o ambiente base renomeado para o negócio do lead e envia as credenciais por email ao time. Só roda se o lead já agendou e ainda não tem ambiente (1 por lead).",
-        "tags": ["Demo"],
+        "tags": [
+          "Demo"
+        ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": {
-            "type": "object",
-            "required": ["demo_request_id", "company_name"],
-            "properties": {
-              "demo_request_id": { "type": "string", "format": "uuid" },
-              "company_name": { "type": "string", "minLength": 2 },
-              "segment": { "type": "string" },
-              "offer": { "type": "string" },
-              "pain": { "type": "string" },
-              "context": { "type": "string" }
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "demo_request_id",
+                  "company_name"
+                ],
+                "properties": {
+                  "demo_request_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "company_name": {
+                    "type": "string",
+                    "minLength": 2
+                  },
+                  "segment": {
+                    "type": "string"
+                  },
+                  "offer": {
+                    "type": "string"
+                  },
+                  "pain": {
+                    "type": "string"
+                  },
+                  "context": {
+                    "type": "string"
+                  }
+                }
+              }
             }
-          } } }
+          }
         },
         "responses": {
-          "200": { "description": "Ambiente criado", "content": { "application/json": { "schema": {
-            "type": "object",
-            "properties": { "ok": { "type": "boolean" }, "company_id": { "type": "string" }, "email_sent": { "type": "boolean" }, "already": { "type": "boolean" } }
-          } } } },
-          "409": { "description": "Lead ainda não agendou" }
+          "200": {
+            "description": "Ambiente criado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "company_id": {
+                      "type": "string"
+                    },
+                    "email_sent": {
+                      "type": "boolean"
+                    },
+                    "already": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Lead ainda não agendou"
+          }
         }
       }
     },
@@ -192,26 +486,5426 @@
       "post": {
         "summary": "Criar assinatura (Mercado Pago)",
         "description": "Cria a assinatura do Vyzon (checkout transparente, trial 14 dias). Exige JWT do usuário dono do tenant.",
-        "tags": ["Billing"],
+        "tags": [
+          "Billing"
+        ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": {
-            "type": "object",
-            "required": ["token", "email", "planId", "companyId"],
-            "properties": {
-              "token": { "type": "string", "description": "Card token do MP SDK" },
-              "email": { "type": "string", "format": "email" },
-              "planId": { "type": "string", "enum": ["starter", "plus", "pro"] },
-              "companyId": { "type": "string", "format": "uuid" },
-              "upgrade": { "type": "boolean" }
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "token",
+                  "email",
+                  "planId",
+                  "companyId"
+                ],
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "description": "Card token do MP SDK"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "planId": {
+                    "type": "string",
+                    "enum": [
+                      "starter",
+                      "plus",
+                      "pro"
+                    ]
+                  },
+                  "companyId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "upgrade": {
+                    "type": "boolean"
+                  }
+                }
+              }
             }
-          } } }
+          }
         },
         "responses": {
-          "200": { "description": "Assinatura criada", "content": { "application/json": { "schema": {
-            "type": "object",
-            "properties": { "success": { "type": "boolean" }, "subscriptionId": { "type": "string" }, "status": { "type": "string" } }
-          } } } }
+          "200": {
+            "description": "Assinatura criada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "subscriptionId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin-delete-seller": {
+      "post": {
+        "summary": "Remover vendedor",
+        "description": "Admin ou super admin remove um vendedor da empresa (deleta auth.users, profiles e roles). Bloqueia auto-remoção e remoção de administradores.",
+        "tags": [
+          "Admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "sellerId"
+                ],
+                "properties": {
+                  "sellerId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "ID do vendedor a remover"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Resultado da remoção (sucesso ou erro de negócio, sempre HTTP 200)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [
+                            true
+                          ]
+                        },
+                        "deletedName": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "success"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "error"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin-lead-digest": {
+      "post": {
+        "summary": "Processar novo lead de demo",
+        "description": "Endpoint interno (sem auth de usuário), disparado por trigger ao cair um demo_request. Enriquece a empresa, gera resumo com IA, manda WhatsApp pro admin e cria conta demo (trial 14 dias).",
+        "tags": [
+          "Leads"
+        ],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "record"
+                ],
+                "properties": {
+                  "record": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "email"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "name": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "email": {
+                        "type": "string",
+                        "format": "email"
+                      },
+                      "company": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "phone": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "team_size": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "uses_spreadsheets": {
+                        "type": [
+                          "boolean",
+                          "null"
+                        ]
+                      },
+                      "biggest_pain": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "improvement_goal": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "utm_source": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "utm_medium": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "utm_campaign": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "gclid": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "fbclid": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "source": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Processamento concluído",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "whatsapp_sent": {
+                      "type": "boolean"
+                    },
+                    "enriched": {
+                      "type": "boolean"
+                    },
+                    "account": {
+                      "type": "object",
+                      "properties": {
+                        "user_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "company_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "already_exists": {
+                          "type": "boolean"
+                        },
+                        "error": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin-support-inbox": {
+      "post": {
+        "summary": "Caixa de suporte (super admin)",
+        "description": "Lê, abre e responde emails recebidos via Resend. Apenas super admins. Ação selecionada pelo campo action (list, get, reply).",
+        "tags": [
+          "Admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "action": {
+                    "type": "string",
+                    "enum": [
+                      "list",
+                      "get",
+                      "reply"
+                    ],
+                    "default": "list"
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "default": 50,
+                    "description": "Apenas para action=list"
+                  },
+                  "id": {
+                    "type": "string",
+                    "description": "ID do email (action=get)"
+                  },
+                  "to": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    ],
+                    "description": "Destinatário (action=reply)"
+                  },
+                  "subject": {
+                    "type": "string",
+                    "description": "Assunto (action=reply)"
+                  },
+                  "html": {
+                    "type": "string",
+                    "description": "Corpo HTML (action=reply)"
+                  },
+                  "text": {
+                    "type": "string",
+                    "description": "Corpo texto (action=reply)"
+                  },
+                  "inReplyTo": {
+                    "type": "string"
+                  },
+                  "from": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Resultado da ação (lista de emails, email único, ou confirmação de envio)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem Authorization ou token inválido"
+          },
+          "403": {
+            "description": "Usuário não é super admin"
+          }
+        }
+      }
+    },
+    "/deal-call-generate-insights": {
+      "post": {
+        "summary": "Gerar insights de ligação",
+        "description": "Analisa a transcrição de uma ligação (LLM com fallback heurístico) e grava resumo, objeções e próximos passos. Aceita JWT de usuário ou bearer service_role interno.",
+        "tags": [
+          "Calls"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "callId"
+                ],
+                "properties": {
+                  "callId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "ID da deal_call com transcrição"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Insight gerado e persistido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "model": {
+                      "type": "string"
+                    },
+                    "insight": {
+                      "type": "object",
+                      "properties": {
+                        "call_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "deal_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "company_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "summary": {
+                          "type": "string"
+                        },
+                        "objections": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "next_steps": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "action_items": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "suggested_message": {
+                          "type": "string"
+                        },
+                        "suggested_stage": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "status": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem Authorization ou token inválido"
+          },
+          "403": {
+            "description": "Plano insuficiente ou add-on de ligações inativo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "PLAN_UPGRADE_REQUIRED",
+                        "CALLS_ADDON_REQUIRED"
+                      ]
+                    },
+                    "required_plan": {
+                      "type": "string"
+                    },
+                    "current_plan": {
+                      "type": "string"
+                    },
+                    "addon": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/eva-stale-deal-followup": {
+      "post": {
+        "summary": "Follow-up de deals parados",
+        "description": "Endpoint interno disparado por pg_cron (ou manual para debug). Varre deals parados, gera rascunhos de follow-up com Claude Haiku e insere em eva_deal_suggestions. Exige x-cron-secret ou bearer service_role.",
+        "tags": [
+          "EVA"
+        ],
+        "security": [
+          {
+            "webhookSecret": []
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "company_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Filtra para uma empresa específica"
+                  },
+                  "force": {
+                    "type": "boolean",
+                    "description": "Regenera mesmo se já houver sugestão pendente"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Varredura concluída",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "scanned": {
+                      "type": "integer"
+                    },
+                    "processed": {
+                      "type": "integer"
+                    },
+                    "skipped_existing": {
+                      "type": "integer"
+                    },
+                    "failed_llm": {
+                      "type": "integer"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "x-cron-secret ausente/inválido e sem bearer service_role"
+          }
+        }
+      }
+    },
+    "/generate-eva-context-suggestions": {
+      "post": {
+        "summary": "Gerar sugestões de contexto da EVA",
+        "description": "Lê um documento de treino e gera sugestões estruturadas de contexto comercial (status pending, aprovação manual). Não altera o contexto vigente.",
+        "tags": [
+          "EVA"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "documentId"
+                ],
+                "properties": {
+                  "documentId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "ID do eva_training_document a processar"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sugestões geradas e inseridas como pending",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "document_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "suggestions_generated": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authorization ausente ou inválido"
+          }
+        }
+      }
+    },
+    "/generate-eva-replay-moments": {
+      "post": {
+        "summary": "Gerar momentos de replay da EVA",
+        "description": "Pré-computa momentos-chave de conversas reais com desfecho (perdida/sumida/ganha) e mostra como a EVA teria respondido. Manual, persiste em eva_replay_moments. Usa a company do usuário autenticado.",
+        "tags": [
+          "EVA"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Momentos gerados",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "generated": {
+                      "type": "integer"
+                    },
+                    "skipped": {
+                      "type": "integer"
+                    },
+                    "considered": {
+                      "type": "integer"
+                    },
+                    "reason": {
+                      "type": "string",
+                      "description": "Presente quando generated=0"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authorization ausente ou inválido"
+          }
+        }
+      }
+    },
+    "/notify-channel": {
+      "post": {
+        "summary": "Notificar canal Slack/Discord",
+        "description": "Endpoint interno (disparado por trigger pg_net, ou modo teste do frontend). A EVA posta venda fechada ou meta batida no canal do time. Valida hosts oficiais Slack/Discord (anti-SSRF).",
+        "tags": [
+          "EVA"
+        ],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "description": "Modo teste (do frontend ao cadastrar o canal)",
+                    "required": [
+                      "test",
+                      "platform",
+                      "webhook_url"
+                    ],
+                    "properties": {
+                      "test": {
+                        "type": "boolean",
+                        "enum": [
+                          true
+                        ]
+                      },
+                      "platform": {
+                        "type": "string",
+                        "enum": [
+                          "slack",
+                          "discord"
+                        ]
+                      },
+                      "webhook_url": {
+                        "type": "string",
+                        "format": "uri"
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "description": "Modo produção (trigger pg_net)",
+                    "required": [
+                      "company_id"
+                    ],
+                    "properties": {
+                      "company_id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "sale": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "cliente_nome": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "produto_nome": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "valor": {
+                            "type": [
+                              "number",
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "user_id": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "vendedor_nome": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        }
+                      },
+                      "goal": {
+                        "type": "object",
+                        "properties": {
+                          "reached": {
+                            "type": "boolean"
+                          },
+                          "valor_meta": {
+                            "type": [
+                              "number",
+                              "null"
+                            ]
+                          },
+                          "current_value": {
+                            "type": [
+                              "number",
+                              "null"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "reached"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Resultado do envio (ok com mapa de resultados por canal, ou skipped)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "results": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "boolean"
+                      }
+                    },
+                    "skipped": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/twilio-generate-token": {
+      "post": {
+        "summary": "Gerar token Twilio WebRTC",
+        "description": "Gera um access token Twilio de curta duração para chamadas no navegador. Exige plano Plus/Pro e add-on de ligações ativo (super admin bypassa).",
+        "tags": [
+          "Calls"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Token gerado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "token": {
+                      "type": "string",
+                      "description": "JWT Twilio Access Token"
+                    },
+                    "identity": {
+                      "type": "string"
+                    },
+                    "ttl": {
+                      "type": "integer",
+                      "description": "Validade em segundos"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authorization ausente ou inválido"
+          },
+          "403": {
+            "description": "Perfil não encontrado, plano insuficiente ou add-on inativo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "PLAN_UPGRADE_REQUIRED",
+                        "CALLS_ADDON_REQUIRED"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mercadopago-cancel-subscription": {
+      "post": {
+        "summary": "Cancelar assinatura",
+        "description": "Cancela a assinatura Mercado Pago da empresa e marca o status localmente. Exige admin do tenant (ou super admin). Acesso mantido até o fim do ciclo pago.",
+        "tags": [
+          "Billing"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "companyId"
+                ],
+                "properties": {
+                  "companyId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "description": "Motivo do cancelamento (máx 500 chars)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Assinatura cancelada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "cancelled_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "ends_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "mp_cancelled": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authorization ausente ou inválido"
+          },
+          "403": {
+            "description": "Tenant divergente ou usuário não é admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Assinatura já cancelada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ALREADY_CANCELLED"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calendar-slots": {
+      "post": {
+        "summary": "Listar horários disponíveis",
+        "description": "Endpoint público (sem auth). Retorna slots de 30min (9h-18h BRT, seg-sex) dos próximos 14 dias do super_admin, filtrados pelo freeBusy do Google Calendar. Não lê body.",
+        "tags": [
+          "Agenda"
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Slots disponíveis",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "slots": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "startIso": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "endIso": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        }
+                      }
+                    },
+                    "gcal_connected": {
+                      "type": "boolean"
+                    },
+                    "refresh_error": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calendar-book": {
+      "post": {
+        "summary": "Agendar demo no calendário",
+        "description": "Endpoint público (sem auth). Cria evento no Google Calendar do super_admin com convidado e link do Meet, e atualiza o demo_request com scheduled_at e dados do evento.",
+        "tags": [
+          "Agenda"
+        ],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "demo_request_id",
+                  "start_iso",
+                  "end_iso"
+                ],
+                "properties": {
+                  "demo_request_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "start_iso": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "end_iso": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Agendamento criado (com ou sem GCal conectado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "gcal_connected": {
+                      "type": "boolean"
+                    },
+                    "meet_link": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "event_id": {
+                      "type": "string"
+                    },
+                    "html_link": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/public-report": {
+      "get": {
+        "summary": "Relatório público por token (GET)",
+        "description": "Endpoint público (sem auth). Resolve um share_token (query param token) em dados agregados white-label via RPC. Toda validação ocorre na RPC.",
+        "tags": [
+          "Demo"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{16,128}$"
+            },
+            "description": "Share token do relatório"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dados do relatório",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Token não encontrado / revogado / expirado"
+          }
+        }
+      },
+      "post": {
+        "summary": "Relatório público por token (POST)",
+        "description": "Endpoint público (sem auth). Igual ao GET, mas aceita o token no corpo JSON quando não vem na query.",
+        "tags": [
+          "Demo"
+        ],
+        "security": [],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9_-]{16,128}$"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Dados do relatório",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Token não encontrado / revogado / expirado"
+          }
+        }
+      }
+    },
+    "/sdr-auto-outreach": {
+      "post": {
+        "summary": "Abordagem automática do SDR",
+        "description": "Endpoint interno (disparado por trigger sobre demo_requests). Envia WhatsApp (saudação + dados da reunião) e email de confirmação personalizados pela IA para o lead que agendou demo.",
+        "tags": [
+          "Leads"
+        ],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Aceita o lead direto ou dentro de record (payload de trigger). Exige email e phone.",
+                "required": [
+                  "email",
+                  "phone"
+                ],
+                "properties": {
+                  "record": {
+                    "type": "object",
+                    "description": "Payload do trigger; campos do lead aninhados aqui",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "name": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "email": {
+                        "type": "string",
+                        "format": "email"
+                      },
+                      "phone": {
+                        "type": "string"
+                      },
+                      "company": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "scheduled_at": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "format": "date-time"
+                      },
+                      "google_meet_link": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "team_size": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "uses_spreadsheets": {
+                        "type": [
+                          "boolean",
+                          "null"
+                        ]
+                      },
+                      "biggest_pain": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "improvement_goal": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    }
+                  },
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "name": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "company": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "scheduled_at": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "date-time"
+                  },
+                  "google_meet_link": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "team_size": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "uses_spreadsheets": {
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "biggest_pain": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "improvement_goal": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Abordagem disparada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "whatsapp": {
+                      "type": "object",
+                      "properties": {
+                        "greetingSent": {
+                          "type": "boolean"
+                        },
+                        "detailsSent": {
+                          "type": "boolean"
+                        },
+                        "error": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "email": {
+                      "type": "object",
+                      "properties": {
+                        "sent": {
+                          "type": "boolean"
+                        },
+                        "error": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/evolution-whatsapp": {
+      "post": {
+        "summary": "Proxy WhatsApp (Evolution API)",
+        "description": "Proxy multi-ação para a Evolution API (status, connect, chats, messages, send, sendMedia, sendAudio, logout, profilePic, getMedia, instances, monitor, deleteInstance, setWebhookAll, import_history, resyncWebhook). A ação é escolhida pelo campo action. Algumas ações exigem admin/super admin.",
+        "tags": [
+          "WhatsApp"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "action"
+                ],
+                "properties": {
+                  "action": {
+                    "type": "string",
+                    "enum": [
+                      "status",
+                      "connect",
+                      "chats",
+                      "messages",
+                      "send",
+                      "sendMedia",
+                      "sendAudio",
+                      "logout",
+                      "profilePic",
+                      "instances",
+                      "getMedia",
+                      "monitor",
+                      "deleteInstance",
+                      "setWebhookAll",
+                      "import_history",
+                      "resyncWebhook"
+                    ]
+                  },
+                  "companyId": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "uuid"
+                  },
+                  "targetUserId": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "uuid",
+                    "description": "Operar na instância de outro usuário (admin)"
+                  },
+                  "chatId": {
+                    "type": "string",
+                    "description": "JID do chat (messages, send, sendMedia, sendAudio)"
+                  },
+                  "text": {
+                    "type": "string",
+                    "description": "Texto da mensagem (send)"
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "description": "Limite de mensagens (messages, máx 100)"
+                  },
+                  "number": {
+                    "type": "string",
+                    "description": "Número (profilePic)"
+                  },
+                  "messageId": {
+                    "type": "string",
+                    "description": "ID da mensagem (getMedia)"
+                  },
+                  "mediaBase64": {
+                    "type": "string",
+                    "description": "Mídia em base64 sem prefixo data URI"
+                  },
+                  "mimetype": {
+                    "type": "string"
+                  },
+                  "fileName": {
+                    "type": "string"
+                  },
+                  "caption": {
+                    "type": "string"
+                  },
+                  "targetInstanceName": {
+                    "type": "string",
+                    "description": "Nome da instância (deleteInstance)"
+                  },
+                  "maxChats": {
+                    "type": "integer",
+                    "description": "import_history (máx 30)"
+                  },
+                  "maxMessagesPerChat": {
+                    "type": "integer",
+                    "description": "import_history (máx 100)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Resultado da ação. Formato varia por action; sempre inclui success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "instanceName": {
+                      "type": "string"
+                    },
+                    "state": {
+                      "type": "string"
+                    },
+                    "connected": {
+                      "type": "boolean"
+                    },
+                    "qrCodeBase64": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "chats": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "messages": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "sellers": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "instances": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "summary": {
+                      "type": "object"
+                    },
+                    "result": {
+                      "type": "object"
+                    },
+                    "base64": {
+                      "type": "string"
+                    },
+                    "mimetype": {
+                      "type": "string"
+                    },
+                    "profilePicUrl": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "importedChats": {
+                      "type": "integer"
+                    },
+                    "importedMessages": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "action ausente/ inválida ou parâmetro obrigatório faltando"
+          },
+          "401": {
+            "description": "Authorization ausente ou inválido"
+          },
+          "403": {
+            "description": "Sem permissão (contexto de empresa proibido, ou ação restrita a admin/super admin)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/asaas-webhook": {
+      "post": {
+        "summary": "Webhook de cobranças Asaas",
+        "description": "Recebe eventos de pagamento da Asaas (PAYMENT_CONFIRMED, PAYMENT_RECEIVED, PAYMENT_CREATED, PAYMENT_OVERDUE, PAYMENT_REFUNDED, PAYMENT_DELETED, PAYMENT_CHARGEBACK_REQUESTED) e cria/atualiza deals e vendas no CRM. Auth: token no header `asaas-access-token`, validado contra `integration_configs.hottok` da empresa. O mesmo token é reusado para consultar dados do cliente na API da Asaas.",
+        "tags": [
+          "Webhooks de venda"
+        ],
+        "security": [
+          {
+            "webhookSecret": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "event",
+                  "payment"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "event": {
+                    "type": "string",
+                    "enum": [
+                      "PAYMENT_CREATED",
+                      "PAYMENT_CONFIRMED",
+                      "PAYMENT_RECEIVED",
+                      "PAYMENT_OVERDUE",
+                      "PAYMENT_DELETED",
+                      "PAYMENT_REFUNDED",
+                      "PAYMENT_CHARGEBACK_REQUESTED"
+                    ]
+                  },
+                  "dateCreated": {
+                    "type": "string"
+                  },
+                  "payment": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "customer",
+                      "value",
+                      "status"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "customer": {
+                        "type": "string",
+                        "description": "ID do cliente Asaas; usado para buscar nome/email/telefone via API."
+                      },
+                      "value": {
+                        "type": "number"
+                      },
+                      "netValue": {
+                        "type": "number"
+                      },
+                      "billingType": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "externalReference": {
+                        "type": "string"
+                      },
+                      "invoiceUrl": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Evento processado (ou duplicado ignorado).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean"
+                        },
+                        "event": {
+                          "type": "string"
+                        },
+                        "deal_id": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean"
+                        },
+                        "duplicate": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token ausente ou inválido."
+          },
+          "405": {
+            "description": "Método não permitido."
+          },
+          "500": {
+            "description": "Erro interno."
+          }
+        }
+      }
+    },
+    "/braip-webhook": {
+      "post": {
+        "summary": "Webhook de venda Braip",
+        "description": "Recebe eventos de pedido da Braip (order.paid, order.refunded, order.canceled, order.chargeback) e cria/atualiza deals e vendas. Auth: token no header `x-braip-token`, validado contra `integration_configs.hottok` da empresa.",
+        "tags": [
+          "Webhooks de venda"
+        ],
+        "security": [
+          {
+            "webhookSecret": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "event",
+                  "order"
+                ],
+                "properties": {
+                  "event": {
+                    "type": "string",
+                    "enum": [
+                      "order.paid",
+                      "order.refunded",
+                      "order.canceled",
+                      "order.chargeback"
+                    ]
+                  },
+                  "order": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "status",
+                      "customer",
+                      "product",
+                      "amount"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string"
+                      },
+                      "customer": {
+                        "type": "object",
+                        "required": [
+                          "name",
+                          "email"
+                        ],
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string"
+                          },
+                          "phone": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "product": {
+                        "type": "object",
+                        "required": [
+                          "name"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "amount": {
+                        "type": "number"
+                      },
+                      "payment_method": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Evento processado (ou duplicado ignorado).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean"
+                        },
+                        "event": {
+                          "type": "string"
+                        },
+                        "deal_id": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean"
+                        },
+                        "duplicate": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token ausente ou inválido."
+          },
+          "405": {
+            "description": "Método não permitido."
+          },
+          "500": {
+            "description": "Erro interno."
+          }
+        }
+      }
+    },
+    "/cakto-webhook": {
+      "post": {
+        "summary": "Webhook de venda Cakto",
+        "description": "Recebe eventos de compra da Cakto (purchase_approved, purchase_refunded, purchase_canceled, purchase_chargeback) e cria/atualiza deals e vendas. Auth: token no header `x-cakto-token`, validado contra `integration_configs.hottok` da empresa.",
+        "tags": [
+          "Webhooks de venda"
+        ],
+        "security": [
+          {
+            "webhookSecret": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "event",
+                  "data"
+                ],
+                "properties": {
+                  "event": {
+                    "type": "string",
+                    "enum": [
+                      "purchase_approved",
+                      "purchase_refunded",
+                      "purchase_canceled",
+                      "purchase_chargeback"
+                    ]
+                  },
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "customer",
+                      "product",
+                      "amount"
+                    ],
+                    "properties": {
+                      "transaction_id": {
+                        "type": "string"
+                      },
+                      "order_id": {
+                        "type": "string"
+                      },
+                      "customer": {
+                        "type": "object",
+                        "required": [
+                          "name",
+                          "email"
+                        ],
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string"
+                          },
+                          "phone": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "product": {
+                        "type": "object",
+                        "required": [
+                          "name"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "amount": {
+                        "type": "number"
+                      },
+                      "payment_method": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Evento processado (ou duplicado ignorado).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean"
+                        },
+                        "event": {
+                          "type": "string"
+                        },
+                        "deal_id": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean"
+                        },
+                        "duplicate": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token ausente ou inválido."
+          },
+          "405": {
+            "description": "Método não permitido."
+          },
+          "500": {
+            "description": "Erro interno."
+          }
+        }
+      }
+    },
+    "/eduzz-webhook": {
+      "post": {
+        "summary": "Webhook de venda Eduzz",
+        "description": "Recebe eventos de fatura da Eduzz (invoice_paid, invoice_refunded, invoice_canceled, invoice_chargeback, contract_canceled) e cria/atualiza deals e vendas. Auth: token no header `x-eduzz-token`, validado contra `integration_configs.hottok` da empresa.",
+        "tags": [
+          "Webhooks de venda"
+        ],
+        "security": [
+          {
+            "webhookSecret": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "event",
+                  "customer",
+                  "product"
+                ],
+                "properties": {
+                  "event": {
+                    "type": "string",
+                    "enum": [
+                      "invoice_paid",
+                      "invoice_refunded",
+                      "invoice_canceled",
+                      "invoice_chargeback",
+                      "contract_canceled"
+                    ]
+                  },
+                  "invoice": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string"
+                      },
+                      "total": {
+                        "type": "number"
+                      },
+                      "method": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "customer": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "email"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "email": {
+                        "type": "string"
+                      },
+                      "cel": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "product": {
+                    "type": "object",
+                    "required": [
+                      "name"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Evento processado (ou duplicado ignorado).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean"
+                        },
+                        "event": {
+                          "type": "string"
+                        },
+                        "deal_id": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean"
+                        },
+                        "duplicate": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token ausente ou inválido."
+          },
+          "405": {
+            "description": "Método não permitido."
+          },
+          "500": {
+            "description": "Erro interno."
+          }
+        }
+      }
+    },
+    "/greenn-webhook": {
+      "post": {
+        "summary": "Webhook de venda Greenn",
+        "description": "Recebe eventos de compra da Greenn (purchase_approved, purchase_refunded, purchase_canceled, purchase_chargeback) e cria/atualiza deals e vendas. Auth: token no header `x-greenn-token` (comparação direta, não HMAC), validado contra `integration_configs.hottok` da empresa.",
+        "tags": [
+          "Webhooks de venda"
+        ],
+        "security": [
+          {
+            "webhookSecret": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "event",
+                  "data"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "event": {
+                    "type": "string",
+                    "enum": [
+                      "purchase_approved",
+                      "purchase_refunded",
+                      "purchase_canceled",
+                      "purchase_chargeback"
+                    ]
+                  },
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "transaction_id",
+                      "customer",
+                      "product",
+                      "amount",
+                      "payment_method"
+                    ],
+                    "properties": {
+                      "transaction_id": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string"
+                      },
+                      "customer": {
+                        "type": "object",
+                        "required": [
+                          "name",
+                          "email",
+                          "phone"
+                        ],
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string"
+                          },
+                          "phone": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "product": {
+                        "type": "object",
+                        "required": [
+                          "name",
+                          "id"
+                        ],
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "id": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "amount": {
+                        "type": "number"
+                      },
+                      "payment_method": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Evento processado (ou duplicado ignorado).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean"
+                        },
+                        "event": {
+                          "type": "string"
+                        },
+                        "deal_id": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean"
+                        },
+                        "duplicate": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token ausente ou inválido."
+          },
+          "405": {
+            "description": "Método não permitido."
+          },
+          "500": {
+            "description": "Erro interno."
+          }
+        }
+      }
+    },
+    "/hotmart-webhook": {
+      "post": {
+        "summary": "Webhook de venda Hotmart",
+        "description": "Recebe eventos de compra da Hotmart (PURCHASE_APPROVED, PURCHASE_COMPLETE, PURCHASE_CANCELED, PURCHASE_REFUNDED, PURCHASE_CHARGEBACK e correlatos) e cria/atualiza deals e vendas. Auth: header `x-hotmart-hottok`, validado contra `integration_configs.hottok` da empresa.",
+        "tags": [
+          "Webhooks de venda"
+        ],
+        "security": [
+          {
+            "webhookSecret": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "event",
+                  "id",
+                  "data"
+                ],
+                "properties": {
+                  "event": {
+                    "type": "string",
+                    "enum": [
+                      "PURCHASE_APPROVED",
+                      "PURCHASE_COMPLETE",
+                      "PURCHASE_CANCELED",
+                      "PURCHASE_REFUNDED",
+                      "PURCHASE_BILLET_PRINTED",
+                      "PURCHASE_DELAYED",
+                      "PURCHASE_CHARGEBACK"
+                    ]
+                  },
+                  "version": {
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "creation_date": {
+                    "type": "integer"
+                  },
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "buyer",
+                      "purchase",
+                      "product"
+                    ],
+                    "properties": {
+                      "buyer": {
+                        "type": "object",
+                        "required": [
+                          "name",
+                          "email"
+                        ],
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string"
+                          },
+                          "checkout_phone": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "purchase": {
+                        "type": "object",
+                        "required": [
+                          "transaction",
+                          "status",
+                          "price",
+                          "payment"
+                        ],
+                        "properties": {
+                          "transaction": {
+                            "type": "string"
+                          },
+                          "order_date": {
+                            "type": "integer"
+                          },
+                          "approved_date": {
+                            "type": "integer"
+                          },
+                          "status": {
+                            "type": "string"
+                          },
+                          "price": {
+                            "type": "object",
+                            "required": [
+                              "value"
+                            ],
+                            "properties": {
+                              "value": {
+                                "type": "number"
+                              },
+                              "currency_code": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "payment": {
+                            "type": "object",
+                            "required": [
+                              "type"
+                            ],
+                            "properties": {
+                              "type": {
+                                "type": "string"
+                              },
+                              "installments_number": {
+                                "type": "integer"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "product": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "name",
+                          "ucode"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "ucode": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "producer": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "commissions": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "number"
+                            },
+                            "source": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Evento processado (ou duplicado ignorado).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean"
+                        },
+                        "event": {
+                          "type": "string"
+                        },
+                        "deal_id": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean"
+                        },
+                        "duplicate": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "HOTTOK ausente ou inválido."
+          },
+          "405": {
+            "description": "Método não permitido."
+          },
+          "500": {
+            "description": "Erro interno."
+          }
+        }
+      }
+    },
+    "/kiwify-webhook": {
+      "post": {
+        "summary": "Webhook de venda Kiwify",
+        "description": "Recebe eventos de pedido da Kiwify (order_approved, order_refunded, order_chargedback, subscription_created, subscription_canceled) e cria/atualiza deals e vendas. Auth: assinatura HMAC SHA-256 do raw body no header `x-kiwify-signature`, validada contra o secret da empresa (`integration_configs.hottok`) com comparação timing-safe.",
+        "tags": [
+          "Webhooks de venda"
+        ],
+        "security": [
+          {
+            "webhookSecret": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "order_id",
+                  "order_status",
+                  "product",
+                  "customer",
+                  "payment"
+                ],
+                "properties": {
+                  "order_id": {
+                    "type": "string"
+                  },
+                  "order_status": {
+                    "type": "string",
+                    "enum": [
+                      "order_approved",
+                      "order_refunded",
+                      "order_chargedback",
+                      "subscription_created",
+                      "subscription_canceled"
+                    ]
+                  },
+                  "product": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "name"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "customer": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "email",
+                      "mobile"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "email": {
+                        "type": "string"
+                      },
+                      "mobile": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "payment": {
+                    "type": "object",
+                    "required": [
+                      "total",
+                      "method"
+                    ],
+                    "properties": {
+                      "total": {
+                        "type": "number"
+                      },
+                      "method": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "created_at": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Evento processado (ou duplicado ignorado).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean"
+                        },
+                        "event": {
+                          "type": "string"
+                        },
+                        "deal_id": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean"
+                        },
+                        "duplicate": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Assinatura ausente ou inválida."
+          },
+          "405": {
+            "description": "Método não permitido."
+          },
+          "500": {
+            "description": "Erro interno."
+          }
+        }
+      }
+    },
+    "/monetizze-webhook": {
+      "post": {
+        "summary": "Webhook de venda Monetizze",
+        "description": "Recebe eventos da Monetizze (venda_realizada, venda_reembolsada, venda_cancelada, venda_chargeback, boleto_gerado) e cria/atualiza deals e vendas. Auth: token no header `x-monetizze-token`, validado contra `integration_configs.hottok` da empresa.",
+        "tags": [
+          "Webhooks de venda"
+        ],
+        "security": [
+          {
+            "webhookSecret": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "tipo_evento",
+                  "venda",
+                  "comprador",
+                  "produto"
+                ],
+                "properties": {
+                  "tipo_evento": {
+                    "type": "string",
+                    "enum": [
+                      "venda_realizada",
+                      "venda_reembolsada",
+                      "venda_cancelada",
+                      "venda_chargeback",
+                      "boleto_gerado"
+                    ]
+                  },
+                  "venda": {
+                    "type": "object",
+                    "required": [
+                      "codigo",
+                      "status",
+                      "valor"
+                    ],
+                    "properties": {
+                      "codigo": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string"
+                      },
+                      "valor": {
+                        "type": "number"
+                      },
+                      "formaPagamento": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "comprador": {
+                    "type": "object",
+                    "required": [
+                      "nome",
+                      "email"
+                    ],
+                    "properties": {
+                      "nome": {
+                        "type": "string"
+                      },
+                      "email": {
+                        "type": "string"
+                      },
+                      "telefone": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "produto": {
+                    "type": "object",
+                    "required": [
+                      "nome"
+                    ],
+                    "properties": {
+                      "codigo": {
+                        "type": "string"
+                      },
+                      "nome": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Evento processado (ou duplicado ignorado).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean"
+                        },
+                        "event": {
+                          "type": "string"
+                        },
+                        "deal_id": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean"
+                        },
+                        "duplicate": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token ausente ou inválido."
+          },
+          "405": {
+            "description": "Método não permitido."
+          },
+          "500": {
+            "description": "Erro interno."
+          }
+        }
+      }
+    },
+    "/pagarme-webhook": {
+      "post": {
+        "summary": "Webhook de pagamento Pagar.me",
+        "description": "Recebe eventos order/charge/subscription/invoice da Pagar.me API v5 (order.paid, charge.paid, invoice.paid, order.created, charge.pending, charge.refunded, charge.canceled, charge.chargeback, chargeback.created e correlatos) e cria/atualiza deals e vendas. Valores chegam em centavos e são convertidos para reais. Auth: Basic Auth no header `Authorization`; o par `usuario:senha` (ou só a senha) é validado contra `integration_configs.hottok` da empresa.",
+        "tags": [
+          "Webhooks de venda"
+        ],
+        "security": [
+          {
+            "webhookSecret": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Ex: order.paid, charge.paid, subscription.created, charge.refunded, charge.chargeback."
+                  },
+                  "created_at": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "type": "object",
+                    "description": "Objeto da entidade (order/charge/invoice/subscription) conforme o tipo do evento.",
+                    "additionalProperties": true,
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "code": {
+                        "type": "string"
+                      },
+                      "amount": {
+                        "type": "integer",
+                        "description": "Valor em centavos."
+                      },
+                      "customer": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string"
+                          },
+                          "phones": {
+                            "type": "object"
+                          }
+                        }
+                      },
+                      "items": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string"
+                            },
+                            "description": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "charges": {
+                        "type": "array",
+                        "items": {
+                          "type": "object"
+                        }
+                      },
+                      "plan": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "account": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Evento processado (ou duplicado ignorado).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean"
+                        },
+                        "event_type": {
+                          "type": "string"
+                        },
+                        "deal_id": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean"
+                        },
+                        "duplicate": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authorization ausente, Basic Auth inválido ou credenciais não reconhecidas."
+          },
+          "405": {
+            "description": "Método não permitido."
+          },
+          "500": {
+            "description": "Erro interno."
+          }
+        }
+      }
+    },
+    "/stripe-webhook": {
+      "post": {
+        "summary": "Webhook de pagamento Stripe",
+        "description": "Recebe eventos da Stripe (payment_intent, charge, invoice, checkout, subscription) e cria/atualiza deals e vendas. Valores em centavos convertidos para reais (exceto moedas zero-decimal). Auth: validação HMAC SHA-256 do raw body via header `Stripe-Signature` contra o signing secret (`whsec_...`) de cada config ativa, com tolerância de 300s e comparação timing-safe.",
+        "tags": [
+          "Webhooks de venda"
+        ],
+        "security": [
+          {
+            "webhookSecret": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "type",
+                  "data"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Ex: payment_intent.succeeded, charge.succeeded, invoice.paid, checkout.session.completed, charge.refunded, charge.dispute.created."
+                  },
+                  "livemode": {
+                    "type": "boolean"
+                  },
+                  "api_version": {
+                    "type": "string"
+                  },
+                  "created": {
+                    "type": "integer"
+                  },
+                  "data": {
+                    "type": "object",
+                    "required": [
+                      "object"
+                    ],
+                    "properties": {
+                      "object": {
+                        "type": "object",
+                        "description": "Objeto do evento Stripe (PaymentIntent, Charge, Invoice, Checkout Session, etc).",
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Evento processado (ou duplicado ignorado).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean"
+                        },
+                        "event_id": {
+                          "type": "string"
+                        },
+                        "event_type": {
+                          "type": "string"
+                        },
+                        "deal_id": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean"
+                        },
+                        "duplicate": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Stripe-Signature ausente, inválida ou nenhuma config correspondente."
+          },
+          "405": {
+            "description": "Método não permitido."
+          },
+          "500": {
+            "description": "Erro interno."
+          }
+        }
+      }
+    },
+    "/rdstation-webhook": {
+      "post": {
+        "summary": "Webhook RD Station (Marketing e CRM)",
+        "description": "Recebe eventos do RD Station Marketing (WEBHOOK.CONVERTED, WEBHOOK.MARKED_OPPORTUNITY) e CRM (crm_deal_created, crm_deal_updated) e cria/atualiza deals (e vendas em deals ganhos). Auth: token comparado contra `integration_configs.hottok` no header de auth configurável por empresa (padrão `x-rdstation-auth`).",
+        "tags": [
+          "Webhooks de venda"
+        ],
+        "security": [
+          {
+            "webhookSecret": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Suporta os formatos Marketing (event_type/contacts) e CRM (event_name/document).",
+                "properties": {
+                  "event_type": {
+                    "type": "string",
+                    "description": "Formato Marketing: WEBHOOK.CONVERTED, WEBHOOK.MARKED_OPPORTUNITY."
+                  },
+                  "event_name": {
+                    "type": "string",
+                    "description": "Formato CRM: crm_deal_created, crm_deal_updated."
+                  },
+                  "event_uuid": {
+                    "type": "string"
+                  },
+                  "event_timestamp": {
+                    "type": "string"
+                  },
+                  "transaction_uuid": {
+                    "type": "string"
+                  },
+                  "conversion_identifier": {
+                    "type": "string"
+                  },
+                  "traffic_source": {
+                    "type": "string"
+                  },
+                  "uuid": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "personal_phone": {
+                    "type": "string"
+                  },
+                  "company_name": {
+                    "type": "string"
+                  },
+                  "job_title": {
+                    "type": "string"
+                  },
+                  "city": {
+                    "type": "string"
+                  },
+                  "state": {
+                    "type": "string"
+                  },
+                  "tags": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "contacts": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "uuid": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "personal_phone": {
+                          "type": "string"
+                        },
+                        "company_name": {
+                          "type": "string"
+                        },
+                        "job_title": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "document": {
+                    "type": "object",
+                    "description": "Documento do RD CRM.",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "amount_total": {
+                        "type": "number"
+                      },
+                      "amount_unique": {
+                        "type": "number"
+                      },
+                      "amount_monthly": {
+                        "type": "number"
+                      },
+                      "status": {
+                        "type": "string",
+                        "description": "ongoing | won | lost"
+                      },
+                      "win": {
+                        "type": "boolean"
+                      },
+                      "deal_stage": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "nickname": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "deal_pipeline": {
+                        "type": "object"
+                      },
+                      "deal_lost_reason": {
+                        "type": "object"
+                      },
+                      "contacts": {
+                        "type": "array",
+                        "items": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  },
+                  "deal": {
+                    "type": "object",
+                    "description": "Formato legado flat (fallback).",
+                    "properties": {
+                      "deal_id": {
+                        "type": "string"
+                      },
+                      "deal_stage": {
+                        "type": "string"
+                      },
+                      "deal_value": {
+                        "type": "number"
+                      },
+                      "deal_name": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Evento processado (ou duplicado ignorado).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean"
+                        },
+                        "event": {
+                          "type": "string"
+                        },
+                        "deal_id": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean"
+                        },
+                        "duplicate": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token ausente/inválido ou nenhuma config RD Station ativa."
+          },
+          "405": {
+            "description": "Método não permitido."
+          },
+          "500": {
+            "description": "Erro interno."
+          }
+        }
+      }
+    },
+    "/zapier-webhook": {
+      "post": {
+        "summary": "Webhook genérico Zapier",
+        "description": "Recebe payload customizável do Zapier (ou Make/Typeform via Zapier), normaliza campos comuns e cria deal (e venda quando ganho com valor). O campo `event` mapeia o estágio (deal_won/sale_approved → ganho; deal_lost/cancellation/refund → perdido). Auth: token no header `x-zapier-token`, validado contra `integration_configs.hottok` da empresa.",
+        "tags": [
+          "Webhooks de venda"
+        ],
+        "security": [
+          {
+            "webhookSecret": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Schema sugerido; o Zapier pode enviar campos adicionais.",
+                "additionalProperties": true,
+                "properties": {
+                  "event": {
+                    "type": "string",
+                    "description": "Ex: lead_created, deal_won, sale_approved, deal_lost, cancellation, refund."
+                  },
+                  "customer_name": {
+                    "type": "string"
+                  },
+                  "customer_email": {
+                    "type": "string"
+                  },
+                  "customer_phone": {
+                    "type": "string"
+                  },
+                  "product_name": {
+                    "type": "string"
+                  },
+                  "amount": {
+                    "type": "number"
+                  },
+                  "payment_method": {
+                    "type": "string"
+                  },
+                  "external_id": {
+                    "type": "string"
+                  },
+                  "stage": {
+                    "type": "string"
+                  },
+                  "notes": {
+                    "type": "string"
+                  },
+                  "source_app": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Evento processado (ou duplicado ignorado).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean"
+                        },
+                        "event": {
+                          "type": "string"
+                        },
+                        "deal_id": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean"
+                        },
+                        "duplicate": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token ausente ou inválido."
+          },
+          "405": {
+            "description": "Método não permitido."
+          },
+          "500": {
+            "description": "Erro interno."
+          }
+        }
+      }
+    },
+    "/mercadopago-sales-webhook": {
+      "post": {
+        "summary": "Webhook de venda Mercado Pago",
+        "description": "Recebe notificações de pagamento de clientes (distinto do webhook de assinatura do próprio Vyzon), busca o pagamento na API do MP e cria/atualiza deals e vendas conforme o status (approved, refunded, rejected/cancelled, pending). Apenas eventos `type=payment` são processados. Auth: access token no header `x-mp-access-token`, validado contra `integration_configs.hottok` e reusado para chamar a API do Mercado Pago.",
+        "tags": [
+          "Webhooks de venda"
+        ],
+        "security": [
+          {
+            "webhookSecret": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Notificação de webhook do Mercado Pago.",
+                "properties": {
+                  "id": {
+                    "type": [
+                      "string",
+                      "integer"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Apenas 'payment' é processado."
+                  },
+                  "action": {
+                    "type": "string",
+                    "description": "Ex: payment.created, payment.updated."
+                  },
+                  "date_created": {
+                    "type": "string"
+                  },
+                  "user_id": {
+                    "type": [
+                      "string",
+                      "integer"
+                    ]
+                  },
+                  "api_version": {
+                    "type": "string"
+                  },
+                  "live_mode": {
+                    "type": "boolean"
+                  },
+                  "resource": {
+                    "type": "string"
+                  },
+                  "topic": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "description": "ID do pagamento, usado para buscar detalhes na API do MP."
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Evento processado, duplicado, ou ignorado (evento não-payment / sem payment id).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean"
+                        },
+                        "payment_id": {
+                          "type": "string"
+                        },
+                        "deal_id": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "status": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean"
+                        },
+                        "duplicate": {
+                          "type": "boolean"
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean"
+                        },
+                        "ignored": {
+                          "type": "boolean"
+                        },
+                        "reason": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "x-mp-access-token ausente ou inválido."
+          },
+          "404": {
+            "description": "Pagamento não encontrado na API do Mercado Pago."
+          },
+          "405": {
+            "description": "Método não permitido."
+          },
+          "500": {
+            "description": "Erro interno."
+          }
+        }
+      }
+    },
+    "/notazz-webhook": {
+      "post": {
+        "summary": "Webhook de status de NF Notazz",
+        "description": "Recebe callbacks de status de notas fiscais emitidas pela Notazz e anota o status no deal associado (por `external_id`). Não cria deals nem vendas. Auth: token no header `x-notazz-token`, validado contra `integration_configs.hottok` da empresa.",
+        "tags": [
+          "Webhooks de venda"
+        ],
+        "security": [
+          {
+            "webhookSecret": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Callback da Notazz; o status textual é normalizado internamente para NF_AUTHORIZED/NF_REJECTED/NF_CANCELLED/NF_PROCESSING/NF_ERROR.",
+                "additionalProperties": true,
+                "properties": {
+                  "event": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string",
+                    "description": "Ex: autorizada, rejeitada, cancelada, processando, erro."
+                  },
+                  "documentNumber": {
+                    "type": "string"
+                  },
+                  "externalId": {
+                    "type": "string",
+                    "description": "Casa com deals.external_id."
+                  },
+                  "protocol": {
+                    "type": "string"
+                  },
+                  "xmlUrl": {
+                    "type": "string"
+                  },
+                  "pdfUrl": {
+                    "type": "string"
+                  },
+                  "client": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "email": {
+                        "type": "string"
+                      },
+                      "document": {
+                        "type": "string"
+                      },
+                      "phone": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "value": {
+                    "type": "number"
+                  },
+                  "message": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Status processado (ou duplicado ignorado).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean"
+                        },
+                        "status": {
+                          "type": "string",
+                          "description": "Status normalizado da NF."
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean"
+                        },
+                        "duplicate": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token ausente ou inválido."
+          },
+          "405": {
+            "description": "Método não permitido."
+          },
+          "500": {
+            "description": "Erro interno."
+          }
+        }
+      }
+    },
+    "/lead-webhook": {
+      "get": {
+        "summary": "Verificação do webhook (Meta Graph)",
+        "description": "Verificação de subscription do Meta Lead Ads (Facebook Graph). Responde com `hub.challenge` em texto puro quando `hub.mode=subscribe` e `hub.verify_token` coincide com o secret do lead_webhook do slug e o webhook está habilitado. Sem os parâmetros de verificação, responde apenas um liveness. O slug vem no path (/lead-webhook/:slug) ou em `?slug=`. Auth: o `hub.verify_token` deve ser igual ao secret do slug.",
+        "tags": [
+          "Webhooks de venda",
+          "Leads"
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Identificador do webhook de lead (alternativa ao path /lead-webhook/:slug)."
+          },
+          {
+            "name": "hub.mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "subscribe"
+              ]
+            }
+          },
+          {
+            "name": "hub.challenge",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "hub.verify_token",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Deve ser igual ao secret do webhook."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Desafio ecoado (text/plain) ou mensagem de liveness.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Slug ausente."
+          },
+          "403": {
+            "description": "Webhook desabilitado, não encontrado ou verify_token incorreto."
+          }
+        }
+      },
+      "post": {
+        "summary": "Ingestão de lead",
+        "description": "Ingere um lead (Meta Lead Ads, Zapier, Make ou custom) chamando a RPC `ingest_lead_webhook`, que valida o secret/slug e cria o deal. Auth: secret no header `x-webhook-secret` ou em `?secret=`. Slug no path /lead-webhook/:slug ou em `?slug=`.",
+        "tags": [
+          "Webhooks de venda",
+          "Leads"
+        ],
+        "security": [
+          {
+            "webhookSecret": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "secret",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Secret do webhook (alternativa ao header x-webhook-secret)."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Payload de lead em formato livre (Meta Lead Ads, Zapier, Make ou custom); o mapeamento de campos é feito pela RPC ingest_lead_webhook.",
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Lead ingerido com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "deal_id": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Slug ausente, JSON inválido ou payload inválido."
+          },
+          "401": {
+            "description": "Secret ausente, não encontrado ou inválido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Webhook desabilitado."
+          },
+          "422": {
+            "description": "Falha de validação/processamento do lead."
+          },
+          "500": {
+            "description": "Erro de RPC ou interno."
+          }
+        }
+      }
+    },
+    "/evolution-message-webhook": {
+      "post": {
+        "summary": "Receiver de mensagens do Evolution API (WhatsApp)",
+        "description": "Recebe eventos messages.upsert e messages.update do Evolution API e grava em whatsapp_messages + dual-write channel_*. Auth por segredo de webhook (query ?secret= ou header x-webhook-secret), validado contra EVOLUTION_WEBHOOK_SECRET.",
+        "tags": [
+          "WhatsApp"
+        ],
+        "security": [
+          {
+            "webhookSecret": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "event": {
+                    "type": "string",
+                    "description": "messages.upsert ou messages.update"
+                  },
+                  "instance": {
+                    "type": "string",
+                    "description": "Nome da instância (wa_<userIdHex>)"
+                  },
+                  "data": {
+                    "description": "Mensagem, array de mensagens, ou objeto com .messages",
+                    "oneOf": [
+                      {
+                        "type": "object"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "object"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Processado ou ignorado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "inserted": {
+                      "type": "integer"
+                    },
+                    "skipped": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "ignored": {
+                      "type": "string"
+                    },
+                    "status_updates_applied": {
+                      "type": "integer"
+                    },
+                    "dual_write": {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "integer"
+                        },
+                        "skipped": {
+                          "type": "integer"
+                        },
+                        "error": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "JSON inválido ou instance ausente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Segredo de webhook inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/evolution-backfill-webhooks": {
+      "post": {
+        "summary": "Configura webhooks em todas as instâncias Evolution",
+        "description": "Backfill one-off: percorre as instâncias wa_* do Evolution API e configura (mode=set) ou inspeciona (mode=inspect) o webhook receiver. Autenticado pelo próprio EVOLUTION_WEBHOOK_SECRET (query ?secret= ou header x-webhook-secret), sem JWT.",
+        "tags": [
+          "WhatsApp"
+        ],
+        "security": [
+          {
+            "webhookSecret": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "secret",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "EVOLUTION_WEBHOOK_SECRET (alternativa ao header x-webhook-secret)"
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "set",
+                "inspect"
+              ],
+              "default": "set"
+            },
+            "description": "set configura o webhook; inspect só lê o webhook atual"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resultado do backfill por instância",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "total": {
+                      "type": "integer"
+                    },
+                    "configured": {
+                      "type": "integer"
+                    },
+                    "failed": {
+                      "type": "integer"
+                    },
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "instanceName": {
+                            "type": "string"
+                          },
+                          "ok": {
+                            "type": "boolean"
+                          },
+                          "error": {
+                            "type": "string"
+                          },
+                          "current": {
+                            "type": "object"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Falha ao listar instâncias no Evolution API",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/meta-whatsapp-webhook": {
+      "get": {
+        "summary": "Verificação do webhook da Meta Cloud API",
+        "description": "Handshake de verificação da Meta (WhatsApp Business Platform): valida hub.verify_token contra META_WHATSAPP_VERIFY_TOKEN e devolve hub.challenge em texto puro. Sem JWT.",
+        "tags": [
+          "WhatsApp"
+        ],
+        "security": [
+          {
+            "webhookSecret": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "hub.mode",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "subscribe"
+              ]
+            }
+          },
+          {
+            "name": "hub.verify_token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "hub.challenge",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Verificação ok; ecoa o challenge",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Token de verificação inválido",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Receiver de mensagens/status da Meta Cloud API",
+        "description": "Recebe payloads whatsapp_business_account (messages + statuses) e grava em channel_* + message_status_events. RECEIVE-ONLY. Auth via HMAC SHA-256 do body no header x-hub-signature-256, validado contra META_APP_SECRET.",
+        "tags": [
+          "WhatsApp"
+        ],
+        "security": [
+          {
+            "webhookSecret": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "object": {
+                    "type": "string",
+                    "enum": [
+                      "whatsapp_business_account"
+                    ]
+                  },
+                  "entry": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "changes": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "field": {
+                                "type": "string"
+                              },
+                              "value": {
+                                "type": "object",
+                                "properties": {
+                                  "metadata": {
+                                    "type": "object",
+                                    "properties": {
+                                      "phone_number_id": {
+                                        "type": "string"
+                                      },
+                                      "display_phone_number": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  },
+                                  "contacts": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object"
+                                    }
+                                  },
+                                  "messages": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object"
+                                    }
+                                  },
+                                  "statuses": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Resumo do processamento (ou ignorado, sempre 200 para a Meta não fazer retry)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "received_messages_count": {
+                      "type": "integer"
+                    },
+                    "inserted_messages_count": {
+                      "type": "integer"
+                    },
+                    "skipped_duplicates_count": {
+                      "type": "integer"
+                    },
+                    "statuses_count": {
+                      "type": "integer"
+                    },
+                    "status_events_inserted": {
+                      "type": "integer"
+                    },
+                    "status_events_skipped": {
+                      "type": "integer"
+                    },
+                    "errors_count": {
+                      "type": "integer"
+                    },
+                    "ignored": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "JSON inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Assinatura HMAC inválida (quando META_APP_SECRET configurado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "reason": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/whatsapp-session-heartbeat": {
+      "post": {
+        "summary": "Reconcilia status das sessões WhatsApp (Evolution)",
+        "description": "Disparado pelo pg_cron (~5min): verifica o connectionState real de cada channel_connections provider=evolution e rebaixa/promove o status (sem rebaixar em timeout/erro de rede). Aceita anon Bearer (verify_jwt), escreve com service_role.",
+        "tags": [
+          "WhatsApp"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resultado da reconciliação",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "checked": {
+                      "type": "integer"
+                    },
+                    "unreachable": {
+                      "type": "integer"
+                    },
+                    "updated": {
+                      "type": "integer"
+                    },
+                    "transitions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "external_id": {
+                            "type": "string"
+                          },
+                          "from": {
+                            "type": "string"
+                          },
+                          "to": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Evolution API não configurada ou falha de leitura",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/google-calendar-sync": {
+      "post": {
+        "summary": "Sincroniza eventos com o Google Calendar",
+        "description": "Executa create_event, update_event, delete_event ou sync_all para um usuário, usando os tokens OAuth Google salvos no profile (refresh automático). Chamada com service_role; sem JWT do usuário final.",
+        "tags": [
+          "Agenda"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "action",
+                  "userId"
+                ],
+                "properties": {
+                  "action": {
+                    "type": "string",
+                    "enum": [
+                      "create_event",
+                      "update_event",
+                      "delete_event",
+                      "sync_all"
+                    ]
+                  },
+                  "userId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "agendamentoData": {
+                    "type": "object",
+                    "properties": {
+                      "cliente_nome": {
+                        "type": "string"
+                      },
+                      "data_agendamento": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "observacoes": {
+                        "type": "string"
+                      },
+                      "google_event_id": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Resultado da ação",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "eventId": {
+                      "type": "string"
+                    },
+                    "htmlLink": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "synced": {
+                      "type": "integer"
+                    },
+                    "inserted": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Usuário não conectado ao Google ou falha no refresh",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro ao buscar usuário ou ação inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/google-calendar-auto-sync": {
+      "post": {
+        "summary": "Sincronização automática de todos os usuários",
+        "description": "Cron job: percorre todos os profiles com google_access_token e invoca google-calendar-sync (sync_all) para cada um. Roda com service_role; sem JWT do usuário final.",
+        "tags": [
+          "Agenda"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resumo do auto-sync",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "totalUsers": {
+                      "type": "integer"
+                    },
+                    "successCount": {
+                      "type": "integer"
+                    },
+                    "synced": {
+                      "type": "integer"
+                    },
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "userId": {
+                            "type": "string"
+                          },
+                          "success": {
+                            "type": "boolean"
+                          },
+                          "error": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro fatal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/google-calendar-webhook": {
+      "post": {
+        "summary": "Receiver de push notifications do Google Calendar",
+        "description": "Recebe notificações push do Google (headers x-goog-resource-state/-channel-id/-resource-id) e importa eventos novos para agendamentos. Auth opcional por segredo: header x-goog-channel-token ou query ?secret= contra GOOGLE_CALENDAR_WEBHOOK_SECRET.",
+        "tags": [
+          "Agenda"
+        ],
+        "security": [
+          {
+            "webhookSecret": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "secret",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-goog-resource-state",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "sync",
+                "exists"
+              ]
+            }
+          },
+          {
+            "name": "x-goog-channel-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-goog-resource-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-goog-channel-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook verificado, processado ou ignorado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "ignored": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Resource state ausente ou headers obrigatórios faltando"
+          },
+          "403": {
+            "description": "Segredo/token inválido"
+          },
+          "404": {
+            "description": "Profile não encontrado para o channel"
+          },
+          "429": {
+            "description": "Rate limit excedido"
+          },
+          "500": {
+            "description": "Erro ao processar eventos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/google-oauth-init": {
+      "post": {
+        "summary": "Inicia o fluxo OAuth do Google Calendar",
+        "description": "Gera a URL de autorização do Google com state assinado HMAC-SHA256 (CSRF + expiração de 15min). Recebe userId no body. Auth por chave de plataforma (state assinado com SUPABASE_SERVICE_ROLE_KEY).",
+        "tags": [
+          "Auth"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "userId"
+                ],
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "URL de autorização gerada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "authUrl": {
+                      "type": "string",
+                      "format": "uri"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "userId ausente ou erro interno",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/google-oauth-callback": {
+      "get": {
+        "summary": "Callback OAuth do Google Calendar",
+        "description": "Endpoint de redirect do Google: valida o state assinado (HMAC-SHA256), troca o code por tokens, salva no profile e redireciona (302) para /configuracoes/integracoes. Auth pela assinatura do state; sem JWT.",
+        "tags": [
+          "Auth"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Payload base64 + assinatura HMAC (formato payload.signature)"
+          },
+          {
+            "name": "error",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redireciona para o frontend com ?success=true ou ?error=<motivo>",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mercadopago-webhook": {
+      "post": {
+        "summary": "Receiver de webhooks do Mercado Pago",
+        "description": "Recebe eventos subscription_preapproval, valida assinatura HMAC (header x-signature + x-request-id contra MERCADOPAGO_WEBHOOK_SECRET, timing-safe), re-busca a assinatura na API do MP e atualiza companies.subscription_status. Responde 200 imediato e processa em background; idempotente.",
+        "tags": [
+          "Billing"
+        ],
+        "security": [
+          {
+            "webhookSecret": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "x-signature",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Formato ts=<ts>,v1=<hmac>"
+          },
+          {
+            "name": "x-request-id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": [
+                      "string",
+                      "integer"
+                    ]
+                  },
+                  "type": {
+                    "type": "string"
+                  },
+                  "action": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Recebido (processamento ocorre em background)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "received": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/twilio-voice-bridge": {
+      "post": {
+        "summary": "TwiML de bridge para conferência de ligação",
+        "description": "Voice webhook do Twilio: gera TwiML que coloca a perna (seller/customer) numa Conference, gravando a partir da perna do vendedor. Auth por query ?secret= contra TWILIO_WEBHOOK_SECRET; sem segredo, retorna Hangup 403.",
+        "tags": [
+          "Calls"
+        ],
+        "security": [
+          {
+            "webhookSecret": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "secret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "call_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "leg",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "seller"
+              ],
+              "default": "customer"
+            }
+          },
+          {
+            "name": "conference",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "description": "Parâmetros de voz do Twilio (CallSid, etc.)"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "TwiML da conferência",
+            "content": {
+              "text/xml": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Segredo inválido (TwiML Hangup)",
+            "content": {
+              "text/xml": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/twilio-voice-recording-webhook": {
+      "post": {
+        "summary": "Callback de status de gravação do Twilio",
+        "description": "Recebe o recordingStatusCallback (form-urlencoded) do Twilio, grava recording_url/duração em deal_calls, loga deal_activities e dispara a transcrição. Auth por query ?secret= contra TWILIO_WEBHOOK_SECRET.",
+        "tags": [
+          "Calls"
+        ],
+        "security": [
+          {
+            "webhookSecret": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "secret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "call_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "RecordingUrl": {
+                    "type": "string"
+                  },
+                  "RecordingSid": {
+                    "type": "string"
+                  },
+                  "RecordingStatus": {
+                    "type": "string"
+                  },
+                  "RecordingDuration": {
+                    "type": "string"
+                  },
+                  "ConferenceSid": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ok (texto puro)",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "call_id ausente",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Segredo inválido ou ausente",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/twilio-voice-status-webhook": {
+      "post": {
+        "summary": "Callback de status de chamada do Twilio",
+        "description": "Recebe o statusCallback (form-urlencoded) por perna (seller/customer), mapeia o CallStatus do Twilio para o status interno e atualiza deal_calls. Auth por query ?secret= contra TWILIO_WEBHOOK_SECRET.",
+        "tags": [
+          "Calls"
+        ],
+        "security": [
+          {
+            "webhookSecret": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "secret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "call_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "leg",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "unknown"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "CallSid": {
+                    "type": "string"
+                  },
+                  "CallStatus": {
+                    "type": "string"
+                  },
+                  "CallDuration": {
+                    "type": "string"
+                  },
+                  "To": {
+                    "type": "string"
+                  },
+                  "From": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ok (texto puro)",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "call_id ausente",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Segredo inválido ou ausente",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/twilio-voice-webrtc-handler": {
+      "post": {
+        "summary": "TwiML App Voice URL para chamadas WebRTC do browser",
+        "description": "Voice URL do TwiML App: o Twilio chama quando o SDK do browser inicia uma ligação. Recebe params (form-urlencoded), gera TwiML que disca o cliente com gravação dual e status callbacks, e atualiza deal_calls. Sem segredo próprio (a autenticidade vem da Voice URL do TwiML App).",
+        "tags": [
+          "Calls"
+        ],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "callId": {
+                    "type": "string"
+                  },
+                  "call_id": {
+                    "type": "string"
+                  },
+                  "customerPhone": {
+                    "type": "string"
+                  },
+                  "To": {
+                    "type": "string"
+                  },
+                  "conference": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "TwiML para discar o cliente na conferência",
+            "content": {
+              "text/xml": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/upload-ads-conversion": {
+      "post": {
+        "summary": "Upload de conversão offline ao Google Ads",
+        "description": "Recebe { lead_id }, lê gclid + email/phone de demo_requests e sobe um ClickConversion na Google Ads API v21 (auth via refresh_token OAuth + developer-token). Server-side, imune a adblock/DNT. Chamada interna com service_role.",
+        "tags": [
+          "Ads"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "lead_id"
+                ],
+                "properties": {
+                  "lead_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Conversão enviada, pulada (sem gclid/já enviada/gclid de teste) ou erro parcial",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "skipped": {
+                      "type": "string"
+                    },
+                    "result": {
+                      "type": "object"
+                    },
+                    "partial_error": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "lead_id ausente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Lead não encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "detail": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Secrets do Google Ads não configurados ou erro interno",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -223,14 +5917,59 @@
         "scheme": "bearer",
         "bearerFormat": "JWT",
         "description": "JWT do usuário Supabase (sessão logada). Obtido via supabase.auth.getSession()."
+      },
+      "webhookSecret": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-webhook-token",
+        "description": "Segredo do webhook. O mecanismo varia por endpoint: token em header dedicado (ex.: x-hotmart-hottok), assinatura HMAC, Basic Auth ou segredo de plataforma. Ver a descrição de cada endpoint."
       }
     }
   },
   "tags": [
-    { "name": "EVA", "description": "Inteligência comercial da Vyzon" },
-    { "name": "Calls", "description": "Ligações e transcrição no deal" },
-    { "name": "Admin", "description": "Gestão de equipe" },
-    { "name": "Demo", "description": "Ambientes de demonstração" },
-    { "name": "Billing", "description": "Assinatura do Vyzon" }
+    {
+      "name": "EVA",
+      "description": "Inteligência comercial da Vyzon"
+    },
+    {
+      "name": "Calls",
+      "description": "Ligações e transcrição no deal"
+    },
+    {
+      "name": "Admin",
+      "description": "Gestão de equipe"
+    },
+    {
+      "name": "Demo",
+      "description": "Ambientes de demonstração"
+    },
+    {
+      "name": "Billing",
+      "description": "Assinatura do Vyzon"
+    },
+    {
+      "name": "WhatsApp",
+      "description": "Conexão e mensagens de WhatsApp"
+    },
+    {
+      "name": "Agenda",
+      "description": "Google Calendar e agendamento"
+    },
+    {
+      "name": "Auth",
+      "description": "OAuth do Google"
+    },
+    {
+      "name": "Webhooks de venda",
+      "description": "Recebem eventos de provedores de pagamento"
+    },
+    {
+      "name": "Leads",
+      "description": "Ingestão e abordagem de leads"
+    },
+    {
+      "name": "Ads",
+      "description": "Conversões offline para Google Ads"
+    }
   ]
 }
