@@ -21,7 +21,7 @@ import {
     ChatCircle as MessageCircle,
     DotsThree as MoreHorizontal,
     ArrowsClockwise as RefreshCw,
-    Sparkle as Sparkles,
+    Question,
     Target,
 } from "@phosphor-icons/react";
 import { useInicioData } from "@/hooks/useInicioData";
@@ -38,6 +38,8 @@ import {
     type CentralEvaInput,
     type EvaResponse,
 } from "@/hooks/useCentralEvaAssistant";
+import { useTypewriter } from "@/hooks/useTypewriter";
+import { EvaNode } from "@/components/landing/EvaNode";
 import { DecisionWorkspace } from "@/components/inicio/DecisionWorkspace";
 import { useEvolutionSender } from "@/hooks/useEvolutionSender";
 import {
@@ -108,7 +110,7 @@ const ATTENTION_ICON: Record<AttentionItem["type"], typeof MessageCircle> = {
     hot_lead_waiting:    Flame,
     stale_conversation:  Clock,
     stale_deal:          Target,
-    knowledge_gap:       Sparkles,
+    knowledge_gap:       Question,
 };
 
 // ─── Building blocks ────────────────────────────────────────────────────────
@@ -304,10 +306,12 @@ function EvaChat({ evaInput, onNavigate }: { evaInput: CentralEvaInput; onNaviga
 
             {/* Resposta da EVA — loading / answered / error / out_of_scope */}
             {isThinking && (
-                <div className="mt-4 flex items-center gap-2.5 px-4 py-3 rounded-xl"
+                <div className="mt-4 flex items-center gap-2.5 px-4 py-3 rounded-xl eva-think-in"
                     style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.14)" }}>
-                    <Sparkles size={15} weight="duotone" className="animate-pulse" style={{ color: "#6D28D9" }} />
-                    <span className="text-[13px]" style={{ color: "#475569" }}>EVA analisando sua operação…</span>
+                    <span className="eva-orb-pulse inline-flex"><EvaNode size={16} color="#6D28D9" /></span>
+                    <span className="text-[13px]" style={{ color: "#475569" }}>
+                        EVA lendo sua operação<span className="eva-dots" aria-hidden="true" />
+                    </span>
                 </div>
             )}
 
@@ -333,6 +337,22 @@ function EvaChat({ evaInput, onNavigate }: { evaInput: CentralEvaInput; onNaviga
                     Consigo te ajudar com conversas, oportunidades, pipeline e prioridades comerciais.
                 </EvaStatusRow>
             )}
+
+            <style>{`
+                @keyframes evaBlink { 0%,100%{opacity:1} 50%{opacity:0} }
+                .eva-caret { display:inline-block; margin-left:1px; color:#6D28D9; animation: evaBlink 0.9s steps(1) infinite; }
+                @keyframes evaOrbPulse { 0%,100%{transform:scale(1);opacity:0.8} 50%{transform:scale(1.14);opacity:1} }
+                .eva-orb-pulse { animation: evaOrbPulse 1.1s ease-in-out infinite; }
+                @keyframes evaThinkIn { from{opacity:0; transform:translateY(4px)} to{opacity:1; transform:none} }
+                .eva-think-in { animation: evaThinkIn 0.28s ease-out both; }
+                .eva-reveal { animation: evaThinkIn 0.32s ease-out both; }
+                .eva-dots::after { content:""; animation: evaDots 1.3s steps(1,end) infinite; }
+                @keyframes evaDots { 0%{content:""} 25%{content:"."} 50%{content:".."} 75%{content:"..."} 100%{content:""} }
+                @media (prefers-reduced-motion: reduce) {
+                    .eva-caret, .eva-orb-pulse, .eva-think-in, .eva-reveal, .eva-dots::after { animation: none !important; }
+                    .eva-caret { display:none; }
+                }
+            `}</style>
         </div>
     );
 }
@@ -348,20 +368,24 @@ function EvaAnswerBlock({
     onNavigate: (href: string) => void;
     onReset: () => void;
 }) {
+    const { displayed, done } = useTypewriter(response.answer);
     return (
-        <div className="mt-4 rounded-xl p-4"
+        <div className="mt-4 rounded-xl p-4 eva-think-in"
             style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.16)" }}>
             <div className="flex items-start gap-2.5">
                 <div className="h-7 w-7 rounded-lg flex items-center justify-center shrink-0"
                     style={{ background: "rgba(124,58,237,0.10)" }}>
-                    <Sparkles size={15} weight="duotone" style={{ color: "#6D28D9" }} />
+                    <span className={done ? "inline-flex" : "eva-orb-pulse inline-flex"}>
+                        <EvaNode size={15} color="#6D28D9" />
+                    </span>
                 </div>
                 <p className="text-[13px] leading-relaxed flex-1" style={{ color: "#0B1220" }}>
-                    {response.answer}
+                    {displayed}
+                    {!done && <span className="eva-caret" aria-hidden="true">▍</span>}
                 </p>
             </div>
-            {response.actions.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-3 pl-[38px]">
+            {done && response.actions.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3 pl-[38px] eva-reveal">
                     {response.actions.map((a) => (
                         <button
                             key={a.href}
@@ -376,15 +400,17 @@ function EvaAnswerBlock({
                     ))}
                 </div>
             )}
-            <div className="flex items-center justify-between mt-3 pl-[38px]">
-                <span className="text-[10px] uppercase"
-                    style={{ color: "#1E293B", fontWeight: 700, letterSpacing: "0.06em" }}>
-                    Confiança: {CONFIDENCE_LABEL[response.confidence]}
-                </span>
-                <button type="button" onClick={onReset} className="text-[11px] font-semibold" style={{ color: "#6D28D9" }}>
-                    Nova pergunta
-                </button>
-            </div>
+            {done && (
+                <div className="flex items-center justify-between mt-3 pl-[38px] eva-reveal">
+                    <span className="text-[10px] uppercase"
+                        style={{ color: "#1E293B", fontWeight: 700, letterSpacing: "0.06em" }}>
+                        Confiança: {CONFIDENCE_LABEL[response.confidence]}
+                    </span>
+                    <button type="button" onClick={onReset} className="text-[11px] font-semibold" style={{ color: "#6D28D9" }}>
+                        Nova pergunta
+                    </button>
+                </div>
+            )}
         </div>
     );
 }
