@@ -1,0 +1,50 @@
+---
+title: "Webhooks de venda"
+description: "Como o Vyzon recebe eventos de pagamento e materializa no pipeline."
+---
+
+O Vyzon recebe webhooks de 14 provedores de venda/pagamento e os transforma em
+`deals` e `vendas` no CRM. Todos seguem o mesmo padrão.
+
+## Fluxo
+
+<Steps>
+  <Step title="Recebe o evento">
+    O provedor faz `POST` para `/{provedor}-webhook` com o evento.
+  </Step>
+  <Step title="Autentica">
+    Por segredo em header (validado contra `integration_configs.hottok`) ou HMAC
+    assinado do corpo.
+  </Step>
+  <Step title="Garante idempotência">
+    Via RPCs `claim_webhook_event` / `mark_webhook_event_status`. Evento repetido
+    retorna `{ "duplicate": true }`.
+  </Step>
+  <Step title="Materializa no pipeline">
+    Pagamento confirmado vira `deal` em `closed_won` + linha em `vendas`.
+    Reembolso, cancelamento ou chargeback move para `closed_lost`.
+  </Step>
+</Steps>
+
+## Provedores suportados
+
+| Provedor | Auth | Endpoint |
+|---|---|---|
+| Hotmart | header `x-hotmart-hottok` | `/hotmart-webhook` |
+| Kiwify | HMAC `x-kiwify-signature` | `/kiwify-webhook` |
+| Stripe | HMAC `Stripe-Signature` | `/stripe-webhook` |
+| Pagar.me | Basic Auth | `/pagarme-webhook` |
+| Mercado Pago (vendas) | header `x-mp-access-token` | `/mercadopago-sales-webhook` |
+| Asaas | header `asaas-access-token` | `/asaas-webhook` |
+| Braip | header `x-braip-token` | `/braip-webhook` |
+| Cakto | header `x-cakto-token` | `/cakto-webhook` |
+| Eduzz | header `x-eduzz-token` | `/eduzz-webhook` |
+| Greenn | header `x-greenn-token` | `/greenn-webhook` |
+| Monetizze | header `x-monetizze-token` | `/monetizze-webhook` |
+| RD Station | header configurável | `/rdstation-webhook` |
+| Zapier | header `x-zapier-token` | `/zapier-webhook` |
+
+<Note>
+  Leads (não vendas) entram por `/lead-webhook` (Meta Lead Ads, Zapier, Make), e
+  notas fiscais por `/notazz-webhook`.
+</Note>

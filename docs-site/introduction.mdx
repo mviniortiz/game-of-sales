@@ -1,0 +1,49 @@
+---
+title: "Introdução"
+description: "A API interna do Vyzon: o que é, como se conecta e o que dá pra fazer."
+---
+
+A API do Vyzon expõe a operação comercial do produto: WhatsApp, pipeline, EVA
+(a inteligência comercial), ligações, agenda e cobrança. Ela é composta de três
+camadas.
+
+<CardGroup cols={3}>
+  <Card title="Edge Functions" icon="bolt">
+    52 endpoints HTTP (Supabase/Deno) para webhooks, WhatsApp, voz, EVA, agenda e
+    admin. É o foco da [API Reference](/api-reference).
+  </Card>
+  <Card title="PostgREST" icon="database">
+    CRUD automático das tabelas e RPCs, protegido por RLS por `company_id`.
+  </Card>
+  <Card title="Realtime" icon="signal-stream">
+    Assinaturas ao vivo (ex.: inbox em tempo real).
+  </Card>
+</CardGroup>
+
+## Base URL
+
+```
+https://{project}.supabase.co/functions/v1/{endpoint}
+```
+
+## Primeiros passos
+
+<Steps>
+  <Step title="Autentique">
+    A maioria dos endpoints do app usa o JWT da sessão do usuário. Veja
+    [Autenticação](/authentication).
+  </Step>
+  <Step title="Chame um endpoint">
+    Por exemplo, peça à EVA para analisar uma conversa em `POST /whatsapp-copilot`.
+  </Step>
+  <Step title="Use via IA (MCP)">
+    Esta documentação expõe um servidor MCP em `/mcp`, então a EVA, o Claude ou o
+    Cursor podem consultar a doc e executar chamadas em seu nome.
+  </Step>
+</Steps>
+
+<Note>
+  Esta spec é interna e evolui de forma incremental. Webhooks de provedores
+  externos (Hotmart, Stripe, etc.) são descritos em [Guias](/guides/webhooks),
+  não na API Reference, porque são recebidos, não chamados.
+</Note>

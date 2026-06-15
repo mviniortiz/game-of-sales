@@ -1,0 +1,43 @@
+---
+title: "Autenticação"
+description: "Os modelos de autenticação da API do Vyzon."
+---
+
+A API usa um destes modelos, dependendo do endpoint.
+
+## JWT do usuário (app)
+
+A maioria dos endpoints chamados pelo app exige o JWT da sessão do usuário no
+header `Authorization`. O `company_id` e o papel (role) são derivados do token,
+nunca do corpo da requisição.
+
+```bash
+curl https://{project}.supabase.co/functions/v1/report-agent \
+  -H "Authorization: Bearer <USER_JWT>" \
+  -H "Content-Type: application/json" \
+  -d '{ "question": "Quem está mais perto da meta este mês?" }'
+```
+
+No frontend, o token vem da sessão Supabase:
+
+```ts
+const { data: { session } } = await supabase.auth.getSession();
+// session.access_token  →  Authorization: Bearer ...
+```
+
+## Segredo de webhook (provedores)
+
+Webhooks de venda (Hotmart, Kiwify, Stripe, Asaas, Pagar.me e outros) autenticam
+por um segredo configurado em **Integrações** e validado contra
+`integration_configs.hottok`. Alguns usam HMAC assinado do corpo (Kiwify, Stripe,
+Mercado Pago, Meta). Detalhes em [Guias de Webhooks](/guides/webhooks).
+
+## Token-como-segredo
+
+Alguns recursos públicos usam um token opaco como a própria credencial:
+relatórios white-label (`share_token`) e ingestão de leads externos (`slug` + `secret`).
+
+<Warning>
+  Escritas privilegiadas no servidor usam a `service_role` do Supabase, que
+  bypassa o RLS. Essa chave nunca é exposta ao cliente.
+</Warning>

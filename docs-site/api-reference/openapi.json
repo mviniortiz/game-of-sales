@@ -1,0 +1,236 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Vyzon API",
+    "version": "0.1.0",
+    "description": "API interna do Vyzon (Edge Functions). Endpoints chamáveis pelo app autenticado. Webhooks de provedores externos são documentados nos Guias, não aqui. Spec inicial: cobre endpoints representativos e é expandida incrementalmente."
+  },
+  "servers": [
+    { "url": "https://{project}.supabase.co/functions/v1", "variables": { "project": { "default": "omsdkjzkphflpwnbaeye" } } }
+  ],
+  "security": [{ "bearerAuth": [] }],
+  "paths": {
+    "/whatsapp-copilot": {
+      "post": {
+        "summary": "Analisar conversa (EVA Comercial)",
+        "description": "A EVA lê uma conversa de WhatsApp e devolve diagnóstico: sentimento, temperatura, estágio, rascunho de resposta, objeções e qualificação. O company_id é derivado do JWT (nunca do payload).",
+        "tags": ["EVA"],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": {
+            "type": "object",
+            "required": ["messages"],
+            "properties": {
+              "messages": { "type": "array", "description": "Histórico da conversa", "items": { "type": "object", "properties": { "text": { "type": "string" }, "sender": { "type": "string", "enum": ["contact", "me"] } } } },
+              "contactName": { "type": "string" },
+              "contactPhone": { "type": "string" },
+              "force": { "type": "boolean", "description": "Ignora cache" },
+              "objective": { "type": "string", "description": "Objetivo da abordagem (modo prospecção)" }
+            }
+          } } }
+        },
+        "responses": {
+          "200": { "description": "Análise gerada", "content": { "application/json": { "schema": {
+            "type": "object",
+            "properties": {
+              "success": { "type": "boolean" },
+              "analysis": { "type": "object", "properties": {
+                "sentiment": { "type": "string" }, "temperature": { "type": "string" }, "stage": { "type": "string" },
+                "draft": { "type": "string" }, "objections": { "type": "array", "items": { "type": "string" } },
+                "nextAction": { "type": "string" }, "qualification": { "type": "object" }
+              } },
+              "model": { "type": "string" }, "remaining": { "type": "integer" }, "dailyLimit": { "type": "integer" }
+            }
+          } } } },
+          "401": { "description": "JWT ausente ou inválido" },
+          "429": { "description": "Limite diário de uso atingido" }
+        }
+      }
+    },
+    "/report-agent": {
+      "post": {
+        "summary": "Perguntar à EVA sobre métricas",
+        "description": "EVA analítica: responde perguntas do gestor sobre métricas reais da empresa (vendas, metas, produtos) com texto, destaques e gráficos.",
+        "tags": ["EVA"],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": {
+            "type": "object",
+            "required": ["question"],
+            "properties": {
+              "question": { "type": "string" },
+              "companyId": { "type": "string", "description": "Só honrado para super_admin" }
+            }
+          } } }
+        },
+        "responses": {
+          "200": { "description": "Análise", "content": { "application/json": { "schema": {
+            "type": "object",
+            "properties": {
+              "success": { "type": "boolean" },
+              "analysis": { "type": "object", "properties": {
+                "answer": { "type": "string" }, "type": { "type": "string" },
+                "highlights": { "type": "array", "items": { "type": "string" } },
+                "charts": { "type": "array", "items": { "type": "object" } }
+              } },
+              "remaining": { "type": "integer" }
+            }
+          } } } },
+          "401": { "description": "JWT ausente ou inválido" }
+        }
+      }
+    },
+    "/deal-call-initiate": {
+      "post": {
+        "summary": "Iniciar ligação no deal",
+        "description": "Inicia uma ligação (modo demo, webrtc ou twilio click-to-call). Exige plano Plus/Pro com add-on de ligações habilitado.",
+        "tags": ["Calls"],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": {
+            "type": "object",
+            "required": ["dealId"],
+            "properties": {
+              "dealId": { "type": "string", "format": "uuid" },
+              "sellerPhone": { "type": "string", "nullable": true },
+              "customerPhone": { "type": "string", "nullable": true },
+              "mode": { "type": "string", "enum": ["demo", "twilio", "webrtc"], "default": "demo" }
+            }
+          } } }
+        },
+        "responses": {
+          "200": { "description": "Ligação iniciada", "content": { "application/json": { "schema": {
+            "type": "object",
+            "properties": {
+              "success": { "type": "boolean" }, "mode": { "type": "string" },
+              "call": { "type": "object" }, "requiresSetup": { "type": "boolean" }
+            }
+          } } } },
+          "402": { "description": "Plano sem add-on de ligações" },
+          "401": { "description": "JWT ausente ou inválido" }
+        }
+      }
+    },
+    "/deal-call-transcribe": {
+      "post": {
+        "summary": "Transcrever gravação da ligação",
+        "description": "Baixa a gravação da ligação, transcreve via OpenAI Whisper e dispara a geração de insights. Pode ser chamada pelo app ou internamente (service_role).",
+        "tags": ["Calls"],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": {
+            "type": "object",
+            "required": ["callId"],
+            "properties": { "callId": { "type": "string", "format": "uuid" } }
+          } } }
+        },
+        "responses": {
+          "200": { "description": "Transcrita", "content": { "application/json": { "schema": {
+            "type": "object",
+            "properties": { "success": { "type": "boolean" }, "transcript_length": { "type": "integer" }, "transcript_preview": { "type": "string" } }
+          } } } }
+        }
+      }
+    },
+    "/admin-create-seller": {
+      "post": {
+        "summary": "Criar vendedor",
+        "description": "Cria um vendedor (auth + profile) na empresa e envia email de boas-vindas. Exige role admin ou super_admin. Respeita o limite de vendedores do plano.",
+        "tags": ["Admin"],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": {
+            "type": "object",
+            "required": ["nome", "email"],
+            "properties": {
+              "nome": { "type": "string" },
+              "email": { "type": "string", "format": "email" },
+              "sendPassword": { "type": "boolean", "default": true },
+              "companyId": { "type": "string", "description": "Só super_admin pode passar empresa diferente" }
+            }
+          } } }
+        },
+        "responses": {
+          "200": { "description": "Criado", "content": { "application/json": { "schema": {
+            "type": "object",
+            "properties": { "password": { "type": "string", "nullable": true }, "emailSent": { "type": "boolean" } }
+          } } } },
+          "403": { "description": "Sem permissão ou limite do plano atingido" }
+        }
+      }
+    },
+    "/create-personalized-demo": {
+      "post": {
+        "summary": "Montar demo personalizada",
+        "description": "Clona o ambiente base renomeado para o negócio do lead e envia as credenciais por email ao time. Só roda se o lead já agendou e ainda não tem ambiente (1 por lead).",
+        "tags": ["Demo"],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": {
+            "type": "object",
+            "required": ["demo_request_id", "company_name"],
+            "properties": {
+              "demo_request_id": { "type": "string", "format": "uuid" },
+              "company_name": { "type": "string", "minLength": 2 },
+              "segment": { "type": "string" },
+              "offer": { "type": "string" },
+              "pain": { "type": "string" },
+              "context": { "type": "string" }
+            }
+          } } }
+        },
+        "responses": {
+          "200": { "description": "Ambiente criado", "content": { "application/json": { "schema": {
+            "type": "object",
+            "properties": { "ok": { "type": "boolean" }, "company_id": { "type": "string" }, "email_sent": { "type": "boolean" }, "already": { "type": "boolean" } }
+          } } } },
+          "409": { "description": "Lead ainda não agendou" }
+        }
+      }
+    },
+    "/mercadopago-create-subscription": {
+      "post": {
+        "summary": "Criar assinatura (Mercado Pago)",
+        "description": "Cria a assinatura do Vyzon (checkout transparente, trial 14 dias). Exige JWT do usuário dono do tenant.",
+        "tags": ["Billing"],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": {
+            "type": "object",
+            "required": ["token", "email", "planId", "companyId"],
+            "properties": {
+              "token": { "type": "string", "description": "Card token do MP SDK" },
+              "email": { "type": "string", "format": "email" },
+              "planId": { "type": "string", "enum": ["starter", "plus", "pro"] },
+              "companyId": { "type": "string", "format": "uuid" },
+              "upgrade": { "type": "boolean" }
+            }
+          } } }
+        },
+        "responses": {
+          "200": { "description": "Assinatura criada", "content": { "application/json": { "schema": {
+            "type": "object",
+            "properties": { "success": { "type": "boolean" }, "subscriptionId": { "type": "string" }, "status": { "type": "string" } }
+          } } } }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT do usuário Supabase (sessão logada). Obtido via supabase.auth.getSession()."
+      }
+    }
+  },
+  "tags": [
+    { "name": "EVA", "description": "Inteligência comercial da Vyzon" },
+    { "name": "Calls", "description": "Ligações e transcrição no deal" },
+    { "name": "Admin", "description": "Gestão de equipe" },
+    { "name": "Demo", "description": "Ambientes de demonstração" },
+    { "name": "Billing", "description": "Assinatura do Vyzon" }
+  ]
+}

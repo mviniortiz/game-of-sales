@@ -1,0 +1,37 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Vyzon API",
+  "colors": {
+    "primary": "#1556C0",
+    "light": "#4A8CE8",
+    "dark": "#0E3E8A"
+  },
+  "favicon": "/favicon.svg",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentação",
+        "groups": [
+          {
+            "group": "Começando",
+            "pages": ["introduction", "authentication"]
+          },
+          {
+            "group": "Guias",
+            "pages": ["guides/webhooks"]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "openapi": "api-reference/openapi.json"
+      }
+    ]
+  },
+  "footer": {
+    "socials": {
+      "website": "https://vyzon.com.br"
+    }
+  }
+}
