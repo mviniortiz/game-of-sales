@@ -178,25 +178,25 @@ export function PlanCheckoutForm({
                 <h3 className="text-[13px] font-semibold" style={{ color: "#0B1220" }}>Dados do pagamento</h3>
             </div>
 
-            <div className="space-y-3.5">
+            <form onSubmit={(e) => { e.preventDefault(); void handleSubmit(); }} className="space-y-3.5">
                 <div className="space-y-1.5">
                     <label className="text-xs font-medium" style={{ color: "#64748B" }}>Número do cartão</label>
                     <input value={cardNumber} onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
-                        placeholder="0000 0000 0000 0000" className={inputCls} style={inputStyle} maxLength={19} inputMode="numeric" />
+                        placeholder="0000 0000 0000 0000" className={inputCls} style={inputStyle} maxLength={19} inputMode="numeric" autoComplete="cc-number" />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
                         <label className="text-xs font-medium" style={{ color: "#64748B" }}>Validade</label>
                         <input value={cardExpiration} onChange={(e) => setCardExpiration(formatExpiration(e.target.value))}
-                            placeholder="MM/AA" className={inputCls} style={inputStyle} maxLength={5} inputMode="numeric" />
+                            placeholder="MM/AA" className={inputCls} style={inputStyle} maxLength={5} inputMode="numeric" autoComplete="cc-exp" />
                     </div>
                     <div className="space-y-1.5">
                         <label className="text-xs font-medium" style={{ color: "#64748B" }}>CVV</label>
                         <div className="relative">
                             <input type={showCvv ? "text" : "password"} value={cardCvv}
                                 onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                                placeholder="000" className={`${inputCls} pr-10`} style={inputStyle} maxLength={4} inputMode="numeric" />
+                                placeholder="000" className={`${inputCls} pr-10`} style={inputStyle} maxLength={4} inputMode="numeric" autoComplete="cc-csc" />
                             <button type="button" onClick={() => setShowCvv(!showCvv)}
                                 className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: "#94A3B8" }}>
                                 {showCvv ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
@@ -208,7 +208,7 @@ export function PlanCheckoutForm({
                 <div className="space-y-1.5">
                     <label className="text-xs font-medium" style={{ color: "#64748B" }}>Nome no cartão</label>
                     <input value={cardholderName} onChange={(e) => setCardholderName(e.target.value.toUpperCase())}
-                        placeholder="NOME COMO ESTÁ NO CARTÃO" className={inputCls} style={inputStyle} />
+                        placeholder="NOME COMO ESTÁ NO CARTÃO" className={inputCls} style={inputStyle} autoComplete="cc-name" />
                 </div>
 
                 <div className="space-y-1.5">
@@ -223,7 +223,7 @@ export function PlanCheckoutForm({
                     </div>
                 )}
 
-                <button type="button" onClick={handleSubmit} disabled={loading}
+                <button type="submit" disabled={loading}
                     className="w-full h-12 rounded-xl text-white font-bold text-[14px] flex items-center justify-center gap-2 disabled:opacity-60 transition-transform hover:-translate-y-px disabled:hover:translate-y-0"
                     style={{ background: "linear-gradient(135deg, #2563EB, #1D4ED8)", boxShadow: "0 4px 20px -6px rgba(37,99,235,0.5)" }}>
                     {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
@@ -233,7 +233,7 @@ export function PlanCheckoutForm({
                 <p className="text-[11px] text-center" style={{ color: "#94A3B8" }}>
                     Pagamento seguro via Mercado Pago. Cancele quando quiser.
                 </p>
-            </div>
+            </form>
         </div>
     );
 }
