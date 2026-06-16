@@ -103,12 +103,12 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                                         key={link.anchor}
                                         onClick={() => handleAnchor(link.anchor)}
                                         className="lp-focus relative px-4 py-2 rounded-lg text-sm transition-colors duration-150 group hover:text-black"
-                                        style={{ color: "var(--vyz-text-muted)", fontWeight: 500 }}
+                                        style={{ color: "var(--lp-ink-55)", fontWeight: 500 }}
                                     >
                                         <span className="relative z-10">{link.label}</span>
                                         <span
                                             className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-150"
-                                            style={{ background: "var(--vyz-border-strong)" }}
+                                            style={{ background: "var(--lp-line)" }}
                                         />
                                     </button>
                                 );
@@ -250,7 +250,7 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                         <button
                             onClick={onLoginClick}
                             className="lp-focus flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm transition-all duration-150 hover:bg-black/5 hover:text-black"
-                            style={{ color: "var(--vyz-text-muted)", fontWeight: 500 }}
+                            style={{ color: "var(--lp-ink-55)", fontWeight: 500 }}
                         >
                             <LogIn className="h-3.5 w-3.5" />
                             Entrar
@@ -271,14 +271,14 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                         <button
                             onClick={onLoginClick}
                             className="lp-focus text-xs px-3 py-2 rounded-lg"
-                            style={{ color: "var(--vyz-text-muted)", fontWeight: 500 }}
+                            style={{ color: "var(--lp-ink-55)", fontWeight: 500 }}
                         >
                             Entrar
                         </button>
                         <button
                             onClick={() => setMobileOpen((v) => !v)}
                             className="lp-focus w-9 h-9 flex items-center justify-center rounded-lg transition-colors"
-                            style={{ background: "var(--vyz-border-strong)", color: "var(--vyz-text-strong)" }}
+                            style={{ background: "var(--lp-line)", color: "var(--lp-ink)" }}
                             aria-label="Menu"
                             aria-expanded={mobileOpen}
                         >
@@ -293,7 +293,7 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                 className={`fixed inset-0 z-40 md:hidden transition-opacity duration-200 ${
                     mobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
                 }`}
-                style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
+                style={{ background: "rgba(13,20,33,0.5)", backdropFilter: "blur(4px)" }}
                 onClick={() => setMobileOpen(false)}
             />
             <div
@@ -301,22 +301,23 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                     mobileOpen ? "translate-x-0" : "translate-x-full"
                 }`}
                 style={{
-                    background: "rgba(10,13,16,0.97)",
-                    backdropFilter: "blur(16px)",
-                    borderLeft: "1px solid var(--vyz-border)",
-                    boxShadow: "-24px 0 80px rgba(0,0,0,0.4)",
+                    // LP.4: drawer em papel sólido + hairline de tinta (sem glass),
+                    // alinhado ao header — substitui o vidro escuro legado.
+                    background: "var(--lp-paper)",
+                    borderLeft: "1px solid var(--lp-line)",
+                    boxShadow: "-24px 0 80px rgba(13,20,33,0.14)",
                 }}
             >
                 <div
                     className="flex items-center justify-between px-5 h-16 border-b"
-                    style={{ borderColor: "var(--vyz-border)" }}
+                    style={{ borderColor: "var(--lp-line)" }}
                 >
                     <ThemeLogo className="h-7 w-auto" />
                     <button
                         onClick={() => setMobileOpen(false)}
                         aria-label="Fechar menu"
                         className="lp-focus w-8 h-8 flex items-center justify-center rounded-lg"
-                        style={{ background: "var(--vyz-border)", color: "var(--vyz-text-muted)" }}
+                        style={{ background: "var(--lp-line-soft)", color: "var(--lp-ink-55)" }}
                     >
                         <X className="h-4 w-4" />
                     </button>
@@ -330,7 +331,7 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                                     key={link.anchor}
                                     onClick={() => handleAnchor(link.anchor)}
                                     className="lp-focus flex items-center gap-3 w-full px-4 py-3.5 rounded-xl text-left transition-colors hover:bg-black/5 hover:text-black"
-                                    style={{ color: "var(--vyz-text-muted)", fontWeight: 500, fontSize: "0.9375rem" }}
+                                    style={{ color: "var(--lp-ink-70)", fontWeight: 500, fontSize: "0.9375rem" }}
                                 >
                                     <span
                                         className="w-1 h-1 rounded-full flex-shrink-0"
@@ -346,7 +347,7 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                                 <button
                                     onClick={() => setMobileSolutionsOpen((v) => !v)}
                                     className="flex items-center justify-between gap-3 w-full px-4 py-3.5 rounded-xl text-left transition-colors hover:bg-black/5 hover:text-black"
-                                    style={{ color: "var(--vyz-text-muted)", fontWeight: 500, fontSize: "0.9375rem" }}
+                                    style={{ color: "var(--lp-ink-70)", fontWeight: 500, fontSize: "0.9375rem" }}
                                 >
                                     <span className="flex items-center gap-3">
                                         <span
@@ -442,15 +443,15 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
 
                 <div
                     className="px-4 py-5 border-t flex flex-col gap-2"
-                    style={{ borderColor: "var(--vyz-border)" }}
+                    style={{ borderColor: "var(--lp-line)" }}
                 >
                     <button
                         onClick={() => { onLoginClick(); setMobileOpen(false); }}
                         className="lp-focus flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm transition-colors"
                         style={{
-                            color: "var(--vyz-text-muted)",
-                            border: "1px solid var(--vyz-border-strong)",
-                            background: "var(--vyz-surface-1)",
+                            color: "var(--lp-ink-70)",
+                            border: "1px solid var(--lp-line)",
+                            background: "var(--lp-white)",
                             fontWeight: 500,
                         }}
                     >
