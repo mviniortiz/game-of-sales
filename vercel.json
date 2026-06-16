@@ -28,75 +28,75 @@
             "source": "/",
             "has": [{ "type": "host", "value": "gamesales.com.br" }],
             "destination": "https://vyzon.com.br/",
-            "permanent": true
+            "statusCode": 301
         },
         {
             "source": "/:path*",
             "has": [{ "type": "host", "value": "gamesales.com.br" }],
             "destination": "https://vyzon.com.br/:path*",
-            "permanent": true
+            "statusCode": 301
         },
         {
             "source": "/",
             "has": [{ "type": "host", "value": "www.gamesales.com.br" }],
             "destination": "https://vyzon.com.br/",
-            "permanent": true
+            "statusCode": 301
         },
         {
             "source": "/:path*",
             "has": [{ "type": "host", "value": "www.gamesales.com.br" }],
             "destination": "https://vyzon.com.br/:path*",
-            "permanent": true
+            "statusCode": 301
         },
         {
             "source": "/crm-gamificado",
             "destination": "/",
-            "permanent": true
+            "statusCode": 301
         },
         {
             "source": "/crm-com-ranking-de-vendas",
             "destination": "/",
-            "permanent": true
+            "statusCode": 301
         },
         {
             "source": "/crm-para-times-comerciais",
             "destination": "/",
-            "permanent": true
+            "statusCode": 301
         },
         {
             "source": "/alternativas",
             "destination": "/",
-            "permanent": true
+            "statusCode": 301
         },
         {
             "source": "/alternativa-hubspot",
             "destination": "/",
-            "permanent": true
+            "statusCode": 301
         },
         {
             "source": "/alternativa-ploomes",
             "destination": "/",
-            "permanent": true
+            "statusCode": 301
         },
         {
             "source": "/alternativa-rd-station",
             "destination": "/",
-            "permanent": true
+            "statusCode": 301
         },
         {
             "source": "/alternativa-kommo",
             "destination": "/",
-            "permanent": true
+            "statusCode": 301
         },
         {
             "source": "/alternativa-pipedrive",
             "destination": "/",
-            "permanent": true
+            "statusCode": 301
         },
         {
             "source": "/alternativa-agendor",
             "destination": "/",
-            "permanent": true
+            "statusCode": 301
         }
     ],
     "rewrites": [
