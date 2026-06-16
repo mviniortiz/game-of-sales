@@ -8,13 +8,7 @@ const ORIGIN = "https://vyzon.com.br";
 // Qualquer rota fora desta lista (home, /landing, app interno, /auth, previews,
 // /r/:token) cai no canonical da home.
 const SELF_CANONICAL = new Set<string>([
-  "/alternativas",
-  "/alternativa-hubspot",
-  "/alternativa-ploomes",
-  "/alternativa-rd-station",
-  "/alternativa-kommo",
-  "/alternativa-pipedrive",
-  "/alternativa-agendor",
+  // /alternativa-* despublicadas 2026-06-16 (301 → home no vercel.json).
   "/para-infoprodutores",
   "/para-saas-b2b",
   // /crm-* despublicadas 2026-06-10 (301 → home no vercel.json).
@@ -28,7 +22,7 @@ const SELF_CANONICAL = new Set<string>([
  *
  * Por que existe: a SPA serve o index.html da home (canonical = "/") em todas
  * as rotas pelo rewrite do Vercel. Sem corrigir no client, o Googlebot (que
- * renderiza JS) vê as landings client-only — /alternativa-*, /para-* — com
+ * renderiza JS) vê as landings client-only — /para-* — com
  * canonical apontando para a home e pode tratá-las como duplicatas, deixando
  * de indexá-las. As /crm-* já são prerenderizadas (canonical correto no HTML),
  * mas reforçar aqui com o mesmo valor é inofensivo.

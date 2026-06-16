@@ -13,13 +13,6 @@ const ForInfoprodutores = lazy(() => import("./pages/personas/ForInfoprodutores"
 // const ForAgencias = lazy(() => import("./pages/personas/ForAgencias"));
 const ForSaasB2B = lazy(() => import("./pages/personas/ForSaasB2B"));
 const PublicReport = lazy(() => import("./pages/PublicReport"));
-const VsHubspot = lazy(() => import("./pages/alternativas/VsHubspot"));
-const VsPloomes = lazy(() => import("./pages/alternativas/VsPloomes"));
-const VsRDStation = lazy(() => import("./pages/alternativas/VsRDStation"));
-const VsKommo = lazy(() => import("./pages/alternativas/VsKommo"));
-const VsPipedrive = lazy(() => import("./pages/alternativas/VsPipedrive"));
-const VsAgendor = lazy(() => import("./pages/alternativas/VsAgendor"));
-const AlternativasHub = lazy(() => import("./pages/alternativas/AlternativasHub"));
 
 // SEO landings /crm-* DESPUBLICADAS (2026-06-10): posicionamento antigo
 // ("CRM gamificado/ranking"), conflita com o foco atual em agências/conversa.
@@ -71,62 +64,8 @@ const App = () => (
             </Suspense>
           }
         />
-        <Route
-          path="/alternativa-hubspot"
-          element={
-            <Suspense fallback={<LazyFallback />}>
-              <VsHubspot />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/alternativa-ploomes"
-          element={
-            <Suspense fallback={<LazyFallback />}>
-              <VsPloomes />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/alternativa-rd-station"
-          element={
-            <Suspense fallback={<LazyFallback />}>
-              <VsRDStation />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/alternativa-kommo"
-          element={
-            <Suspense fallback={<LazyFallback />}>
-              <VsKommo />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/alternativa-pipedrive"
-          element={
-            <Suspense fallback={<LazyFallback />}>
-              <VsPipedrive />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/alternativa-agendor"
-          element={
-            <Suspense fallback={<LazyFallback />}>
-              <VsAgendor />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/alternativas"
-          element={
-            <Suspense fallback={<LazyFallback />}>
-              <AlternativasHub />
-            </Suspense>
-          }
-        />
+        {/* /alternativa-* e /alternativas despublicadas 2026-06-16 — 301 → home no vercel.json.
+            O posicionamento atual (Central Comercial com EVA p/ agências) não se compara a CRMs. */}
         <Route
           path="/r/:token"
           element={

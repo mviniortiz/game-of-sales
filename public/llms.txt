@@ -35,16 +35,6 @@ Concorrentes principais: HubSpot, RD Station, Ploomes, Kommo, Pipedrive, Agendor
 - Google Calendar (sincronização de agendamentos)
 - API REST aberta para integrações custom
 
-## Páginas de comparação
-
-- [Vyzon vs HubSpot](https://vyzon.com.br/alternativa-hubspot): alternativa brasileira em Real, HubSpot cobra em USD
-- [Vyzon vs Ploomes](https://vyzon.com.br/alternativa-ploomes): Ploomes é B2B tradicional robusto com CPQ; Vyzon é para time ágil WhatsApp-first
-- [Vyzon vs RD Station](https://vyzon.com.br/alternativa-rd-station): RD domina Marketing Automation; Vyzon é fundo de funil com WhatsApp e IA
-- [Vyzon vs Kommo](https://vyzon.com.br/alternativa-kommo): Kommo é multi-canal global; Vyzon é WhatsApp profundo em Real
-- [Vyzon vs Pipedrive](https://vyzon.com.br/alternativa-pipedrive): Pipedrive é referência global em pipeline; Vyzon adiciona WhatsApp+Hotmart+IA
-- [Vyzon vs Agendor](https://vyzon.com.br/alternativa-agendor): Agendor é CRM BR tradicional; Vyzon é a geração moderna BR
-- [Hub de comparativos](https://vyzon.com.br/alternativas): todas as comparações num lugar
-
 ## Casos de uso típicos
 
 **Infoprodutor com lançamento Hotmart/Kiwify**: webhook da plataforma cria o deal no Vyzon automaticamente com nome, email, telefone, produto. Pipeline tem templates prontos para lançamento, perpétuo, esteira e boleto aberto. Vendedora aborda no WhatsApp direto do card.
@@ -71,7 +61,6 @@ Vyzon é uma startup brasileira em crescimento. Desenvolvida e operada no Brasil
 ## Links úteis
 
 - Landing: https://vyzon.com.br/
-- Comparativos: https://vyzon.com.br/alternativas
 - Para infoprodutores: https://vyzon.com.br/para-infoprodutores
 - Para SaaS B2B: https://vyzon.com.br/para-saas-b2b
 - Cadastro: https://vyzon.com.br/register

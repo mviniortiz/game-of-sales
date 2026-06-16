@@ -803,22 +803,7 @@ const ForSaasB2B = () => {
                     style={{ color: "var(--vyz-text-dim)" }}
                 >
                     * Valores em USD convertidos com câmbio R$ 5 e IOF 6,38%. Consulte sites
-                    oficiais pra valores atualizados.{" "}
-                    <a
-                        href="/alternativa-hubspot"
-                        className="underline transition"
-                        style={{ color: "var(--vyz-accent)" }}
-                    >
-                        Ver comparativo completo vs HubSpot
-                    </a>{" "}
-                    e{" "}
-                    <a
-                        href="/alternativa-pipedrive"
-                        className="underline transition"
-                        style={{ color: "var(--vyz-accent)" }}
-                    >
-                        vs Pipedrive
-                    </a>.
+                    oficiais pra valores atualizados.
                 </div>
             </section>
 

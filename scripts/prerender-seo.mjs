@@ -45,55 +45,6 @@ const CONFIGS = [];
 // MANTER SINCRONIZADO com a allowlist do src/components/CanonicalManager.tsx.
 const SIMPLE_ROUTES = [
     {
-        slug: "alternativas",
-        seo: {
-            title: "Alternativas Vyzon | HubSpot, Ploomes, RD Station, Kommo, Pipedrive, Agendor",
-            description: "Compare o Vyzon com HubSpot, Ploomes, RD Station, Kommo, Pipedrive e Agendor. Preço, features, WhatsApp, integrações e quando cada um faz mais sentido.",
-        },
-    },
-    {
-        slug: "alternativa-hubspot",
-        seo: {
-            title: "Alternativa ao HubSpot | Vyzon, CRM brasileiro com WhatsApp",
-            description: "Vyzon é a alternativa brasileira ao HubSpot pra times comerciais: preço em Real, WhatsApp nativo, integração Hotmart/Kiwify. Compare preço, features e quando cada um faz sentido.",
-        },
-    },
-    {
-        slug: "alternativa-ploomes",
-        seo: {
-            title: "Alternativa ao Ploomes | Vyzon, CRM com WhatsApp e Eva IA",
-            description: "Vyzon vs Ploomes: CRM brasileiro pra time ágil que vende no WhatsApp, com integração nativa Hotmart/Kiwify, ranking ao vivo e IA generativa. Compare preço, features e quando cada um faz sentido.",
-        },
-    },
-    {
-        slug: "alternativa-rd-station",
-        seo: {
-            title: "Alternativa ao RD Station | Vyzon, CRM com WhatsApp e Eva IA",
-            description: "Vyzon vs RD Station: CRM brasileiro pra fundo de funil com WhatsApp nativo, Hotmart/Kiwify, ranking ao vivo e IA generativa. Veja quando cada um faz mais sentido.",
-        },
-    },
-    {
-        slug: "alternativa-kommo",
-        seo: {
-            title: "Alternativa ao Kommo | Vyzon, CRM brasileiro com WhatsApp e Eva IA",
-            description: "Vyzon vs Kommo: CRM brasileiro com cobrança em Real, WhatsApp nativo, Hotmart/Kiwify e Eva IA generativa. Kommo é multi-canal global, Vyzon é WhatsApp-first e BR.",
-        },
-    },
-    {
-        slug: "alternativa-pipedrive",
-        seo: {
-            title: "Alternativa ao Pipedrive | Vyzon, CRM brasileiro com WhatsApp",
-            description: "Vyzon vs Pipedrive: CRM brasileiro com cobrança em Real, WhatsApp nativo, Hotmart/Kiwify e Eva IA. Veja quando cada um faz mais sentido.",
-        },
-    },
-    {
-        slug: "alternativa-agendor",
-        seo: {
-            title: "Alternativa ao Agendor | Vyzon, CRM com WhatsApp e Eva IA",
-            description: "Vyzon vs Agendor: dois CRMs brasileiros com propósitos diferentes. Vyzon é WhatsApp-first com IA generativa; Agendor é B2B tradicional com relatórios maduros.",
-        },
-    },
-    {
         slug: "para-infoprodutores",
         seo: {
             title: "Vyzon para Infoprodutores | CRM com Hotmart, Kiwify e Greenn nativo",

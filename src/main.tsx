@@ -6,13 +6,13 @@ import { initAnalytics } from "./lib/analytics";
 
 // Tema por contexto (2026-05-26). A homepage nova ("Central Comercial com EVA")
 // e o app logado são light-first (bg-white / --vyz-* claros em :root). As
-// páginas legadas do origin (SEO /crm-*, comparativos /alternativa*, personas
-// /para-*, relatório público /r/*) são dark-only (bg-[#06080a] / text-white).
+// páginas legadas do origin (SEO /crm-*, personas /para-*, relatório público
+// /r/*) são dark-only (bg-[#06080a] / text-white).
 // Decidimos o tema pelo pathname antes do React montar; isso também neutraliza
 // o "dark" legado no localStorage que deixava a home nova e o app ilegíveis.
 if (typeof window !== "undefined") {
   const path = window.location.pathname;
-  const LEGACY_DARK = ["/alternativa", "/para-", "/crm-", "/r/"];
+  const LEGACY_DARK = ["/para-", "/crm-", "/r/"];
   const isLegacyDark = LEGACY_DARK.some((p) => path.startsWith(p));
 
   if (isLegacyDark) {

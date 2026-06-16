@@ -62,6 +62,41 @@
             "source": "/crm-para-times-comerciais",
             "destination": "/",
             "permanent": true
+        },
+        {
+            "source": "/alternativas",
+            "destination": "/",
+            "permanent": true
+        },
+        {
+            "source": "/alternativa-hubspot",
+            "destination": "/",
+            "permanent": true
+        },
+        {
+            "source": "/alternativa-ploomes",
+            "destination": "/",
+            "permanent": true
+        },
+        {
+            "source": "/alternativa-rd-station",
+            "destination": "/",
+            "permanent": true
+        },
+        {
+            "source": "/alternativa-kommo",
+            "destination": "/",
+            "permanent": true
+        },
+        {
+            "source": "/alternativa-pipedrive",
+            "destination": "/",
+            "permanent": true
+        },
+        {
+            "source": "/alternativa-agendor",
+            "destination": "/",
+            "permanent": true
         }
     ],
     "rewrites": [
