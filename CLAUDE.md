@@ -199,7 +199,7 @@ consulta" ou "Integração via API/Webhook".
 ### Rotas públicas principais
 
 `/` (landing), `/auth`, `/onboarding?plan=starter|plus|pro`,
-`/para-infoprodutores`, `/para-saas-b2b`, `/alternativa-*`, `/alternativas`,
+`/para-infoprodutores`, `/para-saas-b2b`,
 `/changelog`, `/politica-privacidade`, `/termos-de-servico`. App autenticado
 em catch-all (`AppShell`): Inbox, Pipeline, Deal (`DealCommandCenter`), EVA
 (`/eva`), EVA/Agent Studio, Configurações, Performance, Metas.
