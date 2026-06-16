@@ -89,7 +89,8 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                     <button
                         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-                        className="flex items-center gap-2.5 flex-shrink-0"
+                        className="lp-focus rounded-lg flex items-center gap-2.5 flex-shrink-0"
+                        aria-label="Vyzon — voltar ao topo"
                     >
                         <ThemeLogo className="h-6 sm:h-8 w-auto" />
                     </button>
@@ -101,7 +102,7 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                                     <button
                                         key={link.anchor}
                                         onClick={() => handleAnchor(link.anchor)}
-                                        className="relative px-4 py-2 rounded-lg text-sm transition-colors duration-150 group hover:text-black"
+                                        className="lp-focus relative px-4 py-2 rounded-lg text-sm transition-colors duration-150 group hover:text-black"
                                         style={{ color: "var(--vyz-text-muted)", fontWeight: 500 }}
                                     >
                                         <span className="relative z-10">{link.label}</span>
@@ -248,7 +249,7 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                     <div className="hidden md:flex items-center gap-2">
                         <button
                             onClick={onLoginClick}
-                            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm transition-all duration-150 hover:bg-black/5 hover:text-black"
+                            className="lp-focus flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm transition-all duration-150 hover:bg-black/5 hover:text-black"
                             style={{ color: "var(--vyz-text-muted)", fontWeight: 500 }}
                         >
                             <LogIn className="h-3.5 w-3.5" />
@@ -269,16 +270,17 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                     <div className="flex md:hidden items-center gap-2">
                         <button
                             onClick={onLoginClick}
-                            className="text-xs px-3 py-2 rounded-lg"
+                            className="lp-focus text-xs px-3 py-2 rounded-lg"
                             style={{ color: "var(--vyz-text-muted)", fontWeight: 500 }}
                         >
                             Entrar
                         </button>
                         <button
                             onClick={() => setMobileOpen((v) => !v)}
-                            className="w-9 h-9 flex items-center justify-center rounded-lg transition-colors"
+                            className="lp-focus w-9 h-9 flex items-center justify-center rounded-lg transition-colors"
                             style={{ background: "var(--vyz-border-strong)", color: "var(--vyz-text-strong)" }}
                             aria-label="Menu"
+                            aria-expanded={mobileOpen}
                         >
                             {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
                         </button>
@@ -313,7 +315,7 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                     <button
                         onClick={() => setMobileOpen(false)}
                         aria-label="Fechar menu"
-                        className="w-8 h-8 flex items-center justify-center rounded-lg"
+                        className="lp-focus w-8 h-8 flex items-center justify-center rounded-lg"
                         style={{ background: "var(--vyz-border)", color: "var(--vyz-text-muted)" }}
                     >
                         <X className="h-4 w-4" />
@@ -327,7 +329,7 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                                 <button
                                     key={link.anchor}
                                     onClick={() => handleAnchor(link.anchor)}
-                                    className="flex items-center gap-3 w-full px-4 py-3.5 rounded-xl text-left transition-colors hover:bg-black/5 hover:text-black"
+                                    className="lp-focus flex items-center gap-3 w-full px-4 py-3.5 rounded-xl text-left transition-colors hover:bg-black/5 hover:text-black"
                                     style={{ color: "var(--vyz-text-muted)", fontWeight: 500, fontSize: "0.9375rem" }}
                                 >
                                     <span
@@ -444,7 +446,7 @@ export const LandingNav = ({ onLoginClick, onCTAClick }: LandingNavProps) => {
                 >
                     <button
                         onClick={() => { onLoginClick(); setMobileOpen(false); }}
-                        className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm transition-colors"
+                        className="lp-focus flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm transition-colors"
                         style={{
                             color: "var(--vyz-text-muted)",
                             border: "1px solid var(--vyz-border-strong)",
