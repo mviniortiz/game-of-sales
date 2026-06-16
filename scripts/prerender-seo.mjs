@@ -45,20 +45,6 @@ const CONFIGS = [];
 // MANTER SINCRONIZADO com a allowlist do src/components/CanonicalManager.tsx.
 const SIMPLE_ROUTES = [
     {
-        slug: "para-infoprodutores",
-        seo: {
-            title: "Vyzon para Infoprodutores | CRM com Hotmart, Kiwify e Greenn nativo",
-            description: "CRM feito pra infoprodutor: webhook Hotmart/Kiwify/Greenn, pipeline por esteira, recuperação de boleto no WhatsApp e ranking por produto. 14 dias grátis.",
-        },
-    },
-    {
-        slug: "para-saas-b2b",
-        seo: {
-            title: "Vyzon para SaaS B2B | CRM em Real com WhatsApp e Eva IA",
-            description: "CRM brasileiro pra time comercial de SaaS B2B: pipeline por conta, ranking ao vivo, Eva IA cobrando lead parado, WhatsApp nativo e cobrança em Real. Alternativa a HubSpot, Pipedrive e RD Station.",
-        },
-    },
-    {
         slug: "changelog",
         seo: {
             title: "Changelog · Vyzon",

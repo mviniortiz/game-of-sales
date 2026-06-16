@@ -97,6 +97,16 @@
             "source": "/alternativa-agendor",
             "destination": "/",
             "statusCode": 301
+        },
+        {
+            "source": "/para-infoprodutores",
+            "destination": "/",
+            "statusCode": 301
+        },
+        {
+            "source": "/para-saas-b2b",
+            "destination": "/",
+            "statusCode": 301
         }
     ],
     "rewrites": [

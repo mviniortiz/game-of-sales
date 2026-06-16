@@ -124,14 +124,4 @@ describe('Landing critical flows', () => {
         expect(onLogin).toHaveBeenCalled();
         expect(onRegister).toHaveBeenCalled();
     });
-
-    it('ForInfoprodutores renderiza hero + painel interativo', async () => {
-        const { default: ForInfoprodutores } = await import('@/pages/personas/ForInfoprodutores');
-        const { container } = render(
-            <MemoryRouter>
-                <ForInfoprodutores />
-            </MemoryRouter>
-        );
-        expect(container.firstChild).toBeTruthy();
-    });
 });

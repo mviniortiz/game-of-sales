@@ -8,20 +8,6 @@
     <priority>1.0</priority>
   </url>
 
-  <!-- Personas / segmentos -->
-  <url>
-    <loc>https://vyzon.com.br/para-infoprodutores</loc>
-    <lastmod>2026-04-23</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://vyzon.com.br/para-saas-b2b</loc>
-    <lastmod>2026-04-24</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
   <!-- Conteúdo / conta -->
   <url>
     <loc>https://vyzon.com.br/changelog</loc>

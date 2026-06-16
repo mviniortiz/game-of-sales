@@ -83,8 +83,9 @@ conversa** (ver `docs/product/vyzon_agents_for_agencies.md` e
 
 Segmentos adjacentes citados no ICP de vendas (imobiliárias, corretoras,
 energia solar, infoprodutos, SaaS B2B) existem como expansão, mas a **mensagem
-principal é agências**. Páginas de persona já existem: `/para-infoprodutores`,
-`/para-saas-b2b`.
+principal é agências**. As páginas de persona (`/para-infoprodutores`,
+`/para-saas-b2b`) foram DESPUBLICADAS (2026-06-16, 301 → home): foco único na
+home. Componentes preservados em src/pages/personas/ pra eventual republicação.
 
 ## Messaging Hierarchy
 
@@ -199,7 +200,6 @@ consulta" ou "Integração via API/Webhook".
 ### Rotas públicas principais
 
 `/` (landing), `/auth`, `/onboarding?plan=starter|plus|pro`,
-`/para-infoprodutores`, `/para-saas-b2b`,
 `/changelog`, `/politica-privacidade`, `/termos-de-servico`. App autenticado
 em catch-all (`AppShell`): Inbox, Pipeline, Deal (`DealCommandCenter`), EVA
 (`/eva`), EVA/Agent Studio, Configurações, Performance, Metas.

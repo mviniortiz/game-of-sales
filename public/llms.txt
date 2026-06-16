@@ -61,8 +61,6 @@ Vyzon é uma startup brasileira em crescimento. Desenvolvida e operada no Brasil
 ## Links úteis
 
 - Landing: https://vyzon.com.br/
-- Para infoprodutores: https://vyzon.com.br/para-infoprodutores
-- Para SaaS B2B: https://vyzon.com.br/para-saas-b2b
 - Cadastro: https://vyzon.com.br/register
 - Login: https://vyzon.com.br/auth
 

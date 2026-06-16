@@ -6,12 +6,9 @@ import { CanonicalManager } from "@/components/CanonicalManager";
 import LandingPage from "./pages/LandingPage";
 
 const AppShell = lazy(() => import("./AppShell"));
-const ForInfoprodutores = lazy(() => import("./pages/personas/ForInfoprodutores"));
-// ForAgencias: despublicada temporariamente (sem redirect), features multi-tenant
-// prometidas não estão implementadas. Reativar quando implementar
-// (tabela clients, role client_user, white-label por client).
-// const ForAgencias = lazy(() => import("./pages/personas/ForAgencias"));
-const ForSaasB2B = lazy(() => import("./pages/personas/ForSaasB2B"));
+// Personas /para-* DESPUBLICADAS: /para-infoprodutores + /para-saas-b2b removidas
+// (2026-06-16, foco único na home/agências); /para-agencias já estava off.
+// Todas 301 → home no vercel.json.
 const PublicReport = lazy(() => import("./pages/PublicReport"));
 
 // SEO landings /crm-* DESPUBLICADAS (2026-06-10): posicionamento antigo
@@ -46,24 +43,7 @@ const App = () => (
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/landing" element={<LandingPage />} />
-        <Route
-          path="/para-infoprodutores"
-          element={
-            <Suspense fallback={<LazyFallback />}>
-              <ForInfoprodutores />
-            </Suspense>
-          }
-        />
-        {/* /para-agencias despublicada (Opção C) até multi-tenant ser implementado.
-            Rota cai no AppShell (404 → LandingPage ou app). */}
-        <Route
-          path="/para-saas-b2b"
-          element={
-            <Suspense fallback={<LazyFallback />}>
-              <ForSaasB2B />
-            </Suspense>
-          }
-        />
+        {/* Personas /para-* despublicadas 2026-06-16 — 301 → home no vercel.json. */}
         {/* /alternativa-* e /alternativas despublicadas 2026-06-16 — 301 → home no vercel.json.
             O posicionamento atual (Central Comercial com EVA p/ agências) não se compara a CRMs. */}
         <Route

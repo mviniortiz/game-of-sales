@@ -12,7 +12,7 @@ import { initAnalytics } from "./lib/analytics";
 // o "dark" legado no localStorage que deixava a home nova e o app ilegíveis.
 if (typeof window !== "undefined") {
   const path = window.location.pathname;
-  const LEGACY_DARK = ["/para-", "/crm-", "/r/"];
+  const LEGACY_DARK = ["/crm-", "/r/"];
   const isLegacyDark = LEGACY_DARK.some((p) => path.startsWith(p));
 
   if (isLegacyDark) {
