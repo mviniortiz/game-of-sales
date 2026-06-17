@@ -9,7 +9,13 @@ interface HeroV2Props {
 
 export const HeroV2 = ({ onSecondaryClick }: HeroV2Props) => {
     return (
-        <section className="relative" style={{ backgroundColor: "var(--lp-paper)" }}>
+        <section className="relative overflow-hidden" style={{ backgroundColor: "var(--lp-paper)" }}>
+            {/* aura azul na quebra inferior do hero — separa do que vem abaixo */}
+            <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-x-0 bottom-0"
+                style={{ height: 260, background: "radial-gradient(58% 120% at 50% 100%, rgba(21,86,192,0.16), rgba(21,86,192,0.06) 38%, transparent 72%)" }}
+            />
             <div className="relative z-10 mx-auto max-w-4xl px-5 pb-28 pt-32 text-center sm:pb-36 sm:pt-40">
                 <h1
                     className="lp-display mx-auto max-w-4xl landing-fade-in-up-lg landing-delay-100"

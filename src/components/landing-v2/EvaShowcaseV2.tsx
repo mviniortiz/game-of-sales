@@ -24,17 +24,17 @@ export const EvaShowcaseV2 = ({ onStartDemo }: EvaShowcaseV2Props) => {
                             alt="EVA, a camada de inteligência do Vyzon"
                             loading="lazy"
                             className="absolute inset-0 h-full w-full object-cover"
-                            style={{ objectPosition: "center 16%", opacity: 0.95 }}
+                            style={{ objectPosition: "center 16%", opacity: 1, filter: "saturate(1.22) contrast(1.1)" }}
                         />
                         {/* gradiente só na base: a figura aparece em cima, texto legível embaixo */}
                         <div
                             className="absolute inset-0"
                             style={{
                                 background:
-                                    "linear-gradient(to bottom, rgba(248,247,243,0.06) 0%, transparent 34%, rgba(248,247,243,0.55) 64%, rgba(248,247,243,0.98) 100%)",
+                                    "linear-gradient(to bottom, transparent 0%, transparent 44%, rgba(248,247,243,0.5) 70%, rgba(248,247,243,0.98) 100%)",
                             }}
                         />
-                        <div className="relative z-10 flex min-h-[560px] flex-col items-center justify-end px-6 pb-16 pt-52 text-center sm:min-h-[700px]">
+                        <div className="relative z-10 flex min-h-[460px] flex-col items-center justify-end px-6 pb-14 pt-44 text-center sm:min-h-[700px] sm:pb-16 sm:pt-52">
                             <p className="lp-mono" style={{ color: "rgba(5,5,5,0.5)" }}>
                                 EVA em ação
                             </p>
