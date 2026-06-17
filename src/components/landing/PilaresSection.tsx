@@ -17,7 +17,7 @@ const SEGMENTOS = [
 
 const Chip = ({ label }: { label: string }) => (
     <span
-        className="inline-flex items-center gap-3 px-6 py-3 mr-3 text-[14px] sm:text-[15px] whitespace-nowrap"
+        className="lp-chip inline-flex items-center gap-3 px-6 py-3 mr-3 text-[14px] sm:text-[15px] whitespace-nowrap"
         style={{
             border: "1px solid var(--lp-line)",
             borderRadius: 8,
@@ -35,6 +35,14 @@ export const PilaresSection = () => {
     return (
         <section className="lp-paper relative py-20 sm:py-24 overflow-hidden">
             <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+                {/* Índice fantasma — equilibra o vão à direita (device editorial) */}
+                <span
+                    className="lp-index absolute -top-6 right-4 sm:right-6 lg:right-8 hidden md:block"
+                    style={{ fontSize: "clamp(8rem, 18vw, 13rem)" }}
+                    aria-hidden="true"
+                >
+                    05
+                </span>
                 {/* Estação do fio */}
                 <Rise>
                     <div className="lp-station mb-12 sm:mb-14">

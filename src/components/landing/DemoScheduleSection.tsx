@@ -261,6 +261,14 @@ export const DemoScheduleSection = ({
             className="lp-paper lp-paper--fine relative py-20 sm:py-24 px-4 sm:px-6 lg:px-8 overflow-hidden"
         >
             <div className="relative max-w-5xl mx-auto">
+                {/* Índice fantasma — equilibra o vão à direita (device editorial) */}
+                <span
+                    className="lp-index absolute -top-6 right-0 hidden md:block"
+                    style={{ fontSize: "clamp(8rem, 18vw, 13rem)" }}
+                    aria-hidden="true"
+                >
+                    07
+                </span>
                 {/* Estação do fio */}
                 <div className="lp-station mb-12 sm:mb-14 landing-fade-in-up">
                     <span className="lp-station-node" />
