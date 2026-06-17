@@ -1,7 +1,8 @@
-import { useState, useEffect, lazy } from "react";
+import { useState, useEffect, lazy, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { trackEvent, FUNNEL_EVENTS } from "@/lib/analytics";
 import { LazyOnVisible } from "@/components/LazyOnVisible";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { PilaresSection } from "@/components/landing/PilaresSection";
 import { AgentStudioSection } from "@/components/landing/AgentStudioSection";
@@ -42,6 +43,14 @@ const LandingFooter = lazy(() =>
 );
 
 const preloadOnboarding = () => import("@/pages/Onboarding");
+
+// Resiliência por seção: isola cada bloco da landing. Se uma seção quebra
+// (ex.: dependência de runtime falha), ela cai sozinha — `fallback={null}` —
+// sem substituir a página inteira pela tela de erro full-screen. O erro
+// continua sendo capturado no Sentry pelo ErrorBoundary.
+const Safe = ({ children }: { children: ReactNode }) => (
+  <ErrorBoundary fallback={null}>{children}</ErrorBoundary>
+);
 
 const LandingPage = () => {
     const navigate = useNavigate();
@@ -142,61 +151,69 @@ const LandingPage = () => {
             />
 
             {/* 2 · PROBLEMA */}
-            <PainPoints />
+            <Safe><PainPoints /></Safe>
 
             {/* 3 · PROVA VISUAL DE PRODUTO (mock CSS) — âncora "Como funciona" */}
             <div id="how-it-works">
-                <ProductShowcase />
+                <Safe><ProductShowcase /></Safe>
             </div>
 
             {/* 4 · COMO O VYZON RESOLVE */}
-            <AgentStudioSection onCTAClick={() => scrollToDemo("solucao")} />
+            <Safe><AgentStudioSection onCTAClick={() => scrollToDemo("solucao")} /></Safe>
 
             {/* 5 · EVA */}
             <LazyOnVisible minHeight="700px">
-                <EvaAISection onCTAClick={() => smoothScrollToId("pricing")} />
+                <Safe><EvaAISection onCTAClick={() => smoothScrollToId("pricing")} /></Safe>
             </LazyOnVisible>
 
             {/* 6 · PARA QUEM É */}
-            <PilaresSection />
+            <Safe><PilaresSection /></Safe>
 
             {/* 7 · CONFIANÇA (por que o Vyzon existe — sem prova social inventada) */}
-            <TrustNoteSection />
+            <Safe><TrustNoteSection /></Safe>
 
             {/* 8 · CTA / DEMO (alvo de todos os CTAs "Agendar") */}
             <LazyOnVisible minHeight="320px" id="agendar-demo">
-                <DemoScheduleSection />
+                <Safe>
+                    <DemoScheduleSection />
+                </Safe>
             </LazyOnVisible>
 
             {/* 9 · PRICING */}
             <LazyOnVisible minHeight="900px" id="pricing">
-                <PricingSection
-                    onPlanSelect={goToRegister}
-                    onScheduleDemo={scrollToDemo}
-                />
+                <Safe>
+                    <PricingSection
+                        onPlanSelect={goToRegister}
+                        onScheduleDemo={scrollToDemo}
+                    />
+                </Safe>
             </LazyOnVisible>
 
             {/* FAQ */}
             <LazyOnVisible minHeight="600px">
                 <div id="faq">
-                    <FAQSection />
+                    <Safe><FAQSection /></Safe>
                 </div>
             </LazyOnVisible>
 
             {/* CTA FINAL */}
             <LazyOnVisible minHeight="400px">
-                <FinalCTA
-                    onCTAClick={() => goToRegister("pro")}
-                    onScheduleDemoClick={() => scrollToDemo("final_cta")}
-                />
+                <Safe>
+                    <FinalCTA
+                        onCTAClick={() => goToRegister("pro")}
+                        onScheduleDemoClick={() => scrollToDemo("final_cta")}
+                    />
+                </Safe>
             </LazyOnVisible>
 
             <LazyOnVisible minHeight="300px">
-                <LandingFooter
-                    onNavClick={(id) => scrollToLazyAnchor(id)}
-                    onLoginClick={() => navigate("/auth")}
-                    onRegisterClick={() => goToRegister("plus")}
-                />
+                <Safe>
+                    <LandingFooter
+                        onNavClick={(id) => scrollToLazyAnchor(id)}
+                        onLoginClick={() => navigate("/auth")}
+                        onRegisterClick={() => goToRegister("plus")}
+                    />
+                </Safe>
             </LazyOnVisible>
         </div>
     );
