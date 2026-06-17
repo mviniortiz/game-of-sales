@@ -33,7 +33,7 @@ const Chip = ({ label }: { label: string }) => (
 
 export const PilaresSection = () => {
     return (
-        <section className="lp-paper relative py-24 sm:py-28 overflow-hidden">
+        <section className="lp-paper relative py-20 sm:py-24 overflow-hidden">
             <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Estação do fio */}
                 <Rise>

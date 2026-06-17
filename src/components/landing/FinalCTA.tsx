@@ -12,7 +12,7 @@ interface FinalCTAProps {
 export const FinalCTA = ({ onCTAClick, onScheduleDemoClick }: FinalCTAProps) => {
     void onCTAClick;
     return (
-        <section className="lp-paper lp-paper--fine relative py-28 sm:py-36 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        <section className="lp-paper lp-paper--fine relative py-24 sm:py-28 px-4 sm:px-6 lg:px-8 overflow-hidden">
             <div className="relative max-w-4xl mx-auto text-center">
                 {/* O fio chega ao último nó */}
                 <div className="flex flex-col items-center mb-10 landing-fade-in-up" aria-hidden="true">

@@ -6,7 +6,7 @@ import { Rise } from "./animation/Rise";
 
 export const TrustNoteSection = () => {
     return (
-        <section className="relative py-24 sm:py-28 px-4 sm:px-6 lg:px-8 overflow-hidden" style={{ background: "var(--lp-white)" }}>
+        <section className="relative py-20 sm:py-24 px-4 sm:px-6 lg:px-8 overflow-hidden" style={{ background: "var(--lp-white)" }}>
             <div className="relative max-w-5xl mx-auto">
                 {/* Estação do fio */}
                 <Rise>

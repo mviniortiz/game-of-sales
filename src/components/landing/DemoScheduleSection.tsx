@@ -258,7 +258,7 @@ export const DemoScheduleSection = ({
 
     return (
         <section
-            className="lp-paper lp-paper--fine relative py-24 sm:py-32 px-4 sm:px-6 lg:px-8 overflow-hidden"
+            className="lp-paper lp-paper--fine relative py-20 sm:py-24 px-4 sm:px-6 lg:px-8 overflow-hidden"
         >
             <div className="relative max-w-5xl mx-auto">
                 {/* Estação do fio */}

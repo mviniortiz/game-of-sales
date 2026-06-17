@@ -132,7 +132,7 @@ export const FAQSection = () => {
     const [open, setOpen] = useState<number | null>(0);
 
     return (
-        <section className="py-24 sm:py-28 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: "var(--lp-white)" }}>
+        <section className="py-20 sm:py-24 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: "var(--lp-white)" }}>
             <div className="mx-auto max-w-3xl">
                 {/* Estação do fio */}
                 <div className="lp-station mb-12 sm:mb-14 landing-fade-in-up">

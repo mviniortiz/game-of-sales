@@ -47,7 +47,7 @@ function Badge({ tone, children }: { tone: Tone; children: React.ReactNode }) {
 
 export const ProductShowcase = () => {
     return (
-        <section className="lp-paper relative py-24 sm:py-32 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        <section className="lp-paper relative py-20 sm:py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
             <div className="relative max-w-6xl mx-auto">
                 {/* Estação do fio */}
                 <div className="lp-station mb-12 sm:mb-16 landing-fade-in-up">
