@@ -6,7 +6,6 @@ import { CanonicalManager } from "@/components/CanonicalManager";
 import LandingPage from "./pages/LandingPage";
 
 const AppShell = lazy(() => import("./AppShell"));
-const LandingRedesign = lazy(() => import("./pages/LandingRedesign"));
 // Personas /para-* DESPUBLICADAS: /para-infoprodutores + /para-saas-b2b removidas
 // (2026-06-16, foco único na home/agências); /para-agencias já estava off.
 // Todas 301 → home no vercel.json.
@@ -44,14 +43,6 @@ const App = () => (
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/landing" element={<LandingPage />} />
-        <Route
-          path="/redesign"
-          element={
-            <Suspense fallback={<LazyFallback />}>
-              <LandingRedesign />
-            </Suspense>
-          }
-        />
         {/* Personas /para-* despublicadas 2026-06-16 — 301 → home no vercel.json. */}
         {/* /alternativa-* e /alternativas despublicadas 2026-06-16 — 301 → home no vercel.json.
             O posicionamento atual (Central Comercial com EVA p/ agências) não se compara a CRMs. */}
