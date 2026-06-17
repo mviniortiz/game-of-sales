@@ -43,7 +43,7 @@ const LandingV2 = () => {
             <HeroV2 onScheduleDemoClick={goToRegister} onSecondaryClick={() => setDemoOpen(true)} />
             <IntegrationsStripV2 />
             <ProofStripV2 />
-            <EvaShowcaseV2 onStartDemo={goToRegister} />
+            <EvaShowcaseV2 onStartDemo={() => setDemoOpen(true)} />
             <FeaturesV2 />
             <SpecialistAgentsV2 onCTAClick={goToRegister} />
             <div id="how-it-works">
