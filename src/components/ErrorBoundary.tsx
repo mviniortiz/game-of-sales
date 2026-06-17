@@ -5,6 +5,12 @@ import { AlertTriangle, RefreshCw } from "lucide-react";
 
 interface Props {
   children: ReactNode;
+  /**
+   * Fallback a renderizar quando a subárvore quebra. Se omitido, mostra a
+   * tela cheia padrão ("Algo deu errado"). Passe `null` para uma seção sumir
+   * silenciosamente sem derrubar o resto da página (resiliência por seção).
+   */
+  fallback?: ReactNode;
 }
 
 interface State {
@@ -58,6 +64,12 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
+      // Fallback explícito (inclusive `null`): a seção cai sozinha sem
+      // substituir a página inteira pela tela de erro full-screen.
+      if (this.props.fallback !== undefined) {
+        return this.props.fallback;
+      }
+
       const errorMessage = this.state.error?.message || "";
       const isDev = typeof import.meta !== "undefined" && import.meta.env?.DEV;
 

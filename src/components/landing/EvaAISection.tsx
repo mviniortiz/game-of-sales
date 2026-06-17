@@ -22,7 +22,7 @@ export function EvaAISection({ onCTAClick }: { onCTAClick?: () => void }) {
   return (
     <section
       id="eva"
-      className="py-24 sm:py-28 px-4 sm:px-6 lg:px-8 relative overflow-hidden"
+      className="py-20 sm:py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden"
       style={{ background: "var(--lp-white)" }}
     >
       <div className="max-w-6xl mx-auto relative z-10">

@@ -3369,6 +3369,19 @@ All colors MUST be HSL.
 }
 .lp-marquee:hover { animation-play-state: paused; }
 
+/* Chip de segmento: hover com intenção (borda vira tinta + leve elevação).
+   O marquee já pausa no hover, então o chip "para e levanta". */
+.lp-chip {
+  transition: border-color 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.lp-chip:hover {
+  border-color: var(--lp-ink) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px -10px rgba(13, 20, 33, 0.5);
+}
+
 /* ── Hero: a EVA lendo a conversa (loop 9s, time-based — sem IO) ── */
 @keyframes lp-read-msg {
   0% { opacity: 0; transform: translate3d(0, 10px, 0); }
@@ -3474,7 +3487,9 @@ All colors MUST be HSL.
   }
   .lp-read-scan { transform: scaleX(1); opacity: 0; }
   .lp-press,
-  .lp-press:hover {
+  .lp-press:hover,
+  .lp-chip,
+  .lp-chip:hover {
     transition: none;
     transform: none;
   }

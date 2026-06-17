@@ -23,7 +23,7 @@ export const PricingSection = ({ onPlanSelect, onScheduleDemo }: Props) => {
     const [isAnnual, setIsAnnual] = useState(true);
 
     return (
-        <section className="py-24 sm:py-32 px-4 sm:px-6 lg:px-8 relative overflow-hidden" style={{ background: "var(--lp-white)" }}>
+        <section className="py-20 sm:py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden" style={{ background: "var(--lp-white)" }}>
             <div className="max-w-5xl mx-auto relative z-10">
                 {/* Estação do fio */}
                 <div className="lp-station mb-12 sm:mb-14 landing-fade-in-up">

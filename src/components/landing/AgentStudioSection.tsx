@@ -41,7 +41,7 @@ interface AgentStudioSectionProps {
 export const AgentStudioSection = ({ onCTAClick }: AgentStudioSectionProps) => {
     return (
         <section className="lp-ink-band relative overflow-hidden">
-            <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 pb-24 sm:pb-28">
+            <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-20 sm:pb-24">
                 {/* Estação do fio (versão clara) */}
                 <Rise>
                     <div className="lp-station mb-12 sm:mb-16">
