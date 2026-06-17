@@ -97,11 +97,11 @@ vi.mock('@/components/ui/sheet', () => ({
 }));
 
 describe('Smoke Tests - Public Pages', () => {
-    it('Auth page renders without crashing', async () => {
-        const { default: Auth } = await import('@/pages/Auth');
+    it('Login (v2) page renders without crashing', async () => {
+        const { default: LoginV2 } = await import('@/pages/LoginV2');
         const { container } = render(
             <MemoryRouter>
-                <Auth />
+                <LoginV2 />
             </MemoryRouter>
         );
         expect(container.firstChild).toBeTruthy();
@@ -137,11 +137,11 @@ describe('Smoke Tests - Public Pages', () => {
         expect(container.firstChild).toBeTruthy();
     });
 
-    it('LandingPage renders without crashing', async () => {
-        const { default: LandingPage } = await import('@/pages/LandingPage');
+    it('Landing (v2) renders without crashing', async () => {
+        const { default: LandingV2 } = await import('@/pages/LandingV2');
         const { container } = render(
             <MemoryRouter>
-                <LandingPage />
+                <LandingV2 />
             </MemoryRouter>
         );
         expect(container.firstChild).toBeTruthy();

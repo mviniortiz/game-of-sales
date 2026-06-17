@@ -3,7 +3,6 @@ import { BrandedLoader } from "@/components/ui/BrandedLoader";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { CanonicalManager } from "@/components/CanonicalManager";
-import LandingPage from "./pages/LandingPage";
 
 const AppShell = lazy(() => import("./AppShell"));
 // Personas /para-* DESPUBLICADAS: /para-infoprodutores + /para-saas-b2b removidas
@@ -19,6 +18,10 @@ const PublicReport = lazy(() => import("./pages/PublicReport"));
 // const CrmGamificado = lazy(() => import("./pages/seo/CrmGamificado"));
 // const CrmComRanking = lazy(() => import("./pages/seo/CrmComRanking"));
 // const CrmParaTimes = lazy(() => import("./pages/seo/CrmParaTimes"));
+
+// LP.6 — Landing v2 é a landing de PRODUÇÃO (cutover 2026-06-17): / e /v2.
+// O login v2 virou a página de /auth (dentro do AppShell, com AuthProvider).
+const LandingV2 = lazy(() => import("./pages/LandingV2"));
 
 // Página temporária de calibração da EvaEntity (remover depois de plugar à lógica).
 const EvaEntityTest = lazy(() => import("./pages/EvaEntityTest"));
@@ -41,8 +44,9 @@ const App = () => (
     <BrowserRouter>
       <CanonicalManager />
       <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/landing" element={<LandingPage />} />
+        <Route path="/" element={<Suspense fallback={<LazyFallback />}><LandingV2 /></Suspense>} />
+        <Route path="/landing" element={<Suspense fallback={<LazyFallback />}><LandingV2 /></Suspense>} />
+        <Route path="/v2" element={<Suspense fallback={<LazyFallback />}><LandingV2 /></Suspense>} />
         {/* Personas /para-* despublicadas 2026-06-16 — 301 → home no vercel.json. */}
         {/* /alternativa-* e /alternativas despublicadas 2026-06-16 — 301 → home no vercel.json.
             O posicionamento atual (Central Comercial com EVA p/ agências) não se compara a CRMs. */}

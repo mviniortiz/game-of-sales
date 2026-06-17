@@ -324,6 +324,7 @@ export function AppSidebar() {
         className={itemBase}
         activeClassName=""
         aria-label={item.title}
+        data-demo-nav={item.url}
       >
         {/* Pill ativo — só nav principal */}
         {!isFooter && isActive && (

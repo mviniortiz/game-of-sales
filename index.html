@@ -97,10 +97,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- LP.6 landing v2 (/v2): tipografia editorial — Newsreader (display serif) +
+       Geist (sans). Escopadas em .lp-v2; a / de produção segue com Sora/Satoshi. -->
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Newsreader:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet" />
   <link rel="preload" as="font" type="font/woff2" href="/fonts/inter/inter-variable-latin.woff2" crossorigin />
   <link rel="preload" as="font" type="font/woff2" href="/fonts/satoshi/satoshi-700.woff2" crossorigin />
   <link rel="preload" as="font" type="font/woff2" href="/fonts/satoshi/satoshi-900.woff2" crossorigin />
   <link rel="preload" as="font" type="font/woff2" href="/fonts/sentient/sentient-italic-500.woff2" crossorigin />
+  <link rel="preload" as="font" type="font/woff2" href="/fonts/sentient/sentient-400.woff2" crossorigin />
   <style>
     @font-face {
       font-family: 'Inter';
@@ -133,6 +137,23 @@
     }
     /* LP.4 — Sentient itálica (Fontshare/ITF, par editorial da Satoshi).
        Voz "humana" da landing: acentos de headline, dores, carta. */
+    /* LP.6 (2026-06-17) — Sentient roman (reta): display serif leve do hero,
+       direção "etérea" inspirada na handhold.io. Mantém a itálica como voz
+       de ênfase; a reta entra em headlines grandes via .lp-display. */
+    @font-face {
+      font-family: 'Sentient';
+      src: url('/fonts/sentient/sentient-400.woff2') format('woff2');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Sentient';
+      src: url('/fonts/sentient/sentient-500.woff2') format('woff2');
+      font-weight: 500;
+      font-style: normal;
+      font-display: swap;
+    }
     @font-face {
       font-family: 'Sentient';
       src: url('/fonts/sentient/sentient-italic-400.woff2') format('woff2');
@@ -345,6 +366,7 @@
             <li><strong>Priorização:</strong> mostra qual conversa resolver primeiro, do lead mais quente ao follow-up atrasado.</li>
             <li><strong>Conversa vira oportunidade:</strong> em um clique a conversa entra no pipeline, sem planilha paralela.</li>
             <li><strong>Pipeline visual:</strong> enxergue onde cada oportunidade travou, com a conversa e a leitura da EVA junto.</li>
+            <li><strong>Agentes especialistas:</strong> crie versões da EVA focadas em cada etapa comercial (qualificação, follow-up, propostas) com o playbook da agência, sempre com aprovação humana.</li>
             <li><strong>Agenda e follow-up:</strong> os próximos passos aparecem na hora certa.</li>
           </ul>
         </section>
@@ -371,7 +393,7 @@
           <p style="color:#444;margin:0 0 16px;">Centralize dados, reduza tarefas manuais e conecte sua rotina comercial às plataformas que já fazem parte da operação.</p>
           <h3 style="font-size:16px;margin:16px 0 6px;color:#0a7a45;">Disponíveis hoje</h3>
           <p style="color:#222;margin:0;">
-            Hotmart, Kiwify, Greenn, Cakto, Braip, Monetizze, Eduzz, Asaas, Mercado Pago, RD Station, Zapier, Google Sheets, Google Calendar, Notazz.
+            Hotmart, Kiwify, Greenn, Cakto, Braip, Monetizze, Eduzz, Asaas, Mercado Pago, RD Station, Zapier, Notazz.
           </p>
           <h3 style="font-size:16px;margin:16px 0 6px;color:#666;">No roadmap (sob consulta)</h3>
           <p style="color:#222;margin:0;">Stripe, Pagar.me, Celetus.</p>

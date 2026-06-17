@@ -8,9 +8,17 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
+// Quando o app roda DENTRO de um iframe (demo embutida da landing /v2), usamos
+// uma storageKey isolada pra a sessão demo NÃO vazar pra a sessão real da aba
+// que embute. Mesma origem compartilha localStorage; a key separada isola.
+const isEmbedded = (() => {
+  try { return window.self !== window.top; } catch { return true; }
+})();
+
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     storage: localStorage,
+    storageKey: isEmbedded ? "sb-vyzon-embed-auth" : undefined,
     persistSession: true,
     autoRefreshToken: true,
   }

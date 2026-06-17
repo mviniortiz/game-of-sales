@@ -12,8 +12,12 @@ import { AdminRoute } from "@/components/AdminRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { BrandedLoader } from "@/components/ui/BrandedLoader";
 import NotFound from "./pages/NotFound";
+import { EmbedController } from "@/components/embed/EmbedController";
 
-const Auth = lazy(() => import("./pages/Auth"));
+// Detecta se o app está rodando dentro de um iframe (demo embutida da landing).
+const isEmbedded = (() => { try { return window.self !== window.top; } catch { return true; } })();
+
+const LoginV2 = lazy(() => import("./pages/LoginV2"));
 const Register = lazy(() => import("./pages/Register"));
 const RecuperarSenha = lazy(() => import("./pages/RecuperarSenha"));
 const RedefinirSenha = lazy(() => import("./pages/RedefinirSenha"));
@@ -54,6 +58,7 @@ const TermosServico = lazy(() => import("./pages/TermosServico"));
 const LogoPreview = lazy(() => import("./pages/LogoPreview"));
 const ScenePreview = lazy(() => import("./pages/ScenePreview"));
 const Changelog = lazy(() => import("./pages/Changelog"));
+const EmbedDemo = lazy(() => import("./pages/EmbedDemo"));
 
 const CheckoutRedirect = () => {
   const [params] = useSearchParams();
@@ -90,7 +95,7 @@ const AppShell = () => (
           <Analytics />
           <Suspense fallback={<LazyFallback />}>
             <Routes>
-              <Route path="/auth" element={<Auth />} />
+              <Route path="/auth" element={<LoginV2 />} />
               <Route path="/register" element={<Register />} />
               <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/checkout" element={<CheckoutRedirect />} />
@@ -101,6 +106,7 @@ const AppShell = () => (
               <Route path="/politica-privacidade" element={<PoliticaPrivacidade />} />
               <Route path="/termos-de-servico" element={<TermosServico />} />
               <Route path="/changelog" element={<Changelog />} />
+              <Route path="/embed-demo" element={<EmbedDemo />} />
 
               {/* F4A 2026-05-19: /inicio renderiza Inicio (Central da Operação).
                   /dashboard antigo continua acessível como fallback (não removido em F4A,
@@ -412,6 +418,7 @@ const AppShell = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
+          {isEmbedded && <EmbedController />}
         </TooltipProvider>
       </TenantProvider>
     </AuthProvider>

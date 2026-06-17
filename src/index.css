@@ -3197,7 +3197,13 @@ All colors MUST be HSL.
      · Sentient it. = voz humana (a dor, acentos, carta do fundador)
      · monospace    = telemetria da EVA (eyebrows, labels, números)
    Superfície: papel quente + grade técnica fina + hairlines de tinta.
-   Sem glow/blob/blur. Animações transform/opacity em loop CSS (sem IO).
+   Animações transform/opacity em loop CSS (sem IO).
+
+   LP.6 (2026-06-17): exceção CONSCIENTE à regra "sem glow/blob/blur" — o hero
+   ganha UMA onda de marca (verde→azul) difusa e com grão (.lp-hero-wave),
+   inspirada na handhold.io. É discreta (baixa opacidade) e texturizada de
+   propósito pra ler como "assinatura editorial", não como blob de IA genérico.
+   Restrita ao hero; o resto da landing segue sem glow. Decisão do Markus.
    ════════════════════════════════════════════════════════════════════════ */
 
 :root {
@@ -3217,6 +3223,37 @@ All colors MUST be HSL.
   --lp-serif: 'Sentient', 'Georgia', serif;
   --lp-mono: 'Cascadia Mono', 'SFMono-Regular', ui-monospace, 'Consolas', monospace;
   --lp-radius: 10px;
+  /* LP.6 (v2) — tipografia editorial, usada apenas via .lp-v2 (não afeta a /) */
+  --font-display: 'Newsreader', 'Georgia', serif;
+  --font-geist: 'Geist', 'Inter', system-ui, sans-serif;
+}
+
+/* ── LP.6 (v2) Tipografia editorial escopada na landing v2: Newsreader
+   (display serif) + Geist (sans). A / de produção segue intacta. ── */
+.lp-v2 {
+  font-family: var(--font-geist);
+}
+.lp-v2 .lp-display {
+  font-family: var(--font-display);
+  font-style: normal;
+  font-weight: 400;
+}
+.lp-v2 .lp-serif {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+.lp-v2 .lp-mono {
+  font-family: var(--font-geist);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.lp-v2 .vz-btn,
+.lp-v2 .vz-navlink {
+  font-family: var(--font-geist);
 }
 
 /* ── Superfícies ── */
@@ -3256,6 +3293,15 @@ All colors MUST be HSL.
   font-style: italic;
   font-weight: 500;
   letter-spacing: -0.01em;
+}
+/* LP.6 — display serif RETA (roman): headline editorial leve e grande do hero,
+   no espírito da handhold. Voz da marca em tom "humano/refinado", não bold. */
+.lp-display {
+  font-family: var(--lp-serif);
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.04;
 }
 
 /* ── Estação do fio (header de seção): nó + régua + label mono ── */
@@ -3429,6 +3475,517 @@ All colors MUST be HSL.
   animation: lp-underline-grow 0.7s 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* ── LP.6 Hero: onda de marca (verde→azul) difusa + grão ───────────────
+   Exceção CONSCIENTE à regra "sem glow" (ver cabeçalho da seção LP).
+   Decorativa (aria-hidden). O fade-in NÃO bloqueia LCP (não é texto/herói).
+   A arte borra (.wave-art); o grão fica nítido por cima em soft-light. */
+.lp-hero-wave {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  width: 144vw;
+  max-width: 2100px;
+  height: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  animation: lp-wave-in 1.6s 0.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  /* Fade FIXO nas laterais: as pontas da fita desvanecem nas bordas da tela,
+     independente do fluxo (o gradiente repete, então não revela emenda). */
+  -webkit-mask: linear-gradient(to right, transparent, #000 13%, #000 87%, transparent);
+          mask: linear-gradient(to right, transparent, #000 13%, #000 87%, transparent);
+}
+.lp-hero-wave svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.lp-hero-wave .wave-art { filter: blur(4px); }
+/* Fluxo CONTÍNUO: cada fita desliza 1 período (800u) em loop linear => sem
+   emenda. Velocidades distintas dão profundidade. */
+.lp-hero-wave .wave-line { will-change: transform; }
+.lp-hero-wave .wave-line--a { animation: lp-wave-flow 22s linear infinite; }
+.lp-hero-wave .wave-line--b { animation: lp-wave-flow 31s linear infinite; }
+
+/* Grão nítido por cima, em faixa (fade vertical), soft-light: textura editorial */
+.lp-hero-wave::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: soft-light;
+  opacity: 0.28;
+  -webkit-mask: linear-gradient(to bottom, transparent, #000 34%, #000 66%, transparent);
+          mask: linear-gradient(to bottom, transparent, #000 34%, #000 66%, transparent);
+}
+
+@keyframes lp-wave-in { to { opacity: 0.9; } }
+/* 1 período = 800u. translate -800px (= 800 user units do viewBox) reinicia
+   idêntico => loop sem salto. */
+@keyframes lp-wave-flow {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-800px, 0, 0); }
+}
+
+/* ── LP.6 Mesh gradient (estilo handhold): campo de cor fluido animado, fundo
+   dos painéis de produto/feature. Morpha continuamente (alternate). Variantes
+   por cor da marca. Mesma exceção consciente ao "sem glow" do hero. ── */
+.lp-mesh {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background-color: #eaf0f3;
+}
+.lp-mesh::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  z-index: 0;
+  background:
+    radial-gradient(38% 46% at 28% 32%, var(--mesh-1), transparent 62%),
+    radial-gradient(42% 52% at 72% 42%, var(--mesh-2), transparent 60%),
+    radial-gradient(46% 54% at 50% 80%, var(--mesh-3), transparent 64%);
+  filter: blur(26px) saturate(1.05);
+  animation: lp-mesh-move 24s ease-in-out infinite alternate;
+  will-change: transform;
+}
+.lp-mesh::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: soft-light;
+  opacity: 0.2;
+  pointer-events: none;
+}
+.lp-mesh > * { position: relative; z-index: 2; }
+.lp-mesh--mix   { --mesh-1: #00E37A; --mesh-2: #1556C0; --mesh-3: #38BDF8; }
+.lp-mesh--green { --mesh-1: #00E37A; --mesh-2: #16A36A; --mesh-3: #5BE3A8; }
+.lp-mesh--blue  { --mesh-1: #1556C0; --mesh-2: #1E78D4; --mesh-3: #6AA8F0; }
+.lp-mesh--cyan  { --mesh-1: #38BDF8; --mesh-2: #1556C0; --mesh-3: #7DD3FC; }
+.lp-mesh--lilac { --mesh-1: #1556C0; --mesh-2: #6d28d9; --mesh-3: #93C5FD; }
+/* Iluminação sutil (spec v2): mesh mais discreto, off-white por baixo. */
+.lp-mesh--soft { background-color: #f3f5f7; }
+.lp-mesh--soft::before { opacity: 0.62; filter: blur(30px) saturate(1.08); }
+.lp-mesh--soft::after { opacity: 0.28; }
+
+/* grain por cima da imagem de mesh dos tiles (LP.9) */
+.vz-tile-grain {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  mix-blend-mode: soft-light;
+  opacity: 0.42;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@keyframes lp-mesh-move {
+  0%   { transform: translate3d(0, 0, 0) scale(1.05) rotate(0deg); }
+  50%  { transform: translate3d(-5%, 3%, 0) scale(1.2) rotate(6deg); }
+  100% { transform: translate3d(4%, -2%, 0) scale(1.12) rotate(-5deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp-mesh::before { animation: none !important; }
+}
+
+/* ── LP.6 (v2) Microinterações restrained (tiles vivos, sem cara de template).
+   Cada variante drift com duração/fase/direção diferente => não sincroniza.
+   Hover: tile lift 2px + sombra sutil. Card interno: float lento ±2px. ── */
+.lp-mesh--blue::before  { animation-duration: 18s; animation-delay: -3s; }
+.lp-mesh--cyan::before  { animation-duration: 22s; animation-delay: -8s; }
+.lp-mesh--lilac::before { animation-duration: 20s; animation-delay: -5s; }
+.lp-mesh--green::before { animation-duration: 24s; animation-delay: -12s; animation-direction: alternate-reverse; }
+.lp-mesh--mix::before   { animation-duration: 21s; animation-delay: -6s; }
+
+.lp-mesh {
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+.lp-mesh:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 22px 50px -32px rgba(13, 20, 33, 0.22);
+}
+.vz-tilecard {
+  position: relative;
+  z-index: 2;
+  animation: vz-card-float 7s ease-in-out infinite;
+  will-change: transform;
+}
+@keyframes vz-card-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2.5px); }
+}
+
+/* FAQ: abertura suave do conteúdo (o + já gira via .vz-faq-plus) */
+.vz-faq details[open] > p {
+  animation: vz-faq-open 0.24s ease;
+}
+@keyframes vz-faq-open {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Scroll reveal restrained — fade + 10px up, uma vez por elemento */
+.vz-reveal {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.vz-reveal.vz-reveal--in {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-mesh,
+  .vz-tilecard { transition: none; animation: none !important; }
+  .vz-faq details[open] > p { animation: none; }
+  .vz-reveal { opacity: 1; transform: none; transition: none; }
+}
+
+/* ── LP.6 (v2) Micro-demos dos tiles de feature — loops suaves ~9s, sem
+   typing/cursor/spinner. Mostram a EVA "operando" dentro de cada card. ── */
+/* Demo 1 — Assistente: sugestão entra, botão "Usar sugestão" ganha ênfase */
+.vzd1-sug { animation: vzd1-sug 9s ease-in-out infinite; }
+.vzd1-btn { animation: vzd1-btn 9s ease-in-out infinite; transform-origin: center; }
+@keyframes vzd1-sug {
+  0%, 22% { opacity: 0; transform: translateY(8px); }
+  34%, 90% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(8px); }
+}
+@keyframes vzd1-btn {
+  0%, 50% { transform: scale(1); box-shadow: 0 0 0 0 rgba(21, 86, 192, 0); }
+  60% { transform: scale(1.05); box-shadow: 0 8px 20px -8px rgba(21, 86, 192, 0.55); }
+  74%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(21, 86, 192, 0); }
+}
+
+/* Demo 2 — Qualificação: foco alterna entre conversas + resumo troca */
+.vzd2-r1 { animation: vzd2-r1 9s ease-in-out infinite; }
+.vzd2-r2 { animation: vzd2-r2 9s ease-in-out infinite; }
+.vzd2-s1 { animation: vzd2-r1 9s ease-in-out infinite; }
+.vzd2-s2 { animation: vzd2-r2-op 9s ease-in-out infinite; }
+@keyframes vzd2-r1 {
+  0%, 4% { background: rgba(21, 86, 192, 0.08); box-shadow: inset 2px 0 0 0 var(--lp-blue); }
+  46%, 100% { background: transparent; box-shadow: inset 2px 0 0 0 transparent; }
+}
+@keyframes vzd2-r2 {
+  0%, 50% { background: transparent; box-shadow: inset 2px 0 0 0 transparent; }
+  56%, 94% { background: rgba(21, 86, 192, 0.08); box-shadow: inset 2px 0 0 0 var(--lp-blue); }
+  100% { background: transparent; box-shadow: inset 2px 0 0 0 transparent; }
+}
+.vzd2-s1 { animation: vzd2-s1op 9s ease-in-out infinite; }
+@keyframes vzd2-s1op { 0%, 4% { opacity: 1; } 44%, 100% { opacity: 0; } }
+@keyframes vzd2-r2-op { 0%, 50% { opacity: 0; } 56%, 94% { opacity: 1; } 100% { opacity: 0; } }
+
+/* Demo 3 — Playbook: Diagnóstico ativo, depois Proposta indicado */
+.vzd3-a .vzd3-dot { animation: vzd3-dotA 9s ease-in-out infinite; }
+.vzd3-a .vzd3-txt { animation: vzd3-txtA 9s ease-in-out infinite; }
+.vzd3-b .vzd3-dot { animation: vzd3-dotB 9s ease-in-out infinite; }
+.vzd3-b .vzd3-txt { animation: vzd3-txtB 9s ease-in-out infinite; }
+@keyframes vzd3-dotA { 0%, 6% { background: var(--lp-blue); } 50%, 100% { background: var(--lp-line); } }
+@keyframes vzd3-txtA { 0%, 6% { color: var(--lp-ink); font-weight: 600; } 50%, 100% { color: var(--lp-ink-55); font-weight: 400; } }
+@keyframes vzd3-dotB { 0%, 52% { background: var(--lp-line); } 58%, 94% { background: var(--lp-blue); } 100% { background: var(--lp-line); } }
+@keyframes vzd3-txtB { 0%, 52% { color: var(--lp-ink-55); font-weight: 400; } 58%, 94% { color: var(--lp-ink); font-weight: 600; } 100% { color: var(--lp-ink-55); font-weight: 400; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .vzd1-sug, .vzd1-btn,
+  .vzd2-r1, .vzd2-r2, .vzd2-s1, .vzd2-s2,
+  .vzd3-a .vzd3-dot, .vzd3-a .vzd3-txt, .vzd3-b .vzd3-dot, .vzd3-b .vzd3-txt {
+    animation: none !important;
+  }
+  .vzd1-sug { opacity: 1; transform: none; }
+  .vzd2-s2 { opacity: 0; }
+}
+
+/* ── LP.6 (v2) Sistema de botões pill — premium/editorial (estilo handhold).
+   Primário PRETO (não azul); azul Vyzon fica em título/foco/detalhes. ── */
+.vz-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 44px;
+  padding: 0 22px;
+  border-radius: 999px;
+  font-family: var(--lp-sans, 'Sora', 'Inter', sans-serif);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.12s ease;
+}
+.vz-btn--sm { height: 34px; padding: 0 16px; font-size: 13px; }
+.vz-btn:active { transform: scale(0.98); }
+.vz-btn:focus-visible { outline: 2px solid var(--lp-blue); outline-offset: 2px; }
+.vz-btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+
+/* Agent Builder modal — micro-interações de abrir/fechar e transição de passo */
+.vz-modal-overlay { animation: vzOverlayIn 0.2s ease both; }
+.vz-modal-overlay[data-closing="true"] { animation: vzOverlayOut 0.18s ease both; }
+.vz-modal-panel { animation: vzModalIn 0.34s cubic-bezier(0.16, 0.84, 0.24, 1) both; transform-origin: center; }
+.vz-modal-panel[data-closing="true"] { animation: vzModalOut 0.18s ease both; }
+.vz-modal-step { animation: vzStepIn 0.28s ease both; }
+@keyframes vzOverlayIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes vzOverlayOut { from { opacity: 1; } to { opacity: 0; } }
+@keyframes vzModalIn { from { opacity: 0; transform: translateY(12px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes vzModalOut { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(6px) scale(0.985); } }
+@keyframes vzStepIn { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+    .vz-modal-overlay, .vz-modal-overlay[data-closing="true"],
+    .vz-modal-panel, .vz-modal-panel[data-closing="true"],
+    .vz-modal-step { animation: none !important; }
+}
+
+/* aparecimento sequencial calmo de elementos do canvas da demo */
+.vz-rise { animation: vzRise 0.42s ease both; }
+@keyframes vzRise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .vz-rise { animation: none !important; } }
+
+/* ── EVA Orb (demo por voz, Fase 1) — classe vz-eorb p/ não colidir com a
+   .vz-orb decorativa legada da landing de produção ─────────────────────── */
+.vz-eorb { position: relative; display: grid; place-items: center; }
+.vz-eorb__halo {
+    position: absolute; inset: -14%; border-radius: 50%;
+    background: radial-gradient(circle, rgba(21, 86, 192, 0.30), rgba(13, 211, 122, 0.10) 45%, transparent 70%);
+    filter: blur(10px); animation: vzOrbHalo 4.2s ease-in-out infinite;
+}
+.vz-eorb__core {
+    position: relative; width: 100%; height: 100%; border-radius: 50%; overflow: hidden;
+    box-shadow: inset 0 2px 18px rgba(255, 255, 255, 0.35), inset 0 -8px 24px rgba(13, 20, 33, 0.25), 0 26px 60px -24px rgba(21, 86, 192, 0.55);
+    animation: vzOrbBreathe 5.5s ease-in-out infinite;
+}
+.vz-eorb__mesh { width: 100%; height: 100%; }
+.vz-eorb__sheen {
+    position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(circle at 34% 26%, rgba(255, 255, 255, 0.55), transparent 46%);
+    mix-blend-mode: screen;
+}
+.vz-eorb__voice {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: 44%; height: 26%; filter: drop-shadow(0 1px 2px rgba(13, 20, 33, 0.35));
+}
+.vz-eorb__bar { fill: rgba(255, 255, 255, 0.94); transform-box: fill-box; transform-origin: center; }
+
+@keyframes vzOrbHalo { 0%, 100% { opacity: 0.5; transform: scale(1); } 50% { opacity: 0.85; transform: scale(1.05); } }
+@keyframes vzOrbBreathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.025); } }
+
+/* idle — respiração discreta */
+.vz-eorb--idle .vz-eorb__bar { animation: vzBarIdle 3.4s ease-in-out infinite; }
+@keyframes vzBarIdle { 0%, 100% { transform: scaleY(0.26); } 50% { transform: scaleY(0.4); } }
+
+/* thinking — pulso sequencial mais rápido */
+.vz-eorb--thinking .vz-eorb__bar { animation: vzBarThink 1.05s ease-in-out infinite; }
+.vz-eorb--thinking .vz-eorb__halo { animation-duration: 1.8s; }
+@keyframes vzBarThink { 0%, 100% { transform: scaleY(0.22); } 50% { transform: scaleY(0.66); } }
+
+/* speaking — bounce de fala */
+.vz-eorb--speaking .vz-eorb__bar { animation: vzBarSpeak 0.52s ease-in-out infinite; }
+.vz-eorb--speaking .vz-eorb__halo { animation-duration: 2.4s; opacity: 0.9; }
+@keyframes vzBarSpeak {
+    0% { transform: scaleY(0.3); } 25% { transform: scaleY(1); }
+    50% { transform: scaleY(0.42); } 75% { transform: scaleY(0.86); } 100% { transform: scaleY(0.3); }
+}
+
+/* listening — escuta calma */
+.vz-eorb--listening .vz-eorb__bar { animation: vzBarIdle 1.9s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+    .vz-eorb__halo, .vz-eorb__core, .vz-eorb__bar { animation: none !important; }
+    .vz-eorb__bar { transform: scaleY(0.5); }
+}
+
+.vz-btn--primary {
+  background-color: #080808;
+  color: #ffffff;
+  border: 1px solid #080808;
+}
+.vz-btn--primary:hover { background-color: #1a1a1a; border-color: #1a1a1a; }
+
+.vz-btn--secondary {
+  background-color: transparent;
+  color: #111111;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+.vz-btn--secondary:hover { background-color: rgba(0, 0, 0, 0.04); }
+
+/* Variantes claras — pro CTA final de fundo escuro */
+.vz-btn--light {
+  background-color: #ffffff;
+  color: #0a0a0a;
+  border: 1px solid #ffffff;
+}
+.vz-btn--light:hover { background-color: rgba(255, 255, 255, 0.88); border-color: rgba(255, 255, 255, 0.88); }
+.vz-btn--ghostlight {
+  background-color: transparent;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+}
+.vz-btn--ghostlight:hover { background-color: rgba(255, 255, 255, 0.08); }
+
+/* Accordion editorial do FAQ (details nativo) */
+.vz-faq summary { list-style: none; cursor: pointer; }
+.vz-faq summary::-webkit-details-marker { display: none; }
+.vz-faq .vz-faq-plus { transition: transform 0.22s ease; }
+.vz-faq details[open] .vz-faq-plus { transform: rotate(45deg); }
+
+.vz-btn__arrow { transition: transform 0.18s ease; font-weight: 400; }
+.vz-btn:hover .vz-btn__arrow { transform: translateX(3px); }
+
+/* Link de texto simples (ex.: "Entrar" no header v2) */
+.vz-navlink {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--lp-ink-70);
+  transition: color 0.18s ease;
+}
+.vz-navlink:hover { color: var(--lp-ink); }
+
+/* ── LP.6 (v2) Login dark — asset mesh animado (drift lento) + inputs dark ── */
+.vz-mesh-asset {
+  position: relative;
+  overflow: hidden;
+}
+/* O MESH (a própria imagem) é animado por um filtro de distorção SVG
+   (feTurbulence + feDisplacementMap, aplicado inline no <img>). O painel e a
+   imagem ficam parados; só o gradiente ONDULA/FLUI. scale(1.06) mínimo só pra
+   o displacement não expor as bordas — sem zoom perceptível. */
+.vz-mesh-asset img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transform: scale(1.14);
+}
+.vz-input {
+  width: 100%;
+  height: 50px;
+  padding: 0 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-family: var(--font-geist);
+  font-size: 14px;
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+.vz-input::placeholder { color: rgba(255, 255, 255, 0.32); }
+.vz-input:hover { border-color: rgba(255, 255, 255, 0.16); }
+.vz-input:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.065);
+}
+@media (prefers-reduced-motion: reduce) {
+  .vz-mesh-asset img { animation: none; }
+}
+
+/* ── LP.6 (v2) Seção de agentes especialistas — orbs mesh + input claro ── */
+.vz-agent-orb {
+  position: absolute;
+  border-radius: 9999px;
+  overflow: hidden;
+  box-shadow: 0 22px 50px -26px rgba(13, 20, 33, 0.32);
+  isolation: isolate;
+}
+.vz-agent-orb::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='110' height='110'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+  opacity: 0.55;
+  pointer-events: none;
+}
+.vz-orb-a { animation: vz-orb-a 17s ease-in-out infinite; }
+.vz-orb-b { animation: vz-orb-b 21s ease-in-out infinite; }
+.vz-orb-c { animation: vz-orb-c 25s ease-in-out infinite; }
+@keyframes vz-orb-a { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-7px, -5px); } }
+@keyframes vz-orb-b { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(6px, -7px); } }
+@keyframes vz-orb-c { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-3px, 7px); } }
+
+.vz-input-light {
+  height: 46px;
+  padding: 0 14px;
+  border-radius: 12px;
+  background: var(--lp-white);
+  border: 1px solid var(--lp-line);
+  color: var(--lp-ink);
+  font-family: var(--font-geist);
+  font-size: 13.5px;
+  transition: border-color 0.18s ease;
+}
+.vz-input-light::placeholder { color: var(--lp-ink-40); }
+.vz-input-light:focus { outline: none; border-color: rgba(13, 20, 33, 0.32); }
+
+.vz-soft-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.vz-soft-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 44px -28px rgba(13, 20, 33, 0.22);
+}
+@media (prefers-reduced-motion: reduce) {
+  .vz-orb-a, .vz-orb-b, .vz-orb-c { animation: none !important; }
+  .vz-soft-card { transition: none; }
+}
+
+/* Faixa de logos (v2): grayscale discreto, cor no hover. */
+.vz-logo {
+  filter: grayscale(0.45);
+  opacity: 0.75;
+  transition: filter 0.3s ease, opacity 0.3s ease;
+}
+.vz-logo:hover {
+  filter: grayscale(0);
+  opacity: 1;
+}
+
+/* ── LP.6 (v2) "Veja a EVA em ação": aura etérea + orbs iridescentes flutuando,
+   no espírito da seção da handhold. A figura central da EVA entra como <img>
+   (.eva-figure) quando houver um render; sem ela, a aura sustenta a cena. ── */
+.eva-stage { position: relative; isolation: isolate; }
+.eva-aura {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: min(620px, 80%);
+  height: 90%;
+  transform: translate(-50%, -50%);
+  background:
+    radial-gradient(46% 50% at 50% 42%, rgba(0, 227, 122, 0.28), transparent 70%),
+    radial-gradient(54% 58% at 56% 60%, rgba(21, 86, 192, 0.22), transparent 72%);
+  filter: blur(44px);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.eva-figure {
+  position: relative;
+  z-index: 1;
+  display: block;
+  margin: 0 auto;
+  -webkit-mask-image: radial-gradient(70% 80% at 50% 45%, #000 55%, transparent 88%);
+          mask-image: radial-gradient(70% 80% at 50% 45%, #000 55%, transparent 88%);
+}
+.vz-orb {
+  position: absolute;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0) 46%),
+    radial-gradient(circle at 64% 72%, rgba(21, 86, 192, 0.42), rgba(0, 227, 122, 0.32) 58%, rgba(255, 255, 255, 0) 78%);
+  box-shadow: 0 14px 44px -12px rgba(21, 86, 192, 0.4), inset 0 0 22px rgba(255, 255, 255, 0.5);
+  animation: vz-float 8s ease-in-out infinite;
+  will-change: transform;
+  pointer-events: none;
+}
+@keyframes vz-float {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(6px, -20px, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vz-orb { animation: none !important; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .lp-marquee,
   .lp-read-msg,
@@ -3441,10 +3998,13 @@ All colors MUST be HSL.
   .lp-read-stamp,
   .lp-blink,
   .lp-live-dot,
-  .lp-underline::after {
+  .lp-underline::after,
+  .lp-hero-wave,
+  .lp-hero-wave .wave-line {
     animation: none !important;
   }
   .lp-read-scan { transform: scaleX(1); opacity: 0; }
+  .lp-hero-wave { opacity: 0.85; }
   .lp-press,
   .lp-press:hover {
     transition: none;

@@ -442,7 +442,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
     "w-full bg-muted border border-emerald-500/60 rounded px-1.5 py-0.5 text-foreground outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/40 transition-colors";
 
   return (
-    <div className="relative">
+    <div className="relative" data-demo-deal={deal.id}>
       {/* Swipe background indicators (mobile only) */}
       {isMobile && swipe.isSwiping && clampedOffset !== 0 && (
         <>
