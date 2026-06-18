@@ -10,11 +10,28 @@ interface HeroV2Props {
 export const HeroV2 = ({ onSecondaryClick }: HeroV2Props) => {
     return (
         <section className="relative overflow-hidden" style={{ backgroundColor: "var(--lp-paper)" }}>
-            {/* aura azul na quebra inferior do hero — separa do que vem abaixo */}
+            {/* aura azul da hero em formato de DISCO radial (grande, estático)
+                centrado na base: wash de cor (glow) + campo de pontos. */}
             <div
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-x-0 bottom-0"
-                style={{ height: 260, background: "radial-gradient(58% 120% at 50% 100%, rgba(21,86,192,0.16), rgba(21,86,192,0.06) 38%, transparent 72%)" }}
+                className="pointer-events-none absolute left-1/2 bottom-0"
+                style={{
+                    width: "min(1320px, 128vw)", aspectRatio: "1",
+                    transform: "translate(-50%, 50%)",
+                    background: "radial-gradient(circle at center, rgba(21,86,192,0.20), rgba(21,86,192,0.06) 40%, transparent 64%)",
+                }}
+            />
+            <div
+                aria-hidden="true"
+                className="pointer-events-none absolute left-1/2 bottom-0"
+                style={{
+                    width: "min(1240px, 122vw)", aspectRatio: "1",
+                    transform: "translate(-50%, 50%)",
+                    backgroundImage: "radial-gradient(circle, rgba(21,86,192,0.5) 1.6px, transparent 1.7px)",
+                    backgroundSize: "20px 20px",
+                    WebkitMaskImage: "radial-gradient(circle at center, #000 0%, rgba(0,0,0,0.5) 42%, transparent 68%)",
+                    maskImage: "radial-gradient(circle at center, #000 0%, rgba(0,0,0,0.5) 42%, transparent 68%)",
+                }}
             />
             <div className="relative z-10 mx-auto max-w-4xl px-5 pb-28 pt-32 text-center sm:pb-36 sm:pt-40">
                 <h1

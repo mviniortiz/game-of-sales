@@ -3902,6 +3902,13 @@ All colors MUST be HSL.
   .vz-cap-out { animation: none; opacity: 0; }
 }
 
+/* Lenis (scroll suave da landing). Sem a regra de iframe pra não interferir
+   no iframe da demo. */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-stopped { overflow: hidden; }
+
 .vz-btn--primary {
   background-color: #080808;
   color: #ffffff;

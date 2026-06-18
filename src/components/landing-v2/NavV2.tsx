@@ -7,6 +7,7 @@ import { ButtonV2 } from "./ButtonV2";
 interface NavV2Props {
     onLoginClick: () => void;
     onCTAClick: () => void;
+    onNavClick?: (anchor: string) => void;
 }
 
 const LINKS = [
@@ -14,12 +15,12 @@ const LINKS = [
     { label: "EVA", anchor: "eva" },
 ];
 
-const scrollToId = (id: string) => {
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-};
-
-export const NavV2 = ({ onLoginClick, onCTAClick }: NavV2Props) => {
+export const NavV2 = ({ onLoginClick, onCTAClick, onNavClick }: NavV2Props) => {
+    const handleNav = (anchor: string) => {
+        if (onNavClick) { onNavClick(anchor); return; }
+        const el = document.getElementById(anchor);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
     return (
         <header
             className="sticky top-0 z-50 border-b"
@@ -41,18 +42,18 @@ export const NavV2 = ({ onLoginClick, onCTAClick }: NavV2Props) => {
 
                 <nav className="hidden items-center gap-7 md:flex">
                     {LINKS.map((l) => (
-                        <button key={l.anchor} className="vz-navlink" onClick={() => scrollToId(l.anchor)}>
+                        <button key={l.anchor} className="vz-navlink" onClick={() => handleNav(l.anchor)}>
                             {l.label}
                         </button>
                     ))}
                 </nav>
 
                 <div className="flex items-center gap-3 sm:gap-4">
-                    <button className="vz-navlink hidden sm:inline" onClick={onLoginClick}>
+                    <button className="vz-navlink" onClick={onLoginClick}>
                         Entrar
                     </button>
                     <ButtonV2 size="sm" onClick={onCTAClick}>
-                        Agendar demo
+                        Ver demo
                     </ButtonV2>
                 </div>
             </div>

@@ -35,7 +35,7 @@ export const FinalCtaV2 = ({ onScheduleDemoClick, onSecondaryClick }: FinalCtaV2
                 </p>
                 <div className="mt-9 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
                     <ButtonV2 variant="light" onClick={onScheduleDemoClick} showArrow>
-                        Agendar demo gratuita
+                        Ver a EVA em ação
                     </ButtonV2>
                     <ButtonV2 variant="ghostlight" onClick={onSecondaryClick}>
                         Ver como funciona
