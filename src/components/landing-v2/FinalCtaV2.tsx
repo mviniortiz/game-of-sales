@@ -52,14 +52,14 @@ export const FinalCtaV2 = ({ onScheduleDemoClick, onSecondaryClick }: FinalCtaV2
                 alt=""
                 aria-hidden="true"
                 className={`vz-etereal vz-etereal-l pointer-events-none absolute left-0 top-1/2 hidden w-[clamp(220px,26vw,400px)] select-none lg:block ${inCls}`}
-                style={{ opacity: 0.9 }}
+                style={{ opacity: 0.95, mixBlendMode: "screen" }}
             />
             <img
                 src={eterealRight}
                 alt=""
                 aria-hidden="true"
                 className={`vz-etereal vz-etereal-r pointer-events-none absolute right-0 top-1/2 hidden w-[clamp(220px,26vw,400px)] select-none lg:block ${inCls}`}
-                style={{ opacity: 0.9 }}
+                style={{ opacity: 0.95, mixBlendMode: "screen" }}
             />
             <Reveal className="relative z-10 mx-auto max-w-3xl text-center">
                 <h2
