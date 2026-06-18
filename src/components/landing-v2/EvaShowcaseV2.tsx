@@ -1,4 +1,4 @@
-import evaFigure from "@/assets/landing-v2/eva.webp";
+import evaFigure from "@/assets/landing-v2/eva-ethereal.webp";
 import { ButtonV2 } from "./ButtonV2";
 import { Reveal } from "./Reveal";
 
@@ -24,7 +24,7 @@ export const EvaShowcaseV2 = ({ onStartDemo }: EvaShowcaseV2Props) => {
                             alt="EVA, a camada de inteligência do Vyzon"
                             loading="lazy"
                             className="absolute inset-0 h-full w-full object-cover"
-                            style={{ objectPosition: "center 16%", opacity: 1, filter: "saturate(1.22) contrast(1.1)" }}
+                            style={{ objectPosition: "center 14%", opacity: 1 }}
                         />
                         {/* gradiente só na base: a figura aparece em cima, texto legível embaixo */}
                         <div
@@ -34,7 +34,7 @@ export const EvaShowcaseV2 = ({ onStartDemo }: EvaShowcaseV2Props) => {
                                     "linear-gradient(to bottom, transparent 0%, transparent 44%, rgba(248,247,243,0.5) 70%, rgba(248,247,243,0.98) 100%)",
                             }}
                         />
-                        <div className="relative z-10 flex min-h-[460px] flex-col items-center justify-end px-6 pb-14 pt-44 text-center sm:min-h-[700px] sm:pb-16 sm:pt-52">
+                        <div className="relative z-10 flex min-h-[580px] flex-col items-center justify-end px-6 pb-14 pt-56 text-center sm:min-h-[860px] sm:pb-20 sm:pt-80">
                             <p className="lp-mono" style={{ color: "rgba(5,5,5,0.5)" }}>
                                 EVA em ação
                             </p>
