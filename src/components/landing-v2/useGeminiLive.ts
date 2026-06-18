@@ -50,6 +50,11 @@ export function useGeminiLive() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sessionRef = useRef<any>(null);
     const wsOpenRef = useRef(false); // WS do Live realmente OPEN (evita send em socket morto)
+    const gotAudioRef = useRef(false);   // a EVA já produziu áudio nesta sessão?
+    const retryRef = useRef(0);          // tentativas de reconexão (token novo) já feitas
+    const intentionalRef = useRef(false); // disconnect proposital (não reconectar)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const connectFnRef = useRef<((opts: any, retry?: boolean) => void) | null>(null);
     const micCtxRef = useRef<AudioContext | null>(null);
     const micStreamRef = useRef<MediaStream | null>(null);
     const procRef = useRef<ScriptProcessorNode | null>(null);
@@ -116,6 +121,7 @@ export function useGeminiLive() {
     };
 
     const disconnect = useCallback(() => {
+        intentionalRef.current = true;
         wsOpenRef.current = false;
         try { sessionRef.current?.close?.(); } catch { /* noop */ }
         sessionRef.current = null;
@@ -163,11 +169,14 @@ export function useGeminiLive() {
         try { sessionRef.current.sendClientContent({ turns: [{ role: "user", parts: [{ text }] }], turnComplete: true }); } catch { /* noop */ }
     }, []);
 
-    const connect = useCallback(async (opts: ConnectOpts) => {
+    const connect = useCallback(async (opts: ConnectOpts, isRetry = false) => {
         setErrorReason(null);
         setStatus("connecting");
         setOrbState("thinking");
         wsOpenRef.current = false;
+        gotAudioRef.current = false;
+        intentionalRef.current = false;
+        if (!isRetry) retryRef.current = 0;
         mutedRef.current = false;
         userBufRef.current = ""; evaBufRef.current = ""; lastSpeakerRef.current = "";
         turnsRef.current = [];
@@ -237,7 +246,7 @@ export function useGeminiLive() {
                     outputAudioTranscription: {},
                 },
                 callbacks: {
-                    onopen: () => { wsOpenRef.current = true; setStatus("live"); setOrbState("listening"); if (import.meta.env.DEV) console.info("[live] WS open"); },
+                    onopen: () => { wsOpenRef.current = true; setStatus("live"); setOrbState("listening"); },
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     onmessage: (message: any) => {
                         const sc = message.serverContent;
@@ -245,6 +254,7 @@ export function useGeminiLive() {
                         if (sc?.modelTurn?.parts) {
                             for (const p of sc.modelTurn.parts) {
                                 if (p.inlineData?.data) {
+                                    gotAudioRef.current = true;
                                     if (!mutedRef.current) playChunk(p.inlineData.data);
                                     setOrbState("speaking");
                                 }
@@ -298,10 +308,19 @@ export function useGeminiLive() {
                             try { session.sendToolResponse({ functionResponses }); } catch { /* noop */ }
                         }
                     },
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    onerror: (e: any) => { wsOpenRef.current = false; console.warn("[live] WS error", e?.message || e); setErrorReason("ws_error"); setStatus("error"); },
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    onclose: (e: any) => { wsOpenRef.current = false; console.warn("[live] WS close", e?.code, JSON.stringify(e?.reason)); setStatus((s) => (s === "error" ? s : "ended")); },
+                    onerror: () => { wsOpenRef.current = false; },
+                    onclose: () => {
+                        wsOpenRef.current = false;
+                        // reconecta (token NOVO) se a sessão caiu ANTES da EVA
+                        // falar e não foi um fim proposital — cobre erro 1011
+                        // transitório do servidor sem deixar a demo muda.
+                        if (!gotAudioRef.current && !intentionalRef.current && retryRef.current < 2) {
+                            retryRef.current += 1;
+                            window.setTimeout(() => connectFnRef.current?.(opts, true), 600);
+                            return;
+                        }
+                        setStatus((s) => (s === "error" ? s : "ended"));
+                    },
                 },
             });
             sessionRef.current = session;
@@ -352,6 +371,9 @@ export function useGeminiLive() {
             disconnect();
         }
     }, [disconnect]);
+
+    // ref pro connect poder reconectar a si mesmo (retry no onclose)
+    connectFnRef.current = connect as unknown as (opts: ConnectOpts, retry?: boolean) => void;
 
     return { status, orbState, errorReason, userText, evaText, turns, micOn, connect, disconnect, setMuted, sendText, nudge, playbackLeadMs };
 }
