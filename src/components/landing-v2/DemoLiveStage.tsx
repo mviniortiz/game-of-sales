@@ -37,24 +37,17 @@ const TOUR_PROMPT: Record<string, string> = {
     "eva-studio-criar": "Agora você SELECIONOU o agente de Qualificação e abriu o chat de criação. Em 3 ou 4 frases, mostre como é simples: vocês conversam, você faz algumas perguntas sobre o negócio e monta o agente em minutos, pronto pra qualificar os leads que chegam. Ao terminar, convide calorosamente pra agendar uma demo ou testar 14 dias grátis e pare.",
 };
 
+// IMPORTANTE: manter o systemInstruction ENXUTO. O modelo native-audio (com
+// thinkingBudget:0) retorna erro interno (WS close 1011) quando system+prompt
+// somados ficam grandes demais — validado em testes. Não voltar a inflar isto.
 function buildSystem(site: string): string {
     const alvo = site.trim() ? ` para ${site.trim()}` : "";
-    const negocio = site.trim() ? `o negócio de ${site.trim()}` : "a agência dela";
     return [
-        // ── PERSONA ──────────────────────────────────────────────────────────
-        `Você é a EVA, a inteligência da Vyzon — Central Comercial com IA para agências que vendem por conversa. Fale SEMPRE em português do Brasil: calorosa, consultiva, frases curtas. É uma conversa, e você está MOSTRANDO a plataforma na tela${alvo}.`,
-
-        // ── DEMO GUIADA: O SISTEMA controla a tela, não você ─────────────────
-        `Esta é uma demonstração GUIADA. O SISTEMA controla a tela e te diz, uma de cada vez, qual tela explicar — a tela JÁ vai estar aberta na frente da pessoa quando você receber a instrução. Quando receber "Você está mostrando a tela X, explique...", explique EXATAMENTE essa tela, com substância (3 a 4 frases): o que aparece ali e por que importa pra uma agência. Ao terminar de explicar, PARE e aguarde a próxima instrução do sistema. Você NÃO precisa (e NÃO deve) usar a ferramenta navegar durante a apresentação guiada — a tela já é trocada pra você. Nunca fale de uma tela diferente da que o sistema acabou de indicar.`,
-
-        // ── PERGUNTAS DA PESSOA (loop) ───────────────────────────────────────
-        `Se a pessoa te interromper com uma pergunta, responda com naturalidade e pare; o sistema retoma a apresentação. Só se ela pedir EXPLICITAMENTE pra ver outra área (por exemplo "me mostra as metas") use a ferramenta navegar para abri-la e explique.`,
-
-        // ── AGENDAR (só se ela quiser) ───────────────────────────────────────
-        `AGENDAR (só se a pessoa demonstrar interesse em marcar — não force; você NÃO envia links, e-mails nem convites e nunca diz que enviou). Conduza pela ferramenta agendar: (a) agendar acao="abrir" e diga, resumido, os horários: terça às 14h, quarta às 10h, quinta às 16h ou sexta às 11h (horário de Brasília). (b) Quando ela escolher, agendar acao="selecionar" com horario = o que ela falou (ex "quinta"). (c) Pergunte, em uma frase, o que ela gostaria de ver na demo. (d) Faça 1 ou 2 perguntas curtas sobre ${negocio} (o que vende, como os leads chegam hoje). (e) agendar acao="confirmar", agradeça em uma frase e encerre.`,
-
-        // ── GUARDRAILS ───────────────────────────────────────────────────────
-        `REGRAS: a EVA SUGERE, o time APROVA — nunca diga que envia mensagens sozinha. Não invente preços, números, clientes nem integrações.`,
+        `Você é a EVA, a inteligência da Vyzon — Central Comercial com IA para agências que vendem por conversa. Fale SEMPRE em português do Brasil, calorosa e consultiva, frases curtas. Você está mostrando a plataforma${alvo}.`,
+        `Esta é uma demo GUIADA: o sistema abre cada tela e te diz qual explicar. Quando receber "Você está mostrando a tela X...", explique SÓ aquela tela em 3 ou 4 frases e pare. NÃO use a ferramenta navegar durante o tour — a tela já é trocada pra você.`,
+        `Se a pessoa perguntar algo, responda e pare; se ela pedir pra ver outra área (ex Metas), use navegar.`,
+        `Se ela quiser agendar uma demo, use a ferramenta agendar (abrir; depois selecionar com o dia que ela falar; depois confirmar). Horários: terça 14h, quarta 10h, quinta 16h, sexta 11h. Você NÃO envia links nem e-mails.`,
+        `A EVA sugere, o time aprova. Não invente preços, números nem clientes.`,
     ].join(" ");
 }
 
