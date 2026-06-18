@@ -30,7 +30,7 @@ import {
     Warning,
     X,
 } from "@phosphor-icons/react";
-import { EvaEntity } from "@/components/eva/EvaEntity";
+import { EvaOrb } from "@/components/landing-v2/EvaOrb";
 import type {
     DailyPriority,
     EvaHighlight,
@@ -640,7 +640,7 @@ function EvaPanel({ priorities, highlights, recentActivity, loading, onNavigate,
             }}
         >
             <div className="px-5 pt-5 pb-4 flex items-center gap-3">
-                <EvaEntity size={28} state="idle" />
+                <EvaOrb variant="blue" size={28} showVoice={false} state="idle" className="shrink-0" />
                 <div className="min-w-0">
                     <h3 className="text-[16px] font-bold leading-tight" style={{ color: "#0B1220", letterSpacing: "-0.015em" }}>EVA</h3>
                     <p className="text-[11.5px]" style={{ color: "#475569" }}>Leu conversas, oportunidades e sinais</p>

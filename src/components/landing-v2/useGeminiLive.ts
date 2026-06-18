@@ -44,6 +44,7 @@ export function useGeminiLive() {
     const [userText, setUserText] = useState("");
     const [evaText, setEvaText] = useState("");
     const [turns, setTurns] = useState<{ role: "user" | "eva"; text: string }[]>([]);
+    const [micOn, setMicOn] = useState(false);
     const turnsRef = useRef<{ role: "user" | "eva"; text: string }[]>([]);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -113,6 +114,16 @@ export function useGeminiLive() {
         if (m) stopPlayback();
     }, []);
 
+    // envia uma pergunta por TEXTO pra EVA (a resposta vem por voz + transcrição).
+    const sendText = useCallback((text: string) => {
+        const t = text.trim();
+        if (!t || !sessionRef.current) return;
+        try {
+            sessionRef.current.sendClientContent({ turns: [{ role: "user", parts: [{ text: t }] }], turnComplete: true });
+            pushTurn("user", t); // texto digitado não gera inputTranscription — registramos aqui
+        } catch { /* noop */ }
+    }, []);
+
     const connect = useCallback(async (opts: ConnectOpts) => {
         setErrorReason(null);
         setStatus("connecting");
@@ -132,18 +143,18 @@ export function useGeminiLive() {
             const token = data.token as string;
             const model = (data.model as string) || LIVE_MODEL_FALLBACK;
 
-            // 2. microfone
-            let stream: MediaStream;
+            // 2. microfone (OPCIONAL — sem mic, a EVA ainda FALA a resposta e a
+            // pessoa conversa por TEXTO; só não captura a voz de entrada)
+            let stream: MediaStream | null = null;
             try {
                 stream = await navigator.mediaDevices.getUserMedia({
                     audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true },
                 });
             } catch {
-                setErrorReason("mic_denied");
-                setStatus("error");
-                return;
+                stream = null;
             }
             micStreamRef.current = stream;
+            setMicOn(!!stream);
 
             // 3. SDK (dynamic import — fora do bundle inicial)
             const { GoogleGenAI } = await import("@google/genai");
@@ -229,30 +240,32 @@ export function useGeminiLive() {
                 try { session.sendClientContent({ turns: [{ role: "user", parts: [{ text: opts.kickoff }] }], turnComplete: true }); } catch { /* noop */ }
             }
 
-            // 6. captura do microfone @16kHz -> PCM16 base64
-            const micCtx = new Ctx({ sampleRate: 16000 });
-            await micCtx.resume().catch(() => undefined);
-            micCtxRef.current = micCtx;
-            const srcNode = micCtx.createMediaStreamSource(stream);
-            const proc = micCtx.createScriptProcessor(4096, 1, 1);
-            procRef.current = proc;
-            proc.onaudioprocess = (ev) => {
-                if (!sessionRef.current || mutedRef.current) return;
-                const input = ev.inputBuffer.getChannelData(0);
-                const pcm = new Int16Array(input.length);
-                for (let i = 0; i < input.length; i++) {
-                    const s = Math.max(-1, Math.min(1, input[i]));
-                    pcm[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
-                }
-                const b64 = bytesToBase64(new Uint8Array(pcm.buffer));
-                try { sessionRef.current.sendRealtimeInput({ audio: { data: b64, mimeType: "audio/pcm;rate=16000" } }); } catch { /* noop */ }
-            };
-            // gain 0 só pra manter o ScriptProcessor ativo sem ecoar o microfone
-            const sink = micCtx.createGain();
-            sink.gain.value = 0;
-            srcNode.connect(proc);
-            proc.connect(sink);
-            sink.connect(micCtx.destination);
+            // 6. captura do microfone @16kHz -> PCM16 base64 (só se há mic)
+            if (stream) {
+                const micCtx = new Ctx({ sampleRate: 16000 });
+                await micCtx.resume().catch(() => undefined);
+                micCtxRef.current = micCtx;
+                const srcNode = micCtx.createMediaStreamSource(stream);
+                const proc = micCtx.createScriptProcessor(4096, 1, 1);
+                procRef.current = proc;
+                proc.onaudioprocess = (ev) => {
+                    if (!sessionRef.current || mutedRef.current) return;
+                    const input = ev.inputBuffer.getChannelData(0);
+                    const pcm = new Int16Array(input.length);
+                    for (let i = 0; i < input.length; i++) {
+                        const s = Math.max(-1, Math.min(1, input[i]));
+                        pcm[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+                    }
+                    const b64 = bytesToBase64(new Uint8Array(pcm.buffer));
+                    try { sessionRef.current.sendRealtimeInput({ audio: { data: b64, mimeType: "audio/pcm;rate=16000" } }); } catch { /* noop */ }
+                };
+                // gain 0 só pra manter o ScriptProcessor ativo sem ecoar o microfone
+                const sink = micCtx.createGain();
+                sink.gain.value = 0;
+                srcNode.connect(proc);
+                proc.connect(sink);
+                sink.connect(micCtx.destination);
+            }
         } catch (e) {
             console.error("[useGeminiLive] connect error", e);
             setErrorReason("exception");
@@ -261,5 +274,5 @@ export function useGeminiLive() {
         }
     }, [disconnect]);
 
-    return { status, orbState, errorReason, userText, evaText, turns, connect, disconnect, setMuted };
+    return { status, orbState, errorReason, userText, evaText, turns, micOn, connect, disconnect, setMuted, sendText };
 }

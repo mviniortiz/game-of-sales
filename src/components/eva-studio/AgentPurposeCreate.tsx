@@ -1,24 +1,19 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// AgentPurposeCreate (EVA.STUDIO.F1, 2026-06-06) — criar agente é UMA decisão.
+// AgentPurposeCreate (EVA.STUDIO.F1) — criar agente é UMA decisão: escolher o
+// especialista. A galeria lista os 4 agentes (Qualificação, Follow-up, Propostas,
+// Reativação), cada um com a SUA cor (orb mesh). Clicar leva pro chat daquele
+// agente (perguntas + campos + cor próprios — ver evaSpecialists + Journey).
 //
-// "O que você quer que a EVA faça?" + 3 cards de propósito. Um clique cria.
-// TODA configuração (tom, regras, campos) sai daqui e vai pra construção
-// guiada (Frente 2): criar = escolher propósito, nada mais.
+// O medo que esta tela desarma: "vou configurar errado". Resposta: a conversa
+// é guiada e "você revisa cada coisa antes de a EVA usar".
 //
-// O medo que esta tela desarma: "vou configurar errado e a EVA vai falar
-// besteira". Resposta da tela: mostrar O QUE a EVA vai olhar pra montar
-// sozinha + a promessa "você revisa cada coisa antes de a EVA usar".
-//
-// Calibragem (feedback 2026-06-07): a primeira tela pede UMA leitura só (os
-// cards). O bloco "o que a EVA vai olhar" aparece DEPOIS da escolha, como
-// consequência da decisão — transparência sem competir com os cards.
-//
-// PRESENTATIONAL: dados via props. Disponibilidade de propósito/fonte é
-// decisão de quem integra (`available`); aqui não há lógica de negócio.
+// PRESENTATIONAL: dados via props. onCreate cria o blueprint do Qualificador
+// (runtime real); onPickSpecialist diz à jornada qual chat abrir.
 // ─────────────────────────────────────────────────────────────────────────────
 import { useState } from "react";
-import { ArrowRight, Check, HeartHandshake, LifeBuoy, Target } from "lucide-react";
-import { EvaEntity } from "@/components/eva/EvaEntity";
+import { ArrowRight, Check } from "lucide-react";
+import { EvaOrb } from "@/components/landing-v2/EvaOrb";
+import { SPECIALISTS, SPECIALIST_ORDER, type SpecialistKey } from "@/lib/eva/evaSpecialists";
 
 // ─── Tipos ──────────────────────────────────────────────────────────────────
 
@@ -44,58 +39,42 @@ export interface AgentPurposeCreateProps {
     purposes: AgentPurposeOption[];
     /** O que a EVA vai olhar pra montar o agente sozinha (painel pós-escolha). */
     sources: AgentSourceInfo[];
-    /** Dispara no clique do card — cria o agente. */
+    /** Cria o blueprint do agente (hoje o Qualificador, "vender"). */
     onCreate: (purpose: AgentPurpose) => void;
-    /** "Revisar o que a EVA entendeu" no painel pós-escolha → construção guiada. */
+    /** "Conversar com a EVA" no painel pós-escolha → construção guiada. */
     onProceed: (purpose: AgentPurpose) => void;
+    /** Qual especialista o gestor escolheu — define o chat (cor + perguntas). */
+    onPickSpecialist?: (key: SpecialistKey) => void;
     /** Dentro da casca de jornada (EvaStudioShell), o header é da casca. */
     hideHeader?: boolean;
 }
 
-const PURPOSE_META: Record<
-    AgentPurpose,
-    { title: string; desc: string; icon: typeof Target }
-> = {
-    vender: {
-        title: "Vender",
-        desc: "Qualifica leads novos, sugere respostas no Inbox e te avisa quem está pronto pra avançar.",
-        icon: Target,
-    },
-    suporte: {
-        title: "Dar suporte",
-        desc: "Responde dúvidas comuns dos seus clientes e passa pra você o que não souber.",
-        icon: LifeBuoy,
-    },
-    pos_venda: {
-        title: "Pós-venda",
-        desc: "Acompanha clientes ativos, percebe sinais de risco e sugere o próximo contato.",
-        icon: HeartHandshake,
-    },
-};
-
 // ─── Componente ─────────────────────────────────────────────────────────────
 
-export function AgentPurposeCreate({ purposes, sources, onCreate, onProceed, hideHeader }: AgentPurposeCreateProps) {
-    // Pós-escolha: a tela troca dos cards pro painel "vou olhar isto pra montar"
-    const [chosen, setChosen] = useState<AgentPurpose | null>(null);
+export function AgentPurposeCreate({ purposes, sources, onCreate, onProceed, onPickSpecialist, hideHeader }: AgentPurposeCreateProps) {
+    const [chosen, setChosen] = useState<SpecialistKey | null>(null);
+    const chosenSpec = chosen ? SPECIALISTS[chosen] : null;
 
-    const handleChoose = (purpose: AgentPurpose) => {
-        setChosen(purpose);
-        onCreate(purpose);
+    const handleChoose = (key: SpecialistKey) => {
+        setChosen(key);
+        onPickSpecialist?.(key);
+        // Qualificação é o agente com runtime real no Inbox → cria o blueprint.
+        if (key === "qualificacao") onCreate("vender");
     };
 
     return (
         <div className="vz-agentcreate">
-            {/* Header — entidade + pergunta única */}
+            {/* Header — orb do agente escolhido + pergunta única */}
             {!hideHeader && (
             <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 22 }}>
-                <EvaEntity size={44} state={chosen ? "thinking" : "idle"} />
+                <EvaOrb variant={chosenSpec?.orb ?? "blue"} size={44} showVoice={false} state={chosen ? "thinking" : "idle"} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                    <p className="vz-agentcreate-label">EVA Studio</p>
-                    <h1 className="vz-agentcreate-title" style={{ marginTop: 2 }}>
-                        {chosen
-                            ? `Montando seu agente de ${PURPOSE_META[chosen].title.toLowerCase()}`
-                            : "O que você quer que a EVA faça?"}
+                    <p className="vz-agentcreate-label">EVA Studio · Agentes especialistas</p>
+                    <h1
+                        className="vz-agentcreate-title"
+                        style={{ marginTop: 2, fontFamily: "'Newsreader', Georgia, serif", fontWeight: 500, letterSpacing: "-0.012em" }}
+                    >
+                        {chosenSpec ? `Montando o agente de ${chosenSpec.label}` : "Escolha um agente especialista"}
                     </h1>
                 </div>
                 <span className="vz-agentcreate-seal" title="A EVA propõe, você revisa. Nada acontece sem a sua aprovação.">
@@ -107,51 +86,43 @@ export function AgentPurposeCreate({ purposes, sources, onCreate, onProceed, hid
 
             {chosen === null ? (
                 <>
-                    {/* A decisão — e SÓ ela. Uma leitura, um clique. */}
-                    <div className="vz-agentcreate-grid">
-                        {purposes.map(({ purpose, available }, i) => {
-                            const meta = PURPOSE_META[purpose];
-                            const Icon = meta.icon;
+                    {/* A galeria de especialistas — cada um com a sua cor. */}
+                    <div className="vz-agentcreate-grid vz-agentcreate-grid--2col">
+                        {SPECIALIST_ORDER.map((key, i) => {
+                            const s = SPECIALISTS[key];
                             return (
                                 <button
-                                    key={purpose}
+                                    key={key}
                                     type="button"
-                                    disabled={!available}
-                                    onClick={() => available && handleChoose(purpose)}
-                                    className={`vz-agentcreate-card ${
-                                        available ? "vz-agentcreate-card--featured" : "vz-agentcreate-card--soon"
-                                    }`}
+                                    onClick={() => handleChoose(key)}
+                                    className="vz-agentcreate-card vz-agentcreate-card--featured"
                                     style={{ animationDelay: `${i * 0.06}s` }}
                                 >
-                                    {!available && <span className="vz-agentcreate-soon-badge">Em breve</span>}
-                                    <span className="vz-agentcreate-card-icon">
-                                        <Icon style={{ width: 18, height: 18 }} strokeWidth={2.2} />
+                                    <span style={{ display: "block", marginBottom: 14 }}>
+                                        <EvaOrb variant={s.orb} size={40} showVoice={false} />
                                     </span>
                                     <span className="vz-agentcreate-card-title" style={{ display: "block" }}>
-                                        {meta.title}
+                                        {s.label}
                                     </span>
                                     <span className="vz-agentcreate-card-desc" style={{ display: "block" }}>
-                                        {meta.desc}
+                                        {s.desc}
                                     </span>
-                                    {available && (
-                                        <span className="vz-agentcreate-card-cta">
-                                            Criar agente
-                                            <ArrowRight style={{ width: 12, height: 12 }} />
-                                        </span>
-                                    )}
+                                    <span className="vz-agentcreate-card-cta" style={{ color: s.accent }}>
+                                        Criar agente
+                                        <ArrowRight style={{ width: 12, height: 12 }} />
+                                    </span>
                                 </button>
                             );
                         })}
                     </div>
 
-                    {/* A promessa que desarma o medo */}
                     <p className="vz-agentcreate-promise">
                         Leva 1 minuto. Você revisa cada coisa antes de a EVA usar.
                     </p>
                 </>
             ) : (
                 /* Transparência como consequência da decisão: escolheu → "vou
-                   olhar isto pra montar". Nada de leitura prévia competindo. */
+                   olhar isto pra montar". */
                 <div className="vz-agentcreate-building">
                     <p className="vz-agentcreate-sub">
                         Boa escolha. Pra montar esse agente, vou olhar:
@@ -186,9 +157,10 @@ export function AgentPurposeCreate({ purposes, sources, onCreate, onProceed, hid
                         <button
                             type="button"
                             className="vz-evassist-btn vz-evassist-btn--primary"
-                            onClick={() => onProceed(chosen)}
+                            onClick={() => onProceed("vender")}
+                            style={{ background: chosenSpec?.accent, borderColor: chosenSpec?.accent }}
                         >
-                            Revisar o que a EVA entendeu
+                            Conversar com a EVA
                             <ArrowRight style={{ width: 13, height: 13 }} />
                         </button>
                         <button

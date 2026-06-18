@@ -33,7 +33,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { useMemo, useState, type ReactNode } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import { EvaEntity } from "@/components/eva/EvaEntity";
+import { EvaOrb } from "@/components/landing-v2/EvaOrb";
 import {
     AgentPurposeCreate,
     type AgentPurpose,
@@ -54,6 +54,7 @@ import {
 import { ConversationalStudio } from "./ConversationalStudio";
 import { SimulationLab, type LabJudgment, type LabScenario } from "./SimulationLab";
 import { EvaStudioShell, type StudioStepKey } from "./EvaStudioShell";
+import { getSpecialist, type SpecialistKey } from "@/lib/eva/evaSpecialists";
 
 // ─── Tipos ──────────────────────────────────────────────────────────────────
 
@@ -147,6 +148,8 @@ export function EvaStudioJourney({
         initialActivated ? [...ORDER] : initialStep ? ORDER.slice(0, ORDER.indexOf(initialStep)) : [],
     );
     const [teachMode, setTeachMode] = useState<TeachMode>(initialTeachMode ?? "conversa");
+    // Agente especialista escolhido na galeria — define o chat (cor + perguntas).
+    const [chosenAgent, setChosenAgent] = useState<SpecialistKey>("qualificacao");
     const [proveMode, setProveMode] = useState<ProveMode>("campo");
     // Contadores honestos pra barra de prontidão (sessão atual; o persistido
     // entra via replayInitialJudgments — novos julgamentos são sempre de
@@ -241,6 +244,7 @@ export function EvaStudioJourney({
                         purposes={purposes}
                         sources={sources}
                         onCreate={onCreate}
+                        onPickSpecialist={setChosenAgent}
                         onProceed={() => advance("criar", "ensinar")}
                     />
                 )}
@@ -275,7 +279,21 @@ export function EvaStudioJourney({
                         </div>
 
                         <div hidden={teachMode !== "conversa"}>
-                            <ConversationalStudio hideHeader onProceed={() => advance("ensinar", "provar")} />
+                            <ConversationalStudio
+                                hideHeader
+                                agentKey={chosenAgent}
+                                onProceed={() => advance("ensinar", "provar")}
+                                onComplete={(fields) => {
+                                    // Fecha o ciclo: o que a conversa montou vira material
+                                    // pro contexto da EVA (a etapa Revisar mostra como sugestões).
+                                    const spec = getSpecialist(chosenAgent);
+                                    const text = spec.fields
+                                        .map((f) => (fields[f.key] ? `${f.label}: ${fields[f.key]}` : ""))
+                                        .filter(Boolean)
+                                        .join("\n");
+                                    if (text) onSubmitText(text);
+                                }}
+                            />
                         </div>
                         <div hidden={teachMode !== "revisao"}>
                             <GuidedContextBuilder
@@ -357,7 +375,7 @@ export function EvaStudioJourney({
                     <div className={`vz-simreplay-panel vz-simreplay-panel--ready vz-journey-activate ${activated ? "vz-journey-activate--on" : ""}`}>
                         <div className="vz-simreplay-panel-top">
                             <span className={`vz-journey-activate-orb ${activated ? "vz-journey-activate-orb--on" : ""}`}>
-                                <EvaEntity size={52} state={activated ? "done" : "idle"} />
+                                <EvaOrb variant="blue" size={52} showVoice={false} state="idle" />
                             </span>
                             <div style={{ flex: 1, minWidth: 0 }}>
                                 <p className="vz-simreplay-panel-headline">

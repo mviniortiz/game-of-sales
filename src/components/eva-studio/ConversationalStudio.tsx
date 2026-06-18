@@ -1,108 +1,78 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// ConversationalStudio (EVA.STUDIO.CONVO, 2026-06-09) — criar o agente
-// CONVERSANDO, não preenchendo formulário.
+// ConversationalStudio (EVA.STUDIO.CONVO) — criar o agente CONVERSANDO, não
+// preenchendo formulário.
 //
-// Visão (Markus): o gestor não tem conhecimento de produto pra preencher campos.
-// Ele CONVERSA com a EVA (texto, VOZ ou arquivo) e ela entrevista — pergunta só
-// o que precisa, uma coisa de cada vez — e MONTA o agente à direita, em tempo
-// real. Padrão: Sierra Ghostwriter + Wispr Flow + conversational onboarding.
+// Visão (Markus): o gestor não preenche campos — ele CONVERSA com a EVA (texto,
+// VOZ ou arquivo) e ela entrevista, montando o agente à direita em tempo real.
 //
-// Esta versão adiciona:
-//   - "pensando" (typing indicator + delay) pra a resposta não ser brusca
-//   - transcrição de voz real via Web Speech API (pt-BR)
-//   - upload de arquivo (preferir imagem/JPG) que a EVA "lê"
+// Cada agente especialista (qualificação, follow-up, propostas, reativação) tem
+// o SEU chat: perguntas, campos e COR próprios (catálogo em evaSpecialists). A
+// cor (orb + acentos) deixa claro com qual agente o gestor está falando.
 //
-// Composer: microfone + seta-pra-cima circular (estilo Claude, paleta Vyzon) +
-// anexo — NUNCA avião/paper-plane.
+// CONVERSA REAL via useEvaStudioChat → edge `eva-studio-chat`. Sem backend/key,
+// cai num roteiro guiado e os campos viram o que o gestor digitou (nada fabricado).
 //
-// PRESENTATIONAL: conversa roteirizada no preview. A EVA real (perguntas
-// adaptativas + montagem + OCR do arquivo) é a fase de integração.
-//
-// Acoplamento (EVA.STUDIO.JOURNEY): dentro da jornada o header é da casca
-// (hideHeader) e o CTA final leva pro passo Provar (onProceed).
+// Composer: microfone (Web Speech API, pt-BR) + seta-pra-cima circular + anexo.
+// Acoplamento (JOURNEY): header da casca (hideHeader); CTA → Provar (onProceed)
+// e onComplete entrega os campos pra persistir no contexto da EVA.
 // ─────────────────────────────────────────────────────────────────────────────
 import { useRef, useState, useEffect, useCallback } from "react";
 import { ArrowUp, Check, Mic, Paperclip, FileImage, X } from "lucide-react";
-import { EvaEntity } from "@/components/eva/EvaEntity";
+import { EvaOrb } from "@/components/landing-v2/EvaOrb";
+import { useEvaStudioChat, type StudioFields } from "@/hooks/useEvaStudioChat";
+import { getSpecialist, type SpecialistKey } from "@/lib/eva/evaSpecialists";
 
 export interface ConversationalStudioProps {
+    /** Qual agente especialista está sendo montado (cor + perguntas + campos). */
+    agentKey?: SpecialistKey;
     /** Dentro da casca de jornada (EvaStudioShell), o header é da casca. */
     hideHeader?: boolean;
     /** "Testar a EVA nos meus casos" → passo Provar da jornada. */
     onProceed?: () => void;
+    /** Disparado quando a entrevista termina, com os campos montados. */
+    onComplete?: (fields: StudioFields) => void;
 }
 
-interface AgentField {
-    key: string;
-    label: string;
-    value: string;
-}
+export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, onProceed, onComplete }: ConversationalStudioProps = {}) {
+    const spec = getSpecialist(agentKey);
+    const accent = spec.accent;
+    const chat = useEvaStudioChat(spec.key);
+    const { messages, fieldsView, filledCount, total, thinking, done } = chat;
 
-const AGENT_FIELDS: AgentField[] = [
-    { key: "vende", label: "O que vende", value: "Tráfego pago (Meta + Google) · Social media" },
-    { key: "icp", label: "Cliente ideal", value: "Negócios locais faturando a partir de R$ 50 mil/mês" },
-    { key: "qualifica", label: "Como qualifica o lead", value: "Pergunta porte, segmento e quanto já investe hoje" },
-    { key: "redline", label: "Linha vermelha", value: "Nunca prometer resultado garantido antes do diagnóstico" },
-];
-
-const EVA_TURNS: string[] = [
-    "Oi! Eu monto a sua EVA de vendas só conversando, sem formulário nenhum. Me conta com as suas palavras: o que a sua agência vende?",
-    "Boa. E pra quem você vende melhor? Tem um tipo de cliente que costuma fechar mais fácil?",
-    "Entendi. Quando chega um lead novo, o que você precisa saber dele pra decidir se vale a pena seguir?",
-    "Quase lá. Tem alguma coisa que eu NUNCA posso prometer ou falar pro lead?",
-    "Pronto, montei a sua EVA. Olha à direita o que eu entendi. Se tiver algo torto, é só me dizer e eu ajusto.",
-];
-
-type Msg = { from: "eva" | "user"; text: string; attachment?: string };
-
-// Tempo de "pensando" — proporcional ao tamanho da resposta, com piso/teto.
-const thinkMs = (text: string) => Math.min(2200, Math.max(700, text.length * 14));
-
-export function ConversationalStudio({ hideHeader, onProceed }: ConversationalStudioProps = {}) {
-    const [messages, setMessages] = useState<Msg[]>([{ from: "eva", text: EVA_TURNS[0] }]);
-    const [revealed, setRevealed] = useState(0);
     const [input, setInput] = useState("");
     const [recording, setRecording] = useState(false);
-    const [thinking, setThinking] = useState(false);
     const [attachment, setAttachment] = useState<string | null>(null);
     const [speechOk, setSpeechOk] = useState(true);
 
     const scrollRef = useRef<HTMLDivElement>(null);
     const recognitionRef = useRef<unknown>(null);
     const fileRef = useRef<HTMLInputElement>(null);
-
-    const done = revealed >= AGENT_FIELDS.length;
+    const completedRef = useRef(false);
 
     useEffect(() => {
         scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
     }, [messages, thinking]);
 
-    // ── A EVA "pensa" antes de responder (não brusca) ──
-    const evaReply = useCallback((nextRevealed: number, extra?: string) => {
-        const evaNext = extra ?? EVA_TURNS[nextRevealed];
-        if (!evaNext) return;
-        setThinking(true);
-        const t = setTimeout(() => {
-            setThinking(false);
-            setMessages((m) => [...m, { from: "eva", text: evaNext }]);
-            if (!extra) setRevealed(nextRevealed);
-        }, thinkMs(evaNext));
-        return () => clearTimeout(t);
-    }, []);
+    // Entrega os campos montados uma vez, quando a entrevista fecha.
+    useEffect(() => {
+        if (done && !completedRef.current) {
+            completedRef.current = true;
+            onComplete?.(chat.fields);
+        }
+    }, [done, chat.fields, onComplete]);
 
     const handleSend = () => {
         const text = input.trim();
         if ((!text && !attachment) || done || thinking) return;
-        const sent: Msg = { from: "user", text: text || "(material enviado)", attachment: attachment ?? undefined };
+        const att = attachment ?? undefined;
         setInput("");
         setAttachment(null);
-        setMessages((m) => [...m, sent]);
-        evaReply(Math.min(revealed + 1, AGENT_FIELDS.length));
+        void chat.send(text, att);
     };
 
     // ── Transcrição de voz (Web Speech API, pt-BR) ──
-    const toggleRecording = () => {
-        const SR = (window as unknown as { webkitSpeechRecognition?: unknown; SpeechRecognition?: unknown });
+    const toggleRecording = useCallback(() => {
+        const SR = window as unknown as { webkitSpeechRecognition?: unknown; SpeechRecognition?: unknown };
         const Ctor = (SR.SpeechRecognition || SR.webkitSpeechRecognition) as (new () => {
             lang: string; interimResults: boolean; continuous: boolean;
             onresult: (e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void;
@@ -128,29 +98,27 @@ export function ConversationalStudio({ hideHeader, onProceed }: ConversationalSt
         recognitionRef.current = rec;
         rec.start();
         setRecording(true);
-    };
+    }, [recording]);
 
     useEffect(() => () => { (recognitionRef.current as { stop: () => void } | null)?.stop(); }, []);
 
-    // ── Upload de arquivo (preferir imagem/JPG; a EVA "lê") ──
     const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
         const f = e.target.files?.[0];
         if (!f) return;
         setAttachment(f.name);
         e.target.value = "";
-        // a EVA reconhece o material e acelera (extração simulada no preview)
-        setMessages((m) => [...m, { from: "user", text: "", attachment: f.name }]);
-        evaReply(0, "Recebi seu material, já tô lendo. Vou extrair o que der daqui e te confirmar item por item, pode deixar.");
-        setAttachment(null);
     };
 
     return (
-        <div className={`vz-convo ${hideHeader ? "vz-convo--embedded" : ""}`}>
+        <div
+            className={`vz-convo ${hideHeader ? "vz-convo--embedded" : ""}`}
+            style={{ ["--convo-accent"]: accent } as React.CSSProperties}
+        >
             {!hideHeader && (
                 <div className="vz-convo-head">
-                    <EvaEntity size={34} state={thinking ? "thinking" : done ? "done" : "idle"} />
+                    <EvaOrb variant={spec.orb} size={36} showVoice={false} state={thinking ? "analyzing" : "idle"} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                        <h1 className="vz-convo-title">Vamos montar a sua EVA</h1>
+                        <h1 className="vz-convo-title">Vamos montar a sua EVA de {spec.label.toLowerCase()}</h1>
                         <p className="vz-convo-sub">Sem formulário. Você fala ou escreve, e eu construo.</p>
                     </div>
                 </div>
@@ -163,9 +131,12 @@ export function ConversationalStudio({ hideHeader, onProceed }: ConversationalSt
                         {messages.map((m, i) => (
                             <div key={i} className={`vz-convo-row vz-convo-row--${m.from}`}>
                                 {m.from === "eva" && (
-                                    <span className="vz-convo-ava"><EvaEntity size={26} state="idle" /></span>
+                                    <span className="vz-convo-ava"><EvaOrb variant={spec.orb} size={26} showVoice={false} state="idle" /></span>
                                 )}
-                                <div className={`vz-convo-bubble vz-convo-bubble--${m.from}`}>
+                                <div
+                                    className={`vz-convo-bubble vz-convo-bubble--${m.from}`}
+                                    style={m.from === "user" ? { background: accent, borderColor: accent } : undefined}
+                                >
                                     {m.attachment && (
                                         <span className="vz-convo-attach-chip">
                                             <FileImage style={{ width: 13, height: 13 }} />
@@ -180,7 +151,7 @@ export function ConversationalStudio({ hideHeader, onProceed }: ConversationalSt
                         {/* ── Pensando ── */}
                         {thinking && (
                             <div className="vz-convo-row vz-convo-row--eva">
-                                <span className="vz-convo-ava"><EvaEntity size={26} state="thinking" /></span>
+                                <span className="vz-convo-ava"><EvaOrb variant={spec.orb} size={26} showVoice={false} state="analyzing" /></span>
                                 <div className="vz-convo-bubble vz-convo-bubble--eva vz-convo-typing">
                                     <span className="vz-convo-typing-dot" />
                                     <span className="vz-convo-typing-dot" />
@@ -193,7 +164,7 @@ export function ConversationalStudio({ hideHeader, onProceed }: ConversationalSt
                     {/* anexo selecionado, aguardando envio */}
                     {attachment && (
                         <div className="vz-convo-pending-attach">
-                            <FileImage style={{ width: 14, height: 14, color: "#7c3aed" }} />
+                            <FileImage style={{ width: 14, height: 14, color: accent }} />
                             <span style={{ flex: 1, minWidth: 0 }}>{attachment}</span>
                             <button type="button" onClick={() => setAttachment(null)} aria-label="Remover anexo">
                                 <X style={{ width: 13, height: 13 }} />
@@ -231,13 +202,15 @@ export function ConversationalStudio({ hideHeader, onProceed }: ConversationalSt
                             }}
                             placeholder={done ? "Quer ajustar algo? Me fala…" : recording ? "Ouvindo… fala naturalmente" : "Responde com as suas palavras, ou toque no microfone"}
                             rows={1}
+                            disabled={done}
                         />
                         <button
                             type="button"
                             className="vz-convo-send"
                             onClick={handleSend}
-                            disabled={(!input.trim() && !attachment) || thinking}
+                            disabled={(!input.trim() && !attachment) || thinking || done}
                             aria-label="Enviar"
+                            style={{ background: accent }}
                         >
                             <ArrowUp style={{ width: 18, height: 18 }} strokeWidth={2.6} />
                         </button>
@@ -258,25 +231,31 @@ export function ConversationalStudio({ hideHeader, onProceed }: ConversationalSt
                 {/* ── O agente nascendo ── */}
                 <aside className="vz-convo-agent">
                     <div className="vz-convo-agent-head">
-                        <div>
+                        <span style={{ flexShrink: 0, lineHeight: 0 }}>
+                            <EvaOrb variant={spec.orb} size={30} showVoice={false} state={thinking ? "analyzing" : "idle"} />
+                        </span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
                             <p className="vz-convo-agent-kicker">Sua EVA de vendas</p>
-                            <p className="vz-convo-agent-name">Agente de qualificação</p>
+                            <p className="vz-convo-agent-name">{spec.role}</p>
                         </div>
-                        <span className={`vz-convo-agent-status ${done ? "vz-convo-agent-status--done" : ""}`}>
+                        <span
+                            className={`vz-convo-agent-status ${done ? "vz-convo-agent-status--done" : ""}`}
+                            style={done ? { color: accent } : undefined}
+                        >
                             {done ? "pronta" : thinking ? "pensando…" : "montando…"}
                         </span>
                     </div>
 
                     <div className="vz-convo-agent-prog">
-                        <div className="vz-convo-agent-prog-fill" style={{ width: `${(revealed / AGENT_FIELDS.length) * 100}%` }} />
+                        <div className="vz-convo-agent-prog-fill" style={{ width: `${(filledCount / total) * 100}%`, background: accent }} />
                     </div>
 
                     <div className="vz-convo-fields">
-                        {AGENT_FIELDS.map((f, i) => {
-                            const on = i < revealed;
+                        {fieldsView.map((f, i) => {
+                            const on = f.value.trim().length > 0;
                             return (
                                 <div key={f.key} className={`vz-convo-field ${on ? "vz-convo-field--on" : ""}`}>
-                                    <span className="vz-convo-field-mark">
+                                    <span className="vz-convo-field-mark" style={on ? { background: accent, borderColor: accent } : undefined}>
                                         {on ? <Check style={{ width: 12, height: 12 }} strokeWidth={3} /> : i + 1}
                                     </span>
                                     <div style={{ minWidth: 0 }}>
@@ -291,7 +270,7 @@ export function ConversationalStudio({ hideHeader, onProceed }: ConversationalSt
                     </div>
 
                     {done && (
-                        <button type="button" className="vz-convo-agent-cta" onClick={onProceed}>
+                        <button type="button" className="vz-convo-agent-cta" onClick={onProceed} style={{ background: accent }}>
                             Testar a EVA nos meus casos
                             <ArrowUp style={{ width: 14, height: 14, transform: "rotate(90deg)" }} />
                         </button>

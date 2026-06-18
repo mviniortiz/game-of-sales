@@ -41,7 +41,8 @@ import {
 } from "lucide-react";
 import { EvaNode } from "@/components/landing/EvaNode";
 import { toast } from "sonner";
-import { EvaCoreVisual, type EvaCoreState } from "@/components/eva-studio/EvaCoreVisual";
+import { EvaOrb } from "@/components/landing-v2/EvaOrb";
+import { EvaAnalyzingState } from "@/components/inbox/EvaAnalyzingState";
 import { NovaOportunidadeModal } from "@/components/deals/NovaOportunidadeModal";
 import { EvaCreateDealNudge } from "@/components/inbox/EvaCreateDealNudge";
 import { VincularDealModal } from "@/components/deals/VincularDealModal";
@@ -137,7 +138,7 @@ function EmptyPanel({ reason }: { reason: "no-chat" | "no-messages" }) {
     };
     return (
         <div className="flex-1 flex flex-col items-center justify-center px-5 text-center">
-            <EvaCoreVisual className="w-[68px] mb-4" state="idle" showStatus={false} />
+            <EvaOrb variant="blue" state="idle" size={64} className="mb-4" showVoice={false} />
             <p className="text-[13px] font-semibold mb-1" style={{ color: "#0B1220" }}>
                 Aguardando contexto
             </p>
@@ -154,7 +155,7 @@ function EmptyPanel({ reason }: { reason: "no-chat" | "no-messages" }) {
 function LoadingState({ message }: { message?: string }) {
     return (
         <div className="flex-1 flex flex-col items-center justify-center px-5 text-center">
-            <EvaCoreVisual className="w-[72px] mb-4" state="analyzing" showStatus={false} />
+            <EvaOrb variant="blue" state="analyzing" size={72} className="mb-4" />
             <p className="text-[13px] font-semibold mb-1" style={{ color: "#0B1220" }}>
                 {message || "EVA analisando conversa…"}
             </p>
@@ -471,18 +472,12 @@ function PanelContent({
                     background: "#FFFFFF",
                 }}
             >
-                <EvaCoreVisual
-                    className="w-9 shrink-0"
-                    state={
-                        (insight.analyzing
-                            ? "analyzing"
-                            : insight.error
-                            ? "attention"
-                            : insight.data
-                            ? "ready"
-                            : "idle") as EvaCoreState
-                    }
-                    showStatus={false}
+                <EvaOrb
+                    variant="blue"
+                    size={36}
+                    className="shrink-0"
+                    state={insight.analyzing ? "analyzing" : "idle"}
+                    showVoice={false}
                 />
                 <div className="flex-1 min-w-0">
                     <p
@@ -580,8 +575,8 @@ function PanelContent({
                     />
                 )}
 
-                {/* Analisando (mutation rodando) */}
-                {insight.analyzing && <LoadingState message="EVA analisando conversa…" />}
+                {/* Analisando (mutation rodando) — animação por etapas da leitura */}
+                {insight.analyzing && <EvaAnalyzingState />}
 
                 {/* Análise renderizada — sempre que tem data, mesmo se stale */}
                 {insight.data && !insight.analyzing && !insight.error && (
@@ -798,7 +793,7 @@ function formatResetAt(iso: string | null): string | null {
 function NoAnalysisState({ onAnalyze }: { onAnalyze: () => void }) {
     return (
         <div className="flex flex-col items-center justify-center text-center py-8 px-2">
-            <EvaCoreVisual className="w-[72px] mb-4" state="idle" showStatus={false} />
+            <EvaOrb variant="blue" state="idle" size={72} className="mb-4" showVoice={false} />
             <p className="text-[13.5px] font-semibold mb-2" style={{ color: "#0B1220" }}>
                 A EVA ainda não analisou esta conversa.
             </p>

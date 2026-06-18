@@ -13,8 +13,10 @@
 //              que gateia a EVA no Inbox)
 //   Memória  → useEvaMemory · Insights → computeApproval + simResults
 //
-// O chat conversacional segue ROTEIRIZADO (EVA real é épico backend) → entra
-// com selo "prévia" e o modo default do Ensinar é a revisão guiada (real).
+// O chat conversacional agora é REAL (edge eva-studio-chat conduz a entrevista
+// e extrai os campos do agente escolhido); é o caminho DEFAULT do Ensinar, e o
+// que a conversa monta é gravado no contexto via ctxBuilder.submitText
+// (ConversationalStudio.onComplete → Journey → onSubmitText).
 // ─────────────────────────────────────────────────────────────────────────────
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
@@ -89,7 +91,7 @@ export default function EvaStudio() {
     if (!ready) {
         return (
             <div className="flex items-center justify-center" style={{ minHeight: "60vh" }}>
-                <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#7C3AED" }} />
+                <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#2563EB" }} />
             </div>
         );
     }
@@ -104,8 +106,7 @@ export default function EvaStudio() {
             <EvaStudioJourney
                 initialStep={isApproved ? "ativar" : isSaved ? "ensinar" : "criar"}
                 initialActivated={isApproved}
-                initialTeachMode="revisao"
-                chatBadge="prévia"
+                initialTeachMode="conversa"
                 // ── Criar ──
                 purposes={[
                     { purpose: "vender", available: true },
@@ -234,7 +235,7 @@ function HybridAutoCreateToggle({
                     disabled={!canEdit || saving}
                     onClick={() => onChange(!value)}
                     className="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-50"
-                    style={{ background: value ? "#7C3AED" : "#CBD5E1" }}
+                    style={{ background: value ? "#2563EB" : "#CBD5E1" }}
                 >
                     <span
                         className="inline-block h-5 w-5 rounded-full bg-white transition-transform"

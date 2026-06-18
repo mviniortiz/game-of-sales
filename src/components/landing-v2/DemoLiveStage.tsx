@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
+import { ArrowUp } from "lucide-react";
 import { EvaOrb } from "./EvaOrb";
 import { useGeminiLive } from "./useGeminiLive";
+import { whatsappUrl } from "@/config/contact";
+import { WhatsappGlyph } from "@/components/icons/WhatsappGlyph";
 
 // LP.8 (v2) — tour AO VIVO: o app real num iframe (/embed-demo) + a EVA por VOZ
 // (Gemini Live, rodando no parent) narrando e NAVEGANDO o iframe. A tool
@@ -40,33 +43,56 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
     const [active, setActive] = useState("inicio");
     const [appReady, setAppReady] = useState(false);
     const [muted, setMuted] = useState(false);
+    const [chatOpen, setChatOpen] = useState(false);
+    const [draft, setDraft] = useState("");
+    const [waiting, setWaiting] = useState(false);
     const connectedRef = useRef(false);
     const activeRef = useRef("inicio");
     const queueRef = useRef<string[]>([]);
-    const pumpRef = useRef<number | null>(null);
+    const dwellTimerRef = useRef<number | null>(null);
+    const maxTimerRef = useRef<number | null>(null);
+    const dwellOkRef = useRef(true);   // piso de tempo na tela atual já cumprido?
+    const turnDoneRef = useRef(true);  // a EVA terminou de falar desta tela?
+    const spokeRef = useRef(false);    // a EVA chegou a falar nesta tela?
     const live = useGeminiLive();
 
-    // tempo mínimo que cada tela fica antes de avançar — desacopla a rajada de
-    // tool calls do Gemini do ritmo visual (senão o iframe pula à frente da fala)
-    const MIN_DWELL = 9500;
+    // RITMO ACOPLADO À FALA: a tela só troca quando (a) ficou um tempo mínimo E
+    // (b) a EVA TERMINOU de falar dela (turnComplete → orbState "listening").
+    // Antes era um timer fixo de 9,5s que deixava o visual atrás da voz (a EVA
+    // "pulava etapas"); agora o visual acompanha a narração.
+    const MIN_DWELL = 2600;   // piso anti-piscar / absorve rajada de tool calls
+    const MAX_DWELL = 15000;  // teto: avança mesmo se ela não parar de falar
 
     const sendGoto = (screen: string) => {
         try { iframeRef.current?.contentWindow?.postMessage({ source: "vyzon-demo", action: "goto", screen }, window.location.origin); } catch { /* noop */ }
     };
     const setScreen = (screen: string) => { activeRef.current = screen; setActive(screen); sendGoto(screen); };
 
-    // fila com ritmo: processa a 1ª tela na hora e as próximas a cada MIN_DWELL
-    const pump = () => {
+    const tryAdvance = () => {
+        if (dwellOkRef.current && turnDoneRef.current && queueRef.current.length > 0) showNext();
+    };
+    // mostra a tela + arma os gates: piso de tempo (MIN_DWELL) e "espera a fala
+    // terminar" (turnDone vira true quando a EVA para de falar); teto MAX_DWELL.
+    const showScreen = (screen: string) => {
+        setScreen(screen);
+        dwellOkRef.current = false;
+        turnDoneRef.current = false;
+        spokeRef.current = false;
+        if (dwellTimerRef.current) clearTimeout(dwellTimerRef.current);
+        dwellTimerRef.current = window.setTimeout(() => { dwellOkRef.current = true; tryAdvance(); }, MIN_DWELL);
+        if (maxTimerRef.current) clearTimeout(maxTimerRef.current);
+        maxTimerRef.current = window.setTimeout(() => { turnDoneRef.current = true; tryAdvance(); }, MAX_DWELL);
+    };
+    const showNext = () => {
         const next = queueRef.current.shift();
-        if (next === undefined) { pumpRef.current = null; return; }
-        setScreen(next);
-        pumpRef.current = window.setTimeout(pump, MIN_DWELL);
+        if (next !== undefined) showScreen(next);
     };
     const enqueue = (screen: string) => {
+        if (activeRef.current === screen) return;       // já é a tela atual
         const q = queueRef.current;
-        if (q[q.length - 1] === screen) return; // evita duplicado consecutivo
+        if (q[q.length - 1] === screen) return;          // duplicado consecutivo
         q.push(screen);
-        if (pumpRef.current === null) pump();
+        tryAdvance();
     };
 
     // handshake + auto-connect da voz quando o app real fica pronto
@@ -77,7 +103,7 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
             if (d?.source !== "vyzon-demo" || d?.event !== "ready") return;
             if (d.path && String(d.path).startsWith("/embed-demo")) return;
             setAppReady(true);
-            sendGoto(activeRef.current);
+            showScreen(activeRef.current); // inicia "inicio" já armando os gates de ritmo
             if (!connectedRef.current) {
                 connectedRef.current = true;
                 live.connect({
@@ -101,8 +127,40 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // desconecta a voz e para a fila ao sair do tour
-    useEffect(() => () => { live.disconnect(); if (pumpRef.current) clearTimeout(pumpRef.current); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    // desconecta a voz e para os timers ao sair do tour
+    useEffect(() => () => { live.disconnect(); if (dwellTimerRef.current) clearTimeout(dwellTimerRef.current); if (maxTimerRef.current) clearTimeout(maxTimerRef.current); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // acopla a navegação à fala: enquanto a EVA fala (speaking) segura a troca;
+    // quando termina o turno (listening) libera a próxima tela da fila.
+    useEffect(() => {
+        if (live.orbState === "speaking") {
+            spokeRef.current = true;
+            turnDoneRef.current = false;
+            setWaiting(false); // ela começou a responder → tira o "pensando"
+        } else if (live.orbState === "listening" && spokeRef.current) {
+            // só conta como "terminou" se ela chegou a falar desta tela (o
+            // "listening" inicial do onopen não dispara avanço prematuro)
+            turnDoneRef.current = true;
+            tryAdvance();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [live.orbState]);
+
+    // TRANSIÇÃO automática: abre o modo conversa SÓ quando o usuário começa a
+    // tirar dúvidas (fala uma pergunta durante o tour). Quem só assiste não é
+    // interrompido; o botão "Conversar com a EVA" continua como gatilho manual.
+    useEffect(() => {
+        if (!chatOpen && live.userText.trim().length >= 3) setChatOpen(true);
+    }, [live.userText, chatOpen]);
+
+    // envia a pergunta por texto (a EVA responde por voz + texto)
+    const sendChat = () => {
+        const t = draft.trim();
+        if (!t || live.status !== "live") return;
+        setDraft("");
+        setWaiting(true);
+        live.sendText(t);
+    };
 
     const liveOrb = live.status === "connecting" ? "thinking" : live.status === "live" ? live.orbState : "idle";
     const activeIdx = Math.max(0, SCREEN_ORDER.indexOf(active));
@@ -119,6 +177,76 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
                         <div className="flex flex-col items-center gap-4">
                             <EvaOrb state="thinking" size={120} />
                             <p className="text-[14px]" style={{ color: "rgba(5,5,5,0.6)" }}>Abrindo a Vyzon ao vivo…</p>
+                        </div>
+                    </div>
+                )}
+
+                {/* CTA de conversão: alta intenção durante a demo → fala direto com o time */}
+                {appReady && (
+                    <a
+                        href={whatsappUrl(`Oi! Vi a demo da EVA${site.trim() ? ` (${site.trim()})` : ""} e quero conversar sobre o Vyzon.`)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="absolute bottom-4 right-4 z-10 inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-[13px] font-semibold text-white shadow-lg transition-transform hover:scale-[1.03] active:scale-95 motion-reduce:transition-none motion-reduce:hover:scale-100"
+                        style={{ background: "#0B1220" }}
+                    >
+                        <WhatsappGlyph size={15} />
+                        Falar com a gente
+                    </a>
+                )}
+
+                {/* Modo conversa: a EVA "sai da demo" e fica de frente, em VOZ. O
+                    orb grande pulsa/aumenta quando ela fala. Texto é opcional embaixo. */}
+                {chatOpen && (
+                    <div className="vz-demochat-in absolute inset-0 z-20 flex flex-col" style={{ background: "var(--lp-paper)" }}>
+                        <div className="flex items-center justify-between px-5 py-3.5">
+                            <span className="lp-mono" style={{ color: "var(--lp-ink-55)" }}>EVA · ao vivo</span>
+                            <button type="button" onClick={() => setChatOpen(false)} className="rounded-full px-3.5 py-1.5 text-[13px]" style={{ background: "rgba(5,5,5,0.05)", color: "var(--lp-ink-90)", fontWeight: 500 }}>
+                                Voltar pra demo
+                            </button>
+                        </div>
+
+                        {/* Palco: orb grande de frente + nome + legenda da fala */}
+                        <div className="flex flex-1 flex-col items-center justify-center gap-7 px-6 text-center">
+                            <div className={live.orbState === "speaking" ? "vz-orb-speaking" : "vz-orb-calm"}>
+                                <EvaOrb state={live.orbState} size={232} />
+                            </div>
+                            <div className="max-w-xl">
+                                <p className="lp-display" style={{ fontSize: "clamp(1.5rem,3vw,2.1rem)", color: "var(--lp-ink)", letterSpacing: "-0.025em", lineHeight: 1.1 }}>EVA</p>
+                                <p className="mx-auto mt-3 text-[15.5px]" style={{ color: "rgba(5,5,5,0.66)", lineHeight: 1.55, minHeight: 50, maxWidth: 520 }}>
+                                    {waiting
+                                        ? "pensando…"
+                                        : live.evaText || (live.userText ? `Você: ${live.userText}` : "Pode falar comigo, ou digite sua dúvida aqui embaixo.")}
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Texto opcional (texto + voz) + mudo */}
+                        <div className="flex items-center gap-2 px-4 py-3" style={{ borderTop: "1px solid var(--lp-line)", background: "#fff" }}>
+                            <input
+                                value={draft}
+                                onChange={(e) => setDraft(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); sendChat(); } }}
+                                placeholder={live.status === "live" ? "Pergunte à EVA…" : "Conectando a EVA…"}
+                                disabled={live.status !== "live"}
+                                className="vz-input-light flex-1"
+                                aria-label="Sua pergunta pra EVA"
+                            />
+                            <button
+                                type="button"
+                                onClick={sendChat}
+                                disabled={!draft.trim() || live.status !== "live"}
+                                aria-label="Enviar pergunta"
+                                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white transition-opacity disabled:opacity-40"
+                                style={{ background: "var(--lp-blue)" }}
+                            >
+                                <ArrowUp size={18} strokeWidth={2.6} />
+                            </button>
+                            {live.status === "live" && (
+                                <button type="button" onClick={toggleMute} className="shrink-0 text-[13px] underline-offset-4 hover:underline" style={{ color: "var(--lp-ink-55)" }}>
+                                    {muted ? "Ativar som" : "Desativar som"}
+                                </button>
+                            )}
                         </div>
                     </div>
                 )}
@@ -163,6 +291,11 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
                                     {activeIdx >= SCREEN_ORDER.length - 1 ? "Concluir" : "Próximo"}
                                 </button>
                             </>
+                        )}
+                        {live.status === "live" && (
+                            <button type="button" onClick={() => setChatOpen(true)} className="text-[13px]" style={{ color: "var(--lp-blue)", fontWeight: 600 }}>
+                                Conversar com a EVA
+                            </button>
                         )}
                         {live.status === "live" && (
                             <button type="button" onClick={toggleMute} className="text-[13px] underline-offset-4 hover:underline" style={{ color: "var(--lp-ink-55)" }}>

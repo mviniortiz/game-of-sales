@@ -39,7 +39,7 @@ import {
     type EvaResponse,
 } from "@/hooks/useCentralEvaAssistant";
 import { useTypewriter } from "@/hooks/useTypewriter";
-import { EvaNode } from "@/components/landing/EvaNode";
+import { EvaOrb } from "@/components/landing-v2/EvaOrb";
 import { DecisionWorkspace } from "@/components/inicio/DecisionWorkspace";
 import { useEvolutionSender } from "@/hooks/useEvolutionSender";
 import {
@@ -258,7 +258,7 @@ function EvaChat({ evaInput, onNavigate }: { evaInput: CentralEvaInput; onNaviga
                     onChange={(e) => setComposer(e.target.value)}
                     placeholder="Pergunte sobre operação, pipeline ou conversas"
                     disabled={isThinking}
-                    className="w-full h-11 pl-4 pr-14 rounded-xl text-[13px] outline-none transition-all focus:border-[#7C3AED]/40 disabled:opacity-70"
+                    className="w-full h-11 pl-4 pr-14 rounded-xl text-[13px] outline-none transition-all focus:border-[#2563EB]/40 disabled:opacity-70"
                     style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", color: "#0B1220" }}
                 />
                 <button
@@ -266,7 +266,7 @@ function EvaChat({ evaInput, onNavigate }: { evaInput: CentralEvaInput; onNaviga
                     disabled={!composer.trim() || isThinking}
                     aria-label="Perguntar à EVA"
                     className={`eva-send-btn absolute right-1.5 top-1.5 inline-flex items-center justify-center h-8 w-8 rounded-full text-white disabled:opacity-40 disabled:shadow-none ${composer.trim() && !isThinking ? "eva-send-idle" : ""}`}
-                    style={{ background: "linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)" }}
+                    style={{ background: "linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)" }}
                 >
                     {isThinking
                         ? <CircleNotch size={15} weight="bold" className="animate-spin" />
@@ -296,7 +296,7 @@ function EvaChat({ evaInput, onNavigate }: { evaInput: CentralEvaInput; onNaviga
                         type="button"
                         onClick={() => setShowAllCommands(true)}
                         className="inline-flex items-center gap-1 text-[12px] px-3 py-1.5 rounded-full transition-colors hover:brightness-105"
-                        style={{ background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.18)", color: "#6D28D9", fontWeight: 600 }}
+                        style={{ background: "rgba(37,99,235,0.06)", border: "1px solid rgba(37,99,235,0.18)", color: "#1D4ED8", fontWeight: 600 }}
                     >
                         Mais ações
                         <MoreHorizontal size={13} weight="bold" />
@@ -307,8 +307,8 @@ function EvaChat({ evaInput, onNavigate }: { evaInput: CentralEvaInput; onNaviga
             {/* Resposta da EVA — loading / answered / error / out_of_scope */}
             {isThinking && (
                 <div className="mt-4 flex items-center gap-2.5 px-4 py-3 rounded-xl eva-think-in"
-                    style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.14)" }}>
-                    <span className="eva-orb-pulse inline-flex"><EvaNode size={16} color="#6D28D9" /></span>
+                    style={{ background: "rgba(37,99,235,0.05)", border: "1px solid rgba(37,99,235,0.14)" }}>
+                    <EvaOrb variant="blue" state="analyzing" size={24} showVoice={false} className="shrink-0" />
                     <span className="text-[13px]" style={{ color: "#475569" }}>
                         EVA lendo sua operação<span className="eva-dots" aria-hidden="true" />
                     </span>
@@ -340,7 +340,7 @@ function EvaChat({ evaInput, onNavigate }: { evaInput: CentralEvaInput; onNaviga
 
             <style>{`
                 @keyframes evaBlink { 0%,100%{opacity:1} 50%{opacity:0} }
-                .eva-caret { display:inline-block; margin-left:1px; color:#6D28D9; animation: evaBlink 0.9s steps(1) infinite; }
+                .eva-caret { display:inline-block; margin-left:1px; color:#1D4ED8; animation: evaBlink 0.9s steps(1) infinite; }
                 @keyframes evaOrbPulse { 0%,100%{transform:scale(1);opacity:0.8} 50%{transform:scale(1.14);opacity:1} }
                 .eva-orb-pulse { animation: evaOrbPulse 1.1s ease-in-out infinite; }
                 @keyframes evaThinkIn { from{opacity:0; transform:translateY(4px)} to{opacity:1; transform:none} }
@@ -371,14 +371,9 @@ function EvaAnswerBlock({
     const { displayed, done } = useTypewriter(response.answer);
     return (
         <div className="mt-4 rounded-xl p-4 eva-think-in"
-            style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.16)" }}>
+            style={{ background: "rgba(37,99,235,0.05)", border: "1px solid rgba(37,99,235,0.16)" }}>
             <div className="flex items-start gap-2.5">
-                <div className="h-7 w-7 rounded-lg flex items-center justify-center shrink-0"
-                    style={{ background: "rgba(124,58,237,0.10)" }}>
-                    <span className={done ? "inline-flex" : "eva-orb-pulse inline-flex"}>
-                        <EvaNode size={15} color="#6D28D9" />
-                    </span>
-                </div>
+                <EvaOrb variant="blue" size={28} showVoice={false} state={done ? "idle" : "analyzing"} className="shrink-0" />
                 <p className="text-[13px] leading-relaxed flex-1" style={{ color: "#0B1220" }}>
                     {displayed}
                     {!done && <span className="eva-caret" aria-hidden="true">▍</span>}
@@ -392,7 +387,7 @@ function EvaAnswerBlock({
                             type="button"
                             onClick={() => onNavigate(a.href)}
                             className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-semibold transition-all hover:brightness-105"
-                            style={{ background: "#FFFFFF", border: "1px solid rgba(124,58,237,0.28)", color: "#6D28D9" }}
+                            style={{ background: "#FFFFFF", border: "1px solid rgba(37,99,235,0.28)", color: "#1D4ED8" }}
                         >
                             {a.label}
                             <ArrowRight size={12} weight="bold" />
@@ -406,7 +401,7 @@ function EvaAnswerBlock({
                         style={{ color: "#1E293B", fontWeight: 700, letterSpacing: "0.06em" }}>
                         Confiança: {CONFIDENCE_LABEL[response.confidence]}
                     </span>
-                    <button type="button" onClick={onReset} className="text-[11px] font-semibold" style={{ color: "#6D28D9" }}>
+                    <button type="button" onClick={onReset} className="text-[11px] font-semibold" style={{ color: "#1D4ED8" }}>
                         Nova pergunta
                     </button>
                 </div>
@@ -431,7 +426,7 @@ function EvaStatusRow({
         <div className="mt-4 flex items-center justify-between gap-3 px-4 py-3 rounded-xl"
             style={{ background: s.bg, border: `1px solid ${s.border}` }}>
             <span className="text-[12.5px]" style={{ color: s.color }}>{children}</span>
-            <button type="button" onClick={onReset} className="text-[11px] font-semibold shrink-0" style={{ color: "#6D28D9" }}>
+            <button type="button" onClick={onReset} className="text-[11px] font-semibold shrink-0" style={{ color: "#1D4ED8" }}>
                 Voltar
             </button>
         </div>
@@ -796,21 +791,21 @@ const Inicio = () => {
             <div
                 className="rounded-2xl px-7 sm:px-9 py-6 sm:py-7 flex flex-col sm:flex-row sm:items-end justify-between gap-4 relative overflow-hidden"
                 style={{
-                    background: "linear-gradient(135deg, rgba(37,99,235,0.07) 0%, rgba(74,140,232,0.04) 45%, rgba(16,185,129,0.05) 100%)",
-                    border: "1px solid rgba(148,163,184,0.26)",
-                    boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 10px 30px rgba(15,23,42,0.05)",
+                    background: "#FFFFFF",
+                    border: "1px solid #E6EDF5",
+                    boxShadow: "0 1px 2px rgba(15,23,42,0.04)",
                 }}
             >
                 <div
                     className="absolute top-0 inset-x-0 h-px pointer-events-none"
                     style={{
-                        background: "linear-gradient(90deg, transparent, rgba(37,99,235,0.35) 30%, rgba(16,185,129,0.30) 70%, transparent)",
+                        background: "linear-gradient(90deg, transparent, rgba(37,99,235,0.30) 40%, rgba(37,99,235,0.16) 70%, transparent)",
                     }}
                 />
                 <div className="relative z-10">
                     <div className="flex items-center gap-3 mb-2">
-                        <h1 className="text-[28px] sm:text-[36px] font-bold tracking-tight leading-[1.05]"
-                            style={{ color: "#0B1220", letterSpacing: "-0.028em" }}>
+                        <h1 className="text-[30px] sm:text-[40px] leading-[1.04]"
+                            style={{ color: "#0B1220", fontFamily: "'Newsreader', Georgia, serif", fontWeight: 500, letterSpacing: "-0.012em" }}>
                             {greeting}{firstName ? `, ${firstName}` : ""}
                         </h1>
                         {criticalCount > 0 && (

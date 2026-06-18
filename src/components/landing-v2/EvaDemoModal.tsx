@@ -78,7 +78,7 @@ export const EvaDemoModal = ({ open, onClose, onCTAClick }: EvaDemoModalProps) =
                 <div
                     className="vz-modal-panel relative flex w-full flex-col overflow-hidden rounded-[22px] bg-white shadow-2xl"
                     data-closing={closing}
-                    style={{ height: isTour ? "min(94vh, 880px)" : "min(90vh, 760px)", maxWidth: isTour ? 1280 : 1152 }}
+                    style={{ height: isTour ? "min(96vh, 1000px)" : "min(90vh, 760px)", maxWidth: isTour ? 1440 : 1152 }}
                 >
                     <div className="flex items-center justify-between px-6 py-3.5" style={{ borderBottom: "1px solid var(--lp-line)" }}>
                         <span className="lp-mono" style={{ color: "var(--lp-ink-55)" }}>EVA · Vyzon</span>

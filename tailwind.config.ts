@@ -14,8 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
+        sans: ['Geist', 'Inter', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'sans-serif'],
         heading: ['var(--font-heading)'],
-        serif: ['"Playfair Display"', 'Georgia', 'serif'],
+        serif: ['Newsreader', 'Georgia', 'serif'],
       },
       colors: {
         border: "hsl(var(--border))",
