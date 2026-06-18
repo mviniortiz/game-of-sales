@@ -23,7 +23,7 @@ function buildSystem(site: string): string {
     return [
         `Você é a EVA, a inteligência da Vyzon — Central Comercial com IA para agências que vendem por conversa.`,
         `Fale SEMPRE em português do Brasil, calorosa, consultiva, frases curtas. É uma conversa, e você está MOSTRANDO a plataforma na tela${alvo}.`,
-        `RITMO IMPORTANTE: apresente UMA tela por vez. Para cada tela, chame a ferramenta navegar e então EXPLIQUE com calma, em 2 ou 3 frases, o que ela mostra. NUNCA chame navegar para a próxima tela enquanto ainda estiver explicando a atual — só avance depois de terminar a explicação da tela atual.`,
+        `RITMO (regra central): você controla a TELA pela ferramenta navegar. SEMPRE chame navegar no INÍCIO de cada tela — inclusive a Central no começo — e SÓ DEPOIS explique aquela tela, em 2 ou 3 frases, com calma. É uma chamada de navegar por tela, na ordem certa. NUNCA explique uma tela sem antes ter chamado navegar para ela; NUNCA chame navegar de várias telas de uma vez nem antecipe a próxima enquanto ainda está explicando a atual. A tela que aparece tem que bater com o que você está falando naquele momento.`,
         `Siga esta ordem: navegar "inicio" (Central de Comando: você reúne conversas, leads quentes e o próximo passo de cada lead) → navegar "inbox" (as conversas chegando dos canais, onde você lê cada atendimento) → navegar "pipeline" (cada conversa vira uma oportunidade no funil e você aponta o que está parado) → navegar "lead" (abra o DETALHE de uma oportunidade e mostre as informações: contexto, histórico e o próximo passo sugerido) → navegar "eva-studio" (onde a pessoa cria um agente especialista em minutos com o playbook da agência).`,
         `Conduza de forma contínua, sem esperar a pessoa pedir para avançar, mas responda se ela te interromper com uma pergunta. Ao final, convide para agendar uma demo ou testar 14 dias grátis.`,
         `Regra do produto: a EVA SUGERE, o time APROVA. Nunca diga que envia mensagens sozinha. Não invente preços, números, clientes nem integrações.`,
@@ -49,50 +49,32 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
     const connectedRef = useRef(false);
     const activeRef = useRef("inicio");
     const queueRef = useRef<string[]>([]);
-    const dwellTimerRef = useRef<number | null>(null);
-    const maxTimerRef = useRef<number | null>(null);
-    const dwellOkRef = useRef(true);   // piso de tempo na tela atual já cumprido?
-    const turnDoneRef = useRef(true);  // a EVA terminou de falar desta tela?
-    const spokeRef = useRef(false);    // a EVA chegou a falar nesta tela?
+    const pumpRef = useRef<number | null>(null);
     const live = useGeminiLive();
 
-    // RITMO ACOPLADO À FALA: a tela só troca quando (a) ficou um tempo mínimo E
-    // (b) a EVA TERMINOU de falar dela (turnComplete → orbState "listening").
-    // Antes era um timer fixo de 9,5s que deixava o visual atrás da voz (a EVA
-    // "pulava etapas"); agora o visual acompanha a narração.
-    const MIN_DWELL = 2600;   // piso anti-piscar / absorve rajada de tool calls
-    const MAX_DWELL = 15000;  // teto: avança mesmo se ela não parar de falar
+    // RITMO: a EVA narra de forma CONTÍNUA (um turno longo) — então não dá pra
+    // esperar "fim de turno" pra trocar de tela (isso travava o visual na 1ª).
+    // Navegamos na PRÓPRIA tool call `navegar` (o sinal de "vou falar desta tela
+    // agora"), com um piso entre trocas só pra absorver rajada de chamadas.
+    const MIN_DWELL = 2200;
 
     const sendGoto = (screen: string) => {
         try { iframeRef.current?.contentWindow?.postMessage({ source: "vyzon-demo", action: "goto", screen }, window.location.origin); } catch { /* noop */ }
     };
     const setScreen = (screen: string) => { activeRef.current = screen; setActive(screen); sendGoto(screen); };
 
-    const tryAdvance = () => {
-        if (dwellOkRef.current && turnDoneRef.current && queueRef.current.length > 0) showNext();
-    };
-    // mostra a tela + arma os gates: piso de tempo (MIN_DWELL) e "espera a fala
-    // terminar" (turnDone vira true quando a EVA para de falar); teto MAX_DWELL.
-    const showScreen = (screen: string) => {
-        setScreen(screen);
-        dwellOkRef.current = false;
-        turnDoneRef.current = false;
-        spokeRef.current = false;
-        if (dwellTimerRef.current) clearTimeout(dwellTimerRef.current);
-        dwellTimerRef.current = window.setTimeout(() => { dwellOkRef.current = true; tryAdvance(); }, MIN_DWELL);
-        if (maxTimerRef.current) clearTimeout(maxTimerRef.current);
-        maxTimerRef.current = window.setTimeout(() => { turnDoneRef.current = true; tryAdvance(); }, MAX_DWELL);
-    };
     const showNext = () => {
         const next = queueRef.current.shift();
-        if (next !== undefined) showScreen(next);
+        if (next === undefined) { pumpRef.current = null; return; }
+        setScreen(next);
+        pumpRef.current = window.setTimeout(showNext, MIN_DWELL);
     };
     const enqueue = (screen: string) => {
-        if (activeRef.current === screen) return;       // já é a tela atual
+        if (activeRef.current === screen) return;          // já é a tela atual
         const q = queueRef.current;
-        if (q[q.length - 1] === screen) return;          // duplicado consecutivo
+        if (q[q.length - 1] === screen) return;            // duplicado consecutivo
         q.push(screen);
-        tryAdvance();
+        if (pumpRef.current === null) showNext();          // mostra já; rajada é paceada por MIN_DWELL
     };
 
     // handshake + auto-connect da voz quando o app real fica pronto
@@ -103,7 +85,7 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
             if (d?.source !== "vyzon-demo" || d?.event !== "ready") return;
             if (d.path && String(d.path).startsWith("/embed-demo")) return;
             setAppReady(true);
-            showScreen(activeRef.current); // inicia "inicio" já armando os gates de ritmo
+            setScreen(activeRef.current); // posiciona em "inicio"; as próximas vêm das tool calls
             if (!connectedRef.current) {
                 connectedRef.current = true;
                 live.connect({
@@ -127,23 +109,12 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // desconecta a voz e para os timers ao sair do tour
-    useEffect(() => () => { live.disconnect(); if (dwellTimerRef.current) clearTimeout(dwellTimerRef.current); if (maxTimerRef.current) clearTimeout(maxTimerRef.current); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    // desconecta a voz e para o pump ao sair do tour
+    useEffect(() => () => { live.disconnect(); if (pumpRef.current) clearTimeout(pumpRef.current); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // acopla a navegação à fala: enquanto a EVA fala (speaking) segura a troca;
-    // quando termina o turno (listening) libera a próxima tela da fila.
+    // quando a EVA começa a falar, tira o "pensando" do chat de conversa
     useEffect(() => {
-        if (live.orbState === "speaking") {
-            spokeRef.current = true;
-            turnDoneRef.current = false;
-            setWaiting(false); // ela começou a responder → tira o "pensando"
-        } else if (live.orbState === "listening" && spokeRef.current) {
-            // só conta como "terminou" se ela chegou a falar desta tela (o
-            // "listening" inicial do onopen não dispara avanço prematuro)
-            turnDoneRef.current = true;
-            tryAdvance();
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        if (live.orbState === "speaking") setWaiting(false);
     }, [live.orbState]);
 
     // TRANSIÇÃO automática: abre o modo conversa SÓ quando o usuário começa a
