@@ -49,6 +49,7 @@ export function useGeminiLive() {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sessionRef = useRef<any>(null);
+    const wsOpenRef = useRef(false); // WS do Live realmente OPEN (evita send em socket morto)
     const micCtxRef = useRef<AudioContext | null>(null);
     const micStreamRef = useRef<MediaStream | null>(null);
     const procRef = useRef<ScriptProcessorNode | null>(null);
@@ -115,6 +116,7 @@ export function useGeminiLive() {
     };
 
     const disconnect = useCallback(() => {
+        wsOpenRef.current = false;
         try { sessionRef.current?.close?.(); } catch { /* noop */ }
         sessionRef.current = null;
         try { procRef.current?.disconnect(); } catch { /* noop */ }
@@ -165,6 +167,7 @@ export function useGeminiLive() {
         setErrorReason(null);
         setStatus("connecting");
         setOrbState("thinking");
+        wsOpenRef.current = false;
         mutedRef.current = false;
         userBufRef.current = ""; evaBufRef.current = ""; lastSpeakerRef.current = "";
         turnsRef.current = [];
@@ -234,7 +237,7 @@ export function useGeminiLive() {
                     outputAudioTranscription: {},
                 },
                 callbacks: {
-                    onopen: () => { setStatus("live"); setOrbState("listening"); },
+                    onopen: () => { wsOpenRef.current = true; setStatus("live"); setOrbState("listening"); if (import.meta.env.DEV) console.info("[live] WS open"); },
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     onmessage: (message: any) => {
                         const sc = message.serverContent;
@@ -295,8 +298,10 @@ export function useGeminiLive() {
                             try { session.sendToolResponse({ functionResponses }); } catch { /* noop */ }
                         }
                     },
-                    onerror: () => { setErrorReason("ws_error"); setStatus("error"); },
-                    onclose: () => { setStatus((s) => (s === "error" ? s : "ended")); },
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    onerror: (e: any) => { wsOpenRef.current = false; console.warn("[live] WS error", e?.message || e); setErrorReason("ws_error"); setStatus("error"); },
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    onclose: (e: any) => { wsOpenRef.current = false; console.warn("[live] WS close", e?.code, JSON.stringify(e?.reason)); setStatus((s) => (s === "error" ? s : "ended")); },
                 },
             });
             sessionRef.current = session;
@@ -323,7 +328,7 @@ export function useGeminiLive() {
                     const proc = micCtx.createScriptProcessor(1024, 1, 1);
                     procRef.current = proc;
                     proc.onaudioprocess = (ev) => {
-                        if (!sessionRef.current || mutedRef.current) return;
+                        if (!sessionRef.current || !wsOpenRef.current || mutedRef.current) return;
                         const input = ev.inputBuffer.getChannelData(0);
                         const pcm = new Int16Array(input.length);
                         for (let i = 0; i < input.length; i++) {
