@@ -3909,6 +3909,19 @@ html.lenis, html.lenis body { height: auto; }
 .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
 .lenis.lenis-stopped { overflow: hidden; }
 
+/* Imagens etéreas do CTA final: deslizam das laterais ao entrar na viewport.
+   Só transform (sem opacity:0) pra não sumirem se o observer não disparar.
+   O translateY(-50%) (centragem vertical) já vai no transform pra não brigar
+   com utilitários do Tailwind. */
+.vz-etereal { transition: transform 1.1s cubic-bezier(0.22, 1, 0.36, 1); will-change: transform; }
+.vz-etereal-l { transform: translate(-34px, -50%) scale(0.96); }
+.vz-etereal-r { transform: translate(34px, -50%) scale(0.96); }
+.vz-etereal-l.is-in, .vz-etereal-r.is-in { transform: translate(0, -50%) scale(1); }
+@media (prefers-reduced-motion: reduce) {
+  .vz-etereal { transition: none; }
+  .vz-etereal-l, .vz-etereal-r { transform: translate(0, -50%) scale(1); }
+}
+
 .vz-btn--primary {
   background-color: #080808;
   color: #ffffff;
