@@ -59,6 +59,10 @@ export function useGeminiLive() {
     const userBufRef = useRef("");
     const evaBufRef = useRef("");
     const lastSpeakerRef = useRef<"user" | "eva" | "">("");
+    // fila de revelação da legenda: cada delta de transcrição é exibido só quando
+    // o áudio correspondente é OUVIDO (agora + lead de reprodução).
+    const evaRevealRef = useRef<{ text: string; at: number }[]>([]);
+    const evaRafRef = useRef<number | null>(null);
 
     const pushTurn = (role: "user" | "eva", text: string) => {
         const t = text.trim();
@@ -73,6 +77,21 @@ export function useGeminiLive() {
         });
         sourcesRef.current = [];
         if (outCtxRef.current) playHeadRef.current = outCtxRef.current.currentTime;
+    };
+
+    // revela a legenda no RITMO da reprodução: cada delta tem um "at" (quando o
+    // áudio dele é ouvido); um rAF vai liberando os que já venceram.
+    const pumpEvaReveal = () => {
+        const now = performance.now();
+        const q = evaRevealRef.current;
+        let changed = false;
+        while (q.length && q[0].at <= now) { evaBufRef.current += q.shift()!.text; changed = true; }
+        if (changed) setEvaText(evaBufRef.current);
+        evaRafRef.current = q.length ? requestAnimationFrame(pumpEvaReveal) : null;
+    };
+    const clearEvaReveal = () => {
+        evaRevealRef.current = [];
+        if (evaRafRef.current !== null) { cancelAnimationFrame(evaRafRef.current); evaRafRef.current = null; }
     };
 
     const playChunk = (b64: string) => {
@@ -104,6 +123,7 @@ export function useGeminiLive() {
         micStreamRef.current = null;
         try { micCtxRef.current?.close(); } catch { /* noop */ }
         micCtxRef.current = null;
+        clearEvaReveal();
         stopPlayback();
         try { outCtxRef.current?.close(); } catch { /* noop */ }
         outCtxRef.current = null;
@@ -112,6 +132,16 @@ export function useGeminiLive() {
     const setMuted = useCallback((m: boolean) => {
         mutedRef.current = m;
         if (m) stopPlayback();
+    }, []);
+
+    // Quanto áudio (ms) ainda está na fila pra tocar — i.e., o quanto a fala que a
+    // pessoa OUVE está atrasada em relação ao que o modelo já gerou. A demo usa
+    // isso pra trocar de tela no instante em que ela OUVE a transição, não quando
+    // o modelo emite o tool call (que vem adiantado).
+    const playbackLeadMs = useCallback(() => {
+        const ctx = outCtxRef.current;
+        if (!ctx) return 0;
+        return Math.max(0, (playHeadRef.current - ctx.currentTime) * 1000);
     }, []);
 
     // envia uma pergunta por TEXTO pra EVA (a resposta vem por voz + transcrição).
@@ -124,6 +154,13 @@ export function useGeminiLive() {
         } catch { /* noop */ }
     }, []);
 
+    // cutuca a EVA pra CONTINUAR (sem registrar na transcrição) — usado quando o
+    // turno dela encerra no meio do tour e ela fica esperando.
+    const nudge = useCallback((text: string) => {
+        if (!sessionRef.current) return;
+        try { sessionRef.current.sendClientContent({ turns: [{ role: "user", parts: [{ text }] }], turnComplete: true }); } catch { /* noop */ }
+    }, []);
+
     const connect = useCallback(async (opts: ConnectOpts) => {
         setErrorReason(null);
         setStatus("connecting");
@@ -131,6 +168,7 @@ export function useGeminiLive() {
         mutedRef.current = false;
         userBufRef.current = ""; evaBufRef.current = ""; lastSpeakerRef.current = "";
         turnsRef.current = [];
+        clearEvaReveal();
         setUserText(""); setEvaText(""); setTurns([]);
         try {
             // 1. token efêmero
@@ -143,20 +181,9 @@ export function useGeminiLive() {
             const token = data.token as string;
             const model = (data.model as string) || LIVE_MODEL_FALLBACK;
 
-            // 2. microfone (OPCIONAL — sem mic, a EVA ainda FALA a resposta e a
-            // pessoa conversa por TEXTO; só não captura a voz de entrada)
-            let stream: MediaStream | null = null;
-            try {
-                stream = await navigator.mediaDevices.getUserMedia({
-                    audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true },
-                });
-            } catch {
-                stream = null;
-            }
-            micStreamRef.current = stream;
-            setMicOn(!!stream);
-
-            // 3. SDK (dynamic import — fora do bundle inicial)
+            // SDK (dynamic import — fora do bundle inicial). O microfone NÃO é
+            // pedido aqui (era await ANTES da conexão e travava a fala se o
+            // prompt de permissão fosse ignorado) — é capturado depois, sem bloquear.
             const { GoogleGenAI } = await import("@google/genai");
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const ai: any = new GoogleGenAI({ apiKey: token, httpOptions: { apiVersion: "v1alpha" } });
@@ -178,6 +205,18 @@ export function useGeminiLive() {
                     // thinking OFF: sem isso o native-audio gasta o turno "pensando"
                     // (latência ruim + raciocínio vazando); validado: 1ª fala em ~1.7s.
                     thinkingConfig: { thinkingBudget: 0 },
+                    // VAD de BAIXA sensibilidade: ruído de fundo / eco da própria
+                    // EVA NÃO interrompem a fala dela (era o que a deixava muda);
+                    // voz real e clara ainda faz barge-in. + silêncio maior pra
+                    // confirmar fim de fala.
+                    realtimeInputConfig: {
+                        automaticActivityDetection: {
+                            startOfSpeechSensitivity: "START_SENSITIVITY_LOW",
+                            endOfSpeechSensitivity: "END_SENSITIVITY_LOW",
+                            prefixPaddingMs: 300,
+                            silenceDurationMs: 1000,
+                        },
+                    },
                     ...(opts.tools ? { tools: opts.tools } : {}),
                     inputAudioTranscription: {},
                     outputAudioTranscription: {},
@@ -187,7 +226,7 @@ export function useGeminiLive() {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     onmessage: (message: any) => {
                         const sc = message.serverContent;
-                        if (sc?.interrupted) { stopPlayback(); setOrbState("listening"); }
+                        if (sc?.interrupted) { stopPlayback(); clearEvaReveal(); setOrbState("listening"); }
                         if (sc?.modelTurn?.parts) {
                             for (const p of sc.modelTurn.parts) {
                                 if (p.inlineData?.data) {
@@ -201,31 +240,46 @@ export function useGeminiLive() {
                         const it = sc?.inputTranscription?.text as string | undefined;
                         const ot = sc?.outputTranscription?.text as string | undefined;
                         if (it) {
-                            if (lastSpeakerRef.current !== "user") {
-                                if (evaBufRef.current.trim()) { pushTurn("eva", evaBufRef.current); setEvaText(""); }
-                                userBufRef.current = "";
-                                lastSpeakerRef.current = "user";
+                            // limpa marcadores não-verbais que o ASR emite com ruído
+                            // de fundo (ex "<noise>", "[silence]") — senão viram um
+                            // "turno do usuário" fantasma que abre o chat e trava o tour.
+                            const clean = it.replace(/<[^>]*>/g, "").replace(/\[[^\]]*\]/g, "");
+                            if (clean.trim() || userBufRef.current) {
+                                if (lastSpeakerRef.current !== "user") {
+                                    if (evaBufRef.current.trim()) { pushTurn("eva", evaBufRef.current); setEvaText(""); }
+                                    clearEvaReveal();
+                                    userBufRef.current = "";
+                                    lastSpeakerRef.current = "user";
+                                }
+                                userBufRef.current += clean;
+                                setUserText(userBufRef.current);
                             }
-                            userBufRef.current += it;
-                            setUserText(userBufRef.current);
                         }
                         if (ot) {
                             if (lastSpeakerRef.current !== "eva") {
                                 if (userBufRef.current.trim()) { pushTurn("user", userBufRef.current); setUserText(""); }
                                 evaBufRef.current = "";
+                                clearEvaReveal();
                                 lastSpeakerRef.current = "eva";
                             }
-                            evaBufRef.current += ot;
-                            setEvaText(evaBufRef.current);
+                            // exibe este trecho quando o áudio dele for OUVIDO (agora + lead)
+                            const ctx = outCtxRef.current;
+                            const lead = ctx ? Math.max(0, (playHeadRef.current - ctx.currentTime) * 1000) : 0;
+                            evaRevealRef.current.push({ text: ot, at: performance.now() + lead });
+                            if (evaRafRef.current === null) evaRafRef.current = requestAnimationFrame(pumpEvaReveal);
                         }
                         if (sc?.turnComplete) setOrbState("listening");
                         if (message.toolCall?.functionCalls?.length) {
+                            // BLINDAGEM: a Live API trava o turno se uma tool call
+                            // ficar sem resposta. Garantimos que TODA call recebe
+                            // resposta mesmo se o handler lançar.
                             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            const functionResponses = message.toolCall.functionCalls.map((fc: any) => ({
-                                id: fc.id,
-                                name: fc.name,
-                                response: { result: opts.onToolCall?.(fc.name, fc.args || {}) ?? "ok" },
-                            }));
+                            const functionResponses = message.toolCall.functionCalls.map((fc: any) => {
+                                let result: unknown = "ok";
+                                try { result = opts.onToolCall?.(fc.name, fc.args || {}) ?? "ok"; }
+                                catch (err) { console.error("[useGeminiLive] onToolCall error", err); }
+                                return { id: fc.id, name: fc.name, response: { result } };
+                            });
                             try { session.sendToolResponse({ functionResponses }); } catch { /* noop */ }
                         }
                     },
@@ -235,37 +289,45 @@ export function useGeminiLive() {
             });
             sessionRef.current = session;
 
-            // kickoff: faz a EVA começar a apresentação sozinha
+            // kickoff opcional (faz a EVA começar sozinha)
             if (opts.kickoff) {
                 try { session.sendClientContent({ turns: [{ role: "user", parts: [{ text: opts.kickoff }] }], turnComplete: true }); } catch { /* noop */ }
             }
 
-            // 6. captura do microfone @16kHz -> PCM16 base64 (só se há mic)
-            if (stream) {
-                const micCtx = new Ctx({ sampleRate: 16000 });
-                await micCtx.resume().catch(() => undefined);
-                micCtxRef.current = micCtx;
-                const srcNode = micCtx.createMediaStreamSource(stream);
-                const proc = micCtx.createScriptProcessor(4096, 1, 1);
-                procRef.current = proc;
-                proc.onaudioprocess = (ev) => {
-                    if (!sessionRef.current || mutedRef.current) return;
-                    const input = ev.inputBuffer.getChannelData(0);
-                    const pcm = new Int16Array(input.length);
-                    for (let i = 0; i < input.length; i++) {
-                        const s = Math.max(-1, Math.min(1, input[i]));
-                        pcm[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
-                    }
-                    const b64 = bytesToBase64(new Uint8Array(pcm.buffer));
-                    try { sessionRef.current.sendRealtimeInput({ audio: { data: b64, mimeType: "audio/pcm;rate=16000" } }); } catch { /* noop */ }
-                };
-                // gain 0 só pra manter o ScriptProcessor ativo sem ecoar o microfone
-                const sink = micCtx.createGain();
-                sink.gain.value = 0;
-                srcNode.connect(proc);
-                proc.connect(sink);
-                sink.connect(micCtx.destination);
-            }
+            // microfone OPCIONAL e NÃO-BLOQUEANTE: a voz já conectou e a EVA vai
+            // FALAR de qualquer jeito. Capturamos a voz de entrada quando/se o
+            // usuário permitir — um prompt ignorado/negado NÃO trava mais a fala.
+            navigator.mediaDevices
+                .getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true } })
+                .then((stream) => {
+                    if (!sessionRef.current) { stream.getTracks().forEach((t) => t.stop()); return; } // já desconectou
+                    micStreamRef.current = stream;
+                    setMicOn(true);
+                    const micCtx = new Ctx({ sampleRate: 16000 });
+                    micCtx.resume().catch(() => undefined);
+                    micCtxRef.current = micCtx;
+                    const srcNode = micCtx.createMediaStreamSource(stream);
+                    // chunks pequenos (1024 @16kHz ≈ 64ms) — barge-in responsivo
+                    const proc = micCtx.createScriptProcessor(1024, 1, 1);
+                    procRef.current = proc;
+                    proc.onaudioprocess = (ev) => {
+                        if (!sessionRef.current || mutedRef.current) return;
+                        const input = ev.inputBuffer.getChannelData(0);
+                        const pcm = new Int16Array(input.length);
+                        for (let i = 0; i < input.length; i++) {
+                            const s = Math.max(-1, Math.min(1, input[i]));
+                            pcm[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+                        }
+                        const b64 = bytesToBase64(new Uint8Array(pcm.buffer));
+                        try { sessionRef.current.sendRealtimeInput({ audio: { data: b64, mimeType: "audio/pcm;rate=16000" } }); } catch { /* noop */ }
+                    };
+                    const sink = micCtx.createGain();
+                    sink.gain.value = 0;
+                    srcNode.connect(proc);
+                    proc.connect(sink);
+                    sink.connect(micCtx.destination);
+                })
+                .catch(() => { setMicOn(false); });
         } catch (e) {
             console.error("[useGeminiLive] connect error", e);
             setErrorReason("exception");
@@ -274,5 +336,5 @@ export function useGeminiLive() {
         }
     }, [disconnect]);
 
-    return { status, orbState, errorReason, userText, evaText, turns, micOn, connect, disconnect, setMuted, sendText };
+    return { status, orbState, errorReason, userText, evaText, turns, micOn, connect, disconnect, setMuted, sendText, nudge, playbackLeadMs };
 }

@@ -295,11 +295,11 @@ export function AppSidebar() {
 
   // ─── F2.6 item style ─────────────────────────────────────────────────
   // Altura 40px, radius 12px, gap-2.5. Ativo: bg azul muito suave +
-  // border azul + ícone azul. Hover: bg #F3F6FA. Sem AnimatedIcon — render
+  // border azul + ícone azul. Hover: bg #F6F4EF. Sem AnimatedIcon — render
   // direto controlando cor via className do ícone.
   const baseItem =
     "relative flex items-center gap-2.5 h-10 px-3 rounded-xl text-[14px] font-medium transition-colors duration-150 outline-none";
-  const inactiveClass = `${baseItem} text-[#64748B] hover:text-[#0B1220] hover:bg-[#F3F6FA]`;
+  const inactiveClass = `${baseItem} text-[#64748B] hover:text-[#0B1220] hover:bg-[#F6F4EF]`;
   const activeClass = `${baseItem} text-[#0B1220]`;
 
   const renderNavItem = (item: NavItem | FooterItem, opts?: { footer?: boolean }) => {
@@ -312,7 +312,7 @@ export function AppSidebar() {
 
     // Footer = mais discreto: text menor e cor mais muted, sem ativo cheio
     const itemBase = isFooter
-      ? "relative flex items-center gap-2.5 h-9 px-3 rounded-lg text-[12.5px] font-medium text-[#94A3B8] hover:text-[#0B1220] hover:bg-[#F3F6FA] transition-colors outline-none"
+      ? "relative flex items-center gap-2.5 h-9 px-3 rounded-lg text-[12.5px] font-medium text-[#94A3B8] hover:text-[#0B1220] hover:bg-[#F6F4EF] transition-colors outline-none"
       : isActive
       ? activeClass
       : inactiveClass;

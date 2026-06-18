@@ -259,12 +259,13 @@ export function InboxList({
                     />
                 ) : (
                     <ul className="px-2 py-2 flex flex-col gap-0.5">
-                        {filtered.map((chat) => (
+                        {filtered.map((chat, i) => (
                             <LeadCard
                                 key={chat.id}
                                 chat={chat}
                                 isSelected={chat.id === selectedChatId}
                                 onSelect={() => onSelect(chat.id)}
+                                demoTarget={i === 0}
                             />
                         ))}
                     </ul>
@@ -433,12 +434,13 @@ interface LeadCardProps {
     chat: Chat;
     isSelected: boolean;
     onSelect: () => void;
+    demoTarget?: boolean;
 }
 
-function LeadCard({ chat, isSelected, onSelect }: LeadCardProps) {
+function LeadCard({ chat, isSelected, onSelect, demoTarget }: LeadCardProps) {
     const picUrl = useProfilePic(chat.phone, chat.profilePicUrl);
     return (
-        <li>
+        <li {...(demoTarget ? { "data-demo-inbox-item": "" } : {})}>
             <button
                 type="button"
                 onClick={onSelect}

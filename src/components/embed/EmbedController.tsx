@@ -88,6 +88,56 @@ export function EmbedController() {
                 return;
             }
 
+            // "inbox-analise" = abrir a 1ª conversa (a mais recente) no Inbox e
+            // deixar o painel da EVA aparecer. Resolve o id por query (a demo usa
+            // ids gerados), move o cursor no 1º item e navega com deep link.
+            if (d.screen === "inbox-analise") {
+                clearTimers();
+                const open = (cid: string | null) => {
+                    const has = moveTo("[data-demo-inbox-item]");
+                    if (!has) showFlash("EVA · análise");
+                    timers.current.push(window.setTimeout(() => {
+                        if (has) { setClicking(true); timers.current.push(window.setTimeout(() => setClicking(false), 240)); }
+                        navigate(cid ? `/inbox?conversationId=${cid}` : "/inbox");
+                    }, has ? 760 : 0));
+                };
+                supabase.from("channel_conversations").select("id").order("last_message_at", { ascending: false }).limit(1).maybeSingle()
+                    .then(({ data }) => open(data?.id ? String(data.id) : null));
+                return;
+            }
+
+            // "eva-studio-criar" = dentro do EVA Studio, a EVA escolhe o agente de
+            // Qualificação e entra no chat de criação (clique REAL no DOM, com
+            // retry até a galeria montar). Não navega — já estamos em /eva-studio.
+            if (d.screen === "eva-studio-criar") {
+                clearTimers();
+                const clickAt = (el: HTMLElement, then?: () => void) => {
+                    const r = el.getBoundingClientRect();
+                    setPos({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
+                    setVisible(true);
+                    timers.current.push(window.setTimeout(() => {
+                        setClicking(true);
+                        timers.current.push(window.setTimeout(() => setClicking(false), 240));
+                        el.click();
+                        if (then) timers.current.push(window.setTimeout(then, 1200));
+                    }, 520));
+                };
+                const tryRun = (attempt: number) => {
+                    const card = document.querySelector(".vz-agentcreate-card") as HTMLElement | null;
+                    if (!card) {
+                        if (attempt < 10) timers.current.push(window.setTimeout(() => tryRun(attempt + 1), 400));
+                        else showFlash(SCREEN_FLASH["eva-studio"]);
+                        return;
+                    }
+                    clickAt(card, () => {
+                        const btn = document.querySelector(".vz-evassist-btn--primary") as HTMLElement | null;
+                        if (btn) clickAt(btn);
+                    });
+                };
+                tryRun(0);
+                return;
+            }
+
             const url = NAV_URL[d.screen as string];
             if (!url) return;
             clearTimers();

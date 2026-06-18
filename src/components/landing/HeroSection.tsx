@@ -1,31 +1,20 @@
-import { useEffect, useRef } from "react";
-import { Calendar, Check } from "lucide-react";
+import { useEffect } from "react";
+import { Calendar } from "lucide-react";
 import { LandingButton } from "./LandingButton";
 import { trackEvent } from "@/lib/analytics";
 
-// LP.5 2026-06-12: tilt 3D sutil no cartão da EVA (só mouse fino, rAF, sem
-// re-render) + gatilho mobile do easter egg: 5 toques rápidos na telemetria
-// "EVA · lendo a conversa" disparam o CustomEvent "vyzon:eva-egg".
-const TILT_MAX_X = 4; // graus
-const TILT_MAX_Y = 6;
-
-// LP.4 2026-06-09: hero "O Fio da Conversa" — layout assimétrico. Esquerda:
-// headline Satoshi 900 com acento Sentient itálica. Direita: o artefato-
-// assinatura, um cartão onde a EVA lê uma conversa real em loop CSS de 9s
-// (mensagem → varredura → pills de análise → sugestão → aprovação → pipeline).
-// A página demonstra o produto antes de explicá-lo. Sem IO, sem JS de motion.
+// LP.6 2026-06-17: hero minimalista, direção "handhold". Composição centrada e
+// centralizada na viewport, headline em Sentient roman (display serif leve) e
+// UMA fita de marca (verde→azul) fluindo em loop contínuo atrás do conteúdo.
+// O cartão de demonstração da EVA saiu do hero (some daqui pra manter o herói
+// limpo e impactante); a demonstração vive nas seções abaixo. Estilos da fita
+// em index.css (.lp-hero-wave) — ver nota de exceção ao "sem glow".
 const HERO_COPY = {
-    line1: "Pare de perder leads",
-    line2: "no WhatsApp.",
+    line1: "Um copiloto para",
+    line2: "cada conversa.",
     subtitle:
-        "A Central Comercial para agências que vendem por conversa. A EVA lê cada atendimento, aponta quem está pronto para avançar e sugere o próximo passo. Seu time aprova e a oportunidade segue no pipeline.",
+        "A EVA acompanha seus atendimentos no WhatsApp e mostra o próximo passo. Você aprova.",
 };
-
-const READ_PILLS = [
-    { cls: "lp-read-pill-1", label: "intenção: preço", color: "#1556C0", bg: "rgba(21,86,192,0.08)", border: "rgba(21,86,192,0.3)" },
-    { cls: "lp-read-pill-2", label: "urgência: alta", color: "#B45309", bg: "rgba(245,158,11,0.1)", border: "rgba(245,158,11,0.35)" },
-    { cls: "lp-read-pill-3", label: "fit: bom", color: "#008A52", bg: "rgba(0,138,82,0.08)", border: "rgba(0,138,82,0.3)" },
-] as const;
 
 interface HeroSectionProps {
     onCTAClick: () => void;
@@ -35,270 +24,117 @@ interface HeroSectionProps {
 }
 
 export const HeroSection = ({ onCTAClick, onScheduleDemoClick }: HeroSectionProps) => {
-    const tiltRef = useRef<HTMLDivElement>(null);
-    const tiltFrame = useRef(0);
-    const taps = useRef({ count: 0, at: 0 });
-
     useEffect(() => {
         try {
             trackEvent("hero_variant_shown", { variant: "fio_da_conversa_lp4" });
         } catch {
             /* analytics never breaks UX */
         }
-        return () => cancelAnimationFrame(tiltFrame.current);
     }, []);
 
     const onSchedule = onScheduleDemoClick || onCTAClick;
 
-    const handleTiltMove = (e: React.PointerEvent<HTMLDivElement>) => {
-        if (e.pointerType !== "mouse") return;
-        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-        const el = tiltRef.current;
-        if (!el) return;
-        const rect = el.getBoundingClientRect();
-        const px = (e.clientX - rect.left) / rect.width - 0.5;
-        const py = (e.clientY - rect.top) / rect.height - 0.5;
-        cancelAnimationFrame(tiltFrame.current);
-        tiltFrame.current = requestAnimationFrame(() => {
-            el.style.transition = "none";
-            el.style.transform = `perspective(900px) rotateX(${(-py * TILT_MAX_X).toFixed(2)}deg) rotateY(${(px * TILT_MAX_Y).toFixed(2)}deg)`;
-        });
-    };
-
-    const handleTiltLeave = () => {
-        const el = tiltRef.current;
-        if (!el) return;
-        cancelAnimationFrame(tiltFrame.current);
-        el.style.transition = "transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)";
-        el.style.transform = "";
-    };
-
-    // 5 toques rápidos na telemetria acordam a EVA (easter egg, ver EvaEasterEgg)
-    const handleTelemetryTap = () => {
-        const now = Date.now();
-        taps.current =
-            now - taps.current.at > 1600
-                ? { count: 1, at: now }
-                : { count: taps.current.count + 1, at: now };
-        if (taps.current.count >= 5) {
-            taps.current = { count: 0, at: 0 };
-            window.dispatchEvent(new CustomEvent("vyzon:eva-egg"));
-        }
-    };
-
     return (
-        <section className="lp-paper lp-paper--fine relative overflow-hidden">
-            <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] gap-14 lg:gap-10 items-center pt-32 sm:pt-40 pb-20 sm:pb-28">
-                    {/* ── ESQUERDA: headline + sub + CTA ─────────────────── */}
-                    <div className="text-left">
-                        {/* Eyebrow mono — a telemetria abre a página */}
-                        <p
-                            className="lp-mono landing-fade-in-up"
-                            style={{ color: "var(--lp-blue)" }}
-                        >
-                            Central Comercial&nbsp;&nbsp;·&nbsp;&nbsp;agências que vendem por conversa
-                        </p>
-
-                        <h1
-                            className="font-satoshi mt-5 landing-fade-in-up landing-delay-100"
-                            style={{
-                                fontSize: "clamp(2.9rem, 7vw, 5rem)",
-                                lineHeight: 0.98,
-                                letterSpacing: "-0.045em",
-                                color: "var(--lp-ink)",
-                                fontWeight: 900,
-                            }}
-                        >
-                            {HERO_COPY.line1}
-                            <br />
-                            <span
-                                className="lp-serif lp-underline"
-                                style={{
-                                    fontWeight: 500,
-                                    letterSpacing: "-0.03em",
-                                    color: "var(--lp-blue)",
-                                    paddingRight: "0.04em",
-                                }}
-                            >
-                                {HERO_COPY.line2}
-                            </span>
-                        </h1>
-
-                        <p
-                            className="mt-7 max-w-[560px] landing-fade-in-up landing-delay-200"
-                            style={{
-                                fontSize: "clamp(1rem, 1.9vw, 1.1875rem)",
-                                lineHeight: 1.6,
-                                color: "var(--lp-ink-70)",
-                                fontWeight: 400,
-                            }}
-                        >
-                            {HERO_COPY.subtitle}
-                        </p>
-
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-4 mt-9 landing-fade-in-up landing-delay-300">
-                            <LandingButton
-                                href="#agendar-demo"
-                                onClick={(e) => {
-                                    if (onSchedule) {
-                                        e.preventDefault();
-                                        onSchedule();
-                                    }
-                                }}
-                                variant="primary"
-                                size="lg"
-                                icon={<Calendar className="h-4 w-4" strokeWidth={2} />}
-                                showArrow
-                            >
-                                Agendar demo gratuita
-                            </LandingButton>
-                            <p
-                                className="text-[13px] leading-snug max-w-[220px]"
-                                style={{ color: "var(--lp-ink-55)", fontWeight: 500 }}
-                            >
-                                Gratuita e personalizada para o contexto da sua agência.
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* ── DIREITA: a EVA lendo uma conversa (loop CSS 9s) ── */}
-                    <div className="relative landing-fade-in-up landing-delay-300" aria-hidden="true">
-                        <div
-                            ref={tiltRef}
-                            onPointerMove={handleTiltMove}
-                            onPointerLeave={handleTiltLeave}
-                            className="lp-card lp-frame lp-tilt p-5 sm:p-6 max-w-[440px] mx-auto lg:mx-0 lg:ml-auto"
-                        >
-                            {/* Header de telemetria (5 toques: easter egg) */}
-                            <div
-                                className="flex items-center gap-2.5 pb-4 border-b select-none"
-                                style={{ borderColor: "var(--lp-line-soft)" }}
-                                onClick={handleTelemetryTap}
-                            >
-                                <span className="lp-live-dot shrink-0" />
-                                <span className="lp-mono" style={{ color: "var(--lp-ink-55)" }}>
-                                    EVA · lendo a conversa
-                                </span>
-                                <span
-                                    className="lp-blink ml-auto"
-                                    style={{
-                                        width: 8,
-                                        height: 14,
-                                        background: "var(--lp-blue)",
-                                        display: "inline-block",
-                                    }}
-                                />
-                            </div>
-
-                            {/* Mensagem do lead */}
-                            <div className="lp-read-msg mt-5">
-                                <p className="lp-mono mb-1.5" style={{ color: "var(--lp-ink-40)" }}>
-                                    Carla R. · Meta Ads · 14:32
-                                </p>
-                                <div
-                                    className="px-4 py-3 text-[14px]"
-                                    style={{
-                                        background: "var(--lp-paper)",
-                                        border: "1px solid var(--lp-line)",
-                                        borderRadius: "10px 10px 10px 3px",
-                                        color: "var(--lp-ink-90)",
-                                        lineHeight: 1.5,
-                                    }}
-                                >
-                                    Oi, vi o anúncio e queria entender os planos.
-                                </div>
-                                {/* Varredura de leitura */}
-                                <div
-                                    className="lp-read-scan mt-2 h-[2px]"
-                                    style={{ background: "linear-gradient(90deg, var(--lp-blue), rgba(21,86,192,0.2))" }}
-                                />
-                            </div>
-
-                            {/* Pills de análise */}
-                            <div className="flex flex-wrap gap-2 mt-4">
-                                {READ_PILLS.map((p) => (
-                                    <span
-                                        key={p.label}
-                                        className={`${p.cls} lp-mono px-2.5 py-1.5`}
-                                        style={{
-                                            color: p.color,
-                                            background: p.bg,
-                                            border: `1px solid ${p.border}`,
-                                            borderRadius: 6,
-                                            textTransform: "none",
-                                            letterSpacing: "0.02em",
-                                        }}
-                                    >
-                                        {p.label}
-                                    </span>
-                                ))}
-                            </div>
-
-                            {/* Sugestão + aprovação */}
-                            <div className="lp-read-suggest mt-4">
-                                <div
-                                    className="px-4 py-3.5"
-                                    style={{
-                                        background: "var(--lp-white)",
-                                        border: "1px solid var(--lp-line)",
-                                        borderLeft: "3px solid var(--lp-blue)",
-                                        borderRadius: 8,
-                                    }}
-                                >
-                                    <p className="lp-mono mb-1.5" style={{ color: "var(--lp-blue)" }}>
-                                        sugestão da EVA
-                                    </p>
-                                    <p className="text-[13.5px]" style={{ color: "var(--lp-ink-90)", lineHeight: 1.5 }}>
-                                        Pergunte sobre orçamento e urgência antes de propor uma reunião.
-                                    </p>
-                                    <div className="flex items-center gap-2 mt-3">
-                                        <span
-                                            className="lp-read-approve inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] text-white"
-                                            style={{ background: "var(--lp-blue)", borderRadius: 6, fontWeight: 600 }}
-                                        >
-                                            <Check className="h-3 w-3" strokeWidth={2.8} />
-                                            Usar sugestão
-                                        </span>
-                                        <span
-                                            className="inline-flex items-center px-3 py-1.5 text-[12px]"
-                                            style={{
-                                                border: "1px solid var(--lp-line)",
-                                                borderRadius: 6,
-                                                color: "var(--lp-ink-55)",
-                                                fontWeight: 600,
-                                            }}
-                                        >
-                                            Editar
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Carimbo: virou oportunidade */}
-                            <div className="flex justify-end mt-4">
-                                <span
-                                    className="lp-read-stamp lp-mono inline-flex items-center gap-2 px-3 py-2"
-                                    style={{
-                                        color: "var(--lp-ink)",
-                                        border: "1.5px solid var(--lp-ink)",
-                                        borderRadius: 4,
-                                        background: "var(--lp-paper)",
-                                    }}
-                                >
-                                    → oportunidade no pipeline
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* O fio desce para a próxima seção */}
-                        <div
-                            className="hidden lg:block absolute left-1/2 -bottom-28 h-28 w-px"
-                            style={{
-                                background:
-                                    "repeating-linear-gradient(180deg, var(--lp-line) 0 6px, transparent 6px 12px)",
-                            }}
+        <section className="relative overflow-hidden" style={{ backgroundColor: "var(--lp-paper)" }}>
+            {/* LP.6: fita de marca (verde→azul) fluindo em loop contínuo, difusa +
+                grão. Decorativa, atrás do conteúdo. Estilos em index.css
+                (.lp-hero-wave). Exceção consciente ao "sem glow" (ver index.css). */}
+            <div className="lp-hero-wave" aria-hidden="true">
+                <svg viewBox="0 0 1600 400" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        {/* Gradiente periódico repetido (período 800): casa com a onda,
+                            então a cor flui junto sem revelar emenda. */}
+                        <linearGradient id="lpWaveA" gradientUnits="userSpaceOnUse" spreadMethod="repeat" x1="0" y1="0" x2="800" y2="0">
+                            <stop offset="0" stopColor="#00E37A" stopOpacity="0.78" />
+                            <stop offset="0.5" stopColor="#1556C0" stopOpacity="0.78" />
+                            <stop offset="1" stopColor="#00E37A" stopOpacity="0.78" />
+                        </linearGradient>
+                        <linearGradient id="lpWaveB" gradientUnits="userSpaceOnUse" spreadMethod="repeat" x1="0" y1="0" x2="800" y2="0">
+                            <stop offset="0" stopColor="#1E78D4" stopOpacity="0.46" />
+                            <stop offset="0.5" stopColor="#00E37A" stopOpacity="0.46" />
+                            <stop offset="1" stopColor="#1E78D4" stopOpacity="0.46" />
+                        </linearGradient>
+                    </defs>
+                    {/* Ondas senoidais PERIÓDICAS (período 800): cada uma desliza 800u
+                        em loop linear => fluxo contínuo sem emenda. Velocidades distintas
+                        dão profundidade. O blur (CSS) difunde; o grão vem do ::after. */}
+                    <g className="wave-art" fill="none" strokeLinecap="round">
+                        <path
+                            className="wave-line wave-line--a"
+                            d="M-800,196 Q-600,136 -400,196 Q-200,256 0,196 Q200,136 400,196 Q600,256 800,196 Q1000,136 1200,196 Q1400,256 1600,196 Q1800,136 2000,196 Q2200,256 2400,196"
+                            stroke="url(#lpWaveA)"
+                            strokeWidth="118"
                         />
+                        <path
+                            className="wave-line wave-line--b"
+                            d="M-800,232 Q-600,277 -400,232 Q-200,187 0,232 Q200,277 400,232 Q600,187 800,232 Q1000,277 1200,232 Q1400,187 1600,232 Q1800,277 2000,232 Q2200,187 2400,232"
+                            stroke="url(#lpWaveB)"
+                            strokeWidth="62"
+                        />
+                    </g>
+                </svg>
+            </div>
+
+            <div className="relative z-10 mx-auto flex min-h-[92vh] max-w-5xl flex-col justify-start px-4 sm:px-6 lg:px-8 pt-[19vh] pb-[26vh]">
+                {/* ── CENTRO: headline + sub + CTA (composição centrada, espírito handhold) ── */}
+                <div className="mx-auto w-full max-w-3xl text-center">
+                    {/* LP.6: headline em Sentient roman (display serif leve e grande,
+                        espírito handhold). Acento "cada conversa." mantém a voz itálica
+                        azul com a sublinha viva. */}
+                    <h1
+                        className="lp-display landing-fade-in-up-lg landing-delay-100"
+                        style={{
+                            fontSize: "clamp(2.7rem, 7.4vw, 5.4rem)",
+                            lineHeight: 1.03,
+                            letterSpacing: "-0.025em",
+                            color: "var(--lp-ink)",
+                        }}
+                    >
+                        {HERO_COPY.line1}
+                        <br />
+                        <span
+                            className="lp-serif lp-underline"
+                            style={{
+                                letterSpacing: "-0.02em",
+                                color: "var(--lp-blue)",
+                                paddingRight: "0.04em",
+                            }}
+                        >
+                            {HERO_COPY.line2}
+                        </span>
+                    </h1>
+
+                    <p
+                        className="mx-auto mt-8 max-w-[600px] landing-fade-in-up landing-delay-200"
+                        style={{
+                            fontSize: "clamp(1.0625rem, 1.9vw, 1.1875rem)",
+                            lineHeight: 1.65,
+                            color: "var(--lp-ink-70)",
+                            fontWeight: 400,
+                        }}
+                    >
+                        {HERO_COPY.subtitle}
+                    </p>
+
+                    <div className="mt-10 flex flex-col items-center gap-3.5 landing-fade-in-up landing-delay-400">
+                        <LandingButton
+                            href="#agendar-demo"
+                            onClick={(e) => {
+                                if (onSchedule) {
+                                    e.preventDefault();
+                                    onSchedule();
+                                }
+                            }}
+                            variant="primary"
+                            size="lg"
+                            icon={<Calendar className="h-4 w-4" strokeWidth={2} />}
+                            showArrow
+                        >
+                            Agendar demo gratuita
+                        </LandingButton>
+                        <p className="text-[13px] leading-snug" style={{ color: "var(--lp-ink-55)", fontWeight: 500 }}>
+                            Gratuita e personalizada para o contexto da sua agência.
+                        </p>
                     </div>
                 </div>
             </div>

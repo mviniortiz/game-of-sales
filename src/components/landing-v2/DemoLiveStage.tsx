@@ -4,6 +4,7 @@ import { EvaOrb } from "./EvaOrb";
 import { useGeminiLive } from "./useGeminiLive";
 import { whatsappUrl } from "@/config/contact";
 import { WhatsappGlyph } from "@/components/icons/WhatsappGlyph";
+import { DemoScheduler, DEMO_SLOTS, type SchedStep } from "./DemoScheduler";
 
 // LP.8 (v2) — tour AO VIVO: o app real num iframe (/embed-demo) + a EVA por VOZ
 // (Gemini Live, rodando no parent) narrando e NAVEGANDO o iframe. A tool
@@ -14,28 +15,87 @@ interface DemoLiveStageProps {
     site: string;
 }
 
-const SCREEN_ORDER = ["inicio", "inbox", "pipeline", "lead", "eva-studio"];
-const SCREEN_LABEL: Record<string, string> = { inicio: "Central de Comando", inbox: "Inbox", pipeline: "Pipeline", lead: "Detalhe do lead", "eva-studio": "Configurar agente", metas: "Metas", ranking: "Ranking" };
-const NAV_ENUM = ["inicio", "inbox", "pipeline", "lead", "eva-studio", "metas", "ranking"];
+const SCREEN_ORDER = ["inicio", "inbox", "inbox-analise", "pipeline", "lead", "metas", "ranking", "eva-studio", "eva-studio-criar"];
+const SCREEN_LABEL: Record<string, string> = { inicio: "Central de Comando", inbox: "Inbox", "inbox-analise": "Análise da EVA", pipeline: "Pipeline", lead: "Detalhe do lead", "eva-studio": "EVA Studio", "eva-studio-criar": "Criar agente", metas: "Metas", ranking: "Ranking" };
+const NAV_ENUM = ["inicio", "inbox", "inbox-analise", "pipeline", "lead", "eva-studio", "eva-studio-criar", "metas", "ranking"];
+
+// telas pesadas demoram a montar — espera mais antes de mandar a EVA narrar,
+// pra ela não falar sobre uma tela ainda em loading/spinner.
+const MOUNT_DELAY: Record<string, number> = { "eva-studio": 2000, "eva-studio-criar": 2600, "inbox-analise": 1100, lead: 1100 };
+
+// Tour DETERMINÍSTICO: o sistema abre a tela e MANDA a EVA narrar exatamente
+// aquela tela (a tela já está aberta). Garante que fala e tela nunca divergem.
+const TOUR_PROMPT: Record<string, string> = {
+    inicio: "Você está mostrando a CENTRAL DE COMANDO. Em 3 ou 4 frases calorosas, explique que é aqui que o gestor começa o dia: você já leu toda a operação e reuniu num lugar só as conversas ativas, os leads quentes e a fila do que precisa de atenção agora, com o próximo passo de cada um. Ao terminar, pare.",
+    inbox: "Agora você está mostrando a CAIXA DE ENTRADA (o Inbox). Em 2 ou 3 frases, explique que são todas as conversas dos canais (WhatsApp e afins) reunidas num lugar só, na ordem do que precisa de atenção. Ao terminar, pare.",
+    "inbox-analise": "Agora você ABRIU a conversa da Carla e o seu painel de análise apareceu ao lado. Em 3 ou 4 frases, mostre o DIFERENCIAL: você leu a conversa inteira, percebeu que é um lead quente com intenção de preço, e já deixou a resposta sugerida pronta — o time só revisa e aprova antes de enviar. É isso que te diferencia de um chat comum: você entende a conversa e sugere o próximo passo. Ao terminar, pare.",
+    pipeline: "Agora você está mostrando o PIPELINE. Em 3 ou 4 frases, explique que é o funil: cada conversa vira uma oportunidade; há estágios, dá pra ver um lead parado e você avisa quando algo precisa de follow-up. Ao terminar, pare.",
+    lead: "Agora você está mostrando o DETALHE DE UMA OPORTUNIDADE. Em 3 ou 4 frases, explique o que aparece: o contexto do lead, o histórico da conversa, o que você entendeu e o próximo passo que você sugere. Ao terminar, pare.",
+    metas: "Agora você está mostrando as METAS. Em 3 ou 4 frases, explique que aqui o gestor acompanha as metas do time em tempo real (quanto já foi feito do objetivo do mês) e que dá pra CONFIGURAR a meta de cada vendedor — definir o valor e o período, e a Vyzon mostra o quanto falta e o ritmo necessário. Ao terminar, pare.",
+    ranking: "Agora você está mostrando o RANKING. Em 3 ou 4 frases, explique que é o placar da equipe: mostra como cada vendedor está em relação à meta, de um jeito que dá visibilidade e motiva o time sadiamente, sem exposição. Ao terminar, pare.",
+    "eva-studio": "Agora você está mostrando o EVA STUDIO, onde a pessoa cria agentes especialistas. Em 2 ou 3 frases, diga que aqui ela monta agentes para qualificação, follow-up, propostas e reativação, cada um treinado com o playbook da agência. Ao terminar, pare.",
+    "eva-studio-criar": "Agora você SELECIONOU o agente de Qualificação e abriu o chat de criação. Em 3 ou 4 frases, mostre como é simples: vocês conversam, você faz algumas perguntas sobre o negócio e monta o agente em minutos, pronto pra qualificar os leads que chegam. Ao terminar, convide calorosamente pra agendar uma demo ou testar 14 dias grátis e pare.",
+};
 
 function buildSystem(site: string): string {
     const alvo = site.trim() ? ` para ${site.trim()}` : "";
+    const negocio = site.trim() ? `o negócio de ${site.trim()}` : "a agência dela";
     return [
-        `Você é a EVA, a inteligência da Vyzon — Central Comercial com IA para agências que vendem por conversa.`,
-        `Fale SEMPRE em português do Brasil, calorosa, consultiva, frases curtas. É uma conversa, e você está MOSTRANDO a plataforma na tela${alvo}.`,
-        `RITMO (regra central): você controla a TELA pela ferramenta navegar. SEMPRE chame navegar no INÍCIO de cada tela — inclusive a Central no começo — e SÓ DEPOIS explique aquela tela, em 2 ou 3 frases, com calma. É uma chamada de navegar por tela, na ordem certa. NUNCA explique uma tela sem antes ter chamado navegar para ela; NUNCA chame navegar de várias telas de uma vez nem antecipe a próxima enquanto ainda está explicando a atual. A tela que aparece tem que bater com o que você está falando naquele momento.`,
-        `Siga esta ordem: navegar "inicio" (Central de Comando: você reúne conversas, leads quentes e o próximo passo de cada lead) → navegar "inbox" (as conversas chegando dos canais, onde você lê cada atendimento) → navegar "pipeline" (cada conversa vira uma oportunidade no funil e você aponta o que está parado) → navegar "lead" (abra o DETALHE de uma oportunidade e mostre as informações: contexto, histórico e o próximo passo sugerido) → navegar "eva-studio" (onde a pessoa cria um agente especialista em minutos com o playbook da agência).`,
-        `Conduza de forma contínua, sem esperar a pessoa pedir para avançar, mas responda se ela te interromper com uma pergunta. Ao final, convide para agendar uma demo ou testar 14 dias grátis.`,
-        `Regra do produto: a EVA SUGERE, o time APROVA. Nunca diga que envia mensagens sozinha. Não invente preços, números, clientes nem integrações.`,
+        // ── PERSONA ──────────────────────────────────────────────────────────
+        `Você é a EVA, a inteligência da Vyzon — Central Comercial com IA para agências que vendem por conversa. Fale SEMPRE em português do Brasil: calorosa, consultiva, frases curtas. É uma conversa, e você está MOSTRANDO a plataforma na tela${alvo}.`,
+
+        // ── DEMO GUIADA: O SISTEMA controla a tela, não você ─────────────────
+        `Esta é uma demonstração GUIADA. O SISTEMA controla a tela e te diz, uma de cada vez, qual tela explicar — a tela JÁ vai estar aberta na frente da pessoa quando você receber a instrução. Quando receber "Você está mostrando a tela X, explique...", explique EXATAMENTE essa tela, com substância (3 a 4 frases): o que aparece ali e por que importa pra uma agência. Ao terminar de explicar, PARE e aguarde a próxima instrução do sistema. Você NÃO precisa (e NÃO deve) usar a ferramenta navegar durante a apresentação guiada — a tela já é trocada pra você. Nunca fale de uma tela diferente da que o sistema acabou de indicar.`,
+
+        // ── PERGUNTAS DA PESSOA (loop) ───────────────────────────────────────
+        `Se a pessoa te interromper com uma pergunta, responda com naturalidade e pare; o sistema retoma a apresentação. Só se ela pedir EXPLICITAMENTE pra ver outra área (por exemplo "me mostra as metas") use a ferramenta navegar para abri-la e explique.`,
+
+        // ── AGENDAR (só se ela quiser) ───────────────────────────────────────
+        `AGENDAR (só se a pessoa demonstrar interesse em marcar — não force; você NÃO envia links, e-mails nem convites e nunca diz que enviou). Conduza pela ferramenta agendar: (a) agendar acao="abrir" e diga, resumido, os horários: terça às 14h, quarta às 10h, quinta às 16h ou sexta às 11h (horário de Brasília). (b) Quando ela escolher, agendar acao="selecionar" com horario = o que ela falou (ex "quinta"). (c) Pergunte, em uma frase, o que ela gostaria de ver na demo. (d) Faça 1 ou 2 perguntas curtas sobre ${negocio} (o que vende, como os leads chegam hoje). (e) agendar acao="confirmar", agradeça em uma frase e encerre.`,
+
+        // ── GUARDRAILS ───────────────────────────────────────────────────────
+        `REGRAS: a EVA SUGERE, o time APROVA — nunca diga que envia mensagens sozinha. Não invente preços, números, clientes nem integrações.`,
     ].join(" ");
 }
 
+// quebra a fala em frases (termina em . ! ? …) pra legenda mostrar só a frase
+// ATUAL e deixar a anterior sumir — sem empilhar o turno inteiro.
+function splitSentences(t: string): string[] {
+    const out: string[] = [];
+    let cur = "";
+    for (const ch of t) {
+        cur += ch;
+        if (".!?…".indexOf(ch) >= 0) { const s = cur.trim(); if (s) out.push(s); cur = ""; }
+    }
+    const tail = cur.trim();
+    if (tail) out.push(tail);
+    return out;
+}
+
+// Tools BLOCKING (padrão): o modelo pausa MINIMAMENTE em cada chamada (a tool é
+// instantânea, devolve "ok" na hora) — isso ESPAÇA a geração e mantém o lead de
+// áudio pequeno, o que é essencial pra sincronia tela↔fala. NON_BLOCKING fazia
+// ela falar contínuo, o lead explodia e a navegação travava no futuro.
 const TOOLS = [{
-    functionDeclarations: [{
-        name: "navegar",
-        description: "Abre uma tela da plataforma Vyzon (ou, com tela='lead', o detalhe de uma oportunidade) para a pessoa ver, enquanto você explica.",
-        parameters: { type: "OBJECT", properties: { tela: { type: "STRING", enum: NAV_ENUM, description: "qual tela abrir" } }, required: ["tela"] },
-    }],
+    functionDeclarations: [
+        {
+            name: "navegar",
+            description: "Abre uma tela da plataforma Vyzon (ou, com tela='lead', o detalhe de uma oportunidade) para a pessoa ver, enquanto você explica.",
+            parameters: { type: "OBJECT", properties: { tela: { type: "STRING", enum: NAV_ENUM, description: "qual tela abrir" } }, required: ["tela"] },
+        },
+        {
+            name: "agendar",
+            description: "Conduz o agendamento de uma demo/call quando a pessoa demonstra interesse em marcar. Você NÃO envia links nem e-mails — você abre e opera esta agenda. acao='abrir' mostra a agenda; 'selecionar' (com horario) marca o dia/hora que a pessoa escolheu e avança; 'detalhes' avança pra etapa de perguntas; 'confirmar' finaliza; 'fechar' volta ao tour.",
+            parameters: {
+                type: "OBJECT",
+                properties: {
+                    acao: { type: "STRING", enum: ["abrir", "selecionar", "detalhes", "confirmar", "fechar"], description: "o que fazer na agenda" },
+                    horario: { type: "STRING", description: "dia ou hora escolhido pela pessoa, ex 'quinta' ou '16h' (só em acao='selecionar')" },
+                },
+                required: ["acao"],
+            },
+        },
+    ],
 }];
 
 export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
@@ -46,35 +106,74 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
     const [chatOpen, setChatOpen] = useState(false);
     const [draft, setDraft] = useState("");
     const [waiting, setWaiting] = useState(false);
+    const [sched, setSched] = useState<SchedStep | null>(null);
+    const [slotId, setSlotId] = useState<string | null>(null);
     const connectedRef = useRef(false);
     const activeRef = useRef("inicio");
-    const queueRef = useRef<string[]>([]);
-    const pumpRef = useRef<number | null>(null);
+    const navTimersRef = useRef<number[]>([]);
+    const lastTargetRef = useRef("inicio");
+    const tourIdxRef = useRef(-1);      // -1 = não começou, -2 = concluído
+    const stepSpokeRef = useRef(false); // a EVA já narrou a tela atual?
+    const nudgedStepRef = useRef(-1);   // último passo já mandado narrar (anti-duplicação)
     const live = useGeminiLive();
-
-    // RITMO: a EVA narra de forma CONTÍNUA (um turno longo) — então não dá pra
-    // esperar "fim de turno" pra trocar de tela (isso travava o visual na 1ª).
-    // Navegamos na PRÓPRIA tool call `navegar` (o sinal de "vou falar desta tela
-    // agora"), com um piso entre trocas só pra absorver rajada de chamadas.
-    const MIN_DWELL = 2200;
 
     const sendGoto = (screen: string) => {
         try { iframeRef.current?.contentWindow?.postMessage({ source: "vyzon-demo", action: "goto", screen }, window.location.origin); } catch { /* noop */ }
     };
     const setScreen = (screen: string) => { activeRef.current = screen; setActive(screen); sendGoto(screen); };
 
-    const showNext = () => {
-        const next = queueRef.current.shift();
-        if (next === undefined) { pumpRef.current = null; return; }
-        setScreen(next);
-        pumpRef.current = window.setTimeout(showNext, MIN_DWELL);
+    // SINCRONIA tela↔fala: o tool call `navegar` chega ADIANTADO (no tempo de
+    // geração do modelo), mas a pessoa percebe o tempo de REPRODUÇÃO. Atrasamos a
+    // troca de tela pelo áudio ainda na fila (playbackLeadMs) menos uma
+    // antecipação pro cursor andar — assim a tela vira no instante em que ela
+    // OUVE a transição. Robusto mesmo se o modelo adianta toda a narração.
+    const ANTICIPATE = 480;   // ms que o cursor anda antes do clique/troca
+    const MAX_SYNC = 7000;    // teto: nunca segura a tela mais que isso (anti-trava)
+    // executa fn no instante em que a pessoa OUVE a fala atual: atrasa pelo áudio
+    // ainda na fila (playbackLeadMs), menos a antecipação do cursor, com teto pra
+    // a tela nunca ficar "presa no passado" se o lead crescer demais.
+    const afterSpeech = (fn: () => void, extra = 0) => {
+        const delay = Math.min(MAX_SYNC, Math.max(0, live.playbackLeadMs() - ANTICIPATE)) + extra;
+        const t = window.setTimeout(fn, delay);
+        navTimersRef.current.push(t);
     };
-    const enqueue = (screen: string) => {
-        if (activeRef.current === screen) return;          // já é a tela atual
-        const q = queueRef.current;
-        if (q[q.length - 1] === screen) return;            // duplicado consecutivo
-        q.push(screen);
-        if (pumpRef.current === null) showNext();          // mostra já; rajada é paceada por MIN_DWELL
+    const scheduleNav = (screen: string) => {
+        if (lastTargetRef.current === screen) return;      // já estamos indo pra lá
+        lastTargetRef.current = screen;
+        afterSpeech(() => setScreen(screen));
+    };
+
+    // TOUR DETERMINÍSTICO: abre a tela i (de verdade), espera montar e MANDA a EVA
+    // narrar exatamente essa tela. O avanço pra próxima é feito por efeito quando
+    // ela termina de falar. Tela sempre bate com a fala.
+    const startStep = (i: number) => {
+        if (i < 0 || i >= SCREEN_ORDER.length) { tourIdxRef.current = -2; return; }
+        if (nudgedStepRef.current >= i) return;  // este passo já foi mandado narrar (anti-repetição)
+        nudgedStepRef.current = i;
+        tourIdxRef.current = i;
+        stepSpokeRef.current = false;
+        const screen = SCREEN_ORDER[i];
+        lastTargetRef.current = screen;
+        setScreen(screen);
+        const t = window.setTimeout(() => live.nudge(TOUR_PROMPT[screen] || `Explique a tela ${screen}.`), MOUNT_DELAY[screen] ?? 750);
+        navTimersRef.current.push(t);
+    };
+
+    // agendamento conduzido pela EVA (substitui a alucinação do "enviei o link")
+    const handleAgendar = (acao: string, horario: string) => {
+        if (acao === "abrir") { afterSpeech(() => setSched("horarios")); return; }
+        if (acao === "selecionar") {
+            const q = horario.toLowerCase();
+            const m = DEMO_SLOTS.find((s) =>
+                q.includes(s.dia.toLowerCase()) || q.includes(s.hora.toLowerCase().replace("h", "")) || `${s.dia} ${s.hora}`.toLowerCase().includes(q),
+            ) || DEMO_SLOTS[2];
+            afterSpeech(() => { setSlotId(m.id); setSched("horarios"); });
+            afterSpeech(() => setSched("detalhes"), 1400); // mostra o clique, depois avança
+            return;
+        }
+        if (acao === "detalhes") { afterSpeech(() => setSched("detalhes")); return; }
+        if (acao === "confirmar") { afterSpeech(() => setSched("confirmado")); return; }
+        if (acao === "fechar") { setSched(null); return; }
     };
 
     // handshake + auto-connect da voz quando o app real fica pronto
@@ -85,19 +184,24 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
             if (d?.source !== "vyzon-demo" || d?.event !== "ready") return;
             if (d.path && String(d.path).startsWith("/embed-demo")) return;
             setAppReady(true);
-            setScreen(activeRef.current); // posiciona em "inicio"; as próximas vêm das tool calls
+            setScreen(activeRef.current); // posiciona em "inicio"; o tour é dirigido pelo cliente
             if (!connectedRef.current) {
                 connectedRef.current = true;
                 live.connect({
                     systemInstruction: buildSystem(site),
                     voiceName: "Sulafat",
                     tools: TOOLS,
-                    kickoff: "Comece a demonstração agora pela Central de Comando e conduza na ordem das telas (inicio, inbox, pipeline, abrir o detalhe de um lead, e configurar agente), explicando CADA uma com calma e por completo antes de avançar para a próxima. Não espere minhas respostas para seguir.",
+                    // sem kickoff: o tour determinístico (efeito abaixo) abre a tela
+                    // e MANDA a EVA narrar cada uma, na ordem.
                     onToolCall: (name, args) => {
                         if (name === "navegar") {
                             const tela = String((args as { tela?: string }).tela || "");
                             if (import.meta.env.DEV) console.debug("[demo] navegar →", tela);
-                            if (NAV_ENUM.includes(tela)) enqueue(tela);
+                            if (NAV_ENUM.includes(tela)) scheduleNav(tela);
+                        } else if (name === "agendar") {
+                            const a = args as { acao?: string; horario?: string };
+                            if (import.meta.env.DEV) console.debug("[demo] agendar →", a.acao, a.horario);
+                            handleAgendar(String(a.acao || ""), String(a.horario || ""));
                         }
                         return "ok";
                     },
@@ -109,13 +213,47 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // desconecta a voz e para o pump ao sair do tour
-    useEffect(() => () => { live.disconnect(); if (pumpRef.current) clearTimeout(pumpRef.current); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    // desconecta a voz e limpa timers de navegação ao sair do tour
+    useEffect(() => () => { live.disconnect(); navTimersRef.current.forEach(clearTimeout); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // quando a EVA começa a falar, tira o "pensando" do chat de conversa
+    // quando a EVA começa a falar: tira o "pensando" e marca que narrou a tela
     useEffect(() => {
-        if (live.orbState === "speaking") setWaiting(false);
+        if (live.orbState === "speaking") { setWaiting(false); stepSpokeRef.current = true; }
     }, [live.orbState]);
+
+    // INÍCIO do tour: assim que a voz fica ao vivo, abre a 1ª tela e manda narrar
+    useEffect(() => {
+        if (live.status === "live" && tourIdxRef.current === -1) startStep(0);
+    }, [live.status]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // LEGENDA AO VIVO: mostra SÓ a frase que ela está falando agora; quando uma
+    // nova frase começa, a anterior DISSOLVE (vanish com blur). A key da frase
+    // atual é o ÍNDICE (não o texto) pra ela NÃO re-animar a cada palavra que
+    // chega — só anima a entrada quando começa uma frase nova.
+    const [capCurrent, setCapCurrent] = useState("");
+    const [capKey, setCapKey] = useState(0);
+    const [capFading, setCapFading] = useState<{ id: number; text: string }[]>([]);
+    const capSeenRef = useRef(0);
+    const capIdRef = useRef(0);
+    const capTimersRef = useRef<number[]>([]);
+    useEffect(() => {
+        const full = live.evaText;
+        if (!full) { setCapCurrent(""); capSeenRef.current = 0; return; }
+        const s = splitSentences(full);
+        if (!s.length) return;
+        const completedBefore = s.length - 1; // tudo antes da última já "passou"
+        while (capSeenRef.current < completedBefore) {
+            const text = s[capSeenRef.current];
+            capSeenRef.current += 1;
+            const id = ++capIdRef.current;
+            setCapFading((f) => [...f.slice(-1), { id, text }]); // no máx. 1 dissolvendo
+            const tm = window.setTimeout(() => setCapFading((f) => f.filter((x) => x.id !== id)), 2300);
+            capTimersRef.current.push(tm);
+        }
+        setCapCurrent(s[s.length - 1] ?? "");
+        setCapKey(s.length); // muda só quando começa uma frase nova → anima 1x
+    }, [live.evaText]);
+    useEffect(() => () => { capTimersRef.current.forEach(clearTimeout); }, []);
 
     // TRANSIÇÃO automática: abre o modo conversa SÓ quando o usuário começa a
     // tirar dúvidas (fala uma pergunta durante o tour). Quem só assiste não é
@@ -123,6 +261,22 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
     useEffect(() => {
         if (!chatOpen && live.userText.trim().length >= 3) setChatOpen(true);
     }, [live.userText, chatOpen]);
+
+    // AVANÇO do tour: quando a EVA TERMINA de narrar a tela atual (volta a
+    // "listening" depois de ter falado), espera o áudio drenar e abre a próxima.
+    // Pausa em modo conversa/agenda e quando o usuário está falando.
+    useEffect(() => {
+        if (tourIdxRef.current < 0) return;            // tour não rodando/concluído
+        if (chatOpen || sched) return;                 // conversa/agenda mandam
+        if (live.orbState !== "listening") return;     // ainda falando/pensando
+        if (!stepSpokeRef.current) return;             // ainda não narrou esta tela
+        if (live.userText.trim()) return;              // usuário está falando
+        const t = window.setTimeout(() => {
+            if (chatOpen || sched || live.userText.trim()) return;
+            startStep(tourIdxRef.current + 1);
+        }, live.playbackLeadMs() + 900);               // só depois do áudio terminar
+        return () => clearTimeout(t);
+    }, [live.orbState, chatOpen, sched, live.userText]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // envia a pergunta por texto (a EVA responde por voz + texto)
     const sendChat = () => {
@@ -184,7 +338,7 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
                             </div>
                             <div className="max-w-xl">
                                 <p className="lp-display" style={{ fontSize: "clamp(1.5rem,3vw,2.1rem)", color: "var(--lp-ink)", letterSpacing: "-0.025em", lineHeight: 1.1 }}>EVA</p>
-                                <p className="mx-auto mt-3 text-[15.5px]" style={{ color: "rgba(5,5,5,0.66)", lineHeight: 1.55, minHeight: 50, maxWidth: 520 }}>
+                                <p className="mx-auto mt-3 text-[15.5px]" style={{ color: "rgba(8,10,15,0.92)", lineHeight: 1.55, minHeight: 50, maxWidth: 520 }}>
                                     {waiting
                                         ? "pensando…"
                                         : live.evaText || (live.userText ? `Você: ${live.userText}` : "Pode falar comigo, ou digite sua dúvida aqui embaixo.")}
@@ -221,6 +375,17 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
                         </div>
                     </div>
                 )}
+
+                {/* Agendamento conduzido pela EVA (overlay acima da demo) */}
+                {sched && (
+                    <DemoScheduler
+                        step={sched}
+                        selectedId={slotId}
+                        site={site}
+                        onClose={() => setSched(null)}
+                        onConclude={onDone}
+                    />
+                )}
             </div>
 
             {/* barra: orb + transcrição/estado + controles (empilha no mobile) */}
@@ -231,9 +396,18 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
                         {live.status === "live" ? (
                             <>
                                 <p className="lp-mono" style={{ color: "var(--lp-live)" }}>EVA ao vivo · {SCREEN_LABEL[active] || active}</p>
-                                <p className="truncate text-[13px]" style={{ color: "rgba(5,5,5,0.66)" }}>
-                                    {live.evaText || (live.userText ? `Você: ${live.userText}` : "Pode falar com a EVA, ela está te mostrando a plataforma.")}
-                                </p>
+                                <div className="relative" style={{ minHeight: "2.6em" }} aria-live="polite">
+                                    {/* frase anterior dissolvendo (vanish) */}
+                                    {capFading.map((f) => (
+                                        <p key={f.id} className="vz-cap-out pointer-events-none absolute inset-x-0 top-0 line-clamp-2 text-[13px] leading-snug" style={{ color: "rgba(8,10,15,0.92)" }}>
+                                            {f.text}
+                                        </p>
+                                    ))}
+                                    {/* frase atual (key = índice da frase, não o texto) */}
+                                    <p key={capKey} className="vz-cap-in line-clamp-2 text-[13px] leading-snug" style={{ color: "rgba(8,10,15,0.92)" }}>
+                                        {capCurrent || (live.userText ? `Você: ${live.userText}` : "Pode falar com a EVA, ela está te mostrando a plataforma.")}
+                                    </p>
+                                </div>
                             </>
                         ) : live.status === "connecting" ? (
                             <p className="text-[13.5px]" style={{ color: "rgba(5,5,5,0.6)" }}>Conectando a EVA… libere o microfone quando o navegador pedir.</p>

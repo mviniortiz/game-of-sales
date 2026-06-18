@@ -422,7 +422,7 @@ const Inbox = () => {
             className="flex w-full overflow-hidden -mx-3 -my-3 sm:-mx-4 sm:-my-4 md:-mx-6 md:-my-6"
             style={{
                 height: "calc(100vh - 3.5rem)",
-                background: "#F3F6FA",
+                background: "#F6F4EF",
             }}
         >
             {/* Coluna esquerda — lista */}

@@ -5,7 +5,7 @@ import { EvaAnalyzingState } from "@/components/inbox/EvaAnalyzingState";
 // (rota /eva-suggestion-preview). Validação visual alinhada à DNA da landing.
 export default function EvaSuggestionPreview() {
     return (
-        <div style={{ minHeight: "100vh", background: "#F3F6FA" }} className="px-6 py-12">
+        <div style={{ minHeight: "100vh", background: "#F6F4EF" }} className="px-6 py-12">
             <div className="mx-auto flex max-w-4xl flex-wrap items-start gap-8">
                 <div className="w-full max-w-md space-y-6">
                     <p className="text-[13px]" style={{ color: "#64748B" }}>EvaSuggestionCard — preview</p>

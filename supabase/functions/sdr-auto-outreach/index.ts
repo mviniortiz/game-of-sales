@@ -217,7 +217,14 @@ async function sendWhatsApp(phone: string, message: string): Promise<{ sent: boo
     const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json", apikey: EVOLUTION_API_KEY },
-      body: JSON.stringify({ number: normalizedPhone, text: message }),
+      body: JSON.stringify({
+        number: normalizedPhone,
+        text: message,
+        // ritmo humano: a Evolution mostra "digitando…" por `delay` ms antes de
+        // entregar (anti-ban). Proporcional ao texto, teto 3.5s.
+        delay: Math.min(3500, Math.max(800, message.trim().length * 35)),
+        presence: "composing",
+      }),
     });
     if (!res.ok) {
       const errorText = await res.text();

@@ -1,8 +1,9 @@
+import { useState } from "react";
 import { ButtonV2 } from "./ButtonV2";
 import { EvaOrb } from "./EvaOrb";
 
-// LP.7 (v2) — passo 1 da demo guiada: intake. Coleta e-mail + site/nome (sem
-// backend nesta versão; nada é enviado). Link discreto pra versão por voz.
+// LP.7 (v2) — passo 1 da demo guiada: intake. Coleta e-mail CORPORATIVO + site
+// (sem backend nesta versão; nada é enviado). Valida e-mail pessoal e domínio.
 interface DemoIntakeStepProps {
     email: string;
     site: string;
@@ -13,10 +14,42 @@ interface DemoIntakeStepProps {
     onStart: () => void;
 }
 
-const emailOk = (e: string) => /\S+@\S+\.\S+/.test(e.trim());
+const HEARD_OPTIONS = ["Google", "Instagram", "LinkedIn", "Indicação", "YouTube", "Outro"];
+
+// provedores de e-mail pessoal mais comuns no BR — bloqueados (queremos corporativo)
+const PERSONAL_EMAIL_DOMAINS = new Set([
+    "gmail.com", "googlemail.com", "hotmail.com", "hotmail.com.br", "outlook.com", "outlook.com.br",
+    "live.com", "msn.com", "yahoo.com", "yahoo.com.br", "ymail.com", "icloud.com", "me.com",
+    "aol.com", "proton.me", "protonmail.com", "bol.com.br", "uol.com.br", "terra.com.br",
+    "ig.com.br", "globo.com", "globomail.com", "r7.com", "zipmail.com.br",
+]);
+
+function emailError(e: string): string {
+    const v = e.trim().toLowerCase();
+    if (!v) return "";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return "Digite um e-mail válido.";
+    const domain = v.split("@")[1] || "";
+    if (PERSONAL_EMAIL_DOMAINS.has(domain)) return "Use o e-mail corporativo da sua agência, não um e-mail pessoal.";
+    return "";
+}
+
+function siteError(s: string): string {
+    const v = s.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
+    if (!v) return "";
+    // precisa ser um domínio de verdade (ex .com, .com.br, .io)
+    if (!/^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(v) || !/\.[a-z]{2,}$/.test(v)) {
+        return "Informe o site da empresa, com domínio (ex: suaagencia.com).";
+    }
+    return "";
+}
 
 export const DemoIntakeStep = ({ email, site, heardFrom, setEmail, setSite, setHeardFrom, onStart }: DemoIntakeStepProps) => {
-    const ready = emailOk(email) && site.trim().length > 0;
+    const [emailTouched, setEmailTouched] = useState(false);
+    const [siteTouched, setSiteTouched] = useState(false);
+    const eErr = emailError(email);
+    const sErr = siteError(site);
+    const ready = !!email.trim() && !!site.trim() && !eErr && !sErr;
+    const showErr = (touched: boolean, err: string) => touched && !!err;
     return (
         <div className="vz-modal-step grid flex-1 lg:grid-cols-[1.1fr_0.9fr]">
             <div className="flex flex-col justify-center gap-6 px-7 py-10 sm:px-10">
@@ -33,30 +66,53 @@ export const DemoIntakeStep = ({ email, site, heardFrom, setEmail, setSite, setH
                 </div>
 
                 <div className="flex max-w-md flex-col gap-3">
-                    <input
-                        type="email"
-                        className="vz-input-light w-full"
-                        placeholder="Seu e-mail"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        aria-label="E-mail"
-                        autoFocus
-                    />
-                    <input
-                        className="vz-input-light w-full"
-                        placeholder="Site ou nome da agência"
-                        value={site}
-                        onChange={(e) => setSite(e.target.value)}
-                        aria-label="Site ou nome da agência"
-                    />
-                    <input
-                        className="vz-input-light w-full"
-                        placeholder="Onde você nos encontrou? (opcional)"
-                        value={heardFrom}
-                        onChange={(e) => setHeardFrom(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && ready && onStart()}
-                        aria-label="Onde você nos encontrou"
-                    />
+                    <div>
+                        <input
+                            type="email"
+                            className="vz-input-light w-full"
+                            placeholder="Seu e-mail corporativo"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            onBlur={() => setEmailTouched(true)}
+                            aria-label="E-mail corporativo"
+                            aria-invalid={showErr(emailTouched, eErr)}
+                            autoFocus
+                        />
+                        {showErr(emailTouched, eErr) && (
+                            <p className="mt-1.5 text-[13px]" style={{ color: "#c0392b" }}>{eErr}</p>
+                        )}
+                    </div>
+                    <div>
+                        <input
+                            className="vz-input-light w-full"
+                            placeholder="Site da sua agência (ex: suaagencia.com)"
+                            value={site}
+                            onChange={(e) => setSite(e.target.value)}
+                            onBlur={() => setSiteTouched(true)}
+                            aria-label="Site da agência"
+                            aria-invalid={showErr(siteTouched, sErr)}
+                        />
+                        {showErr(siteTouched, sErr) && (
+                            <p className="mt-1.5 text-[13px]" style={{ color: "#c0392b" }}>{sErr}</p>
+                        )}
+                    </div>
+                    <div className="mt-1">
+                        <label className="mb-2 block text-[13px]" style={{ color: "rgba(5,5,5,0.55)" }}>
+                            Onde você nos encontrou? <span style={{ color: "var(--lp-ink-40)" }}>(opcional)</span>
+                        </label>
+                        <select
+                            className="vz-input-light w-full"
+                            value={heardFrom}
+                            onChange={(e) => setHeardFrom(e.target.value)}
+                            aria-label="Onde você nos encontrou"
+                            style={{ appearance: "none", backgroundImage: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23667' stroke-width='2.5'><path d='M6 9l6 6 6-6'/></svg>\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center", paddingRight: 38 }}
+                        >
+                            <option value="">Selecione…</option>
+                            {HEARD_OPTIONS.map((opt) => (
+                                <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                        </select>
+                    </div>
                     <div className="mt-1">
                         <ButtonV2 onClick={onStart} variant="primary" showArrow disabled={!ready}>Iniciar demo ao vivo</ButtonV2>
                     </div>

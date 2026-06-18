@@ -1811,7 +1811,7 @@ export default function Onboarding() {
     };
 
     return (
-        <div className="min-h-screen flex selection:bg-[rgba(37,99,235,0.18)]" style={{ background: "#F3F6FA" }}>
+        <div className="min-h-screen flex selection:bg-[rgba(37,99,235,0.18)]" style={{ background: "#F6F4EF" }}>
             <Confetti show={showConfetti} />
 
             {/* Left Panel - Dynamic per step (hidden on mobile) */}

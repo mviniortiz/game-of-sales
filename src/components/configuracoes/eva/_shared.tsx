@@ -135,7 +135,7 @@ export function FormCard({
         {icon && (
           <span
             className="inline-flex items-center justify-center h-7 w-7 rounded-lg shrink-0"
-            style={{ background: "#F3F6FA", border: "1px solid #E6EDF5" }}
+            style={{ background: "#F6F4EF", border: "1px solid #E6EDF5" }}
           >
             {icon}
           </span>

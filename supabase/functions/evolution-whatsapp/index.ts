@@ -87,6 +87,30 @@ async function ensureWebhook(instanceName: string): Promise<{ ok: boolean; error
   }
 }
 
+// ── Blindagem anti-ban (EVA guardiã do número) ───────────────────────────────
+// Ritmo humano: a Evolution exibe "digitando/gravando" durante `delay` ms antes
+// de entregar a mensagem. Um atraso proporcional ao texto (teto 3.5s) tira o
+// padrão de bot que dispara banimento — o número parece uma pessoa digitando.
+function typingDelayMs(text?: string): number {
+  const len = (text || "").trim().length;
+  return Math.min(3500, Math.max(800, Math.round(len * 35)));
+}
+
+// Rede anti-rajada por instância e por número de destino. Limites GENEROSOS:
+// cortam loop/abuso (bug ou outreach descontrolado), não o vendedor respondendo
+// no Inbox. Fail-open: erro de infra nunca bloqueia um envio legítimo.
+async function outboundAllowed(admin: any, instanceName: string, target: string): Promise<boolean> {
+  try {
+    const [byInstance, byNumber] = await Promise.all([
+      admin.rpc("consume_rate_limit", { p_bucket: `wa-out:${instanceName}`, p_limit: 25, p_window_seconds: 60 }),
+      admin.rpc("consume_rate_limit", { p_bucket: `wa-out:${instanceName}:${target}`, p_limit: 12, p_window_seconds: 60 }),
+    ]);
+    return byInstance.data !== false && byNumber.data !== false;
+  } catch {
+    return true; // fail-open
+  }
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -788,14 +812,22 @@ serve(async (req) => {
 
       console.log(`[send] target=${target} isGroup=${isGroup} chatId=${body.chatId} instanceName=${instanceName}`);
 
+      if (!(await outboundAllowed(adminSupabase, instanceName, target))) {
+        return json(429, { error: "rate_limited", message: "Muitas mensagens em sequência neste canal. Aguarde alguns segundos." });
+      }
+
       try {
+        const typingMs = typingDelayMs(body.text);
         const sendRes = await evolutionRequest(`/message/sendText/${instanceName}`, {
           method: "POST",
           body: JSON.stringify({
             number: target,
             text: String(body.text).trim(),
+            // ritmo humano: "digitando…" por typingMs antes de entregar
+            delay: typingMs,
+            presence: "composing",
           }),
-        });
+        }, typingMs + 8000);
         return json(200, { success: true, instanceName, result: sendRes });
       } catch (sendErr: any) {
         console.error("[send] error:", sendErr?.message, "status:", sendErr?.status, "payload:", JSON.stringify(sendErr?.payload));
@@ -838,14 +870,21 @@ serve(async (req) => {
 
       if (body.caption) payload.caption = body.caption;
       if (body.fileName) payload.fileName = body.fileName;
+      // ritmo humano: leve "digitando…" antes da mídia
+      payload.delay = 600;
+      payload.presence = "composing";
 
       console.log(`[sendMedia] target=${target} type=${payload.mediatype} mime=${body.mimetype} base64Length=${body.mediaBase64.length}`);
+
+      if (!(await outboundAllowed(adminSupabase, instanceName, target))) {
+        return json(429, { error: "rate_limited", message: "Muitas mensagens em sequência neste canal. Aguarde alguns segundos." });
+      }
 
       try {
         const sendRes = await evolutionRequest(`/message/sendMedia/${instanceName}`, {
           method: "POST",
           body: JSON.stringify(payload),
-        });
+        }, 12000);
         console.log("[sendMedia] success:", JSON.stringify(sendRes));
         return json(200, { success: true, instanceName, result: sendRes });
       } catch (sendErr: any) {
@@ -866,14 +905,21 @@ serve(async (req) => {
       const audioMime = body.mimetype || "audio/mp4";
       console.log(`[sendAudio] target=${target} mime=${audioMime} base64Length=${body.mediaBase64.length}`);
 
+      if (!(await outboundAllowed(adminSupabase, instanceName, target))) {
+        return json(429, { error: "rate_limited", message: "Muitas mensagens em sequência neste canal. Aguarde alguns segundos." });
+      }
+
       try {
         const sendRes = await evolutionRequest(`/message/sendWhatsAppAudio/${instanceName}`, {
           method: "POST",
           body: JSON.stringify({
             number: target,
             audio: `data:${audioMime};base64,${body.mediaBase64}`,
+            // ritmo humano: "gravando áudio…" antes de entregar
+            delay: 800,
+            presence: "recording",
           }),
-        });
+        }, 12000);
         console.log("[sendAudio] success:", JSON.stringify(sendRes));
         return json(200, { success: true, instanceName, result: sendRes });
       } catch (sendErr: any) {

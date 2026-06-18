@@ -67,7 +67,7 @@ export const EvaDemoModal = ({ open, onClose, onCTAClick }: EvaDemoModalProps) =
     return createPortal(
         <div className="lp-v2">
             <div
-                className="vz-modal-overlay fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4"
+                className={`vz-modal-overlay fixed inset-0 z-[100] flex items-center justify-center ${isTour ? "p-0 sm:p-3" : "p-2 sm:p-4"}`}
                 data-closing={closing}
                 style={{ background: "rgba(8,8,10,0.62)", backdropFilter: "blur(8px)" }}
                 onMouseDown={(e) => e.target === e.currentTarget && requestClose()}
@@ -76,9 +76,9 @@ export const EvaDemoModal = ({ open, onClose, onCTAClick }: EvaDemoModalProps) =
                 aria-label="Demonstração da EVA"
             >
                 <div
-                    className="vz-modal-panel relative flex w-full flex-col overflow-hidden rounded-[22px] bg-white shadow-2xl"
+                    className={`vz-modal-panel relative flex w-full flex-col overflow-hidden bg-white shadow-2xl ${isTour ? "rounded-none sm:rounded-[18px]" : "rounded-[22px]"}`}
                     data-closing={closing}
-                    style={{ height: isTour ? "min(96vh, 1000px)" : "min(90vh, 760px)", maxWidth: isTour ? 1440 : 1152 }}
+                    style={{ height: isTour ? "min(98vh, 1300px)" : "min(90vh, 760px)", maxWidth: isTour ? 1840 : 1152 }}
                 >
                     <div className="flex items-center justify-between px-6 py-3.5" style={{ borderBottom: "1px solid var(--lp-line)" }}>
                         <span className="lp-mono" style={{ color: "var(--lp-ink-55)" }}>EVA · Vyzon</span>

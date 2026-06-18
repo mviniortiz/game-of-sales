@@ -66,7 +66,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full text-[#0B1220]" style={{ background: "#F3F6FA" }}>
+      <div className="min-h-screen flex w-full text-[#0B1220]" style={{ background: "#F6F4EF" }}>
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           {/* Trial Banner — faixa horizontal no topo da área de conteúdo (não como coluna) */}
@@ -83,7 +83,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
             <SidebarTrigger />
             <span className="text-xs sm:text-sm font-medium text-[#64748B] truncate">{getPageTitle(location.pathname)}</span>
           </header>
-          <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-auto" style={{ background: "#F3F6FA" }}>
+          <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-auto" style={{ background: "#F6F4EF" }}>
             {children}
           </main>
         </div>

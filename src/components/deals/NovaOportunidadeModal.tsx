@@ -706,7 +706,7 @@ function Section({
       <header className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
         <span
           className="inline-flex items-center justify-center h-5 w-5 rounded-md"
-          style={{ background: "#F3F6FA", border: "1px solid #E6EDF5" }}
+          style={{ background: "#F6F4EF", border: "1px solid #E6EDF5" }}
         >
           {icon}
         </span>

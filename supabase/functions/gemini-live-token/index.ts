@@ -32,13 +32,15 @@ serve(async (req) => {
 
     if (!GEMINI_API_KEY) return json(200, { ok: false, reason: "no_key" });
 
-    // rate-limit por IP (fail-open)
+    // rate-limit por IP (fail-open). Generoso: corta abuso de bot, mas não
+    // atrapalha quem testa/reabre a demo várias vezes nem visitantes atrás do
+    // mesmo NAT. (8/h era baixo demais — bloqueava o uso legítimo.)
     const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() || "anon";
     try {
         const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
         const { data } = await admin.rpc("consume_rate_limit", {
             p_bucket: `gemini-live:${ip}`,
-            p_limit: 8,
+            p_limit: 40,
             p_window_seconds: 3600,
         });
         if (data === false) return json(429, { ok: false, reason: "rate_limit", message: "Muitas sessões. Tente em alguns minutos." });

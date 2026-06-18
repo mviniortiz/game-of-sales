@@ -3891,6 +3891,17 @@ All colors MUST be HSL.
   .vz-orb-speaking { animation: none; transform: scale(1.04); }
 }
 
+/* Legenda ao vivo da EVA: a frase atual se MATERIALIZA (blur→nítido) e a
+   anterior DISSOLVE como vapor (vanish: blur + fade + sobe devagar). */
+@keyframes vzCapIn  { from { opacity: 0; filter: blur(5px); transform: translateY(6px); } to { opacity: 1; filter: blur(0); transform: none; } }
+@keyframes vzCapOut { 0% { opacity: 1; filter: blur(0); transform: translateY(0); } 100% { opacity: 0; filter: blur(8px); transform: translateY(-12px); } }
+.vz-cap-in  { animation: vzCapIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.vz-cap-out { animation: vzCapOut 2.2s cubic-bezier(0.33, 0, 0.2, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .vz-cap-in { animation: none; }
+  .vz-cap-out { animation: none; opacity: 0; }
+}
+
 .vz-btn--primary {
   background-color: #080808;
   color: #ffffff;
