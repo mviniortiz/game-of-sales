@@ -188,12 +188,24 @@ export function useGeminiLive() {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const ai: any = new GoogleGenAI({ apiKey: token, httpOptions: { apiVersion: "v1alpha" } });
 
-            // 4. saída de áudio @24kHz
+            // 4. saída de áudio @24kHz. NÃO damos await no resume: sem user
+            // activation válida (o connect roda segundos após o clique), o
+            // resume() pode ficar PENDENTE e travar a conexão inteira → a EVA
+            // nunca conecta. Resumimos em background e na 1ª interação (gesture).
             const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
             const outCtx = new Ctx({ sampleRate: 24000 });
-            await outCtx.resume().catch(() => undefined);
             outCtxRef.current = outCtx;
             playHeadRef.current = outCtx.currentTime;
+            outCtx.resume().catch(() => undefined);
+            if (outCtx.state !== "running") {
+                const resumeOnGesture = () => {
+                    outCtx.resume().catch(() => undefined);
+                    if (outCtx.state === "running") {
+                        ["pointerdown", "touchstart", "keydown"].forEach((ev) => window.removeEventListener(ev, resumeOnGesture));
+                    }
+                };
+                ["pointerdown", "touchstart", "keydown"].forEach((ev) => window.addEventListener(ev, resumeOnGesture, { passive: true }));
+            }
 
             // 5. conexão Live
             const session = await ai.live.connect({
