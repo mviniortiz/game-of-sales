@@ -22,6 +22,8 @@ const PublicReport = lazy(() => import("./pages/PublicReport"));
 // LP.6 — Landing v2 é a landing de PRODUÇÃO (cutover 2026-06-17): / e /v2.
 // O login v2 virou a página de /auth (dentro do AppShell, com AuthProvider).
 const LandingV2 = lazy(() => import("./pages/LandingV2"));
+const BlogV2 = lazy(() => import("./pages/BlogV2"));
+const BlogPostV2 = lazy(() => import("./pages/BlogPostV2"));
 
 // Página temporária de calibração da EvaEntity (remover depois de plugar à lógica).
 const EvaEntityTest = lazy(() => import("./pages/EvaEntityTest"));
@@ -48,6 +50,8 @@ const App = () => (
         <Route path="/" element={<Suspense fallback={<LazyFallback />}><LandingV2 /></Suspense>} />
         <Route path="/landing" element={<Suspense fallback={<LazyFallback />}><LandingV2 /></Suspense>} />
         <Route path="/v2" element={<Suspense fallback={<LazyFallback />}><LandingV2 /></Suspense>} />
+        <Route path="/blog" element={<Suspense fallback={<LazyFallback />}><BlogV2 /></Suspense>} />
+        <Route path="/blog/:slug" element={<Suspense fallback={<LazyFallback />}><BlogPostV2 /></Suspense>} />
         {/* Personas /para-* despublicadas 2026-06-16 — 301 → home no vercel.json. */}
         {/* /alternativa-* e /alternativas despublicadas 2026-06-16 — 301 → home no vercel.json.
             O posicionamento atual (Central Comercial com EVA p/ agências) não se compara a CRMs. */}

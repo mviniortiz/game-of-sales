@@ -8,6 +8,7 @@ interface NavV2Props {
     onLoginClick: () => void;
     onCTAClick: () => void;
     onNavClick?: (anchor: string) => void;
+    onBlogClick?: () => void;
 }
 
 const LINKS = [
@@ -15,7 +16,7 @@ const LINKS = [
     { label: "EVA", anchor: "eva" },
 ];
 
-export const NavV2 = ({ onLoginClick, onCTAClick, onNavClick }: NavV2Props) => {
+export const NavV2 = ({ onLoginClick, onCTAClick, onNavClick, onBlogClick }: NavV2Props) => {
     const handleNav = (anchor: string) => {
         if (onNavClick) { onNavClick(anchor); return; }
         const el = document.getElementById(anchor);
@@ -49,6 +50,11 @@ export const NavV2 = ({ onLoginClick, onCTAClick, onNavClick }: NavV2Props) => {
                 </nav>
 
                 <div className="flex items-center gap-3 sm:gap-4">
+                    {onBlogClick && (
+                        <button className="vz-navlink" onClick={onBlogClick}>
+                            Blog
+                        </button>
+                    )}
                     <button className="vz-navlink" onClick={onLoginClick}>
                         Entrar
                     </button>

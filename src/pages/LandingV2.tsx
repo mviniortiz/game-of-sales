@@ -49,6 +49,24 @@ const LandingV2 = () => {
         if (demoOpen) lenis.stop(); else lenis.start();
     }, [demoOpen]);
 
+    // vindo do blog: ?demo=1 abre a demo; ?go=<anchor> rola até a seção
+    useEffect(() => {
+        const sp = new URLSearchParams(window.location.search);
+        if (sp.get("demo") === "1") setDemoOpen(true);
+        const go = sp.get("go");
+        let t: number | undefined;
+        if (go) {
+            t = window.setTimeout(() => {
+                const el = document.getElementById(go);
+                if (!el) return;
+                if (lenisRef.current) lenisRef.current.scrollTo(el, { offset: 0 });
+                else el.scrollIntoView({ behavior: "smooth", block: "start" });
+            }, 450);
+        }
+        if (sp.get("demo") || go) window.history.replaceState({}, "", window.location.pathname);
+        return () => { if (t) clearTimeout(t); };
+    }, []);
+
     const goToRegister = () => navigate("/onboarding?plan=plus");
     const scrollToId = (id: string) => {
         const el = document.getElementById(id);
@@ -62,7 +80,7 @@ const LandingV2 = () => {
             className="lp-v2 min-h-screen w-full selection:bg-blue-700/20"
             style={{ background: "var(--lp-paper)", color: "var(--lp-ink)" }}
         >
-            <NavV2 onCTAClick={() => setDemoOpen(true)} onLoginClick={() => navigate("/auth")} onNavClick={scrollToId} />
+            <NavV2 onCTAClick={() => setDemoOpen(true)} onLoginClick={() => navigate("/auth")} onNavClick={scrollToId} onBlogClick={() => navigate("/blog")} />
             <HeroV2 onScheduleDemoClick={goToRegister} onSecondaryClick={() => setDemoOpen(true)} />
             <IntegrationsStripV2 />
             <ProofStripV2 />
@@ -74,7 +92,7 @@ const LandingV2 = () => {
             </div>
             <FaqV2 />
             <FinalCtaV2 onScheduleDemoClick={() => setDemoOpen(true)} onSecondaryClick={() => scrollToId("how-it-works")} />
-            <FooterV2 onNavClick={scrollToId} onLoginClick={() => navigate("/auth")} />
+            <FooterV2 onNavClick={scrollToId} onLoginClick={() => navigate("/auth")} onBlogClick={() => navigate("/blog")} />
             <EvaDemoModal open={demoOpen} onClose={() => setDemoOpen(false)} onCTAClick={goToRegister} />
         </div>
     );
