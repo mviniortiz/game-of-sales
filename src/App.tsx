@@ -24,6 +24,7 @@ const PublicReport = lazy(() => import("./pages/PublicReport"));
 const LandingV2 = lazy(() => import("./pages/LandingV2"));
 const BlogV2 = lazy(() => import("./pages/BlogV2"));
 const BlogPostV2 = lazy(() => import("./pages/BlogPostV2"));
+const EvaVoz = lazy(() => import("./pages/EvaVoz"));
 
 // Página temporária de calibração da EvaEntity (remover depois de plugar à lógica).
 const EvaEntityTest = lazy(() => import("./pages/EvaEntityTest"));
@@ -52,6 +53,7 @@ const App = () => (
         <Route path="/v2" element={<Suspense fallback={<LazyFallback />}><LandingV2 /></Suspense>} />
         <Route path="/blog" element={<Suspense fallback={<LazyFallback />}><BlogV2 /></Suspense>} />
         <Route path="/blog/:slug" element={<Suspense fallback={<LazyFallback />}><BlogPostV2 /></Suspense>} />
+        <Route path="/eva-voz" element={<Suspense fallback={<LazyFallback />}><EvaVoz /></Suspense>} />
         {/* Personas /para-* despublicadas 2026-06-16 — 301 → home no vercel.json. */}
         {/* /alternativa-* e /alternativas despublicadas 2026-06-16 — 301 → home no vercel.json.
             O posicionamento atual (Central Comercial com EVA p/ agências) não se compara a CRMs. */}
