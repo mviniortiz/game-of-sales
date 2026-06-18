@@ -17,6 +17,7 @@ interface ConnectOpts {
     kickoff?: string; // turno inicial pra EVA começar a falar sozinha
     onToolCall?: (name: string, args: Record<string, unknown>) => unknown;
     onCaption?: (text: string, role: "user" | "eva") => void;
+    captureMic?: boolean; // capturar a voz de entrada (off por padrão — vide tour guiado)
 }
 
 const LIVE_MODEL_FALLBACK = "gemini-2.5-flash-native-audio-preview-12-2025";
@@ -229,6 +230,9 @@ export function useGeminiLive() {
                     // thinking OFF: sem isso o native-audio gasta o turno "pensando"
                     // (latência ruim + raciocínio vazando); validado: 1ª fala em ~1.7s.
                     thinkingConfig: { thinkingBudget: 0 },
+                    // comprime o histórico (janela deslizante) pra o contexto não
+                    // estourar ao longo do tour (defesa extra contra o erro 1011).
+                    contextWindowCompression: { slidingWindow: {} },
                     // VAD de BAIXA sensibilidade: ruído de fundo / eco da própria
                     // EVA NÃO interrompem a fala dela (era o que a deixava muda);
                     // voz real e clara ainda faz barge-in. + silêncio maior pra
@@ -330,40 +334,42 @@ export function useGeminiLive() {
                 try { session.sendClientContent({ turns: [{ role: "user", parts: [{ text: opts.kickoff }] }], turnComplete: true }); } catch { /* noop */ }
             }
 
-            // microfone OPCIONAL e NÃO-BLOQUEANTE: a voz já conectou e a EVA vai
-            // FALAR de qualquer jeito. Capturamos a voz de entrada quando/se o
-            // usuário permitir — um prompt ignorado/negado NÃO trava mais a fala.
-            navigator.mediaDevices
-                .getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true } })
-                .then((stream) => {
-                    if (!sessionRef.current) { stream.getTracks().forEach((t) => t.stop()); return; } // já desconectou
-                    micStreamRef.current = stream;
-                    setMicOn(true);
-                    const micCtx = new Ctx({ sampleRate: 16000 });
-                    micCtx.resume().catch(() => undefined);
-                    micCtxRef.current = micCtx;
-                    const srcNode = micCtx.createMediaStreamSource(stream);
-                    // chunks pequenos (1024 @16kHz ≈ 64ms) — barge-in responsivo
-                    const proc = micCtx.createScriptProcessor(1024, 1, 1);
-                    procRef.current = proc;
-                    proc.onaudioprocess = (ev) => {
-                        if (!sessionRef.current || !wsOpenRef.current || mutedRef.current) return;
-                        const input = ev.inputBuffer.getChannelData(0);
-                        const pcm = new Int16Array(input.length);
-                        for (let i = 0; i < input.length; i++) {
-                            const s = Math.max(-1, Math.min(1, input[i]));
-                            pcm[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
-                        }
-                        const b64 = bytesToBase64(new Uint8Array(pcm.buffer));
-                        try { sessionRef.current.sendRealtimeInput({ audio: { data: b64, mimeType: "audio/pcm;rate=16000" } }); } catch { /* noop */ }
-                    };
-                    const sink = micCtx.createGain();
-                    sink.gain.value = 0;
-                    srcNode.connect(proc);
-                    proc.connect(sink);
-                    sink.connect(micCtx.destination);
-                })
-                .catch(() => { setMicOn(false); });
+            // microfone DESLIGADO por padrão: o áudio de entrada acumulava
+            // transcrição no contexto e derrubava a sessão (erro 1011) no meio do
+            // tour. A EVA narra/conduz sozinha; a interação é por TEXTO. Só captura
+            // se opts.captureMic (reabilitar quando o áudio for resampleado p/ 16kHz).
+            if (opts.captureMic) {
+                navigator.mediaDevices
+                    .getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true } })
+                    .then((stream) => {
+                        if (!sessionRef.current) { stream.getTracks().forEach((t) => t.stop()); return; } // já desconectou
+                        micStreamRef.current = stream;
+                        setMicOn(true);
+                        const micCtx = new Ctx({ sampleRate: 16000 });
+                        micCtx.resume().catch(() => undefined);
+                        micCtxRef.current = micCtx;
+                        const srcNode = micCtx.createMediaStreamSource(stream);
+                        const proc = micCtx.createScriptProcessor(1024, 1, 1);
+                        procRef.current = proc;
+                        proc.onaudioprocess = (ev) => {
+                            if (!sessionRef.current || !wsOpenRef.current || mutedRef.current) return;
+                            const input = ev.inputBuffer.getChannelData(0);
+                            const pcm = new Int16Array(input.length);
+                            for (let i = 0; i < input.length; i++) {
+                                const s = Math.max(-1, Math.min(1, input[i]));
+                                pcm[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+                            }
+                            const b64 = bytesToBase64(new Uint8Array(pcm.buffer));
+                            try { sessionRef.current.sendRealtimeInput({ audio: { data: b64, mimeType: "audio/pcm;rate=16000" } }); } catch { /* noop */ }
+                        };
+                        const sink = micCtx.createGain();
+                        sink.gain.value = 0;
+                        srcNode.connect(proc);
+                        proc.connect(sink);
+                        sink.connect(micCtx.destination);
+                    })
+                    .catch(() => { setMicOn(false); });
+            }
         } catch (e) {
             console.error("[useGeminiLive] connect error", e);
             setErrorReason("exception");
