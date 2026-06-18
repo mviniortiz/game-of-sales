@@ -14,8 +14,13 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // keepNames: a minificação NÃO renomeia classes/funções. O @google/genai
+  // (WebSocket do Live) quebrava em produção (build minificado) — "WebSocket is
+  // already in CLOSING or CLOSED state" — mas funcionava em dev (não minificado).
+  esbuild: { keepNames: true },
   build: {
     target: "es2020",
+    minify: "esbuild",
     rollupOptions: {
       output: {
         manualChunks(id) {
