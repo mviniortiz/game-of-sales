@@ -19,15 +19,20 @@ export const EvaShowcaseV2 = ({ onStartDemo }: EvaShowcaseV2Props) => {
                         className="overflow-hidden rounded-[32px]"
                         style={{ border: "1px solid var(--lp-line)", backgroundColor: "#eef2f7" }}
                     >
-                        {/* A figura da EVA aparece POR INTEIRO (sem corte/zoom, sem
-                            gradiente). O fundo claro da imagem casa com o do card. */}
-                        <div className="flex justify-center px-4 pt-8 sm:pt-12">
-                            <img
-                                src={evaFigure}
-                                alt="EVA, a camada de inteligência do Vyzon"
-                                loading="lazy"
-                                className="block h-auto w-full max-w-[620px] object-contain"
-                            />
+                        {/* A figura da EVA (cabeça aos ombros) aparece inteira, sem
+                            zoom no rosto. A imagem é 1080x1350 mas o terço inferior é
+                            só fundo branco — recortamos ele (object-cover + top) pra
+                            não sobrar espaço morto. Sem gradiente/opacidade. */}
+                        <div className="mx-auto w-full max-w-[660px] px-4 pt-6 sm:pt-10">
+                            <div className="overflow-hidden rounded-[20px]" style={{ aspectRatio: "1080 / 950" }}>
+                                <img
+                                    src={evaFigure}
+                                    alt="EVA, a camada de inteligência do Vyzon"
+                                    loading="lazy"
+                                    className="h-full w-full object-cover"
+                                    style={{ objectPosition: "center top" }}
+                                />
+                            </div>
                         </div>
                         <div className="flex flex-col items-center px-6 pb-14 pt-2 text-center sm:pb-16">
                             <p className="lp-mono" style={{ color: "rgba(5,5,5,0.5)" }}>
