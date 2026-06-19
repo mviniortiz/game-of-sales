@@ -34,13 +34,14 @@ serve(async (req) => {
 
     // rate-limit por IP (fail-open). Generoso: corta abuso de bot, mas não
     // atrapalha quem testa/reabre a demo várias vezes nem visitantes atrás do
-    // mesmo NAT. (8/h era baixo demais — bloqueava o uso legítimo.)
+    // mesmo NAT. (8/h era baixo demais; subiu pra 150 porque a demo "em blocos"
+    // reconecta a sessão a cada tela → ~10 tokens por demo.)
     const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() || "anon";
     try {
         const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
         const { data } = await admin.rpc("consume_rate_limit", {
             p_bucket: `gemini-live:${ip}`,
-            p_limit: 40,
+            p_limit: 150,
             p_window_seconds: 3600,
         });
         if (data === false) return json(429, { ok: false, reason: "rate_limit", message: "Muitas sessões. Tente em alguns minutos." });

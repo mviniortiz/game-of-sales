@@ -21,7 +21,9 @@ interface DemoLiveStageProps {
     site: string;
 }
 
-const SCREEN_ORDER = ["inicio", "inbox", "inbox-analise", "pipeline", "lead", "metas", "ranking", "eva-studio", "eva-studio-criar"];
+// Ordem do tour: EVA Studio logo após o detalhe do lead (destaque), Metas e
+// Ranking como fechamento.
+const SCREEN_ORDER = ["inicio", "inbox", "inbox-analise", "pipeline", "lead", "eva-studio", "eva-studio-criar", "metas", "ranking"];
 const SCREEN_LABEL: Record<string, string> = { inicio: "Central de Comando", inbox: "Inbox", "inbox-analise": "Análise da EVA", pipeline: "Pipeline", lead: "Detalhe do lead", "eva-studio": "EVA Studio", "eva-studio-criar": "Criar agente", metas: "Metas", ranking: "Ranking" };
 const NAV_ENUM = ["inicio", "inbox", "inbox-analise", "pipeline", "lead", "eva-studio", "eva-studio-criar", "metas", "ranking"];
 
@@ -53,9 +55,9 @@ const TOUR_PROMPT: Record<string, string> = {
     pipeline: "Agora você está mostrando o PIPELINE. Em 3 ou 4 frases, explique que é o funil: cada conversa vira uma oportunidade; há estágios, dá pra ver um lead parado e você avisa quando algo precisa de follow-up. Ao terminar, pare.",
     lead: "Agora você está mostrando o DETALHE DE UMA OPORTUNIDADE. Em 3 ou 4 frases, explique o que aparece: o contexto do lead, o histórico da conversa, o que você entendeu e o próximo passo que você sugere. Ao terminar, pare.",
     metas: "Agora você está mostrando as METAS. Em 3 ou 4 frases, explique que aqui o gestor acompanha as metas do time em tempo real (quanto já foi feito do objetivo do mês) e que dá pra CONFIGURAR a meta de cada vendedor — definir o valor e o período, e a Vyzon mostra o quanto falta e o ritmo necessário. Ao terminar, pare.",
-    ranking: "Agora você está mostrando o RANKING. Em 3 ou 4 frases, explique que é o placar da equipe: mostra como cada vendedor está em relação à meta, de um jeito que dá visibilidade e motiva o time sadiamente, sem exposição. Ao terminar, pare.",
+    ranking: "Agora você está mostrando o RANKING, e esta é a última tela. Em 3 ou 4 frases, explique que é o placar da equipe: mostra como cada vendedor está em relação à meta, de um jeito que dá visibilidade e motiva o time sadiamente, sem exposição. Ao terminar, convide calorosamente a pessoa pra agendar uma demo ou testar 14 dias grátis, e pare.",
     "eva-studio": "Agora você está mostrando o EVA STUDIO, onde a pessoa cria agentes especialistas. Em 2 ou 3 frases, diga que aqui ela monta agentes para qualificação, follow-up, propostas e reativação, cada um treinado com o playbook da agência. Ao terminar, pare.",
-    "eva-studio-criar": "Agora você SELECIONOU o agente de Qualificação e abriu o chat de criação. Em 3 ou 4 frases, mostre como é simples: vocês conversam, você faz algumas perguntas sobre o negócio e monta o agente em minutos, pronto pra qualificar os leads que chegam. Ao terminar, convide calorosamente pra agendar uma demo ou testar 14 dias grátis e pare.",
+    "eva-studio-criar": "Agora você SELECIONOU o agente de Qualificação e abriu o chat de criação. Em 3 ou 4 frases, mostre como é simples: vocês conversam, você faz algumas perguntas sobre o negócio e monta o agente em minutos, pronto pra qualificar os leads que chegam. Ao terminar, pare.",
 };
 
 // Saudação inicial: a EVA se apresenta (momento visual com o orbe grande) ANTES
@@ -130,9 +132,11 @@ const CONNECT_WAIT = 13000;
 // native-audio acumula contexto e trava (turno vazio) depois de ~5 telas, e
 // ainda sofre 1011 transitório do servidor. Correção: sessão fresca periódica +
 // reconectar-e-retomar quando um turno vem vazio ou o WS cai.
-const RECONNECT_EVERY = 4;    // reconecta a sessão a cada N telas narradas (zera o contexto)
-const MAX_RETRY = 3;          // re-tentativas (reconectando) por turno vazio
-const MAX_RECONNECTS = 14;    // teto global de reconexões (anti-loop)
+// EM BLOCOS: sessão FRESCA por tela (cada bloco é o 1º turno de uma sessão nova,
+// que nunca engasga por acúmulo). Reconecta antes de narrar cada tela.
+const RECONNECT_EVERY = 1;    // reconecta a sessão a cada tela (bloco por bloco)
+const MAX_RETRY = 2;          // re-tentativas (reconectando) por turno vazio
+const MAX_RECONNECTS = 24;    // teto global de reconexões (anti-loop; ~1 por tela + retries)
 const SPEAK_TIMEOUT = 8000;   // se a EVA não começa a falar nesse tempo após o nudge = turno vazio
 
 // botão de controle circular estilo Handhold (mic / áudio / conversar / desligar)
