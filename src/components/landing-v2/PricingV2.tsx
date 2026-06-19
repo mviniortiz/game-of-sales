@@ -1,109 +1,111 @@
 import { Check } from "lucide-react";
 import { ButtonV2 } from "./ButtonV2";
 import { Reveal } from "./Reveal";
+import { PLANS } from "@/data/landing/pricing";
 
-// LP.6 (v2) — planos. SEM preço numérico (decisão: "Sob consulta" discreto).
-// 3 cards calmos, borda fina, central com leve destaque (sem badge "popular").
-// Título da seção em serif; cards em sans. CTA pill preto.
+// LP.9 (v2) — seção de PLANOS com preço transparente (desarma o "deve ser caro").
+// CTA primário "Testar 14 dias grátis" (self-service, /onboarding); secundário
+// "Agendar demo". O Pro inverte: "Falar com especialista" (call) como primário.
+// Estilo editorial da landing; o plano popular ganha destaque azul.
 interface PricingV2Props {
-    onCTAClick: () => void;
-    onContactClick: () => void;
+    onTrial: (planSlug: string) => void;
+    onScheduleDemo: () => void;
 }
 
-const PLANS = [
-    {
-        name: "Start",
-        desc: "Para validar a EVA em uma frente comercial.",
-        items: [
-            "1 canal de atendimento",
-            "Sugestões assistidas pela EVA",
-            "Aprovação humana antes do envio",
-            "Visão básica das conversas",
-        ],
-        cta: "Agendar demo",
-        featured: false,
-    },
-    {
-        name: "Operação",
-        desc: "Para organizar atendimento, qualificação e próximos passos.",
-        items: [
-            "Central comercial com WhatsApp",
-            "Playbooks comerciais da agência",
-            "Sugestões de resposta e follow-up",
-            "Pipeline e acompanhamento do time",
-        ],
-        cta: "Agendar demo",
-        featured: true,
-    },
-    {
-        name: "Scale",
-        desc: "Para operações com múltiplos fluxos, canais e regras comerciais.",
-        items: [
-            "Múltiplos fluxos comerciais",
-            "Automações e integrações avançadas",
-            "Regras por etapa da jornada",
-            "Suporte para implantação",
-        ],
-        cta: "Falar com vendas",
-        featured: false,
-    },
-];
-
-export const PricingV2 = ({ onCTAClick, onContactClick }: PricingV2Props) => {
+export const PricingV2 = ({ onTrial, onScheduleDemo }: PricingV2Props) => {
     return (
-        <section id="pricing" className="px-5 py-24 sm:py-32" style={{ backgroundColor: "var(--lp-paper)" }}>
-            <div className="mx-auto max-w-[1080px]">
-                <Reveal className="max-w-2xl">
-                    <h2
-                        className="lp-display"
-                        style={{ fontSize: "clamp(2rem, 4.4vw, 3rem)", lineHeight: 1.08, letterSpacing: "-0.03em", color: "#050505" }}
-                    >
-                        Planos para cada estágio da operação comercial
-                    </h2>
-                    <p className="mt-5 max-w-xl" style={{ fontSize: "1.0625rem", lineHeight: 1.6, color: "rgba(5,5,5,0.68)" }}>
-                        Comece validando a EVA em uma frente comercial e evolua para uma operação completa com automações, playbooks e acompanhamento do time.
-                    </p>
+        <section id="planos" className="px-5 py-20 sm:py-28" style={{ backgroundColor: "var(--lp-paper)" }}>
+            <div className="mx-auto max-w-[1100px]">
+                <Reveal>
+                    <div className="mx-auto max-w-2xl text-center">
+                        <p className="lp-mono" style={{ color: "var(--lp-ink-55)" }}>Planos</p>
+                        <h2
+                            className="lp-display mt-3"
+                            style={{ fontSize: "clamp(2.1rem, 4.6vw, 3.4rem)", lineHeight: 1.04, letterSpacing: "-0.035em", color: "#050505" }}
+                        >
+                            Preço simples e transparente
+                        </h2>
+                        <p className="mx-auto mt-4 max-w-md" style={{ fontSize: "1.05rem", lineHeight: 1.55, color: "rgba(5,5,5,0.66)" }}>
+                            Comece com 14 dias grátis, sem cartão. Cresça quando seu time crescer.
+                        </p>
+                    </div>
                 </Reveal>
 
-                <Reveal delay={100} className="mt-14 grid gap-5 lg:grid-cols-3">
-                    {PLANS.map((p) => (
-                        <div
-                            key={p.name}
-                            className="flex flex-col rounded-2xl p-7"
-                            style={{
-                                background: "var(--lp-white)",
-                                border: p.featured ? "1px solid rgba(5,5,5,0.2)" : "1px solid var(--lp-line)",
-                            }}
-                        >
-                            <h3 style={{ fontSize: "1.25rem", fontWeight: 600, color: "var(--lp-ink)", letterSpacing: "-0.01em" }}>
-                                {p.name}
-                            </h3>
-                            <p className="mt-2 text-[13px]" style={{ color: "rgba(5,5,5,0.46)", fontWeight: 500 }}>
-                                Sob consulta
-                            </p>
-                            <p className="mt-4 text-[14.5px]" style={{ color: "rgba(5,5,5,0.66)", lineHeight: 1.55 }}>
-                                {p.desc}
-                            </p>
-                            <ul className="mt-6 mb-8 flex flex-col gap-3">
-                                {p.items.map((it) => (
-                                    <li key={it} className="flex items-start gap-2.5 text-[14px]" style={{ color: "var(--lp-ink)" }}>
-                                        <Check className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2} style={{ color: "rgba(5,5,5,0.4)" }} />
-                                        <span>{it}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                            <div className="mt-auto">
-                                <ButtonV2
-                                    variant={p.featured ? "primary" : "secondary"}
-                                    onClick={p.cta === "Falar com vendas" ? onContactClick : onCTAClick}
-                                    className="w-full"
+                <div className="mt-12 grid gap-5 sm:mt-16 lg:grid-cols-3">
+                    {PLANS.map((plan, i) => {
+                        const slug = plan.name.toLowerCase();
+                        const isPro = plan.name === "Pro";
+                        return (
+                            <Reveal key={plan.name} delay={i * 80}>
+                                <div
+                                    className="flex h-full flex-col rounded-[20px] p-7 sm:p-8"
+                                    style={{
+                                        border: plan.popular ? "1.5px solid var(--lp-blue)" : "1px solid var(--lp-line)",
+                                        background: "var(--lp-white)",
+                                        boxShadow: plan.popular ? "0 18px 50px -28px rgba(21,86,192,0.4)" : "none",
+                                    }}
                                 >
-                                    {p.cta}
-                                </ButtonV2>
-                            </div>
-                        </div>
-                    ))}
-                </Reveal>
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="lp-display" style={{ fontSize: "1.45rem", letterSpacing: "-0.02em", color: "#050505" }}>
+                                            {plan.name}
+                                        </h3>
+                                        {plan.popular && (
+                                            <span className="lp-mono rounded-full px-2.5 py-1 text-white" style={{ background: "var(--lp-blue)", fontSize: 10.5, letterSpacing: "0.04em" }}>
+                                                MAIS POPULAR
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="mt-2 text-[13.5px]" style={{ color: "rgba(5,5,5,0.6)", lineHeight: 1.5, minHeight: 40 }}>
+                                        {plan.tagline}
+                                    </p>
+
+                                    <div className="mt-5 flex items-baseline gap-1.5">
+                                        <span className="lp-display" style={{ fontSize: "2.6rem", letterSpacing: "-0.04em", color: "#050505" }}>
+                                            R$ {plan.price}
+                                        </span>
+                                        <span className="text-[14px]" style={{ color: "rgba(5,5,5,0.55)" }}>/mês</span>
+                                    </div>
+                                    {plan.extraInfo && (
+                                        <p className="lp-mono mt-1.5" style={{ color: "var(--lp-ink-40)", fontSize: 11.5 }}>{plan.extraInfo}</p>
+                                    )}
+
+                                    <div className="mt-6 flex flex-col gap-2.5">
+                                        {plan.features.map((f) => (
+                                            <div key={f} className="flex items-start gap-2.5">
+                                                <Check size={16} strokeWidth={2.6} className="mt-0.5 shrink-0" style={{ color: "var(--lp-blue)" }} />
+                                                <span className="text-[13.5px]" style={{ color: "rgba(5,5,5,0.78)", lineHeight: 1.45 }}>{f}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div className="flex flex-col items-center gap-2.5 pt-7" style={{ marginTop: "auto" }}>
+                                        {isPro ? (
+                                            <>
+                                                <ButtonV2 onClick={onScheduleDemo} variant="primary" className="w-full">Falar com especialista</ButtonV2>
+                                                <button type="button" onClick={() => onTrial(slug)} className="text-[13px] underline-offset-4 hover:underline" style={{ color: "var(--lp-ink-55)" }}>
+                                                    ou testar 14 dias grátis
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <ButtonV2 onClick={() => onTrial(slug)} variant={plan.popular ? "primary" : "secondary"} className="w-full">
+                                                    Testar 14 dias grátis
+                                                </ButtonV2>
+                                                <button type="button" onClick={onScheduleDemo} className="text-[13px] underline-offset-4 hover:underline" style={{ color: "var(--lp-ink-55)" }}>
+                                                    Agendar demo
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            </Reveal>
+                        );
+                    })}
+                </div>
+
+                <p className="mx-auto mt-8 text-center text-[12.5px]" style={{ color: "var(--lp-ink-40)" }}>
+                    Assinatura mensal, cancele quando quiser. Pagamento via Mercado Pago.
+                </p>
             </div>
         </section>
     );

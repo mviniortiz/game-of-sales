@@ -14,6 +14,7 @@ interface NavV2Props {
 const LINKS = [
     { label: "Como funciona", anchor: "how-it-works" },
     { label: "EVA", anchor: "eva" },
+    { label: "Planos", anchor: "planos" },
 ];
 
 export const NavV2 = ({ onLoginClick, onCTAClick, onNavClick, onBlogClick }: NavV2Props) => {

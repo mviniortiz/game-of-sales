@@ -9,6 +9,7 @@ import { ProofStripV2 } from "@/components/landing-v2/ProofStripV2";
 import { EvaShowcaseV2 } from "@/components/landing-v2/EvaShowcaseV2";
 import { FeaturesV2 } from "@/components/landing-v2/FeaturesV2";
 import { SpecialistAgentsV2 } from "@/components/landing-v2/SpecialistAgentsV2";
+import { PricingV2 } from "@/components/landing-v2/PricingV2";
 import { HowItWorksV2 } from "@/components/landing-v2/HowItWorksV2";
 import { FaqV2 } from "@/components/landing-v2/FaqV2";
 import { FinalCtaV2 } from "@/components/landing-v2/FinalCtaV2";
@@ -87,6 +88,7 @@ const LandingV2 = () => {
             <EvaShowcaseV2 onStartDemo={() => setDemoOpen(true)} />
             <FeaturesV2 />
             <SpecialistAgentsV2 onCTAClick={goToRegister} />
+            <PricingV2 onTrial={(slug) => navigate(`/onboarding?plan=${slug}`)} onScheduleDemo={() => setDemoOpen(true)} />
             <div id="how-it-works">
                 <HowItWorksV2 onStart={goToRegister} />
             </div>
