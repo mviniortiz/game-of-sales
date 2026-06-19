@@ -23,14 +23,13 @@ export const HeroV2 = ({ onSecondaryClick }: HeroV2Props) => {
             />
             <div
                 aria-hidden="true"
-                className="pointer-events-none absolute left-1/2 bottom-0"
+                className="vz-hero-dots pointer-events-none absolute left-1/2 bottom-0"
                 style={{
                     width: "min(1240px, 122vw)", aspectRatio: "1",
-                    transform: "translate(-50%, 50%)",
-                    backgroundImage: "radial-gradient(circle, rgba(21,86,192,0.5) 1.6px, transparent 1.7px)",
+                    backgroundImage: "radial-gradient(circle, rgba(21,86,192,0.36) 1.6px, transparent 1.7px)",
                     backgroundSize: "20px 20px",
-                    WebkitMaskImage: "radial-gradient(circle at center, #000 0%, rgba(0,0,0,0.5) 42%, transparent 68%)",
-                    maskImage: "radial-gradient(circle at center, #000 0%, rgba(0,0,0,0.5) 42%, transparent 68%)",
+                    WebkitMaskImage: "radial-gradient(circle at center, #000 0%, rgba(0,0,0,0.42) 38%, transparent 60%)",
+                    maskImage: "radial-gradient(circle at center, #000 0%, rgba(0,0,0,0.42) 38%, transparent 60%)",
                 }}
             />
             <div className="relative z-10 mx-auto max-w-4xl px-5 pb-28 pt-32 text-center sm:pb-36 sm:pt-40">

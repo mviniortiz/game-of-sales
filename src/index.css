@@ -3886,6 +3886,20 @@ All colors MUST be HSL.
 }
 .vz-demochat-in { animation: vzDemoChatIn 0.34s cubic-bezier(0.22, 1, 0.36, 1) both; }
 
+/* Hero (v2): campo de pontos azuis — animação de ENTRADA (surge crescendo do
+   centro). O translate(-50%,50%) posiciona o disco; o scale anima a entrada. */
+@keyframes vzHeroDotsIn {
+  from { opacity: 0; transform: translate(-50%, 50%) scale(0.82); }
+  to   { opacity: 1; transform: translate(-50%, 50%) scale(1); }
+}
+.vz-hero-dots {
+  transform: translate(-50%, 50%);
+  animation: vzHeroDotsIn 1.6s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .vz-hero-dots { animation: none; opacity: 1; }
+}
+
 /* Conversa livre (fim da demo): fundo MESH GRADIENT animado — dois conjuntos de
    blobs nas cores da marca girando em sentidos opostos com blur = malha fluida. */
 .vz-meshchat-bg { position: absolute; inset: 0; overflow: hidden; background: #090c14; }
