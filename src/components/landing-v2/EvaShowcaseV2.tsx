@@ -16,25 +16,20 @@ export const EvaShowcaseV2 = ({ onStartDemo }: EvaShowcaseV2Props) => {
             <div className="mx-auto max-w-[1100px]">
                 <Reveal>
                     <div
-                        className="relative overflow-hidden rounded-[32px]"
-                        style={{ border: "1px solid var(--lp-line)", backgroundColor: "#eaeef4" }}
+                        className="overflow-hidden rounded-[32px]"
+                        style={{ border: "1px solid var(--lp-line)", backgroundColor: "#eef2f7" }}
                     >
-                        <img
-                            src={evaFigure}
-                            alt="EVA, a camada de inteligência do Vyzon"
-                            loading="lazy"
-                            className="absolute inset-0 h-full w-full object-cover"
-                            style={{ objectPosition: "center 14%", opacity: 1 }}
-                        />
-                        {/* gradiente só na base: a figura aparece em cima, texto legível embaixo */}
-                        <div
-                            className="absolute inset-0"
-                            style={{
-                                background:
-                                    "linear-gradient(to bottom, transparent 0%, transparent 44%, rgba(248,247,243,0.5) 70%, rgba(248,247,243,0.98) 100%)",
-                            }}
-                        />
-                        <div className="relative z-10 flex min-h-[580px] flex-col items-center justify-end px-6 pb-14 pt-56 text-center sm:min-h-[860px] sm:pb-20 sm:pt-80">
+                        {/* A figura da EVA aparece POR INTEIRO (sem corte/zoom, sem
+                            gradiente). O fundo claro da imagem casa com o do card. */}
+                        <div className="flex justify-center px-4 pt-8 sm:pt-12">
+                            <img
+                                src={evaFigure}
+                                alt="EVA, a camada de inteligência do Vyzon"
+                                loading="lazy"
+                                className="block h-auto w-full max-w-[620px] object-contain"
+                            />
+                        </div>
+                        <div className="flex flex-col items-center px-6 pb-14 pt-2 text-center sm:pb-16">
                             <p className="lp-mono" style={{ color: "rgba(5,5,5,0.5)" }}>
                                 EVA em ação
                             </p>

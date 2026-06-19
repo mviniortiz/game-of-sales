@@ -55,7 +55,7 @@ const TOUR_PROMPT: Record<string, string> = {
     pipeline: "Agora você está mostrando o PIPELINE. Em 3 ou 4 frases, explique que é o funil: cada conversa vira uma oportunidade; há estágios, dá pra ver um lead parado e você avisa quando algo precisa de follow-up. Ao terminar, pare.",
     lead: "Agora você está mostrando o DETALHE DE UMA OPORTUNIDADE. Em 3 ou 4 frases, explique o que aparece: o contexto do lead, o histórico da conversa, o que você entendeu e o próximo passo que você sugere. Ao terminar, pare.",
     metas: "Agora você está mostrando as METAS. Em 3 ou 4 frases, explique que aqui o gestor acompanha as metas do time em tempo real (quanto já foi feito do objetivo do mês) e que dá pra CONFIGURAR a meta de cada vendedor — definir o valor e o período, e a Vyzon mostra o quanto falta e o ritmo necessário. Ao terminar, pare.",
-    ranking: "Agora você está mostrando o RANKING, e esta é a última tela. Em 3 ou 4 frases, explique que é o placar da equipe: mostra como cada vendedor está em relação à meta, de um jeito que dá visibilidade e motiva o time sadiamente, sem exposição. Ao terminar, convide calorosamente a pessoa pra agendar uma demo ou testar 14 dias grátis, e pare.",
+    ranking: "Agora você está mostrando o RANKING, a última tela do tour. Em 2 ou 3 frases, explique que é o placar da equipe: mostra como cada vendedor está em relação à meta, de um jeito que dá visibilidade e motiva o time sadiamente, sem exposição. Ao terminar, pare.",
     "eva-studio": "Agora você está mostrando o EVA STUDIO, onde a pessoa cria agentes especialistas. Em 2 ou 3 frases, diga que aqui ela monta agentes para qualificação, follow-up, propostas e reativação, cada um treinado com o playbook da agência. Ao terminar, pare.",
     "eva-studio-criar": "Agora você SELECIONOU o agente de Qualificação e abriu o chat de criação. Em 3 ou 4 frases, mostre como é simples: vocês conversam, você faz algumas perguntas sobre o negócio e monta o agente em minutos, pronto pra qualificar os leads que chegam. Ao terminar, pare.",
 };
@@ -63,6 +63,10 @@ const TOUR_PROMPT: Record<string, string> = {
 // Saudação inicial: a EVA se apresenta (momento visual com o orbe grande) ANTES
 // do tour. Curta e calorosa; ao terminar, o tour começa sozinho.
 const GREETING_PROMPT = "Cumprimente a pessoa de forma calorosa e BREVE: diga oi, que você é a EVA, a inteligência da Vyzon, e que vai mostrar rapidinho como a plataforma organiza o comercial de uma agência. Termine convidando a começar, tipo 'vem comigo'. No máximo 2 ou 3 frases curtas. Ao terminar, pare.";
+
+// Abertura da CONVERSA LIVRE (fim da demo): a EVA convida a pessoa a tirar
+// dúvidas por voz; daqui em diante é Q&A sobre a Vyzon (sem mais navegar telas).
+const FREECHAT_PROMPT = "O tour da plataforma acabou. Em 2 frases calorosas, diga que adorou mostrar a Vyzon e convide a pessoa a te perguntar QUALQUER dúvida agora, por voz, que você responde na hora. A partir daqui responda as perguntas dela sobre a Vyzon de forma simpática, consultiva e CURTA, e NÃO use a ferramenta navegar. Se ela quiser avançar, sugira agendar uma demo ou testar 14 dias grátis. Ao terminar de falar, pare e escute.";
 
 // IMPORTANTE: manter system + tools ENXUTOS. O modelo native-audio (com
 // thinkingBudget:0) retorna erro interno (WS close 1011) quando a SOMA de
@@ -174,9 +178,12 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
     const [greeting, setGreeting] = useState(false); // momento de saudação (orbe grande) antes do tour
     const [greetExit, setGreetExit] = useState(false); // saudação dissolvendo (transição pra demo)
     const [stageIn, setStageIn] = useState(false);     // demo "entrando" (zoom sutil)
+    const [freeChat, setFreeChat] = useState(false);   // conversa livre (mesh gradient) no fim da demo
     const greetSpokeRef = useRef(false);
     const greetExitRef = useRef(false);
     const greetWatchRef = useRef<number | null>(null);
+    const freeChatRef = useRef(false);
+    const awaitingFreeChatRef = useRef(false); // reconectando pra abrir a conversa livre
     const connectedRef = useRef(false);
     const activeRef = useRef("inicio");
     const navTimersRef = useRef<number[]>([]);
@@ -277,7 +284,7 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
     const startStep = (i: number) => {
         clearStepWatch();
         clearSpeakTimer();
-        if (i < 0 || i >= SCREEN_ORDER.length) { tourIdxRef.current = -2; return; }
+        if (i < 0 || i >= SCREEN_ORDER.length) { tourIdxRef.current = -2; enterFreeChat(); return; }
         if (nudgedStepRef.current >= i) return;  // este passo já foi iniciado (anti-repetição)
         nudgedStepRef.current = i;
         tourIdxRef.current = i;
@@ -325,6 +332,30 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
         }
         clearGreetWatch();
         greetWatchRef.current = window.setTimeout(endGreeting, live.status === "live" ? 17000 : 1100);
+    };
+
+    // CONVERSA LIVRE (fim da demo): tela de mesh gradient + Q&A por voz. Abre
+    // numa sessão FRESCA (sem o contexto do tour) e liga o microfone pra ela
+    // ouvir a pessoa. Sem voz, só mostra a tela (input de texto ainda funciona).
+    const openFreeChatTurn = () => {
+        if (live.status !== "live") return;
+        live.nudge(FREECHAT_PROMPT);
+        live.setMicEnabled(true);
+    };
+    const enterFreeChat = () => {
+        if (freeChatRef.current) return;
+        freeChatRef.current = true;
+        clearStepWatch();
+        clearSpeakTimer();
+        setFreeChat(true);
+        telasNaSessaoRef.current = 0;
+        if (live.status === "live" && reconnectsRef.current < MAX_RECONNECTS) {
+            reconnectsRef.current += 1;
+            awaitingFreeChatRef.current = true;
+            live.reconnect();          // sessão limpa; o coordenador abre o Q&A ao voltar "live"
+        } else {
+            openFreeChatTurn();
+        }
     };
 
     // agendamento conduzido pela EVA (substitui a alucinação do "enviei o link")
@@ -392,6 +423,7 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
     useEffect(() => {
         if (live.orbState !== "speaking") return;
         setWaiting(false);
+        if (freeChatRef.current) { clearSpeakTimer(); return; } // conversa livre não conta tela
         if (greetingRef.current) {
             if (!greetSpokeRef.current) { greetSpokeRef.current = true; telasNaSessaoRef.current += 1; clearSpeakTimer(); }
             return;
@@ -403,13 +435,19 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
     // pendente) e RECONEXÃO REATIVA se a sessão cai no meio (1011 transitório).
     useEffect(() => {
         if (live.status === "live") {
+            if (awaitingFreeChatRef.current) { awaitingFreeChatRef.current = false; openFreeChatTurn(); return; }
             if (awaitingResumeRef.current) { awaitingResumeRef.current = false; narrateStep(resumeStepRef.current); return; }
             if (!tourStartedRef.current) { tourStartedRef.current = true; startGreeting(); } // saúda, depois o tour
             return;
         }
-        if ((live.status === "ended" || live.status === "error") && tourStartedRef.current
-            && tourIdxRef.current >= 0 && !awaitingResumeRef.current && reconnectsRef.current < MAX_RECONNECTS) {
-            doReconnect(Math.max(0, tourIdxRef.current)); // sessão caiu → reconecta e retoma
+        if (live.status === "ended" || live.status === "error") {
+            if (reconnectsRef.current >= MAX_RECONNECTS) return;
+            if (freeChatRef.current && !awaitingFreeChatRef.current) {     // caiu na conversa → reabre
+                reconnectsRef.current += 1; awaitingFreeChatRef.current = true; live.reconnect(); return;
+            }
+            if (tourStartedRef.current && tourIdxRef.current >= 0 && !awaitingResumeRef.current) {
+                doReconnect(Math.max(0, tourIdxRef.current)); // sessão caiu no tour → reconecta e retoma
+            }
         }
     }, [live.status]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -503,7 +541,7 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
     const stageCaption = (voiceLive && capCurrent) ? capCurrent : capFallback;
 
     return (
-        <div className="flex h-full flex-1 flex-col">
+        <div className="relative flex h-full flex-1 flex-col">
             <div className={`relative flex-1 ${stageIn ? "vz-stage-in" : ""}`} style={{ background: "#0b0d12" }}>
                 <iframe ref={iframeRef} src="/embed-demo" title="Demonstração da Vyzon" allow="microphone" className="h-full w-full" style={{ border: 0, display: "block" }} />
                 {!appReady && (
@@ -672,6 +710,57 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
                     </a>
                 </div>
             </div>
+
+            {/* CONVERSA LIVRE (fim da demo): tela imersiva de MESH GRADIENT + Q&A
+                por voz. A EVA convida a perguntar; mic ligado + input de texto. */}
+            {freeChat && !sched && (
+                <div className="vz-meshchat-in absolute inset-0 z-50 flex flex-col">
+                    <div className="vz-meshchat-bg" aria-hidden="true" />
+                    <div className="relative z-10 flex items-center justify-between px-5 py-3.5">
+                        <span className="lp-mono inline-flex items-center gap-1.5" style={{ color: "rgba(255,255,255,0.72)" }}>
+                            <span className="h-1.5 w-1.5 rounded-full" style={{ background: voiceLive ? "var(--lp-live)" : "rgba(255,255,255,0.5)" }} />
+                            EVA · ao vivo
+                        </span>
+                        <button type="button" onClick={endCall} className="rounded-full px-3.5 py-1.5 text-[13px] text-white transition-colors hover:bg-white/10" style={{ background: "rgba(255,255,255,0.12)" }}>
+                            Encerrar
+                        </button>
+                    </div>
+
+                    <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-7 px-6 text-center">
+                        <div className={live.orbState === "speaking" ? "vz-orb-speaking" : "vz-orb-calm"}>
+                            <EvaOrb state={liveOrb} size={232} />
+                        </div>
+                        <p className="text-white" style={{ fontSize: "clamp(1rem,2.4vw,1.15rem)", lineHeight: 1.55, minHeight: 56, maxWidth: 560, textShadow: "0 1px 14px rgba(0,0,0,0.45)" }} aria-live="polite">
+                            {waiting ? "pensando…" : (live.evaText || (live.userText.trim() ? `Você: ${live.userText}` : "Pode me perguntar o que quiser sobre a Vyzon."))}
+                        </p>
+                    </div>
+
+                    <div className="relative z-10 mx-auto flex w-full max-w-xl items-center gap-2 px-4">
+                        <input
+                            value={draft}
+                            onChange={(e) => setDraft(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); sendChat(); } }}
+                            placeholder={voiceLive ? "Pergunte à EVA…" : "Conectando…"}
+                            disabled={!voiceLive}
+                            aria-label="Sua pergunta pra EVA"
+                            className="vz-meshchat-input flex-1 rounded-full px-4 py-3 text-[14px] text-white outline-none"
+                            style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.22)" }}
+                        />
+                        <button type="button" onClick={sendChat} disabled={!draft.trim() || !voiceLive} aria-label="Enviar pergunta" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition-opacity disabled:opacity-40" style={{ background: "var(--lp-blue)" }}>
+                            <ArrowUp size={18} strokeWidth={2.6} />
+                        </button>
+                        <button type="button" onClick={toggleMic} disabled={!voiceLive} aria-pressed={live.micOn} aria-label={live.micOn ? "Desligar microfone" : "Falar com a EVA"} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors disabled:opacity-40" style={{ background: live.micOn ? "var(--lp-blue)" : "rgba(255,255,255,0.14)", color: "#fff" }}>
+                            {live.micOn ? <Mic size={18} /> : <MicOff size={18} />}
+                        </button>
+                    </div>
+
+                    <div className="relative z-10 mb-5 mt-3 flex justify-center">
+                        <button type="button" onClick={() => setSched("horarios")} className="rounded-full px-5 py-2.5 text-[13.5px] font-semibold transition-transform hover:scale-[1.03] active:scale-95" style={{ background: "#fff", color: "var(--lp-ink)" }}>
+                            Agendar uma demo
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

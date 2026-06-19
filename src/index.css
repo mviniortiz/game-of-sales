@@ -3886,6 +3886,35 @@ All colors MUST be HSL.
 }
 .vz-demochat-in { animation: vzDemoChatIn 0.34s cubic-bezier(0.22, 1, 0.36, 1) both; }
 
+/* Conversa livre (fim da demo): fundo MESH GRADIENT animado — dois conjuntos de
+   blobs nas cores da marca girando em sentidos opostos com blur = malha fluida. */
+.vz-meshchat-bg { position: absolute; inset: 0; overflow: hidden; background: #090c14; }
+.vz-meshchat-bg::before, .vz-meshchat-bg::after {
+  content: ""; position: absolute; inset: -35%; background-repeat: no-repeat;
+  background-image:
+    radial-gradient(closest-side, rgba(21,86,192,0.62), transparent),
+    radial-gradient(closest-side, rgba(109,40,217,0.55), transparent),
+    radial-gradient(closest-side, rgba(56,189,248,0.42), transparent),
+    radial-gradient(closest-side, rgba(13,148,136,0.30), transparent);
+  background-size: 58% 58%, 52% 52%, 64% 64%, 50% 50%;
+  background-position: 18% 28%, 78% 38%, 52% 82%, 35% 60%;
+  filter: blur(46px);
+  animation: vzMeshSpin 24s linear infinite;
+  will-change: transform;
+}
+.vz-meshchat-bg::after { animation-duration: 34s; animation-direction: reverse; opacity: 0.85; }
+@keyframes vzMeshSpin {
+  from { transform: rotate(0deg) scale(1.12); }
+  to   { transform: rotate(360deg) scale(1.12); }
+}
+.vz-meshchat-in { animation: vzGreetIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.vz-meshchat-input::placeholder { color: rgba(255, 255, 255, 0.55); }
+.vz-meshchat-input:focus { border-color: rgba(255, 255, 255, 0.4); background: rgba(255, 255, 255, 0.16); }
+@media (prefers-reduced-motion: reduce) {
+  .vz-meshchat-bg::before, .vz-meshchat-bg::after { animation: none; }
+  .vz-meshchat-in { animation: none; }
+}
+
 /* Saudação → demo: o overlay de apresentação ENTRA (sobe+fade), depois DISSOLVE
    (fade+zoom+blur) revelando a plataforma, que por sua vez ENTRA com zoom sutil. */
 @keyframes vzGreetIn {

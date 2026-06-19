@@ -80,6 +80,7 @@ export function useGeminiLive() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const connectFnRef = useRef<((opts: any, retry?: boolean) => void) | null>(null);
     const lastOptsRef = useRef<ConnectOpts | null>(null); // últimas opts pra reconnect()
+    const epochRef = useRef(0); // nº da conexão atual (ignora callbacks de sessões antigas)
     const micCtxRef = useRef<AudioContext | null>(null);
     const micStreamRef = useRef<MediaStream | null>(null);
     const procRef = useRef<ScriptProcessorNode | null>(null);
@@ -261,6 +262,12 @@ export function useGeminiLive() {
 
     const connect = useCallback(async (opts: ConnectOpts, isRetry = false) => {
         lastOptsRef.current = opts; // guarda pra reconnect() (sessão fresca no tour)
+        // EPOCH: cada conexão tem um número; callbacks de sessões ANTIGAS (ex.: o
+        // onclose atrasado da sessão que acabamos de substituir num reconnect) são
+        // IGNORADOS. Sem isso, esse onclose seta status "ended" e o coordenador
+        // dispara reconexões extras → o tour pula/repete telas.
+        const myEpoch = ++epochRef.current;
+        const alive = () => epochRef.current === myEpoch;
         setErrorReason(null);
         setStatus("connecting");
         setOrbState("thinking");
@@ -343,9 +350,10 @@ export function useGeminiLive() {
                     outputAudioTranscription: {},
                 },
                 callbacks: {
-                    onopen: () => { wsOpenRef.current = true; setStatus("live"); setOrbState("listening"); if (import.meta.env.DEV) console.debug("[eva] WS open"); },
+                    onopen: () => { if (!alive()) return; wsOpenRef.current = true; setStatus("live"); setOrbState("listening"); if (import.meta.env.DEV) console.debug("[eva] WS open"); },
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     onmessage: (message: any) => {
+                        if (!alive()) return; // ignora mensagens de uma sessão já substituída
                         const sc = message.serverContent;
                         if (sc?.interrupted) { stopPlayback(); clearEvaReveal(); setOrbState("listening"); }
                         if (sc?.modelTurn?.parts) {
@@ -406,11 +414,12 @@ export function useGeminiLive() {
                             try { session.sendToolResponse({ functionResponses }); } catch { /* noop */ }
                         }
                     },
-                    onerror: () => { wsOpenRef.current = false; stopMic(); },
+                    onerror: () => { if (!alive()) return; wsOpenRef.current = false; stopMic(); },
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     onclose: (e: any) => {
-                        wsOpenRef.current = false;
                         stopMic(); // mata o spam "WebSocket already CLOSING" do mic
+                        if (!alive()) return; // onclose de sessão substituída (reconnect) — ignora
+                        wsOpenRef.current = false;
                         if (import.meta.env.DEV) console.debug("[eva] WS close", e?.code, e?.reason);
                         // reconecta (token NOVO) se a sessão caiu ANTES da EVA
                         // falar e não foi um fim proposital — cobre erro 1011
