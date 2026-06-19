@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { ArrowUp } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { ArrowUp, Mic, MicOff, Volume2, VolumeX, MessageSquare, PhoneOff } from "lucide-react";
 import { EvaOrb } from "./EvaOrb";
 import { useGeminiLive } from "./useGeminiLive";
 import { whatsappUrl } from "@/config/contact";
@@ -9,7 +9,13 @@ import { DemoScheduler, DEMO_SLOTS, type SchedStep } from "./DemoScheduler";
 // LP.8 (v2) — tour AO VIVO: o app real num iframe (/embed-demo) + a EVA por VOZ
 // (Gemini Live, rodando no parent) narrando e NAVEGANDO o iframe. A tool
 // navegar(tela) dispara o goto via postMessage → o EmbedController move o cursor
-// e troca de rota. Fallback manual (botões) se sem microfone/chave.
+// e troca de rota.
+//
+// ROBUSTEZ (o tour NUNCA fica preso): o avanço de tela tem uma rede de segurança
+// dupla — (1) watchdog por passo que força a próxima tela se a voz não conduzir
+// no tempo esperado; (2) rede de conexão que conduz por LEGENDA pré-escrita se a
+// voz não conectar. Quando a voz funciona, ela narra e o ritmo é dela; quando
+// falha, a EVA conduz sozinha com legendas. Controles estilo Handhold embaixo.
 interface DemoLiveStageProps {
     onDone: () => void;
     site: string;
@@ -22,6 +28,21 @@ const NAV_ENUM = ["inicio", "inbox", "inbox-analise", "pipeline", "lead", "eva-s
 // telas pesadas demoram a montar — espera mais antes de mandar a EVA narrar,
 // pra ela não falar sobre uma tela ainda em loading/spinner.
 const MOUNT_DELAY: Record<string, number> = { "eva-studio": 2000, "eva-studio-criar": 2600, "inbox-analise": 1100, lead: 1100 };
+
+// Legenda pré-escrita por tela: mostrada imediatamente ao abrir a tela e usada
+// como NARRAÇÃO de fallback quando a voz não está conduzindo (sem chave/sem
+// conexão/erro). Garante que a demo SEMPRE explica o que está na tela.
+const SCREEN_CAPTION: Record<string, string> = {
+    inicio: "Esta é a Central de Comando: tudo que precisa da sua atenção hoje num lugar só, com o próximo passo de cada conversa.",
+    inbox: "A Caixa de Entrada reúne as conversas de todos os canais, na ordem do que precisa de resposta agora.",
+    "inbox-analise": "A EVA leu a conversa inteira, viu que é um lead quente e já deixou a resposta sugerida pronta. O time só revisa e aprova.",
+    pipeline: "No Pipeline cada conversa vira uma oportunidade no funil, e a EVA avisa quando algo precisa de follow-up.",
+    lead: "No detalhe da oportunidade você vê o contexto do lead, o histórico da conversa e o próximo passo que a EVA sugere.",
+    metas: "Em Metas você acompanha o objetivo do time em tempo real e configura a meta de cada vendedor.",
+    ranking: "O Ranking é o placar da equipe: dá visibilidade e motiva o time de um jeito saudável, sem exposição.",
+    "eva-studio": "No EVA Studio você cria agentes especialistas para qualificação, follow-up, propostas e reativação.",
+    "eva-studio-criar": "Você conversa com a EVA, responde algumas perguntas sobre o negócio e o agente de qualificação fica pronto em minutos.",
+};
 
 // Tour DETERMINÍSTICO: o sistema abre a tela e MANDA a EVA narrar exatamente
 // aquela tela (a tela já está aberta). Garante que fala e tela nunca divergem.
@@ -91,6 +112,35 @@ const TOOLS = [{
     ],
 }];
 
+// teto absoluto que uma tela pode ficar no ar quando a voz CONDUZ (anti-trava):
+// se a EVA não terminar de narrar nesse tempo, o tour avança mesmo assim.
+const STEP_CEIL = 22000;
+// quanto tempo cada tela fica no ar quando a voz NÃO conduz (fallback legenda).
+const STEP_DWELL_NOVOICE = 9000;
+// quanto esperar a voz conectar antes de conduzir o tour por legenda.
+const CONNECT_WAIT = 13000;
+
+// botão de controle circular estilo Handhold (mic / áudio / conversar / desligar)
+const CtrlBtn = ({ onClick, label, active, danger, disabled, children }: {
+    onClick: () => void; label: string; active?: boolean; danger?: boolean; disabled?: boolean; children: ReactNode;
+}) => (
+    <button
+        type="button"
+        onClick={onClick}
+        disabled={disabled}
+        aria-label={label}
+        aria-pressed={active}
+        title={label}
+        className={`flex h-11 w-11 items-center justify-center rounded-full transition-colors disabled:opacity-35 ${active || danger ? "" : "hover:bg-black/[0.06]"}`}
+        style={{
+            background: danger ? "rgba(214,40,40,0.12)" : active ? "var(--lp-blue)" : "transparent",
+            color: danger ? "#d62828" : active ? "#fff" : "var(--lp-ink-90)",
+        }}
+    >
+        {children}
+    </button>
+);
+
 export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const [active, setActive] = useState("inicio");
@@ -101,14 +151,22 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
     const [waiting, setWaiting] = useState(false);
     const [sched, setSched] = useState<SchedStep | null>(null);
     const [slotId, setSlotId] = useState<string | null>(null);
+    const [capFallback, setCapFallback] = useState(SCREEN_CAPTION.inicio);
     const connectedRef = useRef(false);
     const activeRef = useRef("inicio");
     const navTimersRef = useRef<number[]>([]);
     const lastTargetRef = useRef("inicio");
     const tourIdxRef = useRef(-1);      // -1 = não começou, -2 = concluído
+    const tourStartedRef = useRef(false);
     const stepSpokeRef = useRef(false); // a EVA já narrou a tela atual?
     const nudgedStepRef = useRef(-1);   // último passo já mandado narrar (anti-duplicação)
+    const stepWatchRef = useRef<number | null>(null); // watchdog do passo atual
+    const chatOpenRef = useRef(false);  // refs lidas dentro do watchdog (sem closure stale)
+    const schedRef = useRef(false);
     const live = useGeminiLive();
+
+    useEffect(() => { chatOpenRef.current = chatOpen; }, [chatOpen]);
+    useEffect(() => { schedRef.current = !!sched; }, [sched]);
 
     const sendGoto = (screen: string) => {
         try { iframeRef.current?.contentWindow?.postMessage({ source: "vyzon-demo", action: "goto", screen }, window.location.origin); } catch { /* noop */ }
@@ -122,9 +180,6 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
     // OUVE a transição. Robusto mesmo se o modelo adianta toda a narração.
     const ANTICIPATE = 480;   // ms que o cursor anda antes do clique/troca
     const MAX_SYNC = 7000;    // teto: nunca segura a tela mais que isso (anti-trava)
-    // executa fn no instante em que a pessoa OUVE a fala atual: atrasa pelo áudio
-    // ainda na fila (playbackLeadMs), menos a antecipação do cursor, com teto pra
-    // a tela nunca ficar "presa no passado" se o lead crescer demais.
     const afterSpeech = (fn: () => void, extra = 0) => {
         const delay = Math.min(MAX_SYNC, Math.max(0, live.playbackLeadMs() - ANTICIPATE)) + extra;
         const t = window.setTimeout(fn, delay);
@@ -136,20 +191,40 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
         afterSpeech(() => setScreen(screen));
     };
 
-    // TOUR DETERMINÍSTICO: abre a tela i (de verdade), espera montar e MANDA a EVA
-    // narrar exatamente essa tela. O avanço pra próxima é feito por efeito quando
-    // ela termina de falar. Tela sempre bate com a fala.
+    const clearStepWatch = () => { if (stepWatchRef.current) { clearTimeout(stepWatchRef.current); stepWatchRef.current = null; } };
+
+    // TOUR DETERMINÍSTICO + ROBUSTO: abre a tela i, mostra a legenda e (se a voz
+    // estiver viva) manda a EVA narrar. Um WATCHDOG garante que o passo nunca
+    // fica preso: se a voz não conduzir até o teto, avança sozinho. Quando a
+    // pessoa abre conversa/agenda, o watchdog espera (não pula por cima dela).
     const startStep = (i: number) => {
+        clearStepWatch();
         if (i < 0 || i >= SCREEN_ORDER.length) { tourIdxRef.current = -2; return; }
-        if (nudgedStepRef.current >= i) return;  // este passo já foi mandado narrar (anti-repetição)
+        if (nudgedStepRef.current >= i) return;  // este passo já foi iniciado (anti-repetição)
         nudgedStepRef.current = i;
         tourIdxRef.current = i;
         stepSpokeRef.current = false;
         const screen = SCREEN_ORDER[i];
         lastTargetRef.current = screen;
         setScreen(screen);
-        const t = window.setTimeout(() => live.nudge(TOUR_PROMPT[screen] || `Explique a tela ${screen}.`), MOUNT_DELAY[screen] ?? 750);
-        navTimersRef.current.push(t);
+        setCapFallback(SCREEN_CAPTION[screen] || "");
+        const mount = MOUNT_DELAY[screen] ?? 750;
+        const voiceLive = live.status === "live";
+        if (voiceLive) {
+            const t = window.setTimeout(() => live.nudge(TOUR_PROMPT[screen] || `Explique a tela ${screen}.`), mount);
+            navTimersRef.current.push(t);
+        }
+        // WATCHDOG anti-trava (a real correção do "fica parado na Central"):
+        const ceil = (voiceLive ? STEP_CEIL : STEP_DWELL_NOVOICE) + mount;
+        const tick = () => {
+            if (tourIdxRef.current !== i) return;                       // já avançou
+            if (chatOpenRef.current || schedRef.current) {              // pessoa engajada → espera
+                stepWatchRef.current = window.setTimeout(tick, 4000);
+                return;
+            }
+            startStep(i + 1);
+        };
+        stepWatchRef.current = window.setTimeout(tick, ceil);
     };
 
     // agendamento conduzido pela EVA (substitui a alucinação do "enviei o link")
@@ -184,8 +259,6 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
                     systemInstruction: buildSystem(site),
                     voiceName: "Sulafat",
                     tools: TOOLS,
-                    // sem kickoff: o tour determinístico (efeito abaixo) abre a tela
-                    // e MANDA a EVA narrar cada uma, na ordem.
                     onToolCall: (name, args) => {
                         if (name === "navegar") {
                             const tela = String((args as { tela?: string }).tela || "");
@@ -206,23 +279,33 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // desconecta a voz e limpa timers de navegação ao sair do tour
-    useEffect(() => () => { live.disconnect(); navTimersRef.current.forEach(clearTimeout); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    // desconecta a voz e limpa timers ao sair do tour
+    useEffect(() => () => { live.disconnect(); navTimersRef.current.forEach(clearTimeout); clearStepWatch(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // quando a EVA começa a falar: tira o "pensando" e marca que narrou a tela
     useEffect(() => {
         if (live.orbState === "speaking") { setWaiting(false); stepSpokeRef.current = true; }
     }, [live.orbState]);
 
-    // INÍCIO do tour: assim que a voz fica ao vivo, abre a 1ª tela e manda narrar
+    // INÍCIO do tour assim que a voz fica ao vivo (caminho feliz)
     useEffect(() => {
-        if (live.status === "live" && tourIdxRef.current === -1) startStep(0);
+        if (live.status === "live" && !tourStartedRef.current) { tourStartedRef.current = true; startStep(0); }
     }, [live.status]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // LEGENDA AO VIVO: mostra SÓ a frase que ela está falando agora; quando uma
-    // nova frase começa, a anterior DISSOLVE (vanish com blur). A key da frase
-    // atual é o ÍNDICE (não o texto) pra ela NÃO re-animar a cada palavra que
-    // chega — só anima a entrada quando começa uma frase nova.
+    // REDE DE SEGURANÇA: se a voz der erro OU não conectar a tempo, conduz o tour
+    // mesmo assim (por legenda). A demo NUNCA fica parada esperando a EVA conectar.
+    useEffect(() => {
+        if (!appReady || tourStartedRef.current) return;
+        if (live.status === "error") { tourStartedRef.current = true; startStep(0); return; }
+        const t = window.setTimeout(() => {
+            if (!tourStartedRef.current) { tourStartedRef.current = true; startStep(0); }
+        }, CONNECT_WAIT);
+        return () => clearTimeout(t);
+    }, [appReady, live.status]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // LEGENDA AO VIVO (voz): mostra SÓ a frase que ela está falando agora; quando
+    // uma nova frase começa, a anterior DISSOLVE. A key da frase atual é o ÍNDICE
+    // pra ela NÃO re-animar a cada palavra — só anima a entrada de frase nova.
     const [capCurrent, setCapCurrent] = useState("");
     const [capKey, setCapKey] = useState(0);
     const [capFading, setCapFading] = useState<{ id: number; text: string }[]>([]);
@@ -248,16 +331,15 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
     }, [live.evaText]);
     useEffect(() => () => { capTimersRef.current.forEach(clearTimeout); }, []);
 
-    // TRANSIÇÃO automática: abre o modo conversa SÓ quando o usuário começa a
-    // tirar dúvidas (fala uma pergunta durante o tour). Quem só assiste não é
-    // interrompido; o botão "Conversar com a EVA" continua como gatilho manual.
+    // abre o modo conversa quando o usuário começa a falar/digitar uma dúvida
     useEffect(() => {
         if (!chatOpen && live.userText.trim().length >= 3) setChatOpen(true);
     }, [live.userText, chatOpen]);
 
-    // AVANÇO do tour: quando a EVA TERMINA de narrar a tela atual (volta a
-    // "listening" depois de ter falado), espera o áudio drenar e abre a próxima.
-    // Pausa em modo conversa/agenda e quando o usuário está falando.
+    // AVANÇO por VOZ: quando a EVA TERMINA de narrar a tela (volta a "listening"
+    // depois de ter falado), espera o áudio drenar e abre a próxima. Pausa em
+    // modo conversa/agenda e quando o usuário está falando. (O watchdog cobre o
+    // resto: se a voz não terminar/cair, o tour avança por tempo mesmo assim.)
     useEffect(() => {
         if (tourIdxRef.current < 0) return;            // tour não rodando/concluído
         if (chatOpen || sched) return;                 // conversa/agenda mandam
@@ -280,11 +362,15 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
         live.sendText(t);
     };
 
-    const liveOrb = live.status === "connecting" ? "thinking" : live.status === "live" ? live.orbState : "idle";
     const activeIdx = Math.max(0, SCREEN_ORDER.indexOf(active));
     const manual = live.status === "error" || (appReady && live.status === "idle");
-    const goManual = (i: number) => { if (i >= SCREEN_ORDER.length) onDone(); else setScreen(SCREEN_ORDER[i]); };
+    const goManual = (i: number) => { if (i >= SCREEN_ORDER.length) endCall(); else { nudgedStepRef.current = i - 1; startStep(i); } };
     const toggleMute = () => { const m = !muted; setMuted(m); live.setMuted(m); };
+    const toggleMic = () => { live.setMicEnabled(!live.micOn); };
+    const endCall = () => { live.disconnect(); onDone(); };
+    const voiceLive = live.status === "live";
+    // legenda do palco: a fala da EVA quando há voz; senão a legenda pré-escrita.
+    const stageCaption = (voiceLive && capCurrent) ? capCurrent : capFallback;
 
     return (
         <div className="flex h-full flex-1 flex-col">
@@ -299,18 +385,27 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
                     </div>
                 )}
 
-                {/* CTA de conversão: alta intenção durante a demo → fala direto com o time */}
-                {appReady && (
-                    <a
-                        href={whatsappUrl(`Oi! Vi a demo da EVA${site.trim() ? ` (${site.trim()})` : ""} e quero conversar sobre o Vyzon.`)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="absolute bottom-4 right-4 z-10 inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-[13px] font-semibold text-white shadow-lg transition-transform hover:scale-[1.03] active:scale-95 motion-reduce:transition-none motion-reduce:hover:scale-100"
-                        style={{ background: "#0B1220" }}
-                    >
-                        <WhatsappGlyph size={15} />
-                        Falar com a gente
-                    </a>
+                {/* LEGENDA + estado ao vivo sobre o palco (estilo Handhold): a EVA
+                    "narra" o que está na tela; chip "ao vivo" no topo do bloco. */}
+                {appReady && !chatOpen && !sched && (
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-col items-center gap-2.5 px-4 pb-5 pt-20"
+                        style={{ background: "linear-gradient(to top, rgba(8,9,12,0.62), rgba(8,9,12,0.18) 55%, transparent)" }}>
+                        <span className="lp-mono inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-white"
+                            style={{ background: "rgba(8,9,12,0.55)", backdropFilter: "blur(6px)", fontSize: 10.5, letterSpacing: "0.04em" }}>
+                            <span className="h-1.5 w-1.5 rounded-full" style={{ background: voiceLive ? "var(--lp-live)" : "rgba(255,255,255,0.55)" }} />
+                            EVA · {SCREEN_LABEL[active] || active}
+                        </span>
+                        <div className="relative w-full max-w-2xl text-center" style={{ minHeight: "2.7em" }} aria-live="polite">
+                            {voiceLive && capFading.map((f) => (
+                                <p key={f.id} className="vz-cap-out pointer-events-none absolute inset-x-0 top-0 line-clamp-2 text-[14.5px] font-medium leading-snug text-white">
+                                    {f.text}
+                                </p>
+                            ))}
+                            <p key={`${capKey}-${active}`} className="vz-cap-in line-clamp-2 text-[14.5px] font-medium leading-snug text-white" style={{ textShadow: "0 1px 8px rgba(0,0,0,0.45)" }}>
+                                {live.userText.trim() ? `Você: ${live.userText}` : stageCaption}
+                            </p>
+                        </div>
+                    </div>
                 )}
 
                 {/* Modo conversa: a EVA "sai da demo" e fica de frente, em VOZ. O
@@ -339,30 +434,30 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
                             </div>
                         </div>
 
-                        {/* Texto opcional (texto + voz) + mudo */}
+                        {/* Texto opcional (texto + voz) + mic + mudo */}
                         <div className="flex items-center gap-2 px-4 py-3" style={{ borderTop: "1px solid var(--lp-line)", background: "#fff" }}>
                             <input
                                 value={draft}
                                 onChange={(e) => setDraft(e.target.value)}
                                 onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); sendChat(); } }}
-                                placeholder={live.status === "live" ? "Pergunte à EVA…" : "Conectando a EVA…"}
-                                disabled={live.status !== "live"}
+                                placeholder={voiceLive ? "Pergunte à EVA…" : "Conectando a EVA…"}
+                                disabled={!voiceLive}
                                 className="vz-input-light flex-1"
                                 aria-label="Sua pergunta pra EVA"
                             />
                             <button
                                 type="button"
                                 onClick={sendChat}
-                                disabled={!draft.trim() || live.status !== "live"}
+                                disabled={!draft.trim() || !voiceLive}
                                 aria-label="Enviar pergunta"
                                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white transition-opacity disabled:opacity-40"
                                 style={{ background: "var(--lp-blue)" }}
                             >
                                 <ArrowUp size={18} strokeWidth={2.6} />
                             </button>
-                            {live.status === "live" && (
-                                <button type="button" onClick={toggleMute} className="shrink-0 text-[13px] underline-offset-4 hover:underline" style={{ color: "var(--lp-ink-55)" }}>
-                                    {muted ? "Ativar som" : "Desativar som"}
+                            {voiceLive && (
+                                <button type="button" onClick={toggleMic} aria-pressed={live.micOn} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors" style={{ background: live.micOn ? "var(--lp-blue)" : "rgba(5,5,5,0.05)", color: live.micOn ? "#fff" : "var(--lp-ink-90)" }} aria-label={live.micOn ? "Desligar microfone" : "Falar com a EVA"} title={live.micOn ? "Desligar microfone" : "Falar com a EVA"}>
+                                    {live.micOn ? <Mic size={17} /> : <MicOff size={17} />}
                                 </button>
                             )}
                         </div>
@@ -381,67 +476,50 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
                 )}
             </div>
 
-            {/* barra: orb + transcrição/estado + controles (empilha no mobile) */}
-            <div className="flex shrink-0 flex-col gap-2.5 px-4 py-3 sm:flex-row sm:items-center sm:gap-4 sm:px-6 sm:py-3.5" style={{ borderTop: "1px solid var(--lp-line)", background: "#fff" }}>
-                <div className="flex min-w-0 flex-1 items-center gap-3">
-                    <EvaOrb state={liveOrb} size={42} className="shrink-0" />
-                    <div className="min-w-0 flex-1">
-                        {live.status === "live" ? (
-                            <>
-                                <p className="lp-mono" style={{ color: "var(--lp-live)" }}>EVA ao vivo · {SCREEN_LABEL[active] || active}</p>
-                                <div className="relative" style={{ minHeight: "2.6em" }} aria-live="polite">
-                                    {/* frase anterior dissolvendo (vanish) */}
-                                    {capFading.map((f) => (
-                                        <p key={f.id} className="vz-cap-out pointer-events-none absolute inset-x-0 top-0 line-clamp-2 text-[13px] leading-snug" style={{ color: "rgba(8,10,15,0.92)" }}>
-                                            {f.text}
-                                        </p>
-                                    ))}
-                                    {/* frase atual (key = índice da frase, não o texto) */}
-                                    <p key={capKey} className="vz-cap-in line-clamp-2 text-[13px] leading-snug" style={{ color: "rgba(8,10,15,0.92)" }}>
-                                        {capCurrent || (live.userText ? `Você: ${live.userText}` : "Pode falar com a EVA, ela está te mostrando a plataforma.")}
-                                    </p>
-                                </div>
-                            </>
-                        ) : live.status === "connecting" ? (
-                            <p className="text-[13.5px]" style={{ color: "rgba(5,5,5,0.6)" }}>Conectando a EVA… libere o microfone quando o navegador pedir.</p>
-                        ) : live.status === "error" ? (
-                            <p className="text-[13px]" style={{ color: "rgba(5,5,5,0.6)" }}>
-                                {live.errorReason === "mic_denied" ? "Sem microfone — navegue pelos botões." : live.errorReason === "no_key" ? "Voz não configurada — use os botões." : "Voz indisponível — use os botões."}
-                            </p>
-                        ) : (
-                            <p className="text-[13.5px]" style={{ color: "rgba(5,5,5,0.6)" }}>{SCREEN_LABEL[active]}</p>
-                        )}
-                    </div>
+            {/* BARRA HANDHOLD: progresso à esquerda, controles circulares no centro
+                (conversar · mic · áudio · desligar), CTA "Falar com a gente" à direita */}
+            <div className="flex shrink-0 items-center gap-3 px-3 py-2.5 sm:gap-4 sm:px-6 sm:py-3" style={{ borderTop: "1px solid var(--lp-line)", background: "#fff" }}>
+                {/* esquerda: progresso do tour (some no mobile estreito) */}
+                <div className="hidden min-w-0 flex-1 items-center gap-1.5 sm:flex">
+                    {SCREEN_ORDER.map((s, i) => (
+                        <span key={s} className="h-1.5 rounded-full transition-all" style={{ width: i === activeIdx ? 18 : 6, background: i <= activeIdx ? "var(--lp-blue)" : "var(--lp-line)" }} />
+                    ))}
                 </div>
 
-                <div className="flex items-center justify-between gap-3 sm:justify-end">
-                    <div className="flex items-center gap-1.5">
-                        {SCREEN_ORDER.map((s, i) => (
-                            <span key={s} className="h-1.5 rounded-full transition-all" style={{ width: i === activeIdx ? 18 : 6, background: i <= activeIdx ? "var(--lp-blue)" : "var(--lp-line)" }} />
-                        ))}
-                    </div>
+                {/* centro: pílula de controles estilo Handhold */}
+                <div className="flex items-center gap-1 rounded-full px-1.5 py-1" style={{ background: "rgba(5,5,5,0.035)", border: "1px solid var(--lp-line)" }}>
+                    <CtrlBtn onClick={() => setChatOpen(true)} label="Conversar com a EVA">
+                        <MessageSquare size={18} />
+                    </CtrlBtn>
+                    <CtrlBtn onClick={toggleMic} active={live.micOn} disabled={!voiceLive} label={live.micOn ? "Desligar microfone" : "Falar com a EVA"}>
+                        {live.micOn ? <Mic size={18} /> : <MicOff size={18} />}
+                    </CtrlBtn>
+                    <CtrlBtn onClick={toggleMute} active={muted} disabled={!voiceLive} label={muted ? "Ativar som da EVA" : "Silenciar a EVA"}>
+                        {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+                    </CtrlBtn>
+                    <span className="mx-0.5 h-6 w-px" style={{ background: "var(--lp-line)" }} />
+                    <CtrlBtn onClick={endCall} danger label="Encerrar demo">
+                        <PhoneOff size={17} />
+                    </CtrlBtn>
+                </div>
 
-                    <div className="flex shrink-0 items-center gap-3">
-                        {manual && (
-                            <>
-                                <button type="button" onClick={() => goManual(activeIdx - 1)} disabled={activeIdx === 0} className="text-[13.5px] disabled:opacity-30" style={{ color: "var(--lp-ink-55)" }}>Anterior</button>
-                                <button type="button" onClick={() => goManual(activeIdx + 1)} className="rounded-full px-4 py-1.5 text-[13.5px] text-white sm:px-5 sm:py-2" style={{ background: "var(--lp-ink)", fontWeight: 600 }}>
-                                    {activeIdx >= SCREEN_ORDER.length - 1 ? "Concluir" : "Próximo"}
-                                </button>
-                            </>
-                        )}
-                        {live.status === "live" && (
-                            <button type="button" onClick={() => setChatOpen(true)} className="text-[13px]" style={{ color: "var(--lp-blue)", fontWeight: 600 }}>
-                                Conversar com a EVA
-                            </button>
-                        )}
-                        {live.status === "live" && (
-                            <button type="button" onClick={toggleMute} className="text-[13px] underline-offset-4 hover:underline" style={{ color: "var(--lp-ink-55)" }}>
-                                {muted ? "Ativar som" : "Desativar som"}
-                            </button>
-                        )}
-                        <button type="button" onClick={() => { live.disconnect(); onDone(); }} className="text-[13px]" style={{ color: "var(--lp-ink-55)", fontWeight: 500 }}>Encerrar</button>
-                    </div>
+                {/* direita: estado/manual + CTA WhatsApp */}
+                <div className="flex min-w-0 flex-1 items-center justify-end gap-2.5">
+                    {manual && (
+                        <button type="button" onClick={() => goManual(activeIdx + 1)} className="hidden rounded-full px-4 py-1.5 text-[13px] text-white sm:inline-flex" style={{ background: "var(--lp-ink)", fontWeight: 600 }}>
+                            {activeIdx >= SCREEN_ORDER.length - 1 ? "Concluir" : "Próximo"}
+                        </button>
+                    )}
+                    <a
+                        href={whatsappUrl(`Oi! Vi a demo da EVA${site.trim() ? ` (${site.trim()})` : ""} e quero conversar sobre o Vyzon.`)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-[13px] font-semibold text-white transition-transform hover:scale-[1.03] active:scale-95 motion-reduce:transition-none motion-reduce:hover:scale-100"
+                        style={{ background: "#0B1220" }}
+                    >
+                        <WhatsappGlyph size={14} />
+                        <span className="hidden sm:inline">Falar com a gente</span>
+                    </a>
                 </div>
             </div>
         </div>

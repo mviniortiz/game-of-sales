@@ -121,22 +121,68 @@ export function useGeminiLive() {
         src.onended = () => { sourcesRef.current = sourcesRef.current.filter((s) => s !== src); };
     };
 
-    const disconnect = useCallback(() => {
-        intentionalRef.current = true;
-        wsOpenRef.current = false;
-        try { sessionRef.current?.close?.(); } catch { /* noop */ }
-        sessionRef.current = null;
+    // captura do microfone (PCM16 16kHz → sendRealtimeInput). Extraída pra poder
+    // LIGAR/DESLIGAR em runtime pelo botão de mic (estilo Handhold), em vez de só
+    // no connect. Idempotente: não reabre se já está capturando.
+    const startMic = useCallback(() => {
+        if (micStreamRef.current || !sessionRef.current) return;
+        navigator.mediaDevices
+            .getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true } })
+            .then((stream) => {
+                if (!sessionRef.current) { stream.getTracks().forEach((t) => t.stop()); return; } // já desconectou
+                micStreamRef.current = stream;
+                setMicOn(true);
+                const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+                const micCtx = new Ctx({ sampleRate: 16000 });
+                micCtx.resume().catch(() => undefined);
+                micCtxRef.current = micCtx;
+                const srcNode = micCtx.createMediaStreamSource(stream);
+                const proc = micCtx.createScriptProcessor(1024, 1, 1);
+                procRef.current = proc;
+                proc.onaudioprocess = (ev) => {
+                    if (!sessionRef.current || !wsOpenRef.current) return;
+                    const input = ev.inputBuffer.getChannelData(0);
+                    const pcm = new Int16Array(input.length);
+                    for (let i = 0; i < input.length; i++) {
+                        const s = Math.max(-1, Math.min(1, input[i]));
+                        pcm[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+                    }
+                    const b64 = bytesToBase64(new Uint8Array(pcm.buffer));
+                    try { sessionRef.current.sendRealtimeInput({ audio: { data: b64, mimeType: "audio/pcm;rate=16000" } }); } catch { /* noop */ }
+                };
+                const sink = micCtx.createGain();
+                sink.gain.value = 0;
+                srcNode.connect(proc);
+                proc.connect(sink);
+                sink.connect(micCtx.destination);
+            })
+            .catch(() => { setMicOn(false); });
+    }, []);
+
+    const stopMic = useCallback(() => {
         try { procRef.current?.disconnect(); } catch { /* noop */ }
         procRef.current = null;
         micStreamRef.current?.getTracks().forEach((t) => t.stop());
         micStreamRef.current = null;
         try { micCtxRef.current?.close(); } catch { /* noop */ }
         micCtxRef.current = null;
+        setMicOn(false);
+    }, []);
+
+    // liga/desliga a captura do microfone em runtime (botão de mic).
+    const setMicEnabled = useCallback((on: boolean) => { if (on) startMic(); else stopMic(); }, [startMic, stopMic]);
+
+    const disconnect = useCallback(() => {
+        intentionalRef.current = true;
+        wsOpenRef.current = false;
+        try { sessionRef.current?.close?.(); } catch { /* noop */ }
+        sessionRef.current = null;
+        stopMic();
         clearEvaReveal();
         stopPlayback();
         try { outCtxRef.current?.close(); } catch { /* noop */ }
         outCtxRef.current = null;
-    }, []);
+    }, [stopMic]);
 
     const setMuted = useCallback((m: boolean) => {
         mutedRef.current = m;
@@ -336,50 +382,19 @@ export function useGeminiLive() {
 
             // microfone DESLIGADO por padrão: o áudio de entrada acumulava
             // transcrição no contexto e derrubava a sessão (erro 1011) no meio do
-            // tour. A EVA narra/conduz sozinha; a interação é por TEXTO. Só captura
-            // se opts.captureMic (reabilitar quando o áudio for resampleado p/ 16kHz).
-            if (opts.captureMic) {
-                navigator.mediaDevices
-                    .getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true } })
-                    .then((stream) => {
-                        if (!sessionRef.current) { stream.getTracks().forEach((t) => t.stop()); return; } // já desconectou
-                        micStreamRef.current = stream;
-                        setMicOn(true);
-                        const micCtx = new Ctx({ sampleRate: 16000 });
-                        micCtx.resume().catch(() => undefined);
-                        micCtxRef.current = micCtx;
-                        const srcNode = micCtx.createMediaStreamSource(stream);
-                        const proc = micCtx.createScriptProcessor(1024, 1, 1);
-                        procRef.current = proc;
-                        proc.onaudioprocess = (ev) => {
-                            if (!sessionRef.current || !wsOpenRef.current || mutedRef.current) return;
-                            const input = ev.inputBuffer.getChannelData(0);
-                            const pcm = new Int16Array(input.length);
-                            for (let i = 0; i < input.length; i++) {
-                                const s = Math.max(-1, Math.min(1, input[i]));
-                                pcm[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
-                            }
-                            const b64 = bytesToBase64(new Uint8Array(pcm.buffer));
-                            try { sessionRef.current.sendRealtimeInput({ audio: { data: b64, mimeType: "audio/pcm;rate=16000" } }); } catch { /* noop */ }
-                        };
-                        const sink = micCtx.createGain();
-                        sink.gain.value = 0;
-                        srcNode.connect(proc);
-                        proc.connect(sink);
-                        sink.connect(micCtx.destination);
-                    })
-                    .catch(() => { setMicOn(false); });
-            }
+            // tour. A EVA narra/conduz sozinha; quem quiser FALAR liga o mic pelo
+            // botão (setMicEnabled) — captura sob demanda, sem travar o tour.
+            if (opts.captureMic) startMic();
         } catch (e) {
             console.error("[useGeminiLive] connect error", e);
             setErrorReason("exception");
             setStatus("error");
             disconnect();
         }
-    }, [disconnect]);
+    }, [disconnect, startMic]);
 
     // ref pro connect poder reconectar a si mesmo (retry no onclose)
     connectFnRef.current = connect as unknown as (opts: ConnectOpts, retry?: boolean) => void;
 
-    return { status, orbState, errorReason, userText, evaText, turns, micOn, connect, disconnect, setMuted, sendText, nudge, playbackLeadMs };
+    return { status, orbState, errorReason, userText, evaText, turns, micOn, connect, disconnect, setMuted, setMicEnabled, sendText, nudge, playbackLeadMs };
 }
