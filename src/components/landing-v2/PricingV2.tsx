@@ -14,8 +14,17 @@ interface PricingV2Props {
 
 export const PricingV2 = ({ onTrial, onScheduleDemo }: PricingV2Props) => {
     return (
-        <section id="planos" className="px-5 py-20 sm:py-28" style={{ backgroundColor: "var(--lp-paper)" }}>
-            <div className="mx-auto max-w-[1100px]">
+        <section id="planos" className="relative overflow-hidden px-5 py-20 sm:py-28" style={{ backgroundColor: "var(--lp-paper)" }}>
+            {/* aura azul de marca atrás do plano popular (centro) */}
+            <div
+                aria-hidden="true"
+                className="pointer-events-none absolute left-1/2 top-1/2"
+                style={{
+                    width: "min(760px, 92vw)", aspectRatio: "1", transform: "translate(-50%, -38%)",
+                    background: "radial-gradient(circle, rgba(21,86,192,0.13), rgba(21,86,192,0.04) 40%, transparent 64%)",
+                }}
+            />
+            <div className="relative mx-auto max-w-[1100px]">
                 <Reveal>
                     <div className="mx-auto max-w-2xl text-center">
                         <p className="lp-mono" style={{ color: "var(--lp-ink-55)" }}>Planos</p>
@@ -38,7 +47,12 @@ export const PricingV2 = ({ onTrial, onScheduleDemo }: PricingV2Props) => {
                         return (
                             <Reveal key={plan.name} delay={i * 80}>
                                 <div
-                                    className="flex h-full flex-col rounded-[20px] p-7 sm:p-8"
+                                    className="vz-price-card flex h-full flex-col rounded-[20px] p-7 sm:p-8"
+                                    onMouseMove={(e) => {
+                                        const r = e.currentTarget.getBoundingClientRect();
+                                        e.currentTarget.style.setProperty("--mx", `${e.clientX - r.left}px`);
+                                        e.currentTarget.style.setProperty("--my", `${e.clientY - r.top}px`);
+                                    }}
                                     style={{
                                         border: plan.popular ? "1.5px solid var(--lp-blue)" : "1px solid var(--lp-line)",
                                         background: "var(--lp-white)",

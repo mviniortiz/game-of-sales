@@ -3886,6 +3886,25 @@ All colors MUST be HSL.
 }
 .vz-demochat-in { animation: vzDemoChatIn 0.34s cubic-bezier(0.22, 1, 0.36, 1) both; }
 
+/* Pricing (v2) — "sauce": cards reagem ao cursor (spotlight azul que segue o
+   mouse) + sobem suave no hover. Estilo Linear/Vercel, na paleta Vyzon. */
+.vz-price-card {
+  position: relative;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s ease, border-color 0.3s ease;
+}
+.vz-price-card::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  opacity: 0; transition: opacity 0.35s ease;
+  background: radial-gradient(240px circle at var(--mx, 50%) var(--my, 0%), rgba(21, 86, 192, 0.14), transparent 70%);
+}
+.vz-price-card:hover { transform: translateY(-6px); box-shadow: 0 26px 64px -32px rgba(21, 86, 192, 0.5); }
+.vz-price-card:hover::before { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .vz-price-card { transition: none; }
+  .vz-price-card:hover { transform: none; }
+  .vz-price-card::before { display: none; }
+}
+
 /* Hero (v2): campo de pontos azuis — animação de ENTRADA (surge crescendo do
    centro). O translate(-50%,50%) posiciona o disco; o scale anima a entrada. */
 @keyframes vzHeroDotsIn {
