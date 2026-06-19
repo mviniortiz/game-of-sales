@@ -24,8 +24,10 @@ export const FinalCtaV2 = ({ onScheduleDemoClick, onSecondaryClick }: FinalCtaV2
         }
         const el = ref.current;
         if (!el) return;
+        // bidirecional: desliza pra dentro ao entrar, volta pras bordas ao sair
+        // (transform-only, não some se o observer falhar — vide regra WebView).
         const io = new IntersectionObserver((entries) => {
-            entries.forEach((e) => { if (e.isIntersecting) { setInView(true); io.disconnect(); } });
+            entries.forEach((e) => setInView(e.isIntersecting));
         }, { threshold: 0.2, rootMargin: "0px 0px -8% 0px" });
         io.observe(el);
         return () => io.disconnect();
