@@ -32,10 +32,11 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     //   1. Registro via SSO Google (profile criado sem company)
     //   2. Abandonou o wizard antes de criar a company
     //   3. Dados corrompidos
-    // Redireciona pro /onboarding?step=2 — wizard pula step 1 pq isLoggedIn=true
-    const needsOnboarding = !!profile && !profile.is_super_admin && !companyId && !isSuperAdmin;
-    if (needsOnboarding) {
-      navigate("/onboarding?step=2", { replace: true });
+    // Logado sem empresa (ex.: entrou via Google) → completa o cadastro simples
+    // (/criar-conta detecta o modo SSO e pede só o nome da agência).
+    const needsCompany = !!profile && !profile.is_super_admin && !companyId && !isSuperAdmin;
+    if (needsCompany) {
+      navigate("/criar-conta", { replace: true });
       return;
     }
   }, [user, loading, profile, companyId, isSuperAdmin, navigate, signOut]);

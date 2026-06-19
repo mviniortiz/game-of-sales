@@ -6,7 +6,7 @@ import { trackEvent } from "@/lib/analytics";
 import type { SeoLandingConfig } from "./types";
 
 const SCHEDULE_URL = "/#agendar-demo";
-const TRIAL_URL = "/onboarding?plan=plus";
+const TRIAL_URL = "/criar-conta?plan=plus";
 
 type Props = { config: SeoLandingConfig };
 

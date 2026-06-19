@@ -130,7 +130,7 @@ const LoginV2 = () => {
 
                             <p className="mt-10 text-[13px]" style={{ color: "rgba(255,255,255,0.4)" }}>
                                 Ainda não tem conta?{" "}
-                                <button type="button" onClick={() => navigate("/onboarding?plan=plus")} style={{ color: "rgba(255,255,255,0.82)", fontWeight: 500 }} className="hover:underline">
+                                <button type="button" onClick={() => navigate("/criar-conta?plan=plus")} style={{ color: "rgba(255,255,255,0.82)", fontWeight: 500 }} className="hover:underline">
                                     Criar conta grátis
                                 </button>
                             </p>

@@ -68,7 +68,7 @@ const LandingV2 = () => {
         return () => { if (t) clearTimeout(t); };
     }, []);
 
-    const goToRegister = () => navigate("/onboarding?plan=plus");
+    const goToRegister = () => navigate("/criar-conta?plan=plus");
     const scrollToId = (id: string) => {
         const el = document.getElementById(id);
         if (!el) return;
@@ -88,7 +88,7 @@ const LandingV2 = () => {
             <EvaShowcaseV2 onStartDemo={() => setDemoOpen(true)} />
             <FeaturesV2 />
             <SpecialistAgentsV2 onCTAClick={goToRegister} />
-            <PricingV2 onTrial={(slug) => navigate(`/onboarding?plan=${slug}`)} onScheduleDemo={() => setDemoOpen(true)} />
+            <PricingV2 onTrial={(slug) => navigate(`/criar-conta?plan=${slug}`)} onScheduleDemo={() => setDemoOpen(true)} />
             <div id="how-it-works">
                 <HowItWorksV2 onStart={goToRegister} />
             </div>

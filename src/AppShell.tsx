@@ -18,7 +18,6 @@ import { EmbedController } from "@/components/embed/EmbedController";
 const isEmbedded = (() => { try { return window.self !== window.top; } catch { return true; } })();
 
 const LoginV2 = lazy(() => import("./pages/LoginV2"));
-const Register = lazy(() => import("./pages/Register"));
 const RecuperarSenha = lazy(() => import("./pages/RecuperarSenha"));
 const RedefinirSenha = lazy(() => import("./pages/RedefinirSenha"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -46,7 +45,7 @@ const CRM = lazy(() => import("./pages/CRM"));
 const DealCommandCenter = lazy(() => import("./pages/DealCommandCenter"));
 const Pulse = lazy(() => import("./pages/Pulse"));
 const Inbox = lazy(() => import("./pages/Inbox"));
-const Onboarding = lazy(() => import("./pages/Onboarding"));
+const SignupV2 = lazy(() => import("./pages/SignupV2"));
 const SalesPerformanceCenter = lazy(() => import("./pages/SalesPerformanceCenter"));
 const AgenteRelatorios = lazy(() => import("./pages/AgenteRelatorios"));
 const EvaStudio = lazy(() => import("./pages/EvaStudio"));
@@ -63,7 +62,7 @@ const EmbedDemo = lazy(() => import("./pages/EmbedDemo"));
 const CheckoutRedirect = () => {
   const [params] = useSearchParams();
   const plan = params.get("plan") || "plus";
-  return <Navigate to={`/onboarding?plan=${plan}&step=5`} replace />;
+  return <Navigate to={`/criar-conta?plan=${plan}`} replace />;
 };
 
 const LazyFallback = () => <BrandedLoader />;
@@ -96,8 +95,10 @@ const AppShell = () => (
           <Suspense fallback={<LazyFallback />}>
             <Routes>
               <Route path="/auth" element={<LoginV2 />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/onboarding" element={<Onboarding />} />
+              <Route path="/criar-conta" element={<SignupV2 />} />
+              {/* compat: links antigos /onboarding e /register caem no novo cadastro */}
+              <Route path="/onboarding" element={<Navigate to="/criar-conta" replace />} />
+              <Route path="/register" element={<Navigate to="/criar-conta" replace />} />
               <Route path="/checkout" element={<CheckoutRedirect />} />
               <Route path="/recuperar-senha" element={<RecuperarSenha />} />
               <Route path="/redefinir-senha" element={<RedefinirSenha />} />

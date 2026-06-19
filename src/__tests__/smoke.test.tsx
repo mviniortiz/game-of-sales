@@ -107,11 +107,11 @@ describe('Smoke Tests - Public Pages', () => {
         expect(container.firstChild).toBeTruthy();
     });
 
-    it('Register page renders without crashing', async () => {
-        const { default: Register } = await import('@/pages/Register');
+    it('Signup (v2) page renders without crashing', async () => {
+        const { default: SignupV2 } = await import('@/pages/SignupV2');
         const { container } = render(
             <MemoryRouter>
-                <Register />
+                <SignupV2 />
             </MemoryRouter>
         );
         expect(container.firstChild).toBeTruthy();
