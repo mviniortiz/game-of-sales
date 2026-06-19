@@ -204,7 +204,7 @@ export function useEvaVoice() {
                 config: {
                     responseModalities: ["AUDIO"],
                     systemInstruction: opts.systemInstruction,
-                    speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: opts.voiceName || "Sulafat" } } },
+                    speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: opts.voiceName || "Achernar" } } },
                     thinkingConfig: { thinkingBudget: 0 },
                     contextWindowCompression: { slidingWindow: {} },
                     realtimeInputConfig: {

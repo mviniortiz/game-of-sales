@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ArrowUp, Mic, MicOff, Volume2, VolumeX, MessageSquare, PhoneOff } from "lucide-react";
 import { EvaOrb } from "./EvaOrb";
-import { useGeminiLive } from "./useGeminiLive";
+import { useGeminiLive, primeEvaAudio } from "./useGeminiLive";
 import { whatsappUrl } from "@/config/contact";
 import { WhatsappGlyph } from "@/components/icons/WhatsappGlyph";
 import { DemoScheduler, DEMO_SLOTS, type SchedStep } from "./DemoScheduler";
@@ -58,16 +58,21 @@ const TOUR_PROMPT: Record<string, string> = {
     "eva-studio-criar": "Agora você SELECIONOU o agente de Qualificação e abriu o chat de criação. Em 3 ou 4 frases, mostre como é simples: vocês conversam, você faz algumas perguntas sobre o negócio e monta o agente em minutos, pronto pra qualificar os leads que chegam. Ao terminar, convide calorosamente pra agendar uma demo ou testar 14 dias grátis e pare.",
 };
 
-// IMPORTANTE: manter o systemInstruction ENXUTO. O modelo native-audio (com
-// thinkingBudget:0) retorna erro interno (WS close 1011) quando system+prompt
-// somados ficam grandes demais — validado em testes. Não voltar a inflar isto.
+// Saudação inicial: a EVA se apresenta (momento visual com o orbe grande) ANTES
+// do tour. Curta e calorosa; ao terminar, o tour começa sozinho.
+const GREETING_PROMPT = "Cumprimente a pessoa de forma calorosa e BREVE: diga oi, que você é a EVA, a inteligência da Vyzon, e que vai mostrar rapidinho como a plataforma organiza o comercial de uma agência. Termine convidando a começar, tipo 'vem comigo'. No máximo 2 ou 3 frases curtas. Ao terminar, pare.";
+
+// IMPORTANTE: manter system + tools ENXUTOS. O modelo native-audio (com
+// thinkingBudget:0) retorna erro interno (WS close 1011) quando a SOMA de
+// systemInstruction + descrições das tools passa de ~1.4k chars — reproduzido
+// 3/3 em Node (system 871 + tools 1122 = 1011; reduzir qualquer um resolve).
+// Esta versão soma ~1.3k e foi validada 3/3. NÃO voltar a inflar nenhum dos dois.
 function buildSystem(site: string): string {
     const alvo = site.trim() ? ` para ${site.trim()}` : "";
     return [
-        `Você é a EVA, a inteligência da Vyzon — Central Comercial com IA para agências que vendem por conversa. Fale SEMPRE em português do Brasil, calorosa e consultiva, frases curtas. Você está mostrando a plataforma${alvo}.`,
-        `Esta é uma demo GUIADA: o sistema abre cada tela e te diz qual explicar. Quando receber "Você está mostrando a tela X...", explique SÓ aquela tela em 3 ou 4 frases e pare. NÃO use a ferramenta navegar durante o tour — a tela já é trocada pra você.`,
-        `Se a pessoa perguntar algo, responda e pare; se ela pedir pra ver outra área (ex Metas), use navegar.`,
-        `Se ela quiser agendar uma demo, use a ferramenta agendar (abrir; depois selecionar com o dia que ela falar; depois confirmar). Horários: terça 14h, quarta 10h, quinta 16h, sexta 11h. Você NÃO envia links nem e-mails.`,
+        `Você é a EVA, a inteligência da Vyzon (Central Comercial com IA para agências que vendem por conversa). Fale sempre em português do Brasil, calorosa e consultiva, frases curtas. Você mostra a plataforma${alvo}.`,
+        `Demo GUIADA: o sistema abre cada tela e diz qual você deve explicar. Explique SÓ a tela indicada em 3 ou 4 frases e pare. NÃO use a ferramenta navegar durante o tour.`,
+        `Se a pessoa perguntar algo, responda e pare. Se pedir outra área, use navegar. Se quiser marcar uma demo, use agendar (abrir, selecionar o dia que ela falar, confirmar); horários: terça 14h, quarta 10h, quinta 16h, sexta 11h. Você não envia links nem e-mails.`,
         `A EVA sugere, o time aprova. Não invente preços, números nem clientes.`,
     ].join(" ");
 }
@@ -90,21 +95,23 @@ function splitSentences(t: string): string[] {
 // instantânea, devolve "ok" na hora) — isso ESPAÇA a geração e mantém o lead de
 // áudio pequeno, o que é essencial pra sincronia tela↔fala. NON_BLOCKING fazia
 // ela falar contínuo, o lead explodia e a navegação travava no futuro.
+// Descrições ENXUTAS de propósito (vide nota do 1011 acima): o fluxo de cada
+// tool já é explicado no systemInstruction; aqui só os nomes/enums importam.
 const TOOLS = [{
     functionDeclarations: [
         {
             name: "navegar",
-            description: "Abre uma tela da plataforma Vyzon (ou, com tela='lead', o detalhe de uma oportunidade) para a pessoa ver, enquanto você explica.",
-            parameters: { type: "OBJECT", properties: { tela: { type: "STRING", enum: NAV_ENUM, description: "qual tela abrir" } }, required: ["tela"] },
+            description: "Abre uma tela da plataforma para a pessoa ver.",
+            parameters: { type: "OBJECT", properties: { tela: { type: "STRING", enum: NAV_ENUM } }, required: ["tela"] },
         },
         {
             name: "agendar",
-            description: "Conduz o agendamento de uma demo/call quando a pessoa demonstra interesse em marcar. Você NÃO envia links nem e-mails — você abre e opera esta agenda. acao='abrir' mostra a agenda; 'selecionar' (com horario) marca o dia/hora que a pessoa escolheu e avança; 'detalhes' avança pra etapa de perguntas; 'confirmar' finaliza; 'fechar' volta ao tour.",
+            description: "Conduz o agendamento de uma demo.",
             parameters: {
                 type: "OBJECT",
                 properties: {
-                    acao: { type: "STRING", enum: ["abrir", "selecionar", "detalhes", "confirmar", "fechar"], description: "o que fazer na agenda" },
-                    horario: { type: "STRING", description: "dia ou hora escolhido pela pessoa, ex 'quinta' ou '16h' (só em acao='selecionar')" },
+                    acao: { type: "STRING", enum: ["abrir", "selecionar", "detalhes", "confirmar", "fechar"] },
+                    horario: { type: "STRING", description: "dia/hora que a pessoa escolheu" },
                 },
                 required: ["acao"],
             },
@@ -119,6 +126,14 @@ const STEP_CEIL = 22000;
 const STEP_DWELL_NOVOICE = 9000;
 // quanto esperar a voz conectar antes de conduzir o tour por legenda.
 const CONNECT_WAIT = 13000;
+// RESILIÊNCIA da voz (validado em Node, 3/3 no tour de 9 telas): o modelo
+// native-audio acumula contexto e trava (turno vazio) depois de ~5 telas, e
+// ainda sofre 1011 transitório do servidor. Correção: sessão fresca periódica +
+// reconectar-e-retomar quando um turno vem vazio ou o WS cai.
+const RECONNECT_EVERY = 4;    // reconecta a sessão a cada N telas narradas (zera o contexto)
+const MAX_RETRY = 3;          // re-tentativas (reconectando) por turno vazio
+const MAX_RECONNECTS = 14;    // teto global de reconexões (anti-loop)
+const SPEAK_TIMEOUT = 8000;   // se a EVA não começa a falar nesse tempo após o nudge = turno vazio
 
 // botão de controle circular estilo Handhold (mic / áudio / conversar / desligar)
 const CtrlBtn = ({ onClick, label, active, danger, disabled, children }: {
@@ -152,6 +167,12 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
     const [sched, setSched] = useState<SchedStep | null>(null);
     const [slotId, setSlotId] = useState<string | null>(null);
     const [capFallback, setCapFallback] = useState(SCREEN_CAPTION.inicio);
+    const [greeting, setGreeting] = useState(false); // momento de saudação (orbe grande) antes do tour
+    const [greetExit, setGreetExit] = useState(false); // saudação dissolvendo (transição pra demo)
+    const [stageIn, setStageIn] = useState(false);     // demo "entrando" (zoom sutil)
+    const greetSpokeRef = useRef(false);
+    const greetExitRef = useRef(false);
+    const greetWatchRef = useRef<number | null>(null);
     const connectedRef = useRef(false);
     const activeRef = useRef("inicio");
     const navTimersRef = useRef<number[]>([]);
@@ -161,12 +182,21 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
     const stepSpokeRef = useRef(false); // a EVA já narrou a tela atual?
     const nudgedStepRef = useRef(-1);   // último passo já mandado narrar (anti-duplicação)
     const stepWatchRef = useRef<number | null>(null); // watchdog do passo atual
+    const speakTimerRef = useRef<number | null>(null); // speak-check (detecta turno vazio)
     const chatOpenRef = useRef(false);  // refs lidas dentro do watchdog (sem closure stale)
     const schedRef = useRef(false);
+    // resiliência da sessão de voz (reconexão proativa + reconectar-e-retomar)
+    const telasNaSessaoRef = useRef(0);   // telas já narradas na sessão de voz atual
+    const reconnectsRef = useRef(0);      // total de reconexões (anti-loop)
+    const retryCountRef = useRef(0);      // re-tentativas do passo atual
+    const awaitingResumeRef = useRef(false); // reconectando: aguarda voltar "live" pra renarrar
+    const resumeStepRef = useRef(0);      // passo a retomar quando a voz voltar
     const live = useGeminiLive();
 
+    const greetingRef = useRef(false);
     useEffect(() => { chatOpenRef.current = chatOpen; }, [chatOpen]);
     useEffect(() => { schedRef.current = !!sched; }, [sched]);
+    useEffect(() => { greetingRef.current = greeting; }, [greeting]);
 
     const sendGoto = (screen: string) => {
         try { iframeRef.current?.contentWindow?.postMessage({ source: "vyzon-demo", action: "goto", screen }, window.location.origin); } catch { /* noop */ }
@@ -192,39 +222,105 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
     };
 
     const clearStepWatch = () => { if (stepWatchRef.current) { clearTimeout(stepWatchRef.current); stepWatchRef.current = null; } };
+    const clearSpeakTimer = () => { if (speakTimerRef.current) { clearTimeout(speakTimerRef.current); speakTimerRef.current = null; } };
 
-    // TOUR DETERMINÍSTICO + ROBUSTO: abre a tela i, mostra a legenda e (se a voz
-    // estiver viva) manda a EVA narrar. Um WATCHDOG garante que o passo nunca
-    // fica preso: se a voz não conduzir até o teto, avança sozinho. Quando a
-    // pessoa abre conversa/agenda, o watchdog espera (não pula por cima dela).
-    const startStep = (i: number) => {
+    // reconecta a voz numa SESSÃO FRESCA e RETOMA o passo i quando voltar "live"
+    // (zera o contexto que trava a EVA / recupera de 1011). A tela já está aberta.
+    const doReconnect = (i: number) => {
         clearStepWatch();
-        if (i < 0 || i >= SCREEN_ORDER.length) { tourIdxRef.current = -2; return; }
-        if (nudgedStepRef.current >= i) return;  // este passo já foi iniciado (anti-repetição)
-        nudgedStepRef.current = i;
-        tourIdxRef.current = i;
-        stepSpokeRef.current = false;
+        clearSpeakTimer();
+        reconnectsRef.current += 1;
+        telasNaSessaoRef.current = 0;
+        awaitingResumeRef.current = true;
+        resumeStepRef.current = i;
+        live.reconnect();
+    };
+
+    // (re)envia o nudge do passo i e arma o WATCHDOG (anti-trava) + o SPEAK-CHECK
+    // (detecta turno vazio: se a EVA não começa a falar a tempo, reconecta e
+    // retoma o mesmo passo numa sessão fresca). A tela já foi aberta por startStep.
+    const narrateStep = (i: number) => {
         const screen = SCREEN_ORDER[i];
-        lastTargetRef.current = screen;
-        setScreen(screen);
-        setCapFallback(SCREEN_CAPTION[screen] || "");
         const mount = MOUNT_DELAY[screen] ?? 750;
         const voiceLive = live.status === "live";
         if (voiceLive) {
             const t = window.setTimeout(() => live.nudge(TOUR_PROMPT[screen] || `Explique a tela ${screen}.`), mount);
             navTimersRef.current.push(t);
+            clearSpeakTimer();
+            speakTimerRef.current = window.setTimeout(() => {
+                if (tourIdxRef.current !== i || stepSpokeRef.current) return;     // já falou/avançou
+                if (chatOpenRef.current || schedRef.current) return;             // pessoa engajada
+                if (retryCountRef.current < MAX_RETRY && reconnectsRef.current < MAX_RECONNECTS) {
+                    retryCountRef.current += 1;
+                    doReconnect(i);                                              // turno vazio → sessão fresca + retoma
+                }
+            }, mount + SPEAK_TIMEOUT);
         }
-        // WATCHDOG anti-trava (a real correção do "fica parado na Central"):
+        // WATCHDOG anti-trava: se o passo não avança até o teto, segue pro próximo.
+        clearStepWatch();
         const ceil = (voiceLive ? STEP_CEIL : STEP_DWELL_NOVOICE) + mount;
         const tick = () => {
-            if (tourIdxRef.current !== i) return;                       // já avançou
-            if (chatOpenRef.current || schedRef.current) {              // pessoa engajada → espera
-                stepWatchRef.current = window.setTimeout(tick, 4000);
-                return;
-            }
+            if (tourIdxRef.current !== i) return;
+            if (chatOpenRef.current || schedRef.current) { stepWatchRef.current = window.setTimeout(tick, 4000); return; }
             startStep(i + 1);
         };
         stepWatchRef.current = window.setTimeout(tick, ceil);
+    };
+
+    // TOUR ROBUSTO: abre a tela i, mostra a legenda e dispara a narração. Antes de
+    // narrar, se a sessão já contou RECONNECT_EVERY telas, reconecta (sessão
+    // fresca) — o contexto acumulado trava a EVA depois de ~5 telas.
+    const startStep = (i: number) => {
+        clearStepWatch();
+        clearSpeakTimer();
+        if (i < 0 || i >= SCREEN_ORDER.length) { tourIdxRef.current = -2; return; }
+        if (nudgedStepRef.current >= i) return;  // este passo já foi iniciado (anti-repetição)
+        nudgedStepRef.current = i;
+        tourIdxRef.current = i;
+        stepSpokeRef.current = false;
+        retryCountRef.current = 0;
+        const screen = SCREEN_ORDER[i];
+        lastTargetRef.current = screen;
+        setScreen(screen);
+        setCapFallback(SCREEN_CAPTION[screen] || "");
+        if (live.status === "live" && telasNaSessaoRef.current >= RECONNECT_EVERY && reconnectsRef.current < MAX_RECONNECTS) {
+            doReconnect(i);   // sessão fresca antes de narrar; retoma o passo i ao voltar "live"
+            return;
+        }
+        narrateStep(i);
+    };
+
+    const clearGreetWatch = () => { if (greetWatchRef.current) { clearTimeout(greetWatchRef.current); greetWatchRef.current = null; } };
+    // termina a saudação com TRANSIÇÃO: o overlay DISSOLVE (greetExit) e, ao
+    // fim, a demo ENTRA com um zoom sutil (stageIn) e o tour começa.
+    const endGreeting = () => {
+        clearGreetWatch();
+        if (greetExitRef.current) return; // já transicionando
+        greetExitRef.current = true;
+        setGreetExit(true);
+        const t = window.setTimeout(() => {
+            setGreeting(false);
+            setGreetExit(false);
+            greetExitRef.current = false;
+            setStageIn(true);
+            const t2 = window.setTimeout(() => setStageIn(false), 950);
+            navTimersRef.current.push(t2);
+            startStep(0);
+        }, 640); // dura a dissolução do overlay
+        navTimersRef.current.push(t);
+    };
+    // SAUDAÇÃO: a EVA se apresenta com o orbe grande antes do tour, reusando a
+    // sessão de voz (1º turno). Ao terminar de falar (efeito de avanço) ou no
+    // teto, o tour começa. Sem voz, passa direto pro tour (legenda).
+    const startGreeting = () => {
+        setGreeting(true);
+        greetSpokeRef.current = false;
+        if (live.status === "live") {
+            const t = window.setTimeout(() => live.nudge(GREETING_PROMPT), 400);
+            navTimersRef.current.push(t);
+        }
+        clearGreetWatch();
+        greetWatchRef.current = window.setTimeout(endGreeting, live.status === "live" ? 17000 : 1100);
     };
 
     // agendamento conduzido pela EVA (substitui a alucinação do "enviei o link")
@@ -257,13 +353,18 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
                 connectedRef.current = true;
                 live.connect({
                     systemInstruction: buildSystem(site),
-                    voiceName: "Sulafat",
+                    voiceName: "Achernar",
                     tools: TOOLS,
                     onToolCall: (name, args) => {
                         if (name === "navegar") {
                             const tela = String((args as { tela?: string }).tela || "");
-                            if (import.meta.env.DEV) console.debug("[demo] navegar →", tela);
-                            if (NAV_ENUM.includes(tela)) scheduleNav(tela);
+                            // DURANTE o tour determinístico o SISTEMA controla as telas.
+                            // O modelo às vezes chama navegar mesmo proibido (atropela a
+                            // narração e embola). Só aceitamos navegar quando o tour
+                            // ACABOU (-2) ou a pessoa está em Q&A (chat aberto).
+                            const tourAtivo = tourIdxRef.current >= 0 && !chatOpenRef.current;
+                            if (import.meta.env.DEV) console.debug("[demo] navegar →", tela, tourAtivo ? "(ignorado: tour ativo)" : "");
+                            if (!tourAtivo && NAV_ENUM.includes(tela)) scheduleNav(tela);
                         } else if (name === "agendar") {
                             const a = args as { acao?: string; horario?: string };
                             if (import.meta.env.DEV) console.debug("[demo] agendar →", a.acao, a.horario);
@@ -280,28 +381,43 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
     }, []);
 
     // desconecta a voz e limpa timers ao sair do tour
-    useEffect(() => () => { live.disconnect(); navTimersRef.current.forEach(clearTimeout); clearStepWatch(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    useEffect(() => () => { live.disconnect(); navTimersRef.current.forEach(clearTimeout); clearStepWatch(); clearSpeakTimer(); clearGreetWatch(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // quando a EVA começa a falar: tira o "pensando" e marca que narrou a tela
+    // quando a EVA começa a falar: tira o "pensando", marca que narrou a tela,
+    // conta a tela nesta sessão de voz e cancela o speak-check (não veio vazio).
     useEffect(() => {
-        if (live.orbState === "speaking") { setWaiting(false); stepSpokeRef.current = true; }
+        if (live.orbState !== "speaking") return;
+        setWaiting(false);
+        if (greetingRef.current) {
+            if (!greetSpokeRef.current) { greetSpokeRef.current = true; telasNaSessaoRef.current += 1; clearSpeakTimer(); }
+            return;
+        }
+        if (!stepSpokeRef.current) { stepSpokeRef.current = true; telasNaSessaoRef.current += 1; clearSpeakTimer(); }
     }, [live.orbState]);
 
-    // INÍCIO do tour assim que a voz fica ao vivo (caminho feliz)
+    // COORDENADOR da voz: início do tour, RETOMADA após reconexão (renarra o passo
+    // pendente) e RECONEXÃO REATIVA se a sessão cai no meio (1011 transitório).
     useEffect(() => {
-        if (live.status === "live" && !tourStartedRef.current) { tourStartedRef.current = true; startStep(0); }
+        if (live.status === "live") {
+            if (awaitingResumeRef.current) { awaitingResumeRef.current = false; narrateStep(resumeStepRef.current); return; }
+            if (!tourStartedRef.current) { tourStartedRef.current = true; startGreeting(); } // saúda, depois o tour
+            return;
+        }
+        if ((live.status === "ended" || live.status === "error") && tourStartedRef.current
+            && tourIdxRef.current >= 0 && !awaitingResumeRef.current && reconnectsRef.current < MAX_RECONNECTS) {
+            doReconnect(Math.max(0, tourIdxRef.current)); // sessão caiu → reconecta e retoma
+        }
     }, [live.status]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // REDE DE SEGURANÇA: se a voz der erro OU não conectar a tempo, conduz o tour
-    // mesmo assim (por legenda). A demo NUNCA fica parada esperando a EVA conectar.
+    // REDE DE SEGURANÇA: se a voz não conectar a tempo, conduz por legenda — a
+    // demo nunca fica parada esperando a EVA. (Quedas no meio o coordenador cobre.)
     useEffect(() => {
         if (!appReady || tourStartedRef.current) return;
-        if (live.status === "error") { tourStartedRef.current = true; startStep(0); return; }
         const t = window.setTimeout(() => {
             if (!tourStartedRef.current) { tourStartedRef.current = true; startStep(0); }
         }, CONNECT_WAIT);
         return () => clearTimeout(t);
-    }, [appReady, live.status]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [appReady]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // LEGENDA AO VIVO (voz): mostra SÓ a frase que ela está falando agora; quando
     // uma nova frase começa, a anterior DISSOLVE. A key da frase atual é o ÍNDICE
@@ -341,6 +457,14 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
     // modo conversa/agenda e quando o usuário está falando. (O watchdog cobre o
     // resto: se a voz não terminar/cair, o tour avança por tempo mesmo assim.)
     useEffect(() => {
+        // fim da SAUDAÇÃO: quando a EVA termina de se apresentar, começa o tour.
+        if (greeting) {
+            if (live.orbState === "listening" && greetSpokeRef.current && !live.userText.trim()) {
+                const t = window.setTimeout(endGreeting, live.playbackLeadMs() + 700);
+                return () => clearTimeout(t);
+            }
+            return;
+        }
         if (tourIdxRef.current < 0) return;            // tour não rodando/concluído
         if (chatOpen || sched) return;                 // conversa/agenda mandam
         if (live.orbState !== "listening") return;     // ainda falando/pensando
@@ -351,7 +475,7 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
             startStep(tourIdxRef.current + 1);
         }, live.playbackLeadMs() + 900);               // só depois do áudio terminar
         return () => clearTimeout(t);
-    }, [live.orbState, chatOpen, sched, live.userText]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [live.orbState, chatOpen, sched, live.userText, greeting]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // envia a pergunta por texto (a EVA responde por voz + texto)
     const sendChat = () => {
@@ -365,16 +489,18 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
     const activeIdx = Math.max(0, SCREEN_ORDER.indexOf(active));
     const manual = live.status === "error" || (appReady && live.status === "idle");
     const goManual = (i: number) => { if (i >= SCREEN_ORDER.length) endCall(); else { nudgedStepRef.current = i - 1; startStep(i); } };
-    const toggleMute = () => { const m = !muted; setMuted(m); live.setMuted(m); };
-    const toggleMic = () => { live.setMicEnabled(!live.micOn); };
-    const endCall = () => { live.disconnect(); onDone(); };
+    const toggleMute = () => { primeEvaAudio(); const m = !muted; setMuted(m); live.setMuted(m); };
+    const toggleMic = () => { primeEvaAudio(); live.setMicEnabled(!live.micOn); };
+    const endCall = () => { tourIdxRef.current = -2; awaitingResumeRef.current = false; live.disconnect(); onDone(); };
     const voiceLive = live.status === "live";
+    // estado do orbe: reflete o que a EVA está fazendo (fala/escuta/pensa).
+    const liveOrb = live.status === "live" ? live.orbState : live.status === "connecting" ? "thinking" : "idle";
     // legenda do palco: a fala da EVA quando há voz; senão a legenda pré-escrita.
     const stageCaption = (voiceLive && capCurrent) ? capCurrent : capFallback;
 
     return (
         <div className="flex h-full flex-1 flex-col">
-            <div className="relative flex-1" style={{ background: "#0b0d12" }}>
+            <div className={`relative flex-1 ${stageIn ? "vz-stage-in" : ""}`} style={{ background: "#0b0d12" }}>
                 <iframe ref={iframeRef} src="/embed-demo" title="Demonstração da Vyzon" allow="microphone" className="h-full w-full" style={{ border: 0, display: "block" }} />
                 {!appReady && (
                     <div className="absolute inset-0 flex items-center justify-center" style={{ background: "var(--lp-paper)" }}>
@@ -385,11 +511,31 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
                     </div>
                 )}
 
+                {/* SAUDAÇÃO: momento de apresentação com o orbe grande, antes do
+                    tour. Cobre o palco; sai quando a EVA termina de se apresentar. */}
+                {appReady && greeting && (
+                    <div className={`${greetExit ? "vz-greet-out" : "vz-greet-in"} absolute inset-0 z-30 flex flex-col items-center justify-center gap-7 px-6 text-center`} style={{ background: "var(--lp-paper)" }}>
+                        <div className={live.orbState === "speaking" ? "vz-orb-speaking" : "vz-orb-calm"}>
+                            <EvaOrb state={liveOrb} size={210} />
+                        </div>
+                        <div className="max-w-xl">
+                            <p className="lp-display" style={{ fontSize: "clamp(1.8rem,3.4vw,2.4rem)", color: "var(--lp-ink)", letterSpacing: "-0.03em", lineHeight: 1.1 }}>EVA</p>
+                            <p className="mx-auto mt-3 text-[16px]" style={{ color: "rgba(8,10,15,0.92)", lineHeight: 1.55, minHeight: 50, maxWidth: 520 }} aria-live="polite">
+                                {live.evaText || "Oi! Só um instante, já começo…"}
+                            </p>
+                        </div>
+                    </div>
+                )}
+
                 {/* LEGENDA + estado ao vivo sobre o palco (estilo Handhold): a EVA
                     "narra" o que está na tela; chip "ao vivo" no topo do bloco. */}
-                {appReady && !chatOpen && !sched && (
+                {appReady && !greeting && !chatOpen && !sched && (
                     <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-col items-center gap-2.5 px-4 pb-5 pt-20"
                         style={{ background: "linear-gradient(to top, rgba(8,9,12,0.62), rgba(8,9,12,0.18) 55%, transparent)" }}>
+                        {/* orbe da EVA: anima quando ela fala (barras de voz + bounce) */}
+                        <div className={live.orbState === "speaking" ? "vz-orb-speaking" : "vz-orb-calm"}>
+                            <EvaOrb state={liveOrb} size={58} />
+                        </div>
                         <span className="lp-mono inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-white"
                             style={{ background: "rgba(8,9,12,0.55)", backdropFilter: "blur(6px)", fontSize: 10.5, letterSpacing: "0.04em" }}>
                             <span className="h-1.5 w-1.5 rounded-full" style={{ background: voiceLive ? "var(--lp-live)" : "rgba(255,255,255,0.55)" }} />

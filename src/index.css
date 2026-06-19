@@ -3886,6 +3886,24 @@ All colors MUST be HSL.
 }
 .vz-demochat-in { animation: vzDemoChatIn 0.34s cubic-bezier(0.22, 1, 0.36, 1) both; }
 
+/* Saudação → demo: o overlay de apresentação ENTRA (sobe+fade), depois DISSOLVE
+   (fade+zoom+blur) revelando a plataforma, que por sua vez ENTRA com zoom sutil. */
+@keyframes vzGreetIn {
+  from { opacity: 0; transform: scale(0.98) translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+.vz-greet-in { animation: vzGreetIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes vzGreetOut {
+  from { opacity: 1; transform: scale(1); filter: blur(0); }
+  to   { opacity: 0; transform: scale(1.06); filter: blur(10px); }
+}
+.vz-greet-out { animation: vzGreetOut 0.64s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+@keyframes vzStageIn {
+  from { opacity: 0.5; transform: scale(1.04); }
+  to   { opacity: 1; transform: none; }
+}
+.vz-stage-in { animation: vzStageIn 0.9s cubic-bezier(0.22, 1, 0.36, 1) both; transform-origin: center; }
+
 /* Orb da conversa: AUMENTA/pulsa quando a EVA está falando; calmo quando não.
    transição suave entre os dois estados. */
 @keyframes vzOrbSpeak { 0%, 100% { transform: scale(1.0); } 50% { transform: scale(1.075); } }
@@ -3894,6 +3912,8 @@ All colors MUST be HSL.
 .vz-orb-speaking, .vz-orb-calm { will-change: transform; }
 @media (prefers-reduced-motion: reduce) {
   .vz-demochat-in { animation: none; }
+  .vz-greet-in, .vz-greet-out, .vz-stage-in { animation: none; }
+  .vz-greet-out { opacity: 0; }
   .vz-orb-speaking { animation: none; transform: scale(1.04); }
 }
 

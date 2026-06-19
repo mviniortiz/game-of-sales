@@ -10,6 +10,29 @@ import { supabase } from "@/integrations/supabase/client";
 export type LiveStatus = "idle" | "connecting" | "live" | "ended" | "error";
 export type LiveOrbState = "thinking" | "speaking" | "listening";
 
+// AudioContext de SAÍDA "primado": o autoplay do navegador só deixa tocar áudio
+// se o contexto for criado/resumido DENTRO de um gesto do usuário. O connect roda
+// segundos depois do clique (após o iframe subir), fora da janela de ativação —
+// então o contexto nascia suspenso e a EVA ficava MUDA (legenda/transcrição vinham
+// normais, mas o áudio nunca tocava). Solução: criar/resumir este singleton no
+// clique de "Iniciar demo" (gesto válido) e reusá-lo no connect. Chamar
+// primeEvaAudio() de dentro de um onClick.
+let primedOutCtx: AudioContext | null = null;
+function getOutAudioContext(): AudioContext | null {
+    try {
+        const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        if (!primedOutCtx || primedOutCtx.state === "closed") primedOutCtx = new Ctx({ sampleRate: 24000 });
+        if (primedOutCtx.state !== "running") primedOutCtx.resume().catch(() => undefined);
+        return primedOutCtx;
+    } catch {
+        return null;
+    }
+}
+// chamar de dentro de um onClick/gesto pra destravar o áudio da EVA (autoplay).
+export function primeEvaAudio(): void {
+    getOutAudioContext();
+}
+
 interface ConnectOpts {
     systemInstruction: string;
     voiceName?: string;
@@ -56,6 +79,7 @@ export function useGeminiLive() {
     const intentionalRef = useRef(false); // disconnect proposital (não reconectar)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const connectFnRef = useRef<((opts: any, retry?: boolean) => void) | null>(null);
+    const lastOptsRef = useRef<ConnectOpts | null>(null); // últimas opts pra reconnect()
     const micCtxRef = useRef<AudioContext | null>(null);
     const micStreamRef = useRef<MediaStream | null>(null);
     const procRef = useRef<ScriptProcessorNode | null>(null);
@@ -180,8 +204,27 @@ export function useGeminiLive() {
         stopMic();
         clearEvaReveal();
         stopPlayback();
-        try { outCtxRef.current?.close(); } catch { /* noop */ }
+        // NÃO fecha o contexto primado (reuso entre demos); fecha só se for um
+        // contexto avulso criado no fallback.
+        if (outCtxRef.current && outCtxRef.current !== primedOutCtx) {
+            try { outCtxRef.current.close(); } catch { /* noop */ }
+        }
         outCtxRef.current = null;
+    }, [stopMic]);
+
+    // reconecta numa SESSÃO FRESCA (mesmas opts) sem encerrar a experiência —
+    // usado pelo tour pra zerar o contexto acumulado (que trava a EVA depois de
+    // ~5 telas) e pra se recuperar de um WS 1011 transitório. Reusa o outCtx
+    // primado (não fecha o áudio). connect() reseta o estado e religa o WS.
+    const reconnect = useCallback(() => {
+        if (!lastOptsRef.current) return;
+        intentionalRef.current = true; // não deixa o onclose disparar nada
+        try { sessionRef.current?.close?.(); } catch { /* noop */ }
+        sessionRef.current = null;
+        stopMic();
+        clearEvaReveal();
+        stopPlayback();
+        connectFnRef.current?.(lastOptsRef.current); // ref evita TDZ (connect é definido abaixo)
     }, [stopMic]);
 
     const setMuted = useCallback((m: boolean) => {
@@ -217,6 +260,7 @@ export function useGeminiLive() {
     }, []);
 
     const connect = useCallback(async (opts: ConnectOpts, isRetry = false) => {
+        lastOptsRef.current = opts; // guarda pra reconnect() (sessão fresca no tour)
         setErrorReason(null);
         setStatus("connecting");
         setOrbState("thinking");
@@ -252,10 +296,13 @@ export function useGeminiLive() {
             // resume() pode ficar PENDENTE e travar a conexão inteira → a EVA
             // nunca conecta. Resumimos em background e na 1ª interação (gesture).
             const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-            const outCtx = new Ctx({ sampleRate: 24000 });
+            // reusa o contexto PRIMADO no gesto de iniciar (autoplay) — só cria um
+            // novo se nada foi primado (ex.: demo aberta direto via ?demo=1).
+            const outCtx = getOutAudioContext() ?? new Ctx({ sampleRate: 24000 });
             outCtxRef.current = outCtx;
             playHeadRef.current = outCtx.currentTime;
             outCtx.resume().catch(() => undefined);
+            if (import.meta.env.DEV) console.debug("[eva] outCtx criado, state =", outCtx.state);
             if (outCtx.state !== "running") {
                 const resumeOnGesture = () => {
                     outCtx.resume().catch(() => undefined);
@@ -272,7 +319,7 @@ export function useGeminiLive() {
                 config: {
                     responseModalities: ["AUDIO"],
                     systemInstruction: opts.systemInstruction,
-                    speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: opts.voiceName || "Sulafat" } } },
+                    speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: opts.voiceName || "Achernar" } } },
                     // thinking OFF: sem isso o native-audio gasta o turno "pensando"
                     // (latência ruim + raciocínio vazando); validado: 1ª fala em ~1.7s.
                     thinkingConfig: { thinkingBudget: 0 },
@@ -296,7 +343,7 @@ export function useGeminiLive() {
                     outputAudioTranscription: {},
                 },
                 callbacks: {
-                    onopen: () => { wsOpenRef.current = true; setStatus("live"); setOrbState("listening"); },
+                    onopen: () => { wsOpenRef.current = true; setStatus("live"); setOrbState("listening"); if (import.meta.env.DEV) console.debug("[eva] WS open"); },
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     onmessage: (message: any) => {
                         const sc = message.serverContent;
@@ -304,6 +351,7 @@ export function useGeminiLive() {
                         if (sc?.modelTurn?.parts) {
                             for (const p of sc.modelTurn.parts) {
                                 if (p.inlineData?.data) {
+                                    if (import.meta.env.DEV && !gotAudioRef.current) console.debug("[eva] 1º áudio recebido; outCtx.state =", outCtxRef.current?.state, "muted =", mutedRef.current);
                                     gotAudioRef.current = true;
                                     if (!mutedRef.current) playChunk(p.inlineData.data);
                                     setOrbState("speaking");
@@ -358,9 +406,12 @@ export function useGeminiLive() {
                             try { session.sendToolResponse({ functionResponses }); } catch { /* noop */ }
                         }
                     },
-                    onerror: () => { wsOpenRef.current = false; },
-                    onclose: () => {
+                    onerror: () => { wsOpenRef.current = false; stopMic(); },
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    onclose: (e: any) => {
                         wsOpenRef.current = false;
+                        stopMic(); // mata o spam "WebSocket already CLOSING" do mic
+                        if (import.meta.env.DEV) console.debug("[eva] WS close", e?.code, e?.reason);
                         // reconecta (token NOVO) se a sessão caiu ANTES da EVA
                         // falar e não foi um fim proposital — cobre erro 1011
                         // transitório do servidor sem deixar a demo muda.
@@ -391,10 +442,10 @@ export function useGeminiLive() {
             setStatus("error");
             disconnect();
         }
-    }, [disconnect, startMic]);
+    }, [disconnect, startMic, stopMic]);
 
     // ref pro connect poder reconectar a si mesmo (retry no onclose)
     connectFnRef.current = connect as unknown as (opts: ConnectOpts, retry?: boolean) => void;
 
-    return { status, orbState, errorReason, userText, evaText, turns, micOn, connect, disconnect, setMuted, setMicEnabled, sendText, nudge, playbackLeadMs };
+    return { status, orbState, errorReason, userText, evaText, turns, micOn, connect, reconnect, disconnect, setMuted, setMicEnabled, sendText, nudge, playbackLeadMs };
 }

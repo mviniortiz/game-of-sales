@@ -28,7 +28,7 @@ const EvaVoz = () => {
 
     const start = () => {
         startedRef.current = true;
-        live.connect({ systemInstruction: SYSTEM, voiceName: "Sulafat", greeting: GREETING });
+        live.connect({ systemInstruction: SYSTEM, voiceName: "Achernar", greeting: GREETING });
     };
     const send = () => {
         const t = draft.trim();
