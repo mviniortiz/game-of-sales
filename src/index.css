@@ -3886,6 +3886,16 @@ All colors MUST be HSL.
 }
 .vz-demochat-in { animation: vzDemoChatIn 0.34s cubic-bezier(0.22, 1, 0.36, 1) both; }
 
+/* Transição landing → cadastro: um véu escuro (cor do cadastro) cobre a landing
+   clara antes de navegar, evitando o "corte" seco entre as páginas. */
+@keyframes vzSignupVeil { from { opacity: 0; } to { opacity: 1; } }
+.vz-signup-veil { animation: vzSignupVeil 0.34s ease both; }
+@keyframes vzVeilMark { from { opacity: 0; transform: translateY(8px) scale(0.96); } to { opacity: 1; transform: none; } }
+.vz-veil-mark { animation: vzVeilMark 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both; }
+@media (prefers-reduced-motion: reduce) {
+  .vz-signup-veil, .vz-veil-mark { animation: none; }
+}
+
 /* Pricing (v2) — "sauce": cards reagem ao cursor (spotlight azul que segue o
    mouse) + sobem suave no hover. Estilo Linear/Vercel, na paleta Vyzon. */
 .vz-price-card {

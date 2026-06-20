@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Lenis from "lenis";
+import { ThemeLogo } from "@/components/ui/ThemeLogo";
 import { NavV2 } from "@/components/landing-v2/NavV2";
 import { EvaDemoModal } from "@/components/landing-v2/EvaDemoModal";
 import { HeroV2 } from "@/components/landing-v2/HeroV2";
@@ -20,7 +21,18 @@ import { FooterV2 } from "@/components/landing-v2/FooterV2";
 const LandingV2 = () => {
     const navigate = useNavigate();
     const [demoOpen, setDemoOpen] = useState(false);
+    const [toSignup, setToSignup] = useState(false);
     const lenisRef = useRef<Lenis | null>(null);
+
+    // TRANSIÇÃO pro teste grátis: um véu escuro (cor do cadastro) cobre a landing
+    // clara, pré-carrega o chunk do cadastro durante o véu, e então navega — sem
+    // corte seco nem flash do loader.
+    const goToSignup = (plan: string) => {
+        if (toSignup) return;
+        setToSignup(true);
+        import("./SignupV2").catch(() => undefined);
+        window.setTimeout(() => navigate(`/criar-conta?plan=${plan}`), 440);
+    };
 
     useEffect(() => {
         const html = document.documentElement;
@@ -68,7 +80,7 @@ const LandingV2 = () => {
         return () => { if (t) clearTimeout(t); };
     }, []);
 
-    const goToRegister = () => navigate("/criar-conta?plan=plus");
+    const goToRegister = () => goToSignup("plus");
     const scrollToId = (id: string) => {
         const el = document.getElementById(id);
         if (!el) return;
@@ -88,7 +100,7 @@ const LandingV2 = () => {
             <EvaShowcaseV2 onStartDemo={() => setDemoOpen(true)} />
             <FeaturesV2 />
             <SpecialistAgentsV2 onCTAClick={goToRegister} />
-            <PricingV2 onTrial={(slug) => navigate(`/criar-conta?plan=${slug}`)} onScheduleDemo={() => setDemoOpen(true)} />
+            <PricingV2 onTrial={(slug) => goToSignup(slug)} onScheduleDemo={() => setDemoOpen(true)} />
             <div id="how-it-works">
                 <HowItWorksV2 onStart={goToRegister} />
             </div>
@@ -96,6 +108,16 @@ const LandingV2 = () => {
             <FinalCtaV2 onScheduleDemoClick={() => setDemoOpen(true)} onSecondaryClick={() => scrollToId("how-it-works")} />
             <FooterV2 onNavClick={scrollToId} onLoginClick={() => navigate("/auth")} onBlogClick={() => navigate("/blog")} />
             <EvaDemoModal open={demoOpen} onClose={() => setDemoOpen(false)} onCTAClick={goToRegister} />
+
+            {/* véu de transição pro cadastro (cor do cadastro), some ao trocar de rota */}
+            {toSignup && (
+                <div className="vz-signup-veil fixed inset-0 z-[200] flex flex-col items-center justify-center gap-5" style={{ background: "#07080A" }}>
+                    <div className="vz-veil-mark flex flex-col items-center gap-5" style={{ filter: "brightness(0) invert(1)" }}>
+                        <ThemeLogo className="h-7 w-auto" />
+                    </div>
+                    <p className="vz-veil-mark lp-mono" style={{ color: "rgba(255,255,255,0.5)" }}>Preparando seu teste grátis…</p>
+                </div>
+            )}
         </div>
     );
 };
