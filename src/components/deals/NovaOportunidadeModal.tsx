@@ -26,6 +26,7 @@ import { useTenant } from "@/contexts/TenantContext";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { resolveAgentSuggestionForConversation } from "@/hooks/useCreateOpportunityFromConversation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -234,6 +235,14 @@ export const NovaOportunidadeModal = ({
       const additionalContacts =
         Object.keys(contatoExtra).length > 0 ? [contatoExtra] : [];
 
+      // Fase 2 (Analytics da EVA) — atribuição ao funil da EVA: se este deal
+      // nasce de uma conversa com sugestão da EVA (pending/accepted), vincula a
+      // mais recente e resolve a pendente. Sem sugestão = null (honesto).
+      // Best-effort: não bloqueia a criação do deal.
+      const agentSuggestionId = conversationId
+        ? await resolveAgentSuggestionForConversation(conversationId, sellerId)
+        : null;
+
       const dealInsert: Record<string, unknown> = {
         title: parsed.titulo,
         customer_name: parsed.clienteNome,
@@ -242,6 +251,7 @@ export const NovaOportunidadeModal = ({
         company_id: effectiveCompanyId,
         additional_contacts: additionalContacts,
       };
+      if (agentSuggestionId) dealInsert.agent_suggestion_id = agentSuggestionId;
       if (parsed.valor !== null) dealInsert.value = parsed.valor;
       if (parsed.produtoId) dealInsert.product_id = parsed.produtoId;
       if (parsed.dataEsperada) dealInsert.expected_close_date = parsed.dataEsperada;

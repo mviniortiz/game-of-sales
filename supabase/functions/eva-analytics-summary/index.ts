@@ -211,6 +211,104 @@ async function buildFunnel(admin: any, companyId: string, sinceIso: string) {
   return funnel;
 }
 
+// ─── Fase 2 — Funil atribuível à EVA ──────────────────────────────────────────
+// Counts por stage SÓ de deals com agent_suggestion_id não-null no período.
+// Atribuição: o deal nasceu de uma sugestão da EVA (manual ou híbrido).
+async function buildFunnelEva(admin: any, companyId: string, sinceIso: string) {
+  const { data, error } = await admin
+    .from("deals")
+    .select("stage")
+    .eq("company_id", companyId)
+    .not("agent_suggestion_id", "is", null)
+    .gte("created_at", sinceIso);
+  if (error) throw error;
+
+  const rows = (data || []) as { stage: string }[];
+  if (rows.length === 0) return { empty: true as const };
+
+  const funnel = {
+    lead: 0,
+    qualification: 0,
+    proposal: 0,
+    negotiation: 0,
+    closed_won: 0,
+    closed_lost: 0,
+  };
+  for (const r of rows) {
+    if (r.stage in funnel) (funnel as Record<string, number>)[r.stage]++;
+  }
+  return { ...funnel, total: rows.length };
+}
+
+// ─── Fase 2 — Tendência temporal diária ───────────────────────────────────────
+// Para cada dia do período:
+//   approvalRate = (accepted+adjusted+sent) / (resolvidas no dia) ou null se 0.
+//     "resolvidas" = sugestões com resolved_at naquele dia e desfecho de
+//     qualidade (accepted/adjusted/sent/rejected). expired não conta.
+//   qualified = conversation_summaries analisadas com qualificação naquele dia.
+function dayKey(iso: string): string | null {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toISOString().slice(0, 10); // YYYY-MM-DD (UTC)
+}
+
+async function buildTrend(admin: any, companyId: string, sinceIso: string) {
+  // Sugestões resolvidas no período (por resolved_at).
+  const { data: sugData, error: sugErr } = await admin
+    .from("agent_suggestions")
+    .select("status, resolved_at")
+    .eq("company_id", companyId)
+    .gte("resolved_at", sinceIso);
+  if (sugErr) throw sugErr;
+
+  // Conversas analisadas no período (por analyzed_at).
+  const { data: convData, error: convErr } = await admin
+    .from("conversation_summaries")
+    .select("qualification, temperature, analyzed_at")
+    .eq("company_id", companyId)
+    .gte("analyzed_at", sinceIso);
+  if (convErr) throw convErr;
+
+  // Acumuladores por dia.
+  const days = new Map<string, { resolved: number; positive: number; qualified: number }>();
+  const bump = (key: string) => {
+    let e = days.get(key);
+    if (!e) { e = { resolved: 0, positive: 0, qualified: 0 }; days.set(key, e); }
+    return e;
+  };
+
+  for (const r of (sugData || []) as { status: string; resolved_at: string | null }[]) {
+    if (!r.resolved_at) continue;
+    const key = dayKey(r.resolved_at);
+    if (!key) continue;
+    const e = bump(key);
+    // expired não entra no denominador de qualidade.
+    if (r.status === "accepted" || r.status === "adjusted" || r.status === "sent") {
+      e.resolved++; e.positive++;
+    } else if (r.status === "rejected") {
+      e.resolved++;
+    }
+  }
+
+  for (const r of (convData || []) as { qualification: QualJson | null; temperature: string | null; analyzed_at: string }[]) {
+    const key = dayKey(r.analyzed_at);
+    if (!key) continue;
+    const q = (r.qualification || {}) as QualJson;
+    const temp = q.temperatura ?? r.temperature ?? null;
+    // qualificada = a EVA pontuou (score) ou definiu temperatura (espelha o
+    // critério de "qualified" do bloco de conversas da Fase 1).
+    if (typeof q.score_sugerido === "number" || temp) bump(key).qualified++;
+  }
+
+  return [...days.entries()]
+    .map(([date, v]) => ({
+      date,
+      approvalRate: v.resolved > 0 ? v.positive / v.resolved : null,
+      qualified: v.qualified,
+    }))
+    .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+}
+
 async function buildTopGaps(admin: any, companyId: string, sinceIso: string) {
   // Gaps abertos primeiro (status='open'), por occurrence_count desc, top 5.
   // Sem filtro de período: um gap reincidente é relevante mesmo se nasceu antes.
@@ -308,7 +406,7 @@ serve(async (req) => {
 
     const sinceIso = new Date(Date.now() - rangeDays * 24 * 60 * 60 * 1000).toISOString();
 
-    const [approval, convBlocks, sla, funnel, topGaps, topMemory] = await Promise.all([
+    const [approval, convBlocks, sla, funnel, funnelEva, trend, topGaps, topMemory] = await Promise.all([
       safe("approval", () => buildApproval(admin, effectiveCompanyId, sinceIso), { empty: true as const }),
       safe(
         "conversation_summaries",
@@ -317,6 +415,8 @@ serve(async (req) => {
       ),
       safe("sla", () => buildSla(admin, effectiveCompanyId, sinceIso), { firstReplyMedianMin: null as number | null, conversations: 0 }),
       safe("funnel", () => buildFunnel(admin, effectiveCompanyId, sinceIso), { lead: 0, qualification: 0, proposal: 0, negotiation: 0, closed_won: 0, closed_lost: 0 }),
+      safe("funnelEva", () => buildFunnelEva(admin, effectiveCompanyId, sinceIso), { empty: true as const }),
+      safe("trend", () => buildTrend(admin, effectiveCompanyId, sinceIso), [] as { date: string; approvalRate: number | null; qualified: number }[]),
       safe("topGaps", () => buildTopGaps(admin, effectiveCompanyId, sinceIso), [] as { description: string; count: number; status: "open" | "resolved" }[]),
       safe("topMemory", () => buildTopMemory(admin, effectiveCompanyId), [] as { content: string; usageCount: number; type: string }[]),
     ]);
@@ -326,6 +426,9 @@ serve(async (req) => {
       approval,
       sla,
       funnel,
+      // Fase 2 — funil atribuível à EVA + tendência temporal diária.
+      funnelEva,
+      trend,
       temperature: convBlocks.temperature,
       scoreAvg: convBlocks.scoreAvg,
       qualified: convBlocks.qualified,

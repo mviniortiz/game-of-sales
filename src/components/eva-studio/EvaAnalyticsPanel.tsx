@@ -24,6 +24,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
     AlertTriangle,
     ChartColumn,
+    LineChart,
     Lock,
     MessageSquareWarning,
     ShieldCheck,
@@ -55,6 +56,17 @@ interface FunnelShape {
     closed_won?: number;
     closed_lost?: number;
 }
+/** Funil SÓ dos deals atribuídos à EVA. `empty` quando ainda não há nenhum. */
+interface EvaFunnelShape extends FunnelShape {
+    total?: number;
+    empty?: boolean;
+}
+/** Ponto da série diária da curva de confiança. approvalRate em 0..1 ou null. */
+interface TrendPoint {
+    date?: string;
+    approvalRate?: number | null;
+    qualified?: number;
+}
 interface TemperatureShape {
     quente?: number;
     morno?: number;
@@ -65,6 +77,8 @@ interface AnalyticsSummary {
     approval?: ApprovalShape;
     sla?: { firstReplyMedianMin?: number | null; conversations?: number };
     funnel?: FunnelShape;
+    funnelEva?: EvaFunnelShape;
+    trend?: TrendPoint[];
     temperature?: TemperatureShape;
     scoreAvg?: number | null;
     qualified?: number;
@@ -316,6 +330,155 @@ function SlaCard({ sla, active }: { sla: AnalyticsSummary["sla"]; active: boolea
     );
 }
 
+// ─── Curva de confiança (tendência) ──────────────────────────────────────────
+// Mini gráfico de área/linha da taxa de aprovação ao longo do tempo, com o
+// volume de qualificados como barras de fundo discretas. SVG leve, sem lib.
+
+function fmtDateShort(iso: string | undefined): string {
+    if (!iso) return "";
+    // YYYY-MM-DD → DD/MM, defensivo a formatos inesperados
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+    if (m) return `${m[3]}/${m[2]}`;
+    const d = new Date(iso);
+    return isFinite(d.getTime()) ? `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}` : "";
+}
+
+function TrendCard({ trend, active }: { trend: TrendPoint[] | undefined; active: boolean }) {
+    const reduced = usePrefersReducedMotion();
+    const pathRef = useRef<SVGPathElement>(null);
+
+    // Sanitiza a série defensivamente: ordena por data, mantém shape tolerante.
+    const points = (trend ?? [])
+        .filter((p): p is TrendPoint => !!p && typeof p === "object")
+        .map((p) => ({
+            date: typeof p.date === "string" ? p.date : "",
+            rate: typeof p.approvalRate === "number" && isFinite(p.approvalRate) ? Math.max(0, Math.min(1, p.approvalRate)) : null,
+            qualified: num(p.qualified),
+        }))
+        .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+
+    const withRate = points.filter((p) => p.rate !== null);
+    const empty = points.length === 0 || withRate.length === 0;
+
+    // Geometria do SVG (viewBox fixo, responsivo por width 100%)
+    const W = 320;
+    const H = 96;
+    const PADX = 4;
+    const PADTOP = 10;
+    const PADBOT = 8;
+
+    // Anima o desenho do path (stroke-dashoffset) na entrada, respeitando reduced-motion.
+    useEffect(() => {
+        if (empty || reduced || !active) return;
+        const el = pathRef.current;
+        if (!el) return;
+        const len = el.getTotalLength?.() ?? 0;
+        if (!len) return;
+        el.style.transition = "none";
+        el.style.strokeDasharray = `${len}`;
+        el.style.strokeDashoffset = `${len}`;
+        // força reflow antes de animar
+        void el.getBoundingClientRect();
+        el.style.transition = "stroke-dashoffset 0.9s cubic-bezier(0.22,1,0.36,1)";
+        el.style.strokeDashoffset = "0";
+    }, [empty, reduced, active, withRate.length]);
+
+    if (empty) {
+        return (
+            <div className="rounded-2xl p-5" style={cardSoft}>
+                <div className="flex items-center gap-2 mb-3">
+                    <span className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "rgba(124,58,237,0.08)" }}>
+                        <LineChart className="w-3.5 h-3.5" style={{ color: PURPLE }} />
+                    </span>
+                    <p className="text-[13px] font-semibold" style={{ color: INK }}>Curva de confiança</p>
+                </div>
+                <div className="rounded-xl px-4 py-8 text-center" style={{ background: "#F8FAFC", border: `1px dashed ${HAIR}` }}>
+                    <p className="text-[12.5px]" style={{ color: SUB, lineHeight: 1.6 }}>
+                        A curva aparece conforme o time usa a EVA. Cada dia de aprovações desenha um ponto a mais aqui.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    const n = points.length;
+    const innerW = W - PADX * 2;
+    const innerH = H - PADTOP - PADBOT;
+    const x = (i: number) => (n === 1 ? W / 2 : PADX + (i / (n - 1)) * innerW);
+    const y = (rate: number) => PADTOP + (1 - rate) * innerH;
+
+    // Barras de fundo: volume de qualificados (discreto)
+    const maxQ = Math.max(1, ...points.map((p) => p.qualified));
+    const barW = n === 1 ? innerW * 0.25 : Math.min((innerW / n) * 0.55, 14);
+
+    // Linha + área da approvalRate. Interpola sobre dias com rate (ignora null).
+    const rated = points.map((p, i) => ({ i, rate: p.rate })).filter((p): p is { i: number; rate: number } => p.rate !== null);
+    const linePts = rated.map((p) => ({ px: x(p.i), py: y(p.rate) }));
+    const linePath = linePts.map((p, i) => `${i === 0 ? "M" : "L"}${p.px.toFixed(1)},${p.py.toFixed(1)}`).join(" ");
+    const areaPath =
+        linePts.length > 1
+            ? `${linePath} L${linePts[linePts.length - 1].px.toFixed(1)},${(H - PADBOT).toFixed(1)} L${linePts[0].px.toFixed(1)},${(H - PADBOT).toFixed(1)} Z`
+            : "";
+
+    const last = withRate[withRate.length - 1];
+    const lastPct = Math.round((last.rate ?? 0) * 100);
+
+    return (
+        <div className="rounded-2xl p-5" style={cardSoft}>
+            <div className="flex items-center justify-between gap-3 mb-1">
+                <div className="flex items-center gap-2">
+                    <span className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "rgba(124,58,237,0.08)" }}>
+                        <LineChart className="w-3.5 h-3.5" style={{ color: PURPLE }} />
+                    </span>
+                    <p className="text-[13px] font-semibold" style={{ color: INK }}>Curva de confiança</p>
+                </div>
+                <span className="text-[11.5px] tabular-nums font-semibold px-2 py-0.5 rounded-full" style={{ color: PURPLE, background: "rgba(124,58,237,0.08)" }}>
+                    {lastPct}% hoje
+                </span>
+            </div>
+            <p className="text-[11.5px] mb-2.5" style={{ color: SUB }}>
+                taxa de aprovação dia a dia, com o volume de qualificados ao fundo.
+            </p>
+
+            <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} role="img" aria-label={`Curva de confiança: aprovação atual ${lastPct}%`} style={{ display: "block", overflow: "visible" }}>
+                {/* grade horizontal sutil (0/50/100%) */}
+                {[0, 0.5, 1].map((g) => (
+                    <line key={g} x1={PADX} x2={W - PADX} y1={y(g)} y2={y(g)} stroke={HAIR} strokeWidth={1} strokeDasharray={g === 0.5 ? "2 3" : undefined} opacity={g === 0.5 ? 0.7 : 1} />
+                ))}
+                {/* barras de fundo: volume de qualificados */}
+                {points.map((p, i) =>
+                    p.qualified > 0 ? (
+                        <rect
+                            key={`b${i}`}
+                            x={x(i) - barW / 2}
+                            y={H - PADBOT - (p.qualified / maxQ) * innerH * 0.6}
+                            width={barW}
+                            height={(p.qualified / maxQ) * innerH * 0.6}
+                            rx={2}
+                            fill={BLUE}
+                            opacity={0.1}
+                        />
+                    ) : null,
+                )}
+                {/* área sob a linha */}
+                {areaPath && <path d={areaPath} fill={PURPLE} opacity={0.08} />}
+                {/* linha da taxa de aprovação */}
+                <path ref={pathRef} d={linePath} fill="none" stroke={PURPLE} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                {/* ponto final em destaque */}
+                {linePts.length > 0 && (
+                    <circle cx={linePts[linePts.length - 1].px} cy={linePts[linePts.length - 1].py} r={3} fill="#FFFFFF" stroke={PURPLE} strokeWidth={2} />
+                )}
+            </svg>
+
+            {/* extremos do eixo de tempo */}
+            <div className="flex items-center justify-between mt-1.5">
+                <span className="text-[10px] tabular-nums" style={{ color: MUTE }}>{fmtDateShort(points[0]?.date)}</span>
+                <span className="text-[10px] tabular-nums" style={{ color: MUTE }}>{fmtDateShort(points[n - 1]?.date)}</span>
+            </div>
+        </div>
+    );
+}
+
 // ─── Cards do bloco B: Resultado ──────────────────────────────────────────────
 
 const FUNNEL_STAGES: { key: keyof FunnelShape; label: string; color: string }[] = [
@@ -325,40 +488,86 @@ const FUNNEL_STAGES: { key: keyof FunnelShape; label: string; color: string }[] 
     { key: "closed_won", label: "Ganhos", color: GREEN },
 ];
 
-function FunnelCard({ funnel, qualified }: { funnel: FunnelShape | undefined; qualified: number }) {
-    const rows = FUNNEL_STAGES.map((s) => ({
+/** Linhas do funil a partir de um shape, com piso em qualificação (qualified). */
+function funnelRows(shape: FunnelShape | undefined, qualifiedFloor = 0) {
+    return FUNNEL_STAGES.map((s) => ({
         ...s,
-        v: s.key === "qualification" ? Math.max(num(funnel?.qualification), qualified) : num(funnel?.[s.key]),
+        v: s.key === "qualification" ? Math.max(num(shape?.qualification), qualifiedFloor) : num(shape?.[s.key]),
     }));
+}
+
+/** Barras do funil — variante destaque (grande) ou contexto (compacta). */
+function FunnelBars({ rows, compact }: { rows: ReturnType<typeof funnelRows>; compact?: boolean }) {
     const max = Math.max(1, ...rows.map((r) => r.v));
-    const anyData = rows.some((r) => r.v > 0);
+    return (
+        <div className={compact ? "space-y-2" : "space-y-3"}>
+            {rows.map((r) => (
+                <div key={r.key} className="flex items-center gap-3">
+                    <span className={`${compact ? "text-[11px]" : "text-[11.5px]"} w-[88px] shrink-0`} style={{ color: SUB }}>{r.label}</span>
+                    <div className={`flex-1 ${compact ? "h-4" : "h-6"} rounded-md overflow-hidden`} style={{ background: "#F4F6FA" }}>
+                        <span
+                            className="block h-full rounded-md"
+                            style={{
+                                width: `${Math.max((r.v / max) * 100, r.v > 0 ? 6 : 0)}%`,
+                                background: r.color,
+                                opacity: compact ? 0.5 : 1,
+                                transition: "width 0.6s cubic-bezier(0.22,1,0.36,1)",
+                            }}
+                        />
+                    </div>
+                    <span className={`${compact ? "text-[11.5px]" : "text-[13px]"} font-bold tabular-nums w-7 text-right shrink-0`} style={{ color: INK }}>{r.v}</span>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+function FunnelCard({ funnel, funnelEva, qualified }: { funnel: FunnelShape | undefined; funnelEva: EvaFunnelShape | undefined; qualified: number }) {
+    // Funil da EVA: só vale como destaque quando não-empty E tem algum movimento.
+    const evaAvailable = !!funnelEva && !funnelEva.empty;
+    const evaRows = evaAvailable ? funnelRows(funnelEva) : [];
+    const evaHasData = evaRows.some((r) => r.v > 0);
+
+    const generalRows = funnelRows(funnel, qualified);
+    const generalHasData = generalRows.some((r) => r.v > 0);
+
     return (
         <div className="rounded-2xl p-5" style={cardSoft}>
             <div className="flex items-center gap-2 mb-4">
-                <span className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "rgba(37,99,235,0.08)" }}>
-                    <ChartColumn className="w-3.5 h-3.5" style={{ color: BLUE }} />
+                <span className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: evaAvailable ? "rgba(124,58,237,0.08)" : "rgba(37,99,235,0.08)" }}>
+                    <ChartColumn className="w-3.5 h-3.5" style={{ color: evaAvailable ? PURPLE : BLUE }} />
                 </span>
-                <p className="text-[13px] font-semibold" style={{ color: INK }}>Do qualificado ao fechado</p>
+                <p className="text-[13px] font-semibold" style={{ color: INK }}>
+                    {evaAvailable ? "Do qualificado ao fechado, pela EVA" : "Do qualificado ao fechado"}
+                </p>
             </div>
-            {anyData ? (
-                <div className="space-y-3">
-                    {rows.map((r) => (
-                        <div key={r.key} className="flex items-center gap-3">
-                            <span className="text-[11.5px] w-[88px] shrink-0" style={{ color: SUB }}>{r.label}</span>
-                            <div className="flex-1 h-6 rounded-md overflow-hidden" style={{ background: "#F4F6FA" }}>
-                                <span
-                                    className="block h-full rounded-md"
-                                    style={{
-                                        width: `${Math.max((r.v / max) * 100, r.v > 0 ? 6 : 0)}%`,
-                                        background: r.color,
-                                        transition: "width 0.6s cubic-bezier(0.22,1,0.36,1)",
-                                    }}
-                                />
-                            </div>
-                            <span className="text-[13px] font-bold tabular-nums w-7 text-right shrink-0" style={{ color: INK }}>{r.v}</span>
+
+            {evaAvailable ? (
+                <>
+                    {evaHasData ? (
+                        <FunnelBars rows={evaRows} />
+                    ) : (
+                        <p className="text-[12px]" style={{ color: SUB, lineHeight: 1.6 }}>
+                            A EVA já tem deals atribuídos, mas nenhum se moveu no período ainda.
+                        </p>
+                    )}
+                    {/* Funil geral como contexto secundário, menor e atenuado */}
+                    {generalHasData && (
+                        <div className="mt-4 pt-3.5" style={{ borderTop: `1px solid ${HAIR}` }}>
+                            <p className="text-[10.5px] font-semibold uppercase mb-2.5" style={{ color: MUTE, letterSpacing: "0.07em" }}>
+                                Pipeline geral
+                            </p>
+                            <FunnelBars rows={generalRows} compact />
                         </div>
-                    ))}
-                </div>
+                    )}
+                </>
+            ) : generalHasData ? (
+                <>
+                    <FunnelBars rows={generalRows} />
+                    <p className="text-[11px] mt-3" style={{ color: MUTE, lineHeight: 1.5 }}>
+                        Ainda sem deals atribuídos à EVA neste período. Quando ela qualificar e o card avançar, o funil dela aparece aqui em destaque.
+                    </p>
+                </>
             ) : (
                 <p className="text-[12px]" style={{ color: SUB, lineHeight: 1.6 }}>
                     Sem oportunidades movimentadas no período. O funil se preenche conforme os leads avançam.
@@ -526,7 +735,9 @@ export function EvaAnalyticsPanel({ onTeach }: { onTeach?: () => void }) {
     const slaEmpty = !(typeof sla?.firstReplyMedianMin === "number");
     const funnelEmpty = !funnel || Object.values(funnel).every((v) => !num(v));
     const tempEmpty = !temperature || Object.values(temperature).every((v) => !num(v));
-    const wholeEmpty = approvalEmpty && slaEmpty && funnelEmpty && tempEmpty && objections.length === 0 && gaps.length === 0;
+    const trendEmpty = !(data.trend ?? []).some((p) => p && typeof p.approvalRate === "number" && isFinite(p.approvalRate));
+    const funnelEvaEmpty = !data.funnelEva || data.funnelEva.empty;
+    const wholeEmpty = approvalEmpty && slaEmpty && funnelEmpty && tempEmpty && trendEmpty && funnelEvaEmpty && objections.length === 0 && gaps.length === 0;
 
     if (wholeEmpty) {
         return (
@@ -560,12 +771,15 @@ export function EvaAnalyticsPanel({ onTeach }: { onTeach?: () => void }) {
                     <ApprovalCard approval={approval} active={!isLoading} />
                     <SlaCard sla={sla} active={!isLoading} />
                 </div>
+                <div className="mt-3">
+                    <TrendCard trend={data.trend} active={!isLoading} />
+                </div>
             </Section>
 
             {/* ── B) RESULTADO ── */}
             <Section index={1} eyebrow="02" title="Resultado">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                    <FunnelCard funnel={funnel} qualified={num(data.qualified)} />
+                    <FunnelCard funnel={funnel} funnelEva={data.funnelEva} qualified={num(data.qualified)} />
                     <TemperatureCard temperature={temperature} scoreAvg={data.scoreAvg} active={!isLoading} />
                 </div>
             </Section>

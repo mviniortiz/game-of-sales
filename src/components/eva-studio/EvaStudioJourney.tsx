@@ -31,7 +31,7 @@
 //
 // PRESENTATIONAL: dados e escrita 100% via props (quem integra grava).
 // ─────────────────────────────────────────────────────────────────────────────
-import { useMemo, useState, type ReactNode } from "react";
+import { forwardRef, useImperativeHandle, useMemo, useState, type ReactNode } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { EvaOrb } from "@/components/landing-v2/EvaOrb";
 import {
@@ -103,6 +103,13 @@ export interface EvaStudioJourneyProps {
 
 type AsideView = "memoria" | "insights" | "analytics";
 
+/** Handle imperativo: deixa quem integra navegar a jornada de fora (ex.: o
+ *  "Ir para Ensinar" do painel Analytics fecha a vista e abre o passo Ensinar). */
+export interface EvaStudioJourneyHandle {
+    /** Fecha qualquer vista secundária e leva pro passo informado. */
+    goToStep: (key: StudioStepKey) => void;
+}
+
 const ASIDE_META: Record<AsideView, { title: string; sub: string }> = {
     memoria: { title: "Memória da EVA", sub: "Tudo que eu sei hoje, e de onde cada coisa veio." },
     insights: { title: "Insights da EVA", sub: "O que melhorar antes de me soltar no Inbox." },
@@ -120,7 +127,7 @@ const ORDER: StudioStepKey[] = ["criar", "ensinar", "provar", "ativar"];
 
 // ─── Componente ─────────────────────────────────────────────────────────────
 
-export function EvaStudioJourney({
+export const EvaStudioJourney = forwardRef<EvaStudioJourneyHandle, EvaStudioJourneyProps>(function EvaStudioJourney({
     purposes,
     sources,
     onCreate,
@@ -146,7 +153,7 @@ export function EvaStudioJourney({
     initialActivated,
     initialTeachMode,
     chatBadge,
-}: EvaStudioJourneyProps) {
+}: EvaStudioJourneyProps, ref) {
     const [step, setStep] = useState<StudioStepKey>(initialStep ?? "criar");
     const [doneKeys, setDoneKeys] = useState<StudioStepKey[]>(() =>
         initialActivated ? [...ORDER] : initialStep ? ORDER.slice(0, ORDER.indexOf(initialStep)) : [],
@@ -183,6 +190,23 @@ export function EvaStudioJourney({
         setStep(key);
         setAside(null);
     };
+
+    // Navegação imperativa de fora (ex.: painel Analytics → "Ir para Ensinar").
+    // Marca como concluídos os passos anteriores ao destino, pra ele ficar
+    // alcançável pelo stepper (reachable depende de doneKeys/índice atual).
+    useImperativeHandle(ref, () => ({
+        goToStep: (key: StudioStepKey) => {
+            const target = ORDER.indexOf(key);
+            if (target > 0) {
+                setDoneKeys((d) => {
+                    const next = [...d];
+                    for (const k of ORDER.slice(0, target)) if (!next.includes(k)) next.push(k);
+                    return next;
+                });
+            }
+            selectStep(key);
+        },
+    }), []);
 
     // ── Prontidão: passo concluído + julgamento feito enchem; clique não ──
     const totalReplayJudged = replayJudged + persistedReplayCount;
@@ -413,4 +437,4 @@ export function EvaStudioJourney({
             </div>
         </EvaStudioShell>
     );
-}
+});

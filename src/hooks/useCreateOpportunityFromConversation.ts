@@ -23,6 +23,46 @@ export interface CreateOpportunityInput {
   conversationId?: string | null;
 }
 
+// Analytics da EVA — Fase 2. Dada uma conversa, acha a sugestão mais recente da
+// EVA (pending ou accepted) para atribuir o deal a ela. Se a sugestão ainda
+// estava pending, marca accepted (o humano materializou a sugestão num card).
+// Best-effort: se a coluna/tabela não existir ou falhar, devolve null e o fluxo
+// de criação de deal segue intacto (vínculo apenas não é gravado).
+export async function resolveAgentSuggestionForConversation(
+  conversationId: string,
+  userId: string | null,
+): Promise<string | null> {
+  try {
+    const { data, error } = await supabase
+      .from("agent_suggestions" as never)
+      .select("id, status")
+      .eq("conversation_id", conversationId)
+      .in("status", ["pending", "accepted"])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error || !data) return null;
+    const row = data as { id: string; status: string };
+
+    // Resolve a sugestão pendente: criar o card é o "aprovar" desta sugestão.
+    if (row.status === "pending") {
+      const { error: upErr } = await supabase
+        .from("agent_suggestions" as never)
+        .update({
+          status: "accepted",
+          resolved_by: userId,
+          resolved_at: new Date().toISOString(),
+        } as never)
+        .eq("id", row.id);
+      if (upErr) console.error("[fase2] resolver sugestão pending→accepted falhou (não fatal):", upErr);
+    }
+    return row.id;
+  } catch (e) {
+    console.error("[fase2] busca de agent_suggestion da conversa falhou (não fatal):", e);
+    return null;
+  }
+}
+
 export function useCreateOpportunityFromConversation() {
   const { user, companyId } = useAuth();
   const qc = useQueryClient();
@@ -37,6 +77,12 @@ export function useCreateOpportunityFromConversation() {
       if (input.phone) contato.phone = input.phone;
       const additionalContacts = Object.keys(contato).length > 0 ? [contato] : [];
 
+      // Fase 2 — atribuição à EVA: se a conversa tem sugestão (pending/accepted),
+      // vincula o deal a ela e resolve a pending. Sem sugestão = null (honesto).
+      const agentSuggestionId = input.conversationId
+        ? await resolveAgentSuggestionForConversation(input.conversationId, user.id)
+        : null;
+
       const dealInsert: Record<string, unknown> = {
         title: input.title,
         customer_name: input.customerName,
@@ -48,6 +94,7 @@ export function useCreateOpportunityFromConversation() {
       if (input.value != null) dealInsert.value = input.value;
       if (input.leadSource) dealInsert.lead_source = input.leadSource;
       if (input.notes) dealInsert.notes = input.notes;
+      if (agentSuggestionId) dealInsert.agent_suggestion_id = agentSuggestionId;
 
       const { data: deal, error } = await supabase
         .from("deals")

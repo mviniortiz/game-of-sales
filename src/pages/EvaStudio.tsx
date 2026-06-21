@@ -18,7 +18,7 @@
 // que a conversa monta é gravado no contexto via ctxBuilder.submitText
 // (ConversationalStudio.onComplete → Journey → onSubmitText).
 // ─────────────────────────────────────────────────────────────────────────────
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -29,7 +29,7 @@ import { useEvaReplayMoments } from "@/hooks/useEvaReplayMoments";
 import { useEvaContextSuggestions } from "@/hooks/useEvaContextSuggestions";
 import { useHybridAutoCreate } from "@/hooks/useHybridAutoCreate";
 import { computeApproval, type Verdict } from "@/lib/eva/approval";
-import { EvaStudioJourney } from "@/components/eva-studio/EvaStudioJourney";
+import { EvaStudioJourney, type EvaStudioJourneyHandle } from "@/components/eva-studio/EvaStudioJourney";
 import { EvaMemoryView } from "@/components/eva-studio/EvaMemoryTab";
 import { EvaInsightsTab } from "@/components/eva-studio/EvaInsightsTab";
 import { EvaAnalyticsPanel } from "@/components/eva-studio/EvaAnalyticsPanel";
@@ -44,6 +44,9 @@ export default function EvaStudio() {
     const replay = useEvaReplayMoments();
     const ctxBuilder = useEvaContextSuggestions();
     const hybrid = useHybridAutoCreate();
+
+    // Handle imperativo da jornada — deixa o painel Analytics navegar pro Ensinar.
+    const journeyRef = useRef<EvaStudioJourneyHandle>(null);
 
     // Aprovação feita nesta sessão (o hook só reflete depois do reload)
     const [approvedNow, setApprovedNow] = useState(false);
@@ -104,6 +107,7 @@ export default function EvaStudio() {
                 </p>
             )}
             <EvaStudioJourney
+                ref={journeyRef}
                 initialStep={isApproved ? "ativar" : "criar"}
                 initialActivated={isApproved}
                 initialTeachMode="conversa"
@@ -173,7 +177,7 @@ export default function EvaStudio() {
                 // ── Vistas secundárias ──
                 memoryContent={<EvaMemoryView memory={memory} loading={memoryLoading} />}
                 insightsContent={<EvaInsightsTab hideHeader approval={approval} memory={memory} lastSimAt={lastSimAt} />}
-                analyticsContent={<EvaAnalyticsPanel />}
+                analyticsContent={<EvaAnalyticsPanel onTeach={() => journeyRef.current?.goToStep("ensinar")} />}
             />
 
             {/* VYZON.AGENTS.2 (híbrido) — auto-criação de oportunidade. Só após
