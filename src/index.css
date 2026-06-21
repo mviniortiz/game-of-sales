@@ -3323,6 +3323,20 @@ All colors MUST be HSL.
   .vz-studiomode-btn:active { transform: none; }
 }
 
+/* EVA.STUDIO.ANALYTICS — shimmer do skeleton (entrada estática em reduced-motion) */
+@keyframes vz-anlt-shimmer {
+  0% { background-position: -180px 0; }
+  100% { background-position: 220px 0; }
+}
+.vz-anlt-skel {
+  background: linear-gradient(90deg, #eef1f6 0%, #f6f8fb 50%, #eef1f6 100%);
+  background-size: 400px 100%;
+  animation: vz-anlt-shimmer 1.2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .vz-anlt-skel { animation: none; background: #eef1f6; }
+}
+
 /* ════════════════════════════════════════════════════════════════════════
    LP.4 (2026-06-09) — "O FIO DA CONVERSA" · design system da landing
    Conceito: a página se comporta como o produto — um console comercial

@@ -89,6 +89,8 @@ export interface EvaStudioJourneyProps {
     // Vistas secundárias (lateral): conteúdo pronto, renderizado por cima do passo
     memoryContent?: ReactNode;
     insightsContent?: ReactNode;
+    /** Analytics da EVA — vista transversal (não é etapa da jornada). */
+    analyticsContent?: ReactNode;
     /** Retomar a jornada de onde parou (no integrado vem do blueprint). */
     initialStep?: StudioStepKey;
     /** EVA já aprovada (approved_assisted) → painel Ativar em estado "ativa". */
@@ -99,11 +101,12 @@ export interface EvaStudioJourneyProps {
     chatBadge?: string;
 }
 
-type AsideView = "memoria" | "insights";
+type AsideView = "memoria" | "insights" | "analytics";
 
 const ASIDE_META: Record<AsideView, { title: string; sub: string }> = {
     memoria: { title: "Memória da EVA", sub: "Tudo que eu sei hoje, e de onde cada coisa veio." },
     insights: { title: "Insights da EVA", sub: "O que melhorar antes de me soltar no Inbox." },
+    analytics: { title: "Analytics da EVA", sub: "O que a EVA fez no período: confiança, resultado e o que ensinar." },
 };
 
 const STEPS = [
@@ -138,6 +141,7 @@ export function EvaStudioJourney({
     onActivate,
     memoryContent,
     insightsContent,
+    analyticsContent,
     initialStep,
     initialActivated,
     initialTeachMode,
@@ -211,11 +215,11 @@ export function EvaStudioJourney({
             onSelect={selectStep}
             readiness={{ label: "Prontidão da EVA", pct: readinessPct }}
             hideStepLabel={aside !== null}
-            secondary={(["memoria", "insights"] as AsideView[])
-                .filter((v) => (v === "memoria" ? memoryContent : insightsContent))
+            secondary={(["memoria", "insights", "analytics"] as AsideView[])
+                .filter((v) => (v === "memoria" ? memoryContent : v === "insights" ? insightsContent : analyticsContent))
                 .map((v) => ({
                     key: v,
-                    label: v === "memoria" ? "Memória" : "Insights",
+                    label: v === "memoria" ? "Memória" : v === "insights" ? "Insights" : "Analytics",
                     active: aside === v,
                     onClick: () => setAside((a) => (a === v ? null : v)),
                 }))}
@@ -233,7 +237,7 @@ export function EvaStudioJourney({
                             <h2 className="vz-journey-aside-title">{ASIDE_META[aside].title}</h2>
                             <p className="vz-journey-aside-sub">{ASIDE_META[aside].sub}</p>
                         </div>
-                        {aside === "memoria" ? memoryContent : insightsContent}
+                        {aside === "memoria" ? memoryContent : aside === "insights" ? insightsContent : analyticsContent}
                     </div>
                 )}
 

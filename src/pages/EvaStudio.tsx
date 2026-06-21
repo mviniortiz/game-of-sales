@@ -32,6 +32,7 @@ import { computeApproval, type Verdict } from "@/lib/eva/approval";
 import { EvaStudioJourney } from "@/components/eva-studio/EvaStudioJourney";
 import { EvaMemoryView } from "@/components/eva-studio/EvaMemoryTab";
 import { EvaInsightsTab } from "@/components/eva-studio/EvaInsightsTab";
+import { EvaAnalyticsPanel } from "@/components/eva-studio/EvaAnalyticsPanel";
 import type { LabJudgment, LabScenario } from "@/components/eva-studio/SimulationLab";
 
 export default function EvaStudio() {
@@ -172,6 +173,7 @@ export default function EvaStudio() {
                 // ── Vistas secundárias ──
                 memoryContent={<EvaMemoryView memory={memory} loading={memoryLoading} />}
                 insightsContent={<EvaInsightsTab hideHeader approval={approval} memory={memory} lastSimAt={lastSimAt} />}
+                analyticsContent={<EvaAnalyticsPanel />}
             />
 
             {/* VYZON.AGENTS.2 (híbrido) — auto-criação de oportunidade. Só após

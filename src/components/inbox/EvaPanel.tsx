@@ -403,6 +403,68 @@ function PanelContent({
     const autoCreateFiredRef = useRef(false);
     const [quickCreating, setQuickCreating] = useState(false);
 
+    // ── Analytics da EVA — taxa de aprovação (agent_suggestions) ─────────────
+    // Quando a EVA produz uma leitura desta conversa (qualificação com próxima
+    // ação / resposta sugerida), registramos 1 sugestão pendente em
+    // agent_suggestions. Dedup: no máx 1 por (conversa + analyzed_at). O
+    // desfecho (accepted/adjusted) é gravado quando o humano USA a resposta
+    // sugerida (Copiar/Enviar) — feito no SuggestedReply via resolveSuggestion.
+    // Isso popula approval.rate no painel SEM mudar a UI redesenhada.
+    const analyzedAt = insight.lastAnalyzedAt ? insight.lastAnalyzedAt.toISOString() : null;
+    const pendingSuggestionIdRef = useRef<string | null>(null);
+    const pendingSuggestionResolvedRef = useRef(false);
+    const recordedKeyRef = useRef<string | null>(null);
+
+    useEffect(() => {
+        if (!conversationId || !analyzedAt) return;
+        const q = insight.data?.qualification;
+        if (!q) return;
+        // Só registra quando há de fato uma sugestão acionável (próxima ação ou
+        // resposta sugerida) — uma análise vazia não é uma sugestão.
+        const hasActionable = Boolean(q.proxima_acao || q.resposta_sugerida);
+        if (!hasActionable) return;
+
+        const dedupKey = `${conversationId}::${analyzedAt}`;
+        if (recordedKeyRef.current === dedupKey) return;
+        recordedKeyRef.current = dedupKey;
+        // Nova análise → novo desfecho a registrar.
+        pendingSuggestionIdRef.current = null;
+        pendingSuggestionResolvedRef.current = false;
+
+        (async () => {
+            try {
+                const id = await agentLog.record({
+                    kind: "qualification",
+                    conversationId,
+                    inputSummary: { source: "inbox", trigger: "eva_reading", analyzedAt },
+                    suggestion: {
+                        proxima_acao: q.proxima_acao ?? null,
+                        resposta_sugerida: q.resposta_sugerida ?? null,
+                        score: q.score_sugerido ?? null,
+                        temperatura: q.temperatura ?? null,
+                    },
+                    status: "pending",
+                });
+                pendingSuggestionIdRef.current = id;
+            } catch { /* auditoria nunca quebra o fluxo */ }
+        })();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [conversationId, analyzedAt]);
+
+    // Resolve a sugestão pendente desta análise (1x) quando o humano usa a
+    // resposta. accepted = copiou/enviou SEM editar; adjusted = editou antes.
+    const resolveSuggestion = async (status: "accepted" | "adjusted", finalText: string) => {
+        const id = pendingSuggestionIdRef.current;
+        if (!id || pendingSuggestionResolvedRef.current) return;
+        pendingSuggestionResolvedRef.current = true;
+        try {
+            await agentLog.resolve({ id, status, appliedPayload: { text: finalText } });
+        } catch {
+            // permite nova tentativa se a gravação do desfecho falhou
+            pendingSuggestionResolvedRef.current = false;
+        }
+    };
+
     useEffect(() => {
         if (autoCreateFiredRef.current) return;
         if (!hybrid.ready || !hybrid.approved || !hybrid.autoCreate) return;
@@ -724,6 +786,7 @@ function PanelContent({
                             }}
                             onSendReply={onSendReply}
                             createNudge={createNudge}
+                            onResolveSuggestion={resolveSuggestion}
                         />
                     </>
                 )}
@@ -1014,12 +1077,16 @@ function RealContent({
     dealState,
     onSendReply,
     createNudge,
+    onResolveSuggestion,
 }: {
     chat: Chat;
     insight: EvaInsightResult;
     dealState: CrmDealState;
     onSendReply?: (text: string) => Promise<void>;
     createNudge?: JSX.Element | null;
+    /** Analytics da EVA — registra o desfecho (accepted/adjusted) da sugestão
+     *  quando o humano usa a resposta. Best-effort, nunca quebra a UI. */
+    onResolveSuggestion?: (status: "accepted" | "adjusted", finalText: string) => void | Promise<void>;
 }) {
     const { analysis, qualification, legacy } = insight;
     const summary = analysis.sentiment || "Análise da EVA disponível.";
@@ -1124,6 +1191,7 @@ function RealContent({
                             text={qualification.resposta_sugerida || analysis.draft || ""}
                             onSend={onSendReply}
                             hasAction={Boolean(proximaAcaoLabel || analysis.nextAction)}
+                            onResolveSuggestion={onResolveSuggestion}
                         />
                     )}
                 </RevealItem>
@@ -1624,19 +1692,29 @@ function SuggestedReply({
     text,
     onSend,
     hasAction = false,
+    onResolveSuggestion,
 }: {
     text: string;
     onSend?: (text: string) => Promise<void>;
     hasAction?: boolean;
+    /** Analytics da EVA — registra accepted (copiou/enviou sem editar) ou
+     *  adjusted (editou o texto antes). Best-effort, nunca quebra o fluxo. */
+    onResolveSuggestion?: (status: "accepted" | "adjusted", finalText: string) => void | Promise<void>;
 }) {
     const [edited, setEdited] = useState<string | null>(null);
     const [sending, setSending] = useState(false);
     const display = edited ?? text;
 
+    // Desfecho da sugestão: se o texto enviado/copiado difere do original (o
+    // humano editou antes de usar), conta como "adjusted"; senão "accepted".
+    const outcomeFor = (finalText: string): "accepted" | "adjusted" =>
+        finalText.trim() !== text.trim() ? "adjusted" : "accepted";
+
     const handleCopy = async () => {
         try {
             await navigator.clipboard.writeText(display);
             toast.success("Resposta copiada");
+            void onResolveSuggestion?.(outcomeFor(display), display);
         } catch {
             toast.error("Não foi possível copiar");
         }
@@ -1651,6 +1729,7 @@ function SuggestedReply({
         try {
             await onSend(msg);
             toast.success("Resposta enviada");
+            void onResolveSuggestion?.(outcomeFor(msg), msg);
             setEdited(null);
         } catch {
             toast.error("Não foi possível enviar");
