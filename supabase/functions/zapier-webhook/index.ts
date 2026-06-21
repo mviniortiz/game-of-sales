@@ -26,6 +26,17 @@ interface ZapierPayload {
     [k: string]: unknown;
 }
 
+// Hash determinístico (SHA-256 hex) de um conjunto de campos. Usado pra
+// gerar uma chave de idempotência ESTÁVEL quando o payload não traz um
+// identificador externo — assim um replay do mesmo conteúdo não cria deals
+// duplicados (antes a chave era aleatória → replay sempre passava).
+async function sha256Hex(input: string): Promise<string> {
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
+    return Array.from(new Uint8Array(buf))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+}
+
 async function claimWebhookEvent(supabase: any, provider: string, eventKey: string, metadata: Record<string, unknown>) {
     try {
         const { data, error } = await supabase.rpc("claim_webhook_event", {
@@ -88,7 +99,38 @@ serve(async (req: Request) => {
         const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
         const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-        const txId = payload.external_id || `zap_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+        // Chave de idempotência: prefere external_id (estável). Sem ele,
+        // deriva um hash determinístico do CONTEÚDO do lead (email+telefone+
+        // produto+valor+evento). Mesmo POST repetido => mesma chave => o
+        // claim_webhook_event bloqueia o replay. NUNCA usar Date.now()/random
+        // aqui, senão todo retry vira um deal novo.
+        const stableExternalId = (payload.external_id || "").toString().trim();
+        let txId: string;
+        if (stableExternalId) {
+            txId = stableExternalId;
+        } else {
+            const fingerprint = [
+                eventName,
+                (payload.customer_email || "").toString().trim().toLowerCase(),
+                (payload.customer_phone || "").toString().trim(),
+                (payload.product_name || "").toString().trim(),
+                typeof payload.amount === "number" ? String(payload.amount) : "",
+                (payload.source_app || "").toString().trim(),
+            ].join("|");
+            // Se NÃO houver nenhum identificador de contato/produto, o
+            // fingerprint é vazio e idempotência seria inútil — rejeita.
+            const hasIdentifier =
+                (payload.customer_email && String(payload.customer_email).trim()) ||
+                (payload.customer_phone && String(payload.customer_phone).trim()) ||
+                (payload.product_name && String(payload.product_name).trim());
+            if (!hasIdentifier) {
+                return new Response(
+                    JSON.stringify({ error: "Missing stable identifier (external_id, customer_email, customer_phone or product_name required)" }),
+                    { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+                );
+            }
+            txId = `zaph_${(await sha256Hex(fingerprint)).slice(0, 32)}`;
+        }
         const eventKey = `${txId}:${eventName}`;
         parsedEventKey = eventKey;
 

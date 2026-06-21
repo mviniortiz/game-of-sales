@@ -3,15 +3,27 @@
   <!-- Home -->
   <url>
     <loc>https://vyzon.com.br/</loc>
-    <lastmod>2026-06-09</lastmod>
+    <lastmod>2026-06-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
 
   <!-- Conteúdo / conta -->
   <url>
+    <loc>https://vyzon.com.br/blog</loc>
+    <lastmod>2026-06-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://vyzon.com.br/eva-voz</loc>
+    <lastmod>2026-06-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://vyzon.com.br/changelog</loc>
-    <lastmod>2026-06-09</lastmod>
+    <lastmod>2026-06-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.4</priority>
   </url>

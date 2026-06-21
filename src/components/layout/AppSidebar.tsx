@@ -73,6 +73,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { motion, useReducedMotion } from "framer-motion";
 
 // Phosphor icon component type
 type PhosphorIcon = ComponentType<IconProps>;
@@ -223,6 +224,7 @@ export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const collapsed = state === "collapsed";
+  const reduceMotion = useReducedMotion();
   const [isNovaVendaOpen, setIsNovaVendaOpen] = useState(false);
   // F4G: estado separado pro modal de oportunidade (event diferente)
   const [isNovaOportunidadeOpen, setIsNovaOportunidadeOpen] = useState(false);
@@ -298,7 +300,7 @@ export function AppSidebar() {
   // border azul + ícone azul. Hover: bg #F6F4EF. Sem AnimatedIcon — render
   // direto controlando cor via className do ícone.
   const baseItem =
-    "relative flex items-center gap-2.5 h-10 px-3 rounded-xl text-[14px] font-medium transition-colors duration-150 outline-none";
+    "group relative flex items-center gap-2.5 h-10 px-3 rounded-xl text-[14px] font-medium transition-all duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] outline-none";
   const inactiveClass = `${baseItem} text-[#64748B] hover:text-[#0B1220] hover:bg-[#F6F4EF]`;
   const activeClass = `${baseItem} text-[#0B1220]`;
 
@@ -326,17 +328,30 @@ export function AppSidebar() {
         aria-label={item.title}
         data-demo-nav={item.url}
       >
-        {/* Pill ativo — só nav principal */}
+        {/* Pill ativo — só nav principal. Desliza entre itens (layoutId). */}
         {!isFooter && isActive && (
           <>
-            <span
-              className="absolute inset-0 rounded-xl pointer-events-none"
-              style={{
-                background: "rgba(37,99,235,0.08)",
-                border: "1px solid rgba(37,99,235,0.18)",
-              }}
-              aria-hidden
-            />
+            {reduceMotion ? (
+              <span
+                className="absolute inset-0 rounded-xl pointer-events-none"
+                style={{
+                  background: "rgba(37,99,235,0.08)",
+                  border: "1px solid rgba(37,99,235,0.18)",
+                }}
+                aria-hidden
+              />
+            ) : (
+              <motion.span
+                layoutId="sidebar-active-pill"
+                transition={{ type: "spring", stiffness: 420, damping: 36 }}
+                className="absolute inset-0 rounded-xl pointer-events-none"
+                style={{
+                  background: "rgba(37,99,235,0.08)",
+                  border: "1px solid rgba(37,99,235,0.18)",
+                }}
+                aria-hidden
+              />
+            )}
             <span
               className="absolute -left-[7px] top-1/2 -translate-y-1/2 h-1.5 w-1.5 rounded-full pointer-events-none"
               style={{ background: "#2563EB", boxShadow: "0 0 6px rgba(37,99,235,0.45)" }}
@@ -345,7 +360,7 @@ export function AppSidebar() {
           </>
         )}
 
-        <span className="relative shrink-0 inline-flex">
+        <span className="relative shrink-0 inline-flex transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110 motion-reduce:group-hover:scale-100">
           <Icon
             size={18}
             weight={isActive && !isFooter ? "fill" : "duotone"}
@@ -455,12 +470,7 @@ export function AppSidebar() {
                   <button
                     onClick={() => setIsNovaOportunidadeOpen(true)}
                     aria-label="Novo lead"
-                    className="relative w-full flex items-center justify-center h-10 rounded-xl text-white transition-all duration-200 active:scale-[0.97] hover:brightness-110"
-                    style={{
-                      background: "linear-gradient(135deg, #2563EB 0%, #4A8CE8 100%)",
-                      boxShadow:
-                        "0 6px 20px rgba(37,99,235,0.30), 0 1px 0 rgba(255,255,255,0.20) inset",
-                    }}
+                    className="relative w-full flex items-center justify-center h-10 rounded-full bg-[#080808] text-white transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.97] hover:bg-[#1a1a1a] hover:-translate-y-px motion-reduce:hover:translate-y-0 shadow-[0_1px_2px_rgba(8,8,8,0.18),0_6px_16px_-8px_rgba(8,8,8,0.45)] hover:shadow-[0_3px_8px_rgba(8,8,8,0.20),0_14px_30px_-10px_rgba(8,8,8,0.50)]"
                   >
                     <Plus size={16} weight="bold" />
                   </button>
@@ -473,12 +483,7 @@ export function AppSidebar() {
               <button
                 onClick={() => setIsNovaOportunidadeOpen(true)}
                 aria-label="Novo lead"
-                className="relative w-full flex items-center justify-center gap-1.5 h-10 rounded-xl text-white text-[13px] font-semibold tracking-tight transition-all duration-200 active:scale-[0.98] hover:brightness-110"
-                style={{
-                  background: "linear-gradient(135deg, #2563EB 0%, #4A8CE8 100%)",
-                  boxShadow:
-                    "0 6px 20px rgba(37,99,235,0.30), 0 1px 0 rgba(255,255,255,0.20) inset",
-                }}
+                className="relative w-full flex items-center justify-center gap-1.5 h-10 rounded-full bg-[#080808] text-white text-[13px] font-semibold tracking-tight transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.98] hover:bg-[#1a1a1a] hover:-translate-y-px motion-reduce:hover:translate-y-0 shadow-[0_1px_2px_rgba(8,8,8,0.18),0_6px_16px_-8px_rgba(8,8,8,0.45)] hover:shadow-[0_3px_8px_rgba(8,8,8,0.20),0_14px_30px_-10px_rgba(8,8,8,0.50)]"
               >
                 <Plus size={15} weight="bold" />
                 <span>Novo lead</span>

@@ -77,6 +77,7 @@ import { differenceInDays } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { syncWonDealToSale, unsyncDealSale } from "@/utils/salesSync";
 import { KanbanColumn } from "@/components/crm/KanbanColumn";
+import { ReadinessBand } from "@/components/crm/ReadinessBand";
 import { DealCard } from "@/components/crm/DealCard";
 import { NewDealModal } from "@/components/crm/NewDealModal";
 import { KanbanSkeleton } from "@/components/crm/KanbanSkeleton";
@@ -1194,7 +1195,7 @@ export default function CRM() {
 
             {/* Controles empurrados à direita */}
             <div className="flex items-center gap-2 sm:ml-auto flex-shrink-0">
-              <div className="inline-flex items-center gap-0.5 rounded-lg border border-input bg-background p-0.5 flex-shrink-0 dark:border-white/10 dark:bg-white/[0.03]">
+              <div className="inline-flex items-center gap-0.5 rounded-full border border-input bg-background p-0.5 flex-shrink-0 dark:border-white/10 dark:bg-white/[0.03]">
                 {[
                   { id: "kanban", label: "Kanban" },
                   { id: "list", label: "Lista" },
@@ -1205,7 +1206,7 @@ export default function CRM() {
                       key={v.id}
                       type="button"
                       onClick={() => setViewMode(v.id as "kanban" | "list")}
-                      className={`h-7 rounded-md px-3 text-[11.5px] font-medium transition-colors ${
+                      className={`h-7 rounded-full px-3 text-[11.5px] font-medium transition-colors ${
                         active
                           ? "bg-muted text-foreground shadow-sm ring-1 ring-border/60 dark:bg-white/10 dark:ring-white/15"
                           : "text-muted-foreground hover:text-foreground"
@@ -1318,7 +1319,7 @@ export default function CRM() {
             {/* Toggle filters button */}
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-[11.5px] font-medium transition-colors ${
+              className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[11.5px] font-medium transition-colors ${
                 activeFilterCount > 0
                   ? "bg-emerald-500/15 text-emerald-700 ring-1 ring-emerald-500/30 dark:text-emerald-300"
                   : "border border-input bg-background text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/15 dark:hover:bg-white/[0.06]"
@@ -1374,7 +1375,7 @@ export default function CRM() {
                 })}
                 <button
                   onClick={clearAllFilters}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <XPh size={12} weight="bold" /> Limpar filtros
                 </button>
@@ -1386,7 +1387,7 @@ export default function CRM() {
               <>
                 <button
                   onClick={() => setFilterHotDeals(!filterHotDeals)}
-                  className={`inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-[11.5px] font-medium transition-colors ${
+                  className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[11.5px] font-medium transition-colors ${
                     filterHotDeals
                       ? "bg-orange-500/15 text-orange-700 ring-1 ring-orange-500/30 dark:text-orange-300"
                       : "border border-input bg-background text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/15 dark:hover:bg-white/[0.06]"
@@ -1397,7 +1398,7 @@ export default function CRM() {
 
                 <button
                   onClick={() => setFilterRottingDeals(!filterRottingDeals)}
-                  className={`inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-[11.5px] font-medium transition-colors ${
+                  className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[11.5px] font-medium transition-colors ${
                     filterRottingDeals
                       ? "bg-rose-500/15 text-rose-700 ring-1 ring-rose-500/30 dark:text-rose-300"
                       : "border border-input bg-background text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/15 dark:hover:bg-white/[0.06]"
@@ -1415,7 +1416,7 @@ export default function CRM() {
                     <button
                       key={level}
                       onClick={() => setFilterProbability(isActive ? "all" : level)}
-                      className={`inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-[11.5px] font-medium transition-colors ${
+                      className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[11.5px] font-medium transition-colors ${
                         isActive
                           ? "bg-sky-500/15 text-sky-700 ring-1 ring-sky-500/30 dark:text-sky-300"
                           : "border border-input bg-background text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/15 dark:hover:bg-white/[0.06]"
@@ -1435,7 +1436,7 @@ export default function CRM() {
                     <button
                       key={range}
                       onClick={() => setFilterDateRange(isActive ? "all" : range)}
-                      className={`inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-[11.5px] font-medium transition-colors ${
+                      className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[11.5px] font-medium transition-colors ${
                         isActive
                           ? "bg-violet-500/15 text-violet-700 ring-1 ring-violet-500/30 dark:text-violet-300"
                           : "border border-input bg-background text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/15 dark:hover:bg-white/[0.06]"
@@ -1485,7 +1486,7 @@ export default function CRM() {
                     <div className="w-px h-5 bg-border" />
                     <button
                       onClick={clearAllFilters}
-                      className="inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-[11.5px] font-medium text-rose-600 dark:text-rose-400 transition-colors hover:bg-rose-500/10"
+                      className="inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[11.5px] font-medium text-rose-600 dark:text-rose-400 transition-colors hover:bg-rose-500/10"
                     >
                       <XPh size={13} weight="bold" /> Limpar filtros
                     </button>
@@ -1545,6 +1546,16 @@ export default function CRM() {
                 },
               }}
             >
+              {/* LP-PIPE.2 — faixa "Precisa de você agora" (leitura da EVA, accent roxo).
+                  Some sozinha quando não há deal pronto. Não esconde nada do board. */}
+              {!selectionMode && (
+                <ReadinessBand
+                  deals={filteredDeals}
+                  contextByDeal={pipelineContext.contextByDeal}
+                  formatCurrency={formatCurrency}
+                />
+              )}
+
               {/* Mobile stage selector pills */}
               <div className="flex sm:hidden gap-2 px-4 pt-3 pb-1 overflow-x-auto scrollbar-none">
                 {STAGES.map((stage, idx) => {
@@ -1596,12 +1607,18 @@ export default function CRM() {
                   }
                 }}
               >
-                {STAGES.map((stage, idx) => (
+                {(() => {
+                  const maxColumnValue = Math.max(
+                    0,
+                    ...STAGES.map((s) => stageTotals[s.id]?.value || 0),
+                  );
+                  return STAGES.map((stage, idx) => (
                     <KanbanColumn
                       key={stage.id}
                       stage={stage}
                       deals={dealsByStage[stage.id] || []}
                       total={stageTotals[stage.id] || { count: 0, value: 0 }}
+                      maxColumnValue={maxColumnValue}
                       formatCurrency={formatCurrency}
                       onDeleteDeal={(deal) => {
                         if (confirm(`Tem certeza que deseja excluir a negociação "${deal.title}"?`)) {
@@ -1619,7 +1636,8 @@ export default function CRM() {
                       contextByDeal={pipelineContext.contextByDeal}
                       tagsByDeal={dealsTags.tagsByDeal}
                     />
-                ))}
+                  ));
+                })()}
               </div>
 
               {/* Mobile stage indicator dots */}

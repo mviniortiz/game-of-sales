@@ -31,6 +31,63 @@ function json(body: unknown, status = 200) {
   });
 }
 
+async function sha256Hex(input: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
+  return Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+/** Procura um valor no payload por uma lista de aliases (case-insensitive),
+ *  cobrindo também o encapsulamento field_data do Meta Lead Ads. Espelha a
+ *  lógica do pick_field do banco — usado só pra montar o lead_key. */
+function pickField(payload: Record<string, unknown>, aliases: string[]): string {
+  // Achata field_data: [{name, values:[...]}] do Meta Lead Ads
+  let flat: Record<string, unknown> = payload;
+  const fd = payload["field_data"];
+  if (Array.isArray(fd)) {
+    flat = {};
+    for (const item of fd as Array<Record<string, unknown>>) {
+      const name = String(item?.name ?? "").toLowerCase();
+      const values = item?.values as unknown[] | undefined;
+      if (name) flat[name] = Array.isArray(values) ? String(values[0] ?? "") : "";
+    }
+  }
+  for (const alias of aliases) {
+    const candidates = [flat[alias], flat[alias.toLowerCase()], payload[alias], payload[alias.toLowerCase()]];
+    for (const c of candidates) {
+      if (c != null && String(c).trim() !== "") return String(c).trim();
+    }
+  }
+  return "";
+}
+
+/** Chave de idempotência determinística por lead.
+ *  - Se o payload traz um id de evento estável (Meta leadgen_id/id, ou um
+ *    row id/idempotency_key do Google Sheets/Zapier), usa ELE direto.
+ *  - Senão, deriva um hash de (slug + email/phone/name) dentro de uma janela
+ *    de tempo, pra que retries da mesma planilha/Meta não criem deal novo,
+ *    mas leads genuinamente diferentes (ou o mesmo contato muito depois)
+ *    passem. NÃO usa Date.now() bruto. */
+async function computeLeadKey(slug: string, payload: Record<string, unknown>): Promise<string> {
+  const explicit = pickField(payload, [
+    "leadgen_id", "lead_id", "leadId", "idempotency_key", "idempotencyKey",
+    "event_id", "eventId", "row_id", "rowId", "id",
+  ]);
+  if (explicit) return `id:${explicit}`;
+
+  const email = pickField(payload, ["email", "e-mail", "e_mail", "customer_email"]).toLowerCase();
+  const phone = pickField(payload, ["phone", "phone_number", "telefone", "whatsapp", "customer_phone"]).replace(/\D/g, "");
+  const name = pickField(payload, ["full_name", "name", "nome", "customer_name", "lead_name"]).toLowerCase();
+
+  // Janela de 10 min: protege contra rajada de retries (planilha/Meta reenviam
+  // em segundos/minutos) sem bloquear pra sempre o mesmo contato.
+  const windowSec = 600;
+  const windowBucket = Math.floor(Date.now() / 1000 / windowSec);
+  const fingerprint = [slug, email, phone, name, String(windowBucket)].join("|");
+  return `h:${(await sha256Hex(fingerprint)).slice(0, 40)}`;
+}
+
 function extractSlug(url: URL): string {
   // Aceita /functions/v1/lead-webhook/:slug ou ?slug=
   const qs = url.searchParams.get("slug");
@@ -105,11 +162,15 @@ serve(async (req) => {
     auth: { persistSession: false },
   });
 
+  // Chave de idempotência determinística (id estável OU hash por janela).
+  const leadKey = await computeLeadKey(slug, payload as Record<string, unknown>);
+
   try {
     const { data, error } = await supabase.rpc("ingest_lead_webhook", {
       p_slug: slug,
       p_secret: secret,
       p_payload: payload,
+      p_lead_key: leadKey,
     });
 
     if (error) {
@@ -117,7 +178,11 @@ serve(async (req) => {
       return json({ ok: false, error: "rpc_error" }, 500);
     }
 
-    const result = data as { ok: boolean; error?: string; deal_id?: string };
+    const result = data as { ok: boolean; error?: string; deal_id?: string; duplicate?: boolean };
+    // Duplicado (mesmo lead_key já visto) → 200, sem criar deal novo.
+    if (result?.ok && result?.duplicate) {
+      return json(result, 200);
+    }
     if (!result?.ok) {
       const status =
         result?.error === "not_found" || result?.error === "invalid_secret"

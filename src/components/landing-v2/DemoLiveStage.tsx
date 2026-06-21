@@ -714,14 +714,13 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
             {/* CONVERSA LIVRE (fim da demo): tela imersiva de MESH GRADIENT + Q&A
                 por voz. A EVA convida a perguntar; mic ligado + input de texto. */}
             {freeChat && !sched && (
-                <div className="vz-meshchat-in absolute inset-0 z-50 flex flex-col">
-                    <div className="vz-meshchat-bg" aria-hidden="true" />
+                <div className="vz-meshchat-in absolute inset-0 z-50 flex flex-col" style={{ background: "var(--lp-paper)" }}>
                     <div className="relative z-10 flex items-center justify-between px-5 py-3.5">
-                        <span className="lp-mono inline-flex items-center gap-1.5" style={{ color: "rgba(255,255,255,0.72)" }}>
-                            <span className="h-1.5 w-1.5 rounded-full" style={{ background: voiceLive ? "var(--lp-live)" : "rgba(255,255,255,0.5)" }} />
+                        <span className="lp-mono inline-flex items-center gap-1.5" style={{ color: "var(--lp-ink-55)" }}>
+                            <span className="h-1.5 w-1.5 rounded-full" style={{ background: voiceLive ? "var(--lp-live)" : "var(--lp-ink-40)" }} />
                             EVA · ao vivo
                         </span>
-                        <button type="button" onClick={endCall} className="rounded-full px-3.5 py-1.5 text-[13px] text-white transition-colors hover:bg-white/10" style={{ background: "rgba(255,255,255,0.12)" }}>
+                        <button type="button" onClick={endCall} className="rounded-full px-3.5 py-1.5 text-[13px]" style={{ background: "rgba(5,5,5,0.05)", color: "var(--lp-ink-90)", fontWeight: 500 }}>
                             Encerrar
                         </button>
                     </div>
@@ -730,9 +729,17 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
                         <div className={live.orbState === "speaking" ? "vz-orb-speaking" : "vz-orb-calm"}>
                             <EvaOrb state={liveOrb} size={232} />
                         </div>
-                        <p className="text-white" style={{ fontSize: "clamp(1rem,2.4vw,1.15rem)", lineHeight: 1.55, minHeight: 56, maxWidth: 560, textShadow: "0 1px 14px rgba(0,0,0,0.45)" }} aria-live="polite">
-                            {waiting ? "pensando…" : (live.evaText || (live.userText.trim() ? `Você: ${live.userText}` : "Pode me perguntar o que quiser sobre a Vyzon."))}
-                        </p>
+                        {/* Legenda frase-a-frase (MESMO padrão do tour: a anterior dissolve) */}
+                        <div className="relative w-full text-center" style={{ minHeight: 56, maxWidth: 560 }} aria-live="polite">
+                            {voiceLive && capFading.map((f) => (
+                                <p key={f.id} className="vz-cap-out pointer-events-none absolute inset-x-0 top-0 line-clamp-2 font-medium leading-snug" style={{ color: "var(--lp-ink-90)", fontSize: "clamp(1rem,2.4vw,1.15rem)" }}>
+                                    {f.text}
+                                </p>
+                            ))}
+                            <p key={`free-${capKey}`} className="vz-cap-in line-clamp-3 font-medium leading-snug" style={{ color: "var(--lp-ink-90)", fontSize: "clamp(1rem,2.4vw,1.15rem)" }}>
+                                {waiting ? "pensando…" : (live.userText.trim() ? `Você: ${live.userText}` : (capCurrent || "Pode me perguntar o que quiser sobre a Vyzon."))}
+                            </p>
+                        </div>
                     </div>
 
                     <div className="relative z-10 mx-auto flex w-full max-w-xl items-center gap-2 px-4">
@@ -743,19 +750,19 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
                             placeholder={voiceLive ? "Pergunte à EVA…" : "Conectando…"}
                             disabled={!voiceLive}
                             aria-label="Sua pergunta pra EVA"
-                            className="vz-meshchat-input flex-1 rounded-full px-4 py-3 text-[14px] text-white outline-none"
-                            style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.22)" }}
+                            className="vz-meshchat-input flex-1 rounded-full px-4 py-3 text-[14px] outline-none"
+                            style={{ background: "rgba(5,5,5,0.04)", border: "1px solid var(--lp-line)", color: "var(--lp-ink-90)" }}
                         />
                         <button type="button" onClick={sendChat} disabled={!draft.trim() || !voiceLive} aria-label="Enviar pergunta" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition-opacity disabled:opacity-40" style={{ background: "var(--lp-blue)" }}>
                             <ArrowUp size={18} strokeWidth={2.6} />
                         </button>
-                        <button type="button" onClick={toggleMic} disabled={!voiceLive} aria-pressed={live.micOn} aria-label={live.micOn ? "Desligar microfone" : "Falar com a EVA"} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors disabled:opacity-40" style={{ background: live.micOn ? "var(--lp-blue)" : "rgba(255,255,255,0.14)", color: "#fff" }}>
+                        <button type="button" onClick={toggleMic} disabled={!voiceLive} aria-pressed={live.micOn} aria-label={live.micOn ? "Desligar microfone" : "Falar com a EVA"} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors disabled:opacity-40" style={{ background: live.micOn ? "var(--lp-blue)" : "rgba(5,5,5,0.05)", color: live.micOn ? "#fff" : "var(--lp-ink-90)" }}>
                             {live.micOn ? <Mic size={18} /> : <MicOff size={18} />}
                         </button>
                     </div>
 
                     <div className="relative z-10 mb-5 mt-3 flex justify-center">
-                        <button type="button" onClick={() => setSched("horarios")} className="rounded-full px-5 py-2.5 text-[13.5px] font-semibold transition-transform hover:scale-[1.03] active:scale-95" style={{ background: "#fff", color: "var(--lp-ink)" }}>
+                        <button type="button" onClick={() => setSched("horarios")} className="rounded-full px-5 py-2.5 text-[13.5px] font-semibold text-white transition-transform hover:scale-[1.03] active:scale-95" style={{ background: "var(--lp-ink)" }}>
                             Agendar uma demo
                         </button>
                     </div>

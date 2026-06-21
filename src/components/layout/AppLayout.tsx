@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { motion, useReducedMotion } from "framer-motion";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { TrialBanner } from "./TrialBanner";
@@ -43,6 +44,7 @@ const ALLOWED_EXPIRED_PATHS = [
 
 export const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
+  const reduceMotion = useReducedMotion();
   const { isExpired, isTrialActive } = useTrial();
 
   useEffect(() => {
@@ -84,7 +86,18 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
             <span className="text-xs sm:text-sm font-medium text-[#64748B] truncate">{getPageTitle(location.pathname)}</span>
           </header>
           <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-auto" style={{ background: "#F6F4EF" }}>
-            {children}
+            {/* Animação de entrada padrão de TODA aba: a key por rota remonta e
+                dispara o fade+rise. h-full preserva páginas full-height (Inbox/
+                Pipeline). Respeita prefers-reduced-motion. */}
+            <motion.div
+              key={location.pathname}
+              className="h-full"
+              initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+            >
+              {children}
+            </motion.div>
           </main>
         </div>
       </div>

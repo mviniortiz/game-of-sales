@@ -181,21 +181,45 @@
     "operatingSystem": "Web",
     "description": "Central Comercial com EVA para agências que vendem por conversa. Organiza atendimentos no WhatsApp, qualifica e prioriza leads, e transforma conversas em pipeline. A EVA analisa as conversas e sugere o próximo passo, seu time aprova.",
     "url": "https://vyzon.com.br",
+    "audience": {
+      "@type": "Audience",
+      "audienceType": "Agências de marketing e operações comerciais que vendem por conversa"
+    },
     "offers": {
       "@type": "AggregateOffer",
       "priceCurrency": "BRL",
       "lowPrice": "147",
       "highPrice": "797",
-      "offerCount": "3"
+      "offerCount": "3",
+      "offers": [
+        {
+          "@type": "Offer",
+          "name": "Starter",
+          "price": "147",
+          "priceCurrency": "BRL"
+        },
+        {
+          "@type": "Offer",
+          "name": "Plus",
+          "price": "397",
+          "priceCurrency": "BRL"
+        },
+        {
+          "@type": "Offer",
+          "name": "Pro",
+          "price": "797",
+          "priceCurrency": "BRL"
+        }
+      ]
     },
     "featureList": [
-      "Inbox comercial para WhatsApp e canais",
-      "EVA, IA que analisa conversas e sugere o próximo passo",
-      "Qualificação e priorização de leads",
-      "Pipeline visual de oportunidades",
-      "Conversa vira oportunidade em um clique",
-      "Agenda e follow-up de oportunidades",
-      "Integrações com plataformas de venda"
+      "EVA, IA que lê a conversa e sugere o próximo passo, com aprovação humana",
+      "Inbox comercial para WhatsApp e outros canais",
+      "Agentes especialistas da EVA (qualificação, follow-up, propostas) com o playbook da agência",
+      "Qualificação e priorização de leads por intenção, fit e urgência",
+      "Pipeline visual de oportunidades com agendamentos",
+      "Conexão do WhatsApp por QR code via Evolution API",
+      "Integrações com Hotmart, Kiwify, Mercado Pago, RD Station e mais"
     ],
     "screenshot": "https://vyzon.com.br/og-image.jpg?v=5"
   }
@@ -210,8 +234,8 @@
     "sameAs": []
   }
   </script>
-  <!-- FAQPage sincronizada com o FAQ visível da landing (src/components/landing/
-       FAQSection.tsx) — rich results exigem que o conteúdo apareça na página. -->
+  <!-- FAQPage sincronizada com o FAQ visível da landing (src/components/
+       landing-v2/FaqV2.tsx) — rich results exigem que o conteúdo apareça na página. -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -219,82 +243,50 @@
     "mainEntity": [
       {
         "@type": "Question",
-        "name": "O que é o Vyzon?",
+        "name": "A EVA envia mensagens sozinha?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Vyzon é uma Central Comercial com EVA para agências que vendem por conversa. Ele organiza Inbox, Pipeline, Central de Comando e IA comercial assistida para ajudar seu time a priorizar leads e transformar atendimento em oportunidade."
+          "text": "Não. A EVA sugere respostas e próximos passos, mas o envio depende da aprovação do seu time. A ideia é acelerar a operação sem tirar o controle humano."
         }
       },
       {
         "@type": "Question",
-        "name": "O que é EVA?",
+        "name": "A EVA substitui meu time comercial?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "EVA é a IA comercial do Vyzon. Ela entende o contexto da agência, analisa conversas e sugere próximos passos para o time agir com mais clareza."
+          "text": "Não. Ela funciona como uma camada de apoio para ajudar o time a entender contexto, responder melhor e seguir o playbook comercial da agência."
         }
       },
       {
         "@type": "Question",
-        "name": "A EVA responde sozinha meus leads?",
+        "name": "Funciona com WhatsApp?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Não por padrão. A EVA analisa e sugere respostas, próximos passos e prioridades. Seu time aprova antes de qualquer ação."
+          "text": "Sim. A proposta da EVA é acompanhar conversas comerciais que já acontecem no WhatsApp e transformar esse contexto em sugestões práticas para o time."
         }
       },
       {
         "@type": "Question",
-        "name": "O Vyzon substitui meu vendedor?",
+        "name": "Preciso mudar meu processo comercial?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Não. O Vyzon ajuda o vendedor a agir melhor. A decisão continua com o time."
+          "text": "Não necessariamente. A EVA deve se adaptar ao processo da agência: etapas, ofertas, critérios de qualificação, tom de voz e próximos passos."
         }
       },
       {
         "@type": "Question",
-        "name": "A EVA aprende com os materiais da minha agência?",
+        "name": "Serve para qualquer empresa?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Sim. Você pode adicionar serviços, FAQs, objeções, ICP e playbooks para a EVA usar como contexto. Nada é aplicado sem aprovação."
+          "text": "A Vyzon está sendo pensada principalmente para agências e operações comerciais que vendem por conversa, especialmente onde o WhatsApp concentra boa parte do atendimento."
         }
       },
       {
         "@type": "Question",
-        "name": "Preciso trocar meu número de WhatsApp atual?",
+        "name": "Como funciona a implantação?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Não. Você conecta o número que sua agência já usa, direto por QR code, e continua atendendo normalmente. O Vyzon organiza essas conversas na Inbox Comercial."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Quanto tempo leva para configurar?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "A conexão do WhatsApp leva poucos minutos. Pipeline e time você monta no mesmo dia, e o contexto da EVA pode começar simples e crescer com o uso. Na demo, a gente mostra esse caminho com o seu cenário."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Preciso abandonar meu CRM ou planilha atual?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Não de imediato. O Vyzon organiza o atendimento e o pipeline das conversas. Muitas operações começam por aí e trazem o restante do processo no próprio ritmo."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Quem vê minhas conversas e dados?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Só o seu time. Os dados de cada agência ficam isolados na própria conta, e a EVA usa as conversas apenas para gerar análises e sugestões dentro da sua operação."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "O que acontece se eu cancelar?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Você pode cancelar quando quiser, direto na plataforma, sem fidelidade. Seu número de WhatsApp continua seu e pode ser desconectado a qualquer momento."
+          "text": "Na demo, entendemos seu fluxo comercial, canais, volume de atendimentos e playbook atual. A partir disso, avaliamos como a EVA pode entrar na operação sem bagunçar o processo."
         }
       }
     ]
@@ -308,37 +300,32 @@
     src="https://www.facebook.com/tr?id=2941145869417242&ev=PageView&noscript=1"
   /></noscript>
   <div id="root"></div>
-  <noscript>
-    <div style="padding:40px;text-align:center;font-family:sans-serif;">
-      <h1>Vyzon, Central Comercial com EVA</h1>
-      <p>Central Comercial com EVA para agências que vendem por conversa: organize atendimentos no WhatsApp, priorize oportunidades e transforme conversas em pipeline.</p>
-      <p><a href="/politica-privacidade">Politica de Privacidade</a> | <a href="/termos-de-servico">Termos de Servico</a></p>
-    </div>
-  </noscript>
 
   <!--
-    Crawlable HTML fallback — versão textual completa da landing.
+    Crawlable HTML fallback — versão textual completa da landing v2 (a home /).
     Renderizada apenas quando JavaScript está desabilitado, mas presente no
     HTML enviado pelo servidor para crawlers/SEO tools que não executam JS.
     A SPA React substitui o conteúdo de #root quando JS roda; este bloco
-    nunca é mostrado simultaneamente. Mantenha sincronizado com a landing
-    (src/components/landing/*).
+    nunca é mostrado simultaneamente. Mantenha sincronizado com a landing v2
+    (src/pages/LandingV2.tsx + src/components/landing-v2/*).
   -->
   <noscript>
     <div style="max-width:960px;margin:0 auto;padding:32px 20px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;line-height:1.6;color:#111;">
       <header>
-        <h1 style="font-size:34px;line-height:1.15;margin:0 0 12px;">Pare de perder leads no WhatsApp</h1>
+        <h1 style="font-size:34px;line-height:1.15;margin:0 0 12px;">Um copiloto para cada conversa</h1>
         <p style="font-size:18px;color:#333;margin:0 0 20px;max-width:680px;">
-          A Central Comercial para agências que vendem por conversa. A EVA lê cada atendimento, aponta quem está pronto para avançar e sugere o próximo passo. Seu time aprova e a oportunidade segue no pipeline.
+          A EVA acompanha os atendimentos da sua agência no WhatsApp, entende o contexto e sugere o próximo passo para seu time aprovar. Central Comercial com EVA para agências que vendem por conversa.
         </p>
         <p style="margin:0 0 32px;">
-          <a href="#agendar-demo" style="display:inline-block;padding:10px 18px;background:#1556C0;color:#fff;text-decoration:none;border-radius:8px;margin:0 6px 6px 0;"><strong>Agendar demo gratuita</strong></a>
-          <a href="/onboarding?plan=plus" style="display:inline-block;padding:10px 18px;border:1px solid #999;color:#111;text-decoration:none;border-radius:8px;">Testar grátis por 14 dias</a>
+          <a href="/criar-conta?plan=plus" style="display:inline-block;padding:10px 18px;background:#1556C0;color:#fff;text-decoration:none;border-radius:8px;margin:0 6px 6px 0;"><strong>Testar 14 dias grátis</strong></a>
+          <a href="#planos" style="display:inline-block;padding:10px 18px;border:1px solid #999;color:#111;text-decoration:none;border-radius:8px;">Ver planos</a>
         </p>
         <nav aria-label="Seções da página" style="margin:0 0 32px;font-size:14px;">
-          <a href="#problema" style="color:#1556C0;margin-right:14px;">Problema</a>
-          <a href="#mecanismo" style="color:#1556C0;margin-right:14px;">Como funciona</a>
-          <a href="#para-quem" style="color:#1556C0;margin-right:14px;">Para quem é</a>
+          <a href="#eva" style="color:#1556C0;margin-right:14px;">A EVA</a>
+          <a href="#funcionalidades" style="color:#1556C0;margin-right:14px;">Como ajuda</a>
+          <a href="#especialistas" style="color:#1556C0;margin-right:14px;">Especialistas</a>
+          <a href="#planos" style="color:#1556C0;margin-right:14px;">Planos</a>
+          <a href="#como-funciona" style="color:#1556C0;margin-right:14px;">Como funciona</a>
           <a href="#integracoes" style="color:#1556C0;margin-right:14px;">Integrações</a>
           <a href="#faq" style="color:#1556C0;margin-right:14px;">FAQ</a>
           <a href="/auth" style="color:#1556C0;">Entrar</a>
@@ -346,92 +333,143 @@
       </header>
 
       <main>
-        <section id="problema" style="margin:0 0 40px;">
-          <h2 style="font-size:24px;margin:0 0 8px;">Sua agência gera lead. Mas a oportunidade se perde no caminho.</h2>
-          <p style="color:#444;margin:0 0 16px;">Agência que vende por conversa vive do WhatsApp. Quando o atendimento não é organizado, o lead esfria, a resposta atrasa e a oportunidade some no meio das mensagens.</p>
+        <section id="prova" style="margin:0 0 40px;">
+          <h2 style="font-size:24px;margin:0 0 8px;">A EVA sugere, seu time aprova</h2>
           <ul style="padding-left:20px;color:#222;">
-            <li><strong>Lead quente fica sem resposta.</strong> A pessoa chega interessada, ninguém responde a tempo e ela vai pro concorrente.</li>
-            <li><strong>Follow-up depende de cobrança no grupo.</strong> O retorno fica na memória do vendedor, e a oportunidade evapora sem aviso.</li>
-            <li><strong>Pipeline não acompanha o que aconteceu no WhatsApp.</strong> O que foi falado na conversa não chega no funil, e o gestor não enxerga onde a venda travou.</li>
-            <li><strong>Você só descobre que o lead esfriou quando já era.</strong> Sem leitura da conversa, o sinal de esfriamento aparece tarde demais.</li>
-          </ul>
-          <p style="color:#222;margin:16px 0 0;">O Vyzon centraliza os atendimentos e, com a EVA, transforma cada conversa em <strong>oportunidade no pipeline</strong>.</p>
-        </section>
-
-        <section id="mecanismo" style="margin:0 0 40px;">
-          <h2 style="font-size:24px;margin:0 0 8px;">Da conversa ao pipeline, com a EVA do seu lado</h2>
-          <p style="color:#444;margin:0 0 16px;">Uma central comercial onde o atendimento, a leitura da conversa e o funil ficam conectados. A EVA sugere, seu time aprova.</p>
-          <ul style="padding-left:20px;color:#222;">
-            <li><strong>Inbox comercial:</strong> centraliza os atendimentos do WhatsApp e de outros canais em um lugar só.</li>
-            <li><strong>EVA, IA comercial:</strong> lê a conversa, entende o contexto, qualifica o lead e sugere o próximo passo e a resposta.</li>
-            <li><strong>Priorização:</strong> mostra qual conversa resolver primeiro, do lead mais quente ao follow-up atrasado.</li>
-            <li><strong>Conversa vira oportunidade:</strong> em um clique a conversa entra no pipeline, sem planilha paralela.</li>
-            <li><strong>Pipeline visual:</strong> enxergue onde cada oportunidade travou, com a conversa e a leitura da EVA junto.</li>
-            <li><strong>Agentes especialistas:</strong> crie versões da EVA focadas em cada etapa comercial (qualificação, follow-up, propostas) com o playbook da agência, sempre com aprovação humana.</li>
-            <li><strong>Agenda e follow-up:</strong> os próximos passos aparecem na hora certa.</li>
+            <li><strong>Onde a conversa acontece.</strong> A EVA trabalha no canal em que seus leads já falam com sua agência.</li>
+            <li><strong>Aprovação humana.</strong> Nenhuma sugestão é enviada sem o ok do seu time.</li>
+            <li><strong>Playbook da agência.</strong> Cada resposta segue o contexto, a oferta e o processo comercial da operação.</li>
           </ul>
         </section>
 
-        <section id="para-quem" style="margin:0 0 40px;">
-          <h2 style="font-size:24px;margin:0 0 8px;">Feito para quem vende por conversa</h2>
-          <p style="color:#444;margin:0 0 16px;">Agências e times comerciais que recebem leads no WhatsApp e precisam atender rápido, qualificar e não deixar oportunidade esfriar.</p>
+        <section id="eva" style="margin:0 0 40px;">
+          <h2 style="font-size:24px;margin:0 0 8px;">Veja a EVA em ação</h2>
+          <p style="color:#444;margin:0;">Entenda como ela lê a conversa, sugere o próximo passo e mantém seu time no controle.</p>
+        </section>
+
+        <section id="funcionalidades" style="margin:0 0 40px;">
+          <h2 style="font-size:24px;margin:0 0 8px;">A EVA acompanha cada etapa da conversa</h2>
+          <p style="color:#444;margin:0 0 16px;">Da primeira mensagem ao fechamento, ela entende o contexto, sugere o próximo passo e ajuda seu time a vender com mais consistência.</p>
+
+          <h3 style="font-size:18px;margin:20px 0 4px;">Ajude sua equipe a responder melhor cada lead</h3>
+          <p style="color:#444;margin:0 0 8px;">A EVA lê a conversa, entende o momento do lead e sugere uma resposta clara para avançar o atendimento.</p>
           <ul style="padding-left:20px;color:#222;">
-            <li>
-              <strong>Agências de marketing.</strong> Centralize os atendimentos de cada cliente, qualifique os leads com a EVA e mostre o pipeline em tempo real.
-              <a href="#agendar-demo" style="color:#1556C0;">Agendar demo gratuita</a>.
-            </li>
-            <li>
-              <strong>Infoprodutores e mentorias.</strong> Organize os atendimentos de closers e leads de produtos digitais em um fluxo previsível.
-            </li>
-            <li>
-              <strong>Times SDR/Closer B2B.</strong> Organize prospecção, qualificação e oportunidades em um fluxo simples para o time usar.
-            </li>
+            <li>Entende o contexto da conversa.</li>
+            <li>Sugere uma resposta pronta para revisão.</li>
+            <li>Mantém aprovação humana antes do envio.</li>
           </ul>
+
+          <h3 style="font-size:18px;margin:20px 0 4px;">Saiba quais conversas merecem atenção agora</h3>
+          <p style="color:#444;margin:0 0 8px;">A EVA identifica sinais de compra, dúvidas comerciais e oportunidades que podem passar despercebidas no WhatsApp.</p>
+          <ul style="padding-left:20px;color:#222;">
+            <li>Identifica intenção comercial.</li>
+            <li>Diferencia curiosidade de oportunidade real.</li>
+            <li>Ajuda o time a priorizar atendimentos.</li>
+          </ul>
+
+          <h3 style="font-size:18px;margin:20px 0 4px;">Transforme seu processo comercial em próximos passos</h3>
+          <p style="color:#444;margin:0 0 8px;">A EVA usa o contexto da sua operação para sugerir respostas alinhadas ao jeito certo de vender da agência.</p>
+          <ul style="padding-left:20px;color:#222;">
+            <li>Padroniza a condução comercial.</li>
+            <li>Ajuda novos vendedores a seguir o processo.</li>
+            <li>Reduz respostas desalinhadas.</li>
+          </ul>
+        </section>
+
+        <section id="especialistas" style="margin:0 0 40px;">
+          <h2 style="font-size:24px;margin:0 0 8px;">Crie especialistas para cada etapa da conversa</h2>
+          <p style="color:#444;margin:0 0 16px;">No Vyzon, a EVA pode assumir papéis específicos para qualificar leads, sugerir follow-ups, preparar próximos passos e apoiar seu time em cada momento da jornada comercial.</p>
+          <ul style="padding-left:20px;color:#222;">
+            <li><strong>Qualificação.</strong> Identifica intenção, contexto e estágio do lead antes de sugerir o próximo passo.</li>
+            <li><strong>Follow-up.</strong> Ajuda seu time a retomar conversas no momento certo, com abordagem alinhada ao histórico.</li>
+            <li><strong>Propostas e próximos passos.</strong> Transforma o playbook comercial da agência em sugestões práticas para avançar cada oportunidade.</li>
+          </ul>
+        </section>
+
+        <section id="planos" style="margin:0 0 40px;">
+          <h2 style="font-size:24px;margin:0 0 8px;">Preço simples e transparente</h2>
+          <p style="color:#444;margin:0 0 16px;">Comece com 14 dias grátis, sem cartão. Cresça quando seu time crescer. Assinatura mensal, cancele quando quiser. Pagamento via Mercado Pago.</p>
+
+          <h3 style="font-size:18px;margin:20px 0 4px;">Starter — R$ 147/mês</h3>
+          <p style="color:#444;margin:0 0 6px;">Para estruturar o primeiro fluxo comercial.</p>
+          <ul style="padding-left:20px;color:#222;">
+            <li>1 vendedor/closer + 1 admin</li>
+            <li>WhatsApp conectado</li>
+            <li>Inbox Comercial</li>
+            <li>Pipeline com agendamentos</li>
+            <li>EVA sugerindo respostas e próximos passos</li>
+            <li>Suporte humano no WhatsApp</li>
+          </ul>
+
+          <h3 style="font-size:18px;margin:20px 0 4px;">Plus — R$ 397/mês (mais popular)</h3>
+          <p style="color:#444;margin:0 0 6px;">Para agências que recebem leads todos os dias.</p>
+          <ul style="padding-left:20px;color:#222;">
+            <li>3 SDRs/closers + 1 admin</li>
+            <li>Tudo do Starter</li>
+            <li>EVA analisando intenção, fit, urgência e objeções</li>
+            <li>Ranking e metas do time</li>
+            <li>Relatórios completos</li>
+            <li>Integrações Hotmart, Kiwify e Mercado Pago</li>
+          </ul>
+          <p style="color:#555;margin:6px 0 0;font-size:13px;">+R$ 49,97/SDR adicional. Ligações como add-on.</p>
+
+          <h3 style="font-size:18px;margin:20px 0 4px;">Pro — R$ 797/mês</h3>
+          <p style="color:#444;margin:0 0 6px;">Para agências com operação comercial em escala.</p>
+          <ul style="padding-left:20px;color:#222;">
+            <li>8 SDRs/closers + 3 admins</li>
+            <li>Tudo do Plus</li>
+            <li>EVA com prioridade e limite ampliado</li>
+            <li>Multiempresa: matriz + braços</li>
+            <li>Ligações com transcrição e resumo do deal</li>
+            <li>Integrações completas (Stripe e mais)</li>
+            <li>Suporte prioritário</li>
+          </ul>
+          <p style="color:#555;margin:6px 0 0;font-size:13px;">+R$ 48,99/SDR adicional. Falar com especialista.</p>
+        </section>
+
+        <section id="como-funciona" style="margin:0 0 40px;">
+          <h2 style="font-size:24px;margin:0 0 8px;">Coloque a EVA para operar sem mudar seu processo</h2>
+          <p style="color:#444;margin:0 0 16px;">Conecte seus canais, ajuste o playbook comercial e comece a revisar sugestões com seu time.</p>
+          <ul style="padding-left:20px;color:#222;">
+            <li><strong>01. Conecte seu WhatsApp e seus canais.</strong> Ligamos a EVA aos canais onde seus atendimentos já acontecem.</li>
+            <li><strong>02. Ajuste o playbook da agência.</strong> Defina etapas, critérios, tom de voz e próximos passos comerciais.</li>
+            <li><strong>03. Revise sugestões com seu time.</strong> A EVA sugere respostas e ações. A aprovação continua com quem conduz a venda.</li>
+          </ul>
+          <p style="color:#222;margin:16px 0 0;">14 dias grátis, sem cartão.</p>
         </section>
 
         <section id="integracoes" style="margin:0 0 40px;">
-          <h2 style="font-size:24px;margin:0 0 8px;">Conecte a Vyzon às ferramentas que sua operação já usa</h2>
-          <p style="color:#444;margin:0 0 16px;">Centralize dados, reduza tarefas manuais e conecte sua rotina comercial às plataformas que já fazem parte da operação.</p>
-          <h3 style="font-size:16px;margin:16px 0 6px;color:#0a7a45;">Disponíveis hoje</h3>
+          <h2 style="font-size:24px;margin:0 0 8px;">Conecta com as ferramentas que sua agência já usa</h2>
+          <h3 style="font-size:16px;margin:16px 0 6px;color:#0a7a45;">No ar hoje</h3>
           <p style="color:#222;margin:0;">
-            Hotmart, Kiwify, Greenn, Cakto, Braip, Monetizze, Eduzz, Asaas, Mercado Pago, RD Station, Zapier, Notazz.
+            WhatsApp (Evolution API), RD Station, Mercado Pago, Hotmart, Kiwify, Meta Lead Ads, Asaas, Zapier, Eduzz, Monetizze, Greenn, Notazz, Google Calendar.
           </p>
-          <h3 style="font-size:16px;margin:16px 0 6px;color:#666;">No roadmap (sob consulta)</h3>
-          <p style="color:#222;margin:0;">Stripe, Pagar.me, Celetus.</p>
-          <h3 style="font-size:16px;margin:16px 0 6px;color:#666;">Conexões abertas</h3>
-          <p style="color:#222;margin:0;">WhatsApp via Evolution API, webhooks abertos autenticados por token e lead webhooks (formulários e Google Sheets).</p>
+          <h3 style="font-size:16px;margin:16px 0 6px;color:#666;">Em breve</h3>
+          <p style="color:#222;margin:0;">Make, Slack, Calendly, Google Ads, Notion, Typeform, Trello, ClickUp, HubSpot, Pipedrive, n8n, Discord, monday.com.</p>
         </section>
 
         <section id="faq" style="margin:0 0 40px;">
-          <h2 style="font-size:24px;margin:0 0 8px;">Perguntas frequentes</h2>
-          <h3 style="font-size:16px;margin:16px 0 4px;">O que é o Vyzon?</h3>
-          <p style="color:#222;margin:0;">Vyzon é uma Central Comercial com EVA para agências que vendem por conversa. Ele organiza Inbox, Pipeline, Central de Comando e IA comercial assistida para ajudar seu time a priorizar leads e transformar atendimento em oportunidade.</p>
-          <h3 style="font-size:16px;margin:16px 0 4px;">O que é EVA?</h3>
-          <p style="color:#222;margin:0;">EVA é a IA comercial do Vyzon. Ela entende o contexto da agência, analisa conversas e sugere próximos passos para o time agir com mais clareza.</p>
-          <h3 style="font-size:16px;margin:16px 0 4px;">A EVA responde sozinha meus leads?</h3>
-          <p style="color:#222;margin:0;">Não por padrão. A EVA analisa e sugere respostas, próximos passos e prioridades. Seu time aprova antes de qualquer ação.</p>
-          <h3 style="font-size:16px;margin:16px 0 4px;">O Vyzon substitui meu vendedor?</h3>
-          <p style="color:#222;margin:0;">Não. O Vyzon ajuda o vendedor a agir melhor. A decisão continua com o time.</p>
-          <h3 style="font-size:16px;margin:16px 0 4px;">A EVA aprende com os materiais da minha agência?</h3>
-          <p style="color:#222;margin:0;">Sim. Você pode adicionar serviços, FAQs, objeções, ICP e playbooks para a EVA usar como contexto. Nada é aplicado sem aprovação.</p>
-          <h3 style="font-size:16px;margin:16px 0 4px;">Preciso trocar meu número de WhatsApp atual?</h3>
-          <p style="color:#222;margin:0;">Não. Você conecta o número que sua agência já usa, direto por QR code, e continua atendendo normalmente. O Vyzon organiza essas conversas na Inbox Comercial.</p>
-          <h3 style="font-size:16px;margin:16px 0 4px;">Quanto tempo leva para configurar?</h3>
-          <p style="color:#222;margin:0;">A conexão do WhatsApp leva poucos minutos. Pipeline e time você monta no mesmo dia, e o contexto da EVA pode começar simples e crescer com o uso. Na demo, a gente mostra esse caminho com o seu cenário.</p>
-          <h3 style="font-size:16px;margin:16px 0 4px;">Preciso abandonar meu CRM ou planilha atual?</h3>
-          <p style="color:#222;margin:0;">Não de imediato. O Vyzon organiza o atendimento e o pipeline das conversas. Muitas operações começam por aí e trazem o restante do processo no próprio ritmo.</p>
-          <h3 style="font-size:16px;margin:16px 0 4px;">Quem vê minhas conversas e dados?</h3>
-          <p style="color:#222;margin:0;">Só o seu time. Os dados de cada agência ficam isolados na própria conta, e a EVA usa as conversas apenas para gerar análises e sugestões dentro da sua operação.</p>
-          <h3 style="font-size:16px;margin:16px 0 4px;">O que acontece se eu cancelar?</h3>
-          <p style="color:#222;margin:0;">Você pode cancelar quando quiser, direto na plataforma, sem fidelidade. Seu número de WhatsApp continua seu e pode ser desconectado a qualquer momento.</p>
+          <h2 style="font-size:24px;margin:0 0 8px;">Dúvidas frequentes</h2>
+          <h3 style="font-size:16px;margin:16px 0 4px;">A EVA envia mensagens sozinha?</h3>
+          <p style="color:#222;margin:0;">Não. A EVA sugere respostas e próximos passos, mas o envio depende da aprovação do seu time. A ideia é acelerar a operação sem tirar o controle humano.</p>
+          <h3 style="font-size:16px;margin:16px 0 4px;">A EVA substitui meu time comercial?</h3>
+          <p style="color:#222;margin:0;">Não. Ela funciona como uma camada de apoio para ajudar o time a entender contexto, responder melhor e seguir o playbook comercial da agência.</p>
+          <h3 style="font-size:16px;margin:16px 0 4px;">Funciona com WhatsApp?</h3>
+          <p style="color:#222;margin:0;">Sim. A proposta da EVA é acompanhar conversas comerciais que já acontecem no WhatsApp e transformar esse contexto em sugestões práticas para o time.</p>
+          <h3 style="font-size:16px;margin:16px 0 4px;">Preciso mudar meu processo comercial?</h3>
+          <p style="color:#222;margin:0;">Não necessariamente. A EVA deve se adaptar ao processo da agência: etapas, ofertas, critérios de qualificação, tom de voz e próximos passos.</p>
+          <h3 style="font-size:16px;margin:16px 0 4px;">Serve para qualquer empresa?</h3>
+          <p style="color:#222;margin:0;">A Vyzon está sendo pensada principalmente para agências e operações comerciais que vendem por conversa, especialmente onde o WhatsApp concentra boa parte do atendimento.</p>
+          <h3 style="font-size:16px;margin:16px 0 4px;">Como funciona a implantação?</h3>
+          <p style="color:#222;margin:0;">Na demo, entendemos seu fluxo comercial, canais, volume de atendimentos e playbook atual. A partir disso, avaliamos como a EVA pode entrar na operação sem bagunçar o processo.</p>
         </section>
 
-        <section id="agendar-demo" style="margin:0 0 40px;">
-          <h2 style="font-size:24px;margin:0 0 8px;">Veja o Vyzon funcionando na sua operação</h2>
-          <p style="color:#444;margin:0 0 16px;">Em uma demo rápida, mostramos como a EVA organiza os atendimentos, qualifica os leads e transforma conversas em pipeline na rotina da sua agência.</p>
+        <section id="comecar" style="margin:0 0 40px;">
+          <h2 style="font-size:24px;margin:0 0 8px;">Dê à sua equipe um copiloto para cada conversa</h2>
+          <p style="color:#444;margin:0 0 16px;">A EVA ajuda sua agência a entender atendimentos, sugerir próximos passos e manter o time no controle do processo comercial.</p>
           <p style="margin:0;">
-            <a href="#agendar-demo" style="display:inline-block;padding:10px 18px;background:#1556C0;color:#fff;text-decoration:none;border-radius:8px;margin:0 6px 6px 0;"><strong>Agendar demo gratuita</strong></a>
-            <a href="/onboarding?plan=plus" style="display:inline-block;padding:10px 18px;border:1px solid #999;color:#111;text-decoration:none;border-radius:8px;">Começar teste grátis</a>
+            <a href="/criar-conta?plan=plus" style="display:inline-block;padding:10px 18px;background:#1556C0;color:#fff;text-decoration:none;border-radius:8px;margin:0 6px 6px 0;"><strong>Testar 14 dias grátis</strong></a>
+            <a href="/blog" style="display:inline-block;padding:10px 18px;border:1px solid #999;color:#111;text-decoration:none;border-radius:8px;">Ler o blog</a>
           </p>
         </section>
       </main>

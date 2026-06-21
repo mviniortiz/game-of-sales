@@ -62,7 +62,30 @@ interface HotmartPayload {
     };
 }
 
-async function claimWebhookEvent(supabase: any, provider: string, eventKey: string, metadata: Record<string, unknown>) {
+// Resultado do claim de idempotência.
+//   - enabled=false  → a RPC NÃO existe no banco (função não migrada). Seguimos
+//                      como se fosse evento novo (fail-open SÓ neste caso).
+//   - claimed=true   → primeira vez que vemos este evento, processa.
+//   - claimed=false  → duplicado, ignora.
+//   - transientError → erro TRANSITÓRIO (timeout/conexão/permissão). NÃO dá pra
+//                      saber se é novo; o chamador deve fail-CLOSED (5xx) pra
+//                      forçar retry, em vez de arriscar processar duplicado.
+type ClaimResult =
+    | { enabled: false; claimed: true }
+    | { enabled: true; claimed: boolean }
+    | { transientError: string };
+
+// PGRST202 = PostgREST não encontrou a função (assinatura/rota inexistente).
+function isFunctionMissingError(error: any): boolean {
+    const code = String(error?.code || "");
+    if (code === "PGRST202") return true;
+    const msg = String(error?.message || "").toLowerCase();
+    // Fallback textual: PostgREST costuma dizer "could not find the function".
+    return msg.includes("could not find the function") ||
+        (msg.includes("claim_webhook_event") && msg.includes("does not exist"));
+}
+
+async function claimWebhookEvent(supabase: any, provider: string, eventKey: string, metadata: Record<string, unknown>): Promise<ClaimResult> {
     try {
         const { data, error } = await supabase.rpc("claim_webhook_event", {
             p_provider: provider,
@@ -70,14 +93,20 @@ async function claimWebhookEvent(supabase: any, provider: string, eventKey: stri
             p_metadata: metadata,
         });
         if (error) {
-            const msg = String(error.message || "").toLowerCase();
-            if (msg.includes("claim_webhook_event")) return { enabled: false, claimed: true };
-            throw error;
+            // Função inexistente → idempotência desligada (fail-open intencional).
+            if (isFunctionMissingError(error)) {
+                console.warn("[Hotmart Webhook] claim_webhook_event not deployed; idempotency disabled");
+                return { enabled: false, claimed: true };
+            }
+            // Qualquer outro erro é TRANSITÓRIO → fail-closed.
+            console.error("[Hotmart Webhook] transient idempotency error:", error);
+            return { transientError: String(error?.message || "rpc_error") };
         }
         return { enabled: true, claimed: data === true };
     } catch (error) {
-        console.warn("[Hotmart Webhook] persistent idempotency unavailable:", error);
-        return { enabled: false, claimed: true };
+        // Exceção (rede/abort) também é transitória → fail-closed.
+        console.error("[Hotmart Webhook] idempotency exception:", error);
+        return { transientError: error instanceof Error ? error.message : String(error) };
     }
 }
 
@@ -173,6 +202,14 @@ serve(async (req: Request) => {
             transaction: payload.data?.purchase?.transaction || null,
             company_id: companyId,
         });
+        // Erro transitório na idempotência → fail-CLOSED: responde 503 pra que
+        // a Hotmart re-tente. Não processamos às cegas (evita deal duplicado).
+        if ("transientError" in idempotency) {
+            return new Response(
+                JSON.stringify({ error: "Idempotency check unavailable, retry later" }),
+                { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+            );
+        }
         if (!idempotency.claimed) {
             console.log(`[Hotmart Webhook] Duplicate event ignored: ${eventKey}`);
             return new Response(JSON.stringify({ success: true, duplicate: true }), {

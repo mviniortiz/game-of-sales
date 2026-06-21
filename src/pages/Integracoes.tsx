@@ -1,8 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { usePlan } from "@/hooks/usePlan";
 import { UpgradePrompt } from "@/components/shared/UpgradePrompt";
 import {
@@ -19,9 +16,10 @@ import {
   CreditCard,
   Calendar,
   Bell,
+  SearchX,
 } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { toast } from "sonner";
 import { IntegrationConfigModal } from "@/components/integrations/IntegrationConfigModal";
 import { GoogleCalendarConfigModal } from "@/components/integrations/GoogleCalendarConfigModal";
@@ -86,6 +84,17 @@ interface WebhookLog {
   error_message: string | null;
   created_at: string;
 }
+
+// ── Status palette ──────────────────────────────────────────────────
+// Semantic status colors (não há token --vyz-* semântico de saúde; cores
+// nomeadas locais para verde/vermelho/âmbar de telemetria de webhook).
+const STATUS = {
+  green: "#16A34A",
+  greenBg: "#ECFDF3",
+  greenBorder: "rgba(22,163,74,0.28)",
+  red: "#DC2626",
+  amber: "#D97706",
+} as const;
 
 // ── Integration Data ───────────────────────────────────────────────
 const INTEGRATIONS: Integration[] = [
@@ -413,11 +422,28 @@ const EVENT_LABELS: Record<string, string> = {
 // ── Status helpers ──────────────────────────────────────────────────
 const statusDot = (status: string | null) => {
   switch (status) {
-    case "success": return "#16A34A";
-    case "error": return "#DC2626";
-    case "processing": return "#D97706";
-    default: return "#94A3B8";
+    case "success": return STATUS.green;
+    case "error": return STATUS.red;
+    case "processing": return STATUS.amber;
+    default: return "var(--vyz-text-soft)";
   }
+};
+
+// ── Motion ──────────────────────────────────────────────────────────
+// Stagger interno dos cards (o AppLayout já anima a página inteira, então
+// aqui é só o ritmo entre cards). Transform-only + reduced-motion.
+const CARD_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
+
+const gridVariants: Variants = {
+  hidden: {},
+  show: {
+    transition: { staggerChildren: 0.045, delayChildren: 0.02 },
+  },
+};
+
+const cardVariants: Variants = {
+  hidden: { opacity: 0, y: 10 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: CARD_EASE } },
 };
 
 // ── Integration Card ──────────────────────────────────────────────
@@ -428,6 +454,7 @@ const IntegrationCard = ({
   eventCount,
   onConnect,
   onManage,
+  reduced,
 }: {
   integration: Integration;
   effectiveStatus: IntegrationStatus;
@@ -435,6 +462,7 @@ const IntegrationCard = ({
   eventCount?: number;
   onConnect?: () => void;
   onManage?: () => void;
+  reduced: boolean;
 }) => {
   const [votes, setVotes] = useState(integration.votes || 0);
   const [hasVoted, setHasVoted] = useState(false);
@@ -451,77 +479,71 @@ const IntegrationCard = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2 }}
-      whileHover={{ y: -2, transition: { duration: 0.15 } }}
-      className="group relative flex flex-col h-full rounded-2xl overflow-hidden transition-colors"
+      variants={cardVariants}
+      whileHover={reduced ? undefined : { y: -3 }}
+      transition={{ duration: 0.18, ease: CARD_EASE }}
+      className="vyz-int-card group relative flex flex-col h-full rounded-xl overflow-hidden"
       style={{
-        background: isRoadmap ? "#F8FAFC" : "#FFFFFF",
-        border: `1px solid ${isActive ? "rgba(22,163,74,0.28)" : "#E6EDF5"}`,
-        boxShadow: "0 1px 2px rgba(11,18,32,0.04)",
+        background: isRoadmap ? "var(--vyz-surface-2)" : "var(--vyz-surface-1)",
+        border: `1px solid ${isActive ? STATUS.greenBorder : "var(--vyz-border)"}`,
+        // Sombra em camadas: ambient suave + key curta.
+        boxShadow: isActive
+          ? "0 1px 2px rgba(11,18,32,0.04), 0 12px 28px -18px rgba(22,163,74,0.22)"
+          : "0 1px 2px rgba(11,18,32,0.04)",
       }}
     >
       <div className="p-5 flex-1 flex flex-col">
         {/* Header row: Logo + Status */}
         <div className="flex items-start justify-between mb-3.5">
           <div
-            className="w-12 h-12 rounded-xl flex items-center justify-center bg-white p-2 overflow-hidden"
-            style={{ border: "1px solid #EEF2F7" }}
+            className="w-11 h-11 rounded-xl flex items-center justify-center bg-white p-2 overflow-hidden"
+            style={{ border: "1px solid var(--vyz-border-subtle)" }}
           >
             {integration.logo ? (
               <img src={integration.logo} alt={integration.name} className="w-full h-full object-contain" />
             ) : (
-              <span className="text-base font-bold" style={{ color: "#0B1220" }}>
+              <span className="text-base font-bold" style={{ color: "var(--vyz-text-primary)" }}>
                 {integration.logoText}
               </span>
             )}
           </div>
 
           {isActive && (
-            <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full" style={{ background: "#ECFDF3" }}>
-              <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#16A34A" }} />
-              <span className="text-[10px] font-semibold uppercase" style={{ color: "#16A34A", letterSpacing: "0.04em" }}>
+            <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full" style={{ background: STATUS.greenBg }}>
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: STATUS.green }} />
+              <span className="text-[10px] font-semibold uppercase" style={{ color: STATUS.green, letterSpacing: "0.04em" }}>
                 Conectado
               </span>
             </span>
           )}
           {isRoadmap && (
-            <span className="text-[10px] font-semibold px-2 py-1 rounded-full" style={{ background: "#F1F5F9", color: "#94A3B8" }}>
+            <span
+              className="text-[10px] font-semibold uppercase px-2 py-1 rounded-full"
+              style={{ background: "var(--vyz-surface-3)", color: "var(--vyz-text-muted)", letterSpacing: "0.04em" }}
+            >
               Em breve
             </span>
           )}
         </div>
 
-        {/* Name & Description */}
-        <h3 className="text-[15px] font-semibold mb-1 tracking-tight" style={{ color: "#0B1220" }}>{integration.name}</h3>
-        <p className="text-xs line-clamp-2 leading-relaxed" style={{ color: "#64748B" }}>{integration.description}</p>
+        {/* Name & Description — card limpo: features vão pro modal */}
+        <h3 className="text-[15px] font-semibold mb-1 tracking-tight" style={{ color: "var(--vyz-text-primary)" }}>
+          {integration.name}
+        </h3>
+        <p className="text-xs line-clamp-2 leading-relaxed" style={{ color: "var(--vyz-text-muted)" }}>
+          {integration.description}
+        </p>
 
-        {/* Feature pills (até 3 — resto vai pro modal) */}
-        {integration.features && !isRoadmap && (
-          <div className="flex flex-wrap gap-1.5 mt-3.5">
-            {integration.features.slice(0, 3).map((feature) => (
-              <span
-                key={feature}
-                className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium"
-                style={{ background: "#F8FAFC", color: "#64748B", border: "1px solid #EEF2F7" }}
-              >
-                {feature}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* Active: último evento (compacto) */}
+        {/* Active: indício de saúde — último evento (compacto) */}
         {isActive && lastEvent && (
           <div className="mt-3.5 flex items-center justify-between gap-2">
             <span className="flex items-center gap-1.5 min-w-0">
               <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: statusDot(lastEvent.status) }} />
-              <span className="text-[11px] truncate" style={{ color: "#64748B" }}>
+              <span className="text-[11px] truncate" style={{ color: "var(--vyz-text-muted)" }}>
                 {EVENT_LABELS[lastEvent.event_type || ""] || lastEvent.event_type || "Evento"}
               </span>
             </span>
-            <span className="text-[10px] tabular-nums shrink-0" style={{ color: "#94A3B8" }}>
+            <span className="text-[10px] tabular-nums shrink-0" style={{ color: "var(--vyz-text-soft)" }}>
               {formatDistanceToNow(new Date(lastEvent.created_at), { addSuffix: true, locale: ptBR })}
             </span>
           </div>
@@ -531,16 +553,16 @@ const IntegrationCard = ({
       </div>
 
       {/* Footer */}
-      <div className="px-5 py-3" style={{ borderTop: "1px solid #EEF2F7", background: "#FCFDFE" }}>
+      <div className="px-5 py-3" style={{ borderTop: "1px solid var(--vyz-border-subtle)", background: "var(--vyz-accent-soft-4)" }}>
         {isActive && (
           <div className="flex items-center justify-between">
-            <span className="text-[11px]" style={{ color: "#94A3B8" }}>
+            <span className="text-[11px]" style={{ color: "var(--vyz-text-soft)" }}>
               {eventCount !== undefined && eventCount > 0 ? `${eventCount} eventos este mês` : "Recebendo eventos"}
             </span>
             <button
               onClick={onManage}
-              className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors hover:bg-[#F1F5F9]"
-              style={{ color: "#475569" }}
+              className="vyz-int-btn-ghost inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg"
+              style={{ color: "var(--vyz-text)" }}
             >
               <Settings className="w-3.5 h-3.5" />
               Gerenciar
@@ -551,7 +573,7 @@ const IntegrationCard = ({
         {effectiveStatus === "available" && (
           <button
             onClick={onConnect}
-            className="w-full inline-flex items-center justify-center gap-2 h-9 rounded-lg text-xs font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] transition-colors"
+            className="vyz-int-btn-primary w-full inline-flex items-center justify-center gap-2 h-9 rounded-full text-xs font-semibold text-white"
           >
             <Plug className="w-3.5 h-3.5" />
             Conectar
@@ -560,16 +582,16 @@ const IntegrationCard = ({
 
         {isRoadmap && (
           <div className="flex items-center justify-between">
-            <span className="text-[11px] tabular-nums" style={{ color: "#94A3B8" }}>
-              <span className="font-semibold" style={{ color: "#0B1220" }}>{votes}</span> votos
+            <span className="text-[11px] tabular-nums" style={{ color: "var(--vyz-text-soft)" }}>
+              <span className="font-semibold" style={{ color: "var(--vyz-text-primary)" }}>{votes}</span> votos
             </span>
             <button
               onClick={handleVote}
               disabled={hasVoted}
-              className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg border transition-colors disabled:cursor-default"
+              className="vyz-int-btn-vote inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg border disabled:cursor-default"
               style={hasVoted
-                ? { background: "#ECFDF3", color: "#16A34A", borderColor: "rgba(22,163,74,0.2)" }
-                : { borderColor: "#E6EDF5", color: "#475569" }}
+                ? { background: STATUS.greenBg, color: STATUS.green, borderColor: STATUS.greenBorder }
+                : { borderColor: "var(--vyz-border)", color: "var(--vyz-text)" }}
             >
               <ThumbsUp className={`w-3 h-3 ${hasVoted ? "fill-current" : ""}`} />
               {hasVoted ? "Votado" : "Votar"}
@@ -580,6 +602,49 @@ const IntegrationCard = ({
     </motion.div>
   );
 };
+
+// ── Section header (rótulo técnico + sub) ───────────────────────────
+const SectionHeader = ({
+  icon: Icon,
+  iconColor,
+  label,
+  labelColor,
+  count,
+  sub,
+  dot,
+  trailing,
+}: {
+  icon?: React.ElementType;
+  iconColor?: string;
+  label: string;
+  labelColor?: string;
+  count?: number;
+  sub: string;
+  dot?: string;
+  trailing?: React.ReactNode;
+}) => (
+  <div className="flex items-end justify-between mb-4 flex-wrap gap-3">
+    <div>
+      <div className="flex items-center gap-2 mb-1">
+        {dot && <span className="w-1.5 h-1.5 rounded-full" style={{ background: dot }} />}
+        {Icon && <Icon className="h-3.5 w-3.5" style={{ color: iconColor || "var(--vyz-accent)" }} />}
+        <h2
+          className="text-[11px] font-semibold uppercase"
+          style={{ color: labelColor || "var(--vyz-text-muted)", letterSpacing: "0.06em" }}
+        >
+          {label}
+        </h2>
+        {count !== undefined && (
+          <span className="text-[10px] tabular-nums" style={{ color: "var(--vyz-text-soft)" }}>
+            {count}
+          </span>
+        )}
+      </div>
+      <p className="text-[13px]" style={{ color: "var(--vyz-text-soft)" }}>{sub}</p>
+    </div>
+    {trailing}
+  </div>
+);
 
 // ── Type for integration config ──────────────────────────────────────
 interface IntegrationConfig {
@@ -594,6 +659,7 @@ const Integracoes = () => {
   const { needsUpgrade } = usePlan();
   const { companyId } = useAuth();
   const navigate = useNavigate();
+  const reduced = useReducedMotion() ?? false;
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<IntegrationCategory>("all");
@@ -767,6 +833,20 @@ const Integracoes = () => {
   const roadmapIntegrations = filteredIntegrations.filter(i => getEffectiveStatus(i) === "roadmap");
 
   const connectedCount = allIntegrations.filter(i => getEffectiveStatus(i) === "active").length;
+  const noResults = filteredIntegrations.length === 0;
+  const clearFilters = () => { setSearchQuery(""); setActiveFilter("all"); };
+
+  // Grid wrapper com stagger interno dos cards (não replica o fade da página).
+  const Grid = ({ children }: { children: React.ReactNode }) => (
+    <motion.div
+      variants={gridVariants}
+      initial={reduced ? false : "hidden"}
+      animate="show"
+      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+    >
+      {children}
+    </motion.div>
+  );
 
   return (
     <>
@@ -775,28 +855,34 @@ const Integracoes = () => {
         <div className="flex flex-col gap-4">
           {/* Mini stats */}
           <div className="flex items-center gap-2.5 flex-wrap">
-            <div className="flex items-center gap-2 rounded-xl px-3.5 py-2" style={{ background: "#FFFFFF", border: "1px solid #E6EDF5", boxShadow: "0 1px 2px rgba(11,18,32,0.04)" }}>
-              <span className="text-[11px] font-semibold uppercase" style={{ color: "#64748B", letterSpacing: "0.04em" }}>Conectadas</span>
-              <span className="text-sm font-bold tabular-nums flex items-center gap-1.5" style={{ color: "#0B1220" }}>
+            <div
+              className="flex items-center gap-2 rounded-xl px-3.5 py-2"
+              style={{ background: "var(--vyz-surface-1)", border: "1px solid var(--vyz-border)", boxShadow: "0 1px 2px rgba(11,18,32,0.04)" }}
+            >
+              <span className="text-[11px] font-semibold uppercase" style={{ color: "var(--vyz-text-muted)", letterSpacing: "0.04em" }}>Conectadas</span>
+              <span className="text-sm font-bold tabular-nums flex items-center gap-1.5" style={{ color: "var(--vyz-text-primary)" }}>
                 {connectedCount}
-                {connectedCount > 0 && <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#16A34A" }} />}
+                {connectedCount > 0 && <span className="w-1.5 h-1.5 rounded-full" style={{ background: STATUS.green }} />}
               </span>
             </div>
-            <div className="flex items-center gap-2 rounded-xl px-3.5 py-2" style={{ background: "#FFFFFF", border: "1px solid #E6EDF5", boxShadow: "0 1px 2px rgba(11,18,32,0.04)" }}>
-              <span className="text-[11px] font-semibold uppercase" style={{ color: "#64748B", letterSpacing: "0.04em" }}>Eventos no mês</span>
-              <span className="text-sm font-bold tabular-nums" style={{ color: "#0B1220" }}>{webhookStats.totalCount}</span>
+            <div
+              className="flex items-center gap-2 rounded-xl px-3.5 py-2"
+              style={{ background: "var(--vyz-surface-1)", border: "1px solid var(--vyz-border)", boxShadow: "0 1px 2px rgba(11,18,32,0.04)" }}
+            >
+              <span className="text-[11px] font-semibold uppercase" style={{ color: "var(--vyz-text-muted)", letterSpacing: "0.04em" }}>Eventos no mês</span>
+              <span className="text-sm font-bold tabular-nums" style={{ color: "var(--vyz-text-primary)" }}>{webhookStats.totalCount}</span>
             </div>
             {webhookStats.errorCount > 0 && (
-              <div className="flex items-center gap-2 rounded-xl px-3.5 py-2" style={{ background: "#FEF2F2", border: "1px solid rgba(220,38,38,0.18)" }}>
-                <span className="text-[11px] font-semibold uppercase" style={{ color: "#DC2626", letterSpacing: "0.04em" }}>Erros</span>
-                <span className="text-sm font-bold tabular-nums" style={{ color: "#DC2626" }}>{webhookStats.errorCount}</span>
+              <div className="flex items-center gap-2 rounded-xl px-3.5 py-2" style={{ background: "#FEF2F2", border: `1px solid ${STATUS.red}2e` }}>
+                <span className="text-[11px] font-semibold uppercase" style={{ color: STATUS.red, letterSpacing: "0.04em" }}>Erros</span>
+                <span className="text-sm font-bold tabular-nums" style={{ color: STATUS.red }}>{webhookStats.errorCount}</span>
               </div>
             )}
           </div>
 
           {/* Filtros + busca */}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex gap-1 p-1 rounded-xl overflow-x-auto no-scrollbar" style={{ background: "#F1F5F9" }}>
+            <div className="flex gap-1 p-1 rounded-xl overflow-x-auto no-scrollbar" style={{ background: "var(--vyz-surface-2)" }}>
               {FILTER_TABS.map(tab => {
                 const TabIcon = tab.icon;
                 const active = activeFilter === tab.id;
@@ -804,10 +890,11 @@ const Integracoes = () => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveFilter(tab.id)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors"
+                    aria-pressed={active}
+                    className="vyz-int-tab flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap"
                     style={active
-                      ? { background: "#FFFFFF", color: "#0B1220", boxShadow: "0 1px 2px rgba(11,18,32,0.06)" }
-                      : { color: "#64748B" }}
+                      ? { background: "var(--vyz-surface-1)", color: "var(--vyz-text-primary)", boxShadow: "0 1px 2px rgba(11,18,32,0.06)" }
+                      : { color: "var(--vyz-text-muted)" }}
                   >
                     <TabIcon className="w-3.5 h-3.5" />
                     {tab.label}
@@ -818,14 +905,15 @@ const Integracoes = () => {
 
             {/* Busca */}
             <div className="relative w-full sm:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "#94A3B8" }} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--vyz-text-soft)" }} />
               <input
                 type="text"
                 placeholder="Buscar integração..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 h-9 text-sm rounded-lg outline-none transition-colors focus:border-[#2563EB]"
-                style={{ background: "#FFFFFF", border: "1px solid #E6EDF5", color: "#0B1220" }}
+                aria-label="Buscar integração"
+                className="vyz-int-search w-full pl-9 pr-3 h-9 text-sm rounded-lg outline-none"
+                style={{ background: "var(--vyz-surface-1)", border: "1px solid var(--vyz-border)", color: "var(--vyz-text-primary)" }}
               />
             </div>
           </div>
@@ -834,21 +922,46 @@ const Integracoes = () => {
         {/* ── Content ────────────────────────────────────────── */}
         <div className="space-y-9">
 
+          {/* ── Empty / sem resultado ──────────────────────── */}
+          {noResults && (
+            <div
+              className="rounded-xl flex flex-col items-center text-center px-6 py-14"
+              style={{ background: "var(--vyz-surface-1)", border: "1px dashed var(--vyz-border-strong)" }}
+            >
+              <div
+                className="w-11 h-11 rounded-xl flex items-center justify-center mb-4"
+                style={{ background: "var(--vyz-surface-2)" }}
+              >
+                <SearchX className="w-5 h-5" style={{ color: "var(--vyz-text-soft)" }} />
+              </div>
+              <h3 className="text-[15px] font-semibold tracking-tight" style={{ color: "var(--vyz-text-primary)" }}>
+                Nenhuma integração encontrada
+              </h3>
+              <p className="text-[13px] mt-1 max-w-sm" style={{ color: "var(--vyz-text-muted)" }}>
+                {searchQuery
+                  ? <>Nada bate com <span className="font-medium" style={{ color: "var(--vyz-text)" }}>"{searchQuery}"</span> neste filtro.</>
+                  : "Não há integrações neste filtro."}
+              </p>
+              <button
+                onClick={clearFilters}
+                className="vyz-int-btn-ghost mt-4 inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border"
+                style={{ borderColor: "var(--vyz-border)", color: "var(--vyz-accent)" }}
+              >
+                Limpar busca e filtros
+              </button>
+            </div>
+          )}
+
           {/* ── Connected Integrations ──────────────────────── */}
           {activeIntegrations.length > 0 && (
             <section>
-              <div className="flex items-end justify-between mb-4">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#16A34A" }} />
-                    <h2 className="text-[11px] font-semibold uppercase" style={{ color: "#16A34A", letterSpacing: "0.06em" }}>Conectadas</h2>
-                  </div>
-                  <p className="text-[13px]" style={{ color: "#94A3B8" }}>
-                    {activeIntegrations.length} {activeIntegrations.length === 1 ? "integração ativa" : "integrações ativas"}
-                  </p>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <SectionHeader
+                dot={STATUS.green}
+                label="Conectadas"
+                labelColor={STATUS.green}
+                sub={`${activeIntegrations.length} ${activeIntegrations.length === 1 ? "integração ativa, recebendo eventos" : "integrações ativas, recebendo eventos"}`}
+              />
+              <Grid>
                 {activeIntegrations.map(integration => (
                   <IntegrationCard
                     key={integration.id}
@@ -857,9 +970,10 @@ const Integracoes = () => {
                     lastEvent={webhookStats.lastByPlatform[integration.id]}
                     eventCount={webhookStats.countByPlatform[integration.id]}
                     onManage={() => handleManageIntegration(integration.id)}
+                    reduced={reduced}
                   />
                 ))}
-              </div>
+              </Grid>
             </section>
           )}
 
@@ -871,59 +985,46 @@ const Integracoes = () => {
                   const groupItems = availableIntegrations.filter((i) => i.category === groupKey);
                   if (groupItems.length === 0) return null;
                   const meta = GROUP_META[groupKey];
-                  const GroupIcon = meta.icon;
                   return (
                     <section key={groupKey}>
-                      <div className="flex items-end justify-between mb-4">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <GroupIcon className="h-3.5 w-3.5" style={{ color: "#2563EB" }} />
-                            <h2 className="text-[11px] font-semibold uppercase" style={{ color: "#64748B", letterSpacing: "0.06em" }}>
-                              {meta.label}
-                            </h2>
-                            <span className="text-[10px] tabular-nums" style={{ color: "#94A3B8" }}>
-                              {groupItems.length}
-                            </span>
-                          </div>
-                          <p className="text-[13px]" style={{ color: "#94A3B8" }}>{meta.sub}</p>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                      <SectionHeader
+                        icon={meta.icon}
+                        label={meta.label}
+                        count={groupItems.length}
+                        sub={meta.sub}
+                      />
+                      <Grid>
                         {groupItems.map((integration) => (
                           <IntegrationCard
                             key={integration.id}
                             integration={integration}
                             effectiveStatus="available"
                             onConnect={() => handleConnect(integration.id)}
+                            reduced={reduced}
                           />
                         ))}
-                      </div>
+                      </Grid>
                     </section>
                   );
                 })}
               </div>
             ) : (
               <section>
-                <div className="flex items-end justify-between mb-4">
-                  <div>
-                    <h2 className="text-[11px] font-semibold uppercase mb-1" style={{ color: "#64748B", letterSpacing: "0.06em" }}>
-                      {GROUP_META[activeFilter as Exclude<IntegrationCategory, "all">]?.label ?? "Disponíveis"}
-                    </h2>
-                    <p className="text-[13px]" style={{ color: "#94A3B8" }}>
-                      {availableIntegrations.length} {availableIntegrations.length === 1 ? "plataforma pronta" : "plataformas prontas"} para conectar
-                    </p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <SectionHeader
+                  label={GROUP_META[activeFilter as Exclude<IntegrationCategory, "all">]?.label ?? "Disponíveis"}
+                  sub={`${availableIntegrations.length} ${availableIntegrations.length === 1 ? "plataforma pronta" : "plataformas prontas"} para conectar`}
+                />
+                <Grid>
                   {availableIntegrations.map((integration) => (
                     <IntegrationCard
                       key={integration.id}
                       integration={integration}
                       effectiveStatus="available"
                       onConnect={() => handleConnect(integration.id)}
+                      reduced={reduced}
                     />
                   ))}
-                </div>
+                </Grid>
               </section>
             )
           )}
@@ -931,19 +1032,11 @@ const Integracoes = () => {
           {/* ── Atividade dos webhooks ─────────────────── */}
           {webhookLogs.length > 0 && (
             <section>
-              <div className="flex items-end justify-between mb-4">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <Activity className="h-3.5 w-3.5" style={{ color: "#2563EB" }} />
-                    <h2 className="text-[11px] font-semibold uppercase" style={{ color: "#64748B", letterSpacing: "0.06em" }}>
-                      Atividade
-                    </h2>
-                  </div>
-                  <p className="text-[13px]" style={{ color: "#94A3B8" }}>
-                    Eventos recebidos dos seus webhooks
-                  </p>
-                </div>
-              </div>
+              <SectionHeader
+                icon={Activity}
+                label="Atividade"
+                sub="Eventos recebidos dos seus webhooks"
+              />
               <WebhookHeartbeat
                 logs={webhookLogs}
                 stats={webhookStats}
@@ -956,49 +1049,49 @@ const Integracoes = () => {
           {/* ── Roadmap ──────────────────────────────────────── */}
           {roadmapIntegrations.length > 0 && (
             <section>
-              <div className="flex items-end justify-between mb-4 flex-wrap gap-3">
-                <div>
-                  <h2 className="text-[11px] font-semibold uppercase mb-1" style={{ color: "#64748B", letterSpacing: "0.06em" }}>
-                    Em breve
-                  </h2>
-                  <p className="text-[13px]" style={{ color: "#94A3B8" }}>
-                    Vote nas próximas integrações que quer ver no Vyzon
-                  </p>
-                </div>
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full" style={{ background: "rgba(37,99,235,0.08)", color: "#2563EB" }}>
-                  <ThumbsUp className="w-3 h-3" />
-                  Votação aberta
-                </span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <SectionHeader
+                label="Em breve"
+                sub="Vote nas próximas integrações que quer ver no Vyzon"
+                trailing={
+                  <span
+                    className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full"
+                    style={{ background: "var(--vyz-accent-soft-8)", color: "var(--vyz-accent)" }}
+                  >
+                    <ThumbsUp className="w-3 h-3" />
+                    Votação aberta
+                  </span>
+                }
+              />
+              <Grid>
                 {roadmapIntegrations.map(integration => (
                   <IntegrationCard
                     key={integration.id}
                     integration={integration}
                     effectiveStatus="roadmap"
+                    reduced={reduced}
                   />
                 ))}
-              </div>
+              </Grid>
             </section>
           )}
 
           {/* ── Solicitar integração ──────────────────────── */}
-          <div className="rounded-2xl p-5 sm:p-6" style={{ background: "#F8FAFC", border: "1px dashed #D8E2F0" }}>
+          <div className="rounded-xl p-5 sm:p-6" style={{ background: "var(--vyz-surface-2)", border: "1px dashed var(--vyz-border-strong)" }}>
             <div className="flex items-center gap-4 flex-wrap">
-              <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(37,99,235,0.08)" }}>
-                <Puzzle className="w-5 h-5" style={{ color: "#2563EB" }} />
+              <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: "var(--vyz-accent-soft-8)" }}>
+                <Puzzle className="w-5 h-5" style={{ color: "var(--vyz-accent)" }} />
               </div>
               <div className="flex-1 min-w-[240px]">
-                <h3 className="font-semibold text-[15px] tracking-tight" style={{ color: "#0B1220" }}>
+                <h3 className="font-semibold text-[15px] tracking-tight" style={{ color: "var(--vyz-text-primary)" }}>
                   Precisa de outra integração?
                 </h3>
-                <p className="text-[13px] mt-0.5" style={{ color: "#64748B" }}>
+                <p className="text-[13px] mt-0.5" style={{ color: "var(--vyz-text-muted)" }}>
                   Conte qual plataforma você usa, priorizamos as mais votadas
                 </p>
               </div>
               <button
-                className="shrink-0 inline-flex items-center gap-1.5 h-9 px-4 rounded-lg text-xs font-semibold transition-colors hover:bg-[#F1F5F9]"
-                style={{ border: "1px solid #E6EDF5", color: "#2563EB", background: "#FFFFFF" }}
+                className="vyz-int-btn-ghost shrink-0 inline-flex items-center gap-1.5 h-9 px-4 rounded-lg text-xs font-semibold border"
+                style={{ borderColor: "var(--vyz-border)", color: "var(--vyz-accent)", background: "var(--vyz-surface-1)" }}
               >
                 Solicitar integração
                 <ArrowUpRight className="w-3.5 h-3.5" />
@@ -1007,12 +1100,12 @@ const Integracoes = () => {
           </div>
 
           {/* ── Footer ───────────────────────────────────────── */}
-          <div className="flex items-center justify-between text-[11px] pt-5 flex-wrap gap-2" style={{ borderTop: "1px solid #EEF2F7", color: "#94A3B8" }}>
+          <div className="flex items-center justify-between text-[11px] pt-5 flex-wrap gap-2" style={{ borderTop: "1px solid var(--vyz-border-subtle)", color: "var(--vyz-text-soft)" }}>
             <span className="flex items-center gap-1.5">
               <Shield className="h-3 w-3" />
               Dados criptografados e protegidos
             </span>
-            <Link to="/politica-privacidade" className="transition-colors hover:underline" style={{ color: "#2563EB" }}>
+            <Link to="/politica-privacidade" className="transition-colors hover:underline" style={{ color: "var(--vyz-accent)" }}>
               Política de Privacidade
             </Link>
           </div>

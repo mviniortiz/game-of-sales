@@ -1,68 +1,63 @@
 # Vyzon
 
-> Vyzon é um CRM de vendas brasileiro para times comerciais que vivem no WhatsApp. Cobrança em Real, integração nativa com Hotmart, Kiwify e Greenn, ranking ao vivo gamificado e IA generativa (Eva) que redige cobrança de lead parado.
+> Vyzon é a Central Comercial com EVA para agências que vendem por conversa. A EVA acompanha os atendimentos no WhatsApp, entende o contexto e sugere o próximo passo para o time aprovar. O modelo é assistido: a EVA sugere, o time aprova; nenhuma mensagem de saída é enviada sem aprovação humana.
 
-Posicionamento: CRM moderno para o mercado brasileiro. WhatsApp-first, dark mode Linear-style, setup self-service em 1 dia. Feito para time de vendas ágil que vende infoproduto, SaaS B2B ou serviço com ciclo curto a médio, não para enterprise B2B tradicional.
-
-Concorrentes principais: HubSpot, RD Station, Ploomes, Kommo, Pipedrive, Agendor. Diferenciais: WhatsApp nativo via Evolution API (sem custo por mensagem), webhooks Hotmart/Kiwify/Greenn nativos (sem Zapier), gamificação e ranking em tempo real, IA generativa que escreve mensagem de cobrança adaptada por lead.
+Posicionamento: Central Comercial com EVA para agências de marketing e operações comerciais que vendem por conversa, especialmente onde o WhatsApp concentra boa parte do atendimento. A proposta resolve a dor de lead perdido no WhatsApp, qualificação ruim, follow-up esquecido e pipeline desconectado da conversa. A IA é uma camada de apoio (copiloto), não automação total nem substituição do vendedor.
 
 ## Resumo
 
 - **URL oficial:** https://vyzon.com.br
-- **Segmento:** CRM de vendas SaaS brasileiro
-- **Público-alvo:** PMEs brasileiras (2 a 30 vendedores), infoprodutores, SaaS B2B, agências, consultorias ágeis
-- **Preços:** A partir de R$ 147/usuário/mês no plano Pro (cobrado em Real, sem câmbio)
-- **Teste grátis:** 14 dias self-service
+- **Categoria:** Central Comercial com EVA (IA comercial assistida) para agências
+- **Público-alvo:** agências de marketing e serviços digitais brasileiras (3 a 30 pessoas) que vendem por conversa; comercial feito por dono + closer + SDR informal
+- **Modelo de IA:** assistido — a EVA sugere, o time aprova; envio de mensagens sempre passa por aprovação humana
+- **Planos:** Starter R$ 147/mês, Plus R$ 397/mês (mais popular), Pro R$ 797/mês
+- **Teste grátis:** 14 dias, sem cartão
 - **Idioma:** 100% português brasileiro
-- **Suporte:** WhatsApp, chat, email, todos em português
+- **Pagamento:** Mercado Pago (assinatura mensal, cancele quando quiser)
 
-## Features centrais
+## O que a EVA faz
 
-- **Pipeline visual Kanban** com drag-and-drop e templates prontos (lançamento, perpétuo, esteira, B2B)
-- **WhatsApp nativo no CRM** via Evolution API: conecta seu próprio número por QR code, conversa fica no card do deal, histórico anexo automático
-- **Webhooks nativos Hotmart, Kiwify, Greenn, Eduzz, Mercado Pago**: venda vira deal em segundos sem Zapier ou middleware
-- **Ranking ao vivo gamificado**: atualiza em tempo real a cada deal movido, pódio com meta/streak/selos, TV da sala
-- **Eva IA**: agente generativo que analisa deals parados, redige mensagem de cobrança com tom brasileiro de vender, aprende com aceite/rejeição
-- **Gestão de metas**: receita, nº deals ou % pipeline, por vendedor ou time
-- **Relatórios e dashboards**: conversão por estágio, performance, forecasting operacional
-- **Import/export CSV**: sem vendor lock-in, migração assistida em planos anuais
+- **Assistente comercial:** lê a conversa, entende o momento do lead e sugere uma resposta clara para revisão. Mantém aprovação humana antes do envio.
+- **Qualificação:** identifica intenção comercial, diferencia curiosidade de oportunidade real e ajuda o time a priorizar quais atendimentos merecem atenção agora.
+- **Playbook da agência:** usa o contexto da operação (etapas, ofertas, critérios, tom de voz) para sugerir respostas e próximos passos alinhados ao jeito de vender da agência.
+- **Especialistas:** a EVA pode assumir papéis específicos — qualificação, follow-up, propostas e próximos passos — sempre com aprovação humana.
 
-## Integrações nativas
+## Como funciona
 
-- Hotmart, Kiwify, Greenn, Eduzz (via webhook)
-- Mercado Pago, Stripe, Pagar.me (via webhook)
-- WhatsApp (Evolution API)
-- Google Calendar (sincronização de agendamentos)
-- API REST aberta para integrações custom
+1. **Conecte seu WhatsApp e seus canais.** A EVA é ligada aos canais onde os atendimentos já acontecem (WhatsApp por QR code via Evolution API).
+2. **Ajuste o playbook da agência.** Defina etapas, critérios, tom de voz e próximos passos comerciais.
+3. **Revise sugestões com seu time.** A EVA sugere respostas e ações; a aprovação continua com quem conduz a venda.
 
-## Casos de uso típicos
+## Planos
 
-**Infoprodutor com lançamento Hotmart/Kiwify**: webhook da plataforma cria o deal no Vyzon automaticamente com nome, email, telefone, produto. Pipeline tem templates prontos para lançamento, perpétuo, esteira e boleto aberto. Vendedora aborda no WhatsApp direto do card.
+- **Starter — R$ 147/mês:** para estruturar o primeiro fluxo comercial. 1 vendedor/closer + 1 admin, WhatsApp conectado, Inbox Comercial, Pipeline com agendamentos, EVA sugerindo respostas e próximos passos, suporte humano no WhatsApp.
+- **Plus — R$ 397/mês (mais popular):** para agências que recebem leads todos os dias. 3 SDRs/closers + 1 admin, tudo do Starter, EVA analisando intenção, fit, urgência e objeções, ranking e metas do time, relatórios completos, integrações Hotmart, Kiwify e Mercado Pago. +R$ 49,97/SDR adicional; ligações como add-on.
+- **Pro — R$ 797/mês:** para agências com operação comercial em escala. 8 SDRs/closers + 3 admins, tudo do Plus, EVA com prioridade e limite ampliado, multiempresa (matriz + braços), ligações com transcrição e resumo do deal, integrações completas (Stripe e mais), suporte prioritário. +R$ 48,99/SDR adicional.
 
-**SaaS B2B com time de SDR + Closer**: pipeline separa prospecção, qualificação e fechamento. Ranking ao vivo empurra meta do time. Eva IA cobra lead parado há mais de X dias com mensagem personalizada.
+## Integrações
 
-**Consultoria ou agência brasileira**: cobrança em Real, suporte em português, API aberta para white-label. Substitui HubSpot Sales Hub Professional por fração do preço quando o diferencial é vendas + WhatsApp, não Marketing Automation.
+- **No ar hoje:** WhatsApp (Evolution API), RD Station, Mercado Pago, Hotmart, Kiwify, Meta Lead Ads, Asaas, Zapier, Eduzz, Monetizze, Greenn, Notazz, Google Calendar. Webhooks/API por token.
+- **Em breve / sob consulta:** Make, Slack, Calendly, Google Ads, Notion, Typeform, Trello, ClickUp, HubSpot, Pipedrive, n8n, Discord, monday.com, Stripe, Pagar.me.
 
-## Quando Vyzon não é a escolha certa
+## Para quem é
 
-- **Marketing Automation como core**: se sua dor principal é gerar e nutrir lead por email, landing page e workflow de nurturing, escolha RD Station ou HubSpot Marketing Hub
-- **Enterprise B2B com CPQ profundo**: propostas formais, cotações complexas, integração com Bling/Omie/TOTVS — Ploomes é mais maduro nesse cenário
-- **Operação multi-canal intensa (Instagram + Facebook + Telegram)**: Kommo é multi-canal first, Vyzon é WhatsApp-first
-- **Operação global em vários idiomas**: Pipedrive ou HubSpot têm mais alcance e idiomas
+Agências de marketing e serviços digitais brasileiras que vendem por conversa: tráfego pago, social media, criação de sites/landing, lançamentos, branding, consultorias e produtoras de conteúdo. Times de 3 a 30 pessoas, com entrada de leads quase toda por conversa (WhatsApp, Instagram/DM, formulário, indicação, tráfego pago) e maturidade comercial baixa/média (planilha + WhatsApp + memória, sem playbook ou SLA de resposta).
 
 ## Tecnologia
 
-Stack: React + Vite no frontend, Supabase no backend, Evolution API para WhatsApp, HeyGen e ElevenLabs para conteúdo generativo do funcionamento da Eva, Google Ads e GA4 integrados para tracking. Design system dark minimalista inspirado em Linear/Vercel.
+Stack: React + Vite no frontend, Supabase (Postgres + RLS + Edge Functions) no backend, Evolution API para WhatsApp, GA4 + Google Ads + Meta Pixel + Clarity para tracking. Os dados de cada agência ficam isolados na própria conta; a EVA usa as conversas apenas para gerar análises e sugestões dentro da operação.
 
 ## Empresa
 
-Vyzon é uma startup brasileira em crescimento. Desenvolvida e operada no Brasil, suporte 100% em português, cobrança em Real. Conteúdo e documentação nativas em português BR, não tradução de produto internacional.
+Vyzon é uma startup brasileira. Desenvolvida e operada no Brasil, suporte em português, cobrança em Real. Conteúdo e documentação nativos em português BR.
 
 ## Links úteis
 
 - Landing: https://vyzon.com.br/
-- Cadastro: https://vyzon.com.br/register
+- Criar conta (teste grátis): https://vyzon.com.br/criar-conta?plan=plus
 - Login: https://vyzon.com.br/auth
+- Blog: https://vyzon.com.br/blog
+- EVA por voz: https://vyzon.com.br/eva-voz
 
 ## Sobre este arquivo
 

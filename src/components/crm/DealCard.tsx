@@ -48,13 +48,15 @@ interface DealCardProps {
   tags?: Tag[];
 }
 
-// F5P.2 — Mapeamento visual de temperatura EVA pros badges
-// LP-PIPE.1: tons duais light-first (os -300 eram da era dark).
-const EVA_TEMP_STYLES: Record<string, { label: string; bg: string; color: string }> = {
-  quente:  { label: "Quente", bg: "bg-rose-500/10",    color: "text-rose-600 dark:text-rose-300" },
-  morno:   { label: "Morno",  bg: "bg-amber-500/10",   color: "text-amber-600 dark:text-amber-300" },
-  frio:    { label: "Frio",   bg: "bg-sky-500/10",     color: "text-sky-600 dark:text-sky-300" },
-  unknown: { label: "EVA não analisou", bg: "bg-muted/40", color: "text-muted-foreground" },
+// LP-PIPE.2 "Fio da Conversa" — a leitura da EVA é texto curto, NÃO o conteúdo
+// da mensagem. Deriva da temperatura quando não há proxima_acao explícita.
+// REGRA DE PRIVACIDADE: nunca exibir trecho de mensagem do cliente — só a
+// interpretação que a EVA já produziu (temperature/proximaAcao/isStale).
+const EVA_DERIVED_READ: Record<string, string> = {
+  quente: "Pronto pra avançar",
+  morno: "Aquecendo",
+  frio: "Esfriando",
+  unknown: "Aguardando leitura",
 };
 
 // F5P.3 — Rotting status (visual mais sutil: borda âmbar discreta, sem rose
@@ -174,6 +176,14 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
   };
 
   const isBeingDragged = isDragging || isSortableDragging;
+
+  // LP-PIPE.2 — "ao vivo": última mensagem nas últimas 24h (sinal verde discreto).
+  const isLive = (() => {
+    const ts = context?.lastMessageAt;
+    if (!ts) return false;
+    const diff = Date.now() - new Date(ts).getTime();
+    return diff >= 0 && diff < 24 * 60 * 60 * 1000;
+  })();
 
   const daysSince = deal.updated_at
     ? differenceInDays(new Date(), new Date(deal.updated_at)) : 0;
@@ -595,48 +605,80 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
           <GripVertical className="absolute -left-1 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
         )}
 
-        {/* ── Row 1: Title + avatar ─────────────────────────── */}
-        <div className="flex items-start justify-between gap-2 mb-1">
-          {canInlineEdit && editingField === "title" ? (
-            <input
-              ref={inputRef}
-              value={editValue}
-              onChange={handleTextInputChange}
-              onKeyDown={handleEditKeyDown}
-              onBlur={saveField}
-              onClick={e => e.stopPropagation()}
-              onMouseDown={e => e.stopPropagation()}
-              onPointerDown={e => e.stopPropagation()}
-              disabled={isSaving}
-              className={`${inlineInputClass} text-[13px] font-semibold leading-snug flex-1`}
-              autoFocus
-            />
-          ) : canInlineEdit ? (
-            <h4
-              className="font-semibold text-foreground text-[13.5px] leading-snug line-clamp-2 flex-1 group/title inline-flex items-start gap-1 cursor-text rounded hover:bg-muted/40 transition-colors px-0.5 -mx-0.5 tracking-tight"
-              onClick={e => startEditing("title", e)}
-              onMouseDown={e => e.stopPropagation()}
-              onPointerDown={e => e.stopPropagation()}
-            >
-              <span className="flex-1">{deal.title}</span>
-              <Pencil className="h-2.5 w-2.5 text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity mt-0.5 flex-shrink-0" />
-            </h4>
-          ) : (
-            <h4 className="font-semibold text-foreground text-[13.5px] leading-snug line-clamp-2 flex-1 tracking-tight">
-              {deal.title}
-            </h4>
-          )}
-
-          <div className="flex items-center gap-1 flex-shrink-0">
-            {deal.is_hot && (
-              <Flame className="h-3.5 w-3.5 text-orange-500 dark:text-orange-400" />
+        {/* ── Row 1: Título + valor (LP-PIPE.2 layout editorial) ─── */}
+        <div className="flex items-start justify-between gap-2.5 mb-1">
+          {/* Esquerda: ponto "ao vivo" + título */}
+          <div className="flex items-start gap-1.5 flex-1 min-w-0">
+            {isLive && (
+              <span
+                className="mt-[5px] h-1.5 w-1.5 rounded-full flex-shrink-0"
+                style={{ backgroundColor: "var(--lp-live, #008a52)" }}
+                title="Conversa ativa nas últimas 24h"
+                aria-label="Conversa ativa"
+              />
             )}
-            <Avatar className={`h-5 w-5 ring-1 ${deal.assignee_outside_company ? "ring-rose-500/40" : "ring-border"}`}>
-              <AvatarImage src={deal.profiles?.avatar_url || undefined} />
-              <AvatarFallback className={`text-[9px] font-semibold ${deal.assignee_outside_company ? "bg-rose-500/10 text-rose-600 dark:text-rose-300" : "bg-muted text-muted-foreground"}`}>
-                {deal.assignee_outside_company ? "!" : getInitials(deal.profiles?.nome || "")}
-              </AvatarFallback>
-            </Avatar>
+            {canInlineEdit && editingField === "title" ? (
+              <input
+                ref={inputRef}
+                value={editValue}
+                onChange={handleTextInputChange}
+                onKeyDown={handleEditKeyDown}
+                onBlur={saveField}
+                onClick={e => e.stopPropagation()}
+                onMouseDown={e => e.stopPropagation()}
+                onPointerDown={e => e.stopPropagation()}
+                disabled={isSaving}
+                className={`${inlineInputClass} text-[13px] font-semibold leading-snug flex-1`}
+                autoFocus
+              />
+            ) : canInlineEdit ? (
+              <h4
+                className="font-semibold text-slate-900 dark:text-foreground text-[13.5px] leading-snug line-clamp-2 flex-1 group/title inline-flex items-start gap-1 cursor-text rounded hover:bg-muted/40 transition-colors px-0.5 -mx-0.5 tracking-tight"
+                onClick={e => startEditing("title", e)}
+                onMouseDown={e => e.stopPropagation()}
+                onPointerDown={e => e.stopPropagation()}
+              >
+                <span className="flex-1">{deal.title}</span>
+                <Pencil className="h-2.5 w-2.5 text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity mt-0.5 flex-shrink-0" />
+              </h4>
+            ) : (
+              <h4 className="font-semibold text-slate-900 dark:text-foreground text-[13.5px] leading-snug line-clamp-2 flex-1 tracking-tight">
+                {deal.title}
+              </h4>
+            )}
+          </div>
+
+          {/* Direita: valor em mono/tabular (hero discreto, alinhado ao título) */}
+          <div className="flex-shrink-0">
+            {canInlineEdit && editingField === "value" ? (
+              <input
+                ref={inputRef}
+                value={editValue}
+                onChange={handleValueInputChange}
+                onKeyDown={handleEditKeyDown}
+                onBlur={saveField}
+                onClick={e => e.stopPropagation()}
+                onMouseDown={e => e.stopPropagation()}
+                onPointerDown={e => e.stopPropagation()}
+                disabled={isSaving}
+                className={`${inlineInputClass} text-[14px] font-bold tabular-nums w-28 text-right`}
+                autoFocus
+              />
+            ) : canInlineEdit ? (
+              <button
+                className="text-[14px] font-bold text-slate-900 dark:text-foreground tabular-nums tracking-tight leading-snug group/value inline-flex items-center gap-1 cursor-text rounded hover:bg-muted/40 transition-colors px-0.5 -mx-0.5"
+                onClick={e => startEditing("value", e)}
+                onMouseDown={e => e.stopPropagation()}
+                onPointerDown={e => e.stopPropagation()}
+              >
+                {formatCurrency(deal.value)}
+                <Pencil className="h-2.5 w-2.5 text-muted-foreground opacity-0 group-hover/value:opacity-100 transition-opacity flex-shrink-0" />
+              </button>
+            ) : (
+              <span className="text-[14px] font-bold text-slate-900 dark:text-foreground tabular-nums tracking-tight leading-snug">
+                {formatCurrency(deal.value)}
+              </span>
+            )}
           </div>
         </div>
 
@@ -655,8 +697,8 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
           </div>
         )}
 
-        {/* ── Row 2: Customer name + tags inline ─────────────── */}
-        <div className="flex items-center gap-1.5 mb-3 min-h-[14px]">
+        {/* ── Row 2: Cliente (hairline de respiro) + responsável/hot ─── */}
+        <div className="flex items-center justify-between gap-1.5 mb-2.5 min-h-[16px]">
           {canInlineEdit && editingField === "customer_name" ? (
             <input
               ref={inputRef}
@@ -673,7 +715,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
             />
           ) : canInlineEdit ? (
             <button
-              className="text-[11px] text-muted-foreground/80 truncate group/cname inline-flex items-center gap-1 cursor-text rounded hover:bg-muted/40 transition-colors px-0.5 -mx-0.5 max-w-[60%]"
+              className="text-[11px] text-slate-500 dark:text-muted-foreground/80 truncate group/cname inline-flex items-center gap-1 cursor-text rounded hover:bg-muted/40 transition-colors px-0.5 -mx-0.5 min-w-0"
               onClick={e => startEditing("customer_name", e)}
               onMouseDown={e => e.stopPropagation()}
               onPointerDown={e => e.stopPropagation()}
@@ -682,62 +724,91 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
               <Pencil className="h-2 w-2 text-muted-foreground opacity-0 group-hover/cname:opacity-100 transition-opacity flex-shrink-0" />
             </button>
           ) : (
-            <span className="text-[11px] text-muted-foreground/80 truncate max-w-[60%]">
+            <span className="text-[11px] text-slate-500 dark:text-muted-foreground/80 truncate min-w-0">
               {deal.customer_name}
             </span>
           )}
+
+          <div className="flex items-center gap-1 flex-shrink-0">
+            {deal.is_hot && (
+              <Flame className="h-3.5 w-3.5 text-orange-500 dark:text-orange-400" />
+            )}
+            <Avatar className={`h-5 w-5 ring-1 ${deal.assignee_outside_company ? "ring-rose-500/40" : "ring-border"}`}>
+              <AvatarImage src={deal.profiles?.avatar_url || undefined} />
+              <AvatarFallback className={`text-[9px] font-semibold ${deal.assignee_outside_company ? "bg-rose-500/10 text-rose-600 dark:text-rose-300" : "bg-muted text-muted-foreground"}`}>
+                {deal.assignee_outside_company ? "!" : getInitials(deal.profiles?.nome || "")}
+              </AvatarFallback>
+            </Avatar>
+          </div>
 
           {/* F6T.2 — dealTags legado (sistema deal_tags) escondido do card pra
               evitar mistura visual com tags F6T.1. Dados continuam vivos no DB;
               renderização principal agora usa props.tags (vide bloco abaixo). */}
         </div>
 
-        {/* ── F5P.2: contexto comercial (canal + EVA) ───────── */}
+        {/* ── LP-PIPE.2 "Fio da Conversa": a leitura da EVA ──────
+            Mostra SÓ a interpretação da EVA (estado + próxima ação), nunca o
+            conteúdo das mensagens. Accent roxo fino = a camada da EVA. */}
         {context && (() => {
           const hasConv = !!context.conversationId;
-          const evaStyle = EVA_TEMP_STYLES[context.temperature] || EVA_TEMP_STYLES.unknown;
-          // Linha EVA: prioriza stale > proxima_acao
-          const evaLine = context.isStale
-            ? "EVA desatualizada"
-            : context.proximaAcao
-              ? `EVA: ${context.proximaAcao}`
-              : null;
-          return (
-            <div className="mb-2 flex flex-col gap-1.5" onClick={e => e.stopPropagation()}>
-              <div className="flex items-center gap-1.5 flex-wrap">
-                {/* Badge canal */}
-                <span
-                  className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded font-semibold ${
-                    hasConv ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-muted/40 text-muted-foreground"
-                  }`}
-                >
-                  <span className={`h-1.5 w-1.5 rounded-full ${hasConv ? "bg-emerald-500" : "bg-slate-400"}`} />
-                  {hasConv ? "WhatsApp" : "Sem conversa"}
-                </span>
 
-                {/* Badge EVA temperatura */}
-                {hasConv && (
-                  <span className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded font-semibold ${evaStyle.bg} ${evaStyle.color}`}>
-                    <Flame className="h-2.5 w-2.5" />
-                    {evaStyle.label}
+          // Texto da leitura: stale > proxima_acao > derivado da temperatura.
+          // Trunca elegante via line-clamp no JSX.
+          let readText: string;
+          if (context.isStale) {
+            readText = "EVA desatualizada";
+          } else if (context.proximaAcao) {
+            readText = context.proximaAcao;
+          } else {
+            readText = EVA_DERIVED_READ[context.temperature] || EVA_DERIVED_READ.unknown;
+          }
+
+          // Tom: âmbar quando stale, neutro discreto quando sem conversa,
+          // roxo da EVA no caso normal.
+          const tone = context.isStale
+            ? "amber"
+            : hasConv
+              ? "eva"
+              : "neutral";
+
+          const since = context.lastMessageAt
+            ? formatDistanceToNow(new Date(context.lastMessageAt), { addSuffix: false, locale: ptBR })
+            : null;
+
+          const toneClass =
+            tone === "amber"
+              ? "border-amber-400/40 bg-amber-500/[0.06] text-amber-700 dark:text-amber-300/90"
+              : tone === "eva"
+                ? "border-violet-500/25 bg-violet-500/[0.06] text-violet-700 dark:text-violet-300/90"
+                : "border-slate-200 bg-slate-50 text-slate-500 dark:border-border/50 dark:bg-card/40 dark:text-muted-foreground";
+
+          return (
+            <div className="mb-2.5 flex flex-col gap-1.5" onClick={e => e.stopPropagation()}>
+              {/* Etiqueta da leitura — accent roxo fino, prefixo "EVA" */}
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span
+                  className={`inline-flex items-center gap-1.5 min-w-0 max-w-full px-2 py-1 rounded-md border text-[10.5px] leading-tight ${toneClass}`}
+                  title={hasConv ? readText : "Sem conversa vinculada"}
+                >
+                  <span className="font-semibold uppercase tracking-wide text-[9px] opacity-80 flex-shrink-0">
+                    EVA
+                  </span>
+                  <span className="truncate font-medium">
+                    {hasConv ? readText : "Sem conversa vinculada"}
+                  </span>
+                </span>
+                {hasConv && since && (
+                  <span className="text-[10px] text-slate-400 dark:text-muted-foreground/70 tabular-nums flex-shrink-0 whitespace-nowrap">
+                    há {since}
                   </span>
                 )}
               </div>
 
-              {/* Linha EVA (próxima ação OU stale) */}
-              {hasConv && evaLine && (
-                <p className={`text-[10.5px] truncate ${
-                  context.isStale ? "text-amber-600 dark:text-amber-300/90" : "text-muted-foreground"
-                }`}>
-                  {evaLine}
-                </p>
-              )}
-
-              {/* F5P.4f — "Abrir conversa" virou mini-pill com hover sutil + arrow */}
+              {/* F5P.4f — "Abrir conversa" mini-pill (preserva navegação /inbox) */}
               {context.conversationId && (
                 <button
                   type="button"
-                  className="group/openconv inline-flex items-center gap-1.5 self-start px-2 py-1 -ml-0.5 rounded-md text-[10.5px] font-medium text-sky-600 dark:text-sky-300 bg-sky-500/10 hover:bg-sky-500/15 ring-1 ring-sky-500/15 hover:ring-sky-500/25 transition-colors"
+                  className="group/openconv inline-flex items-center gap-1.5 self-start px-2 py-1 -ml-0.5 rounded-full text-[10.5px] font-medium text-sky-600 dark:text-sky-300 bg-sky-500/10 hover:bg-sky-500/15 ring-1 ring-sky-500/15 hover:ring-sky-500/25 transition-colors"
                   onClick={(e) => {
                     e.stopPropagation();
                     navigate(`/inbox?conversationId=${context.conversationId}`);
@@ -816,41 +887,10 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
           })()
         )}
 
-        {/* F5P.4b — Value hero (sem probability % e sem barra colorida) */}
-        <div className="mb-3">
-          {canInlineEdit && editingField === "value" ? (
-            <input
-              ref={inputRef}
-              value={editValue}
-              onChange={handleValueInputChange}
-              onKeyDown={handleEditKeyDown}
-              onBlur={saveField}
-              onClick={e => e.stopPropagation()}
-              onMouseDown={e => e.stopPropagation()}
-              onPointerDown={e => e.stopPropagation()}
-              disabled={isSaving}
-              className={`${inlineInputClass} text-[20px] font-bold text-emerald-600 dark:text-emerald-400 tabular-nums w-36`}
-              autoFocus
-            />
-          ) : canInlineEdit ? (
-            <button
-              className="text-[20px] font-bold text-emerald-600 dark:text-emerald-400 tabular-nums tracking-tight group/value inline-flex items-center gap-1.5 cursor-text rounded hover:bg-muted/40 transition-colors px-0.5 -mx-0.5"
-              onClick={e => startEditing("value", e)}
-              onMouseDown={e => e.stopPropagation()}
-              onPointerDown={e => e.stopPropagation()}
-            >
-              {formatCurrency(deal.value)}
-              <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover/value:opacity-100 transition-opacity flex-shrink-0" />
-            </button>
-          ) : (
-            <span className="text-[20px] font-bold text-emerald-600 dark:text-emerald-400 tabular-nums tracking-tight">
-              {formatCurrency(deal.value)}
-            </span>
-          )}
-        </div>
+        {/* LP-PIPE.2 — value hero movido pra Row 1 (alinhado ao título). */}
 
         {/* ── F5P.4f — Meta row humanizado: linguagem comercial em vez de tags técnicas. */}
-        <div className="flex items-center gap-2.5 text-[10.5px] text-muted-foreground">
+        <div className="flex items-center gap-2.5 text-[10.5px] text-muted-foreground pt-0.5 mt-0.5 border-t border-slate-100 dark:border-border/30">
           {/* Aguardando (era "Parado há X dias") — só em deals abertos */}
           {daysSince > 3 && deal.stage !== "closed_won" && deal.stage !== "closed_lost" && (
             <span className="inline-flex items-center gap-1 tabular-nums text-amber-600 dark:text-amber-400/90">

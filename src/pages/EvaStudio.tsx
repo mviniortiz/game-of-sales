@@ -37,7 +37,7 @@ import type { LabJudgment, LabScenario } from "@/components/eva-studio/Simulatio
 export default function EvaStudio() {
     const { isAdmin } = useAuth();
     const canEdit = !!isAdmin;
-    const { ready, initial, origin, existing, save, approveAssisted } = useEvaBlueprint();
+    const { ready, initial, existing, save, approveAssisted } = useEvaBlueprint();
     const { memory, loading: memoryLoading } = useEvaMemory();
     const { results: simResults, save: saveSim } = useEvaSimulationResults();
     const replay = useEvaReplayMoments();
@@ -47,7 +47,6 @@ export default function EvaStudio() {
     // Aprovação feita nesta sessão (o hook só reflete depois do reload)
     const [approvedNow, setApprovedNow] = useState(false);
     const isApproved = approvedNow || initial.status === "approved_assisted";
-    const isSaved = origin === "saved";
 
     const requireEdit = (msg: string) => {
         if (!canEdit) { toast.error(msg); return false; }
@@ -104,7 +103,7 @@ export default function EvaStudio() {
                 </p>
             )}
             <EvaStudioJourney
-                initialStep={isApproved ? "ativar" : isSaved ? "ensinar" : "criar"}
+                initialStep={isApproved ? "ativar" : "criar"}
                 initialActivated={isApproved}
                 initialTeachMode="conversa"
                 // ── Criar ──

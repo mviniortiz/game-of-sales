@@ -18,6 +18,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
     AlertCircle,
     AlertTriangle,
@@ -65,6 +66,86 @@ import type {
     Temperatura,
     Urgencia,
 } from "@/lib/eva/qualificationSchema";
+
+// ─── Movimento (disciplinado, com fallback de reduced-motion) ───────────────
+// LP-INBOX.2 2026-06-21: as seções entram com fade+rise em stagger curto, o
+// score conta pra cima, a barra anima a largura, o dossiê anima a altura.
+// Tudo respeita prefers-reduced-motion: entrega o estado final estático.
+
+const EVA_EASE = [0.22, 1, 0.36, 1] as const;
+
+/** Rise + fade curto, usado como item dentro de um <Section> (StaggerGroup). */
+const riseItem = {
+    hidden: { opacity: 0, y: 8 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.32, ease: EVA_EASE } },
+};
+
+/** Container que orquestra o stagger dos filhos (~60ms entre cada). */
+const staggerGroup = {
+    hidden: {},
+    show: { transition: { staggerChildren: 0.06, delayChildren: 0.02 } },
+};
+
+/**
+ * Item animado de uma seção. Quando reduced-motion está ligado, renderiza um
+ * <div> simples (estado final), nunca deixando conteúdo invisível.
+ */
+function RevealItem({
+    children,
+    className,
+    style,
+}: {
+    children: React.ReactNode;
+    className?: string;
+    style?: React.CSSProperties;
+}) {
+    const reduce = useReducedMotion();
+    if (reduce) {
+        return (
+            <div className={className} style={style}>
+                {children}
+            </div>
+        );
+    }
+    return (
+        <motion.div variants={riseItem} className={className} style={style}>
+            {children}
+        </motion.div>
+    );
+}
+
+/** Conta de 0 (ou do valor anterior) até `value` ao montar. Respeita reduced-motion. */
+function useCountUp(value: number | null, durationMs = 650): number | null {
+    const reduce = useReducedMotion();
+    const [display, setDisplay] = useState<number | null>(value);
+    const rafRef = useRef<number | null>(null);
+
+    useEffect(() => {
+        if (value === null) {
+            setDisplay(null);
+            return;
+        }
+        if (reduce) {
+            setDisplay(value);
+            return;
+        }
+        const from = 0;
+        const start = performance.now();
+        const tick = (now: number) => {
+            const t = Math.min(1, (now - start) / durationMs);
+            // easeOutCubic, alinhado à curva do projeto
+            const eased = 1 - Math.pow(1 - t, 3);
+            setDisplay(Math.round(from + (value - from) * eased));
+            if (t < 1) rafRef.current = requestAnimationFrame(tick);
+        };
+        rafRef.current = requestAnimationFrame(tick);
+        return () => {
+            if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+        };
+    }, [value, durationMs, reduce]);
+
+    return display;
+}
 
 // ─── Tradução de enums ──────────────────────────────────────────────────────
 
@@ -490,6 +571,24 @@ function PanelContent({
                         {headerSubtitle}
                     </p>
                 </div>
+                {/* LP-INBOX.2 — desatualizada visível JÁ no header (não só no meio),
+                    com pulso muito sutil. Discreto mas inequívoco. */}
+                {insight.hasAnalysis && !insight.analyzing &&
+                 (insight.isStaleByMessages || insight.isStaleByContext) && (
+                    <span
+                        className="vz-eva-stale inline-flex items-center gap-1 text-[9.5px] px-1.5 py-0.5 rounded uppercase shrink-0"
+                        title={insight.isStaleByContext ? "O contexto da EVA mudou desde a última análise" : "Chegaram mensagens novas desde a última análise"}
+                        style={{
+                            background: "rgba(245,158,11,0.12)",
+                            color: "#B45309",
+                            fontWeight: 700,
+                            letterSpacing: "0.05em",
+                        }}
+                    >
+                        <span className="vz-eva-stale-dot h-1.5 w-1.5 rounded-full" style={{ background: "#F59E0B" }} />
+                        Desatualizada
+                    </span>
+                )}
                 {insight.hasAnalysis && !insight.analyzing && (
                     <button
                         type="button"
@@ -544,6 +643,26 @@ function PanelContent({
                 onLinkExisting={() => setLinkOpen(true)}
                 onOpenDeal={(id) => navigate(`/deals/${id}`)}
             />
+
+            {/* Micro-interações: pulso do "desatualizada" + hover dos cards/botões.
+                Curva custom do projeto; tudo desliga sob prefers-reduced-motion. */}
+            <style>{`
+                @keyframes vzEvaStalePulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.45;transform:scale(.82)} }
+                .vz-eva-stale-dot { animation: vzEvaStalePulse 2.2s ease-in-out infinite; }
+                .vz-eva-hero { transition: box-shadow .2s cubic-bezier(0.22,1,0.36,1), transform .2s cubic-bezier(0.22,1,0.36,1); }
+                .vz-eva-hero:hover { box-shadow: 0 2px 4px rgba(15,23,42,0.05), 0 18px 40px -18px rgba(37,99,235,0.26); }
+                .vz-eva-cta { transition: transform .18s cubic-bezier(0.22,1,0.36,1), box-shadow .18s cubic-bezier(0.22,1,0.36,1), filter .18s cubic-bezier(0.22,1,0.36,1); }
+                .vz-eva-cta:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.05); }
+                .vz-eva-cta:active:not(:disabled) { transform: translateY(0); }
+                .vz-eva-ghost { transition: background .18s cubic-bezier(0.22,1,0.36,1), border-color .18s cubic-bezier(0.22,1,0.36,1), transform .18s cubic-bezier(0.22,1,0.36,1); }
+                .vz-eva-ghost:hover { background: rgba(37,99,235,0.05); transform: translateY(-1px); }
+                .vz-eva-ghost:active { transform: translateY(0); }
+                @media (prefers-reduced-motion: reduce) {
+                    .vz-eva-stale-dot { animation: none !important; }
+                    .vz-eva-hero, .vz-eva-cta, .vz-eva-ghost { transition: none !important; }
+                    .vz-eva-cta:hover:not(:disabled), .vz-eva-ghost:hover { transform: none !important; }
+                }
+            `}</style>
 
             {/* Conteúdo — LP-INBOX.1: fundo levemente rebaixado pra dar
                 profundidade ao cartão-herói; ritmo vertical mais curto. */}
@@ -844,15 +963,21 @@ function StaleBadge({
             : newMessagesCount > 0
             ? `${newMessagesCount} ${newMessagesCount === 1 ? "mensagem nova chegou" : "mensagens novas chegaram"} depois da última análise.`
             : "Novas mensagens chegaram depois da última análise.";
+    const reduce = useReducedMotion();
+    const Wrap = reduce ? "div" : motion.div;
+    const wrapProps = reduce
+        ? {}
+        : ({ initial: { opacity: 0, y: 8 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.3, ease: EVA_EASE } } as const);
     return (
-        <div
+        <Wrap
             className="rounded-xl px-4 py-3 flex items-start gap-3"
             style={{
                 background: "rgba(245,158,11,0.08)",
                 border: "1px solid rgba(245,158,11,0.22)",
             }}
+            {...(wrapProps as object)}
         >
-            <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "#B45309" }} />
+            <AlertCircle className="h-4 w-4 mt-0.5 shrink-0 vz-eva-stale-dot" style={{ color: "#B45309" }} />
             <div className="flex-1 min-w-0">
                 <p className="text-[12.5px] font-semibold mb-0.5" style={{ color: "#0B1220" }}>
                     {title}
@@ -870,7 +995,7 @@ function StaleBadge({
                 <RefreshCw className="h-3 w-3" />
                 {label}
             </button>
-        </div>
+        </Wrap>
     );
 }
 
@@ -910,15 +1035,35 @@ function RealContent({
     const gaps = qualification.knowledge_gaps.filter((g) => g.type !== "agency_context");
     const hasInfo = qualification.info_coletada.length > 0 || qualification.info_faltante.length > 0;
 
-    // LP-INBOX.1 2026-06-09: de pilha de formulários → decision stack.
-    // 1 herói (próxima ação + resposta), 1 régua de leitura, alertas finos e
-    // o resto vira dossiê expansível (progressive disclosure). Lógica intocada.
+    const reduce = useReducedMotion();
+    const hasHero = Boolean(
+        proximaAcaoLabel || analysis.nextAction || qualification.resposta_sugerida || analysis.draft,
+    );
+    const hasDiagnosis = Boolean(
+        qualification.score_sugerido !== null ||
+        qualification.temperatura ||
+        qualification.fit_sugerido,
+    );
+
+    // LP-INBOX.2 2026-06-21: a apresentação vira uma decision stack ENCENADA.
+    // Diagnóstico rápido (1 olhada) → herói (o que fazer agora) → nudge →
+    // handoff → leitura completa → dossiê em seções separadas. As seções
+    // entram em stagger (rise+fade); a LÓGICA e as condições são as mesmas.
+    const Stack = reduce ? "div" : motion.div;
+    const stackProps = reduce
+        ? {}
+        : ({ variants: staggerGroup, initial: "hidden", animate: "show" } as const);
+
     return (
-        <>
+        <Stack className="space-y-4" {...(stackProps as object)}>
             {/* Avisos finos */}
-            {hasAgencyGap && <ContextGapBanner />}
+            {hasAgencyGap && (
+                <RevealItem>
+                    <ContextGapBanner />
+                </RevealItem>
+            )}
             {legacy && (
-                <div
+                <RevealItem
                     className="px-3 py-2 flex items-start gap-2 rounded-md"
                     style={{
                         background: "rgba(245,158,11,0.06)",
@@ -930,28 +1075,37 @@ function RealContent({
                         Esta conversa ainda usa análise no formato antigo. A próxima
                         reanálise traz qualificação completa.
                     </p>
-                </div>
+                </RevealItem>
             )}
 
-            {/* ── HERÓI: a vez da EVA (próxima ação + resposta sugerida) ── */}
-            {(proximaAcaoLabel || analysis.nextAction || qualification.resposta_sugerida || analysis.draft) && (
-                <div
-                    className="rounded-xl overflow-hidden"
+            {/* ── DIAGNÓSTICO RÁPIDO: a leitura em 1 olhada ── */}
+            {hasDiagnosis && (
+                <RevealItem>
+                    <QuickDiagnosis qualification={qualification} />
+                </RevealItem>
+            )}
+
+            {/* ── HERÓI: o que fazer agora (próxima ação + resposta sugerida) ── */}
+            {hasHero && (
+                <RevealItem
+                    className="rounded-xl overflow-hidden vz-eva-hero"
                     style={{
                         background: "#FFFFFF",
                         border: "1px solid #D9E2EC",
                         boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 12px 32px -16px rgba(37,99,235,0.18)",
                     }}
                 >
+                    <div className="px-4 pt-3 pb-1.5">
+                        <p
+                            className="text-[10px] uppercase inline-flex items-center gap-1.5"
+                            style={{ color: "#6D28D9", fontWeight: 700, letterSpacing: "0.08em" }}
+                        >
+                            <EvaNode size={10} color="#6D28D9" />
+                            O que fazer agora
+                        </p>
+                    </div>
                     {(proximaAcaoLabel || analysis.nextAction) && (
-                        <div className="px-4 pt-3.5">
-                            <p
-                                className="text-[10px] uppercase inline-flex items-center gap-1.5 mb-1.5"
-                                style={{ color: "#6D28D9", fontWeight: 700, letterSpacing: "0.08em" }}
-                            >
-                                <EvaNode size={10} color="#6D28D9" />
-                                Próxima ação
-                            </p>
+                        <div className="px-4 pb-0.5">
                             <p
                                 className="text-[14px] font-semibold"
                                 style={{ color: "#0B1220", lineHeight: 1.35 }}
@@ -969,60 +1123,68 @@ function RealContent({
                         <SuggestedReply
                             text={qualification.resposta_sugerida || analysis.draft || ""}
                             onSend={onSendReply}
+                            hasAction={Boolean(proximaAcaoLabel || analysis.nextAction)}
                         />
                     )}
-                </div>
+                </RevealItem>
             )}
 
             {/* Nível 2 do upgrade de confiança: card "novo lead pronto pro pipeline",
                 montado no PanelContent e passado como slot. */}
-            {createNudge}
+            {createNudge && <RevealItem>{createNudge}</RevealItem>}
 
             {/* Handoff — alerta importante, logo abaixo do herói */}
             {qualification.deve_fazer_handoff && (
-                <RecommendationCallout
-                    icon={UserCog}
-                    tone="amber"
-                    title="A EVA recomenda handoff humano"
-                    body="Esta conversa bate em regras de handoff cadastradas. Considere passar para um vendedor."
-                />
+                <RevealItem>
+                    <RecommendationCallout
+                        icon={UserCog}
+                        tone="amber"
+                        title="A EVA recomenda handoff humano"
+                        body="Esta conversa bate em regras de handoff cadastradas. Considere passar para um vendedor."
+                    />
+                </RevealItem>
             )}
 
-            {/* ── LEITURA: score + sinais, sem caixa ── */}
-            <QualificationBlock qualification={qualification} />
+            {/* ── LEITURA COMPLETA: justificativa + sinais agrupados ── */}
+            <RevealItem>
+                <QualificationBlock qualification={qualification} />
+            </RevealItem>
 
-            {/* ── DOSSIÊ: o resto em linhas expansíveis ── */}
-            <div
-                className="rounded-xl px-4"
-                style={{ background: "#FFFFFF", border: "1px solid #E5EAF1" }}
-            >
-                <DossierRow title="Resumo da conversa" defaultOpen>
-                    <p className="text-[12.5px]" style={{ color: "#334155", lineHeight: 1.6 }}>
-                        {summary}
-                    </p>
-                    {analysis.stage && (
-                        <p className="text-[11px] mt-1.5" style={{ color: "#64748B" }}>
-                            Estágio sugerido: <strong style={{ color: "#0B1220" }}>{analysis.stage}</strong>
+            {/* ── DOSSIÊ: seções SEPARADAS com respiro (não 1 caixa monolítica) ── */}
+            <RevealItem className="space-y-2.5">
+                <DossierCard>
+                    <DossierRow title="Resumo da conversa" defaultOpen>
+                        <p className="text-[12.5px]" style={{ color: "#334155", lineHeight: 1.6 }}>
+                            {summary}
                         </p>
-                    )}
-                </DossierRow>
+                        {analysis.stage && (
+                            <p className="text-[11px] mt-1.5" style={{ color: "#64748B" }}>
+                                Estágio sugerido: <strong style={{ color: "#0B1220" }}>{analysis.stage}</strong>
+                            </p>
+                        )}
+                    </DossierRow>
+                </DossierCard>
 
                 {hasInfo && (
-                    <DossierRow
-                        title="Informações do lead"
-                        count={qualification.info_coletada.length + qualification.info_faltante.length}
-                    >
-                        <InfoLists
-                            coletada={qualification.info_coletada}
-                            faltante={qualification.info_faltante}
-                        />
-                    </DossierRow>
+                    <DossierCard>
+                        <DossierRow
+                            title="Informações do lead"
+                            count={qualification.info_coletada.length + qualification.info_faltante.length}
+                        >
+                            <InfoLists
+                                coletada={qualification.info_coletada}
+                                faltante={qualification.info_faltante}
+                            />
+                        </DossierRow>
+                    </DossierCard>
                 )}
 
                 {gaps.length > 0 && (
-                    <DossierRow title="Lacunas de contexto" count={gaps.length}>
-                        <KnowledgeGapsList gaps={gaps} />
-                    </DossierRow>
+                    <DossierCard>
+                        <DossierRow title="O que deixa a EVA mais afiada" count={gaps.length}>
+                            <KnowledgeGapsList gaps={gaps} />
+                        </DossierRow>
+                    </DossierCard>
                 )}
 
                 {/* F6T.3 — Marcadores comerciais (tags da conversa/deal vinculado) */}
@@ -1031,19 +1193,40 @@ function RealContent({
                     dealId={dealState.effectiveDealId}
                 />
 
-                <DossierRow title="Oportunidade no CRM">
-                    <CrmBlock
-                        matchedDeal={dealState.matchedDeal}
-                        hasLinkedOpportunity={dealState.hasLinkedOpportunity}
-                        effectiveDealId={dealState.effectiveDealId}
-                        loading={dealState.loading}
-                    />
-                </DossierRow>
-            </div>
+                <DossierCard>
+                    <DossierRow title="Oportunidade no CRM">
+                        <CrmBlock
+                            matchedDeal={dealState.matchedDeal}
+                            hasLinkedOpportunity={dealState.hasLinkedOpportunity}
+                            effectiveDealId={dealState.effectiveDealId}
+                            loading={dealState.loading}
+                        />
+                    </DossierRow>
+                </DossierCard>
+            </RevealItem>
 
             {/* EVA.STUDIO.7 — regras aplicadas no EVA Studio (só leitura) */}
-            <EvaStudioRules />
-        </>
+            <RevealItem>
+                <EvaStudioRules />
+            </RevealItem>
+        </Stack>
+    );
+}
+
+// ─── Dossiê: cartão por seção (respiro entre, não border monolítico) ────────
+
+function DossierCard({ children }: { children: React.ReactNode }) {
+    return (
+        <div
+            className="rounded-xl px-4 transition-shadow duration-200"
+            style={{
+                background: "#FFFFFF",
+                border: "1px solid #E5EAF1",
+                boxShadow: "0 1px 2px rgba(15,23,42,0.03)",
+            }}
+        >
+            {children}
+        </div>
     );
 }
 
@@ -1061,6 +1244,7 @@ function DossierRow({
     children: React.ReactNode;
 }) {
     const [open, setOpen] = useState(defaultOpen);
+    const reduce = useReducedMotion();
     return (
         <div className="border-b last:border-b-0" style={{ borderColor: "#EEF2F6" }}>
             <button
@@ -1070,14 +1254,15 @@ function DossierRow({
                 className="w-full flex items-center gap-2 py-3 text-left group"
             >
                 <ChevronRight
-                    className="h-3.5 w-3.5 shrink-0 transition-transform duration-150"
+                    className="h-3.5 w-3.5 shrink-0 transition-transform duration-200"
                     style={{
                         color: open ? "#2563EB" : "#94A3B8",
                         transform: open ? "rotate(90deg)" : "none",
+                        transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
                     }}
                 />
                 <span
-                    className="text-[11px] uppercase flex-1"
+                    className="text-[11px] uppercase flex-1 transition-colors duration-200"
                     style={{
                         color: open ? "#0B1220" : "#475569",
                         fontWeight: 700,
@@ -1099,7 +1284,25 @@ function DossierRow({
                     </span>
                 )}
             </button>
-            {open && <div className="pb-3.5 pl-[22px]">{children}</div>}
+            {/* LP-INBOX.2 — anima a altura no expand/collapse (com reduced-motion fallback). */}
+            {reduce ? (
+                open && <div className="pb-3.5 pl-[22px]">{children}</div>
+            ) : (
+                <AnimatePresence initial={false}>
+                    {open && (
+                        <motion.div
+                            key="content"
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.24, ease: EVA_EASE }}
+                            style={{ overflow: "hidden" }}
+                        >
+                            <div className="pb-3.5 pl-[22px]">{children}</div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            )}
         </div>
     );
 }
@@ -1151,101 +1354,189 @@ const TONE_STYLES: Record<ToneKey, { bg: string; border: string; text: string }>
     neutral: { bg: "rgba(148,163,184,0.10)", border: "rgba(148,163,184,0.30)", text: "#475569" },
 };
 
-function QualificationBlock({ qualification }: { qualification: Qualification }) {
+// ─── Diagnóstico rápido — a leitura em 1 olhada (faixa compacta) ────────────
+
+function QuickDiagnosis({ qualification }: { qualification: Qualification }) {
+    const reduce = useReducedMotion();
     const score = qualification.score_sugerido;
+    const animatedScore = useCountUp(score);
     const fit = qualification.fit_sugerido ? FIT_META[qualification.fit_sugerido] : null;
     const temp = qualification.temperatura ? TEMPERATURA_META[qualification.temperatura] : null;
-    const urg = qualification.urgencia ? URGENCIA_META[qualification.urgencia] : null;
+    const TempIcon = temp?.icon;
+    const tempStyle = temp ? TONE_STYLES[temp.tone] : null;
+    const fitStyle = fit ? TONE_STYLES[fit.tone] : null;
+    const barTarget = `${score ?? 0}%`;
 
-    // LP-INBOX.1: leitura da EVA como régua aberta — score grande tabular +
-    // barra de progresso fina + sinais em pills. Sem caixa dentro de caixa.
     return (
-        <div className="px-0.5">
-            <p
-                className="text-[10px] uppercase mb-2.5"
-                style={{ color: "#64748B", fontWeight: 700, letterSpacing: "0.08em" }}
-            >
-                Leitura da EVA
-            </p>
-            <div className="flex items-center gap-3.5">
-                <div className="flex items-baseline gap-1 shrink-0">
+        <div
+            className="rounded-xl px-3.5 py-3"
+            style={{
+                background: "#FFFFFF",
+                border: "1px solid #D9E2EC",
+                boxShadow: "0 1px 2px rgba(15,23,42,0.03)",
+            }}
+        >
+            <div className="flex items-center gap-3">
+                {/* Temperatura — cor + ícone */}
+                {temp && tempStyle && (
+                    <div
+                        className="flex items-center gap-1.5 px-2 py-1 rounded-lg shrink-0"
+                        style={{ background: tempStyle.bg, border: `1px solid ${tempStyle.border}` }}
+                        title={`Temperatura: ${temp.label}`}
+                    >
+                        {TempIcon && <TempIcon className="h-3.5 w-3.5" strokeWidth={2.4} style={{ color: tempStyle.text }} />}
+                        <span className="text-[11.5px]" style={{ color: tempStyle.text, fontWeight: 700 }}>
+                            {temp.label}
+                        </span>
+                    </div>
+                )}
+
+                {/* Score grande tabular (count-up) */}
+                <div className="flex items-baseline gap-0.5 shrink-0">
                     <span
-                        className="text-[26px] leading-none tabular-nums"
+                        className="text-[24px] leading-none tabular-nums"
                         style={{ color: score !== null ? "#1D4ED8" : "#94A3B8", fontWeight: 800, letterSpacing: "-0.03em" }}
                     >
-                        {score !== null ? score : "—"}
+                        {animatedScore !== null ? animatedScore : "—"}
                     </span>
-                    <span className="text-[11px]" style={{ color: "#94A3B8", fontWeight: 600 }}>
+                    <span className="text-[10.5px]" style={{ color: "#94A3B8", fontWeight: 600 }}>
                         /100
                     </span>
                 </div>
-                <div className="flex-1 min-w-0">
-                    <div
-                        className="h-[5px] rounded-full overflow-hidden mb-1.5"
-                        style={{ background: "rgba(13,20,33,0.07)" }}
+
+                {/* Fit */}
+                {fit && fitStyle && (
+                    <span
+                        className="ml-auto text-[11px] px-2 py-0.5 rounded-md shrink-0"
+                        style={{ background: fitStyle.bg, color: fitStyle.text, fontWeight: 700 }}
+                        title={`Fit ${fit.label}`}
                     >
-                        <div
-                            className="h-full rounded-full transition-[width] duration-500"
-                            style={{
-                                width: `${score ?? 0}%`,
-                                background: "linear-gradient(90deg, #2563EB, #4A8CE8)",
-                            }}
-                        />
-                    </div>
-                    <p className="text-[11.5px] font-semibold" style={{ color: "#0B1220" }}>
-                        {fit ? `Fit ${fit.label.toLowerCase()}` : "Score em análise"}
-                    </p>
-                </div>
+                        Fit {fit.label}
+                    </span>
+                )}
             </div>
-            {qualification.score_justificativa && (
-                <p className="text-[11px] mt-2" style={{ color: "#64748B", lineHeight: 1.5 }}>
-                    {qualification.score_justificativa}
-                </p>
-            )}
-            <div className="flex flex-wrap gap-1.5 mt-3">
-                {temp && <TonePill tone={temp.tone} icon={temp.icon} label={`Temperatura: ${temp.label}`} />}
-                {urg && <TonePill tone={urg.tone} label={`Urgência: ${urg.label}`} />}
-                {qualification.intencao && (
-                    <TonePill
-                        tone="purple"
-                        label={`Intenção: ${INTENCAO_LABELS[qualification.intencao] ?? qualification.intencao}`}
+
+            {/* Barra de fit fina (width animada) */}
+            <div
+                className="h-[5px] rounded-full overflow-hidden mt-2.5"
+                style={{ background: "rgba(13,20,33,0.07)" }}
+            >
+                {reduce ? (
+                    <div
+                        className="h-full rounded-full"
+                        style={{ width: barTarget, background: "linear-gradient(90deg, #2563EB, #4A8CE8)" }}
                     />
-                )}
-                {qualification.servico_interesse && (
-                    <TonePill tone="blue" label={`Serviço: ${qualification.servico_interesse}`} />
-                )}
-                {qualification.objecao && (
-                    <TonePill tone="rose" label={`Objeção: ${qualification.objecao}`} />
+                ) : (
+                    <motion.div
+                        className="h-full rounded-full"
+                        style={{ background: "linear-gradient(90deg, #2563EB, #4A8CE8)" }}
+                        initial={{ width: "0%" }}
+                        animate={{ width: barTarget }}
+                        transition={{ duration: 0.6, ease: EVA_EASE, delay: 0.1 }}
+                    />
                 )}
             </div>
         </div>
     );
 }
 
-function TonePill({
+function QualificationBlock({ qualification }: { qualification: Qualification }) {
+    const reduce = useReducedMotion();
+    const temp = qualification.temperatura ? TEMPERATURA_META[qualification.temperatura] : null;
+    const urg = qualification.urgencia ? URGENCIA_META[qualification.urgencia] : null;
+
+    // LP-INBOX.2: sinais AGRUPADOS por categoria, cada um com micro-label.
+    // O score/fit/temperatura já apareceram no diagnóstico rápido acima; aqui
+    // entra a justificativa + os sinais qualificados, organizados.
+    const signals: { category: string; tone: ToneKey; value: string; icon?: typeof Flame }[] = [];
+    if (temp) signals.push({ category: "Temperatura", tone: temp.tone, value: temp.label, icon: temp.icon });
+    if (urg) signals.push({ category: "Urgência", tone: urg.tone, value: urg.label });
+    if (qualification.intencao)
+        signals.push({
+            category: "Intenção",
+            tone: "purple",
+            value: INTENCAO_LABELS[qualification.intencao] ?? qualification.intencao,
+        });
+    if (qualification.servico_interesse)
+        signals.push({ category: "Serviço", tone: "blue", value: qualification.servico_interesse });
+    if (qualification.objecao)
+        signals.push({ category: "Objeção", tone: "rose", value: qualification.objecao });
+
+    const hasContent = Boolean(qualification.score_justificativa) || signals.length > 0;
+    if (!hasContent) return null;
+
+    const PillsWrap = reduce ? "div" : motion.div;
+    const pillsProps = reduce
+        ? {}
+        : ({ variants: staggerGroup, initial: "hidden", animate: "show" } as const);
+
+    return (
+        <div className="px-0.5">
+            <p
+                className="text-[10px] uppercase mb-2.5"
+                style={{ color: "#64748B", fontWeight: 700, letterSpacing: "0.08em" }}
+            >
+                Por que a EVA leu assim
+            </p>
+            {qualification.score_justificativa && (
+                <p className="text-[11.5px] mb-3" style={{ color: "#475569", lineHeight: 1.55 }}>
+                    {qualification.score_justificativa}
+                </p>
+            )}
+            {signals.length > 0 && (
+                <PillsWrap className="flex flex-wrap gap-1.5" {...(pillsProps as object)}>
+                    {signals.map((sig) => (
+                        <CategoryPill
+                            key={sig.category}
+                            category={sig.category}
+                            value={sig.value}
+                            tone={sig.tone}
+                            icon={sig.icon}
+                        />
+                    ))}
+                </PillsWrap>
+            )}
+        </div>
+    );
+}
+
+/** Pill com micro-label de categoria (esquerda) + valor (direita), agrupados. */
+function CategoryPill({
+    category,
+    value,
     tone,
-    label,
     icon: Icon,
 }: {
+    category: string;
+    value: string;
     tone: ToneKey;
-    label: string;
     icon?: typeof Flame;
 }) {
+    const reduce = useReducedMotion();
     const s = TONE_STYLES[tone];
-    return (
+    const inner = (
         <span
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px]"
-            style={{
-                background: s.bg,
-                border: `1px solid ${s.border}`,
-                color: s.text,
-                fontWeight: 600,
-            }}
+            className="inline-flex items-stretch rounded-md overflow-hidden text-[11px]"
+            style={{ border: `1px solid ${s.border}` }}
+            title={`${category}: ${value}`}
         >
-            {Icon && <Icon className="h-3 w-3" strokeWidth={2.4} />}
-            {label}
+            <span
+                className="inline-flex items-center px-1.5 uppercase"
+                style={{ background: "rgba(15,23,42,0.035)", color: "#64748B", fontWeight: 700, letterSpacing: "0.04em", fontSize: "9px" }}
+            >
+                {category}
+            </span>
+            <span
+                className="inline-flex items-center gap-1 px-2 py-0.5"
+                style={{ background: s.bg, color: s.text, fontWeight: 600 }}
+            >
+                {Icon && <Icon className="h-3 w-3" strokeWidth={2.4} />}
+                {value}
+            </span>
         </span>
     );
+    if (reduce) return inner;
+    return <motion.div variants={riseItem}>{inner}</motion.div>;
 }
 
 function InfoLists({
@@ -1255,18 +1546,24 @@ function InfoLists({
     coletada: string[];
     faltante: string[];
 }) {
+    // LP-INBOX.2: dois grupos VISUALMENTE separados — "Já sabemos" (verde) e
+    // "Falta descobrir" (âmbar), cada um com fundo tinto próprio.
     return (
         <div className="grid grid-cols-1 gap-2.5">
             {coletada.length > 0 && (
-                <div>
+                <div
+                    className="rounded-lg px-3 py-2.5"
+                    style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.20)" }}
+                >
                     <p
-                        className="text-[10.5px] uppercase mb-1.5"
+                        className="text-[10.5px] uppercase mb-1.5 inline-flex items-center gap-1"
                         style={{
                             color: "#047857",
                             fontWeight: 700,
                             letterSpacing: "0.08em",
                         }}
                     >
+                        <CheckCircle2 className="h-3 w-3" style={{ color: "#10B981" }} />
                         Já sabemos
                     </p>
                     <ul className="space-y-1">
@@ -1287,15 +1584,19 @@ function InfoLists({
                 </div>
             )}
             {faltante.length > 0 && (
-                <div>
+                <div
+                    className="rounded-lg px-3 py-2.5"
+                    style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.20)" }}
+                >
                     <p
-                        className="text-[10.5px] uppercase mb-1.5"
+                        className="text-[10.5px] uppercase mb-1.5 inline-flex items-center gap-1"
                         style={{
                             color: "#B45309",
                             fontWeight: 700,
                             letterSpacing: "0.08em",
                         }}
                     >
+                        <AlertTriangle className="h-3 w-3" style={{ color: "#F59E0B" }} />
                         Falta descobrir
                     </p>
                     <ul className="space-y-1">
@@ -1319,7 +1620,15 @@ function InfoLists({
     );
 }
 
-function SuggestedReply({ text, onSend }: { text: string; onSend?: (text: string) => Promise<void> }) {
+function SuggestedReply({
+    text,
+    onSend,
+    hasAction = false,
+}: {
+    text: string;
+    onSend?: (text: string) => Promise<void>;
+    hasAction?: boolean;
+}) {
     const [edited, setEdited] = useState<string | null>(null);
     const [sending, setSending] = useState(false);
     const display = edited ?? text;
@@ -1350,10 +1659,19 @@ function SuggestedReply({ text, onSend }: { text: string; onSend?: (text: string
         }
     };
 
-    // LP-INBOX.1: a resposta vive DENTRO do cartão-herói como rascunho de
-    // mensagem (bolha de chat), não como campo de formulário.
+    // LP-INBOX.2: a resposta vive DENTRO do cartão-herói como a EXECUÇÃO da
+    // próxima ação — rascunho de mensagem (bolha de chat), não campo de form.
     return (
-        <div className="px-4 pb-4 pt-3">
+        <div className="px-4 pb-4 pt-2.5">
+            {/* Conector visual: deixa claro que a resposta executa a ação acima. */}
+            {hasAction && (
+                <p
+                    className="text-[10px] uppercase mb-1.5"
+                    style={{ color: "#94A3B8", fontWeight: 700, letterSpacing: "0.07em" }}
+                >
+                    Resposta sugerida
+                </p>
+            )}
             {edited === null ? (
                 <div
                     className="px-3.5 py-3 text-[12.5px]"
@@ -1383,43 +1701,65 @@ function SuggestedReply({ text, onSend }: { text: string; onSend?: (text: string
                     }}
                 />
             )}
-            <div className="flex items-center gap-1.5 flex-wrap mt-2.5">
-                {onSend && (
+            {/* Hierarquia: ação primária maior e sólida; secundárias compactas. */}
+            <div className="flex items-center gap-2 mt-3">
+                {onSend ? (
                     <button
                         type="button"
                         onClick={handleSend}
                         disabled={sending}
-                        className="inline-flex items-center gap-1.5 h-7.5 px-3 py-1.5 rounded-lg text-[11.5px] font-semibold text-white transition-all hover:brightness-110 disabled:opacity-60"
-                        style={{ background: "linear-gradient(135deg, #10B981, #34D399)" }}
+                        className="vz-eva-cta inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-lg text-[12.5px] font-semibold text-white flex-1 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                        style={{
+                            background: "linear-gradient(135deg, #10B981, #34D399)",
+                            boxShadow: "0 6px 16px -6px rgba(16,185,129,0.45), 0 1px 0 rgba(255,255,255,0.20) inset",
+                        }}
                     >
-                        <ArrowUp className="h-3 w-3" />
+                        <ArrowUp className="h-3.5 w-3.5" />
                         {sending ? "Enviando..." : "Enviar resposta"}
+                    </button>
+                ) : (
+                    <button
+                        type="button"
+                        onClick={handleCopy}
+                        className="vz-eva-cta inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-lg text-[12.5px] font-semibold text-white flex-1 transition-all"
+                        style={{
+                            background: "linear-gradient(135deg, #2563EB, #4A8CE8)",
+                            boxShadow: "0 6px 16px -6px rgba(37,99,235,0.40), 0 1px 0 rgba(255,255,255,0.20) inset",
+                        }}
+                    >
+                        <Copy className="h-3.5 w-3.5" />
+                        Copiar resposta
+                    </button>
+                )}
+                {/* Quando há Enviar, Copiar vira secundário compacto (só ícone). */}
+                {onSend && (
+                    <button
+                        type="button"
+                        onClick={handleCopy}
+                        title="Copiar resposta"
+                        aria-label="Copiar resposta"
+                        className="vz-eva-ghost inline-flex items-center justify-center h-9 w-9 rounded-lg transition-all shrink-0"
+                        style={{ color: "#1D4ED8", border: "1px solid rgba(37,99,235,0.22)" }}
+                    >
+                        <Copy className="h-3.5 w-3.5" />
                     </button>
                 )}
                 <button
                     type="button"
-                    onClick={handleCopy}
-                    className="inline-flex items-center gap-1.5 h-7.5 px-3 py-1.5 rounded-lg text-[11.5px] font-semibold transition-all hover:brightness-110"
-                    style={onSend
-                        ? { color: "#1D4ED8", border: "1px solid rgba(37,99,235,0.25)" }
-                        : { background: "linear-gradient(135deg, #2563EB, #4A8CE8)", color: "#FFFFFF" }}
-                >
-                    <Copy className="h-3 w-3" />
-                    Copiar resposta
-                </button>
-                <button
-                    type="button"
                     onClick={() => setEdited(edited === null ? text : null)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11.5px] font-semibold transition-colors hover:bg-[#F7F5FE]"
+                    title={edited === null ? "Editar resposta" : "Cancelar edição"}
+                    aria-label={edited === null ? "Editar resposta" : "Cancelar edição"}
+                    className="vz-eva-ghost inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-lg text-[11.5px] font-semibold transition-all shrink-0"
                     style={{ color: "#6D28D9", border: "1px solid rgba(124,58,237,0.22)" }}
                 >
-                    <Edit3 className="h-3 w-3" />
-                    {edited === null ? "Editar" : "Cancelar edição"}
+                    <Edit3 className="h-3.5 w-3.5" />
+                    {edited === null ? "Editar" : "Cancelar"}
                 </button>
-                <span className="text-[10px] ml-auto" style={{ color: "#94A3B8" }}>
-                    Você aprova antes de enviar.
-                </span>
             </div>
+            {/* Legenda do bloco inteiro: o controle continua humano. */}
+            <p className="text-[10px] mt-2" style={{ color: "#94A3B8" }}>
+                Você aprova antes de enviar.
+            </p>
         </div>
     );
 }
@@ -1493,41 +1833,48 @@ function KnowledgeGapsList({ gaps }: { gaps: KnowledgeGap[] }) {
         other: "Outro",
     };
     return (
-        <ul className="space-y-2">
-            {gaps.map((g, i) => (
-                <li
-                    key={i}
-                    className="rounded-lg px-3 py-2.5"
-                    style={{
-                        background: "#F8FAFC",
-                        border: "1px solid #E2E8F0",
-                    }}
-                >
-                    <div className="flex items-center gap-1.5 mb-1">
-                        <span
-                            className="text-[9.5px] uppercase px-1.5 py-0.5 rounded"
-                            style={{
-                                background: "rgba(124,58,237,0.10)",
-                                color: "#6D28D9",
-                                fontWeight: 700,
-                                letterSpacing: "0.06em",
-                            }}
-                        >
-                            {TYPE_LABELS[g.type] ?? g.type}
-                        </span>
-                    </div>
-                    <p
-                        className="text-[11.5px] mb-1"
-                        style={{ color: "#0B1220", fontWeight: 500 }}
+        <div>
+            {/* Enquadramento: insumo pra afinar a EVA, não erro. */}
+            <p className="text-[11px] mb-2.5" style={{ color: "#64748B", lineHeight: 1.5 }}>
+                Cadastrar estes pontos no contexto deixa as próximas leituras da EVA mais precisas.
+            </p>
+            <ul className="space-y-2">
+                {gaps.map((g, i) => (
+                    <li
+                        key={i}
+                        className="rounded-lg px-3 py-2.5"
+                        style={{
+                            background: "#F8FAFC",
+                            border: "1px solid #E2E8F0",
+                        }}
                     >
-                        {g.description}
-                    </p>
-                    <p className="text-[11px]" style={{ color: "#64748B", lineHeight: 1.4 }}>
-                        Sugestão: {g.suggested_fix}
-                    </p>
-                </li>
-            ))}
-        </ul>
+                        <div className="flex items-center gap-1.5 mb-1">
+                            <span
+                                className="text-[9.5px] uppercase px-1.5 py-0.5 rounded"
+                                style={{
+                                    background: "rgba(124,58,237,0.10)",
+                                    color: "#6D28D9",
+                                    fontWeight: 700,
+                                    letterSpacing: "0.06em",
+                                }}
+                            >
+                                {TYPE_LABELS[g.type] ?? g.type}
+                            </span>
+                        </div>
+                        <p
+                            className="text-[11.5px] mb-1"
+                            style={{ color: "#0B1220", fontWeight: 500 }}
+                        >
+                            {g.description}
+                        </p>
+                        <p className="text-[11px] flex items-start gap-1" style={{ color: "#64748B", lineHeight: 1.4 }}>
+                            <ArrowRight className="h-3 w-3 mt-0.5 shrink-0" style={{ color: "#6D28D9" }} />
+                            <span>{g.suggested_fix}</span>
+                        </p>
+                    </li>
+                ))}
+            </ul>
+        </div>
     );
 }
 
@@ -1557,6 +1904,7 @@ function EvaTagsSection({
     if (tags.length === 0) return null;
 
     return (
+        <DossierCard>
         <DossierRow title="Marcadores comerciais" count={tags.length}>
             <div className="flex items-center gap-1.5 flex-wrap">
                 {tags.map((tag) => {
@@ -1588,6 +1936,7 @@ function EvaTagsSection({
                 Marcadores aplicados pelo time. A EVA não aplica tags sozinha.
             </p>
         </DossierRow>
+        </DossierCard>
     );
 }
 

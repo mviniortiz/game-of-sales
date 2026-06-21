@@ -93,6 +93,31 @@ const SOURCE_META: Record<SourceKind, { label: string; hint: string }> = {
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 
+// Aliases padrão que o backend já reconhece (pick_field). O usuário pode
+// somar os nomes EXATOS das colunas dele por cima destes.
+const DEFAULT_ALIASES: Record<"name" | "email" | "phone", string[]> = {
+    name: ["full_name", "name", "nome", "customer_name", "lead_name"],
+    email: ["email", "e-mail", "e_mail", "customer_email"],
+    phone: ["phone", "phone_number", "telefone", "whatsapp", "celular", "customer_phone"],
+};
+
+// Junta os aliases padrão com as colunas que o usuário digitou (lowercase,
+// sem duplicar), pra montar o field_mapping persistido no webhook.
+function buildFieldMapping(custom: { name: string; email: string; phone: string }) {
+    const parse = (raw: string) =>
+        raw
+            .split(",")
+            .map((s) => s.trim().toLowerCase())
+            .filter(Boolean);
+    const merge = (base: string[], extra: string[]) =>
+        Array.from(new Set([...extra, ...base]));
+    return {
+        name: merge(DEFAULT_ALIASES.name, parse(custom.name)),
+        email: merge(DEFAULT_ALIASES.email, parse(custom.email)),
+        phone: merge(DEFAULT_ALIASES.phone, parse(custom.phone)),
+    };
+}
+
 function makeSecret(len = 24) {
     const bytes = new Uint8Array(len);
     crypto.getRandomValues(bytes);
@@ -106,6 +131,17 @@ function makeSlug(companyId: string) {
     const part = makeSecret(6).toLowerCase().replace(/[^a-z0-9]/g, "");
     return `${companyId.slice(0, 8)}-${part}`;
 }
+
+// Traduz o código técnico de last_error pra algo acionável pro usuário.
+const ERROR_HINTS: Record<string, string> = {
+    missing_contact_fields:
+        "Os leads chegaram sem nome, e-mail nem telefone reconhecíveis. Confira o mapeamento de colunas: os nomes precisam bater com os do cabeçalho.",
+    invalid_secret:
+        "O secret enviado não confere. Confirme que o secret no Apps Script/integração é exatamente o desta tela.",
+    disabled: "O webhook estava pausado quando o lead chegou. Ative-o acima.",
+    no_owner_available:
+        "Nenhum vendedor disponível pra receber o lead. Verifique se há um responsável padrão ou um admin na empresa.",
+};
 
 const fmtDateTime = (iso: string | null) => {
     if (!iso) return "—";
@@ -281,33 +317,62 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
 // ═══════════════════════════════════════════════════════════════════════════
 function buildAppsScript(url: string, secret: string) {
     return `// Vyzon · Google Sheets → Pipeline em tempo real
-// Cabeçalhos obrigatórios na linha 1: name, email, phone
+//
+// PASSO ÚNICO: com este código colado, rode a função "vyzonInstalar"
+// uma vez (menu ▶ Executar → vyzonInstalar) e autorize quando pedir.
+// Pronto: cada linha nova cai no pipeline em ~2s.
+//
+// Por que "vyzonInstalar"? O gatilho simples onEdit do Google é bloqueado
+// de chamar a internet (UrlFetchApp). Esta função instala um gatilho
+// AUTORIZADO, que pode enviar o lead pra Vyzon.
 
 const VYZON_URL = '${url}';
 const VYZON_SECRET = '${secret}';
 
-function onEdit(e) {
+// ▶ Rode UMA vez pra ativar (e autorize o acesso).
+function vyzonInstalar() {
+  const ss = SpreadsheetApp.getActive();
+  // remove gatilhos Vyzon antigos pra não duplicar
+  ScriptApp.getProjectTriggers().forEach(function (t) {
+    if (t.getHandlerFunction() === 'vyzonOnEdit') ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger('vyzonOnEdit')
+    .forSpreadsheet(ss)
+    .onEdit()
+    .create();
+  SpreadsheetApp.getActive().toast('Vyzon conectado! Novas linhas vão pro pipeline.', 'Vyzon', 5);
+}
+
+// Disparado a cada edição (gatilho instalado, autorizado).
+function vyzonOnEdit(e) {
   if (!e || !e.range) return;
   const sheet = e.range.getSheet();
   const row = e.range.getRow();
   if (row <= 1) return; // ignora cabeçalho
 
-  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn())
-    .getValues()[0].map(h => String(h).trim().toLowerCase());
+  const lastCol = sheet.getLastColumn();
+  if (lastCol < 1) return;
+  const headers = sheet.getRange(1, 1, 1, lastCol)
+    .getValues()[0].map(function (h) { return String(h).trim().toLowerCase(); });
   const values = sheet.getRange(row, 1, 1, headers.length).getValues()[0];
 
   const payload = {};
-  headers.forEach((h, i) => { if (h) payload[h] = values[i]; });
+  headers.forEach(function (h, i) { if (h) payload[h] = values[i]; });
+  if (!Object.keys(payload).length) return;
   payload._sheet = sheet.getName();
   payload._row = row;
 
-  UrlFetchApp.fetch(VYZON_URL, {
+  const res = UrlFetchApp.fetch(VYZON_URL, {
     method: 'post',
     contentType: 'application/json',
     headers: { 'x-webhook-secret': VYZON_SECRET },
     payload: JSON.stringify(payload),
     muteHttpExceptions: true,
   });
+  // Falhas ficam visíveis em "Execuções" do Apps Script (não silenciadas).
+  if (res.getResponseCode() >= 300) {
+    console.error('Vyzon ' + res.getResponseCode() + ': ' + res.getContentText());
+  }
 }`;
 }
 
@@ -433,15 +498,23 @@ function WebhookRow({
                         )}
                         <span>·</span>
                         <span>Último lead: {fmtDateTime(hook.last_seen_at)}</span>
-                        {hook.last_error && (
-                            <>
-                                <span>·</span>
-                                <span className="text-destructive font-mono">
-                                    {hook.last_error}
-                                </span>
-                            </>
-                        )}
                     </div>
+
+                    {hook.last_error && (
+                        <div className="mt-3 flex items-start gap-2 rounded-md border border-destructive/25 bg-destructive/5 px-3 py-2">
+                            <AlertTriangle className="h-3.5 w-3.5 text-destructive flex-shrink-0 mt-0.5" />
+                            <div className="min-w-0">
+                                <p className="text-xs font-medium text-destructive">
+                                    {ERROR_HINTS[hook.last_error]
+                                        ? "Último envio foi rejeitado"
+                                        : "Último erro"}
+                                </p>
+                                <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">
+                                    {ERROR_HINTS[hook.last_error] ?? hook.last_error}
+                                </p>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex-shrink-0 flex items-center gap-2">
@@ -504,6 +577,9 @@ function CreateDialog({
     const [label, setLabel] = useState("");
     const [sourceKind, setSourceKind] = useState<SourceKind>(initialSourceKind);
     const [defaultProductId, setDefaultProductId] = useState<string>("none");
+    const [colName, setColName] = useState("");
+    const [colEmail, setColEmail] = useState("");
+    const [colPhone, setColPhone] = useState("");
 
     const { data: produtos } = useQuery({
         queryKey: ["produtos_for_webhook", companyId],
@@ -534,6 +610,11 @@ function CreateDialog({
             secret: makeSecret(),
             label: label.trim(),
             source_kind: sourceKind,
+            field_mapping: buildFieldMapping({
+                name: colName,
+                email: colEmail,
+                phone: colPhone,
+            }),
             default_product_id: defaultProductId === "none" ? null : defaultProductId,
             default_owner_id: user?.id ?? null,
             enabled: true,
@@ -615,6 +696,58 @@ function CreateDialog({
                         </div>
                     )}
 
+                    <div className="space-y-2.5 rounded-lg border border-border bg-muted/30 p-3">
+                        <div className="space-y-0.5">
+                            <Label className="text-xs">
+                                Mapeamento de colunas{" "}
+                                <span className="font-normal text-muted-foreground">(opcional)</span>
+                            </Label>
+                            <p className="text-[11px] text-muted-foreground leading-snug">
+                                {sourceKind === "google_sheets"
+                                    ? "Nomes EXATOS das colunas da sua planilha. Já reconhecemos Nome, E-mail, Telefone e WhatsApp; some aqui só se usar outros nomes."
+                                    : "Nomes dos campos no payload da integração, se forem diferentes dos padrões. Separe por vírgula."}
+                            </p>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <div className="space-y-1">
+                                <Label htmlFor="map-name" className="text-[11px] text-muted-foreground">
+                                    Coluna de nome
+                                </Label>
+                                <Input
+                                    id="map-name"
+                                    value={colName}
+                                    onChange={(e) => setColName(e.target.value)}
+                                    placeholder="Nome completo"
+                                    className="h-8 text-xs"
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <Label htmlFor="map-email" className="text-[11px] text-muted-foreground">
+                                    Coluna de e-mail
+                                </Label>
+                                <Input
+                                    id="map-email"
+                                    value={colEmail}
+                                    onChange={(e) => setColEmail(e.target.value)}
+                                    placeholder="E-mail"
+                                    className="h-8 text-xs"
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <Label htmlFor="map-phone" className="text-[11px] text-muted-foreground">
+                                    Coluna de telefone
+                                </Label>
+                                <Input
+                                    id="map-phone"
+                                    value={colPhone}
+                                    onChange={(e) => setColPhone(e.target.value)}
+                                    placeholder="WhatsApp"
+                                    className="h-8 text-xs"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
                     {sourceKind === "google_sheets" ? (
                         <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3 text-xs text-muted-foreground space-y-2">
                             <p className="flex items-center gap-1.5 text-emerald-400 font-medium">
@@ -625,18 +758,21 @@ function CreateDialog({
                                 <li>Crie o webhook (você recebe URL + secret).</li>
                                 <li>
                                     No Sheets: <span className="font-mono">Extensões → Apps Script</span>,
-                                    cole o código abaixo e salve.
+                                    cole o código que aparece após criar e salve.
                                 </li>
                                 <li>
-                                    Cabeçalho da planilha obrigatório:{" "}
-                                    <code className="font-mono">name</code>,{" "}
-                                    <code className="font-mono">email</code>,{" "}
-                                    <code className="font-mono">phone</code>.
+                                    Rode a função{" "}
+                                    <code className="font-mono">vyzonInstalar</code> uma vez
+                                    (botão ▶ Executar) e autorize quando o Google pedir.
                                 </li>
                                 <li>
-                                    Na primeira execução o Apps Script pede permissão. Depois, cada
-                                    linha nova cai no pipeline em ~2s.
+                                    A 1ª linha da planilha é o cabeçalho. As colunas de nome,
+                                    e-mail e telefone você mapeia abaixo, com os nomes que já
+                                    usa (ex.: <code className="font-mono">Nome</code>,{" "}
+                                    <code className="font-mono">E-mail</code>,{" "}
+                                    <code className="font-mono">WhatsApp</code>).
                                 </li>
+                                <li>Depois disso, cada linha nova cai no pipeline em ~2s.</li>
                             </ol>
                             <p className="text-[11px] text-muted-foreground/80 pt-1">
                                 O snippet completo aparece com a URL e o secret já preenchidos

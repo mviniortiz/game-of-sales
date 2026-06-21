@@ -100,9 +100,26 @@ serve(async (req: Request) => {
             });
         }
 
-        // Parse the webhook payload
-        const payload: GreennPayload = await req.json();
+        // Parse the webhook payload (defensivo: JSON inválido → 400)
+        let payload: GreennPayload;
+        try {
+            payload = await req.json();
+        } catch {
+            return new Response(JSON.stringify({ error: "Invalid JSON payload" }), {
+                status: 400,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+        }
         parsedPayload = payload;
+
+        // Validação mínima de estrutura. Greenn precisa de event + data.
+        // Sem isso o parsing abaixo (payload.data.product.name etc) estouraria.
+        if (!payload || typeof payload !== "object" || !payload.event || !payload.data || typeof payload.data !== "object") {
+            return new Response(JSON.stringify({ error: "Invalid payload: missing event or data" }), {
+                status: 400,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+        }
 
         console.log(`[Greenn Webhook] Received event: ${payload.event}`);
         console.log(`[Greenn Webhook] Transaction: ${payload.data?.transaction_id}`);
@@ -189,22 +206,32 @@ serve(async (req: Request) => {
 
         switch (payload.event) {
             case "purchase_approved": {
+                // Acesso defensivo: optional chaining + defaults pra não estourar
+                // em payload parcialmente malformado.
+                const productName = payload.data?.product?.name || "Produto Greenn";
+                const customerName = payload.data?.customer?.name || "Cliente Greenn";
+                const customerEmail = payload.data?.customer?.email || null;
+                const customerPhone = payload.data?.customer?.phone || null;
+                const amount = typeof payload.data?.amount === "number" ? payload.data.amount : 0;
+                const transactionId = payload.data?.transaction_id || null;
+                const paymentMethod = payload.data?.payment_method || "Desconhecido";
+
                 // Create a new deal in "closed_won" stage
                 const { data: deal, error: dealError } = await supabase
                     .from("deals")
                     .insert({
-                        title: `${payload.data.product.name} - ${payload.data.customer.name}`,
-                        customer_name: payload.data.customer.name,
-                        customer_email: payload.data.customer.email,
-                        customer_phone: payload.data.customer.phone || null,
-                        value: payload.data.amount,
+                        title: `${productName} - ${customerName}`,
+                        customer_name: customerName,
+                        customer_email: customerEmail,
+                        customer_phone: customerPhone,
+                        value: amount,
                         stage: "closed_won",
                         probability: 100,
-                        notes: `Venda via Greenn\nTransação: ${payload.data.transaction_id}\nProduto: ${payload.data.product.name}\nPagamento: ${payload.data.payment_method}`,
+                        notes: `Venda via Greenn\nTransação: ${transactionId}\nProduto: ${productName}\nPagamento: ${paymentMethod}`,
                         user_id: userId,
                         company_id: companyId,
                         source: "greenn",
-                        external_id: payload.data.transaction_id,
+                        external_id: transactionId,
                     })
                     .select()
                     .single();
@@ -224,13 +251,13 @@ serve(async (req: Request) => {
                 const vendaPayload = {
                     user_id: userId,
                     company_id: companyId,
-                    cliente_nome: payload.data.customer.name,
-                    produto_nome: payload.data.product.name,
-                    valor: payload.data.amount,
+                    cliente_nome: customerName,
+                    produto_nome: productName,
+                    valor: amount,
                     plataforma: "Greenn",
-                    forma_pagamento: payload.data.payment_method || "Desconhecido",
+                    forma_pagamento: paymentMethod,
                     status: "Aprovado",
-                    observacoes: `Sincronizado via webhook Greenn (deal ${dealId})\nTransação: ${payload.data.transaction_id}`,
+                    observacoes: `Sincronizado via webhook Greenn (deal ${dealId})\nTransação: ${transactionId}`,
                     data_venda: dataVenda,
                 };
 

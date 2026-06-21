@@ -45,8 +45,10 @@ const SignupV2 = () => {
             if (error) throw new Error(error.message);
             const id = (data as { id: string }).id;
             // associa o usuário (Google) à company — RPC SECURITY DEFINER (bypass RLS)
+            // Vínculo só via RPC SECURITY DEFINER (trava 1o-vínculo/company-vazia).
+            // Sem fallback de UPDATE direto: profiles agora bloqueia auto-set de role/company_id.
             const { error: rpcErr } = await supabase.rpc("onboarding_assign_company", { target_company_id: id });
-            if (rpcErr) await supabase.from("profiles").update({ company_id: id, role: "admin" } as never).eq("id", user!.id);
+            if (rpcErr) throw new Error(rpcErr.message);
             return id;
         }
         const id = globalThis.crypto.randomUUID();

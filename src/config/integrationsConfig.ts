@@ -70,6 +70,8 @@ import stripeLogo from "@/assets/integrations/stripe.svg";
 import pagarmeLogo from "@/assets/integrations/pagarme.svg";
 import zapierLogo from "@/assets/integrations/zapier.svg";
 import notazzLogo from "@/assets/integrations/notazz.png";
+import grupozapLogo from "@/assets/integrations/grupozap.svg";
+import clicksignLogo from "@/assets/integrations/clicksign.svg";
 
 export const INTEGRATIONS_CONFIG: Record<string, IntegrationSpec> = {
   hotmart: {
@@ -824,6 +826,150 @@ export const INTEGRATIONS_CONFIG: Record<string, IntegrationSpec> = {
       "API KEY validada em cada callback",
       "Callback anota no deal cujo external_id bate com o externalId da NF",
       "Status normalizado: autorizada/rejeitada/cancelada/processando/erro",
+    ],
+  },
+
+  grupozap: {
+    id: "grupozap",
+    platform: "grupozap",
+    name: "Grupo OLX (ZAP / VivaReal)",
+    logo: grupozapLogo,
+    accentClass: "violet",
+    tagline: "Leads dos portais imobiliários ZAP, VivaReal e OLX",
+    description:
+      "Captação de leads de portal imobiliário. Cada lead enviado pelo Grupo OLX (ZAP Imóveis, VivaReal) vira um deal no estágio inicial com a origem do portal registrada. Ideal para incorporadoras e imobiliárias.",
+    category: "sales",
+    webhook: {
+      url: `${SUPABASE_FUNCTIONS_URL}/grupozap-lead-webhook`,
+      method: "POST",
+      authType: "token",
+      authHeader: "Authorization: Basic",
+      authFieldLabel: "SECRET_KEY (Grupo OLX)",
+      authFieldPlaceholder: "Cole a SECRET_KEY fornecida no Canal Pro",
+      authFieldHelp:
+        "O Grupo OLX envia esta chave dentro do header Authorization: Basic base64(\"vivareal:SECRET_KEY\"). O Vyzon valida o trecho após o ':'. A chave é fornecida por CRM na homologação do Canal Pro.",
+    },
+    dashboardUrl: "https://canalpro.grupozap.com/",
+    dashboardLabel: "Abrir Canal Pro do Grupo OLX → Integrações",
+    events: [
+      {
+        label: "lead",
+        description:
+          "Novo lead de portal — cria deal em stage 'lead' com lead_source = zap/vivareal/olx",
+      },
+    ],
+    setupSteps: [
+      {
+        title: "Copie a URL do webhook",
+        description: "Use o botão de copiar no campo ao lado para copiar a URL única da sua empresa.",
+      },
+      {
+        title: "Solicite a integração no Canal Pro",
+        description:
+          "No Canal Pro do Grupo OLX, abra a área de Integrações / CRM e informe a URL acima como destino dos leads. A homologação é feita pela equipe do Grupo OLX.",
+        note: "É necessário passar pela homologação do Grupo OLX antes dos leads reais começarem a chegar.",
+      },
+      {
+        title: "Receba a SECRET_KEY",
+        description:
+          "O Grupo OLX gera uma SECRET_KEY para o seu CRM. Cole no campo abaixo — ela é enviada em cada lead dentro do header Authorization: Basic.",
+        note: "A mesma chave vale para todos os portais (ZAP, VivaReal, OLX).",
+      },
+      {
+        title: "Associe o anúncio (opcional)",
+        description:
+          "O payload traz clientListingId (id do anúncio no seu CRM) e originListingId (id do anúncio no portal). Use-os para vincular o lead ao empreendimento certo.",
+      },
+      {
+        title: "Ative e valide com um lead de teste",
+        description:
+          "Após homologar, peça um lead de teste. Se chegar com 2xx, o deal aparece em Integrações → Atividade. 3xx/4xx/5xx fazem o Grupo OLX reprocessar (3 tentativas, até 14 dias).",
+      },
+    ],
+    make: {
+      enabled: false,
+      description:
+        "O Grupo OLX entrega leads direto por webhook após homologação no Canal Pro — não é necessário Make. Use Make apenas se precisar transformar o payload antes de chegar ao Vyzon.",
+      trigger_module: "Grupo OLX > Webhook de leads (nativo, após homologação)",
+      action_module: "POST direto para a URL do webhook",
+    },
+    features: ["Leads ZAP / VivaReal / OLX", "Origem do portal registrada", "Vínculo por anúncio", "Stage inicial 'lead'"],
+    securityNotes: [
+      "Autenticação Basic Auth: a SECRET_KEY do Grupo OLX é validada em cada lead (timing-safe). Sem ela, 401.",
+      "Idempotência por originLeadId — reenvios/retries do portal não criam leads duplicados",
+      "Política de retry do Grupo OLX: 3 tentativas, payload guardado até 14 dias em caso de falha",
+    ],
+  },
+
+  clicksign: {
+    id: "clicksign",
+    platform: "clicksign",
+    name: "Clicksign",
+    logo: clicksignLogo,
+    accentClass: "emerald",
+    tagline: "Assinatura eletrônica de contratos",
+    description:
+      "Quando o contrato é assinado por todos na Clicksign, o Vyzon marca o deal como ganho e anexa o link do documento assinado ao histórico. Fecha o ciclo de venda da incorporadora sem trabalho manual.",
+    category: "sales",
+    webhook: {
+      url: `${SUPABASE_FUNCTIONS_URL}/clicksign-webhook`,
+      method: "POST",
+      authType: "hmac",
+      authHeader: "Content-Hmac",
+      authFieldLabel: "Secret HMAC (Clicksign)",
+      authFieldPlaceholder: "Cole o Secret gerado ao criar o webhook",
+      authFieldHelp:
+        "A Clicksign gera um Secret HMAC-SHA256 ao criar o webhook. Ela assina cada request no header Content-Hmac: sha256=<hex> sobre o corpo bruto. Cole o Secret aqui.",
+    },
+    dashboardUrl: "https://app.clicksign.com/",
+    dashboardLabel: "Entrar na Clicksign → Configurações → Webhooks",
+    events: [
+      { label: "auto_close", description: "Documento finalizado automaticamente (todos assinaram) — marca deal closed_won" },
+      { label: "close", description: "Documento finalizado manualmente — marca deal closed_won" },
+      { label: "document_closed", description: "Documento fechado — marca deal closed_won + anexa link assinado" },
+      { label: "sign", description: "Uma assinatura registrada — anotada no histórico (sem fechar o deal)" },
+      { label: "cancel", description: "Documento cancelado — anotado no deal" },
+    ],
+    setupSteps: [
+      {
+        title: "Copie a URL do webhook",
+        description: "URL única da sua empresa que recebe os eventos de assinatura.",
+      },
+      {
+        title: "Crie o webhook na Clicksign",
+        description:
+          "Na Clicksign, vá em Configurações → Webhooks (ou via API: POST /api/v1/webhooks) e cole a URL acima.",
+      },
+      {
+        title: "Copie o Secret HMAC gerado",
+        description:
+          "Ao criar o webhook, a Clicksign exibe um Secret. Cole no campo abaixo — ele valida o header Content-Hmac (HMAC-SHA256) de cada request.",
+        note: "Sem assinatura válida o request é rejeitado com 401. Nunca compartilhe o Secret.",
+      },
+      {
+        title: "Grave o document key no deal",
+        description:
+          "Ao enviar o contrato para assinatura, salve a 'key' do documento Clicksign no campo external_id do deal correspondente. É por ela que o Vyzon localiza o deal ao fechar.",
+        note: "Sem o vínculo external_id = document key, o evento é registrado mas nenhum deal é fechado.",
+      },
+      {
+        title: "Teste finalizando um documento",
+        description:
+          "Assine um documento de teste até o fim. No evento auto_close/close o deal vinculado vira closed_won e o link assinado aparece no histórico.",
+      },
+    ],
+    make: {
+      enabled: true,
+      description:
+        "Fluxo típico: Vyzon fecha proposta → Make/API cria o documento na Clicksign com a key salva no deal → assinatura concluída → webhook volta aqui e marca o deal como ganho.",
+      trigger_module: "Clicksign > Webhook de eventos (nativo)",
+      action_module: "POST direto para a URL do webhook",
+    },
+    features: ["Contrato assinado fecha o deal", "Link do documento assinado no histórico", "HMAC-SHA256", "Vínculo por document key"],
+    securityNotes: [
+      "Cada request é validado por HMAC-SHA256 no header Content-Hmac — não é possível forjar eventos mesmo conhecendo a URL",
+      "Idempotência por document key + evento — entregas repetidas não fecham o deal duas vezes",
+      "Só os eventos de finalização (auto_close/close/document_closed) marcam o deal como ganho",
     ],
   },
 };

@@ -28,6 +28,8 @@ interface KanbanColumnProps {
   contextByDeal?: Map<string, PipelineDealContext>;
   /** F6T.2 — tags transversais (F6T.1) por deal */
   tagsByDeal?: Map<string, Tag[]>;
+  /** LP-PIPE.2 — maior valor de coluna do board (pra barra de proporção "onde está o dinheiro") */
+  maxColumnValue?: number;
 }
 
 // Micro funnel arrow between columns — LP-PIPE.1: tons duais light-first
@@ -67,9 +69,16 @@ export const KanbanColumn = memo(({
   onSwipeMove,
   contextByDeal,
   tagsByDeal,
+  maxColumnValue = 0,
 }: KanbanColumnProps) => {
   const { setNodeRef, isOver } = useDroppable({ id: stage.id });
   const Icon = stage.icon;
+
+  // LP-PIPE.2 — proporção do valor desta coluna vs a maior coluna do board.
+  // Barra hairline dá a sensação de "onde está o dinheiro" sem números extras.
+  const valueRatio = maxColumnValue > 0
+    ? Math.max(0.04, Math.min(1, total.value / maxColumnValue))
+    : 0;
 
   const dealIds = useMemo(() => deals.map(d => d.id), [deals]);
 
@@ -131,11 +140,25 @@ export const KanbanColumn = memo(({
             </span>
           </div>
           {total.count > 0 ? (
-            <div className="pl-6 flex items-baseline gap-1.5">
-              <span className="text-[11px] text-muted-foreground">Total</span>
-              <span className="text-[12.5px] font-semibold text-emerald-600 dark:text-emerald-300 tabular-nums">
-                {formatCurrency(total.value)}
-              </span>
+            <div className="pl-6 flex flex-col gap-1.5">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-[11px] text-muted-foreground">Total</span>
+                <span className="text-[13px] font-bold text-slate-900 dark:text-emerald-300 tabular-nums tracking-tight">
+                  {formatCurrency(total.value)}
+                </span>
+              </div>
+              {/* LP-PIPE.2 — barra de proporção (valor da coluna vs maior coluna) */}
+              {valueRatio > 0 && (
+                <div
+                  className="h-[3px] w-full rounded-full bg-slate-200/70 dark:bg-white/[0.06] overflow-hidden"
+                  role="presentation"
+                >
+                  <div
+                    className={`h-full rounded-full ${dotBg} transition-[width] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]`}
+                    style={{ width: `${valueRatio * 100}%` }}
+                  />
+                </div>
+              )}
             </div>
           ) : (
             <div className="pl-6 text-[11px] text-muted-foreground/70">
@@ -156,9 +179,11 @@ export const KanbanColumn = memo(({
                     transition-colors duration-150
                     ${isOver ? "border-emerald-400/50 bg-emerald-500/[0.04]" : "border-border/30"}
                   `}>
-                    <TrayPh size={14} weight="duotone" className={`mb-1 ${isOver ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground/50"}`} />
-                    <p className={`text-[10.5px] text-center ${isOver ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground/60"}`}>
-                      {isOver ? "Solte aqui" : "Nenhuma oportunidade aqui"}
+                    <TrayPh size={14} weight="duotone" className={`mb-1.5 ${isOver ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground/50"}`} />
+                    <p className={`text-[10.5px] text-center leading-relaxed ${isOver ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground/60"}`}>
+                      {isOver
+                        ? "Solte aqui"
+                        : "Quando a conversa avançar, a EVA traz o card pra cá."}
                     </p>
                   </div>
                 ) : (

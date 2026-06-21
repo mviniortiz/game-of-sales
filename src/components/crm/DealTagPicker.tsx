@@ -177,7 +177,7 @@ export function DealTagPicker({ dealId, companyId }: DealTagPickerProps) {
               <button
                 onClick={handleCreate}
                 disabled={createAndAssign.isPending}
-                className="w-full inline-flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md text-[12.5px] font-medium bg-emerald-600 text-white hover:bg-emerald-500 transition-colors disabled:opacity-50"
+                className="w-full inline-flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-full text-[12.5px] font-medium bg-emerald-600 text-white hover:bg-emerald-500 transition-colors disabled:opacity-50"
               >
                 {createAndAssign.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
                 Criar "{search.trim()}" e aplicar

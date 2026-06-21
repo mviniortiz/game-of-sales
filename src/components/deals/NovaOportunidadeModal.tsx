@@ -58,12 +58,24 @@ import {
   Workflow,
   Loader2,
   Plus,
-  Sparkle,
+  ShieldCheck,
 } from "lucide-react";
 import { z } from "zod";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn, formatError } from "@/lib/utils";
+import { motion, useReducedMotion } from "framer-motion";
+
+// Entrada das seções: fade + rise em stagger curto. Transform-only.
+const EASE = [0.22, 1, 0.36, 1] as const;
+const sectionsContainer = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.055, delayChildren: 0.04 } },
+};
+const sectionItem = {
+  hidden: { opacity: 0, y: 8 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.28, ease: EASE } },
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Schema
@@ -130,6 +142,7 @@ export const NovaOportunidadeModal = ({
   const { activeCompanyId } = useTenant();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const reduceMotion = useReducedMotion();
 
   const effectiveCompanyId = activeCompanyId || companyId;
 
@@ -417,7 +430,13 @@ export const NovaOportunidadeModal = ({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="px-6 sm:px-7 pt-5 pb-6 space-y-6">
+        <motion.form
+          onSubmit={handleSubmit}
+          className="px-6 sm:px-7 pt-5 pb-6 space-y-6"
+          variants={sectionsContainer}
+          initial={reduceMotion ? false : "hidden"}
+          animate="show"
+        >
           {/* Seção 1: Cliente */}
           <Section title="Cliente" icon={<User className="h-3.5 w-3.5" />}>
             <div className="space-y-3">
@@ -630,14 +649,15 @@ export const NovaOportunidadeModal = ({
           </Section>
 
           {/* Microaviso EVA assistida */}
-          <div
+          <motion.div
+            variants={sectionItem}
             className="flex items-start gap-2 rounded-lg px-3 py-2.5"
             style={{
               background: "rgba(124,58,237,0.04)",
               border: "1px solid rgba(124,58,237,0.14)",
             }}
           >
-            <Sparkle
+            <ShieldCheck
               className="h-3.5 w-3.5 shrink-0 mt-0.5"
               style={{ color: "#7C3AED" }}
             />
@@ -645,10 +665,11 @@ export const NovaOportunidadeModal = ({
               EVA continua assistida: ela sugere próximos passos depois que a oportunidade
               entra no pipeline. Você aprova antes de qualquer ação automática.
             </p>
-          </div>
+          </motion.div>
 
           {/* Actions */}
-          <div
+          <motion.div
+            variants={sectionItem}
             className="flex justify-end gap-3 pt-4"
             style={{ borderTop: "1px solid #EAF0F6" }}
           >
@@ -663,11 +684,6 @@ export const NovaOportunidadeModal = ({
             <Button
               type="submit"
               disabled={createOportunidade.isPending}
-              className="text-white font-semibold"
-              style={{
-                background: "linear-gradient(135deg, #2563EB 0%, #4A8CE8 100%)",
-                boxShadow: "0 6px 16px -4px rgba(37,99,235,0.40)",
-              }}
             >
               {createOportunidade.isPending ? (
                 <>
@@ -681,8 +697,8 @@ export const NovaOportunidadeModal = ({
                 </>
               )}
             </Button>
-          </div>
-        </form>
+          </motion.div>
+        </motion.form>
       </DialogContent>
     </Dialog>
   );
@@ -702,7 +718,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="space-y-2.5">
+    <motion.section variants={sectionItem} className="space-y-2.5">
       <header className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
         <span
           className="inline-flex items-center justify-center h-5 w-5 rounded-md"
@@ -713,7 +729,7 @@ function Section({
         {title}
       </header>
       {children}
-    </section>
+    </motion.section>
   );
 }
 

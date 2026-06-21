@@ -35,12 +35,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { format, parse } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
-  Loader2, Target, User, DollarSign, Phone, Mail,
-  Calendar, Flame, CheckCircle2, ChevronDown, CalendarIcon
+  Loader2, Plus, User, DollarSign, Phone, Mail,
+  Calendar, Flame, CheckCircle2, CalendarIcon
 } from "lucide-react";
 import { type Stage, deriveLegacyStage } from "@/lib/pipelineStyles";
 
@@ -81,10 +81,23 @@ const formatBRL = (raw: string) => {
 const parseBRL = (formatted: string) =>
   parseFloat(formatted.replace(/[^\d,]/g, "").replace(",", ".")) || 0;
 
+// Entrada das seções: fade + rise em stagger curto. Transform-only (nunca opacity
+// isolada). prefers-reduced-motion entrega o estado final estático via variants.
+const EASE = [0.22, 1, 0.36, 1] as const;
+const sectionsContainer = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.055, delayChildren: 0.04 } },
+};
+const sectionItem = {
+  hidden: { opacity: 0, y: 8 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.28, ease: EASE } },
+};
+
 export const NewDealModal = ({ open, onClose, onSuccess, stages, pipelineId }: NewDealModalProps) => {
   const { user, companyId } = useAuth();
   const [displayValue, setDisplayValue] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const reduceMotion = useReducedMotion();
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -110,9 +123,9 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages, pipelineId }: N
   const probability = stages.find((s) => s.id === watchedStage)?.defaultProbability ?? 10;
 
   const probColor =
-    probability >= 70 ? { bar: "bg-emerald-500", text: "text-emerald-400" } :
-      probability >= 30 ? { bar: "bg-amber-500", text: "text-amber-400" } :
-        { bar: "bg-muted-foreground", text: "text-muted-foreground" };
+    probability >= 70 ? { bar: "bg-emerald-500", text: "text-emerald-600" } :
+      probability >= 30 ? { bar: "bg-amber-500", text: "text-amber-600" } :
+        { bar: "bg-slate-400", text: "text-muted-foreground" };
 
   const selectedStage = stages.find(s => s.id === watchedStage);
 
@@ -179,13 +192,13 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages, pipelineId }: N
       setTimeout(() => {
         setSubmitted(false);
         trackEvent(FUNNEL_EVENTS.FIRST_DEAL_CREATED);
-        toast.success("Negociação criada!");
+        toast.success("Oportunidade criada!");
         form.reset();
         setDisplayValue("");
         onSuccess();
       }, 700);
     },
-    onError: () => toast.error("Erro ao criar negociação"),
+    onError: () => toast.error("Erro ao criar oportunidade"),
   });
 
   const onSubmit = (data: FormData) => createMutation.mutate(data);
@@ -198,16 +211,30 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages, pipelineId }: N
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) { form.reset(); setDisplayValue(""); onClose(); } }}>
-      <DialogContent className="max-w-[95vw] sm:max-w-[520px] max-h-[92vh] overflow-y-auto bg-card border border-border shadow-2xl p-0">
+      <DialogContent className="max-w-[95vw] sm:max-w-[520px] max-h-[92vh] overflow-y-auto bg-card border border-[var(--vyz-border)] shadow-[var(--vyz-shadow-panel)] p-0">
 
         {/* ── Header ─────────────────────────────────────── */}
-        <DialogHeader className="px-6 pt-6 pb-4 border-b border-border sticky top-0 bg-card z-10">
+        <DialogHeader
+          className="px-6 pt-6 pb-4 border-b border-[var(--vyz-border)] sticky top-0 z-10 relative overflow-hidden"
+          style={{
+            background:
+              "linear-gradient(135deg, var(--vyz-accent-soft-6) 0%, var(--vyz-accent-soft-4) 100%), var(--vyz-surface-1)",
+          }}
+        >
+          <div
+            className="absolute top-0 inset-x-0 h-px pointer-events-none"
+            style={{ background: "linear-gradient(90deg, transparent, var(--vyz-accent-border-strong) 50%, transparent)" }}
+            aria-hidden
+          />
           <DialogTitle className="flex items-center gap-3 text-foreground">
-            <div className="p-2 rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/20">
-              <Target className="h-5 w-5 text-emerald-400" />
+            <div
+              className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: "var(--vyz-accent-soft-10)", border: "1px solid var(--vyz-accent-border)" }}
+            >
+              <Plus className="h-5 w-5" strokeWidth={2.3} style={{ color: "var(--vyz-accent)" }} />
             </div>
             <div>
-              <p className="text-[17px] font-bold">Nova Negociação</p>
+              <p className="text-[17px] font-bold tracking-tight">Nova oportunidade</p>
               <p className="text-[12px] text-muted-foreground font-normal mt-0.5">
                 Adicione uma nova oportunidade ao pipeline
               </p>
@@ -216,33 +243,40 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages, pipelineId }: N
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="px-6 py-5 space-y-5">
+          <motion.form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="px-6 py-5 space-y-5"
+            variants={sectionsContainer}
+            initial={reduceMotion ? false : "hidden"}
+            animate="show"
+          >
 
             {/* ── Title ──────────────────────────────────── */}
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-foreground text-[13px] font-medium">
-                    Título da Negociação
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      autoFocus
-                      placeholder="Ex: Implementação CRM"
-                      className="h-10 bg-muted border-border text-foreground placeholder:text-muted-foreground
-                        focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <motion.div variants={sectionItem}>
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-foreground text-[13px] font-medium">
+                      Título da oportunidade
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        autoFocus
+                        placeholder="Ex: Implementação CRM"
+                        className="h-10"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </motion.div>
 
             {/* ── Value + Stage ─────────────────────────── */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <motion.div variants={sectionItem} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Value */}
               <FormField
                 control={form.control}
@@ -250,7 +284,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages, pipelineId }: N
                 render={() => (
                   <FormItem>
                     <FormLabel className="text-foreground text-[13px] font-medium flex items-center gap-1.5">
-                      <DollarSign className="h-3.5 w-3.5 text-emerald-400" />
+                      <DollarSign className="h-3.5 w-3.5" style={{ color: "var(--vyz-accent)" }} />
                       Valor
                     </FormLabel>
                     <FormControl>
@@ -260,9 +294,8 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages, pipelineId }: N
                         value={displayValue}
                         onChange={handleValueChange}
                         placeholder="R$ 0,00"
-                        className="h-12 text-lg font-bold bg-emerald-500/10 border-emerald-500/30
-                          text-emerald-300 placeholder:text-emerald-500/40
-                          focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                        className="h-12 text-lg font-bold focus-visible:border-[var(--vyz-accent)] focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent-soft-12)]"
+                        style={{ background: "var(--vyz-accent-soft-6)", borderColor: "var(--vyz-accent-border)", color: "var(--vyz-accent-dark)" }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -279,7 +312,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages, pipelineId }: N
                     <FormLabel className="text-foreground text-[13px] font-medium">Estágio</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="h-12 bg-muted border-border text-foreground">
+                        <SelectTrigger className="h-12">
                           <div className="flex items-center gap-2 flex-1 min-w-0">
                             {selectedStage && (
                               <div className={`p-1 rounded-md ${selectedStage.bgColor} flex-shrink-0`}>
@@ -288,15 +321,13 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages, pipelineId }: N
                             )}
                             <SelectValue placeholder="Selecione..." />
                           </div>
-                          <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="bg-muted border-border">
+                      <SelectContent>
                         {stages.map((stage) => (
                           <SelectItem
                             key={stage.id}
                             value={stage.id}
-                            className="text-foreground focus:bg-secondary"
                           >
                             <div className="flex items-center gap-2">
                               <div className={`p-1 rounded-md ${stage.bgColor}`}>
@@ -312,10 +343,10 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages, pipelineId }: N
                   </FormItem>
                 )}
               />
-            </div>
+            </motion.div>
 
             {/* ── Auto probability bar ──────────────────── */}
-            <div className="p-3 rounded-xl bg-muted/60 border border-border">
+            <motion.div variants={sectionItem} className="p-3 rounded-xl bg-[var(--vyz-surface-2)] border border-[var(--vyz-border)]">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">
                   Probabilidade (automática)
@@ -324,17 +355,17 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages, pipelineId }: N
                   {probability}%
                 </span>
               </div>
-              <div className="h-2 bg-secondary rounded-full overflow-hidden">
+              <div className="h-2 bg-[var(--vyz-surface-3)] rounded-full overflow-hidden">
                 <motion.div
                   className={`h-full ${probColor.bar} rounded-full`}
                   animate={{ width: `${probability}%` }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
+                  transition={{ duration: 0.4, ease: EASE }}
                 />
               </div>
-            </div>
+            </motion.div>
 
             {/* ── Contact group ─────────────────────────── */}
-            <div className="space-y-3 p-4 rounded-xl bg-muted/50 border border-border">
+            <motion.div variants={sectionItem} className="space-y-3 p-4 rounded-xl bg-[var(--vyz-surface-1)] border border-[var(--vyz-border)] transition-shadow duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-18px_rgba(37,99,235,0.16)]">
               <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                 <User className="h-3 w-3" />
                 Contato
@@ -349,8 +380,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages, pipelineId }: N
                       <Input
                         {...field}
                         placeholder="Nome do cliente"
-                        className="h-10 bg-muted border-border text-foreground placeholder:text-muted-foreground
-                          focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
+                        className="h-10"
                       />
                     </FormControl>
                     <FormMessage />
@@ -371,8 +401,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages, pipelineId }: N
                             {...field}
                             type="email"
                             placeholder="Email"
-                            className="h-10 pl-9 bg-muted border-border text-foreground placeholder:text-muted-foreground
-                              focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
+                            className="h-10 pl-9"
                           />
                         </div>
                       </FormControl>
@@ -391,8 +420,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages, pipelineId }: N
                           <Input
                             {...field}
                             placeholder="Telefone"
-                            className="h-10 pl-9 bg-muted border-border text-foreground placeholder:text-muted-foreground
-                              focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
+                            className="h-10 pl-9"
                           />
                         </div>
                       </FormControl>
@@ -401,10 +429,10 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages, pipelineId }: N
                   )}
                 />
               </div>
-            </div>
+            </motion.div>
 
             {/* ── Conta (B2B) ────────────────────────── */}
-            <div className="space-y-3 pt-2 border-t border-border/50">
+            <motion.div variants={sectionItem} className="space-y-3 pt-2 border-t border-[var(--vyz-border-subtle)]">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Conta (opcional · pra B2B)
               </p>
@@ -417,8 +445,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages, pipelineId }: N
                       <Input
                         {...field}
                         placeholder="Nome da empresa (ex: Acme Corp)"
-                        className="h-10 bg-muted border-border text-foreground placeholder:text-muted-foreground
-                          focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
+                        className="h-10"
                       />
                     </FormControl>
                     <FormMessage />
@@ -435,8 +462,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages, pipelineId }: N
                         <Input
                           {...field}
                           placeholder="Site (acme.com)"
-                          className="h-10 bg-muted border-border text-foreground placeholder:text-muted-foreground
-                            focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
+                          className="h-10"
                         />
                       </FormControl>
                       <FormMessage />
@@ -452,8 +478,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages, pipelineId }: N
                         <Input
                           {...field}
                           placeholder="Setor (SaaS, Agência, etc)"
-                          className="h-10 bg-muted border-border text-foreground placeholder:text-muted-foreground
-                            focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
+                          className="h-10"
                         />
                       </FormControl>
                       <FormMessage />
@@ -461,10 +486,10 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages, pipelineId }: N
                   )}
                 />
               </div>
-            </div>
+            </motion.div>
 
             {/* ── Product + Date ────────────────────────── */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <motion.div variants={sectionItem} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="product_id"
@@ -473,16 +498,16 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages, pipelineId }: N
                     <FormLabel className="text-foreground text-[13px] font-medium">Produto</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="h-10 bg-muted border-border text-foreground">
+                        <SelectTrigger className="h-10">
                           <SelectValue placeholder="Selecione..." />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="bg-muted border-border">
+                      <SelectContent>
                         {produtos.length === 0 ? (
                           <div className="px-3 py-2 text-xs text-muted-foreground">Nenhum produto</div>
                         ) : (
                           produtos.map((p: any) => (
-                            <SelectItem key={p.id} value={p.id} className="text-foreground focus:bg-secondary">
+                            <SelectItem key={p.id} value={p.id}>
                               {p.nome}
                             </SelectItem>
                           ))
@@ -513,8 +538,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages, pipelineId }: N
                           <FormControl>
                             <Button
                               variant="outline"
-                              className={`h-10 w-full justify-start text-left font-normal bg-muted border-border hover:bg-secondary hover:text-foreground
-                                focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20
+                              className={`h-10 w-full justify-start text-left font-normal rounded-md
                                 ${field.value ? "text-foreground" : "text-muted-foreground"}`}
                             >
                               <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -541,17 +565,18 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages, pipelineId }: N
                   );
                 }}
               />
-            </div>
+            </motion.div>
 
             {/* ── Hot Deal toggle ───────────────────────── */}
+            <motion.div variants={sectionItem}>
             <FormField
               control={form.control}
               name="is_hot"
               render={({ field }) => (
                 <FormItem>
-                  <div className={`flex items-center justify-between p-3.5 rounded-xl border transition-all duration-200 ${field.value
-                      ? "bg-orange-500/10 border-orange-500/30"
-                      : "bg-muted/50 border-border"
+                  <div className={`flex items-center justify-between p-3.5 rounded-xl border transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] ${field.value
+                      ? "bg-orange-500/10 border-orange-500/40"
+                      : "bg-[var(--vyz-surface-1)] border-[var(--vyz-border)]"
                     }`}>
                     <Label htmlFor="hot-deal" className="flex items-center gap-2.5 cursor-pointer">
                       <AnimatePresence mode="wait">
@@ -562,11 +587,11 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages, pipelineId }: N
                           exit={{ scale: 0.8 }}
                           transition={{ duration: 0.15 }}
                         >
-                          <Flame className={`h-4.5 w-4.5 ${field.value ? "text-orange-400" : "text-muted-foreground"}`} />
+                          <Flame className={`h-4.5 w-4.5 ${field.value ? "text-orange-500" : "text-muted-foreground"}`} />
                         </motion.div>
                       </AnimatePresence>
                       <div>
-                        <span className={`text-sm font-semibold ${field.value ? "text-orange-300" : "text-foreground"}`}>
+                        <span className={`text-sm font-semibold ${field.value ? "text-orange-700" : "text-foreground"}`}>
                           Hot Deal
                         </span>
                         <p className="text-[11px] text-muted-foreground font-normal">Prioridade alta — aparecerá em destaque</p>
@@ -584,8 +609,10 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages, pipelineId }: N
                 </FormItem>
               )}
             />
+            </motion.div>
 
             {/* ── Notes ────────────────────────────────── */}
+            <motion.div variants={sectionItem}>
             <FormField
               control={form.control}
               name="notes"
@@ -595,24 +622,23 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages, pipelineId }: N
                   <FormControl>
                     <Textarea
                       {...field}
-                      placeholder="Informações adicionais sobre a negociação..."
+                      placeholder="Informações adicionais sobre a oportunidade..."
                       rows={2}
-                      className="bg-muted border-border text-foreground placeholder:text-muted-foreground
-                        focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 resize-none text-sm"
+                      className="resize-none text-sm"
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+            </motion.div>
 
             {/* ── Actions ──────────────────────────────── */}
-            <div className="flex justify-end gap-3 pt-2 border-t border-border">
+            <motion.div variants={sectionItem} className="flex justify-end gap-3 pt-2 border-t border-[var(--vyz-border)]">
               <Button
                 type="button"
                 variant="outline"
                 onClick={onClose}
-                className="border-border hover:bg-muted text-foreground"
               >
                 Cancelar
               </Button>
@@ -621,8 +647,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages, pipelineId }: N
                 <Button
                   type="submit"
                   disabled={createMutation.isPending || submitted}
-                  className="min-w-[160px] bg-emerald-600 hover:bg-emerald-500 text-white font-semibold
-                    shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-all"
+                  className="min-w-[160px]"
                 >
                   <AnimatePresence mode="wait" initial={false}>
                     {submitted ? (
@@ -648,14 +673,14 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages, pipelineId }: N
                       </motion.span>
                     ) : (
                       <motion.span key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                        Criar Negociação
+                        Criar oportunidade
                       </motion.span>
                     )}
                   </AnimatePresence>
                 </Button>
               </motion.div>
-            </div>
-          </form>
+            </motion.div>
+          </motion.form>
         </Form>
       </DialogContent>
     </Dialog>

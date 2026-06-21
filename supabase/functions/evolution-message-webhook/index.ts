@@ -539,8 +539,15 @@ serve(async (req) => {
     return json(405, { error: "method not allowed" });
   }
 
-  // Autenticação: secret via query param (?secret=...) ou header x-webhook-secret
-  if (EVOLUTION_WEBHOOK_SECRET) {
+  // Autenticação: secret via query param (?secret=...) ou header x-webhook-secret.
+  // Fail-CLOSED: se o EVOLUTION_WEBHOOK_SECRET não estiver configurado no
+  // ambiente, NÃO aceitamos requests (antes era fail-open: qualquer POST passava).
+  // Sem secret não há como autenticar o Evolution, então recusamos tudo.
+  if (!EVOLUTION_WEBHOOK_SECRET) {
+    console.error("[webhook] EVOLUTION_WEBHOOK_SECRET not configured; rejecting request");
+    return json(500, { error: "webhook secret not configured" });
+  }
+  {
     const url = new URL(req.url);
     const provided = url.searchParams.get("secret") || req.headers.get("x-webhook-secret") || "";
     if (provided !== EVOLUTION_WEBHOOK_SECRET) {
