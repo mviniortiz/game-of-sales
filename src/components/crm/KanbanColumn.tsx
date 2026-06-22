@@ -97,7 +97,7 @@ export const KanbanColumn = memo(({
   const accentBg = stage.color.replace("text-", "bg-").replace("-400", "-500");
 
   return (
-    <div className="flex items-stretch gap-0 h-full">
+    <div className="flex items-stretch gap-0 h-full snap-start">
       {/* Funnel connector BEFORE this column (left side) - hidden on mobile for snap-scroll */}
       {showConversionRate && conversionRate !== null && (
         <div className="hidden sm:flex">
@@ -111,8 +111,8 @@ export const KanbanColumn = memo(({
       <div
         ref={setNodeRef}
         className={`
-          relative flex flex-col w-[85vw] sm:w-[280px] flex-shrink-0 h-full rounded-2xl
-          border transition-colors duration-150 snap-center overflow-hidden
+          relative flex flex-col w-[88vw] max-w-[380px] sm:w-[280px] sm:max-w-none flex-shrink-0 h-full rounded-2xl
+          border transition-colors duration-150 overflow-hidden
           ${isOver
             ? "border-emerald-400/60 bg-emerald-50 dark:bg-emerald-500/[0.05]"
             : "border-slate-200/70 bg-slate-100/70 dark:border-border/40 dark:bg-card/40"

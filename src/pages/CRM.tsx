@@ -147,6 +147,17 @@ export interface Deal {
   lastActivity?: DealLastActivity | null;
 }
 
+// Navegação mobile do kanban: rola até a etapa idx medindo o passo real
+// (largura+gap) pela posição dos filhos — robusto com colunas em vw + gaps.
+function scrollKanbanToStage(container: HTMLElement | null, idx: number) {
+  if (!container || container.children.length === 0) return;
+  const a = container.children[0] as HTMLElement;
+  const b = container.children[1] as HTMLElement | undefined;
+  const step = b ? b.offsetLeft - a.offsetLeft : a.offsetWidth;
+  if (step <= 0) return;
+  container.scrollTo({ left: step * idx, behavior: "smooth" });
+}
+
 export default function CRM() {
   const { user, isSuperAdmin, companyId } = useAuth();
   const { activeCompanyId } = useTenant();
@@ -1565,11 +1576,7 @@ export default function CRM() {
                       key={stage.id}
                       onClick={() => {
                         setActiveStageIndex(idx);
-                        const container = kanbanScrollRef.current;
-                        if (container) {
-                          const columnWidth = container.scrollWidth / STAGES.length;
-                          container.scrollTo({ left: columnWidth * idx, behavior: "smooth" });
-                        }
+                        scrollKanbanToStage(kanbanScrollRef.current, idx);
                       }}
                       className={`
                         flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-semibold
@@ -1596,13 +1603,20 @@ export default function CRM() {
                   flex gap-2 sm:gap-3 p-4 sm:p-6 h-full
                   sm:min-w-max
                   max-sm:snap-x max-sm:snap-mandatory max-sm:overflow-x-auto max-sm:scrollbar-none
+                  max-sm:scroll-pl-4 max-sm:pr-[14vw]
                 "
                 onScroll={(e) => {
                   if (window.innerWidth >= 640) return;
                   const container = e.currentTarget;
-                  const columnWidth = container.scrollWidth / STAGES.length;
-                  const newIndex = Math.round(container.scrollLeft / columnWidth);
-                  if (newIndex !== activeStageIndex && newIndex >= 0 && newIndex < STAGES.length) {
+                  // Mede o passo real (largura+gap) pela posição dos filhos, não por
+                  // scrollWidth/N (que drifta com colunas em vw + gaps).
+                  const a = container.children[0] as HTMLElement | undefined;
+                  const b = container.children[1] as HTMLElement | undefined;
+                  if (!a) return;
+                  const step = b ? b.offsetLeft - a.offsetLeft : a.offsetWidth;
+                  if (step <= 0) return;
+                  const newIndex = Math.min(STAGES.length - 1, Math.max(0, Math.round(container.scrollLeft / step)));
+                  if (newIndex !== activeStageIndex) {
                     setActiveStageIndex(newIndex);
                   }
                 }}
@@ -1647,11 +1661,7 @@ export default function CRM() {
                     key={stage.id}
                     onClick={() => {
                       setActiveStageIndex(idx);
-                      const container = kanbanScrollRef.current;
-                      if (container) {
-                        const columnWidth = container.scrollWidth / STAGES.length;
-                        container.scrollTo({ left: columnWidth * idx, behavior: "smooth" });
-                      }
+                      scrollKanbanToStage(kanbanScrollRef.current, idx);
                     }}
                     className={`
                       h-2 rounded-full transition-all duration-300
