@@ -3203,6 +3203,42 @@ All colors MUST be HSL.
 
 /* Vista secundária (Memória / Insights) por cima do passo */
 .vz-journey-aside { animation: vz-evassist-in 0.28s cubic-bezier(0.22, 1, 0.36, 1); }
+/* Fade-OUT da vista ao fechar: sai antes de a jornada voltar */
+@keyframes vz-aside-out {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(10px); }
+}
+.vz-journey-aside--closing {
+  animation: vz-aside-out 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+  pointer-events: none;
+}
+
+/* ── Cross-fade dos modos dentro de um passo (Conversar↔Revisar, Campo↔Casos) ──
+   Ambos os panes ficam montados (preserva o estado dos filhos). O pane inativo
+   sai do fluxo (absolute) e some; o ativo define a altura no fluxo normal. */
+.vz-modeswap { position: relative; }
+.vz-modeswap-pane {
+  transition:
+    opacity 0.26s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.26s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s linear 0.26s;
+}
+.vz-modeswap-pane--on {
+  position: relative;
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
+  transition-delay: 0s, 0s, 0s;
+}
+.vz-modeswap-pane--off {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  transform: translateY(8px);
+  visibility: hidden;
+  pointer-events: none;
+}
 .vz-journey-back {
   display: inline-flex; align-items: center; gap: 6px;
   font-size: 12px; font-weight: 600; color: #64748b;
@@ -3321,6 +3357,12 @@ All colors MUST be HSL.
   }
   .vz-studioshell-readiness-fill { transition: none; }
   .vz-studiomode-btn:active { transform: none; }
+
+  /* Troca de modo e fechamento de vista: instantâneos, estado final estático */
+  .vz-journey-aside--closing { animation: none !important; }
+  .vz-modeswap-pane { transition: none !important; }
+  .vz-modeswap-pane--off { transform: none; }
+  .vz-modeswap-pane--on { transform: none; }
 }
 
 /* EVA.STUDIO.ANALYTICS — shimmer do skeleton (entrada estática em reduced-motion) */

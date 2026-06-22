@@ -31,9 +31,9 @@
 //
 // PRESENTATIONAL: dados e escrita 100% via props (quem integra grava).
 // ─────────────────────────────────────────────────────────────────────────────
-import { forwardRef, useImperativeHandle, useMemo, useState, type ReactNode } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState, type ReactNode } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import { EvaOrb } from "@/components/landing-v2/EvaOrb";
+import { EvaOrb, type EvaOrbState } from "@/components/landing-v2/EvaOrb";
 import {
     AgentPurposeCreate,
     type AgentPurpose,
@@ -125,6 +125,15 @@ const STEPS = [
 
 const ORDER: StudioStepKey[] = ["criar", "ensinar", "provar", "ativar"];
 
+// O orb do cabeçalho reage ao passo (EvaOrb não tem 'configuring'/'ready' →
+// mapeia pro vocabulário disponível: idle → thinking → analyzing → speaking).
+const STEP_ORB: Record<StudioStepKey, EvaOrbState> = {
+    criar: "idle",
+    ensinar: "thinking",
+    provar: "analyzing",
+    ativar: "speaking",
+};
+
 // ─── Componente ─────────────────────────────────────────────────────────────
 
 export const EvaStudioJourney = forwardRef<EvaStudioJourneyHandle, EvaStudioJourneyProps>(function EvaStudioJourney({
@@ -170,6 +179,22 @@ export const EvaStudioJourney = forwardRef<EvaStudioJourneyHandle, EvaStudioJour
     const [activated, setActivated] = useState(!!initialActivated);
     // Vista secundária aberta por cima do passo atual (null = jornada)
     const [aside, setAside] = useState<AsideView | null>(null);
+    // Vista em saída: fica no DOM enquanto faz o fade-out, depois some
+    const [closingAside, setClosingAside] = useState<AsideView | null>(null);
+    const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // Fecha a vista secundária com fade-out (~0.2s) antes de remover do DOM.
+    // reduced-motion / sem vista aberta → remoção imediata.
+    const closeAside = () => {
+        if (closeTimer.current) clearTimeout(closeTimer.current);
+        if (aside) {
+            setClosingAside(aside);
+            closeTimer.current = setTimeout(() => setClosingAside(null), 200);
+        }
+        setAside(null);
+    };
+    // Limpa o timer pendente ao desmontar (evita setState fora do ciclo de vida)
+    useEffect(() => () => { if (closeTimer.current) clearTimeout(closeTimer.current); }, []);
 
     const persistedReplayCount = useMemo(
         () => Object.values(replayInitialJudgments ?? {}).filter((a) => a !== "skip").length,
@@ -179,16 +204,23 @@ export const EvaStudioJourney = forwardRef<EvaStudioJourneyHandle, EvaStudioJour
     const markDone = (key: StudioStepKey) =>
         setDoneKeys((d) => (d.includes(key) ? d : [...d, key]));
 
+    // Saída direta pra um passo: a vista some na hora (o palco já remonta no passo)
+    const snapAsideClosed = () => {
+        if (closeTimer.current) clearTimeout(closeTimer.current);
+        setAside(null);
+        setClosingAside(null);
+    };
+
     const advance = (from: StudioStepKey, to: StudioStepKey) => {
         markDone(from);
         setStep(to);
-        setAside(null);
+        snapAsideClosed();
     };
 
     // Clicar num passo (stepper/lateral) sempre volta pra jornada
     const selectStep = (key: StudioStepKey) => {
         setStep(key);
-        setAside(null);
+        snapAsideClosed();
     };
 
     // Navegação imperativa de fora (ex.: painel Analytics → "Ir para Ensinar").
@@ -239,34 +271,49 @@ export const EvaStudioJourney = forwardRef<EvaStudioJourneyHandle, EvaStudioJour
             onSelect={selectStep}
             readiness={{ label: "Prontidão da EVA", pct: readinessPct }}
             hideStepLabel={aside !== null}
+            orbState={aside ? "analyzing" : STEP_ORB[step]}
             secondary={(["memoria", "insights", "analytics"] as AsideView[])
                 .filter((v) => (v === "memoria" ? memoryContent : v === "insights" ? insightsContent : analyticsContent))
                 .map((v) => ({
                     key: v,
                     label: v === "memoria" ? "Memória" : v === "insights" ? "Insights" : "Analytics",
                     active: aside === v,
-                    onClick: () => setAside((a) => (a === v ? null : v)),
+                    onClick: () => {
+                        if (aside === v) {
+                            closeAside();
+                        } else {
+                            // Abrir outra vista cancela qualquer fade-out em curso
+                            if (closeTimer.current) clearTimeout(closeTimer.current);
+                            setClosingAside(null);
+                            setAside(v);
+                        }
+                    },
                 }))}
         >
-            {/* Palco: a key remonta a cada troca de passo/vista → entrada animada */}
-            <div key={aside ?? step} className="vz-journey-stage">
+            {/* Palco: a key remonta a cada troca de passo/vista → entrada animada.
+                Durante o fade-out da vista (closingAside) a key fica estável pra
+                não trazer o passo pra baixo antes de a vista sumir. */}
+            <div key={aside ?? (closingAside ? `closing-${closingAside}` : step)} className="vz-journey-stage">
                 {/* ── Vista secundária por cima do passo (Memória / Insights) ── */}
-                {aside && (
-                    <div className="vz-journey-aside">
-                        <button type="button" className="vz-journey-back" onClick={() => setAside(null)}>
-                            <ArrowLeft style={{ width: 13, height: 13 }} />
-                            Voltar pra jornada
-                        </button>
-                        <div className="vz-journey-aside-head">
-                            <h2 className="vz-journey-aside-title">{ASIDE_META[aside].title}</h2>
-                            <p className="vz-journey-aside-sub">{ASIDE_META[aside].sub}</p>
+                {(aside || closingAside) && (() => {
+                    const view = aside ?? closingAside!;
+                    return (
+                        <div className={`vz-journey-aside ${closingAside && !aside ? "vz-journey-aside--closing" : ""}`}>
+                            <button type="button" className="vz-journey-back" onClick={closeAside}>
+                                <ArrowLeft style={{ width: 13, height: 13 }} />
+                                Voltar pra jornada
+                            </button>
+                            <div className="vz-journey-aside-head">
+                                <h2 className="vz-journey-aside-title">{ASIDE_META[view].title}</h2>
+                                <p className="vz-journey-aside-sub">{ASIDE_META[view].sub}</p>
+                            </div>
+                            {view === "memoria" ? memoryContent : view === "insights" ? insightsContent : analyticsContent}
                         </div>
-                        {aside === "memoria" ? memoryContent : aside === "insights" ? insightsContent : analyticsContent}
-                    </div>
-                )}
+                    );
+                })()}
 
                 {/* ── Criar ── */}
-                {!aside && step === "criar" && (
+                {!aside && !closingAside && step === "criar" && (
                     <AgentPurposeCreate
                         hideHeader
                         purposes={purposes}
@@ -279,7 +326,7 @@ export const EvaStudioJourney = forwardRef<EvaStudioJourneyHandle, EvaStudioJour
 
                 {/* ── Ensinar: conversar (principal) ou revisar o extraído ──
                     Modos montados e escondidos: alternar não perde a conversa */}
-                {!aside && step === "ensinar" && (
+                {!aside && !closingAside && step === "ensinar" && (
                     <>
                         <div className="vz-studiomode" role="tablist" aria-label="Como ensinar a EVA">
                             <button
@@ -306,43 +353,53 @@ export const EvaStudioJourney = forwardRef<EvaStudioJourneyHandle, EvaStudioJour
                             </button>
                         </div>
 
-                        <div hidden={teachMode !== "conversa"}>
-                            <ConversationalStudio
-                                hideHeader
-                                agentKey={chosenAgent}
-                                onProceed={() => advance("ensinar", "provar")}
-                                onComplete={(fields) => {
-                                    // Fecha o ciclo: o que a conversa montou vira material
-                                    // pro contexto da EVA (a etapa Revisar mostra como sugestões).
-                                    const spec = getSpecialist(chosenAgent);
-                                    const text = spec.fields
-                                        .map((f) => (fields[f.key] ? `${f.label}: ${fields[f.key]}` : ""))
-                                        .filter(Boolean)
-                                        .join("\n");
-                                    if (text) onSubmitText(text);
-                                }}
-                            />
-                        </div>
-                        <div hidden={teachMode !== "revisao"}>
-                            <GuidedContextBuilder
-                                hideHeader
-                                hasSourceMaterial={hasSourceMaterial}
-                                suggestions={suggestions}
-                                gaps={gaps}
-                                onResolve={onResolve}
-                                onConfirmBatch={onConfirmBatch}
-                                onDefineGap={onDefineGap}
-                                onSubmitText={onSubmitText}
-                            />
-                            <div className="vz-journey-footnav">
-                                <button
-                                    type="button"
-                                    className="vz-journey-footnav-btn"
-                                    onClick={() => advance("ensinar", "provar")}
-                                >
-                                    Continuar: provar a EVA
-                                    <ArrowRight style={{ width: 14, height: 14 }} />
-                                </button>
+                        {/* Cross-fade entre Conversar↔Revisar: ambos montados
+                            (preserva conversa/julgamentos), só anima opacity/transform */}
+                        <div className="vz-modeswap">
+                            <div
+                                className={`vz-modeswap-pane ${teachMode === "conversa" ? "vz-modeswap-pane--on" : "vz-modeswap-pane--off"}`}
+                                aria-hidden={teachMode !== "conversa"}
+                            >
+                                <ConversationalStudio
+                                    hideHeader
+                                    agentKey={chosenAgent}
+                                    onProceed={() => advance("ensinar", "provar")}
+                                    onComplete={(fields) => {
+                                        // Fecha o ciclo: o que a conversa montou vira material
+                                        // pro contexto da EVA (a etapa Revisar mostra como sugestões).
+                                        const spec = getSpecialist(chosenAgent);
+                                        const text = spec.fields
+                                            .map((f) => (fields[f.key] ? `${f.label}: ${fields[f.key]}` : ""))
+                                            .filter(Boolean)
+                                            .join("\n");
+                                        if (text) onSubmitText(text);
+                                    }}
+                                />
+                            </div>
+                            <div
+                                className={`vz-modeswap-pane ${teachMode === "revisao" ? "vz-modeswap-pane--on" : "vz-modeswap-pane--off"}`}
+                                aria-hidden={teachMode !== "revisao"}
+                            >
+                                <GuidedContextBuilder
+                                    hideHeader
+                                    hasSourceMaterial={hasSourceMaterial}
+                                    suggestions={suggestions}
+                                    gaps={gaps}
+                                    onResolve={onResolve}
+                                    onConfirmBatch={onConfirmBatch}
+                                    onDefineGap={onDefineGap}
+                                    onSubmitText={onSubmitText}
+                                />
+                                <div className="vz-journey-footnav">
+                                    <button
+                                        type="button"
+                                        className="vz-journey-footnav-btn"
+                                        onClick={() => advance("ensinar", "provar")}
+                                    >
+                                        Continuar: provar a EVA
+                                        <ArrowRight style={{ width: 14, height: 14 }} />
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </>
@@ -350,7 +407,7 @@ export const EvaStudioJourney = forwardRef<EvaStudioJourneyHandle, EvaStudioJour
 
                 {/* ── Provar: campo de provas (aquecimento) → casos reais (gate) ──
                     Modos montados e escondidos: voltar não zera os julgamentos */}
-                {!aside && step === "provar" && (
+                {!aside && !closingAside && step === "provar" && (
                     <>
                         <div className="vz-studiomode" role="tablist" aria-label="Como provar a EVA">
                             <button
@@ -376,34 +433,44 @@ export const EvaStudioJourney = forwardRef<EvaStudioJourneyHandle, EvaStudioJour
                             </button>
                         </div>
 
-                        <div hidden={proveMode !== "campo"}>
-                            <SimulationLab
-                                hideHeader
-                                onJudge={handleLabJudge}
-                                onComplete={() => setProveMode("reais")}
-                            />
-                        </div>
-                        <div hidden={proveMode !== "reais"}>
-                            <GuidedSimulationReplay
-                                hideHeader
-                                hasReplays={hasReplays}
-                                moments={moments}
-                                initialJudgments={replayInitialJudgments}
-                                onJudge={handleReplayJudge}
-                                onActivate={() => advance("provar", "ativar")}
-                                onRegenerate={onRegenerateReplays}
-                                regenerating={regeneratingReplays}
-                            />
+                        {/* Cross-fade entre Campo↔Casos reais: ambos montados
+                            (voltar não zera os julgamentos), só anima opacity/transform */}
+                        <div className="vz-modeswap">
+                            <div
+                                className={`vz-modeswap-pane ${proveMode === "campo" ? "vz-modeswap-pane--on" : "vz-modeswap-pane--off"}`}
+                                aria-hidden={proveMode !== "campo"}
+                            >
+                                <SimulationLab
+                                    hideHeader
+                                    onJudge={handleLabJudge}
+                                    onComplete={() => setProveMode("reais")}
+                                />
+                            </div>
+                            <div
+                                className={`vz-modeswap-pane ${proveMode === "reais" ? "vz-modeswap-pane--on" : "vz-modeswap-pane--off"}`}
+                                aria-hidden={proveMode !== "reais"}
+                            >
+                                <GuidedSimulationReplay
+                                    hideHeader
+                                    hasReplays={hasReplays}
+                                    moments={moments}
+                                    initialJudgments={replayInitialJudgments}
+                                    onJudge={handleReplayJudge}
+                                    onActivate={() => advance("provar", "ativar")}
+                                    onRegenerate={onRegenerateReplays}
+                                    regenerating={regeneratingReplays}
+                                />
+                            </div>
                         </div>
                     </>
                 )}
 
                 {/* ── Ativar ── */}
-                {!aside && step === "ativar" && (
+                {!aside && !closingAside && step === "ativar" && (
                     <div className={`vz-simreplay-panel vz-simreplay-panel--ready vz-journey-activate ${activated ? "vz-journey-activate--on" : ""}`}>
                         <div className="vz-simreplay-panel-top">
                             <span className={`vz-journey-activate-orb ${activated ? "vz-journey-activate-orb--on" : ""}`}>
-                                <EvaOrb variant="blue" size={52} showVoice={false} state="idle" />
+                                <EvaOrb variant="blue" size={52} showVoice={false} state={activated ? "speaking" : "thinking"} />
                             </span>
                             <div style={{ flex: 1, minWidth: 0 }}>
                                 <p className="vz-simreplay-panel-headline">

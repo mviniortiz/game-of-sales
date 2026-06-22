@@ -164,6 +164,17 @@ export function GuidedContextBuilder({
 
     return (
         <div className="vz-ctxbuild">
+            {/* Stagger de entrada dos cards de sugestão. */}
+            <style>{`
+                @keyframes vzGcbRise {
+                    from { opacity: 0; transform: translateY(8px); }
+                    to   { opacity: 1; transform: translateY(0); }
+                }
+                .vz-gcb-rise { animation: vzGcbRise 0.42s cubic-bezier(0.22, 1, 0.36, 1) both; }
+                @media (prefers-reduced-motion: reduce) {
+                    .vz-gcb-rise { animation: none !important; }
+                }
+            `}</style>
             {/* Header */}
             {!hideHeader && (
             <>
@@ -232,8 +243,8 @@ export function GuidedContextBuilder({
                             </button>
                         )}
                     </div>
-                    {high.map((s) => (
-                        <SuggestionCard key={s.id} suggestion={s} compact onResolve={handleResolve} />
+                    {high.map((s, i) => (
+                        <SuggestionCard key={s.id} suggestion={s} compact onResolve={handleResolve} index={i} />
                     ))}
                 </>
             )}
@@ -244,8 +255,8 @@ export function GuidedContextBuilder({
                     <div className="vz-ctxbuild-group-head">
                         <p className="vz-agentcreate-label">Olha estas com cuidado</p>
                     </div>
-                    {review.map((s) => (
-                        <SuggestionCard key={s.id} suggestion={s} onResolve={handleResolve} />
+                    {review.map((s, i) => (
+                        <SuggestionCard key={s.id} suggestion={s} onResolve={handleResolve} index={i} />
                     ))}
                 </>
             )}
@@ -293,11 +304,14 @@ function SuggestionCard({
     suggestion,
     compact = false,
     onResolve,
+    index = 0,
 }: {
     suggestion: ContextSuggestion;
     /** Alta confiança: card enxuto, evidência em 1 linha — é só carimbar. */
     compact?: boolean;
     onResolve: (s: ContextSuggestion, r: SuggestionResolution) => void;
+    /** Posição na lista — alimenta o stagger de entrada. */
+    index?: number;
 }) {
     const [draft, setDraft] = useState<string | null>(null);
     const editing = draft !== null;
@@ -315,7 +329,10 @@ function SuggestionCard({
     };
 
     return (
-        <div className={`vz-ctxbuild-card ${compact ? "vz-ctxbuild-card--compact" : ""}`}>
+        <div
+            className={`vz-ctxbuild-card vz-gcb-rise ${compact ? "vz-ctxbuild-card--compact" : ""}`}
+            style={{ animationDelay: `${Math.min(index, 8) * 0.055}s` }}
+        >
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span className="vz-ctxbuild-type">{TYPE_LABEL[suggestion.type]}</span>
                 <span className="vz-ctxbuild-conf" title={`Confiança ${Math.round(suggestion.confidence * 100)}%`}>

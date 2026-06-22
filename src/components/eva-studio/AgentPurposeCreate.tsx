@@ -64,6 +64,27 @@ export function AgentPurposeCreate({ purposes, sources, onCreate, onProceed, onP
 
     return (
         <div className="vz-agentcreate">
+            {/* Materialização: galeria recolhe, painel "vou olhar isto" entra. */}
+            <style>{`
+                @keyframes vzApcGalleryOut {
+                    from { opacity: 1; transform: translateY(0); }
+                    to   { opacity: 0; transform: translateY(-8px); }
+                }
+                @keyframes vzApcPanelIn {
+                    from { opacity: 0; transform: translateY(12px) scale(0.985); }
+                    to   { opacity: 1; transform: translateY(0) scale(1); }
+                }
+                .vz-apc-building {
+                    animation: vzApcPanelIn 0.46s cubic-bezier(0.22, 1, 0.36, 1) both;
+                }
+                .vz-apc-source-row {
+                    animation: vzApcPanelIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+                }
+                @media (prefers-reduced-motion: reduce) {
+                    .vz-apc-building,
+                    .vz-apc-source-row { animation: none !important; }
+                }
+            `}</style>
             {/* Header — orb do agente escolhido + pergunta única */}
             {!hideHeader && (
             <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 22 }}>
@@ -123,13 +144,17 @@ export function AgentPurposeCreate({ purposes, sources, onCreate, onProceed, onP
             ) : (
                 /* Transparência como consequência da decisão: escolheu → "vou
                    olhar isto pra montar". */
-                <div className="vz-agentcreate-building">
+                <div className="vz-agentcreate-building vz-apc-building">
                     <p className="vz-agentcreate-sub">
                         Boa escolha. Pra montar esse agente, vou olhar:
                     </p>
                     <div style={{ marginTop: 10 }}>
-                        {sources.map((s) => (
-                            <div key={s.key} className="vz-agentcreate-source">
+                        {sources.map((s, i) => (
+                            <div
+                                key={s.key}
+                                className="vz-agentcreate-source vz-apc-source-row"
+                                style={{ animationDelay: `${0.12 + i * 0.06}s` }}
+                            >
                                 <Check
                                     style={{
                                         width: 13,

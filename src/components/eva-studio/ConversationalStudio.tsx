@@ -17,7 +17,7 @@
 // e onComplete entrega os campos pra persistir no contexto da EVA.
 // ─────────────────────────────────────────────────────────────────────────────
 import { useRef, useState, useEffect, useCallback } from "react";
-import { ArrowUp, Check, Mic, Paperclip, FileImage, X } from "lucide-react";
+import { ArrowUp, Check, Mic, Paperclip, FileImage, X, ArrowLeft } from "lucide-react";
 import { EvaOrb } from "@/components/landing-v2/EvaOrb";
 import { useEvaStudioChat, type StudioFields } from "@/hooks/useEvaStudioChat";
 import { getSpecialist, type SpecialistKey } from "@/lib/eva/evaSpecialists";
@@ -43,23 +43,34 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
     const [recording, setRecording] = useState(false);
     const [attachment, setAttachment] = useState<string | null>(null);
     const [speechOk, setSpeechOk] = useState(true);
+    // Recap: quando a entrevista fecha, a EVA recapitula e o gestor confirma
+    // ANTES de entregar os campos (onComplete). "confirmed" = já gravou.
+    const [recapConfirmed, setRecapConfirmed] = useState(false);
 
     const scrollRef = useRef<HTMLDivElement>(null);
     const recognitionRef = useRef<unknown>(null);
     const fileRef = useRef<HTMLInputElement>(null);
     const completedRef = useRef(false);
 
+    // A entrevista terminou, mas só vira "concluída de verdade" após o recap.
+    const showRecap = done && !recapConfirmed;
+
     useEffect(() => {
         scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
     }, [messages, thinking]);
 
-    // Entrega os campos montados uma vez, quando a entrevista fecha.
-    useEffect(() => {
-        if (done && !completedRef.current) {
-            completedRef.current = true;
-            onComplete?.(chat.fields);
-        }
-    }, [done, chat.fields, onComplete]);
+    // Entrega os campos montados uma vez — SÓ depois de o gestor confirmar o recap.
+    const confirmRecap = useCallback(() => {
+        if (completedRef.current) return;
+        completedRef.current = true;
+        setRecapConfirmed(true);
+        onComplete?.(chat.fields);
+    }, [chat.fields, onComplete]);
+
+    // "Quero ajustar" reabre a conversa: volta a aceitar mensagens.
+    const reopenForAdjust = useCallback(() => {
+        chat.reopen();
+    }, [chat]);
 
     const handleSend = () => {
         const text = input.trim();
@@ -114,6 +125,48 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
             className={`vz-convo ${hideHeader ? "vz-convo--embedded" : ""}`}
             style={{ ["--convo-accent"]: accent } as React.CSSProperties}
         >
+            {/* Polimento: agente "nascendo" suave (barra com easing, check pop,
+                valor extraído surgindo) + recap antes de gravar. */}
+            <style>{`
+                .vz-cvs-prog-fill {
+                    transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+                }
+                @keyframes vzCvsCheckPop {
+                    0%   { transform: scale(0.4); opacity: 0; }
+                    60%  { transform: scale(1.12); }
+                    100% { transform: scale(1); opacity: 1; }
+                }
+                @keyframes vzCvsValueIn {
+                    from { opacity: 0; transform: translateY(4px); }
+                    to   { opacity: 1; transform: translateY(0); }
+                }
+                .vz-cvs-mark--pop {
+                    animation: vzCvsCheckPop 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+                }
+                .vz-cvs-value {
+                    transition: color 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+                }
+                .vz-cvs-value--on {
+                    animation: vzCvsValueIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+                }
+                @keyframes vzCvsRecapIn {
+                    from { opacity: 0; transform: translateY(10px); }
+                    to   { opacity: 1; transform: translateY(0); }
+                }
+                .vz-cvs-recap {
+                    animation: vzCvsRecapIn 0.44s cubic-bezier(0.22, 1, 0.36, 1) both;
+                }
+                .vz-cvs-recap-row {
+                    animation: vzCvsValueIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+                }
+                @media (prefers-reduced-motion: reduce) {
+                    .vz-cvs-prog-fill { transition: none; }
+                    .vz-cvs-mark--pop,
+                    .vz-cvs-value--on,
+                    .vz-cvs-recap,
+                    .vz-cvs-recap-row { animation: none !important; }
+                }
+            `}</style>
             {!hideHeader && (
                 <div className="vz-convo-head">
                     <EvaOrb variant={spec.orb} size={36} showVoice={false} state={thinking ? "analyzing" : "idle"} />
@@ -239,15 +292,15 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
                             <p className="vz-convo-agent-name">{spec.role}</p>
                         </div>
                         <span
-                            className={`vz-convo-agent-status ${done ? "vz-convo-agent-status--done" : ""}`}
-                            style={done ? { color: accent } : undefined}
+                            className={`vz-convo-agent-status ${recapConfirmed ? "vz-convo-agent-status--done" : ""}`}
+                            style={recapConfirmed ? { color: accent } : undefined}
                         >
-                            {done ? "pronta" : thinking ? "pensando…" : "montando…"}
+                            {recapConfirmed ? "pronta" : showRecap ? "confere comigo" : thinking ? "pensando…" : "montando…"}
                         </span>
                     </div>
 
                     <div className="vz-convo-agent-prog">
-                        <div className="vz-convo-agent-prog-fill" style={{ width: `${(filledCount / total) * 100}%`, background: accent }} />
+                        <div className="vz-convo-agent-prog-fill vz-cvs-prog-fill" style={{ width: `${(filledCount / total) * 100}%`, background: accent }} />
                     </div>
 
                     <div className="vz-convo-fields">
@@ -255,12 +308,20 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
                             const on = f.value.trim().length > 0;
                             return (
                                 <div key={f.key} className={`vz-convo-field ${on ? "vz-convo-field--on" : ""}`}>
-                                    <span className="vz-convo-field-mark" style={on ? { background: accent, borderColor: accent } : undefined}>
+                                    <span
+                                        key={on ? "on" : "off"}
+                                        className={`vz-convo-field-mark ${on ? "vz-cvs-mark--pop" : ""}`}
+                                        style={on ? { background: accent, borderColor: accent } : undefined}
+                                    >
                                         {on ? <Check style={{ width: 12, height: 12 }} strokeWidth={3} /> : i + 1}
                                     </span>
                                     <div style={{ minWidth: 0 }}>
                                         <p className="vz-convo-field-label">{f.label}</p>
-                                        <p className="vz-convo-field-value">
+                                        <p
+                                            key={f.value || "empty"}
+                                            className={`vz-convo-field-value vz-cvs-value ${on ? "vz-cvs-value--on" : ""}`}
+                                            style={on ? { color: "var(--vyz-text-strong, #0B1220)" } : undefined}
+                                        >
                                             {on ? f.value : "a EVA ainda vai te perguntar"}
                                         </p>
                                     </div>
@@ -269,8 +330,68 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
                         })}
                     </div>
 
-                    {done && (
-                        <button type="button" className="vz-convo-agent-cta" onClick={onProceed} style={{ background: accent }}>
+                    {/* RECAP antes de gravar: a EVA recapitula e o gestor confirma.
+                        Só após confirmar o onComplete dispara (via confirmRecap). */}
+                    {showRecap && (
+                        <div className="vz-cvs-recap" style={{ marginTop: 16 }}>
+                            <div
+                                style={{
+                                    borderRadius: 10,
+                                    border: "1px solid var(--vyz-border-subtle, #E2E8F0)",
+                                    background: "var(--vyz-surface-2, #FBFCFE)",
+                                    padding: "14px 14px 12px",
+                                }}
+                            >
+                                <p style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12.5, fontWeight: 600, color: "var(--vyz-text-strong, #0B1220)" }}>
+                                    <span style={{ lineHeight: 0 }}>
+                                        <EvaOrb variant={spec.orb} size={18} showVoice={false} state="idle" />
+                                    </span>
+                                    Montei a sua EVA de {spec.label.toLowerCase()} assim:
+                                </p>
+                                <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 8 }}>
+                                    {fieldsView.map((f, i) => {
+                                        const has = f.value.trim().length > 0;
+                                        return (
+                                            <div
+                                                key={f.key}
+                                                className="vz-cvs-recap-row"
+                                                style={{ animationDelay: `${0.06 + i * 0.06}s` }}
+                                            >
+                                                <p style={{ fontSize: 10.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--vyz-text-muted, #64748B)" }}>
+                                                    {f.label}
+                                                </p>
+                                                <p style={{ fontSize: 12.5, color: has ? "var(--vyz-text-primary, #1E293B)" : "var(--vyz-text-muted, #94A3B8)", marginTop: 1 }}>
+                                                    {has ? f.value : "—"}
+                                                </p>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12 }}>
+                                <button
+                                    type="button"
+                                    className="vz-convo-agent-cta"
+                                    onClick={confirmRecap}
+                                    style={{ background: "#0B1220", flex: 1 }}
+                                >
+                                    Confirmar e gravar
+                                    <Check style={{ width: 14, height: 14 }} strokeWidth={2.6} />
+                                </button>
+                                <button
+                                    type="button"
+                                    className="vz-evassist-btn vz-evassist-btn--ghost"
+                                    onClick={reopenForAdjust}
+                                >
+                                    <ArrowLeft style={{ width: 13, height: 13 }} />
+                                    Quero ajustar
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {recapConfirmed && (
+                        <button type="button" className="vz-convo-agent-cta" onClick={onProceed} style={{ background: accent, marginTop: 16 }}>
                             Testar a EVA nos meus casos
                             <ArrowUp style={{ width: 14, height: 14, transform: "rotate(90deg)" }} />
                         </button>

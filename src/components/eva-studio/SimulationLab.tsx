@@ -233,6 +233,17 @@ export function SimulationLab({ hideHeader, onJudge, onComplete }: SimulationLab
 
     return (
         <div className={`vz-simlab ${hideHeader ? "vz-simlab--embedded" : ""}`}>
+            {/* Stagger de entrada da trilha de cenários. */}
+            <style>{`
+                @keyframes vzSlRise {
+                    from { opacity: 0; transform: translateY(8px); }
+                    to   { opacity: 1; transform: translateY(0); }
+                }
+                .vz-sl-rise { animation: vzSlRise 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+                @media (prefers-reduced-motion: reduce) {
+                    .vz-sl-rise { animation: none !important; }
+                }
+            `}</style>
             {!hideHeader && (
                 <div className="vz-simlab-head">
                     <EvaEntity size={34} state="idle" />
@@ -247,7 +258,7 @@ export function SimulationLab({ hideHeader, onJudge, onComplete }: SimulationLab
                 {/* ── Trilha de dificuldade ── */}
                 <aside className="vz-simlab-track">
                     <p className="vz-simlab-track-head">Do mais simples ao extremo</p>
-                    {SCENARIOS.map((s) => {
+                    {SCENARIOS.map((s, i) => {
                         const on = s.id === activeId;
                         const wasJudged = judged.has(s.id);
                         const color = DIFF_COLOR[s.difficulty];
@@ -255,9 +266,9 @@ export function SimulationLab({ hideHeader, onJudge, onComplete }: SimulationLab
                             <button
                                 key={s.id}
                                 type="button"
-                                className={`vz-simlab-level ${on ? "vz-simlab-level--on" : ""}`}
+                                className={`vz-simlab-level vz-sl-rise ${on ? "vz-simlab-level--on" : ""}`}
                                 onClick={() => setActiveId(s.id)}
-                                style={on ? { borderColor: color } : undefined}
+                                style={{ animationDelay: `${i * 0.055}s`, ...(on ? { borderColor: color } : {}) }}
                             >
                                 <span className="vz-simlab-level-avatar" style={{ background: `${color}1a`, color }}>
                                     {wasJudged ? <Check style={{ width: 13, height: 13 }} strokeWidth={3} /> : s.persona[0]}

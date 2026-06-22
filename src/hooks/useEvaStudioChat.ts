@@ -38,6 +38,19 @@ export function useEvaStudioChat(agentKey: SpecialistKey) {
     const [done, setDone] = useState(false);
     const fallbackStep = useRef(0);
 
+    // A 1ª fala é SEMPRE a abertura do especialista escolhido. Se o agente trocar
+    // antes de a conversa começar (sem remount), reflete a abertura do novo agente.
+    const lastSpecKey = useRef(spec.key);
+    if (lastSpecKey.current !== spec.key) {
+        lastSpecKey.current = spec.key;
+        if (messages.length <= 1) {
+            setMessages([{ from: "eva", text: spec.opening }]);
+            setFields(emptyFields);
+            setDone(false);
+            fallbackStep.current = 0;
+        }
+    }
+
     const fieldsView: StudioFieldView[] = useMemo(
         () => spec.fields.map((f) => ({ key: f.key, label: f.label, value: fields[f.key] ?? "" })),
         [spec, fields],
@@ -90,6 +103,16 @@ export function useEvaStudioChat(agentKey: SpecialistKey) {
         [messages, fields, thinking, done, spec],
     );
 
+    // Reabre a entrevista pós-recap ("quero ajustar") sem perder o que já foi
+    // montado: só destrava o envio e deixa a EVA convidar a ajustar.
+    const reopen = useCallback(() => {
+        setDone(false);
+        setMessages((m) => [
+            ...m,
+            { from: "eva", text: "Claro. O que você quer ajustar? Me fala e eu refaço." },
+        ]);
+    }, []);
+
     const reset = useCallback(() => {
         setMessages([{ from: "eva", text: spec.opening }]);
         setFields(emptyFields);
@@ -98,5 +121,5 @@ export function useEvaStudioChat(agentKey: SpecialistKey) {
         fallbackStep.current = 0;
     }, [spec, emptyFields]);
 
-    return { messages, fields, fieldsView, filledCount, total, thinking, done, send, reset };
+    return { messages, fields, fieldsView, filledCount, total, thinking, done, send, reset, reopen };
 }

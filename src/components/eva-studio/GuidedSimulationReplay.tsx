@@ -159,6 +159,17 @@ export function GuidedSimulationReplay({
 
     return (
         <div className="vz-ctxbuild">
+            {/* Stagger de entrada dos momentos-chave. */}
+            <style>{`
+                @keyframes vzGsrRise {
+                    from { opacity: 0; transform: translateY(8px); }
+                    to   { opacity: 1; transform: translateY(0); }
+                }
+                .vz-gsr-rise { animation: vzGsrRise 0.42s cubic-bezier(0.22, 1, 0.36, 1) both; }
+                @media (prefers-reduced-motion: reduce) {
+                    .vz-gsr-rise { animation: none !important; }
+                }
+            `}</style>
             {/* Header — mesma anatomia do F2 */}
             {!hideHeader && (
             <>
@@ -202,8 +213,8 @@ export function GuidedSimulationReplay({
             )}
 
             {/* Fila de momentos */}
-            {pending.map((m) => (
-                <MomentCard key={m.id} moment={m} onJudge={handleJudge} />
+            {pending.map((m, i) => (
+                <MomentCard key={m.id} moment={m} onJudge={handleJudge} index={i} />
             ))}
 
             {pending.length === 0 && (
@@ -243,9 +254,12 @@ export function GuidedSimulationReplay({
 function MomentCard({
     moment,
     onJudge,
+    index = 0,
 }: {
     moment: ReplayMoment;
     onJudge: (m: ReplayMoment, j: MomentJudgment) => void;
+    /** Posição na fila — alimenta o stagger de entrada. */
+    index?: number;
 }) {
     const [draft, setDraft] = useState<string | null>(null);
     const [showSeller, setShowSeller] = useState(false);
@@ -263,7 +277,10 @@ function MomentCard({
     };
 
     return (
-        <div className="vz-simreplay-card">
+        <div
+            className="vz-simreplay-card vz-gsr-rise"
+            style={{ animationDelay: `${Math.min(index, 8) * 0.055}s` }}
+        >
             {/* Cabeçalho: lead + tensão + etiqueta de desfecho */}
             <div className="vz-simreplay-head">
                 <div style={{ minWidth: 0 }}>

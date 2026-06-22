@@ -14,7 +14,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import type { ReactNode } from "react";
 import { Check } from "lucide-react";
-import { EvaOrb } from "@/components/landing-v2/EvaOrb";
+import { EvaOrb, type EvaOrbState } from "@/components/landing-v2/EvaOrb";
 
 export type StudioStepKey = "criar" | "ensinar" | "provar" | "ativar";
 
@@ -39,6 +39,9 @@ export interface EvaStudioShellProps {
     secondary?: { key: string; label: string; onClick: () => void; active?: boolean }[];
     /** Vista secundária aberta no conteúdo → esconde o rótulo do passo. */
     hideStepLabel?: boolean;
+    /** Estado do orb do cabeçalho — reage ao passo atual (idle no Criar,
+     *  analyzing/thinking ao Ensinar/Provar, speaking ao Ativar). */
+    orbState?: EvaOrbState;
     children: ReactNode;
 }
 
@@ -56,6 +59,7 @@ export function EvaStudioShell({
     readiness,
     secondary,
     hideStepLabel,
+    orbState = "idle",
     children,
 }: EvaStudioShellProps) {
     const currentStep = steps.find((s) => s.key === current);
@@ -67,7 +71,7 @@ export function EvaStudioShell({
         <div className="vz-studioshell">
             {/* ── Cabeçalho ÚNICO ── */}
             <div className="vz-studioshell-head">
-                <EvaOrb variant="blue" size={38} showVoice={false} state="idle" />
+                <EvaOrb variant="blue" size={38} showVoice={false} state={orbState} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                     <h1 className="vz-studioshell-title">EVA Studio</h1>
                     <p className="vz-studioshell-subtitle">
