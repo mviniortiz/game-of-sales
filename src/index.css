@@ -3137,6 +3137,38 @@ All colors MUST be HSL.
 .vz-simlab--embedded { max-width: none; padding: 0; }
 .vz-convo--embedded .vz-convo-body { height: min(62vh, 560px); }
 
+/* ── EVA Studio — empilhamento limpo + respiro no mobile (≤880px) ────────────
+   Os grids de 2 colunas já colapsam neste breakpoint; aqui resolvemos a altura
+   ESPREMIDA do chat embedded (o seletor .vz-convo--embedded vencia o colapso e
+   prendia chat+aside em 62vh), compactamos o stepper e cortamos respiro vertical
+   excessivo. Bloco posicionado após as regras do Studio pra vencer no cascade.
+   Desktop intacto. */
+@media (max-width: 880px) {
+  .vz-studioshell { padding: 20px clamp(14px, 4vw, 22px) 40px; }
+  .vz-studioshell-stepper { margin-top: 16px; padding-bottom: 16px; }
+  .vz-studioshell-stepper-label { display: none; } /* só os dots; o rail mostra os nomes */
+  .vz-studioshell-body { gap: 16px; margin-top: 16px; }
+
+  /* Conversacional: empilha de verdade e o chat ganha altura própria (rola por
+     dentro, com o composer ao fim), em vez de os dois painéis dividirem 62vh. */
+  .vz-convo-body,
+  .vz-convo--embedded .vz-convo-body {
+    grid-template-columns: 1fr;
+    height: auto;
+    gap: 12px;
+  }
+  .vz-convo-agent { order: 0; } /* chat primeiro no mobile; progresso/recap abaixo */
+  .vz-convo-chat { height: 60vh; }
+  .vz-convo-row { max-width: 92%; }
+  .vz-convo-title { font-size: 17px; }
+
+  /* Respiro vertical: o embedded zera só o padding lateral; o top/bottom seguia alto. */
+  .vz-agentcreate { padding-top: 24px; padding-bottom: 28px; }
+  .vz-ctxbuild { padding-top: 22px; }
+  .vz-simlab-body { gap: 14px; }
+  .vz-ctxbuild-evidence { white-space: normal; word-break: break-word; }
+}
+
 /* Selo de julgamento já feito no veredito do campo de provas */
 .vz-simlab-judged {
   display: inline-flex; align-items: center; gap: 6px;
