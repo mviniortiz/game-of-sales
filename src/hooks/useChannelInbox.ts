@@ -26,6 +26,9 @@ const MESSAGES_FETCH_LIMIT = 200;
 const REALTIME_DEBOUNCE_CHATS_MS = 500;
 const REALTIME_DEBOUNCE_MESSAGES_MS = 300;
 const PENDING_TTL_MS = 30_000;
+// Resync de fallback do Inbox: o Realtime cobre o caminho rápido; este intervalo
+// garante que a conversa aberta não congele se um evento se perder (igual ao Pulse).
+const INBOX_RESYNC_MS = 15_000;
 
 // ─── Rows ───────────────────────────────────────────────────────────────────
 
@@ -777,6 +780,21 @@ export function useChannelInbox(): UseChannelInbox {
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [connectionId]);
+
+    // ── 8b. Resync de fallback (rede de segurança do Realtime) ────────────
+    // O Realtime pode PERDER eventos (websocket dropa, aba volta do background,
+    // evento não entregue). Sem fallback, mensagens novas da conversa ABERTA não
+    // aparecem até trocar de chat — foi o "travou em 12:17" reportado, com a
+    // sessão viva e o webhook gravando normalmente. Espelha o resync do Pulse.
+    // Pausa quando a aba está oculta pra não gastar à toa.
+    useEffect(() => {
+        if (!connectionId) return;
+        const id = setInterval(() => {
+            if (typeof document !== "undefined" && document.hidden) return;
+            void refreshAll(selectedConversationIdRef.current);
+        }, INBOX_RESYNC_MS);
+        return () => clearInterval(id);
+    }, [connectionId, refreshAll]);
 
     // ── 9. Cleanup timers no unmount ──────────────────────────────────────
     useEffect(() => {
