@@ -211,6 +211,8 @@ export interface UseChannelInbox {
     loadingOlder: boolean;
     /** Carrega a próxima página de mensagens mais antigas (prepend). */
     loadOlderMessages: () => Promise<void>;
+    /** TYPING — jid do contato digitando agora (null = ninguém). */
+    typingJid: string | null;
     chatsError: string | null;
     messagesError: string | null;
     fetchMessages: (conversationId: string) => Promise<void>;
@@ -255,6 +257,8 @@ export function useChannelInbox(): UseChannelInbox {
     const [olderMessages, setOlderMessages] = useState<MessageLine[]>([]);
     const [messagesHasMore, setMessagesHasMore] = useState(false);
     const [loadingOlder, setLoadingOlder] = useState(false);
+    // TYPING — jid do contato "digitando…" agora (efêmero, via Realtime broadcast).
+    const [typingJid, setTypingJid] = useState<string | null>(null);
     const [pendingByConv, setPendingByConv] = useState<Record<string, ChannelPendingOutbound[]>>({});
     const [isLoadingChats, setIsLoadingChats] = useState(false);
     const [isLoadingMessages, setIsLoadingMessages] = useState(false);
@@ -836,6 +840,33 @@ export function useChannelInbox(): UseChannelInbox {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [connectionId]);
 
+    // ── 8a. TYPING — "digitando…" do contato (Realtime broadcast efêmero) ─────
+    // O webhook retransmite o presence.update do WhatsApp pra wa-typing:<instância>.
+    // Guarda só o jid de quem está digitando; some sozinho após 8s sem update.
+    const typingClearRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    useEffect(() => {
+        const inst = connection?.external_id;
+        if (!inst) return;
+        const ch = supabase
+            .channel(`wa-typing:${inst}`)
+            .on("broadcast", { event: "typing" }, (msg) => {
+                const p = (msg.payload || {}) as { jid?: string; typing?: boolean };
+                if (!p.jid) return;
+                if (p.typing) {
+                    setTypingJid(p.jid);
+                    if (typingClearRef.current) clearTimeout(typingClearRef.current);
+                    typingClearRef.current = setTimeout(() => setTypingJid(null), 8000);
+                } else {
+                    setTypingJid((cur) => (cur === p.jid ? null : cur));
+                }
+            })
+            .subscribe();
+        return () => {
+            if (typingClearRef.current) clearTimeout(typingClearRef.current);
+            void supabase.removeChannel(ch);
+        };
+    }, [connection?.external_id]);
+
     // ── 8b. Resync de fallback (rede de segurança do Realtime) ────────────
     // O Realtime pode PERDER eventos (websocket dropa, aba volta do background,
     // evento não entregue). Sem fallback, mensagens novas da conversa ABERTA não
@@ -908,6 +939,7 @@ export function useChannelInbox(): UseChannelInbox {
         messagesHasMore,
         loadingOlder,
         loadOlderMessages,
+        typingJid,
         chatsError,
         messagesError,
         fetchMessages,

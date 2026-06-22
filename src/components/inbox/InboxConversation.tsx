@@ -151,6 +151,8 @@ interface InboxConversationProps {
     hasMoreMessages?: boolean;
     loadingOlder?: boolean;
     onLoadOlder?: () => void;
+    /** TYPING — o contato desta conversa está digitando agora. */
+    typing?: boolean;
 }
 
 export function InboxConversation({
@@ -173,6 +175,7 @@ export function InboxConversation({
     hasMoreMessages,
     loadingOlder,
     onLoadOlder,
+    typing,
 }: InboxConversationProps) {
     if (!chat) {
         return <EmptyConversation />;
@@ -181,6 +184,7 @@ export function InboxConversation({
     return (
         <ConversationView
             chat={chat}
+            typing={typing}
             connected={connected}
             statusChecked={statusChecked}
             onReconnect={onReconnect}
@@ -260,6 +264,7 @@ interface ConversationViewProps {
     hasMoreMessages?: boolean;
     loadingOlder?: boolean;
     onLoadOlder?: () => void;
+    typing?: boolean;
 }
 
 // INBOX.MEDIA — limites e leitura de arquivo. 16MB é o teto prático do WhatsApp
@@ -307,6 +312,7 @@ function ConversationView({
     hasMoreMessages,
     loadingOlder,
     onLoadOlder,
+    typing,
 }: ConversationViewProps) {
     const [composer, setComposer] = useState("");
     const [sending, setSending] = useState(false);
@@ -502,6 +508,7 @@ function ConversationView({
                 onRefresh={onRefresh}
                 isRefreshing={isRefreshing}
                 onOpenEva={onOpenEva}
+                typing={typing}
             />
 
             <MessageThread
@@ -609,12 +616,14 @@ function ConversationHeader({
     onRefresh,
     isRefreshing,
     onOpenEva,
+    typing,
 }: {
     chat: Chat;
     onBack?: () => void;
     onRefresh?: () => void;
     isRefreshing?: boolean;
     onOpenEva?: () => void;
+    typing?: boolean;
 }) {
     const picUrl = useProfilePic(chat.phone, chat.profilePicUrl);
     return (
@@ -663,18 +672,33 @@ function ConversationHeader({
                         </span>
                     )}
                 </div>
-                {/* V1.0.1 — origem/status/score mock removidos. Apenas canal. */}
+                {/* V1.0.1 — origem/status/score mock removidos. Apenas canal.
+                    TYPING — "digitando…" substitui o selo de canal quando o contato digita. */}
                 <div className="flex items-center gap-1.5 flex-wrap">
-                    <span
-                        className="inline-flex items-center gap-1 text-[10.5px]"
-                        style={{ color: "#64748B" }}
-                    >
+                    {typing ? (
                         <span
-                            className="h-1.5 w-1.5 rounded-full"
-                            style={{ background: "#10B981" }}
-                        />
-                        WhatsApp
-                    </span>
+                            className="inline-flex items-center gap-1.5 text-[10.5px] font-medium"
+                            style={{ color: "#10B981" }}
+                        >
+                            digitando
+                            <span className="vz-typing-dots inline-flex gap-[2px]">
+                                <span className="vz-typing-dot" />
+                                <span className="vz-typing-dot" />
+                                <span className="vz-typing-dot" />
+                            </span>
+                        </span>
+                    ) : (
+                        <span
+                            className="inline-flex items-center gap-1 text-[10.5px]"
+                            style={{ color: "#64748B" }}
+                        >
+                            <span
+                                className="h-1.5 w-1.5 rounded-full"
+                                style={{ background: "#10B981" }}
+                            />
+                            WhatsApp
+                        </span>
+                    )}
                 </div>
             </div>
 

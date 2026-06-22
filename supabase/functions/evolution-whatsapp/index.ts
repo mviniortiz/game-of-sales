@@ -75,7 +75,7 @@ async function ensureWebhook(instanceName: string): Promise<{ ok: boolean; error
           url,
           byEvents: false,
           base64: false,
-          events: ["MESSAGES_UPSERT"],
+          events: ["MESSAGES_UPSERT", "MESSAGES_UPDATE", "PRESENCE_UPDATE"],
         },
       }),
     });
@@ -542,7 +542,7 @@ serve(async (req) => {
             url: `${WEBHOOK_RECEIVER_URL}?secret=${EVOLUTION_WEBHOOK_SECRET}`,
             byEvents: false,
             base64: false,
-            events: ["MESSAGES_UPSERT", "MESSAGES_UPDATE"],
+            events: ["MESSAGES_UPSERT", "MESSAGES_UPDATE", "PRESENCE_UPDATE"],
           };
         }
         const createRes = await evolutionRequest("/instance/create", {

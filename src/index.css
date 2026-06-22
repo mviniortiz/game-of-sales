@@ -3137,6 +3137,25 @@ All colors MUST be HSL.
 .vz-simlab--embedded { max-width: none; padding: 0; }
 .vz-convo--embedded .vz-convo-body { height: min(62vh, 560px); }
 
+/* ── Inbox — indicador "digitando…" (3 pontinhos) ── */
+.vz-typing-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: #10b981;
+  display: inline-block;
+  animation: vz-typing-bounce 1.2s infinite ease-in-out both;
+}
+.vz-typing-dot:nth-child(2) { animation-delay: 0.15s; }
+.vz-typing-dot:nth-child(3) { animation-delay: 0.3s; }
+@keyframes vz-typing-bounce {
+  0%, 80%, 100% { opacity: 0.3; transform: translateY(0); }
+  40% { opacity: 1; transform: translateY(-2px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vz-typing-dot { animation: none; opacity: 0.7; }
+}
+
 /* ── EVA Studio — empilhamento limpo + respiro no mobile (≤880px) ────────────
    Os grids de 2 colunas já colapsam neste breakpoint; aqui resolvemos a altura
    ESPREMIDA do chat embedded (o seletor .vz-convo--embedded vencia o colapso e

@@ -566,6 +566,39 @@ const CH_STATUS_RANK: Record<string, number> = {
   queued: 0, failed: 0, received: 1, sent: 1, delivered: 2, read: 3,
 };
 
+// TYPING — recebe presence.update do Evolution/Baileys e RETRANSMITE via Realtime
+// broadcast (efêmero). Formato Baileys: data.id = jid, data.presences[jid].
+// lastKnownPresence = "composing" (digitando) | "paused" | "available" | ...
+async function handlePresenceUpdate(payload: any): Promise<Response> {
+  const instanceName: string | undefined = payload?.instance || payload?.data?.instance;
+  if (!instanceName) return json(200, { ok: true });
+  const data: any = payload?.data || {};
+  const jid: string = data?.id || "";
+  const presences: any = data?.presences || {};
+  const pres: any = (jid && presences[jid]) || Object.values(presences)[0] || {};
+  const state = String(pres?.lastKnownPresence || "").toLowerCase();
+  const typing = state === "composing" || state === "recording";
+  if (!jid) return json(200, { ok: true });
+
+  // Broadcast via REST do Realtime (server-side, service_role). Best-effort.
+  try {
+    await fetch(`${SUPABASE_URL}/realtime/v1/api/broadcast`, {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        messages: [{ topic: `wa-typing:${instanceName}`, event: "typing", payload: { jid, typing } }],
+      }),
+    });
+  } catch (err) {
+    console.warn("[webhook] presence broadcast failed:", (err as any)?.message);
+  }
+  return json(200, { ok: true, typing, jid });
+}
+
 async function handleMessagesUpdate(payload: any): Promise<Response> {
   const instanceName: string | undefined = payload.instance || payload.data?.instance;
   if (!instanceName) return json(200, { ok: true, ignored: "no_instance" });
@@ -637,6 +670,12 @@ serve(async (req) => {
   // INBOX.STATUS — atualiza os checks (entregue/lido) das mensagens enviadas.
   if (event === "messages.update") {
     return await handleMessagesUpdate(payload);
+  }
+
+  // TYPING — "digitando…": presença do contato. Efêmero, via Realtime broadcast
+  // (sem gravar no banco). O front escuta e mostra o indicador na conversa aberta.
+  if (event === "presence.update") {
+    return await handlePresenceUpdate(payload);
   }
 
   if (event !== "messages.upsert") {

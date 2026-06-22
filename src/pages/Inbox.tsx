@@ -524,6 +524,7 @@ const Inbox = () => {
                     hasMoreMessages={!useLegacy ? channelInbox.messagesHasMore : false}
                     loadingOlder={!useLegacy ? channelInbox.loadingOlder : false}
                     onLoadOlder={!useLegacy ? channelInbox.loadOlderMessages : undefined}
+                    typing={!useLegacy && !!selectedChat?.chatJid && channelInbox.typingJid === selectedChat.chatJid}
                 />
             </main>
 
