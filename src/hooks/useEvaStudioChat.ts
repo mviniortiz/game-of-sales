@@ -1,11 +1,18 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { getSpecialist, type SpecialistKey } from "@/lib/eva/evaSpecialists";
+import type { EvaPriorContext } from "./useEvaPriorContext";
 
 // useEvaStudioChat — conversa REAL com a EVA pra montar um agente especialista.
 // Chama a edge `eva-studio-chat` (LLM conduz a entrevista + extrai os campos do
 // agente escolhido). Fail-open: sem backend/key, cai num roteiro guiado e os
 // campos recebem exatamente o que o gestor digitou (nada inventado).
+//
+// Leva 3 (2026-06-21):
+//  - PERSISTÊNCIA: a conversa sobrevive a refresh (localStorage por empresa+agente).
+//  - ADAPTATIVIDADE: recebe o contexto que a empresa já configurou (prior) e já
+//    chega com os campos óbvios preenchidos + avisa a EVA pra não repetir perguntas.
 
 export type StudioMsg = { from: "eva" | "user"; text: string; attachment?: string };
 export type StudioFields = Record<string, string>;
@@ -25,11 +32,50 @@ const FALLBACK_FOLLOWUPS = [
 ];
 const FALLBACK_CLOSING = "Pronto, montei a sua EVA. Olha à direita o que eu entendi. Se tiver algo torto, é só me dizer e eu ajusto.";
 
-export function useEvaStudioChat(agentKey: SpecialistKey) {
+// ── Persistência (localStorage) ──────────────────────────────────────────────
+const STORE_PREFIX = "vyz:eva-studio-chat:v1";
+interface SavedSession { v: 1; messages: StudioMsg[]; fields: StudioFields; done: boolean; step: number }
+
+function storeKey(companyId: string | null | undefined, agentKey: string): string {
+    return `${STORE_PREFIX}:${companyId ?? "anon"}:${agentKey}`;
+}
+function loadSession(key: string): SavedSession | null {
+    try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return null;
+        const s = JSON.parse(raw) as SavedSession;
+        if (s && s.v === 1 && Array.isArray(s.messages) && s.messages.length > 0 && s.fields && typeof s.fields === "object") {
+            return s;
+        }
+    } catch { /* storage indisponível / corrompido */ }
+    return null;
+}
+function saveSession(key: string, s: SavedSession) {
+    try { localStorage.setItem(key, JSON.stringify(s)); } catch { /* quota / modo privado */ }
+}
+function clearSession(key: string) {
+    try { localStorage.removeItem(key); } catch { /* noop */ }
+}
+
+// Aplica os valores que a empresa já configurou (prior.seeds) nos campos vazios
+// do agente escolhido — adaptatividade visível antes mesmo da 1ª pergunta.
+function applySeeds(empty: StudioFields, fieldKeys: string[], prior?: EvaPriorContext): StudioFields {
+    const out = { ...empty };
+    if (!prior?.seeds) return out;
+    for (const k of fieldKeys) {
+        const v = prior.seeds[k];
+        if (v && !out[k]) out[k] = v;
+    }
+    return out;
+}
+
+export function useEvaStudioChat(agentKey: SpecialistKey, prior?: EvaPriorContext) {
+    const { companyId } = useAuth();
     const spec = useMemo(() => getSpecialist(agentKey), [agentKey]);
+    const fieldKeys = useMemo(() => spec.fields.map((f) => f.key), [spec]);
     const emptyFields = useMemo<StudioFields>(
-        () => Object.fromEntries(spec.fields.map((f) => [f.key, ""])),
-        [spec],
+        () => Object.fromEntries(fieldKeys.map((k) => [k, ""])),
+        [fieldKeys],
     );
 
     const [messages, setMessages] = useState<StudioMsg[]>([{ from: "eva", text: spec.opening }]);
@@ -37,19 +83,52 @@ export function useEvaStudioChat(agentKey: SpecialistKey) {
     const [thinking, setThinking] = useState(false);
     const [done, setDone] = useState(false);
     const fallbackStep = useRef(0);
+    const seededRef = useRef(false);
 
-    // A 1ª fala é SEMPRE a abertura do especialista escolhido. Se o agente trocar
-    // antes de a conversa começar (sem remount), reflete a abertura do novo agente.
-    const lastSpecKey = useRef(spec.key);
-    if (lastSpecKey.current !== spec.key) {
-        lastSpecKey.current = spec.key;
-        if (messages.length <= 1) {
+    // ── (Re)carrega a sessão sempre que mudar empresa OU agente (sessionId). ──
+    // Restaura do localStorage se houver; senão começa limpo (seeds entram via efeito).
+    const sessionId = `${companyId ?? "anon"}:${spec.key}`;
+    const loadedFor = useRef<string | null>(null);
+    if (loadedFor.current !== sessionId) {
+        loadedFor.current = sessionId;
+        const saved = loadSession(storeKey(companyId, spec.key));
+        if (saved) {
+            setMessages(saved.messages);
+            setFields({ ...emptyFields, ...saved.fields });
+            setDone(saved.done);
+            fallbackStep.current = saved.step ?? 0;
+            seededRef.current = true; // sessão real: não sobrescrever com seeds
+        } else {
             setMessages([{ from: "eva", text: spec.opening }]);
-            setFields(emptyFields);
+            setFields(applySeeds(emptyFields, fieldKeys, prior));
             setDone(false);
             fallbackStep.current = 0;
+            seededRef.current = prior?.ready ? true : false;
         }
     }
+
+    // O prior pode resolver DEPOIS do mount (query async). Quando ficar pronto e a
+    // conversa ainda estiver intocada (sem sessão salva), pré-preenche os campos.
+    useEffect(() => {
+        if (seededRef.current) return;
+        if (!prior?.ready) return;
+        if (messages.length > 1 || done) return;
+        const anyFilled = Object.values(fields).some((v) => v.trim());
+        if (anyFilled) return;
+        if (Object.keys(prior.seeds).length === 0) { seededRef.current = true; return; }
+        setFields(applySeeds(emptyFields, fieldKeys, prior));
+        seededRef.current = true;
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- só reage ao prior ficar pronto
+    }, [prior?.ready]);
+
+    // ── Persiste a conversa quando há progresso real (não persiste só os seeds). ──
+    useEffect(() => {
+        if (messages.length > 1 || done) {
+            saveSession(storeKey(companyId, spec.key), {
+                v: 1, messages, fields, done, step: fallbackStep.current,
+            });
+        }
+    }, [messages, fields, done, companyId, spec.key]);
 
     const fieldsView: StudioFieldView[] = useMemo(
         () => spec.fields.map((f) => ({ key: f.key, label: f.label, value: fields[f.key] ?? "" })),
@@ -70,10 +149,16 @@ export function useEvaStudioChat(agentKey: SpecialistKey) {
             setMessages(history);
             setThinking(true);
 
-            // 1) EVA real (edge LLM)
+            // 1) EVA real (edge LLM) — manda o contexto que a empresa já configurou
+            //    pra ela não repetir o que já sabe.
             try {
                 const { data, error } = await supabase.functions.invoke("eva-studio-chat", {
-                    body: { agentKey: spec.key, messages: history.map(({ from, text }) => ({ from, text })), fields },
+                    body: {
+                        agentKey: spec.key,
+                        messages: history.map(({ from, text }) => ({ from, text })),
+                        fields,
+                        priorContext: prior?.summary || undefined,
+                    },
                 });
                 if (!error && data?.ok && typeof data.reply === "string") {
                     setMessages((m) => [...m, { from: "eva", text: data.reply }]);
@@ -100,7 +185,7 @@ export function useEvaStudioChat(agentKey: SpecialistKey) {
                 setThinking(false);
             }, 600);
         },
-        [messages, fields, thinking, done, spec],
+        [messages, fields, thinking, done, spec, prior],
     );
 
     // Reabre a entrevista pós-recap ("quero ajustar") sem perder o que já foi
@@ -114,12 +199,14 @@ export function useEvaStudioChat(agentKey: SpecialistKey) {
     }, []);
 
     const reset = useCallback(() => {
+        clearSession(storeKey(companyId, spec.key));
+        seededRef.current = false;
         setMessages([{ from: "eva", text: spec.opening }]);
-        setFields(emptyFields);
+        setFields(applySeeds(emptyFields, fieldKeys, prior));
         setThinking(false);
         setDone(false);
         fallbackStep.current = 0;
-    }, [spec, emptyFields]);
+    }, [spec, emptyFields, fieldKeys, prior, companyId]);
 
     return { messages, fields, fieldsView, filledCount, total, thinking, done, send, reset, reopen };
 }

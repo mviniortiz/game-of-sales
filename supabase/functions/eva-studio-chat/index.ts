@@ -77,14 +77,17 @@ const AGENTS: Record<string, AgentDef> = {
 
 type Fields = Record<string, string>;
 
-function buildSystemPrompt(agent: AgentDef): string {
+function buildSystemPrompt(agent: AgentDef, priorContext?: string): string {
     const fieldList = agent.fields.map((f) => `- ${f.key}: ${f.label}`).join("\n");
     const emptyJson = JSON.stringify(Object.fromEntries(agent.fields.map((f) => [f.key, ""])));
+    const priorBlock = priorContext
+        ? `\nA agência JÁ configurou parte do contexto no Vyzon. Use isto e NÃO repita perguntas já respondidas: considere esses campos preenchidos, só CONFIRME rapidamente ("vi que vocês trabalham com X, certo?") e pergunte SÓ o que ainda falta. Nunca peça do zero o que já está aqui:\n${priorContext}\n`
+        : "";
     return `Você é a EVA, a camada de inteligência comercial do Vyzon. Você está CONVERSANDO com o dono ou gestor de uma agência para ${agent.focus} — sem formulário, só conversa.
 
 Preencha estes campos, conversando de forma natural e acolhedora:
 ${fieldList}
-
+${priorBlock}
 Conduta:
 - Faça UMA pergunta por vez, curta, em português do Brasil. Sem jargão técnico.
 - O gestor pode não saber "preencher campos": pergunte com as palavras dele, puxe um exemplo quando ajudar.
@@ -115,7 +118,7 @@ function sanitizeFields(raw: unknown, agent: AgentDef): Fields {
 
 interface Turn { from: "eva" | "user"; text: string }
 
-async function runChat(agent: AgentDef, messages: Turn[], fields: Fields): Promise<{ reply: string; fields: Fields; done: boolean } | null> {
+async function runChat(agent: AgentDef, messages: Turn[], fields: Fields, priorContext?: string): Promise<{ reply: string; fields: Fields; done: boolean } | null> {
     if (!OPENAI_API_KEY) return null;
 
     const transcript = messages
@@ -131,7 +134,7 @@ async function runChat(agent: AgentDef, messages: Turn[], fields: Fields): Promi
         body: JSON.stringify({
             model: "gpt-5.4-nano",
             messages: [
-                { role: "system", content: buildSystemPrompt(agent) },
+                { role: "system", content: buildSystemPrompt(agent, priorContext) },
                 { role: "user", content: userContent },
             ],
             max_completion_tokens: 900,
@@ -162,9 +165,10 @@ serve(async (req) => {
 
     try {
         const body = await req.json().catch(() => ({}));
-        const { messages, fields, agentKey } = body as { messages?: Turn[]; fields?: unknown; agentKey?: string };
+        const { messages, fields, agentKey, priorContext } = body as { messages?: Turn[]; fields?: unknown; agentKey?: string; priorContext?: unknown };
 
         const agent = AGENTS[agentKey || "qualificacao"] || AGENTS.qualificacao;
+        const prior = typeof priorContext === "string" ? priorContext.trim().slice(0, 1200) : undefined;
 
         const turns: Turn[] = Array.isArray(messages)
             ? messages
@@ -186,7 +190,7 @@ serve(async (req) => {
             /* fail-open */
         }
 
-        const result = await runChat(agent, turns, curFields);
+        const result = await runChat(agent, turns, curFields, prior);
         if (!result) return json(200, { ok: false, reason: "no_key" });
 
         return json(200, { ok: true, ...result });

@@ -20,6 +20,7 @@ import { useRef, useState, useEffect, useCallback } from "react";
 import { ArrowUp, Check, Mic, Paperclip, FileImage, X, ArrowLeft } from "lucide-react";
 import { EvaOrb } from "@/components/landing-v2/EvaOrb";
 import { useEvaStudioChat, type StudioFields } from "@/hooks/useEvaStudioChat";
+import { useEvaPriorContext } from "@/hooks/useEvaPriorContext";
 import { getSpecialist, type SpecialistKey } from "@/lib/eva/evaSpecialists";
 
 export interface ConversationalStudioProps {
@@ -36,13 +37,15 @@ export interface ConversationalStudioProps {
 export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, onProceed, onComplete }: ConversationalStudioProps = {}) {
     const spec = getSpecialist(agentKey);
     const accent = spec.accent;
-    const chat = useEvaStudioChat(spec.key);
+    const prior = useEvaPriorContext();
+    const chat = useEvaStudioChat(spec.key, prior);
     const { messages, fieldsView, filledCount, total, thinking, done } = chat;
 
     const [input, setInput] = useState("");
     const [recording, setRecording] = useState(false);
     const [attachment, setAttachment] = useState<string | null>(null);
     const [speechOk, setSpeechOk] = useState(true);
+    const [micError, setMicError] = useState<string | null>(null);
     // Recap: quando a entrevista fecha, a EVA recapitula e o gestor confirma
     // ANTES de entregar os campos (onComplete). "confirmed" = já gravou.
     const [recapConfirmed, setRecapConfirmed] = useState(false);
@@ -82,12 +85,12 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
     };
 
     // ── Transcrição de voz (Web Speech API, pt-BR) ──
-    const toggleRecording = useCallback(() => {
+    const toggleRecording = useCallback(async () => {
         const SR = window as unknown as { webkitSpeechRecognition?: unknown; SpeechRecognition?: unknown };
         const Ctor = (SR.SpeechRecognition || SR.webkitSpeechRecognition) as (new () => {
             lang: string; interimResults: boolean; continuous: boolean;
             onresult: (e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void;
-            onend: () => void; onerror: () => void; start: () => void; stop: () => void;
+            onend: () => void; onerror: (e: { error?: string }) => void; start: () => void; stop: () => void;
         }) | undefined;
         if (!Ctor) { setSpeechOk(false); return; }
 
@@ -95,6 +98,22 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
             (recognitionRef.current as { stop: () => void } | null)?.stop();
             return;
         }
+
+        // Prime a permissão do microfone: em vários Chrome o SpeechRecognition NÃO
+        // dispara o prompt sozinho e falha calado com "not-allowed". Pedir via
+        // getUserMedia força o prompt e nos deixa mostrar um erro claro se negar.
+        try {
+            const md = navigator.mediaDevices;
+            if (md?.getUserMedia) {
+                const stream = await md.getUserMedia({ audio: true });
+                stream.getTracks().forEach((t) => t.stop());
+            }
+        } catch {
+            setMicError("O microfone está bloqueado. Libera no cadeado do navegador (ao lado do endereço) e tenta de novo.");
+            return;
+        }
+
+        setMicError(null);
         const rec = new Ctor();
         rec.lang = "pt-BR";
         rec.interimResults = true;
@@ -103,12 +122,29 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
             let txt = "";
             for (let i = 0; i < e.results.length; i++) txt += e.results[i][0].transcript;
             setInput(txt);
+            if (txt.trim()) setMicError(null);
         };
         rec.onend = () => { setRecording(false); recognitionRef.current = null; };
-        rec.onerror = () => { setRecording(false); recognitionRef.current = null; };
+        rec.onerror = (e) => {
+            setRecording(false);
+            recognitionRef.current = null;
+            const code = e?.error;
+            if (code === "no-speech") setMicError("Não te ouvi. Toca de novo e fala um pouco mais perto.");
+            else if (code === "audio-capture") setMicError("Não achei um microfone no seu dispositivo.");
+            else if (code === "not-allowed" || code === "service-not-allowed") setMicError("O microfone está bloqueado. Libera no cadeado do navegador e tenta de novo.");
+            else if (code === "network") setMicError("Falha de rede na transcrição de voz. Tenta de novo.");
+            else if (code === "aborted") setMicError(null);
+            else setMicError("Não consegui transcrever agora. Pode digitar que funciona igual.");
+        };
         recognitionRef.current = rec;
-        rec.start();
-        setRecording(true);
+        try {
+            rec.start();
+            setRecording(true);
+        } catch {
+            // start() lança se já houver uma sessão ativa ou em contexto inseguro (http)
+            recognitionRef.current = null;
+            setMicError("Não consegui iniciar a gravação. Tenta de novo, ou digite/anexe um material.");
+        }
     }, [recording]);
 
     useEffect(() => () => { (recognitionRef.current as { stop: () => void } | null)?.stop(); }, []);
@@ -272,6 +308,10 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
                         <p className="vz-convo-rechint">
                             <span className="vz-convo-recdot" /> Transcrevendo sua fala em tempo real
                         </p>
+                    ) : micError ? (
+                        <p className="vz-convo-rechint" style={{ color: "#dc2626" }} role="alert">
+                            {micError}
+                        </p>
                     ) : !speechOk ? (
                         <p className="vz-convo-rechint" style={{ color: "#94a3b8" }}>
                             Seu navegador não suporta voz aqui. Tente no Chrome, ou digite/anexe um material.
@@ -302,6 +342,16 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
                     <div className="vz-convo-agent-prog">
                         <div className="vz-convo-agent-prog-fill vz-cvs-prog-fill" style={{ width: `${(filledCount / total) * 100}%`, background: accent }} />
                     </div>
+
+                    {prior.ready && filledCount > 0 && messages.length <= 1 && (
+                        <p
+                            className="vz-convo-hint"
+                            style={{ margin: "8px 0 0", display: "flex", alignItems: "center", gap: 6 }}
+                        >
+                            <Check style={{ width: 12, height: 12, color: accent }} strokeWidth={3} />
+                            Já aproveitei o que vocês configuraram. Confira ou ajuste o que precisar.
+                        </p>
+                    )}
 
                     <div className="vz-convo-fields">
                         {fieldsView.map((f, i) => {
