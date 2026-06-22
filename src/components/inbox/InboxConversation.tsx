@@ -1137,6 +1137,17 @@ function Composer({
     const { user, companyId } = useAuth();
     const [showTemplates, setShowTemplates] = useState(false);
 
+    // Auto-cresce com o conteúdo (digitado OU injetado pela "Usar resposta" da
+    // EVA), até um teto (~128px). Sem isto, texto longo virava uma caixa de 1
+    // linha com scrollbar (as setas ▲▼). Só mostra scroll quando passa do teto.
+    useEffect(() => {
+        const el = inputRef.current;
+        if (!el) return;
+        el.style.height = "auto";
+        el.style.height = `${Math.min(el.scrollHeight, 128)}px`;
+        el.style.overflowY = el.scrollHeight > 128 ? "auto" : "hidden";
+    }, [value, inputRef]);
+
     // Insere o template no composer (anexa se já houver texto) e foca o input.
     const handleInsertTemplate = (text: string) => {
         onChange(value.trim() ? `${value.trim()} ${text}` : text);
