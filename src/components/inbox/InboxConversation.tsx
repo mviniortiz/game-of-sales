@@ -10,7 +10,6 @@ import {
     FileText,
     Loader2,
     Mic,
-    MoreHorizontal,
     Paperclip,
     RefreshCw,
     UserCheck,
@@ -141,6 +140,8 @@ interface InboxConversationProps {
     statusChecked?: boolean;
     /** Abre o fluxo de (re)conexão do número (QR). */
     onReconnect?: () => void;
+    /** Mobile: abre a EVA (bottom sheet). No desktop a EVA é a coluna direita. */
+    onOpenEva?: () => void;
 }
 
 export function InboxConversation({
@@ -157,6 +158,7 @@ export function InboxConversation({
     connected,
     statusChecked,
     onReconnect,
+    onOpenEva,
 }: InboxConversationProps) {
     if (!chat) {
         return <EmptyConversation />;
@@ -168,6 +170,7 @@ export function InboxConversation({
             connected={connected}
             statusChecked={statusChecked}
             onReconnect={onReconnect}
+            onOpenEva={onOpenEva}
             messages={messages}
             onSendText={onSendText}
             onSendAudio={onSendAudio}
@@ -231,6 +234,7 @@ interface ConversationViewProps {
     connected?: boolean;
     statusChecked?: boolean;
     onReconnect?: () => void;
+    onOpenEva?: () => void;
 }
 
 // INBOX.MEDIA — limites e leitura de arquivo. 16MB é o teto prático do WhatsApp
@@ -272,6 +276,7 @@ function ConversationView({
     connected,
     statusChecked,
     onReconnect,
+    onOpenEva,
 }: ConversationViewProps) {
     const [composer, setComposer] = useState("");
     const [sending, setSending] = useState(false);
@@ -417,6 +422,7 @@ function ConversationView({
                 onBack={onBack}
                 onRefresh={onRefresh}
                 isRefreshing={isRefreshing}
+                onOpenEva={onOpenEva}
             />
 
             <MessageThread
@@ -514,11 +520,13 @@ function ConversationHeader({
     onBack,
     onRefresh,
     isRefreshing,
+    onOpenEva,
 }: {
     chat: Chat;
     onBack?: () => void;
     onRefresh?: () => void;
     isRefreshing?: boolean;
+    onOpenEva?: () => void;
 }) {
     const picUrl = useProfilePic(chat.phone, chat.profilePicUrl);
     return (
@@ -602,15 +610,21 @@ function ConversationHeader({
                 </button>
             )}
 
-            {/* Ações rápidas — mobile (menu compacto) */}
-            <button
-                type="button"
-                className="md:hidden h-8 w-8 rounded-md flex items-center justify-center hover:bg-[#F1F5F9] transition-colors shrink-0"
-                aria-label="Mais ações"
-                title="Mais ações (Preview)"
-            >
-                <MoreHorizontal className="h-4 w-4" style={{ color: "#475569" }} />
-            </button>
+            {/* EVA — mobile: no celular a EVA não tem coluna própria, então o
+                acesso à análise dela vive aqui (abre o bottom sheet). */}
+            {onOpenEva && (
+                <button
+                    type="button"
+                    onClick={onOpenEva}
+                    className="md:hidden h-8 pl-1.5 pr-2.5 rounded-full flex items-center gap-1.5 shrink-0 transition-colors"
+                    style={{ background: "rgba(109,40,217,0.08)", border: "1px solid rgba(109,40,217,0.18)" }}
+                    aria-label="Abrir análise da EVA"
+                    title="Análise da EVA"
+                >
+                    <EvaNode size={14} color="#6D28D9" />
+                    <span className="text-[12px] font-semibold" style={{ color: "#6D28D9" }}>EVA</span>
+                </button>
+            )}
         </div>
     );
 }

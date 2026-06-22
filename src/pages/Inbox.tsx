@@ -4,6 +4,7 @@ import { InboxList, type SyncStatus, type SyncTone } from "@/components/inbox/In
 import { InboxConversation } from "@/components/inbox/InboxConversation";
 import { EvaPanel } from "@/components/inbox/EvaPanel";
 import { WhatsAppConnectModal } from "@/components/inbox/WhatsAppConnectModal";
+import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { useEvolutionSender } from "@/hooks/useEvolutionSender";
 import { useWhatsAppInboxDb } from "@/hooks/useWhatsAppInboxDb";
 import { useChannelInbox } from "@/hooks/useChannelInbox";
@@ -71,6 +72,7 @@ const Inbox = () => {
     const { isAdmin, companyId } = useAuth();
     const { activeCompanyId } = useTenant();
     const [connectModalOpen, setConnectModalOpen] = useState(false);
+    const [evaMobileOpen, setEvaMobileOpen] = useState(false);
     const [historySyncing, setHistorySyncing] = useState(false);
     // PROSPECT.1 — quando o número está em modo prospecção, o EvaPanel ganha
     // "aprovar-e-enviar" e a EVA mira em marcar demo.
@@ -505,6 +507,7 @@ const Inbox = () => {
                     connected={connected}
                     statusChecked={lastStatusCheckedAt != null}
                     onReconnect={() => setConnectModalOpen(true)}
+                    onOpenEva={isMobile ? () => setEvaMobileOpen(true) : undefined}
                 />
             </main>
 
@@ -530,6 +533,30 @@ const Inbox = () => {
                         objective={prospectingMode ? PROSPECTING_OBJECTIVE : undefined}
                     />
                 </aside>
+            )}
+
+            {/* EVA no MOBILE — bottom sheet com o painel completo (no desktop a EVA
+                é a coluna direita). Mesmo EvaPanel, mesmos props. */}
+            {isMobile && (
+                <Drawer open={evaMobileOpen} onOpenChange={setEvaMobileOpen}>
+                    <DrawerContent className="h-[88vh]">
+                        <div className="flex-1 overflow-y-auto overscroll-contain">
+                            <EvaPanel
+                                chat={selectedChat || null}
+                                messages={selectedChatMessages}
+                                onDealLinked={() => {
+                                    if (!useLegacy && selectedChatId) {
+                                        void channelInbox.refreshAll(selectedChatId);
+                                    }
+                                }}
+                                onSendReply={prospectingMode && selectedChatId
+                                    ? (text) => handleSendText(selectedChatId, text)
+                                    : undefined}
+                                objective={prospectingMode ? PROSPECTING_OBJECTIVE : undefined}
+                            />
+                        </div>
+                    </DrawerContent>
+                </Drawer>
             )}
 
             {/* F4W.7.2 — QR Code direto na Inbox */}
