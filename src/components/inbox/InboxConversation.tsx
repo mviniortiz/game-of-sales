@@ -18,6 +18,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { TemplatePicker } from "@/components/whatsapp/TemplatePicker";
 import { EvaNode } from "@/components/landing/EvaNode";
+import { useEvaInsight } from "@/hooks/useEvaInsight";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AudioMessagePlayer } from "@/components/whatsapp/AudioMessagePlayer";
 import { MediaMessageBubble } from "@/components/whatsapp/MediaMessageBubble";
@@ -331,6 +332,14 @@ function ConversationView({
     // baseados em hash determinístico do phone). Sem fonte real, esconde.
     const suggestion = buildEvaSuggestion(chat);
 
+    // Sugestão REAL da EVA inline na conversa (lê a análise salva; o react-query
+    // compartilha o cache com o EvaPanel, sem disparar análise extra).
+    const evaInsight = useEvaInsight({ chatPhone: chat.phone || chat.id, contactName: chat.name, messages });
+    const evaSuggestionText: string = evaInsight.data
+        ? (evaInsight.data.qualification?.resposta_sugerida || evaInsight.data.analysis?.draft || "")
+        : "";
+    const [suggestionDismissed, setSuggestionDismissed] = useState(false);
+
     // Auto-scroll pro fim SÓ quando chega mensagem nova no fim (ou troca de
     // conversa) — não ao prepender páginas antigas (paginação).
     const lastMsgIdRef = useRef<string | null>(null);
@@ -365,6 +374,7 @@ function ConversationView({
         setComposer("");
         setShowSuggestion(true);
         setShowAudio(false);
+        setSuggestionDismissed(false);
         setPendingMedia((prev) => {
             if (prev) URL.revokeObjectURL(prev.previewUrl);
             return null;
@@ -558,6 +568,23 @@ function ConversationView({
                         </button>
                     )}
                 </div>
+            )}
+
+            {/* Sugestão da EVA inline (balão no fim da conversa) — só quando há
+                rascunho real e a conversa não está com mídia pendente. */}
+            {evaSuggestionText && !suggestionDismissed && !pendingMedia && !showAudio && (
+                <EvaInlineSuggestion
+                    text={evaSuggestionText}
+                    onUse={() => {
+                        setComposer(evaSuggestionText);
+                        setSuggestionDismissed(true);
+                        requestAnimationFrame(() => {
+                            const el = inputRef.current;
+                            if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+                        });
+                    }}
+                    onDismiss={() => setSuggestionDismissed(true)}
+                />
             )}
 
             {/* Composer */}
@@ -930,7 +957,7 @@ const MessageBubble = memo(function MessageBubble({
                               color: "#FFFFFF",
                               ...tail,
                               boxShadow: "0 1px 2px rgba(37,99,235,0.18), 0 4px 12px -4px rgba(37,99,235,0.18)",
-                              opacity: isPending ? 0.7 : 1,
+                              opacity: isPending ? 0.92 : 1,
                           }
                         : {
                               background: "#FFFFFF",
@@ -1129,6 +1156,59 @@ function EvaSuggestionBox({
 }
 
 // ─── Media preview (estilo WhatsApp: prévia + legenda antes de enviar) ──────
+
+// Balão da EVA no FIM da conversa: a resposta sugerida aparece "no meio do chat"
+// (não só no painel lateral). Visual de mensagem da EVA (roxo, rabinho à esquerda).
+// "Usar resposta" joga no composer; o humano revisa e envia (assistido).
+function EvaInlineSuggestion({ text, onUse, onDismiss }: { text: string; onUse: () => void; onDismiss: () => void }) {
+    return (
+        <div className="px-3 sm:px-5 pt-1 pb-1" style={{ background: "#F4F7FB" }}>
+            <div className="max-w-[720px] mx-auto">
+                <div
+                    className="overflow-hidden"
+                    style={{
+                        background: "#F7F5FE",
+                        border: "1px solid rgba(124,58,237,0.18)",
+                        borderRadius: "16px 16px 16px 5px",
+                        boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 10px 28px -18px rgba(124,58,237,0.35)",
+                        animation: "vz-evassist-in 0.3s cubic-bezier(0.22,1,0.36,1)",
+                    }}
+                >
+                    <div className="flex items-center gap-1.5 px-3.5 pt-2.5">
+                        <EvaNode size={12} color="#6D28D9" />
+                        <span className="text-[10px] uppercase font-bold" style={{ color: "#6D28D9", letterSpacing: "0.08em" }}>
+                            Sugestão da EVA
+                        </span>
+                        <button
+                            type="button"
+                            onClick={onDismiss}
+                            className="ml-auto h-5 w-5 rounded flex items-center justify-center transition-colors hover:bg-white"
+                            style={{ color: "#94A3B8" }}
+                            aria-label="Dispensar sugestão"
+                        >
+                            <X className="h-3 w-3" />
+                        </button>
+                    </div>
+                    <p className="px-3.5 pt-1 pb-2 text-[12.5px]" style={{ color: "#1E1B2E", lineHeight: 1.5 }}>
+                        {text}
+                    </p>
+                    <div className="px-3.5 pb-3 flex items-center gap-2.5">
+                        <button
+                            type="button"
+                            onClick={onUse}
+                            className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg text-[12px] font-semibold text-white transition-all"
+                            style={{ background: "linear-gradient(135deg, #2563EB, #4A8CE8)", boxShadow: "0 6px 16px -8px rgba(37,99,235,0.5)" }}
+                        >
+                            <ArrowRight className="h-3.5 w-3.5" />
+                            Usar resposta
+                        </button>
+                        <span className="text-[11px]" style={{ color: "#94A3B8" }}>você revisa antes de enviar</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 // Cor do ícone por tipo de arquivo (planilha verde, PDF vermelho, etc.).
 function fileTypeColor(file: File): string {
