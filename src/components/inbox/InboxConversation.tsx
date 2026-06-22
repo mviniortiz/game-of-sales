@@ -306,6 +306,10 @@ function ConversationView({
         setComposer("");
         try {
             await onSendText(chat.id, text);
+        } catch {
+            // Falhou o envio (o erro já foi mostrado lá em cima): devolve o texto
+            // pro composer pra o usuário não perder o que escreveu.
+            setComposer((cur) => (cur ? cur : text));
         } finally {
             setSending(false);
         }

@@ -33,6 +33,25 @@ import { toast } from "sonner";
 
 const STATUS_FRESH_WINDOW_MS = 5 * 60 * 1000;
 
+// Traduz o erro cru do envio (vindo da edge evolution-whatsapp) numa mensagem
+// clara pro usuário. Mantém uma pista da causa real pra diagnóstico.
+function describeSendError(raw: string): string {
+    const m = (raw || "").toLowerCase();
+    if (m.includes("rate_limited") || m.includes("sequência") || m.includes("muitas mensagens"))
+        return "Muitas mensagens em sequência neste número. Aguarde alguns segundos e tente de novo.";
+    if (m.includes("tempo esgotado") || m.includes("timeout"))
+        return "O WhatsApp demorou a responder. Verifique a conexão do número e tente de novo.";
+    if (m.includes("not configured") || m.includes("não configurad") || m.includes("evolution_api"))
+        return "O WhatsApp não está configurado no servidor. Fale com o suporte.";
+    if (m.includes("not found") || m.includes("does not exist") || m.includes("404") || m.includes("instance"))
+        return "A sessão do WhatsApp não foi encontrada. Reconecte o número em Configurações e tente de novo.";
+    if (m.includes("not connected") || m.includes("closed") || m.includes("connecting") || m.includes("disconnected") || m.includes("state"))
+        return "O WhatsApp não está conectado. Reconecte o número em Configurações e tente de novo.";
+    if (m.includes("no company"))
+        return "Não consegui identificar a sua conta. Recarregue a página e tente de novo.";
+    return raw ? `Não consegui enviar a mensagem: ${raw}` : "Não consegui enviar a mensagem. Verifique a conexão do WhatsApp.";
+}
+
 function formatTimeAgo(date: Date | null): string {
     if (!date) return "";
     const diffMs = Date.now() - date.getTime();
@@ -361,7 +380,8 @@ const Inbox = () => {
         const jid = target?.chatJid;
         if (!jid) {
             console.warn("[Inbox] handleSendText: missing chatJid for", chatIdFromCallback);
-            return;
+            toast.error("Não consegui identificar o contato desta conversa. Atualize a página e tente de novo.");
+            throw new Error("missing_chatjid");
         }
         // Pending no active inbox (key é o id da seleção, não o JID)
         activeInbox.appendPendingMessage(target!.id, text);
@@ -375,6 +395,11 @@ const Inbox = () => {
                 if (target?.id) void activeInbox.fetchMessages(target.id);
             }, 1500);
         } catch (err) {
+            // Antes a falha era 100% silenciosa: a mensagem sumia e o usuário não
+            // sabia que não enviou. Agora mostramos a causa real (ajuda a diagnosticar
+            // sessão morta / não conectado / rate limit / instância inexistente).
+            const raw = err instanceof Error ? err.message : "";
+            toast.error(describeSendError(raw));
             void activeInbox.fetchMessages(target!.id);
             throw err;
         }
