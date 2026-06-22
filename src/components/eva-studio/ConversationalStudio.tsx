@@ -17,11 +17,12 @@
 // e onComplete entrega os campos pra persistir no contexto da EVA.
 // ─────────────────────────────────────────────────────────────────────────────
 import { useRef, useState, useEffect, useCallback } from "react";
-import { ArrowUp, Check, Mic, Paperclip, FileImage, X, ArrowLeft } from "lucide-react";
+import { ArrowUp, Check, Mic, Paperclip, FileImage, X, ArrowLeft, Loader2 } from "lucide-react";
 import { EvaOrb } from "@/components/landing-v2/EvaOrb";
 import { useEvaStudioChat, type StudioFields } from "@/hooks/useEvaStudioChat";
 import { useEvaPriorContext } from "@/hooks/useEvaPriorContext";
 import { getSpecialist, type SpecialistKey } from "@/lib/eva/evaSpecialists";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface ConversationalStudioProps {
     /** Qual agente especialista está sendo montado (cor + perguntas + campos). */
@@ -43,15 +44,16 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
 
     const [input, setInput] = useState("");
     const [recording, setRecording] = useState(false);
+    const [transcribing, setTranscribing] = useState(false);
     const [attachment, setAttachment] = useState<string | null>(null);
-    const [speechOk, setSpeechOk] = useState(true);
     const [micError, setMicError] = useState<string | null>(null);
     // Recap: quando a entrevista fecha, a EVA recapitula e o gestor confirma
     // ANTES de entregar os campos (onComplete). "confirmed" = já gravou.
     const [recapConfirmed, setRecapConfirmed] = useState(false);
 
     const scrollRef = useRef<HTMLDivElement>(null);
-    const recognitionRef = useRef<unknown>(null);
+    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+    const chunksRef = useRef<BlobPart[]>([]);
     const fileRef = useRef<HTMLInputElement>(null);
     const completedRef = useRef(false);
 
@@ -84,70 +86,114 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
         void chat.send(text, att);
     };
 
-    // ── Transcrição de voz (Web Speech API, pt-BR) ──
-    const toggleRecording = useCallback(async () => {
-        const SR = window as unknown as { webkitSpeechRecognition?: unknown; SpeechRecognition?: unknown };
-        const Ctor = (SR.SpeechRecognition || SR.webkitSpeechRecognition) as (new () => {
-            lang: string; interimResults: boolean; continuous: boolean;
-            onresult: (e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void;
-            onend: () => void; onerror: (e: { error?: string }) => void; start: () => void; stop: () => void;
-        }) | undefined;
-        if (!Ctor) { setSpeechOk(false); return; }
+    // ── Transcrição de voz PRÓPRIA (MediaRecorder + edge eva-transcribe/Whisper) ──
+    // Estável em Chrome/Firefox/Safari/mobile: grava o áudio, manda pra nossa edge
+    // e devolve o texto. Não depende mais da Web Speech API (Chrome-only/Google).
+    const pickMime = (): string => {
+        const MR = typeof MediaRecorder !== "undefined" ? MediaRecorder : null;
+        if (!MR) return "";
+        const candidates = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg;codecs=opus"];
+        for (const c of candidates) {
+            try { if (MR.isTypeSupported(c)) return c; } catch { /* ignore */ }
+        }
+        return "";
+    };
 
+    const transcribe = useCallback(async (blob: Blob, mime: string) => {
+        setTranscribing(true);
+        try {
+            const dataUri: string = await new Promise((resolve, reject) => {
+                const r = new FileReader();
+                r.onloadend = () => resolve(r.result as string);
+                r.onerror = () => reject(r.error);
+                r.readAsDataURL(blob);
+            });
+            const base64 = dataUri.split(",")[1] || "";
+            if (!base64) { setMicError("Não captei áudio. Tenta de novo, falando um pouco mais."); return; }
+
+            const { data, error } = await supabase.functions.invoke("eva-transcribe", {
+                body: { audioBase64: base64, mime, language: "pt" },
+            });
+            if (error || !data?.ok || typeof data.text !== "string" || !data.text.trim()) {
+                setMicError((data && data.message) || "Não consegui transcrever agora. Pode digitar que funciona igual.");
+                return;
+            }
+            const text = data.text.trim();
+            // Acrescenta ao que já está escrito (permite ditar em pedaços).
+            setInput((prev) => (prev.trim() ? `${prev.trim()} ${text}` : text));
+        } catch {
+            setMicError("Não consegui transcrever agora. Pode digitar que funciona igual.");
+        } finally {
+            setTranscribing(false);
+        }
+    }, []);
+
+    const toggleRecording = useCallback(async () => {
+        // Já gravando → para; o onstop dispara a transcrição.
         if (recording) {
-            (recognitionRef.current as { stop: () => void } | null)?.stop();
+            mediaRecorderRef.current?.stop();
+            return;
+        }
+        if (transcribing) return;
+
+        const MR = typeof MediaRecorder !== "undefined" ? MediaRecorder : null;
+        if (!MR || !navigator.mediaDevices?.getUserMedia) {
+            setMicError("Seu navegador não suporta gravar áudio aqui. Pode digitar ou anexar um material.");
             return;
         }
 
-        // Prime a permissão do microfone: em vários Chrome o SpeechRecognition NÃO
-        // dispara o prompt sozinho e falha calado com "not-allowed". Pedir via
-        // getUserMedia força o prompt e nos deixa mostrar um erro claro se negar.
+        let stream: MediaStream;
         try {
-            const md = navigator.mediaDevices;
-            if (md?.getUserMedia) {
-                const stream = await md.getUserMedia({ audio: true });
-                stream.getTracks().forEach((t) => t.stop());
-            }
+            stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         } catch {
             setMicError("O microfone está bloqueado. Libera no cadeado do navegador (ao lado do endereço) e tenta de novo.");
             return;
         }
 
         setMicError(null);
-        const rec = new Ctor();
-        rec.lang = "pt-BR";
-        rec.interimResults = true;
-        rec.continuous = true;
-        rec.onresult = (e) => {
-            let txt = "";
-            for (let i = 0; i < e.results.length; i++) txt += e.results[i][0].transcript;
-            setInput(txt);
-            if (txt.trim()) setMicError(null);
-        };
-        rec.onend = () => { setRecording(false); recognitionRef.current = null; };
-        rec.onerror = (e) => {
+        const mime = pickMime();
+        let rec: MediaRecorder;
+        try {
+            rec = mime ? new MR(stream, { mimeType: mime }) : new MR(stream);
+        } catch {
+            stream.getTracks().forEach((t) => t.stop());
+            setMicError("Não consegui iniciar a gravação. Tenta de novo, ou digite/anexe um material.");
+            return;
+        }
+
+        chunksRef.current = [];
+        rec.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+        rec.onstop = () => {
+            stream.getTracks().forEach((t) => t.stop());
+            mediaRecorderRef.current = null;
             setRecording(false);
-            recognitionRef.current = null;
-            const code = e?.error;
-            if (code === "no-speech") setMicError("Não te ouvi. Toca de novo e fala um pouco mais perto.");
-            else if (code === "audio-capture") setMicError("Não achei um microfone no seu dispositivo.");
-            else if (code === "not-allowed" || code === "service-not-allowed") setMicError("O microfone está bloqueado. Libera no cadeado do navegador e tenta de novo.");
-            else if (code === "network") setMicError("Falha de rede na transcrição de voz. Tenta de novo.");
-            else if (code === "aborted") setMicError(null);
-            else setMicError("Não consegui transcrever agora. Pode digitar que funciona igual.");
+            const usedMime = rec.mimeType || mime || "audio/webm";
+            const blob = new Blob(chunksRef.current, { type: usedMime });
+            chunksRef.current = [];
+            if (blob.size < 1200) { setMicError("Não captei áudio. Toca, fala e toca de novo pra transcrever."); return; }
+            void transcribe(blob, usedMime);
         };
-        recognitionRef.current = rec;
+        rec.onerror = () => {
+            stream.getTracks().forEach((t) => t.stop());
+            mediaRecorderRef.current = null;
+            setRecording(false);
+            setMicError("Falha ao gravar o áudio. Tenta de novo, ou digite/anexe um material.");
+        };
+
+        mediaRecorderRef.current = rec;
         try {
             rec.start();
             setRecording(true);
         } catch {
-            // start() lança se já houver uma sessão ativa ou em contexto inseguro (http)
-            recognitionRef.current = null;
+            stream.getTracks().forEach((t) => t.stop());
+            mediaRecorderRef.current = null;
             setMicError("Não consegui iniciar a gravação. Tenta de novo, ou digite/anexe um material.");
         }
-    }, [recording]);
+    }, [recording, transcribing, transcribe]);
 
-    useEffect(() => () => { (recognitionRef.current as { stop: () => void } | null)?.stop(); }, []);
+    useEffect(() => () => {
+        try { mediaRecorderRef.current?.stop(); } catch { /* noop */ }
+    }, []);
 
     const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
         const f = e.target.files?.[0];
@@ -277,10 +323,13 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
                             type="button"
                             className={`vz-convo-mic ${recording ? "vz-convo-mic--on" : ""}`}
                             onClick={toggleRecording}
-                            title="Falar em vez de digitar"
-                            aria-label="Gravar áudio"
+                            disabled={transcribing || done}
+                            title={recording ? "Tocar pra transcrever" : "Falar em vez de digitar"}
+                            aria-label={recording ? "Parar e transcrever" : "Gravar áudio"}
                         >
-                            <Mic style={{ width: 16, height: 16 }} />
+                            {transcribing
+                                ? <Loader2 style={{ width: 16, height: 16 }} className="animate-spin" />
+                                : <Mic style={{ width: 16, height: 16 }} />}
                         </button>
                         <textarea
                             className="vz-convo-input"
@@ -289,7 +338,7 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
                             onKeyDown={(e) => {
                                 if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
                             }}
-                            placeholder={done ? "Quer ajustar algo? Me fala…" : recording ? "Ouvindo… fala naturalmente" : "Responde com as suas palavras, ou toque no microfone"}
+                            placeholder={done ? "Quer ajustar algo? Me fala…" : recording ? "Gravando… toque no microfone pra transcrever" : transcribing ? "Transcrevendo sua fala…" : "Responde com as suas palavras, ou toque no microfone"}
                             rows={1}
                             disabled={done}
                         />
@@ -306,18 +355,18 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
                     </div>
                     {recording ? (
                         <p className="vz-convo-rechint">
-                            <span className="vz-convo-recdot" /> Transcrevendo sua fala em tempo real
+                            <span className="vz-convo-recdot" /> Gravando… toque no microfone pra eu transcrever
+                        </p>
+                    ) : transcribing ? (
+                        <p className="vz-convo-rechint">
+                            <Loader2 style={{ width: 12, height: 12 }} className="animate-spin" /> Transcrevendo sua fala…
                         </p>
                     ) : micError ? (
                         <p className="vz-convo-rechint" style={{ color: "#dc2626" }} role="alert">
                             {micError}
                         </p>
-                    ) : !speechOk ? (
-                        <p className="vz-convo-rechint" style={{ color: "#94a3b8" }}>
-                            Seu navegador não suporta voz aqui. Tente no Chrome, ou digite/anexe um material.
-                        </p>
                     ) : (
-                        <p className="vz-convo-hint">Dica: pra anexar material, manda em imagem (JPG/PNG) que eu leio melhor.</p>
+                        <p className="vz-convo-hint">Dica: toque no microfone pra ditar, ou anexe um material em imagem (JPG/PNG).</p>
                     )}
                 </div>
 
