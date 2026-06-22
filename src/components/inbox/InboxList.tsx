@@ -234,12 +234,7 @@ export function InboxList({
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         placeholder="Buscar lead ou telefone…"
-                        className="w-full h-9 pl-9 pr-3 rounded-lg text-[12.5px] outline-none transition-colors"
-                        style={{
-                            background: "#F4F7FB",
-                            border: "1px solid #D9E2EC",
-                            color: "#0B1220",
-                        }}
+                        className="w-full h-9 pl-9 pr-3 rounded-xl text-[12.5px] outline-none transition-all bg-[#F4F7FB] border border-[#D9E2EC] text-[#0B1220] focus:bg-white focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/12"
                     />
                 </div>
             </div>
@@ -439,29 +434,34 @@ interface LeadCardProps {
 
 function LeadCard({ chat, isSelected, onSelect, demoTarget }: LeadCardProps) {
     const picUrl = useProfilePic(chat.phone, chat.profilePicUrl);
+    const isUnread = chat.unreadCount > 0;
+    const time = chat.lastMessage?.time ? formatTimeAgo(chat.lastMessage.time) : "";
     return (
         <li {...(demoTarget ? { "data-demo-inbox-item": "" } : {})}>
             <button
                 type="button"
                 onClick={onSelect}
                 className={cn(
-                    "w-full text-left px-3 py-3 rounded-lg flex items-start gap-3 transition-colors",
+                    "group w-full text-left px-2.5 py-2.5 rounded-xl flex items-center gap-3 transition-all duration-150 ease-[cubic-bezier(0.22,1,0.36,1)]",
                     isSelected ? "bg-[#EEF4FF]" : "hover:bg-[#F4F7FB]"
                 )}
                 style={
                     isSelected
-                        ? {
-                              boxShadow: "inset 2px 0 0 #2563EB",
-                          }
+                        ? { boxShadow: "inset 2px 0 0 #2563EB, 0 1px 2px rgba(15,23,42,0.05)" }
                         : undefined
                 }
             >
-                <Avatar className="h-10 w-10 shrink-0 rounded-full">
+                <Avatar
+                    className={cn(
+                        "h-11 w-11 shrink-0 rounded-full transition-shadow",
+                        isUnread && "ring-2 ring-[#2563EB]/20 ring-offset-1 ring-offset-white"
+                    )}
+                >
                     {picUrl && (
                         <AvatarImage src={picUrl} alt={chat.name} className="rounded-full" />
                     )}
                     <AvatarFallback
-                        className="text-[12px] font-semibold rounded-full text-white"
+                        className="text-[12.5px] font-semibold rounded-full text-white"
                         style={{ background: "linear-gradient(135deg, #2563EB, #4A8CE8)" }}
                     >
                         {getInitials(chat.name)}
@@ -469,58 +469,43 @@ function LeadCard({ chat, isSelected, onSelect, demoTarget }: LeadCardProps) {
                 </Avatar>
 
                 <div className="flex-1 min-w-0">
-                    {/* Linha 1: nome + tempo */}
-                    <div className="flex items-center justify-between gap-2 mb-1">
+                    {/* Linha 1: nome + tempo (não-lida realça nome e hora) */}
+                    <div className="flex items-center justify-between gap-2 mb-0.5">
                         <span
-                            className="text-[13px] font-semibold truncate"
-                            style={{ color: "#0B1220" }}
+                            className="text-[13.5px] truncate"
+                            style={{ color: "#0B1220", fontWeight: isUnread ? 700 : 600, letterSpacing: "-0.01em" }}
                         >
                             {chat.name || chat.phone || "Sem nome"}
                         </span>
                         <span
                             className="text-[10.5px] tabular-nums shrink-0"
-                            style={{ color: "#94A3B8" }}
+                            style={{ color: isUnread ? "#2563EB" : "#94A3B8", fontWeight: isUnread ? 600 : 400 }}
                         >
-                            {chat.lastMessage?.time ? formatTimeAgo(chat.lastMessage.time) : ""}
+                            {time}
                         </span>
                     </div>
 
-                    {/* V1.0.1 — Linha 2: snippet + badge WhatsApp + unread */}
-                    <div className="flex items-end justify-between gap-2">
+                    {/* Linha 2: prévia + contador de não-lidas (sem ruído de canal) */}
+                    <div className="flex items-center justify-between gap-2">
                         <p
-                            className="text-[11.5px] leading-snug truncate flex-1"
-                            style={{ color: "#64748B" }}
+                            className="text-[12px] leading-snug truncate flex-1"
+                            style={{ color: isUnread ? "#334155" : "#64748B", fontWeight: isUnread ? 500 : 400 }}
                         >
-                            {chat.lastMessage?.isMe ? "Você: " : ""}
+                            {chat.lastMessage?.isMe && <span style={{ color: "#94A3B8" }}>Você: </span>}
                             {chat.lastMessage?.text || (
                                 <span style={{ color: "#94A3B8", fontStyle: "italic" }}>
                                     sem mensagens ainda
                                 </span>
                             )}
                         </p>
-                        <div className="flex items-center gap-1.5 shrink-0">
+                        {isUnread && (
                             <span
-                                className="inline-flex items-center text-[10px]"
-                                style={{ color: "#94A3B8" }}
+                                className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10px] text-white tabular-nums leading-none shrink-0"
+                                style={{ background: "#2563EB", fontWeight: 700, boxShadow: "0 1px 3px rgba(37,99,235,0.35)" }}
                             >
-                                <span
-                                    className="h-1.5 w-1.5 rounded-full mr-1"
-                                    style={{ background: "#10B981" }}
-                                />
-                                WhatsApp
+                                {chat.unreadCount > 99 ? "99+" : chat.unreadCount}
                             </span>
-                            {chat.unreadCount > 0 && (
-                                <span
-                                    className="inline-flex items-center justify-center min-w-[18px] h-4 px-1 rounded-full text-[10px] text-white tabular-nums leading-none"
-                                    style={{
-                                        background: "#2563EB",
-                                        fontWeight: 700,
-                                    }}
-                                >
-                                    {chat.unreadCount > 99 ? "99+" : chat.unreadCount}
-                                </span>
-                            )}
-                        </div>
+                        )}
                     </div>
                 </div>
             </button>
