@@ -1204,8 +1204,10 @@ export default function CRM() {
               />
             </div>
 
-            {/* Controles empurrados à direita */}
-            <div className="flex items-center gap-2 sm:ml-auto flex-shrink-0">
+            {/* Controles empurrados à direita. No mobile QUEBRAM em linhas (antes
+                transbordavam pra fora da tela, deixando o filtro de vendedores
+                inacessível); no desktop seguem em linha única alinhados à direita. */}
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto sm:ml-auto sm:flex-nowrap sm:flex-shrink-0">
               <div className="inline-flex items-center gap-0.5 rounded-full border border-input bg-background p-0.5 flex-shrink-0 dark:border-white/10 dark:bg-white/[0.03]">
                 {[
                   { id: "kanban", label: "Kanban" },
@@ -1697,81 +1699,95 @@ export default function CRM() {
               {sortedDealsForList.length === 0 && (
                 <div className="text-muted-foreground text-sm">Nenhuma negociação cadastrada.</div>
               )}
-              {sortedDealsForList.map((deal) => (
-                <div
-                  key={deal.id}
-                  className={`bg-card border rounded-xl p-4 sm:p-5 shadow-sm hover:border-emerald-500/30 hover:shadow-md transition-all ${
-                    selectionMode && selectedDeals.has(deal.id)
-                      ? "border-emerald-500 ring-2 ring-emerald-500/40"
-                      : "border-border"
-                  } ${selectionMode ? "cursor-pointer" : ""}`}
-                  onClick={selectionMode ? () => toggleSelectDeal(deal.id) : undefined}
-                >
-                  <div className="flex flex-col gap-3 sm:gap-2">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                      <div className="flex items-center gap-3">
+              {sortedDealsForList.map((deal) => {
+                const value = Number(deal.value) || 0;
+                const owner = (deal as { profiles?: { nome?: string; avatar_url?: string } }).profiles;
+                const ownerName = owner?.nome || (deal.assignee_outside_company ? "Outro time" : "Sem responsável");
+                const initials = (owner?.nome || "?").trim().split(/\s+/).map((p) => p[0]).slice(0, 2).join("").toUpperCase();
+                const isSel = selectionMode && selectedDeals.has(deal.id);
+                return (
+                  <div
+                    key={deal.id}
+                    onClick={selectionMode ? () => toggleSelectDeal(deal.id) : () => navigate(`/deals/${deal.id}`)}
+                    className={`group bg-white dark:bg-card border rounded-xl p-3.5 sm:p-4 cursor-pointer transition-all duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                      isSel
+                        ? "border-[#2563EB] ring-2 ring-[#2563EB]/30"
+                        : "border-border hover:border-[#2563EB]/30 hover:shadow-md hover:-translate-y-px"
+                    }`}
+                  >
+                    {/* Topo: título + cliente | valor + estágio */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-2.5 min-w-0">
                         {selectionMode && (
                           <div
-                            className={`
-                              w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all duration-150
-                              ${selectedDeals.has(deal.id)
-                                ? "bg-emerald-500 border-emerald-500"
-                                : "bg-muted border-border hover:border-emerald-400"
-                              }
-                            `}
+                            className={`w-5 h-5 mt-0.5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all duration-150 ${
+                              isSel ? "bg-[#2563EB] border-[#2563EB]" : "bg-muted border-border"
+                            }`}
                           >
-                            {selectedDeals.has(deal.id) && (
+                            {isSel && (
                               <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                               </svg>
                             )}
                           </div>
                         )}
-                        <div className="text-base sm:text-lg font-semibold text-foreground">
-                          {deal.title || "Sem título"}
+                        <div className="min-w-0">
+                          <div className="text-[14.5px] font-semibold text-foreground truncate" style={{ letterSpacing: "-0.01em" }}>
+                            {deal.title || "Sem título"}
+                          </div>
+                          <div className="text-[12px] text-muted-foreground truncate mt-0.5">
+                            {deal.customer_name || "Sem cliente"}
+                          </div>
                         </div>
                       </div>
-                      {renderStageBadge(deal.stage_id || "")}
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-sm text-foreground">
-                      <div className="flex flex-col">
-                        <span className="text-xs text-muted-foreground">Cliente</span>
-                        <span>{deal.customer_name || "Cliente"}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-xs text-muted-foreground">Valor</span>
-                        <span className="text-emerald-600 dark:text-emerald-300 font-semibold">{formatCurrency(Number(deal.value) || 0)}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-xs text-muted-foreground">Probabilidade</span>
-                        <span>{deal.probability || 0}%</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-xs text-muted-foreground">Atualizado</span>
-                        <span>{deal.updated_at ? new Date(deal.updated_at).toLocaleString("pt-BR") : "-"}</span>
+                      <div className="flex flex-col items-end gap-1.5 shrink-0">
+                        <span className="text-[14px] font-bold tabular-nums text-foreground">
+                          {formatCurrency(value)}
+                        </span>
+                        {renderStageBadge(deal.stage_id || "")}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 justify-end">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10"
-                        aria-label="Excluir"
-                        onClick={() => {
-                          if (confirm(`Tem certeza que deseja excluir a negociação "${deal.title}"?`)) {
-                            deleteDealMutation.mutate(deal.id);
-                          }
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => navigate(`/deals/${deal.id}`)}>
-                        Ver detalhes
-                      </Button>
+
+                    {/* Rodapé: responsável | probabilidade · atualizado · excluir */}
+                    <div className="flex items-center justify-between gap-2 mt-3 pt-3 border-t border-border/50">
+                      <div className="flex items-center gap-2 min-w-0">
+                        {owner?.avatar_url ? (
+                          <img src={owner.avatar_url} alt="" className="h-6 w-6 rounded-full object-cover shrink-0" />
+                        ) : (
+                          <span
+                            className="h-6 w-6 rounded-full shrink-0 flex items-center justify-center text-white text-[9px] font-semibold"
+                            style={{ background: "linear-gradient(135deg, #2563EB, #4A8CE8)" }}
+                          >
+                            {initials}
+                          </span>
+                        )}
+                        <span className="text-[12px] text-muted-foreground truncate">{ownerName}</span>
+                      </div>
+                      <div className="flex items-center gap-2.5 shrink-0">
+                        {!!deal.probability && (
+                          <span className="text-[11px] font-medium text-muted-foreground tabular-nums">{deal.probability}%</span>
+                        )}
+                        <span className="text-[11px] text-muted-foreground/80 tabular-nums hidden sm:inline">
+                          {deal.updated_at ? new Date(deal.updated_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }) : "—"}
+                        </span>
+                        <button
+                          type="button"
+                          aria-label="Excluir"
+                          className="opacity-50 sm:opacity-0 sm:group-hover:opacity-100 text-rose-500 hover:text-rose-600 p-1 rounded transition-opacity"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (confirm(`Tem certeza que deseja excluir a negociação "${deal.title}"?`)) {
+                              deleteDealMutation.mutate(deal.id);
+                            }
+                          }}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
