@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, memo } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, useCallback, memo } from "react";
 import {
     ArrowLeft,
     ArrowRight,
@@ -146,6 +146,10 @@ interface InboxConversationProps {
      *  valor não-nulo, vai pro campo de digitação; onInjectConsumed zera depois. */
     injectText?: string | null;
     onInjectConsumed?: () => void;
+    /** Paginação: há histórico antigo pra carregar; ação que carrega a próxima página. */
+    hasMoreMessages?: boolean;
+    loadingOlder?: boolean;
+    onLoadOlder?: () => void;
 }
 
 export function InboxConversation({
@@ -165,6 +169,9 @@ export function InboxConversation({
     onOpenEva,
     injectText,
     onInjectConsumed,
+    hasMoreMessages,
+    loadingOlder,
+    onLoadOlder,
 }: InboxConversationProps) {
     if (!chat) {
         return <EmptyConversation />;
@@ -179,6 +186,9 @@ export function InboxConversation({
             onOpenEva={onOpenEva}
             injectText={injectText}
             onInjectConsumed={onInjectConsumed}
+            hasMoreMessages={hasMoreMessages}
+            loadingOlder={loadingOlder}
+            onLoadOlder={onLoadOlder}
             messages={messages}
             onSendText={onSendText}
             onSendAudio={onSendAudio}
@@ -245,6 +255,9 @@ interface ConversationViewProps {
     onOpenEva?: () => void;
     injectText?: string | null;
     onInjectConsumed?: () => void;
+    hasMoreMessages?: boolean;
+    loadingOlder?: boolean;
+    onLoadOlder?: () => void;
 }
 
 // INBOX.MEDIA — limites e leitura de arquivo. 16MB é o teto prático do WhatsApp
@@ -289,6 +302,9 @@ function ConversationView({
     onOpenEva,
     injectText,
     onInjectConsumed,
+    hasMoreMessages,
+    loadingOlder,
+    onLoadOlder,
 }: ConversationViewProps) {
     const [composer, setComposer] = useState("");
     const [sending, setSending] = useState(false);
@@ -305,12 +321,34 @@ function ConversationView({
     // baseados em hash determinístico do phone). Sem fonte real, esconde.
     const suggestion = buildEvaSuggestion(chat);
 
-    // Auto-scroll pro fim quando mensagens mudam
+    // Auto-scroll pro fim SÓ quando chega mensagem nova no fim (ou troca de
+    // conversa) — não ao prepender páginas antigas (paginação).
+    const lastMsgIdRef = useRef<string | null>(null);
+    const olderRestoreRef = useRef<{ height: number; top: number } | null>(null);
     useEffect(() => {
-        if (scrollRef.current) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        const el = scrollRef.current;
+        if (!el || olderRestoreRef.current != null) return;
+        const lastId = messages[messages.length - 1]?.id ?? null;
+        if (lastId !== lastMsgIdRef.current) {
+            lastMsgIdRef.current = lastId;
+            el.scrollTop = el.scrollHeight;
         }
     }, [messages]);
+
+    // Preserva a posição de leitura ao carregar antigas (o conteúdo cresce no topo).
+    useLayoutEffect(() => {
+        const el = scrollRef.current;
+        const info = olderRestoreRef.current;
+        if (!el || !info) return;
+        el.scrollTop = info.top + (el.scrollHeight - info.height);
+        olderRestoreRef.current = null;
+    }, [messages]);
+
+    const handleLoadOlder = useCallback(() => {
+        const el = scrollRef.current;
+        olderRestoreRef.current = el ? { height: el.scrollHeight, top: el.scrollTop } : { height: 0, top: 0 };
+        onLoadOlder?.();
+    }, [onLoadOlder]);
 
     // Quando troca de chat, reseta composer e sugestão
     useEffect(() => {
@@ -455,6 +493,9 @@ function ConversationView({
                 isLoading={isLoading}
                 scrollRef={scrollRef}
                 getAudioMedia={getAudioMedia}
+                hasMoreMessages={hasMoreMessages}
+                loadingOlder={loadingOlder}
+                onLoadOlder={handleLoadOlder}
             />
 
             {/* V1.0.1 — EvaSuggestionBox removido (sugestão era mock determinístico
@@ -690,11 +731,17 @@ function MessageThread({
     isLoading,
     scrollRef,
     getAudioMedia,
+    hasMoreMessages,
+    loadingOlder,
+    onLoadOlder,
 }: {
     messages: MessageLine[];
     isLoading?: boolean;
     scrollRef: React.RefObject<HTMLDivElement>;
     getAudioMedia: (messageId: string) => Promise<string | null>;
+    hasMoreMessages?: boolean;
+    loadingOlder?: boolean;
+    onLoadOlder?: () => void;
 }) {
     if (isLoading && messages.length === 0) {
         return (
@@ -728,6 +775,22 @@ function MessageThread({
         >
             {/* F4C.3: limita largura interna da thread pra leitura confortável em ultrawide. */}
             <div className="max-w-[720px] mx-auto">
+                {/* Paginação: carrega o histórico mais antigo sob demanda (a thread
+                    abre com a janela recente; isto evita puxar milhares de mensagens). */}
+                {hasMoreMessages && (
+                    <div className="flex justify-center pb-3">
+                        <button
+                            type="button"
+                            onClick={onLoadOlder}
+                            disabled={loadingOlder}
+                            className="inline-flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-full transition-colors disabled:opacity-60 hover:bg-white"
+                            style={{ color: "#475569", background: "#FFFFFF", border: "1px solid #D9E2EC" }}
+                        >
+                            {loadingOlder && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                            {loadingOlder ? "Carregando…" : "Carregar mensagens anteriores"}
+                        </button>
+                    </div>
+                )}
                 {(() => {
                     // INBOX.UX — separadores de dia + agrupamento de bolhas do mesmo
                     // remetente em janela curta (estilo WhatsApp). Tudo derivado do

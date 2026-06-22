@@ -205,6 +205,12 @@ export interface UseChannelInbox {
     selectedChatMessages: MessageLine[];
     isLoadingChats: boolean;
     isLoadingMessages: boolean;
+    /** Paginação: há mais histórico antigo pra carregar na conversa aberta. */
+    messagesHasMore: boolean;
+    /** Carregando uma página mais antiga. */
+    loadingOlder: boolean;
+    /** Carrega a próxima página de mensagens mais antigas (prepend). */
+    loadOlderMessages: () => Promise<void>;
     chatsError: string | null;
     messagesError: string | null;
     fetchMessages: (conversationId: string) => Promise<void>;
@@ -243,6 +249,12 @@ export function useChannelInbox(): UseChannelInbox {
     const [connection, setConnection] = useState<ConnectionRow | null>(null);
     const [chats, setChats] = useState<Chat[]>([]);
     const [persistedMessages, setPersistedMessages] = useState<MessageLine[]>([]);
+    // Paginação: a janela recente (persistedMessages) é gerida pelo fetch/realtime/
+    // resync; as páginas mais ANTIGAS ficam separadas (só crescem, resetam ao trocar
+    // de conversa) pra o resync ao vivo não apagá-las.
+    const [olderMessages, setOlderMessages] = useState<MessageLine[]>([]);
+    const [messagesHasMore, setMessagesHasMore] = useState(false);
+    const [loadingOlder, setLoadingOlder] = useState(false);
     const [pendingByConv, setPendingByConv] = useState<Record<string, ChannelPendingOutbound[]>>({});
     const [isLoadingChats, setIsLoadingChats] = useState(false);
     const [isLoadingMessages, setIsLoadingMessages] = useState(false);
@@ -474,7 +486,11 @@ export function useChannelInbox(): UseChannelInbox {
     const fetchMessages = useCallback(
         async (conversationId: string) => {
             if (!conversationId) return;
+            // Trocou de conversa → zera as páginas antigas carregadas (a recente
+            // é recarregada abaixo). No resync da MESMA conversa, preserva.
+            const convChanged = selectedConversationIdRef.current !== conversationId;
             selectedConversationIdRef.current = conversationId;
+            if (convChanged) { setOlderMessages([]); setMessagesHasMore(false); }
             setIsLoadingMessages(true);
             setMessagesError(null);
             try {
@@ -496,6 +512,9 @@ export function useChannelInbox(): UseChannelInbox {
                     .map(rowToMessage);
                 if (selectedConversationIdRef.current !== conversationId) return;
                 setPersistedMessages(messages);
+                // Janela cheia → provavelmente há mais histórico antigo pra paginar.
+                // Só (re)decide no load inicial da conversa; depois o loadOlder manda.
+                if (convChanged) setMessagesHasMore(rows.length >= MESSAGES_FETCH_LIMIT);
 
                 // F4W.4.3 — registra último timestamp do thread pra consistency check
                 const lastMsg = messages[messages.length - 1];
@@ -541,6 +560,42 @@ export function useChannelInbox(): UseChannelInbox {
 
     // F4W.4.3 — mantém o ref sincronizado pra fetchMessages do refetchChats
     fetchMessagesRef.current = fetchMessages;
+
+    // ── 3b. Paginação: carrega a página ANTERIOR (mais antiga) sob demanda ──────
+    const loadOlderMessages = useCallback(async () => {
+        const convId = selectedConversationIdRef.current;
+        if (!convId || loadingOlder || !messagesHasMore) return;
+        // Âncora = a mensagem mais antiga já carregada (antigas, senão a janela recente).
+        const anchor = olderMessages[0] ?? persistedMessages[0];
+        if (!anchor) return;
+        const beforeIso = new Date(anchor.timestamp * 1000).toISOString();
+        setLoadingOlder(true);
+        try {
+            const { data, error: e } = await supabase
+                .from("channel_messages")
+                .select("id, conversation_id, direction, message_type, body, media_ref, message_timestamp, metadata, status")
+                .eq("conversation_id", convId)
+                .lt("message_timestamp", beforeIso)
+                .order("message_timestamp", { ascending: false })
+                .limit(MESSAGES_FETCH_LIMIT);
+            if (e) throw e;
+            if (selectedConversationIdRef.current !== convId) return;
+            const rows = (data || []) as unknown as ChannelMessageRow[];
+            const older = rows.filter(isRenderableMessage).reverse().map(rowToMessage);
+            if (older.length < MESSAGES_FETCH_LIMIT) setMessagesHasMore(false);
+            if (older.length > 0) {
+                setOlderMessages((prev) => {
+                    const seen = new Set(prev.map((m) => m.id));
+                    const fresh = older.filter((m) => !seen.has(m.id));
+                    return [...fresh, ...prev];
+                });
+            }
+        } catch (err) {
+            console.error("[ChannelInbox] loadOlderMessages error:", err instanceof Error ? err.message : err);
+        } finally {
+            setLoadingOlder(false);
+        }
+    }, [loadingOlder, messagesHasMore, olderMessages, persistedMessages]);
 
     // F4W.4.3 — setSelectedConversationId exposto: Inbox sincroniza o ref
     // *antes* de fetchMessages rodar. Crítico pra Realtime decidir atualizar
@@ -833,15 +888,26 @@ export function useChannelInbox(): UseChannelInbox {
         timestamp: Math.floor(p.sentAt / 1000),
         pending: true,
     }));
-    const selectedChatMessages: MessageLine[] = pendingLines.length
-        ? [...persistedMessages, ...pendingLines]
+    // Antigas (paginadas) + janela recente + pendentes. Dedup defensivo por id
+    // (older é sempre estritamente mais antigo, mas garante contra sobreposição).
+    const baseMessages: MessageLine[] = olderMessages.length
+        ? (() => {
+            const seen = new Set(olderMessages.map((m) => m.id));
+            return [...olderMessages, ...persistedMessages.filter((m) => !seen.has(m.id))];
+        })()
         : persistedMessages;
+    const selectedChatMessages: MessageLine[] = pendingLines.length
+        ? [...baseMessages, ...pendingLines]
+        : baseMessages;
 
     return {
         chats,
         selectedChatMessages,
         isLoadingChats,
         isLoadingMessages,
+        messagesHasMore,
+        loadingOlder,
+        loadOlderMessages,
         chatsError,
         messagesError,
         fetchMessages,

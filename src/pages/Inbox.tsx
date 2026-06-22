@@ -520,6 +520,9 @@ const Inbox = () => {
                     onOpenEva={isMobile ? () => setEvaMobileOpen(true) : undefined}
                     injectText={composerInject}
                     onInjectConsumed={() => setComposerInject(null)}
+                    hasMoreMessages={!useLegacy ? channelInbox.messagesHasMore : false}
+                    loadingOlder={!useLegacy ? channelInbox.loadingOlder : false}
+                    onLoadOlder={!useLegacy ? channelInbox.loadOlderMessages : undefined}
                 />
             </main>
 
