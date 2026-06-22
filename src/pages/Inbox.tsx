@@ -73,6 +73,9 @@ const Inbox = () => {
     const { activeCompanyId } = useTenant();
     const [connectModalOpen, setConnectModalOpen] = useState(false);
     const [evaMobileOpen, setEvaMobileOpen] = useState(false);
+    // Texto que a EVA mandou pro composer ("Usar resposta"). InboxConversation
+    // consome e zera. Permite o humano revisar antes de enviar (assistido).
+    const [composerInject, setComposerInject] = useState<string | null>(null);
     const [historySyncing, setHistorySyncing] = useState(false);
     // PROSPECT.1 — quando o número está em modo prospecção, o EvaPanel ganha
     // "aprovar-e-enviar" e a EVA mira em marcar demo.
@@ -508,6 +511,8 @@ const Inbox = () => {
                     statusChecked={lastStatusCheckedAt != null}
                     onReconnect={() => setConnectModalOpen(true)}
                     onOpenEva={isMobile ? () => setEvaMobileOpen(true) : undefined}
+                    injectText={composerInject}
+                    onInjectConsumed={() => setComposerInject(null)}
                 />
             </main>
 
@@ -531,6 +536,7 @@ const Inbox = () => {
                             ? (text) => handleSendText(selectedChatId, text)
                             : undefined}
                         objective={prospectingMode ? PROSPECTING_OBJECTIVE : undefined}
+                        onUseReply={(t) => setComposerInject(t)}
                     />
                 </aside>
             )}
@@ -553,6 +559,7 @@ const Inbox = () => {
                                     ? (text) => handleSendText(selectedChatId, text)
                                     : undefined}
                                 objective={prospectingMode ? PROSPECTING_OBJECTIVE : undefined}
+                                onUseReply={(t) => { setComposerInject(t); setEvaMobileOpen(false); }}
                             />
                         </div>
                     </DrawerContent>

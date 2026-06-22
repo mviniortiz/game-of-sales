@@ -142,6 +142,10 @@ interface InboxConversationProps {
     onReconnect?: () => void;
     /** Mobile: abre a EVA (bottom sheet). No desktop a EVA é a coluna direita. */
     onOpenEva?: () => void;
+    /** Texto que a EVA mandou pro composer ("Usar resposta"). Quando muda pra um
+     *  valor não-nulo, vai pro campo de digitação; onInjectConsumed zera depois. */
+    injectText?: string | null;
+    onInjectConsumed?: () => void;
 }
 
 export function InboxConversation({
@@ -159,6 +163,8 @@ export function InboxConversation({
     statusChecked,
     onReconnect,
     onOpenEva,
+    injectText,
+    onInjectConsumed,
 }: InboxConversationProps) {
     if (!chat) {
         return <EmptyConversation />;
@@ -171,6 +177,8 @@ export function InboxConversation({
             statusChecked={statusChecked}
             onReconnect={onReconnect}
             onOpenEva={onOpenEva}
+            injectText={injectText}
+            onInjectConsumed={onInjectConsumed}
             messages={messages}
             onSendText={onSendText}
             onSendAudio={onSendAudio}
@@ -235,6 +243,8 @@ interface ConversationViewProps {
     statusChecked?: boolean;
     onReconnect?: () => void;
     onOpenEva?: () => void;
+    injectText?: string | null;
+    onInjectConsumed?: () => void;
 }
 
 // INBOX.MEDIA — limites e leitura de arquivo. 16MB é o teto prático do WhatsApp
@@ -277,6 +287,8 @@ function ConversationView({
     statusChecked,
     onReconnect,
     onOpenEva,
+    injectText,
+    onInjectConsumed,
 }: ConversationViewProps) {
     const [composer, setComposer] = useState("");
     const [sending, setSending] = useState(false);
@@ -311,6 +323,19 @@ function ConversationView({
         });
         setMediaCaption("");
     }, [chat.id]);
+
+    // "Usar resposta" da EVA: coloca o texto no composer (substitui o rascunho),
+    // foca o campo e avisa o pai pra zerar. O humano revisa e envia (assistido).
+    useEffect(() => {
+        const t = (injectText || "").trim();
+        if (!t) return;
+        setComposer(t);
+        onInjectConsumed?.();
+        requestAnimationFrame(() => {
+            const el = inputRef.current;
+            if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+        });
+    }, [injectText, onInjectConsumed]);
 
     // Revoga o object URL do preview ao desmontar (evita leak de memória).
     useEffect(() => {

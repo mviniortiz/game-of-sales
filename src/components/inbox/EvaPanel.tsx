@@ -200,13 +200,16 @@ interface EvaPanelProps {
     onSendReply?: (text: string) => Promise<void>;
     /** PROSPECT.1 — objetivo da conversa repassado à EVA (ex.: marcar demo). */
     objective?: string;
+    /** Coloca a resposta sugerida no campo de digitação (assistido: humano revisa
+     *  e envia). No mobile também fecha o bottom sheet. */
+    onUseReply?: (text: string) => void;
 }
 
-export function EvaPanel({ chat, messages, onDealLinked, onSendReply, objective }: EvaPanelProps) {
+export function EvaPanel({ chat, messages, onDealLinked, onSendReply, objective, onUseReply }: EvaPanelProps) {
     if (!chat) return <EmptyPanel reason="no-chat" />;
     // key={chat.id} — remonta por conversa pra não vazar estado local
     // (createOpen / localLinkedDealId) entre chats diferentes.
-    return <PanelContent key={chat.id} chat={chat} messages={messages} onDealLinked={onDealLinked} onSendReply={onSendReply} objective={objective} />;
+    return <PanelContent key={chat.id} chat={chat} messages={messages} onDealLinked={onDealLinked} onSendReply={onSendReply} objective={objective} onUseReply={onUseReply} />;
 }
 
 // ─── Empty / loading / error states ─────────────────────────────────────────
@@ -327,12 +330,14 @@ function PanelContent({
     onDealLinked,
     onSendReply,
     objective,
+    onUseReply,
 }: {
     chat: Chat;
     messages: MessageLine[];
     onDealLinked?: (dealId: string) => void;
     onSendReply?: (text: string) => Promise<void>;
     objective?: string;
+    onUseReply?: (text: string) => void;
 }) {
     const navigate = useNavigate();
     const chatPhone = chat.phone || chat.id;
@@ -787,6 +792,7 @@ function PanelContent({
                             onSendReply={onSendReply}
                             createNudge={createNudge}
                             onResolveSuggestion={resolveSuggestion}
+                            onUseReply={onUseReply}
                         />
                     </>
                 )}
@@ -1078,6 +1084,7 @@ function RealContent({
     onSendReply,
     createNudge,
     onResolveSuggestion,
+    onUseReply,
 }: {
     chat: Chat;
     insight: EvaInsightResult;
@@ -1087,6 +1094,7 @@ function RealContent({
     /** Analytics da EVA — registra o desfecho (accepted/adjusted) da sugestão
      *  quando o humano usa a resposta. Best-effort, nunca quebra a UI. */
     onResolveSuggestion?: (status: "accepted" | "adjusted", finalText: string) => void | Promise<void>;
+    onUseReply?: (text: string) => void;
 }) {
     const { analysis, qualification, legacy } = insight;
     const summary = analysis.sentiment || "Análise da EVA disponível.";
@@ -1190,6 +1198,7 @@ function RealContent({
                         <SuggestedReply
                             text={qualification.resposta_sugerida || analysis.draft || ""}
                             onSend={onSendReply}
+                            onUseReply={onUseReply}
                             hasAction={Boolean(proximaAcaoLabel || analysis.nextAction)}
                             onResolveSuggestion={onResolveSuggestion}
                         />
@@ -1691,11 +1700,13 @@ function InfoLists({
 function SuggestedReply({
     text,
     onSend,
+    onUseReply,
     hasAction = false,
     onResolveSuggestion,
 }: {
     text: string;
     onSend?: (text: string) => Promise<void>;
+    onUseReply?: (text: string) => void;
     hasAction?: boolean;
     /** Analytics da EVA — registra accepted (copiou/enviou sem editar) ou
      *  adjusted (editou o texto antes). Best-effort, nunca quebra o fluxo. */
@@ -1718,6 +1729,16 @@ function SuggestedReply({
         } catch {
             toast.error("Não foi possível copiar");
         }
+    };
+
+    // Coloca a resposta no campo de digitação pro humano revisar e enviar
+    // (assistido). No mobile, o EvaPanel ainda fecha o bottom sheet por cima disto.
+    const handleUse = () => {
+        const msg = display.trim();
+        if (!msg) return;
+        onUseReply?.(msg);
+        void onResolveSuggestion?.(outcomeFor(msg), msg);
+        setEdited(null);
     };
 
     // PROSPECT.1 — aprovar-e-enviar com 1 toque (envia o texto, já editado se for o caso).
@@ -1796,6 +1817,19 @@ function SuggestedReply({
                         <ArrowUp className="h-3.5 w-3.5" />
                         {sending ? "Enviando..." : "Enviar resposta"}
                     </button>
+                ) : onUseReply ? (
+                    <button
+                        type="button"
+                        onClick={handleUse}
+                        className="vz-eva-cta inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-lg text-[12.5px] font-semibold text-white flex-1 transition-all"
+                        style={{
+                            background: "linear-gradient(135deg, #2563EB, #4A8CE8)",
+                            boxShadow: "0 6px 16px -6px rgba(37,99,235,0.40), 0 1px 0 rgba(255,255,255,0.20) inset",
+                        }}
+                    >
+                        <ArrowRight className="h-3.5 w-3.5" />
+                        Usar resposta
+                    </button>
                 ) : (
                     <button
                         type="button"
@@ -1810,8 +1844,8 @@ function SuggestedReply({
                         Copiar resposta
                     </button>
                 )}
-                {/* Quando há Enviar, Copiar vira secundário compacto (só ícone). */}
-                {onSend && (
+                {/* Com ação primária (Enviar/Usar), Copiar vira secundário compacto. */}
+                {(onSend || onUseReply) && (
                     <button
                         type="button"
                         onClick={handleCopy}
