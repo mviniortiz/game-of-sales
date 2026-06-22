@@ -1,0 +1,54 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Evolution API (WhatsApp) — stack de produção pra VPS (Hetzner CX22/CX32).
+# Evolution v2 + Postgres + Redis. Persiste tudo em volumes (sobrevive a restart).
+#
+# Subir:   docker compose up -d
+# Logs:    docker compose logs -f evolution-api
+# Parar:   docker compose down        (os dados ficam nos volumes)
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  evolution-api:
+    image: atendai/evolution-api:v2.2.3   # confira a tag estável mais recente no Docker Hub
+    container_name: evolution-api
+    restart: always
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    volumes:
+      - evolution_instances:/evolution/instances
+    depends_on:
+      - postgres
+      - redis
+    networks: [evolution-net]
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: evolution-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: evolution
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: evolution
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks: [evolution-net]
+
+  redis:
+    image: redis:7-alpine
+    container_name: evolution-redis
+    restart: always
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    networks: [evolution-net]
+
+volumes:
+  evolution_instances:
+  postgres_data:
+  redis_data:
+
+networks:
+  evolution-net:
+    driver: bridge
