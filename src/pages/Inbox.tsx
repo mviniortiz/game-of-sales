@@ -440,6 +440,7 @@ const Inbox = () => {
         base64: string,
         mimetype: string,
         opts?: { caption?: string; fileName?: string },
+        progress?: { onProgress?: (pct: number) => void; signal?: AbortSignal },
     ) => {
         const target = chats.find((c) => c.id === chatIdFromCallback) || selectedChat;
         const jid = target?.chatJid;
@@ -447,7 +448,7 @@ const Inbox = () => {
             console.warn("[Inbox] handleSendMedia: missing chatJid for", chatIdFromCallback);
             return;
         }
-        await sendMediaMessage(jid, base64, mimetype, opts);
+        await sendMediaMessage(jid, base64, mimetype, opts, progress);
         void activeInbox.fetchMessages(target!.id);
         window.setTimeout(() => {
             if (target?.id) void activeInbox.fetchMessages(target.id);

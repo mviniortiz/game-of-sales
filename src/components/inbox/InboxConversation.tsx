@@ -127,6 +127,7 @@ interface InboxConversationProps {
         base64: string,
         mimetype: string,
         opts?: { caption?: string; fileName?: string },
+        progress?: { onProgress?: (pct: number) => void; signal?: AbortSignal },
     ) => Promise<void> | void;
     getAudioMedia: (messageId: string) => Promise<string | null>;
     isLoading?: boolean;
@@ -236,6 +237,7 @@ type SendMediaFn = (
     base64: string,
     mimetype: string,
     opts?: { caption?: string; fileName?: string },
+    progress?: { onProgress?: (pct: number) => void; signal?: AbortSignal },
 ) => Promise<void> | void;
 
 interface ConversationViewProps {
@@ -313,6 +315,8 @@ function ConversationView({
     const [pendingMedia, setPendingMedia] = useState<PendingMedia | null>(null);
     const [mediaCaption, setMediaCaption] = useState("");
     const [sendingMedia, setSendingMedia] = useState(false);
+    const [uploadPct, setUploadPct] = useState<number | null>(null);
+    const uploadAbortRef = useRef<AbortController | null>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -448,19 +452,31 @@ function ConversationView({
     const handleMediaSend = useCallback(async () => {
         if (!pendingMedia || !onSendMedia || sendingMedia) return;
         setSendingMedia(true);
+        setUploadPct(0);
+        const controller = new AbortController();
+        uploadAbortRef.current = controller;
         try {
             const base64 = await fileToBase64(pendingMedia.file);
             await onSendMedia(chat.id, base64, pendingMedia.file.type || "application/octet-stream", {
                 caption: mediaCaption.trim() || undefined,
                 fileName: pendingMedia.file.name,
-            });
+            }, { onProgress: setUploadPct, signal: controller.signal });
             handleMediaCancel();
         } catch (err) {
-            console.error("[InboxConversation] media send error:", err);
+            if ((err as DOMException)?.name !== "AbortError") {
+                console.error("[InboxConversation] media send error:", err);
+            }
         } finally {
             setSendingMedia(false);
+            setUploadPct(null);
+            uploadAbortRef.current = null;
         }
     }, [pendingMedia, onSendMedia, sendingMedia, chat.id, mediaCaption, handleMediaCancel]);
+
+    // Cancela o upload em andamento (aborta o XHR). O finally limpa o estado.
+    const handleUploadCancel = useCallback(() => {
+        uploadAbortRef.current?.abort();
+    }, []);
 
     const handleUseSuggestion = () => {
         setComposer(suggestion);
@@ -538,7 +554,13 @@ function ConversationView({
             )}
 
             {/* Composer */}
-            {pendingMedia ? (
+            {sendingMedia && pendingMedia ? (
+                <UploadProgressCard
+                    file={pendingMedia.file}
+                    pct={uploadPct ?? 0}
+                    onCancel={handleUploadCancel}
+                />
+            ) : pendingMedia ? (
                 <MediaPreviewBar
                     media={pendingMedia}
                     caption={mediaCaption}
@@ -1083,6 +1105,68 @@ function EvaSuggestionBox({
 }
 
 // ─── Media preview (estilo WhatsApp: prévia + legenda antes de enviar) ──────
+
+// Cor do ícone por tipo de arquivo (planilha verde, PDF vermelho, etc.).
+function fileTypeColor(file: File): string {
+    const n = file.name.toLowerCase();
+    if (n.endsWith(".xlsx") || n.endsWith(".xls") || n.endsWith(".csv")) return "#16A34A";
+    if (n.endsWith(".pdf")) return "#DC2626";
+    if (n.endsWith(".doc") || n.endsWith(".docx")) return "#2563EB";
+    if (n.endsWith(".ppt") || n.endsWith(".pptx")) return "#EA580C";
+    if (file.type.startsWith("image/")) return "#7C3AED";
+    if (file.type.startsWith("video/")) return "#0891B2";
+    return "#64748B";
+}
+function fmtMB(bytes: number): string {
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+// Card de upload com % REAL + cancelar (referência do Markus). Aparece enquanto
+// o documento/mídia sobe; a barra reflete o progresso de upload de verdade.
+function UploadProgressCard({ file, pct, onCancel }: { file: File; pct: number; onCancel: () => void }) {
+    const p = Math.min(Math.max(pct, 0), 1);
+    const loaded = Math.round(file.size * p);
+    const ext = (file.name.split(".").pop() || "").toUpperCase().slice(0, 4);
+    return (
+        <div className="px-3 sm:px-5 py-3" style={{ borderTop: "1px solid #D9E2EC", background: "#FFFFFF" }}>
+            <div className="max-w-[720px] mx-auto">
+                <div className="flex items-center gap-3 rounded-xl px-3 py-2.5" style={{ background: "#F4F7FB", border: "1px solid #D9E2EC" }}>
+                    <div
+                        className="shrink-0 h-9 w-9 rounded-lg flex items-center justify-center text-white font-bold"
+                        style={{ background: fileTypeColor(file), fontSize: ext.length > 3 ? 8 : 9 }}
+                    >
+                        {ext || <FileText className="h-4 w-4" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                            <span className="text-[13px] font-semibold truncate" style={{ color: "#0B1220" }}>{file.name}</span>
+                            <button
+                                type="button"
+                                onClick={onCancel}
+                                aria-label="Cancelar envio"
+                                title="Cancelar"
+                                className="shrink-0 h-6 w-6 rounded-md flex items-center justify-center transition-colors hover:bg-white"
+                                style={{ color: "#64748B" }}
+                            >
+                                <X className="h-3.5 w-3.5" />
+                            </button>
+                        </div>
+                        <div className="text-[11.5px] mt-0.5">
+                            <span style={{ color: "#2563EB", fontWeight: 600 }}>Enviando {Math.round(p * 100)}%</span>
+                            <span style={{ color: "#94A3B8" }}> · {fmtMB(loaded)} de {fmtMB(file.size)}</span>
+                        </div>
+                        <div className="mt-1.5 h-1.5 rounded-full overflow-hidden" style={{ background: "#E2E8F0" }}>
+                            <div
+                                className="h-full rounded-full transition-[width] duration-200 ease-out"
+                                style={{ width: `${p * 100}%`, background: "linear-gradient(90deg, #2563EB, #4A8CE8)" }}
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 function MediaPreviewBar({
     media,

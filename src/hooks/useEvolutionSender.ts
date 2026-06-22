@@ -45,6 +45,50 @@ interface SendMediaOpts {
     fileName?: string;
 }
 
+/** Permite mostrar a % real do upload e cancelar (AbortSignal). */
+export interface SendMediaProgress {
+    onProgress?: (pct: number) => void;
+    signal?: AbortSignal;
+}
+
+// Upload rastreado (XHR) pro edge: dá evento de progresso (a % real) e cancelamento,
+// que o supabase.functions.invoke (fetch) não expõe. Mesmo corpo do invokeProxy.
+function uploadEvolutionMedia(
+    url: string,
+    anon: string,
+    token: string,
+    body: Record<string, unknown>,
+    progress?: SendMediaProgress,
+): Promise<void> {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", url);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.setRequestHeader("apikey", anon);
+        xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+        xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable && progress?.onProgress) progress.onProgress(e.loaded / e.total);
+        };
+        xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                progress?.onProgress?.(1);
+                resolve();
+            } else {
+                let detail = `HTTP ${xhr.status}`;
+                try { const b = JSON.parse(xhr.responseText); detail = b?.error || b?.message || detail; } catch { /* ignore */ }
+                reject(new Error(detail));
+            }
+        };
+        xhr.onerror = () => reject(new Error("Falha de rede ao enviar a mídia."));
+        xhr.onabort = () => reject(new DOMException("Envio cancelado", "AbortError"));
+        if (progress?.signal) {
+            if (progress.signal.aborted) { xhr.abort(); return; }
+            progress.signal.addEventListener("abort", () => xhr.abort(), { once: true });
+        }
+        xhr.send(JSON.stringify(body));
+    });
+}
+
 export interface UseEvolutionSender {
     connected: boolean;
     connecting: boolean;
@@ -59,6 +103,7 @@ export interface UseEvolutionSender {
         base64: string,
         mimetype: string,
         opts?: SendMediaOpts,
+        progress?: SendMediaProgress,
     ) => Promise<void>;
     getAudioMedia: (messageId: string) => Promise<string | null>;
     refreshStatus: () => Promise<boolean>;
@@ -212,24 +257,43 @@ export function useEvolutionSender(): UseEvolutionSender {
             base64: string,
             mimetype: string,
             opts?: SendMediaOpts,
+            progress?: SendMediaProgress,
         ) => {
             if (!chatJid || !base64) return;
             setError(null);
             try {
-                await invokeProxy("sendMedia", {
-                    chatId: chatJid,
-                    mediaBase64: base64,
-                    mimetype,
-                    caption: opts?.caption || undefined,
-                    fileName: opts?.fileName || undefined,
-                });
+                if (progress?.onProgress || progress?.signal) {
+                    // Caminho com % real (XHR rastreado). Mesmo corpo do invokeProxy.
+                    const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/evolution-whatsapp`;
+                    const anon = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+                    const { data } = await supabase.auth.getSession();
+                    const token = data.session?.access_token || anon;
+                    await uploadEvolutionMedia(url, anon, token, {
+                        action: "sendMedia",
+                        companyId: activeCompanyId,
+                        chatId: chatJid,
+                        mediaBase64: base64,
+                        mimetype,
+                        caption: opts?.caption || undefined,
+                        fileName: opts?.fileName || undefined,
+                    }, progress);
+                } else {
+                    await invokeProxy("sendMedia", {
+                        chatId: chatJid,
+                        mediaBase64: base64,
+                        mimetype,
+                        caption: opts?.caption || undefined,
+                        fileName: opts?.fileName || undefined,
+                    });
+                }
             } catch (err) {
+                if ((err as DOMException)?.name === "AbortError") throw err; // cancelado: não é erro de UI
                 const msg = err instanceof Error ? err.message : "Falha ao enviar mídia.";
                 setError(msg);
                 throw err;
             }
         },
-        [invokeProxy],
+        [invokeProxy, activeCompanyId],
     );
 
     // ── Get audio media (download via Evolution + cache) ───────────────────
