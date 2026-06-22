@@ -174,6 +174,34 @@ function getInstanceName(userId: string) {
   return `wa_${userId.replace(/-/g, "")}`;
 }
 
+// ── Helpers de mídia (cache no Storage privado whatsapp-media) ────────────────
+function bytesFromBase64(b64: string): Uint8Array {
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+function base64FromBytes(bytes: Uint8Array): string {
+  let bin = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    bin += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  }
+  return btoa(bin);
+}
+function mediaExt(mime: string): string {
+  const m = (mime || "").toLowerCase();
+  if (m.includes("jpeg") || m.includes("jpg")) return "jpg";
+  if (m.includes("png")) return "png";
+  if (m.includes("webp")) return "webp";
+  if (m.includes("gif")) return "gif";
+  if (m.includes("mp4")) return "mp4";
+  if (m.includes("ogg") || m.includes("opus")) return "ogg";
+  if (m.includes("mpeg") || m.includes("mp3")) return "mp3";
+  if (m.includes("pdf")) return "pdf";
+  return "bin";
+}
+
 function extractQrBase64(payload: any): string | null {
   return (
     payload?.qrcode?.base64 ||
@@ -930,25 +958,76 @@ serve(async (req) => {
 
     if (action === "getMedia") {
       if (!body.messageId) return json(400, { error: "messageId is required" });
+
+      // body.messageId pode ser (a) o UUID da linha channel_messages (Inbox novo)
+      // ou (b) o wamid direto (legado). Resolvemos pelo banco pra ter a CHAVE
+      // COMPLETA da Evolution (id+remoteJid+fromMe) — antes mandava só o UUID e a
+      // Evolution nunca achava ("Imagem indisponível").
+      let wamid = String(body.messageId);
+      let remoteJid: string | null = null;
+      let fromMe = false;
+      let rowId: string | null = null;
+      let companyId: string | null = null;
+      let mediaRef: Record<string, any> = {};
+      let storedPath: string | null = null;
+      let storedMime: string | null = null;
+
       try {
-        // Evolution API v2: convert message to base64
+        const { data: row } = await adminSupabase
+          .from("channel_messages")
+          .select("id, company_id, provider_message_id, direction, media_ref, metadata")
+          .eq("id", body.messageId)
+          .maybeSingle();
+        if (row) {
+          rowId = row.id as string;
+          companyId = (row.company_id as string) || null;
+          wamid = (row.provider_message_id as string) || wamid;
+          remoteJid = ((row.metadata as any)?.chat_jid as string) || null;
+          fromMe = row.direction === "outbound";
+          mediaRef = ((row.media_ref as Record<string, any>) || {});
+          storedPath = (mediaRef.storage_path as string) || null;
+          storedMime = (mediaRef.mimetype as string) || null;
+        }
+      } catch { /* segue pro download on-demand */ }
+
+      // 1) Já está no nosso Storage? Serve de lá (robusto: independe da sessão viva).
+      if (storedPath) {
+        try {
+          const { data: file, error: dlErr } = await adminSupabase.storage.from("whatsapp-media").download(storedPath);
+          if (!dlErr && file) {
+            const buf = new Uint8Array(await file.arrayBuffer());
+            return json(200, { success: true, base64: base64FromBytes(buf), mimetype: storedMime || (file as any).type || "application/octet-stream" });
+          }
+        } catch { /* cai pro download da Evolution */ }
+      }
+
+      // 2) Baixa da Evolution com a chave completa.
+      try {
+        const key: any = { id: wamid };
+        if (remoteJid) key.remoteJid = remoteJid;
+        key.fromMe = fromMe;
         const data = await evolutionRequest(`/chat/getBase64FromMediaMessage/${instanceName}`, {
           method: "POST",
-          body: JSON.stringify({
-            message: { key: { id: body.messageId } },
-            convertToMp4: false,
-          }),
+          body: JSON.stringify({ message: { key }, convertToMp4: false }),
         });
         const base64 = data?.base64 || data?.mediaBase64 || data?.data || null;
-        const mimetype = data?.mimetype || data?.mediaType || "audio/ogg";
+        const mimetype = data?.mimetype || data?.mediaType || storedMime || "application/octet-stream";
         if (!base64) {
           return json(404, { error: "Media not found or expired" });
         }
-        return json(200, {
-          success: true,
-          base64,
-          mimetype,
-        });
+
+        // 3) Cacheia no Storage pra próxima vez (best-effort).
+        if (rowId && companyId) {
+          const path = `${companyId}/${rowId}.${mediaExt(mimetype)}`;
+          try {
+            const up = await adminSupabase.storage.from("whatsapp-media").upload(path, bytesFromBase64(base64), { contentType: mimetype, upsert: true });
+            if (!up.error) {
+              await adminSupabase.from("channel_messages").update({ media_ref: { ...mediaRef, storage_path: path, mimetype } }).eq("id", rowId);
+            }
+          } catch { /* cache é best-effort */ }
+        }
+
+        return json(200, { success: true, base64, mimetype });
       } catch (err: any) {
         console.error("[getMedia] error:", err?.message);
         return json(500, { error: err?.message || "Failed to fetch media" });

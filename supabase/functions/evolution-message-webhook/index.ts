@@ -13,6 +13,61 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const EVOLUTION_WEBHOOK_SECRET = Deno.env.get("EVOLUTION_WEBHOOK_SECRET") || "";
+// Secrets do projeto (compartilhados por todas as edges): o webhook usa pra
+// BAIXAR a mídia na entrada e guardar no nosso Storage (robusto vs URL .enc).
+const EVOLUTION_API_URL = Deno.env.get("EVOLUTION_API_URL")?.replace(/\/+$/, "");
+const EVOLUTION_API_KEY = Deno.env.get("EVOLUTION_API_KEY");
+
+const MEDIA_TYPES = new Set(["image", "video", "sticker", "audio", "document"]);
+
+function mediaExt(mime: string): string {
+  const m = (mime || "").toLowerCase();
+  if (m.includes("jpeg") || m.includes("jpg")) return "jpg";
+  if (m.includes("png")) return "png";
+  if (m.includes("webp")) return "webp";
+  if (m.includes("gif")) return "gif";
+  if (m.includes("mp4")) return "mp4";
+  if (m.includes("ogg") || m.includes("opus")) return "ogg";
+  if (m.includes("mpeg") || m.includes("mp3")) return "mp3";
+  if (m.includes("pdf")) return "pdf";
+  return "bin";
+}
+function bytesFromBase64(b64: string): Uint8Array {
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+// Baixa a mídia da Evolution (chave completa) e guarda no bucket privado
+// whatsapp-media, gravando o storage_path no media_ref. Best-effort: qualquer
+// falha é só logada (o on-demand do getMedia segue como fallback).
+async function captureMediaToStorage(
+  admin: any,
+  p: { messageId: string; companyId: string; wamid: string; remoteJid: string; fromMe: boolean; instanceName: string; mimetype: string },
+): Promise<void> {
+  if (!EVOLUTION_API_URL || !EVOLUTION_API_KEY) return;
+  try {
+    const resp = await fetch(`${EVOLUTION_API_URL}/chat/getBase64FromMediaMessage/${p.instanceName}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: EVOLUTION_API_KEY },
+      body: JSON.stringify({ message: { key: { id: p.wamid, remoteJid: p.remoteJid, fromMe: p.fromMe } }, convertToMp4: false }),
+    });
+    if (!resp.ok) return;
+    const data = await resp.json().catch(() => null);
+    const base64 = data?.base64 || data?.mediaBase64 || data?.data || null;
+    const mimetype = data?.mimetype || data?.mediaType || p.mimetype || "application/octet-stream";
+    if (!base64) return;
+    const path = `${p.companyId}/${p.messageId}.${mediaExt(mimetype)}`;
+    const up = await admin.storage.from("whatsapp-media").upload(path, bytesFromBase64(base64), { contentType: mimetype, upsert: true });
+    if (up.error) return;
+    const { data: row } = await admin.from("channel_messages").select("media_ref").eq("id", p.messageId).maybeSingle();
+    const mr = (row?.media_ref as Record<string, unknown>) || {};
+    await admin.from("channel_messages").update({ media_ref: { ...mr, storage_path: path, mimetype } }).eq("id", p.messageId);
+  } catch (err) {
+    console.warn("[webhook] captureMediaToStorage failed:", (err as any)?.message);
+  }
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -454,6 +509,21 @@ async function dualWriteChannel(
         }
       } else {
         messageId = created.id;
+        // BAIXA a mídia na entrada (não-bloqueante): captura os bytes enquanto a
+        // sessão está viva e guarda no nosso Storage, pra nunca ficar "indisponível".
+        if (messageId && MEDIA_TYPES.has(n.internalType) && n.mediaMimetype) {
+          const task = captureMediaToStorage(admin, {
+            messageId,
+            companyId: n.companyId,
+            wamid: n.externalId,
+            remoteJid: n.remoteJid,
+            fromMe: n.direction === "outbound",
+            instanceName: n.instanceName,
+            mimetype: n.mediaMimetype,
+          });
+          // waitUntil mantém a função viva pra terminar o upload sem segurar o 200.
+          try { (globalThis as any).EdgeRuntime?.waitUntil?.(task); } catch { /* noop */ }
+        }
       }
     }
   } catch (err) {
