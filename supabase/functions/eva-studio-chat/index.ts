@@ -88,12 +88,21 @@ function buildSystemPrompt(agent: AgentDef, priorContext?: string): string {
 Preencha estes campos, conversando de forma natural e acolhedora:
 ${fieldList}
 ${priorBlock}
-Conduta:
+Conduta (siga à risca):
 - Faça UMA pergunta por vez, curta, em português do Brasil. Sem jargão técnico.
 - O gestor pode não saber "preencher campos": pergunte com as palavras dele, puxe um exemplo quando ajudar.
 - A cada mensagem do gestor, ATUALIZE os campos com o que ele disse (resuma em 1 frase, não invente). Campo que ele ainda não falou fica como string vazia "".
 - Nunca invente números, preços, clientes nem promessas. Use só o que ele disse.
-- Quando os campos estiverem razoavelmente preenchidos, FECHE: agradeça em 1-2 frases, diga que montou a EVA e que ele revisa/ajusta o que quiser, e marque done=true.
+
+REGRA DE PROGRESSÃO (o mais importante — evita ficar enrolando):
+- Pergunte SEMPRE sobre o PRÓXIMO campo que ainda está VAZIO, na ordem da lista. Olhe os campos já capturados e NÃO pergunte de novo sobre um campo que já tem resposta.
+- Faça NO MÁXIMO UMA pergunta por campo. Se o gestor deu uma resposta razoável, ACEITE e siga pro próximo campo vazio. NÃO refine, não aprofunde, não peça mais detalhes de algo que já está preenchido.
+- Fique ESTRITAMENTE dentro da lista de campos acima. NÃO pergunte sobre preço, fee, faturamento, metas, número de leads, prazos ou qualquer assunto que não seja um dos campos listados.
+- Limite-se a no máximo ~6 perguntas no total. Se já cobriu os campos, pare.
+
+FECHAMENTO (obrigatório):
+- Assim que TODOS os campos tiverem ao menos uma resposta, FECHE NA MESMA HORA: NÃO faça mais nenhuma pergunta. Agradeça em 1-2 frases, diga que montou a EVA e que ele revisa/ajusta o que quiser, e marque done=true.
+- Quando done=true, a sua "reply" NÃO pode terminar com pergunta — é uma fala de fechamento.
 - Seja breve, calorosa e confiante, nunca robótica.
 
 Responda SOMENTE com JSON válido neste formato (sem texto fora do JSON):
@@ -117,6 +126,11 @@ function sanitizeFields(raw: unknown, agent: AgentDef): Fields {
 }
 
 interface Turn { from: "eva" | "user"; text: string }
+
+// Circuit breaker: a entrevista NUNCA pode conversar pra sempre. Passou disso de
+// respostas do gestor, fecha-se com o que tiver (o gestor revisa no recap).
+const MAX_USER_TURNS = 8;
+const FORCED_CLOSING = "Pronto — montei a sua EVA com tudo que você me passou. Olha o resumo aqui do lado: se algo estiver torto, é só me dizer e eu ajusto.";
 
 async function runChat(agent: AgentDef, messages: Turn[], fields: Fields, priorContext?: string): Promise<{ reply: string; fields: Fields; done: boolean } | null> {
     if (!OPENAI_API_KEY) return null;
@@ -149,11 +163,23 @@ async function runChat(agent: AgentDef, messages: Turn[], fields: Fields, priorC
         const parsed = JSON.parse(String(content).replace(/```json\n?/g, "").replace(/```\n?/g, ""));
         const cleanFields = sanitizeFields(parsed.fields, agent);
         const filledCount = agent.fields.filter((f) => cleanFields[f.key].length > 0).length;
-        return {
-            reply: typeof parsed.reply === "string" ? parsed.reply.trim().slice(0, 800) : "",
-            fields: cleanFields,
-            done: parsed.done === true && filledCount >= agent.fields.length,
-        };
+        const allFilled = filledCount >= agent.fields.length;
+        const userTurns = messages.filter((m) => m.from === "user").length;
+
+        // Fecha quando: (a) circuit breaker — gestor já respondeu demais (rede de
+        // segurança contra o loop); (b) tudo preenchido e a LLM marcou done; (c)
+        // tudo preenchido após pelo menos 2 respostas (a LLM às vezes ESQUECE de
+        // marcar done e fica refinando pra sempre). O guard de 2 turnos evita
+        // fechar cedo demais por uma extração otimista da 1ª resposta.
+        const forced = userTurns >= MAX_USER_TURNS;
+        const done = forced || (allFilled && (parsed.done === true || userTurns >= 2));
+
+        let reply = typeof parsed.reply === "string" ? parsed.reply.trim().slice(0, 800) : "";
+        // Se vai fechar mas a EVA ainda fez uma pergunta, troca por uma fala de
+        // fechamento — não pode "encerrar" terminando em "?".
+        if (done && (forced || /\?\s*$/.test(reply) || !reply)) reply = FORCED_CLOSING;
+
+        return { reply, fields: cleanFields, done };
     } catch {
         return null;
     }
