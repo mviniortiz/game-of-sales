@@ -502,6 +502,9 @@ const Inbox = () => {
                     onBack={isMobile ? () => setSelectedChatId(null) : undefined}
                     onRefresh={handleRefresh}
                     isRefreshing={isRefreshing}
+                    connected={connected}
+                    statusChecked={lastStatusCheckedAt != null}
+                    onReconnect={() => setConnectModalOpen(true)}
                 />
             </main>
 

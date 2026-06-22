@@ -135,6 +135,12 @@ interface InboxConversationProps {
     /** F4W.4.1 — Refresh manual no header da conversa (útil em mobile). */
     onRefresh?: () => void;
     isRefreshing?: boolean;
+    /** Estado da sessão WhatsApp: avisa no composer se desconectado. */
+    connected?: boolean;
+    /** Se o status já foi checado ao menos 1x (evita falso "desconectado" no load). */
+    statusChecked?: boolean;
+    /** Abre o fluxo de (re)conexão do número (QR). */
+    onReconnect?: () => void;
 }
 
 export function InboxConversation({
@@ -148,6 +154,9 @@ export function InboxConversation({
     onBack,
     onRefresh,
     isRefreshing,
+    connected,
+    statusChecked,
+    onReconnect,
 }: InboxConversationProps) {
     if (!chat) {
         return <EmptyConversation />;
@@ -156,6 +165,9 @@ export function InboxConversation({
     return (
         <ConversationView
             chat={chat}
+            connected={connected}
+            statusChecked={statusChecked}
+            onReconnect={onReconnect}
             messages={messages}
             onSendText={onSendText}
             onSendAudio={onSendAudio}
@@ -216,6 +228,9 @@ interface ConversationViewProps {
     onBack?: () => void;
     onRefresh?: () => void;
     isRefreshing?: boolean;
+    connected?: boolean;
+    statusChecked?: boolean;
+    onReconnect?: () => void;
 }
 
 // INBOX.MEDIA — limites e leitura de arquivo. 16MB é o teto prático do WhatsApp
@@ -254,6 +269,9 @@ function ConversationView({
     onBack,
     onRefresh,
     isRefreshing,
+    connected,
+    statusChecked,
+    onReconnect,
 }: ConversationViewProps) {
     const [composer, setComposer] = useState("");
     const [sending, setSending] = useState(false);
@@ -420,6 +438,32 @@ function ConversationView({
                 className="hidden"
                 onChange={handleFilePick}
             />
+
+            {/* Aviso: WhatsApp desconectado — o envio vai falhar até reconectar.
+                Só aparece depois do 1º check de status (evita flash no load). */}
+            {statusChecked && connected === false && (
+                <div
+                    className="flex items-center gap-2 px-4 py-2 text-[12.5px]"
+                    style={{ borderTop: "1px solid #FCD9B6", background: "#FFF7ED", color: "#9A3412" }}
+                >
+                    <span
+                        style={{ width: 7, height: 7, borderRadius: 999, background: "#EA580C", flexShrink: 0 }}
+                    />
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                        WhatsApp desconectado. As mensagens não serão entregues até reconectar o número.
+                    </span>
+                    {onReconnect && (
+                        <button
+                            type="button"
+                            onClick={onReconnect}
+                            className="font-semibold rounded-full px-3 py-1 shrink-0"
+                            style={{ background: "#080808", color: "#fff" }}
+                        >
+                            Reconectar
+                        </button>
+                    )}
+                </div>
+            )}
 
             {/* Composer */}
             {pendingMedia ? (
