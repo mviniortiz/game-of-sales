@@ -89,6 +89,50 @@ async function checkConnectionState(instanceName: string): Promise<ResolvedStatu
   }
 }
 
+// ── WATCHDOG da sessão ZUMBI (2026-06-22) ──────────────────────────────────────
+// Sintoma: connectionState diz "open" e o webhook RECEBE, mas o socket de envio
+// fica preso (sendText/getBase64 estouram timeout). Detecção: um sendText pra um
+// número INVÁLIDO ("000000") — se o socket responde (mesmo com erro "não existe"),
+// está vivo; se ESTOURA o timeout, está zumbi. Cura: /instance/restart (preserva
+// o pareamento, sem QR). Roda só nas instâncias realmente "open".
+const PROBE_TIMEOUT_MS = 6000;
+const RESTART_TIMEOUT_MS = 15000;
+
+async function isSendSocketStuck(instanceName: string): Promise<boolean> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
+  try {
+    await fetch(`${EVOLUTION_API_URL}/message/sendText/${instanceName}`, {
+      method: "POST",
+      headers: { apikey: EVOLUTION_API_KEY!, "Content-Type": "application/json" },
+      body: JSON.stringify({ number: "000000", text: "ping" }),
+      signal: controller.signal,
+    });
+    return false; // respondeu (qualquer status HTTP) → socket vivo
+  } catch (err) {
+    return (err as Error)?.name === "AbortError"; // timeout → zumbi
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+async function restartInstance(instanceName: string): Promise<boolean> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), RESTART_TIMEOUT_MS);
+  try {
+    const r = await fetch(`${EVOLUTION_API_URL}/instance/restart/${instanceName}`, {
+      method: "POST",
+      headers: { apikey: EVOLUTION_API_KEY!, "Content-Type": "application/json" },
+      signal: controller.signal,
+    });
+    return r.ok;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: corsHeaders });
@@ -114,6 +158,7 @@ serve(async (req) => {
   // Verifica em lotes (connectionState leve, uma por instância).
   const buckets: Record<ResolvedStatus, string[]> = { active: [], pending: [], disconnected: [] };
   const transitions: Array<{ external_id: string; from: string; to: string }> = [];
+  const activeInstances: string[] = []; // realmente "open" → candidatas ao teste de zumbi
   let unreachable = 0;
 
   for (let i = 0; i < targets.length; i += BATCH_SIZE) {
@@ -123,6 +168,7 @@ serve(async (req) => {
     );
     for (const { conn, real } of results) {
       if (real === null) { unreachable++; continue; } // não verificável → mantém
+      if (real === "active") activeInstances.push(conn.external_id);
       if (real !== conn.status) {
         buckets[real].push(conn.external_id);
         transitions.push({ external_id: conn.external_id, from: String(conn.status), to: real });
@@ -146,9 +192,27 @@ serve(async (req) => {
     else updated += ids.length;
   }
 
+  // ── WATCHDOG: testa o socket de envio das instâncias "open" e reinicia as zumbis ──
+  const restarted: string[] = [];
+  const stuckButRestartFailed: string[] = [];
+  for (let i = 0; i < activeInstances.length; i += BATCH_SIZE) {
+    const batch = activeInstances.slice(i, i + BATCH_SIZE);
+    const probes = await Promise.all(
+      batch.map(async (name) => ({ name, stuck: await isSendSocketStuck(name) })),
+    );
+    for (const { name, stuck } of probes) {
+      if (!stuck) continue;
+      const ok = await restartInstance(name);
+      if (ok) restarted.push(name);
+      else stuckButRestartFailed.push(name);
+    }
+  }
+
   console.log(
     `[heartbeat] checked=${targets.length} unreachable=${unreachable} ` +
-      `updated=${updated} transitions=${JSON.stringify(transitions)}`,
+      `updated=${updated} transitions=${JSON.stringify(transitions)} ` +
+      `probed=${activeInstances.length} restarted=${JSON.stringify(restarted)} ` +
+      `restart_failed=${JSON.stringify(stuckButRestartFailed)}`,
   );
 
   return json(200, {
@@ -157,5 +221,8 @@ serve(async (req) => {
     unreachable,
     updated,
     transitions,
+    probed: activeInstances.length,
+    restarted,
+    restart_failed: stuckButRestartFailed,
   });
 });
