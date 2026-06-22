@@ -404,7 +404,14 @@ const Inbox = () => {
             // sabia que não enviou. Agora mostramos a causa real (ajuda a diagnosticar
             // sessão morta / não conectado / rate limit / instância inexistente).
             const raw = err instanceof Error ? err.message : "";
-            toast.error(describeSendError(raw));
+            const friendly = describeSendError(raw);
+            // Persistente + causa técnica crua na descrição: o envio falha por algo
+            // do servidor Evolution (auth/sessão); o usuário precisa CONSEGUIR LER o
+            // motivo (some rápido demais antes). Fica até ser dispensado.
+            toast.error(friendly, {
+                duration: Infinity,
+                description: raw && raw !== friendly ? `Detalhe técnico: ${raw}` : undefined,
+            });
             void activeInbox.fetchMessages(target!.id);
             throw err;
         }
