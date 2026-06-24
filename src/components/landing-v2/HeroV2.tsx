@@ -34,18 +34,19 @@ export const HeroV2 = ({ onSecondaryClick }: HeroV2Props) => {
             />
             <div className="relative z-10 mx-auto max-w-4xl px-5 pb-28 pt-32 text-center sm:pb-36 sm:pt-40">
                 <h1
-                    className="lp-display mx-auto max-w-4xl landing-fade-in-up-lg landing-delay-100"
+                    className="lp-display mx-auto max-w-3xl landing-fade-in-up-lg landing-delay-100"
                     style={{
-                        fontSize: "clamp(3.5rem, 8vw, 6.5rem)",
-                        lineHeight: 0.9,
-                        letterSpacing: "-0.055em",
+                        fontSize: "clamp(1.9rem, 5.4vw, 4rem)",
+                        lineHeight: 1.05,
+                        letterSpacing: "-0.04em",
                         color: "#050505",
+                        textWrap: "balance",
                     }}
                 >
-                    Um copiloto para
+                    A EVA lê cada conversa
                     <br />
                     <span className="lp-serif" style={{ color: "#050505" }}>
-                        cada conversa.
+                        e aponta quem fechar.
                     </span>
                 </h1>
 
@@ -53,7 +54,7 @@ export const HeroV2 = ({ onSecondaryClick }: HeroV2Props) => {
                     className="mx-auto mt-8 max-w-[560px] landing-fade-in-up landing-delay-200"
                     style={{ fontSize: "clamp(0.9375rem, 1.3vw, 1rem)", lineHeight: 1.55, color: "rgba(5,5,5,0.68)" }}
                 >
-                    A EVA acompanha os atendimentos da sua agência no WhatsApp, entende o contexto e sugere o próximo passo para seu time aprovar.
+                    Ela lê os atendimentos do WhatsApp, entende o contexto e sugere o próximo passo. Seu time aprova, e nenhum lead esfria por esquecimento.
                 </p>
 
                 <div className="mt-9 flex justify-center landing-fade-in-up landing-delay-300">

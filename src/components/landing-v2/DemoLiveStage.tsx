@@ -66,7 +66,7 @@ const GREETING_PROMPT = "Cumprimente a pessoa de forma calorosa e BREVE: diga oi
 
 // Abertura da CONVERSA LIVRE (fim da demo): a EVA convida a pessoa a tirar
 // dúvidas por voz; daqui em diante é Q&A sobre a Vyzon (sem mais navegar telas).
-const FREECHAT_PROMPT = "O tour da plataforma acabou. Em 2 frases calorosas, diga que adorou mostrar a Vyzon e convide a pessoa a te perguntar QUALQUER dúvida agora, por voz, que você responde na hora. A partir daqui responda as perguntas dela sobre a Vyzon de forma simpática, consultiva e CURTA, e NÃO use a ferramenta navegar. Se ela quiser avançar, sugira agendar uma demo ou testar 14 dias grátis. Ao terminar de falar, pare e escute.";
+const FREECHAT_PROMPT = "O tour da plataforma acabou. Em 2 ou 3 frases calorosas, diga que adorou mostrar a Vyzon, reforce a ideia central com algo como 'eu aponto quem fechar, você decide o que fazer' e convide a pessoa a te perguntar QUALQUER dúvida agora, por voz, que você responde na hora. A partir daqui responda as perguntas dela sobre a Vyzon de forma simpática, consultiva e CURTA, e NÃO use a ferramenta navegar. Se ela quiser avançar, sugira agendar uma demo ou testar 14 dias grátis. Ao terminar de falar, pare e escute.";
 
 // IMPORTANTE: manter system + tools ENXUTOS. O modelo native-audio (com
 // thinkingBudget:0) retorna erro interno (WS close 1011) quando a SOMA de
@@ -77,7 +77,7 @@ function buildSystem(site: string): string {
     const alvo = site.trim() ? ` para ${site.trim()}` : "";
     return [
         `Você é a EVA, a inteligência da Vyzon (Central Comercial com IA para agências que vendem por conversa). Fale sempre em português do Brasil, calorosa e consultiva, frases curtas. Você mostra a plataforma${alvo}.`,
-        `Demo GUIADA: o sistema abre cada tela e diz qual você deve explicar. Explique SÓ a tela indicada em 3 ou 4 frases e pare. NÃO use a ferramenta navegar durante o tour.`,
+        `Demo GUIADA: o sistema diz qual tela explicar. Você LEMBRA do que já mostrou: faça transições naturais e NÃO repita. Explique só a tela indicada em 3 frases e pare. Não use navegar no tour.`,
         `Se a pessoa perguntar algo, responda e pare. Se pedir outra área, use navegar. Se quiser marcar uma demo, use agendar (abrir, selecionar o dia que ela falar, confirmar); horários: terça 14h, quarta 10h, quinta 16h, sexta 11h. Você não envia links nem e-mails.`,
         `A EVA sugere, o time aprova. Não invente preços, números nem clientes.`,
     ].join(" ");
@@ -132,16 +132,14 @@ const STEP_CEIL = 22000;
 const STEP_DWELL_NOVOICE = 9000;
 // quanto esperar a voz conectar antes de conduzir o tour por legenda.
 const CONNECT_WAIT = 13000;
-// RESILIÊNCIA da voz (validado em Node, 3/3 no tour de 9 telas): o modelo
-// native-audio acumula contexto e trava (turno vazio) depois de ~5 telas, e
-// ainda sofre 1011 transitório do servidor. Correção: sessão fresca periódica +
-// reconectar-e-retomar quando um turno vem vazio ou o WS cai.
-// EM BLOCOS: sessão FRESCA por tela (cada bloco é o 1º turno de uma sessão nova,
-// que nunca engasga por acúmulo). Reconecta antes de narrar cada tela.
-const RECONNECT_EVERY = 1;    // reconecta a sessão a cada tela (bloco por bloco)
-const MAX_RETRY = 2;          // re-tentativas (reconectando) por turno vazio
-const MAX_RECONNECTS = 24;    // teto global de reconexões (anti-loop; ~1 por tela + retries)
-const SPEAK_TIMEOUT = 8000;   // se a EVA não começa a falar nesse tempo após o nudge = turno vazio
+// RESILIÊNCIA da voz — SESSÃO CONTÍNUA (validado em Node, 8/9 telas numa sessão só):
+// o native-audio às vezes devolve turno VAZIO quando o contexto acumula, mas a
+// sessão NÃO cai. Em vez de reconectar por tela (que apagava a memória e criava
+// gaps), o speak-check faz RE-NUDGE na MESMA sessão — recupera a maioria dos vazios
+// mantendo o contexto (memória → conversa). Reconexão só como ÚLTIMO recurso.
+const MAX_RETRY = 3;          // re-nudges na MESMA sessão por turno vazio (mantém memória)
+const MAX_RECONNECTS = 8;     // teto de reconexões de FALLBACK (raras agora; anti-loop)
+const SPEAK_TIMEOUT = 7000;   // se a EVA não começa a falar nesse tempo após o nudge = turno vazio
 
 // botão de controle circular estilo Handhold (mic / áudio / conversar / desligar)
 const CtrlBtn = ({ onClick, label, active, danger, disabled, children }: {
@@ -247,9 +245,28 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
         live.reconnect();
     };
 
-    // (re)envia o nudge do passo i e arma o WATCHDOG (anti-trava) + o SPEAK-CHECK
-    // (detecta turno vazio: se a EVA não começa a falar a tempo, reconecta e
-    // retoma o mesmo passo numa sessão fresca). A tela já foi aberta por startStep.
+    // SPEAK-CHECK: detecta turno vazio (a EVA não começou a falar a tempo). Validado
+    // em Node: re-nudgar na MESMA sessão recupera a maioria dos vazios (8/9) SEM
+    // reconectar — preservando a memória da sessão. Só reconecta (sessão fresca)
+    // como ÚLTIMO recurso, se os re-nudges não recuperarem.
+    const armSpeakCheck = (i: number, delay: number) => {
+        clearSpeakTimer();
+        speakTimerRef.current = window.setTimeout(() => {
+            if (tourIdxRef.current !== i || stepSpokeRef.current) return;     // já falou/avançou
+            if (chatOpenRef.current || schedRef.current) return;             // pessoa engajada
+            const screen = SCREEN_ORDER[i];
+            if (retryCountRef.current < MAX_RETRY) {
+                retryCountRef.current += 1;
+                live.nudge("Continue: " + (TOUR_PROMPT[screen] || `Explique a tela ${screen}.`)); // re-nudge MESMA sessão (mantém memória)
+                armSpeakCheck(i, 0);                                         // re-arma o check
+            } else if (reconnectsRef.current < MAX_RECONNECTS) {
+                doReconnect(i);                                             // último recurso: sessão fresca + retoma
+            }
+        }, delay + SPEAK_TIMEOUT);
+    };
+
+    // (re)envia o nudge do passo i e arma o SPEAK-CHECK + o WATCHDOG (anti-trava).
+    // A tela já foi aberta por startStep. A sessão é CONTÍNUA (não reconecta por tela).
     const narrateStep = (i: number) => {
         const screen = SCREEN_ORDER[i];
         const mount = MOUNT_DELAY[screen] ?? 750;
@@ -257,15 +274,7 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
         if (voiceLive) {
             const t = window.setTimeout(() => live.nudge(TOUR_PROMPT[screen] || `Explique a tela ${screen}.`), mount);
             navTimersRef.current.push(t);
-            clearSpeakTimer();
-            speakTimerRef.current = window.setTimeout(() => {
-                if (tourIdxRef.current !== i || stepSpokeRef.current) return;     // já falou/avançou
-                if (chatOpenRef.current || schedRef.current) return;             // pessoa engajada
-                if (retryCountRef.current < MAX_RETRY && reconnectsRef.current < MAX_RECONNECTS) {
-                    retryCountRef.current += 1;
-                    doReconnect(i);                                              // turno vazio → sessão fresca + retoma
-                }
-            }, mount + SPEAK_TIMEOUT);
+            armSpeakCheck(i, mount);
         }
         // WATCHDOG anti-trava: se o passo não avança até o teto, segue pro próximo.
         clearStepWatch();
@@ -278,9 +287,9 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
         stepWatchRef.current = window.setTimeout(tick, ceil);
     };
 
-    // TOUR ROBUSTO: abre a tela i, mostra a legenda e dispara a narração. Antes de
-    // narrar, se a sessão já contou RECONNECT_EVERY telas, reconecta (sessão
-    // fresca) — o contexto acumulado trava a EVA depois de ~5 telas.
+    // TOUR (sessão CONTÍNUA): abre a tela i, mostra a legenda e dispara a narração.
+    // NÃO reconecta por tela — a sessão dura o tour todo (mantém memória/contexto),
+    // e o speak-check recupera turnos vazios com re-nudge na mesma sessão.
     const startStep = (i: number) => {
         clearStepWatch();
         clearSpeakTimer();
@@ -294,10 +303,6 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
         lastTargetRef.current = screen;
         setScreen(screen);
         setCapFallback(SCREEN_CAPTION[screen] || "");
-        if (live.status === "live" && telasNaSessaoRef.current >= RECONNECT_EVERY && reconnectsRef.current < MAX_RECONNECTS) {
-            doReconnect(i);   // sessão fresca antes de narrar; retoma o passo i ao voltar "live"
-            return;
-        }
         narrateStep(i);
     };
 

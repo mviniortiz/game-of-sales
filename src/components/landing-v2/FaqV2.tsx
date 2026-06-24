@@ -19,7 +19,7 @@ const FAQS = [
     },
     {
         q: "Serve para qualquer empresa?",
-        a: "A Vyzon está sendo pensada principalmente para agências e operações comerciais que vendem por conversa, especialmente onde o WhatsApp concentra boa parte do atendimento.",
+        a: "A Vyzon é para agências e operações comerciais que vendem por conversa, especialmente onde o WhatsApp concentra o atendimento.",
     },
     {
         q: "Como funciona a implantação?",
