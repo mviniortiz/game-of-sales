@@ -1,13 +1,32 @@
 import type { ReactNode } from "react";
+import { EvaNode } from "@/components/landing/EvaNode";
 
 // LP.9 (v2) — previews detalhados dos tiles. Cada benefício clicável tem o seu
 // preview (mini-UI real, sem badges/chips coloridos — só texto refinado, mono e
-// um acento azul). Trocam dentro do tile com mesh + grain.
+// um acento azul). Trocam dentro do tile com mesh + grain. A EVA "lê ao vivo":
+// o glifo pulsa (.vz-eva-live) e os sinais materializam em sequência
+// (.vz-eva-lines) — remontam a cada troca de item (key={active} no FeaturesV2).
 const cardStyle: React.CSSProperties = { border: "1px solid var(--lp-line)", boxShadow: "0 18px 44px -26px rgba(13,20,33,0.42)", background: "#fff" };
 
 function Card({ children, max = 340 }: { children: ReactNode; max?: number }) {
     return <div className="w-full rounded-2xl p-5" style={{ ...cardStyle, maxWidth: max }}>{children}</div>;
 }
+
+// Cabeçalho de conversa — ancora o card como um atendimento real de WhatsApp.
+function ChatHeader({ name }: { name: string }) {
+    const initials = name.split(" ").map((p) => p[0]).slice(0, 2).join("");
+    return (
+        <div className="mb-3.5 flex items-center gap-2.5">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full text-[10.5px]" style={{ background: "rgba(13,20,33,0.06)", color: "var(--lp-ink-70)", fontWeight: 700 }}>{initials}</span>
+            <span className="text-[13px]" style={{ color: "var(--lp-ink)", fontWeight: 600 }}>{name}</span>
+            <span className="ml-auto flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--lp-live, #008a52)" }} />
+                <span className="lp-mono" style={{ color: "var(--lp-ink-40)" }}>online</span>
+            </span>
+        </div>
+    );
+}
+
 function Bubble({ children }: { children: ReactNode }) {
     return (
         <div className="inline-block px-4 py-2.5 text-[13.5px]" style={{ background: "var(--lp-paper)", border: "1px solid var(--lp-line)", borderRadius: "13px 13px 13px 4px", color: "var(--lp-ink-90)", lineHeight: 1.45, maxWidth: "88%" }}>
@@ -18,9 +37,18 @@ function Bubble({ children }: { children: ReactNode }) {
 function Mono({ children }: { children: ReactNode }) {
     return <p className="lp-mono" style={{ color: "var(--lp-ink-55)" }}>{children}</p>;
 }
+// Selo da EVA: glifo da marca (pulsa = lendo ao vivo) + rótulo mono.
+function EvaTag({ children }: { children: ReactNode }) {
+    return (
+        <div className="flex items-center gap-1.5">
+            <EvaNode size={13} color="var(--lp-blue)" className="vz-eva-live" />
+            <span className="lp-mono" style={{ color: "var(--lp-ink-55)" }}>{children}</span>
+        </div>
+    );
+}
 function Lines({ items }: { items: string[] }) {
     return (
-        <div className="mt-1.5">
+        <div className="vz-eva-lines mt-1.5">
             {items.map((l, i) => (
                 <p key={l} className="py-2 text-[13.5px]" style={{ color: "var(--lp-ink-90)", borderTop: i === 0 ? "none" : "1px solid var(--lp-line-soft)" }}>{l}</p>
             ))}
@@ -32,18 +60,20 @@ const dot = (c = "var(--lp-blue)") => <span className="mt-[7px] h-1.5 w-1.5 shri
 // ── Row 1 — Assistente comercial ──────────────────────────────────────
 const PContexto = () => (
     <Card>
+        <ChatHeader name="Marina C." />
         <Bubble>Oi, queria entender melhor os planos para minha agência.</Bubble>
         <div className="mt-4 border-t pt-4" style={{ borderColor: "var(--lp-line-soft)" }}>
-            <Mono>Leitura da EVA</Mono>
+            <EvaTag>Leitura da EVA</EvaTag>
             <Lines items={["Primeiro contato", "Interesse em planos", "Perfil: agência"]} />
         </div>
     </Card>
 );
 const PSugestao = () => (
     <Card>
+        <ChatHeader name="Rafael D." />
         <Bubble>Quais são os planos de vocês?</Bubble>
         <div className="mt-4 border-t pt-4" style={{ borderColor: "var(--lp-line-soft)" }}>
-            <Mono>Sugestão da EVA</Mono>
+            <EvaTag>Sugestão da EVA</EvaTag>
             <p className="mt-1.5 text-[13.5px]" style={{ color: "var(--lp-ink-90)", lineHeight: 1.5 }}>Claro. Antes de passar os planos, posso entender quantos atendimentos vocês recebem por mês?</p>
             <div className="mt-4 flex items-center gap-2.5">
                 <span className="rounded-lg px-3.5 py-2 text-[12.5px] text-white" style={{ background: "var(--lp-blue)", fontWeight: 600 }}>Usar sugestão</span>
@@ -54,7 +84,7 @@ const PSugestao = () => (
 );
 const PAprovacao = () => (
     <Card>
-        <Mono>Rascunho da EVA</Mono>
+        <EvaTag>Rascunho da EVA</EvaTag>
         <p className="mt-1.5 text-[14px]" style={{ color: "var(--lp-ink-90)", lineHeight: 1.5 }}>Perfeito! Te envio uma proposta ainda hoje à tarde. Pode ser?</p>
         <div className="mt-4 flex items-center justify-between border-t pt-3" style={{ borderColor: "var(--lp-line-soft)" }}>
             <span className="lp-mono" style={{ color: "var(--lp-ink-55)" }}>Aguardando você aprovar</span>
@@ -69,9 +99,10 @@ const PAprovacao = () => (
 // ── Row 2 — Qualificação ──────────────────────────────────────────────
 const PIntencao = () => (
     <Card>
+        <ChatHeader name="Camila S." />
         <Bubble>Quanto custa pra rodar tráfego pago pra minha loja esse mês?</Bubble>
         <div className="mt-4 border-t pt-4" style={{ borderColor: "var(--lp-line-soft)" }}>
-            <Mono>Sinais detectados</Mono>
+            <EvaTag>Sinais detectados</EvaTag>
             <Lines items={["Intenção: contratar tráfego pago", "Urgência: alta", "Decisor na conversa: provável"]} />
         </div>
     </Card>
@@ -79,7 +110,7 @@ const PIntencao = () => (
 const PCuriosidade = () => (
     <Card>
         <Mono>Conversas</Mono>
-        <div className="mt-2 flex flex-col gap-1">
+        <div className="vz-eva-lines mt-2 flex flex-col gap-1">
             <div className="rounded-xl px-3 py-2.5" style={{ background: "rgba(21,86,192,0.05)" }}>
                 <span className="text-[13px]" style={{ color: "var(--lp-ink)", fontWeight: 600 }}>Clara R.</span>
                 <p className="mt-0.5 text-[12px]" style={{ color: "var(--lp-ink-55)" }}>"Quero começar ainda esse mês"</p>
@@ -96,7 +127,7 @@ const PCuriosidade = () => (
 const PPriorizar = () => (
     <Card>
         <Mono>Fila de atendimento</Mono>
-        <div className="mt-2">
+        <div className="vz-eva-lines mt-2">
             {[{ n: "Clara R.", s: "Quente · responder agora" }, { n: "Mayara B.", s: "Morno · retomar amanhã" }, { n: "Jean B.", s: "Frio · nutrir" }].map((r, i) => (
                 <div key={r.n} className="flex items-center gap-3 py-2.5" style={{ borderTop: i === 0 ? "none" : "1px solid var(--lp-line-soft)" }}>
                     <span className="text-[12.5px]" style={{ color: "var(--lp-ink-40)", fontWeight: 700, width: 12 }}>{i + 1}</span>
@@ -114,7 +145,7 @@ const PPriorizar = () => (
 const PPadroniza = () => (
     <Card>
         <Mono>Playbook da agência</Mono>
-        <div className="mt-2.5 flex flex-col gap-0.5">
+        <div className="vz-eva-lines mt-2.5 flex flex-col gap-0.5">
             {["Diagnóstico do lead", "Proposta personalizada", "Follow-up em 2 dias"].map((s, i) => (
                 <div key={s} className="flex items-center gap-2.5 py-2">
                     <span className="flex h-5 w-5 items-center justify-center rounded-full text-[11px] text-white" style={{ background: "var(--lp-blue)", fontWeight: 700 }}>{i + 1}</span>
@@ -126,7 +157,7 @@ const PPadroniza = () => (
 );
 const PNovos = () => (
     <Card>
-        <Mono>Próximo passo sugerido</Mono>
+        <EvaTag>Próximo passo sugerido</EvaTag>
         <p className="mt-1.5 text-[14px]" style={{ color: "var(--lp-ink-90)", lineHeight: 1.5 }}>Enviar o diagnóstico inicial e propor uma call de 15 minutos.</p>
         <div className="mt-3 border-t pt-3" style={{ borderColor: "var(--lp-line-soft)" }}>
             <p className="lp-mono" style={{ color: "var(--lp-blue)" }}>seguindo o playbook da agência</p>
@@ -135,9 +166,9 @@ const PNovos = () => (
 );
 const PAlinhada = () => (
     <Card>
-        <Mono>Resposta alinhada</Mono>
+        <EvaTag>Resposta alinhada</EvaTag>
         <p className="mt-1.5 text-[13.5px]" style={{ color: "var(--lp-ink-90)", lineHeight: 1.5 }}>A sugestão segue o tom da marca e as regras de aprovação da agência.</p>
-        <div className="mt-3 flex flex-col gap-1.5">
+        <div className="vz-eva-lines mt-3 flex flex-col gap-1.5">
             {["Tom da marca", "Sem prometer prazo sem aprovação", "Próximo passo claro"].map((l) => (
                 <div key={l} className="flex items-start gap-2.5 text-[12.5px]" style={{ color: "var(--lp-ink-90)" }}>{dot()}<span>{l}</span></div>
             ))}

@@ -4000,6 +4000,21 @@ All colors MUST be HSL.
 @keyframes vzRise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .vz-rise { animation: none !important; } }
 
+/* FeatureShowcase — EVA "lendo ao vivo": o glifo pulsa e os sinais detectados
+   materializam em sequência. Remontam a cada troca de item (key={active}). */
+.vz-eva-live { animation: vzEvaLive 1.9s ease-in-out infinite; }
+@keyframes vzEvaLive { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+.vz-eva-lines > * { opacity: 0; animation: vzEvaLineIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.vz-eva-lines > *:nth-child(1) { animation-delay: 0.10s; }
+.vz-eva-lines > *:nth-child(2) { animation-delay: 0.22s; }
+.vz-eva-lines > *:nth-child(3) { animation-delay: 0.34s; }
+.vz-eva-lines > *:nth-child(4) { animation-delay: 0.46s; }
+@keyframes vzEvaLineIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .vz-eva-live { animation: none; opacity: 1; }
+  .vz-eva-lines > * { opacity: 1; animation: none; }
+}
+
 /* ── EVA Orb (demo por voz, Fase 1) — classe vz-eorb p/ não colidir com a
    .vz-orb decorativa legada da landing de produção ─────────────────────── */
 .vz-eorb { position: relative; display: grid; place-items: center; }
@@ -4305,9 +4320,12 @@ html.lenis, html.lenis body { height: auto; }
   content: "";
   position: absolute;
   inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='110' height='110'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* Ruído em ESCALA DE CINZA (feColorMatrix saturate 0) — lê como grão de filme,
+     em vez do ruído colorido que o blend quase anulava. Mais denso e visível. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 150px 150px;
   mix-blend-mode: overlay;
-  opacity: 0.55;
+  opacity: 0.85;
   pointer-events: none;
 }
 .vz-orb-a { animation: vz-orb-a 17s ease-in-out infinite; }
@@ -4318,18 +4336,35 @@ html.lenis, html.lenis body { height: auto; }
 @keyframes vz-orb-c { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-3px, 7px); } }
 
 .vz-input-light {
-  height: 46px;
-  padding: 0 14px;
+  height: 44px; /* casa com a altura do .vz-btn (44px) — alinha input+botão lado a lado */
+  padding: 0 16px;
   border-radius: 12px;
   background: var(--lp-white);
   border: 1px solid var(--lp-line);
   color: var(--lp-ink);
   font-family: var(--font-geist);
-  font-size: 13.5px;
+  font-size: 16px; /* >=16px evita o zoom automático do iOS ao focar o campo */
   transition: border-color 0.18s ease;
 }
 .vz-input-light::placeholder { color: var(--lp-ink-40); }
 .vz-input-light:focus { outline: none; border-color: rgba(13, 20, 33, 0.32); }
+/* Mobile: campo maior e mais confortável pra toque/digitação (ex.: colar o site). */
+@media (max-width: 640px) {
+  .vz-input-light { height: 52px; padding: 0 18px; }
+}
+
+/* Campo de DESTAQUE do AgentBuilderCard (cola o site) — é o CTA do card, então
+   bem maior que o input padrão. O botão fica no tamanho padrão (44px), centrado
+   verticalmente na linha (sm:items-center no componente). */
+.vz-agent-field {
+  height: 56px;
+  font-size: 17px;
+  border-radius: 14px;
+  padding: 0 18px;
+}
+@media (max-width: 640px) {
+  .vz-agent-field { height: 64px; font-size: 17px; padding: 0 20px; }
+}
 
 .vz-soft-card {
   transition: transform 0.2s ease, box-shadow 0.2s ease;

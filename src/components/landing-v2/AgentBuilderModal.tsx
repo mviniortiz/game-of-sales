@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { trackBehavior, trackDemoConversion, LANDING_EVENTS } from "@/lib/analytics";
 import { ButtonV2 } from "./ButtonV2";
 import {
     classifyEmail,
@@ -169,6 +170,10 @@ export const AgentBuilderModal = ({ open, onClose, url, onScheduleDemo }: AgentB
                 setStep("error");
                 return;
             }
+            // Lead capturado (demo_requests). Evento + conversão no Google Ads
+            // (mesmo sinal de "demo request"; só envia se o label do Ads existir).
+            trackBehavior(LANDING_EVENTS.AGENT_BUILDER_LEAD, { used_context: useContext });
+            void trackDemoConversion({ email: email.trim(), value: 50 });
             if (data.thin) {
                 setStep("thin");
                 return;

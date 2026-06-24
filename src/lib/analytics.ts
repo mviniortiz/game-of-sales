@@ -294,6 +294,20 @@ export const DEMO_EVENTS = {
   EVA_SUGGESTION_ADJUSTED: "eva_suggestion_adjusted",
 } as const;
 
+// Eventos do funil da LANDING (CTAs, demo, agent builder, pricing, scroll).
+// Disparados via trackBehavior (GA4 + Clarity). O lead do agent builder também
+// vira conversão no Google Ads (trackDemoConversion).
+export const LANDING_EVENTS = {
+  VIEW: "landing_view",
+  CTA_CLICK: "landing_cta_click",
+  DEMO_OPEN: "demo_open",
+  PRICING_PLAN_CLICK: "pricing_plan_click",
+  AGENT_BUILDER_START: "agent_builder_start",
+  AGENT_BUILDER_LEAD: "agent_builder_lead",
+  SCROLL_DEPTH: "scroll_depth",
+  REGISTER_START: "register_start",
+} as const;
+
 /** Dispara um evento de comportamento em GA4 (+Ads) E no Clarity de uma vez. */
 export function trackBehavior(
   eventName: string,
