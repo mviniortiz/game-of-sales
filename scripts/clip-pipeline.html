@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><title>clip-pipeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--ink:#0B1220;--muted:#64748B;--faint:#94A3B8;--blue:#2563EB;--eva:#6D28D9;--line:#E6EDF5;--line2:#D9E2EC;--paper:#F6F4EF}
+html,body{width:1440px;height:900px;font-family:'Sora',system-ui,sans-serif;color:var(--ink);background:var(--paper);overflow:hidden;-webkit-font-smoothing:antialiased}
+.app{display:flex;width:1440px;height:900px}
+.rail{width:64px;flex-shrink:0;background:#0B1220;display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:6px}
+.rail .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#2563EB,#6D28D9);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:17px;margin-bottom:14px}
+.rail .ic{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#7C8AA5;font-size:18px}.rail .ic.on{background:rgba(255,255,255,.10);color:#fff}
+.main{flex:1;display:flex;flex-direction:column}
+.top{padding:22px 28px 14px;border-bottom:1px solid var(--line)}.top .h1{font-size:21px;font-weight:800;letter-spacing:-0.02em}.top .sub{font-size:12.5px;color:var(--muted);margin-top:3px}
+.board{flex:1;display:flex;gap:16px;padding:18px 28px}
+.col{width:300px;flex-shrink:0;display:flex;flex-direction:column}
+.col-head{display:flex;align-items:center;gap:8px;padding:0 4px 12px}.col-head .dot{width:8px;height:8px;border-radius:999px}.col-head .nm{font-size:12.5px;font-weight:700}.col-head .ct{font-size:11px;color:var(--faint);background:#fff;border:1px solid var(--line);border-radius:999px;padding:1px 8px;transition:all .3s}.col-head .sum{margin-left:auto;font-size:11px;font-weight:600;color:var(--muted)}
+.cards{display:flex;flex-direction:column;gap:10px;min-height:60px;border-radius:14px;transition:background .3s}
+.cards.drop{background:rgba(37,99,235,.06);outline:2px dashed rgba(37,99,235,.3);outline-offset:3px}
+.card{background:#fff;border:1px solid var(--line2);border-radius:14px;padding:13px;box-shadow:0 1px 2px rgba(15,23,42,.04),0 10px 26px -18px rgba(37,99,235,.18)}
+.card.move{position:relative;z-index:5;animation:fly 1.6s cubic-bezier(.6,0,.3,1) forwards}
+@keyframes fly{0%{transform:translate(0,0) rotate(0) scale(1);box-shadow:0 1px 2px rgba(15,23,42,.04),0 10px 26px -18px rgba(37,99,235,.18)}30%{transform:translate(8px,-6px) rotate(-2deg) scale(1.03);box-shadow:0 22px 40px -16px rgba(37,99,235,.45)}100%{transform:translate(316px,128px) rotate(0) scale(1);box-shadow:0 22px 40px -20px rgba(37,99,235,.35)}}
+.row1{display:flex;align-items:center;gap:9px}.av{width:32px;height:32px;border-radius:999px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:11px;background:linear-gradient(135deg,#2563EB,#4A8CE8)}
+.card .nm{font-size:13px;font-weight:700;letter-spacing:-0.01em}.card .co{font-size:10.5px;color:var(--faint)}.temp{margin-left:auto;font-size:14px}
+.val{margin-top:9px;font-size:14px;font-weight:800}.val small{font-size:10.5px;color:var(--faint);font-weight:600}
+.eva-read{margin-top:9px;background:#F7F5FE;border:1px solid rgba(124,58,237,.16);border-radius:10px 10px 10px 3px;padding:8px 10px}.eva-read .lab{font-size:8.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6D28D9;display:flex;align-items:center;gap:5px}.eva-read .lab .g{width:8px;height:8px;border-radius:3px;background:linear-gradient(135deg,#6D28D9,#9333EA)}.eva-read p{font-size:11px;color:#1E1B2E;line-height:1.45;margin-top:4px}
+.tags{margin-top:9px;display:flex;gap:5px}.tag{font-size:9px;font-weight:700;padding:3px 7px;border-radius:6px;background:#F1F5F9;color:#475569}
+.placeholder{opacity:0}
+</style></head><body>
+<div class="app">
+<div class="rail"><div class="logo">V</div><div class="ic">⌂</div><div class="ic">✦</div><div class="ic on">▦</div><div class="ic">◷</div><div class="ic">⚙</div></div>
+<div class="main">
+<div class="top"><div class="h1">Pipeline Comercial</div><div class="sub">Agência · funil de novos clientes · 18 oportunidades ativas</div></div>
+<div class="board">
+<div class="col"><div class="col-head"><span class="dot" style="background:#94A3B8"></span><span class="nm">Novo lead</span><span class="ct">6</span><span class="sum">R$ 21k</span></div>
+<div class="cards"><div class="card"><div class="row1"><div class="av" style="background:linear-gradient(135deg,#DB2777,#F472B6)">CF</div><div><div class="nm">Carla Figueiredo</div><div class="co">Loja Aurora</div></div><span class="temp">🟡</span></div><div class="val">R$ 2.200<small> /mês</small></div><div class="eva-read"><div class="lab"><span class="g"></span>Leitura da EVA</div><p>Curiosa, ainda comparando. Vale enviar 1 case.</p></div><div class="tags"><span class="tag">SOCIAL MEDIA</span></div></div></div></div>
+
+<div class="col"><div class="col-head"><span class="dot" style="background:#2563EB"></span><span class="nm">Qualificando</span><span class="ct" id="ctQual">5</span><span class="sum">R$ 26k</span></div>
+<div class="cards"><div class="card move" id="moving"><div class="row1"><div class="av">MC</div><div><div class="nm">Marina Costa</div><div class="co">Clínica Belle Estética</div></div><span class="temp">🔥</span></div><div class="val">R$ 3.000<small> /mês</small></div><div class="eva-read"><div class="lab"><span class="g"></span>Leitura da EVA</div><p>Decisor e meta claros. Hora de montar a proposta.</p></div><div class="tags"><span class="tag">TRÁFEGO PAGO</span><span class="tag">QUENTE</span></div></div>
+<div class="card" id="placeholder"><div class="row1"><div class="av" style="background:linear-gradient(135deg,#0891B2,#22D3EE)">TM</div><div><div class="nm">Thiago Mendes</div><div class="co">Mendes Advocacia</div></div><span class="temp">🟡</span></div><div class="val">R$ 3.800<small> /mês</small></div><div class="eva-read"><div class="lab"><span class="g"></span>Leitura da EVA</div><p>Sumiu há 2 dias. Sugiro um follow-up leve.</p></div><div class="tags"><span class="tag">ESFRIANDO</span></div></div></div></div>
+
+<div class="col"><div class="col-head"><span class="dot" style="background:#F59E0B"></span><span class="nm">Proposta enviada</span><span class="ct" id="ctProp">4</span><span class="sum">R$ 24k</span></div>
+<div class="cards" id="dropzone"><div class="card"><div class="row1"><div class="av" style="background:linear-gradient(135deg,#0D9488,#5EEAD4)">BL</div><div><div class="nm">Bruna Lima</div><div class="co">Studio Bloom</div></div><span class="temp">🔥</span></div><div class="val">R$ 6.000<small> /mês</small></div><div class="eva-read"><div class="lab"><span class="g"></span>Leitura da EVA</div><p>Respondeu "fechado". Confirme a data de início.</p></div><div class="tags"><span class="tag">PROPOSTA ACEITA</span></div></div></div></div>
+
+<div class="col"><div class="col-head"><span class="dot" style="background:#10B981"></span><span class="nm">Fechado</span><span class="ct">3</span><span class="sum">R$ 12,8k</span></div>
+<div class="cards"><div class="card"><div class="row1"><div class="av" style="background:linear-gradient(135deg,#16A34A,#4ADE80)">FS</div><div><div class="nm">Fernanda Souza</div><div class="co">Beleza & Cia</div></div><span class="temp">✅</span></div><div class="val">R$ 4.800<small> /mês</small></div><div class="eva-read"><div class="lab"><span class="g"></span>Leitura da EVA</div><p>Cliente novo. Agende o kickoff e peça os acessos.</p></div><div class="tags"><span class="tag" style="background:#DCFCE7;color:#047857">GANHO</span></div></div></div></div>
+</div></div></div>
+<script>
+setTimeout(()=> document.getElementById('dropzone').classList.add('drop'), 900);
+setTimeout(()=> document.getElementById('moving').classList.add('move'), 1200);
+setTimeout(()=>{
+  const m=document.getElementById('moving'); const dz=document.getElementById('dropzone');
+  m.classList.remove('move'); m.style.transform=''; m.classList.remove
+  ? null:null;
+  dz.classList.remove('drop'); dz.insertBefore(m, dz.firstChild); m.style.animation='none';
+  document.getElementById('ctQual').textContent='4';
+  document.getElementById('ctProp').textContent='5';
+  const ph=document.getElementById('placeholder'); ph.style.transition='margin .4s';
+}, 2900);
+</script>
+</body></html>

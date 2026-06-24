@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><title>clip-mobile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--ink:#0B1220;--muted:#64748B;--faint:#94A3B8;--blue:#2563EB;--eva:#6D28D9;--line:#E6EDF5;--line2:#D9E2EC;--paper:#F4F7FB}
+html,body{width:390px;height:844px;font-family:'Sora',system-ui,sans-serif;color:var(--ink);background:var(--paper);overflow:hidden;-webkit-font-smoothing:antialiased}
+.phone{width:390px;height:844px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.status{height:44px;flex-shrink:0;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 22px}.status .time{font-size:13px;font-weight:700}.status .ic{font-size:12px}
+.head{background:#fff;border-bottom:1px solid var(--line2);padding:8px 14px 12px;display:flex;align-items:center;gap:11px;flex-shrink:0}
+.back{font-size:20px;color:#334155}.av{width:38px;height:38px;border-radius:999px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px;background:linear-gradient(135deg,#2563EB,#4A8CE8)}
+.head .nm{font-size:14.5px;font-weight:700}.head .st{font-size:10.5px;color:var(--muted);display:flex;align-items:center;gap:5px;margin-top:1px}.head .st .d{width:6px;height:6px;border-radius:999px;background:#10B981}
+.stream{flex:1;padding:16px 14px;display:flex;flex-direction:column;gap:9px;justify-content:flex-start}
+.b{max-width:80%;padding:9px 13px;font-size:13px;line-height:1.45;border-radius:16px;box-shadow:0 1px 2px rgba(15,23,42,.05);opacity:0;transform:translateY(10px)}
+.b.show{animation:pop .5s cubic-bezier(.22,1,.36,1) forwards}@keyframes pop{to{opacity:1;transform:translateY(0)}}
+.b.lead{align-self:flex-start;background:#fff;border:1px solid #E2E8F0;border-bottom-left-radius:5px}
+.sheet{position:absolute;left:0;right:0;bottom:64px;background:#fff;border-top:1px solid rgba(124,58,237,.18);border-radius:22px 22px 0 0;box-shadow:0 -16px 40px -16px rgba(109,40,217,.3);padding:14px 16px 16px;transform:translateY(110%);animation:up .6s cubic-bezier(.22,1,.36,1) forwards}
+@keyframes up{to{transform:translateY(0)}}
+.grab{width:40px;height:4px;border-radius:999px;background:#E2E8F0;margin:0 auto 12px}
+.top{display:flex;align-items:center;gap:9px}.orb{width:30px;height:30px;border-radius:999px;background:radial-gradient(circle at 35% 30%,#a78bfa,#6D28D9 60%,#4c1d95);box-shadow:0 6px 16px -6px rgba(109,40,217,.5)}
+.lab{font-size:13px;font-weight:700}.sub{font-size:10px;color:var(--muted)}.pill{margin-left:auto;font-size:8.5px;font-weight:800;color:#6D28D9;background:rgba(109,40,217,.10);padding:3px 8px;border-radius:999px}
+.diag{margin-top:12px;display:flex;align-items:center;gap:9px}.temp{font-size:11px;font-weight:700;color:#B45309;background:rgba(245,158,11,.12);padding:4px 9px;border-radius:999px}.score{font-size:20px;font-weight:800}.score small{font-size:11px;color:var(--faint);font-weight:600}.fit{margin-left:auto;font-size:10px;font-weight:700;color:#047857;background:rgba(16,185,129,.12);padding:4px 9px;border-radius:999px}
+.reply{margin-top:12px;background:#F7F5FE;border:1px solid rgba(124,58,237,.16);border-radius:13px 13px 13px 4px;padding:11px 13px;font-size:12.5px;color:#1E1B2E;line-height:1.5}.reply .cap{font-size:8.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6D28D9;display:flex;align-items:center;gap:5px;margin-bottom:5px}.reply .cap .g{width:8px;height:8px;border-radius:3px;background:linear-gradient(135deg,#6D28D9,#9333EA)}
+.acts{margin-top:12px;display:flex;gap:9px}.pri{flex:1;height:44px;border-radius:13px;background:linear-gradient(135deg,#2563EB,#4A8CE8);color:#fff;font-size:13.5px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:7px;box-shadow:0 8px 18px -8px rgba(37,99,235,.55)}
+.pri.tap{animation:tap .4s ease}@keyframes tap{50%{transform:scale(.95);filter:brightness(1.12)}}
+.sec{width:96px;height:44px;border-radius:13px;border:1px solid rgba(124,58,237,.22);color:#6D28D9;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center}
+.hint{margin-top:9px;text-align:center;font-size:10px;color:var(--faint)}
+.tabbar{position:absolute;left:0;right:0;bottom:0;height:64px;background:#fff;border-top:1px solid var(--line2);display:flex;align-items:flex-start;justify-content:space-around;padding-top:9px}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:9px;color:#94A3B8;font-weight:600}.tab.on{color:#2563EB}.tab .ti{font-size:18px}
+</style></head><body>
+<div class="phone">
+<div class="status"><span class="time">14:33</span><span class="ic">📶 ▮</span></div>
+<div class="head"><span class="back">‹</span><div class="av">MC</div><div><div class="nm">Marina Costa</div><div class="st"><span class="d"></span>Clínica Belle · WhatsApp</div></div></div>
+<div class="stream" id="stream">
+  <div class="b lead" data-s>Oi! Queria entender como funciona o tráfego pago.</div>
+  <div class="b lead" data-s>Já invisto uns 3 mil/mês, mas vem pouco agendamento.</div>
+  <div class="b lead" data-s>Preciso pra ontem, tô com a agenda parada.</div>
+</div>
+<div class="sheet" id="sheet">
+  <div class="grab"></div>
+  <div class="top"><div class="orb"></div><div><div class="lab">EVA leu esta conversa</div><div class="sub">e sugere o próximo passo</div></div><span class="pill">ASSISTIDA</span></div>
+  <div class="diag"><span class="temp">🔥 Quente</span><span class="score">82<small>/100</small></span><span class="fit">Fit alto</span></div>
+  <div class="reply"><div class="cap"><span class="g"></span>Resposta sugerida</div>Marina, com R$ 3 mil/mês dá pra estruturar campanhas bem mais qualificadas. Posso te mostrar 2 horários ainda essa semana?</div>
+  <div class="acts"><div class="pri" id="pri">→ Usar resposta</div><div class="sec">Editar</div></div>
+  <div class="hint">você revisa antes de enviar</div>
+</div>
+<div class="tabbar"><div class="tab"><span class="ti">⌂</span>Início</div><div class="tab on"><span class="ti">✦</span>Inbox</div><div class="tab"><span class="ti">▦</span>Pipeline</div><div class="tab"><span class="ti">◷</span>Metas</div></div>
+</div>
+<script>
+const ss=[...document.querySelectorAll('[data-s]')];
+ss.forEach((el,i)=> setTimeout(()=>el.classList.add('show'), 300+i*500));
+document.getElementById('sheet').style.animationDelay=(300+ss.length*500+300)+'ms';
+setTimeout(()=> document.getElementById('pri').classList.add('tap'), 300+ss.length*500+300+1400);
+</script>
+</body></html>

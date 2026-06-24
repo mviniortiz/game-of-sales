@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><title>clip-usar-resposta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--ink:#0B1220;--muted:#64748B;--faint:#94A3B8;--blue:#2563EB;--eva:#6D28D9;--line:#E6EDF5;--line2:#D9E2EC;--paper:#F4F7FB}
+html,body{width:1440px;height:900px;font-family:'Sora',system-ui,sans-serif;color:var(--ink);background:#F6F4EF;overflow:hidden;-webkit-font-smoothing:antialiased}
+.app{display:flex;width:1440px;height:900px}
+.rail{width:64px;flex-shrink:0;background:#0B1220;display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:6px}
+.rail .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#2563EB,#6D28D9);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:17px;margin-bottom:14px}
+.rail .ic{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#7C8AA5;font-size:18px}.rail .ic.on{background:rgba(255,255,255,.10);color:#fff}
+.conv{flex:1;display:flex;flex-direction:column;background:var(--paper)}
+.ch{background:#fff;border-bottom:1px solid var(--line2);padding:13px 26px;display:flex;align-items:center;gap:12px}
+.av{width:38px;height:38px;border-radius:999px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px;background:linear-gradient(135deg,#2563EB,#4A8CE8)}
+.ch .nm{font-size:14.5px;font-weight:700}.ch .ph{font-size:11px;color:var(--faint)}
+.stream{flex:1;padding:26px 36px;display:flex;flex-direction:column;gap:11px;justify-content:flex-end}
+.b{max-width:54%;padding:10px 14px;font-size:13px;line-height:1.5;border-radius:16px;box-shadow:0 1px 2px rgba(15,23,42,.05)}
+.b.lead{align-self:flex-start;background:#fff;border:1px solid #E2E8F0;border-bottom-left-radius:6px}
+.b.me{align-self:flex-end;background:linear-gradient(135deg,#2563EB,#4A8CE8);color:#fff;border-bottom-right-radius:6px;opacity:0;transform:translateY(10px)}
+.b.me.show{animation:pop .5s cubic-bezier(.22,1,.36,1) forwards}@keyframes pop{to{opacity:1;transform:translateY(0)}}
+
+.sugg{align-self:flex-start;max-width:62%;background:#F7F5FE;border:1px solid rgba(124,58,237,.2);border-radius:16px 16px 16px 5px;box-shadow:0 14px 34px -18px rgba(124,58,237,.4);transition:opacity .4s,transform .5s}
+.sugg.gone{opacity:0;transform:translateY(40px) scale(.9)}
+.sugg .h{display:flex;align-items:center;gap:7px;padding:11px 15px 3px}.sugg .h .g{width:13px;height:13px;border-radius:4px;background:linear-gradient(135deg,#6D28D9,#9333EA)}.sugg .h .lab{font-size:10px;font-weight:800;color:#6D28D9;letter-spacing:.08em;text-transform:uppercase}
+.sugg .tx{padding:3px 15px 10px;font-size:12.5px;color:#1E1B2E;line-height:1.5}
+.sugg .ac{padding:0 15px 13px;display:flex;gap:10px}
+.use{background:linear-gradient(135deg,#2563EB,#4A8CE8);color:#fff;font-size:12px;font-weight:600;padding:8px 15px;border-radius:9px}
+.use.tap{animation:tap .35s ease}@keyframes tap{50%{transform:scale(.93);filter:brightness(1.15)}}
+.edit{border:1px solid rgba(124,58,237,.22);color:#6D28D9;font-size:12px;font-weight:600;padding:8px 15px;border-radius:9px}
+
+.composer{background:#fff;border-top:1px solid var(--line2);padding:18px 26px}
+.cwrap{max-width:760px;margin:0 auto}
+.cbadge{font-size:10px;font-weight:700;color:#6D28D9;display:none;align-items:center;gap:6px;margin-bottom:7px}
+.cbadge.show{display:inline-flex;animation:pop .3s ease forwards}.cbadge .g{width:9px;height:9px;border-radius:3px;background:linear-gradient(135deg,#6D28D9,#9333EA)}
+.box{min-height:56px;background:var(--paper);border:1px solid var(--line2);border-radius:16px;display:flex;align-items:center;padding:10px 16px;gap:14px;transition:border .3s,background .3s}
+.box.active{border-color:rgba(37,99,235,.4);background:#fff;box-shadow:0 0 0 4px rgba(37,99,235,.08)}
+.box .txt{flex:1;font-size:14px;line-height:1.5;color:var(--ink)}
+.box .ph{color:var(--faint)}
+.cur{display:inline-block;width:2px;height:17px;background:#2563EB;vertical-align:-3px;margin-left:1px;animation:blink .9s step-end infinite;opacity:0}
+.cur.on{opacity:1}@keyframes blink{50%{opacity:0}}
+.send{width:38px;height:38px;border-radius:999px;background:#2563EB;color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.send.go{animation:tap .35s ease}
+</style></head><body>
+<div class="app">
+<div class="rail"><div class="logo">V</div><div class="ic">⌂</div><div class="ic on">✦</div><div class="ic">▦</div><div class="ic">◷</div><div class="ic">⚙</div></div>
+<div class="conv">
+  <div class="ch"><div class="av">MC</div><div><div class="nm">Marina Costa <span class="ph">· Clínica Belle Estética</span></div></div></div>
+  <div class="stream">
+    <div class="b lead">Já, uns 3 mil por mês, mas vem pouco agendamento qualificado.</div>
+    <div class="b lead">Preciso pra ontem, tô com a agenda parada.</div>
+    <div class="sugg" id="sugg">
+      <div class="h"><span class="g"></span><span class="lab">Sugestão da EVA</span></div>
+      <div class="tx">Marina, com R$ 3 mil por mês dá pra estruturar campanhas bem mais qualificadas. Posso te mostrar dois horários ainda essa semana?</div>
+      <div class="ac"><span class="use" id="use">→ Usar resposta</span><span class="edit">Editar</span></div>
+    </div>
+    <div class="b me" id="sent"></div>
+  </div>
+  <div class="composer"><div class="cwrap">
+    <div class="cbadge" id="badge"><span class="g"></span>Rascunho da EVA · revise antes de enviar</div>
+    <div class="box" id="box"><span class="txt"><span class="ph" id="ph">Responder como humano…</span><span id="typed"></span><span class="cur" id="cur"></span></span><span class="send" id="send">↑</span></div>
+  </div></div>
+</div>
+</div>
+<script>
+const full="Marina, com R$ 3 mil/mês dá pra estruturar campanhas bem mais qualificadas. Posso te mostrar dois horários ainda essa semana? Topa quinta 10h ou sexta 15h?";
+const base="Marina, com R$ 3 mil/mês dá pra estruturar campanhas bem mais qualificadas. Posso te mostrar dois horários ainda essa semana?";
+const typed=document.getElementById('typed');
+function type(text, from, to, speed, done){let i=from;const t=setInterval(()=>{i++;typed.textContent=text.slice(0,i);if(i>=to){clearInterval(t);done&&done();}},speed);}
+setTimeout(()=>{ // tap usar resposta
+  document.getElementById('use').classList.add('tap');
+  document.getElementById('box').classList.add('active');
+  document.getElementById('cur').classList.add('on');
+  document.getElementById('ph').style.display='none';
+  document.getElementById('badge').classList.add('show');
+}, 1400);
+setTimeout(()=> type(base,0,base.length,18), 1800); // texto cai no campo
+setTimeout(()=> typed.textContent=base, 1800+base.length*18+50);
+setTimeout(()=> type(full,base.length,full.length,42), 1800+base.length*18+700); // humano EDITA (adiciona horários)
+setTimeout(()=>{ // envia
+  document.getElementById('send').classList.add('go');
+  document.getElementById('sugg').classList.add('gone');
+  setTimeout(()=>{ const s=document.getElementById('sent'); s.textContent=full; s.classList.add('show'); typed.textContent=''; document.getElementById('cur').classList.remove('on'); document.getElementById('ph').style.display='inline'; document.getElementById('badge').classList.remove('show'); document.getElementById('box').classList.remove('active'); }, 350);
+}, 1800+base.length*18+700+(full.length-base.length)*42+700);
+</script>
+</body></html>

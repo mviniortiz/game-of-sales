@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1440, initial-scale=1" />
+<title>Vyzon — Pipeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--ink:#0B1220;--muted:#64748B;--faint:#94A3B8;--blue:#2563EB;--eva:#6D28D9;--green:#10B981;--line:#E6EDF5;--line2:#D9E2EC;--paper:#F6F4EF}
+  html,body{width:1440px;height:900px;font-family:'Sora',system-ui,sans-serif;color:var(--ink);background:var(--paper);-webkit-font-smoothing:antialiased}
+  .mono{font-family:'JetBrains Mono',monospace}
+  .app{display:flex;width:1440px;height:900px;overflow:hidden}
+  .rail{width:64px;flex-shrink:0;background:#0B1220;display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:6px}
+  .rail .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#2563EB,#6D28D9);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:17px;margin-bottom:14px}
+  .rail .ic{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#7C8AA5;font-size:18px}
+  .rail .ic.on{background:rgba(255,255,255,.10);color:#fff}
+  .main{flex:1;min-width:0;display:flex;flex-direction:column}
+
+  .top{padding:22px 28px 16px;border-bottom:1px solid var(--line)}
+  .top .h1{font-size:21px;font-weight:800;letter-spacing:-0.02em}
+  .top .sub{font-size:12.5px;color:var(--muted);margin-top:3px}
+  .kpis{margin-top:16px;display:flex;gap:10px}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 16px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+  .kpi .v{font-size:18px;font-weight:800;letter-spacing:-0.02em}
+  .kpi .v small{font-size:12px;color:var(--faint);font-weight:600}
+  .kpi .l{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-top:2px}
+  .kpi.eva{border-color:rgba(109,40,217,.22);background:linear-gradient(180deg,#FBFAFF,#fff)}
+  .kpi.eva .l{color:#6D28D9}
+
+  .board{flex:1;display:flex;gap:16px;padding:18px 28px;overflow:hidden}
+  .col{width:300px;flex-shrink:0;display:flex;flex-direction:column}
+  .col-head{display:flex;align-items:center;gap:8px;padding:0 4px 12px}
+  .col-head .dot{width:8px;height:8px;border-radius:999px}
+  .col-head .nm{font-size:12.5px;font-weight:700}
+  .col-head .ct{font-size:11px;color:var(--faint);background:#fff;border:1px solid var(--line);border-radius:999px;padding:1px 8px}
+  .col-head .sum{margin-left:auto;font-size:11px;font-weight:600;color:var(--muted)}
+  .cards{display:flex;flex-direction:column;gap:10px;overflow:hidden}
+
+  .card{background:#fff;border:1px solid var(--line2);border-radius:14px;padding:13px;box-shadow:0 1px 2px rgba(15,23,42,.04),0 10px 26px -18px rgba(37,99,235,.18)}
+  .card .row1{display:flex;align-items:center;gap:9px}
+  .av{width:32px;height:32px;border-radius:999px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:11px;background:linear-gradient(135deg,#2563EB,#4A8CE8)}
+  .card .nm{font-size:13px;font-weight:700;letter-spacing:-0.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .card .co{font-size:10.5px;color:var(--faint)}
+  .temp{margin-left:auto;flex-shrink:0;font-size:14px}
+  .val{margin-top:9px;font-size:14px;font-weight:800;letter-spacing:-0.01em}
+  .val small{font-size:10.5px;color:var(--faint);font-weight:600}
+  .eva-read{margin-top:9px;background:#F7F5FE;border:1px solid rgba(124,58,237,.16);border-radius:10px 10px 10px 3px;padding:8px 10px}
+  .eva-read .lab{font-size:8.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6D28D9;display:flex;align-items:center;gap:5px}
+  .eva-read .lab .g{width:8px;height:8px;border-radius:3px;background:linear-gradient(135deg,#6D28D9,#9333EA)}
+  .eva-read p{font-size:11px;color:#1E1B2E;line-height:1.45;margin-top:4px}
+  .tags{margin-top:9px;display:flex;flex-wrap:wrap;gap:5px}
+  .tag{font-size:9px;font-weight:700;padding:3px 7px;border-radius:6px;background:#F1F5F9;color:#475569;letter-spacing:.02em}
+  .meta{margin-top:9px;display:flex;align-items:center;gap:8px;font-size:10px;color:var(--faint)}
+  .meta .who{display:flex;align-items:center;gap:5px}
+  .meta .miniav{width:16px;height:16px;border-radius:999px;background:#CBD5E1;color:#475569;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center}
+  .alert{color:#B45309;font-weight:700}
+
+  .won .av{background:linear-gradient(135deg,#16A34A,#4ADE80)}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="rail">
+    <div class="logo">V</div>
+    <div class="ic">⌂</div>
+    <div class="ic">✦</div>
+    <div class="ic on">▦</div>
+    <div class="ic">◷</div>
+    <div class="ic">⚙</div>
+  </div>
+  <div class="main">
+    <div class="top">
+      <div class="h1">Pipeline Comercial</div>
+      <div class="sub">Agência · funil de novos clientes · 18 oportunidades ativas</div>
+      <div class="kpis">
+        <div class="kpi"><div class="v">R$ 84,2<small>k</small></div><div class="l">Em aberto</div></div>
+        <div class="kpi"><div class="v">18</div><div class="l">Oportunidades</div></div>
+        <div class="kpi"><div class="v">R$ 12,8<small>k</small></div><div class="l">Fechado no mês</div></div>
+        <div class="kpi eva"><div class="v">5</div><div class="l">EVA: pedem ação</div></div>
+      </div>
+    </div>
+
+    <div class="board">
+      <!-- Novo -->
+      <div class="col">
+        <div class="col-head"><span class="dot" style="background:#94A3B8"></span><span class="nm">Novo lead</span><span class="ct">6</span><span class="sum">R$ 21k</span></div>
+        <div class="cards">
+          <div class="card">
+            <div class="row1"><div class="av">MC</div><div><div class="nm">Marina Costa</div><div class="co">Clínica Belle Estética</div></div><span class="temp">🔥</span></div>
+            <div class="val">R$ 3.000<small> /mês</small></div>
+            <div class="eva-read"><div class="lab"><span class="g"></span>Leitura da EVA</div><p>Tem verba ativa e urgência. Pronta pro diagnóstico essa semana.</p></div>
+            <div class="tags"><span class="tag">TRÁFEGO PAGO</span><span class="tag">QUENTE</span></div>
+            <div class="meta"><span class="who"><span class="miniav">JP</span>João P.</span><span>· há 2h</span></div>
+          </div>
+          <div class="card">
+            <div class="row1"><div class="av" style="background:linear-gradient(135deg,#475569,#94A3B8)">+55</div><div><div class="nm">+55 41 99812-4470</div><div class="co">Lead do anúncio</div></div><span class="temp">🟡</span></div>
+            <div class="val">R$ 1.500<small> /mês est.</small></div>
+            <div class="eva-read"><div class="lab"><span class="g"></span>Leitura da EVA</div><p>Perguntou preço sem contexto. Falta qualificar segmento e meta.</p></div>
+            <div class="tags"><span class="tag">A QUALIFICAR</span></div>
+            <div class="meta"><span class="who"><span class="miniav">—</span>Sem dono</span><span class="alert">· responder</span></div>
+          </div>
+          <div class="card">
+            <div class="row1"><div class="av" style="background:linear-gradient(135deg,#DB2777,#F472B6)">CF</div><div><div class="nm">Carla Figueiredo</div><div class="co">Loja Aurora</div></div><span class="temp">🟡</span></div>
+            <div class="val">R$ 2.200<small> /mês</small></div>
+            <div class="eva-read"><div class="lab"><span class="g"></span>Leitura da EVA</div><p>Curiosa, ainda comparando. Vale enviar 1 case do segmento dela.</p></div>
+            <div class="tags"><span class="tag">SOCIAL MEDIA</span></div>
+            <div class="meta"><span class="who"><span class="miniav">AL</span>Ana L.</span><span>· ontem</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Qualificando -->
+      <div class="col">
+        <div class="col-head"><span class="dot" style="background:#2563EB"></span><span class="nm">Qualificando</span><span class="ct">5</span><span class="sum">R$ 26k</span></div>
+        <div class="cards">
+          <div class="card">
+            <div class="row1"><div class="av" style="background:linear-gradient(135deg,#7C3AED,#a78bfa)">RA</div><div><div class="nm">Rafael Andrade</div><div class="co">RA Performance</div></div><span class="temp">🔥</span></div>
+            <div class="val">R$ 5.500<small> /mês</small></div>
+            <div class="eva-read"><div class="lab"><span class="g"></span>Leitura da EVA</div><p>Decisor confirmado, meta clara. Hora de montar a proposta.</p></div>
+            <div class="tags"><span class="tag">TRÁFEGO + SITE</span><span class="tag">DECISOR</span></div>
+            <div class="meta"><span class="who"><span class="miniav">JP</span>João P.</span><span>· há 5h</span></div>
+          </div>
+          <div class="card">
+            <div class="row1"><div class="av" style="background:linear-gradient(135deg,#0891B2,#22D3EE)">TM</div><div><div class="nm">Thiago Mendes</div><div class="co">Mendes Advocacia</div></div><span class="temp">🟡</span></div>
+            <div class="val">R$ 3.800<small> /mês</small></div>
+            <div class="eva-read"><div class="lab"><span class="g"></span>Leitura da EVA</div><p>Interessado, mas sumiu há 2 dias. Sugiro um follow-up leve.</p></div>
+            <div class="tags"><span class="tag">CONTEÚDO</span><span class="tag alert" style="background:#FEF3C7;color:#B45309">ESFRIANDO</span></div>
+            <div class="meta"><span class="who"><span class="miniav">AL</span>Ana L.</span><span class="alert">· follow-up</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Proposta -->
+      <div class="col">
+        <div class="col-head"><span class="dot" style="background:#F59E0B"></span><span class="nm">Proposta enviada</span><span class="ct">4</span><span class="sum">R$ 24k</span></div>
+        <div class="cards">
+          <div class="card">
+            <div class="row1"><div class="av" style="background:linear-gradient(135deg,#0D9488,#5EEAD4)">BL</div><div><div class="nm">Bruna Lima</div><div class="co">Studio Bloom</div></div><span class="temp">🔥</span></div>
+            <div class="val">R$ 6.000<small> /mês</small></div>
+            <div class="eva-read"><div class="lab"><span class="g"></span>Leitura da EVA</div><p>Respondeu "fechado pra semana que vem". Confirme a data de início.</p></div>
+            <div class="tags"><span class="tag">PROPOSTA ACEITA</span></div>
+            <div class="meta"><span class="who"><span class="miniav">JP</span>João P.</span><span>· hoje</span></div>
+          </div>
+          <div class="card">
+            <div class="row1"><div class="av" style="background:linear-gradient(135deg,#9333EA,#c084fc)">GP</div><div><div class="nm">Gustavo Pires</div><div class="co">GP Fitness</div></div><span class="temp">🟡</span></div>
+            <div class="val">R$ 4.200<small> /mês</small></div>
+            <div class="eva-read"><div class="lab"><span class="g"></span>Leitura da EVA</div><p>Achou caro. Objeção de preço, não de valor. Vale ancorar o ROI.</p></div>
+            <div class="tags"><span class="tag">OBJEÇÃO: PREÇO</span></div>
+            <div class="meta"><span class="who"><span class="miniav">AL</span>Ana L.</span><span>· há 1 dia</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fechado -->
+      <div class="col">
+        <div class="col-head"><span class="dot" style="background:#10B981"></span><span class="nm">Fechado</span><span class="ct">3</span><span class="sum">R$ 12,8k</span></div>
+        <div class="cards">
+          <div class="card won">
+            <div class="row1"><div class="av">FS</div><div><div class="nm">Fernanda Souza</div><div class="co">Beleza & Cia</div></div><span class="temp">✅</span></div>
+            <div class="val">R$ 4.800<small> /mês</small></div>
+            <div class="eva-read"><div class="lab"><span class="g"></span>Leitura da EVA</div><p>Cliente novo. Sugiro agendar o kickoff e pedir os acessos.</p></div>
+            <div class="tags"><span class="tag" style="background:#DCFCE7;color:#047857">GANHO</span></div>
+            <div class="meta"><span class="who"><span class="miniav">JP</span>João P.</span><span>· ontem</span></div>
+          </div>
+          <div class="card won">
+            <div class="row1"><div class="av">DM</div><div><div class="nm">Diego Martins</div><div class="co">DM Imports</div></div><span class="temp">✅</span></div>
+            <div class="val">R$ 3.500<small> /mês</small></div>
+            <div class="eva-read"><div class="lab"><span class="g"></span>Leitura da EVA</div><p>Fechou no boleto. Onboarding inicia segunda.</p></div>
+            <div class="tags"><span class="tag" style="background:#DCFCE7;color:#047857">GANHO</span></div>
+            <div class="meta"><span class="who"><span class="miniav">AL</span>Ana L.</span><span>· 2 dias</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

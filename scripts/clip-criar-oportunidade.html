@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><title>clip-criar-oportunidade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--ink:#0B1220;--muted:#64748B;--faint:#94A3B8;--blue:#2563EB;--eva:#6D28D9;--line:#E6EDF5;--line2:#D9E2EC;--paper:#F4F7FB}
+html,body{width:1440px;height:900px;font-family:'Sora',system-ui,sans-serif;color:var(--ink);background:#F6F4EF;overflow:hidden;-webkit-font-smoothing:antialiased}
+.app{display:flex;width:1440px;height:900px}
+.rail{width:64px;flex-shrink:0;background:#0B1220;display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:6px}
+.rail .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#2563EB,#6D28D9);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:17px;margin-bottom:14px}
+.rail .ic{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#7C8AA5;font-size:18px}.rail .ic.on{background:rgba(255,255,255,.10);color:#fff}
+.bg{flex:1;display:flex;filter:saturate(.9)}
+.list{width:280px;background:#fff;border-right:1px solid var(--line2)}
+.conv{flex:1;background:var(--paper)}
+/* overlay */
+.scrim{position:absolute;inset:0;background:rgba(11,18,32,.34);opacity:0;animation:fade .4s ease forwards}
+@keyframes fade{to{opacity:1}}
+.modal{position:absolute;top:50%;left:50%;width:520px;transform:translate(-50%,-46%) scale(.96);opacity:0;background:#fff;border-radius:20px;box-shadow:0 40px 90px -30px rgba(11,18,32,.5);padding:24px;animation:rise .5s cubic-bezier(.22,1,.36,1) .12s forwards}
+@keyframes rise{to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+.mh{display:flex;align-items:center;gap:11px}
+.orb{width:34px;height:34px;border-radius:999px;background:radial-gradient(circle at 35% 30%,#a78bfa,#6D28D9 60%,#4c1d95);box-shadow:0 6px 18px -6px rgba(109,40,217,.5);flex-shrink:0}
+.mh .ti{font-size:17px;font-weight:800;letter-spacing:-0.02em}.mh .st{font-size:11px;color:#6D28D9;font-weight:600}
+.note{margin-top:14px;background:#F7F5FE;border:1px solid rgba(124,58,237,.16);border-radius:11px;padding:10px 13px;font-size:11.5px;color:#5b21b6;display:flex;align-items:center;gap:8px}
+.note .g{width:10px;height:10px;border-radius:3px;background:linear-gradient(135deg,#6D28D9,#9333EA);flex-shrink:0}
+.field{margin-top:14px}
+.field label{font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--faint)}
+.inp{margin-top:6px;height:44px;border:1px solid var(--line2);border-radius:11px;display:flex;align-items:center;padding:0 14px;font-size:14px;font-weight:500;color:var(--ink);background:#fff;position:relative;overflow:hidden}
+.inp .val{opacity:0}
+.inp.fill{border-color:rgba(37,99,235,.4);background:#F8FBFF}
+.inp.fill .val{animation:show .3s ease forwards}
+@keyframes show{to{opacity:1}}
+.inp .tagdone{position:absolute;right:12px;font-size:9px;font-weight:800;color:#6D28D9;background:rgba(109,40,217,.10);padding:3px 7px;border-radius:6px;opacity:0}
+.inp.fill .tagdone{animation:show .3s ease .1s forwards}
+.two{display:flex;gap:12px}.two .field{flex:1}
+.chiprow{margin-top:6px;display:flex;gap:8px}
+.tchip{font-size:12px;font-weight:700;padding:8px 14px;border-radius:10px;border:1px solid var(--line2);color:var(--muted)}
+.tchip.sel{border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.10);color:#B45309}
+.actions{margin-top:22px;display:flex;gap:10px;justify-content:flex-end}
+.btn{height:44px;padding:0 18px;border-radius:11px;font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:7px}
+.btn.ghost{border:1px solid var(--line2);color:#334155}
+.btn.pri{background:linear-gradient(135deg,#2563EB,#4A8CE8);color:#fff;box-shadow:0 8px 20px -8px rgba(37,99,235,.55)}
+.btn.pri.pulse{animation:pl 1.4s ease-in-out infinite}@keyframes pl{0%,100%{box-shadow:0 8px 20px -8px rgba(37,99,235,.55)}50%{box-shadow:0 8px 26px -2px rgba(37,99,235,.9)}}
+</style></head><body>
+<div class="app">
+<div class="rail"><div class="logo">V</div><div class="ic">⌂</div><div class="ic on">✦</div><div class="ic">▦</div><div class="ic">◷</div><div class="ic">⚙</div></div>
+<div class="bg"><div class="list"></div><div class="conv"></div></div>
+<div class="scrim"></div>
+<div class="modal">
+  <div class="mh"><div class="orb"></div><div><div class="ti">Nova oportunidade</div><div class="st">a EVA já preencheu pra você revisar</div></div></div>
+  <div class="note"><span class="g"></span>Campos detectados na conversa com Marina Costa. Confira e ajuste se precisar.</div>
+  <div class="field"><label>Contato</label><div class="inp" data-f><span class="val">Marina Costa</span><span class="tagdone">EVA</span></div></div>
+  <div class="field"><label>Empresa</label><div class="inp" data-f><span class="val">Clínica Belle Estética</span><span class="tagdone">EVA</span></div></div>
+  <div class="two">
+    <div class="field"><label>Valor estimado</label><div class="inp" data-f><span class="val">R$ 3.000 / mês</span><span class="tagdone">EVA</span></div></div>
+    <div class="field"><label>Segmento</label><div class="inp" data-f><span class="val">Tráfego pago</span><span class="tagdone">EVA</span></div></div>
+  </div>
+  <div class="field"><label>Temperatura</label>
+    <div class="chiprow"><div class="tchip" id="t-frio">Frio</div><div class="tchip" id="t-morno">Morno</div><div class="tchip" id="t-quente">🔥 Quente</div></div>
+  </div>
+  <div class="actions"><div class="btn ghost">Cancelar</div><div class="btn pri" id="save">Criar oportunidade</div></div>
+</div>
+</div>
+<script>
+const fs=[...document.querySelectorAll('[data-f]')];
+fs.forEach((el,i)=> setTimeout(()=>el.classList.add('fill'), 900+i*520));
+setTimeout(()=> document.getElementById('t-quente').classList.add('sel'), 900+fs.length*520+200);
+setTimeout(()=> document.getElementById('save').classList.add('pulse'), 900+fs.length*520+800);
+</script>
+</body></html>

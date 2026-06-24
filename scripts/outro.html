@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><title>outro</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@900&f[]=sentient@500i&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1080px;height:1920px;overflow:hidden;background:linear-gradient(180deg,#0A1020,#0C1730 55%,#0A1326);font-family:'Sora',sans-serif}
+  body::after{content:"";position:absolute;inset:0;background:radial-gradient(120% 80% at 50% 44%,transparent 42%,rgba(0,0,0,.5));pointer-events:none}
+  .wrap{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 110px}
+  .line{font-family:'Satoshi','Sora',sans-serif;font-weight:900;font-size:66px;line-height:1.08;letter-spacing:-0.025em;color:#fff;opacity:0;transform:translateY(22px)}
+  .line em{font-family:'Sentient',serif;font-style:italic;font-weight:500;color:#9DB4E8}
+  .line.in{animation:rise .7s cubic-bezier(.22,1,.36,1) forwards}
+  @keyframes rise{to{opacity:1;transform:translateY(0)}}
+  .cta{position:absolute;bottom:430px;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:24px;opacity:0}
+  .cta.in{animation:rise .7s cubic-bezier(.22,1,.36,1) forwards}
+  .wm{display:flex;align-items:center;gap:18px}
+  .logo{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,#2563EB,#6D28D9);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:34px}
+  .nm{font-family:'Satoshi','Sora',sans-serif;font-weight:900;font-size:50px;letter-spacing:-0.02em;color:#fff}
+  .pill{font-size:27px;font-weight:600;color:#0B1220;background:#fff;padding:19px 44px;border-radius:999px;box-shadow:0 18px 40px -14px rgba(0,0,0,.6)}
+  .url{font-family:'JetBrains Mono',monospace;font-size:23px;letter-spacing:.12em;color:#8FA0C2}
+</style></head>
+<body>
+  <div class="wrap">
+    <div class="line" id="l1">A EVA sugere.<br><em>Você aprova.</em></div>
+  </div>
+  <div class="cta" id="cta">
+    <div class="wm"><div class="logo">V</div><div class="nm">Vyzon</div></div>
+    <div class="pill">Comece grátis · 14 dias</div>
+    <div class="url">vyzon.com.br</div>
+  </div>
+<script>
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  (async()=>{
+    const l1=document.getElementById('l1'), cta=document.getElementById('cta');
+    await sleep(300); l1.classList.add('in');
+    await sleep(1500); cta.classList.add('in');
+  })();
+</script>
+</body></html>

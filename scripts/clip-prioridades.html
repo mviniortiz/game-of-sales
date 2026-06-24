@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><title>clip-prioridades</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--ink:#0B1220;--muted:#64748B;--faint:#94A3B8;--blue:#2563EB;--eva:#6D28D9;--line:#E6EDF5;--line2:#D9E2EC;--paper:#F6F4EF}
+html,body{width:1440px;height:900px;font-family:'Sora',system-ui,sans-serif;color:var(--ink);background:var(--paper);overflow:hidden;-webkit-font-smoothing:antialiased}
+.app{display:flex;width:1440px;height:900px}
+.rail{width:64px;flex-shrink:0;background:#0B1220;display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:6px}
+.rail .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#2563EB,#6D28D9);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:17px;margin-bottom:14px}
+.rail .ic{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#7C8AA5;font-size:18px}.rail .ic.on{background:rgba(255,255,255,.10);color:#fff}
+.main{flex:1;display:flex;flex-direction:column;align-items:center}.wrap{width:880px;padding:38px 0}
+.head{display:flex;align-items:flex-start;gap:14px}
+.orb{width:46px;height:46px;border-radius:999px;background:radial-gradient(circle at 35% 30%,#a78bfa,#6D28D9 60%,#4c1d95);box-shadow:0 8px 22px -6px rgba(109,40,217,.55);flex-shrink:0;margin-top:2px;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.h1{font-size:24px;font-weight:800;letter-spacing:-0.025em}
+.sub{font-size:13.5px;color:var(--muted);margin-top:4px;max-width:560px;line-height:1.5}.sub b{color:#6D28D9}
+.stamp{margin-left:auto;text-align:right}.live{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#047857;background:rgba(16,185,129,.10);padding:4px 9px;border-radius:999px}
+.live .d{width:6px;height:6px;border-radius:999px;background:#10B981;animation:blink 1.6s infinite}@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.t{font-size:10.5px;color:var(--faint);margin-top:6px}
+.band{margin-top:22px;display:flex;align-items:center;gap:8px}.band .g{width:11px;height:11px;border-radius:3px;background:linear-gradient(135deg,#6D28D9,#9333EA)}
+.band .tt{font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#6D28D9}.band .ct{font-size:11px;color:var(--faint);margin-left:auto}
+.items{margin-top:12px;display:flex;flex-direction:column;gap:10px}
+.it{background:#fff;border:1px solid var(--line2);border-radius:16px;padding:15px 16px;display:flex;align-items:center;gap:14px;box-shadow:0 1px 2px rgba(15,23,42,.04),0 12px 30px -20px rgba(37,99,235,.2);opacity:0;transform:translateY(16px)}
+.it.show{animation:pop .55s cubic-bezier(.22,1,.36,1) forwards}@keyframes pop{to{opacity:1;transform:translateY(0)}}
+.it.hot{border-color:rgba(239,68,68,.22)}
+.it.flash{animation:flash 1.2s ease}@keyframes flash{0%,100%{box-shadow:0 1px 2px rgba(15,23,42,.04),0 12px 30px -20px rgba(37,99,235,.2)}40%{box-shadow:0 0 0 3px rgba(37,99,235,.18),0 16px 34px -16px rgba(37,99,235,.4)}}
+.rank{width:24px;text-align:center;font-size:13px;font-weight:800;color:var(--faint)}
+.av{width:46px;height:46px;border-radius:999px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;background:linear-gradient(135deg,#2563EB,#4A8CE8)}
+.body{flex:1;min-width:0}.l1{display:flex;align-items:center;gap:9px}.nm{font-size:14.5px;font-weight:700;letter-spacing:-0.01em}.co{font-size:11.5px;color:var(--faint)}
+.chip{font-size:9.5px;font-weight:700;padding:3px 8px;border-radius:999px}.chip.hot{color:#B91C1C;background:rgba(239,68,68,.10)}.chip.warm{color:#B45309;background:rgba(245,158,11,.12)}.chip.win{color:#047857;background:rgba(16,185,129,.12)}
+.reason{margin-top:5px;font-size:12.5px;color:#334155;line-height:1.45;display:flex;align-items:center;gap:7px}.reason .eg{width:9px;height:9px;border-radius:3px;background:linear-gradient(135deg,#6D28D9,#9333EA);flex-shrink:0}.reason b{color:#0B1220;font-weight:700}
+.right{display:flex;flex-direction:column;align-items:flex-end;gap:9px}.since{font-size:10.5px;color:var(--faint);white-space:nowrap}.since.alert{color:#B91C1C;font-weight:700}
+.cta{height:34px;padding:0 16px;border-radius:10px;background:linear-gradient(135deg,#2563EB,#4A8CE8);color:#fff;font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:6px;box-shadow:0 6px 16px -8px rgba(37,99,235,.5)}
+.cta.ghost{background:#fff;border:1px solid var(--line2);color:#334155;box-shadow:none}
+.cta.pulse{animation:pl 1.4s ease-in-out infinite}@keyframes pl{0%,100%{box-shadow:0 6px 16px -8px rgba(37,99,235,.5)}50%{box-shadow:0 6px 22px -2px rgba(37,99,235,.9)}}
+</style></head><body>
+<div class="app">
+<div class="rail"><div class="logo">V</div><div class="ic on">⌂</div><div class="ic">✦</div><div class="ic">▦</div><div class="ic">◷</div><div class="ic">⚙</div></div>
+<div class="main"><div class="wrap">
+<div class="head"><div class="orb"></div><div><div class="h1">Precisa de você agora</div><div class="sub">A <b>EVA</b> leu suas conversas e ordenou por quem está mais perto de avançar. <b>Ela sugere, você aprova.</b></div></div>
+<div class="stamp"><span class="live"><span class="d"></span>LIVE</span><div class="t">atualizado agora</div></div></div>
+<div class="band"><span class="g"></span><span class="tt">Fila de ação · ordenada pela EVA</span><span class="ct">5 de 42 leads</span></div>
+<div class="items">
+<div class="it hot" data-it><div class="rank">1</div><div class="av">MC</div><div class="body"><div class="l1"><span class="nm">Marina Costa</span><span class="co">· Clínica Belle Estética</span><span class="chip hot">QUENTE · 82</span></div><div class="reason"><span class="eg"></span><span>Tem verba (<b>R$ 3 mil/mês</b>) e urgência. Falta oferecer 2 horários pro diagnóstico.</span></div></div><div class="right"><span class="since">há 1 min</span><span class="cta" id="cta1">→ Responder</span></div></div>
+<div class="it hot" data-it><div class="rank">2</div><div class="av" style="background:linear-gradient(135deg,#7C3AED,#a78bfa)">RA</div><div class="body"><div class="l1"><span class="nm">Rafael Andrade</span><span class="co">· RA Performance</span><span class="chip hot">QUENTE · 78</span></div><div class="reason"><span class="eg"></span><span>Decisor confirmado e meta clara. <b>Pronto pra proposta.</b></span></div></div><div class="right"><span class="since">há 5h</span><span class="cta">→ Montar proposta</span></div></div>
+<div class="it" data-it><div class="rank">3</div><div class="av" style="background:linear-gradient(135deg,#0891B2,#22D3EE)">TM</div><div class="body"><div class="l1"><span class="nm">Thiago Mendes</span><span class="co">· Mendes Advocacia</span><span class="chip warm">ESFRIANDO</span></div><div class="reason"><span class="eg"></span><span>Estava interessado e <b>sumiu há 2 dias</b>. Vale um follow-up leve.</span></div></div><div class="right"><span class="since alert">sem retorno há 2 dias</span><span class="cta">→ Fazer follow-up</span></div></div>
+<div class="it" data-it><div class="rank">4</div><div class="av" style="background:linear-gradient(135deg,#9333EA,#c084fc)">GP</div><div class="body"><div class="l1"><span class="nm">Gustavo Pires</span><span class="co">· GP Fitness</span><span class="chip warm">OBJEÇÃO · PREÇO</span></div><div class="reason"><span class="eg"></span><span>Achou caro, mas o interesse é real. <b>Objeção de preço, não de valor.</b></span></div></div><div class="right"><span class="since">há 1 dia</span><span class="cta ghost">Ver objeção</span></div></div>
+<div class="it" data-it><div class="rank">5</div><div class="av" style="background:linear-gradient(135deg,#0D9488,#5EEAD4)">BL</div><div class="body"><div class="l1"><span class="nm">Bruna Lima</span><span class="co">· Studio Bloom</span><span class="chip win">FECHANDO</span></div><div class="reason"><span class="eg"></span><span>Disse "fechado pra semana que vem". Só falta <b>confirmar a data de início</b>.</span></div></div><div class="right"><span class="since">hoje</span><span class="cta ghost">Confirmar início</span></div></div>
+</div></div></div></div>
+<script>
+const its=[...document.querySelectorAll('[data-it]')];
+its.forEach((el,i)=> setTimeout(()=>el.classList.add('show'), 500+i*420));
+setTimeout(()=>{ its[0].classList.add('flash'); document.getElementById('cta1').classList.add('pulse'); }, 500+its.length*420+600);
+</script>
+</body></html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><title>story-prioridades</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@900&f[]=sentient@500i&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="studio.css">
+<style>
+  .appm .scr{height:844px;background:var(--paper);display:flex;flex-direction:column}
+  .phd{background:#fff;border-bottom:1px solid var(--line2);padding:14px 16px 16px}
+  .phd .r1{display:flex;align-items:center;gap:10px}
+  .orb{width:34px;height:34px;border-radius:999px;background:radial-gradient(circle at 35% 30%,#a78bfa,#6D28D9 60%,#4c1d95);box-shadow:0 6px 16px -6px rgba(109,40,217,.5);flex-shrink:0}
+  .phd .ti{font-size:17px;font-weight:800;letter-spacing:-0.02em}
+  .live{margin-left:auto;display:inline-flex;align-items:center;gap:5px;font-size:9px;font-weight:700;color:#047857;background:rgba(16,185,129,.10);padding:4px 8px;border-radius:999px}
+  .live .d{width:6px;height:6px;border-radius:999px;background:#10B981;animation:bk 1.6s infinite}@keyframes bk{0%,100%{opacity:1}50%{opacity:.3}}
+  .phd .sb{margin-top:7px;font-size:11px;color:var(--muted);line-height:1.45}.phd .sb b{color:#6D28D9}
+  .list{flex:1;padding:13px 14px;display:flex;flex-direction:column;gap:10px;overflow:hidden}
+  .it{background:#fff;border:1px solid var(--line2);border-radius:16px;padding:13px;box-shadow:0 1px 2px rgba(15,23,42,.04),0 12px 28px -20px rgba(37,99,235,.22);opacity:0;transform:translateY(16px)}
+  .it.show{animation:pp .55s cubic-bezier(.22,1,.36,1) forwards}@keyframes pp{to{opacity:1;transform:translateY(0)}}
+  .it.hot{border-color:rgba(239,68,68,.22)}
+  .it .top{display:flex;align-items:center;gap:11px}
+  .rk{width:18px;text-align:center;font-size:12px;font-weight:800;color:var(--faint)}
+  .it .nm{font-size:13.5px;font-weight:700}.it .co{font-size:10.5px;color:var(--faint)}
+  .chip{margin-left:auto;font-size:8.5px;font-weight:700;padding:3px 8px;border-radius:999px}.chip.hot{color:#B91C1C;background:rgba(239,68,68,.10)}.chip.warm{color:#B45309;background:rgba(245,158,11,.12)}
+  .rs{margin-top:9px;font-size:12px;color:#334155;line-height:1.45;display:flex;gap:7px}.rs .eg{width:9px;height:9px;border-radius:3px;background:linear-gradient(135deg,#6D28D9,#9333EA);flex-shrink:0;margin-top:3px}.rs b{color:#0B1220;font-weight:700}
+  .row2{margin-top:11px;display:flex;align-items:center;gap:10px}.since{font-size:10px;color:var(--faint)}.since.al{color:#B91C1C;font-weight:700}
+  .resp{margin-left:auto;height:38px;padding:0 16px;border-radius:11px;background:linear-gradient(135deg,#2563EB,#4A8CE8);color:#fff;font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:6px;box-shadow:0 8px 18px -8px rgba(37,99,235,.5)}
+  .resp.ghost{background:#fff;border:1px solid var(--line2);color:#334155;box-shadow:none}
+</style></head>
+<body>
+  <div class="caps">
+    <div class="cap"><div class="kick">Nunca mais esqueça um lead</div><div class="big">A EVA <em>organiza</em> sua fila</div></div>
+    <div class="cap"><div class="kick">Por temperatura</div><div class="big">Quem está <em>quente</em> primeiro</div></div>
+    <div class="cap"><div class="kick">Com contexto</div><div class="big">O <em>motivo</em> de cada um</div></div>
+    <div class="cap"><div class="kick">Simples assim</div><div class="big">Você só <em>responde</em></div></div>
+  </div>
+
+  <div class="stage">
+    <div class="phone"><div class="notch"></div><div class="screen">
+      <div class="appm"><div class="scr">
+        <div class="status"><span class="time">14:33</span><span class="ic">📶 ▮</span></div>
+        <div class="phd">
+          <div class="r1"><div class="orb"></div><div class="ti">Precisa de você agora</div><span class="live"><span class="d"></span>LIVE</span></div>
+          <div class="sb">A <b>EVA</b> leu suas conversas e ordenou por quem está mais perto de avançar. <b>Ela sugere, você aprova.</b></div>
+        </div>
+        <div class="list">
+          <div class="it hot" data-it>
+            <div class="top"><span class="rk">1</span><div class="av">MC</div><div><div class="nm">Marina Costa</div><div class="co">Clínica Belle Estética</div></div><span class="chip hot">QUENTE · 82</span></div>
+            <div class="rs" data-t="reason"><span class="eg"></span><span>Tem verba (<b>R$ 3 mil/mês</b>) e urgência. Falta oferecer 2 horários pro diagnóstico.</span></div>
+            <div class="row2"><span class="since">respondeu há 1 min</span><span class="resp" data-t="resp" id="resp">→ Responder</span></div>
+          </div>
+          <div class="it hot" data-it>
+            <div class="top"><span class="rk">2</span><div class="av" style="background:linear-gradient(135deg,#7C3AED,#a78bfa)">RA</div><div><div class="nm">Rafael Andrade</div><div class="co">RA Performance</div></div><span class="chip hot">QUENTE · 78</span></div>
+            <div class="rs"><span class="eg"></span><span>Decisor confirmado e meta clara. <b>Pronto pra proposta.</b></span></div>
+            <div class="row2"><span class="since">respondeu há 5h</span><span class="resp">→ Montar proposta</span></div>
+          </div>
+          <div class="it" data-it>
+            <div class="top"><span class="rk">3</span><div class="av" style="background:linear-gradient(135deg,#0891B2,#22D3EE)">TM</div><div><div class="nm">Thiago Mendes</div><div class="co">Mendes Advocacia</div></div><span class="chip warm">ESFRIANDO</span></div>
+            <div class="rs"><span class="eg"></span><span>Estava interessado e <b>sumiu há 2 dias</b>. Vale um follow-up leve.</span></div>
+            <div class="row2"><span class="since al">sem retorno há 2 dias</span><span class="resp ghost">Fazer follow-up</span></div>
+          </div>
+        </div>
+      </div></div>
+    </div></div>
+    <div class="cursor"><svg viewBox="0 0 28 28"><path d="M5 2 L5 22 L10 17 L13.5 25 L17 23.5 L13.5 15.5 L21 15.5 Z" fill="#fff" stroke="#0B1220" stroke-width="1.5" stroke-linejoin="round"/></svg></div>
+  </div>
+
+  <div class="brand">
+    <div class="wm"><div class="logo">V</div><div class="name">Vyzon</div></div>
+    <div class="tag">Central Comercial com EVA</div>
+    <div class="pill">Comece grátis · 14 dias</div>
+  </div>
+
+<script src="studio.js"></script>
+<script>
+(async()=>{
+  const caps=[...document.querySelectorAll('.cap')];
+  const show=i=>caps.forEach((c,j)=>c.classList.toggle('show',j===i));
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  const $=s=>document.querySelector(s);
+
+  show(0); await sleep(450);
+  for(const it of document.querySelectorAll('[data-it]')){ it.classList.add('show'); await sleep(480); }
+  await sleep(350);
+
+  const S=Studio();
+  show(1);
+  await S.enter('reason'); await sleep(300);
+  show(2);
+  await S.zoom('reason',1.42); await sleep(1450); await S.reset();
+  show(3);
+  await S.move('resp');
+  await S.zoom('resp',1.55); await sleep(440);
+  await S.click();
+  $('#resp').style.filter='brightness(1.1)';
+  await sleep(550); await S.reset();
+  await sleep(1500);
+})();
+</script>
+</body></html>

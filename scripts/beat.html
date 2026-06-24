@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><title>beat</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@900&f[]=sentient@500i&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1080px;height:1920px;overflow:hidden;background:linear-gradient(180deg,#0A1020,#0C1730 55%,#0A1326);font-family:'Sora',sans-serif}
+  body::after{content:"";position:absolute;inset:0;background:radial-gradient(120% 80% at 50% 45%,transparent 42%,rgba(0,0,0,.5));pointer-events:none}
+  .wrap{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 120px;gap:8px}
+  .num{font-family:'Satoshi','Sora',sans-serif;font-weight:900;font-size:150px;line-height:.9;letter-spacing:-0.04em;background:linear-gradient(135deg,#4A8CE8,#9333EA);-webkit-background-clip:text;background-clip:text;color:transparent;opacity:0;transform:translateY(26px)}
+  .k{font-family:'JetBrains Mono',monospace;font-size:22px;letter-spacing:.24em;text-transform:uppercase;color:#A78BFA;margin-top:14px;opacity:0;transform:translateY(20px)}
+  .t{font-family:'Satoshi','Sora',sans-serif;font-weight:900;font-size:58px;line-height:1.06;letter-spacing:-0.025em;color:#fff;margin-top:10px;opacity:0;transform:translateY(20px)}
+  .t em{font-family:'Sentient',serif;font-style:italic;font-weight:500;color:#9DB4E8}
+  .in{animation:rise .65s cubic-bezier(.22,1,.36,1) forwards}
+  @keyframes rise{to{opacity:1;transform:translateY(0)}}
+</style></head>
+<body>
+  <div class="wrap">
+    <div class="num" id="num">01</div>
+    <div class="k" id="k">Kicker</div>
+    <div class="t" id="t">Título</div>
+  </div>
+<script>
+  const p=new URLSearchParams(location.search);
+  const num=document.getElementById('num'), k=document.getElementById('k'), t=document.getElementById('t');
+  num.textContent=p.get('n')||'01';
+  k.textContent=p.get('k')||'';
+  t.innerHTML=p.get('t')||'';
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  (async()=>{
+    await sleep(150); num.classList.add('in');
+    await sleep(180); k.classList.add('in');
+    await sleep(160); t.classList.add('in');
+  })();
+</script>
+</body></html>

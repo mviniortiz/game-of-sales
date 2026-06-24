@@ -1,0 +1,69 @@
+/* ── Studio Kit: fundo story + device frame + cursor + zoom + legendas ── */
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --ink:#0B1220;--muted:#64748B;--faint:#94A3B8;--blue:#2563EB;--blue2:#4A8CE8;
+  --eva:#6D28D9;--green:#10B981;--line:#E6EDF5;--line2:#D9E2EC;--paper:#F4F7FB;
+}
+html,body{width:1080px;height:1920px;overflow:hidden;font-family:'Sora',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+body{position:relative;background:linear-gradient(180deg,#0A1020 0%,#0C1730 55%,#0A1326 100%)}
+/* textura discreta (sem glow): hairlines verticais muito sutis */
+body::before{content:"";position:absolute;inset:0;background-image:linear-gradient(90deg,rgba(255,255,255,.022) 1px,transparent 1px);background-size:60px 100%;opacity:.5;pointer-events:none}
+body::after{content:"";position:absolute;inset:0;background:radial-gradient(120% 80% at 50% 38%,transparent 40%,rgba(0,0,0,.45) 100%);pointer-events:none}
+
+/* legenda topo */
+.caps{position:absolute;top:118px;left:0;right:0;text-align:center;z-index:40;padding:0 90px}
+.cap{position:absolute;left:90px;right:90px;opacity:0;transform:translateY(16px);transition:opacity .5s cubic-bezier(.22,1,.36,1),transform .5s cubic-bezier(.22,1,.36,1)}
+.cap.show{opacity:1;transform:translateY(0)}
+.cap .kick{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:#A78BFA;margin-bottom:14px}
+.cap .big{font-family:'Satoshi','Sora',sans-serif;font-weight:900;font-size:54px;line-height:1.06;letter-spacing:-0.02em;color:#fff}
+.cap .big em{font-family:'Sentient','Satoshi',serif;font-style:italic;font-weight:500;color:#C9D6F2}
+
+/* palco que recebe o zoom (contém phone + cursor) */
+.stage{position:absolute;inset:0;transform-origin:540px 960px;transform:scale(1);transition:transform 1.15s cubic-bezier(.45,0,.15,1);will-change:transform}
+/* versão em branco (social põe a copy por cima) */
+.clean .caps,.clean .brand{display:none!important}
+
+/* device frame */
+.phone{position:absolute;left:50%;top:300px;transform:translateX(-50%);width:600px;height:1268px;background:#05070C;border-radius:62px;padding:17px;box-shadow:0 2px 0 rgba(255,255,255,.06) inset,0 50px 120px -40px rgba(0,0,0,.8),0 0 0 2px rgba(255,255,255,.04)}
+.notch{position:absolute;top:30px;left:50%;transform:translateX(-50%);width:150px;height:30px;background:#05070C;border-radius:0 0 18px 18px;z-index:6}
+.screen{width:566px;height:1234px;border-radius:46px;overflow:hidden;background:#fff;position:relative}
+.appm{width:390px;height:844px;transform-origin:0 0;zoom:1.4513}
+
+/* cursor (ponteiro) + clique */
+.cursor{position:absolute;left:540px;top:1980px;width:60px;height:60px;z-index:50;transform-origin:6px 4px;transform:scale(var(--iz,1));transition:left .8s cubic-bezier(.5,0,.18,1),top .8s cubic-bezier(.5,0,.18,1),transform .9s cubic-bezier(.45,0,.15,1);filter:drop-shadow(0 6px 10px rgba(0,0,0,.45));pointer-events:none}
+.cursor.down{filter:drop-shadow(0 3px 6px rgba(0,0,0,.5)) brightness(.92)}
+.cursor svg{display:block;width:100%;height:100%}
+.ripple{position:absolute;width:14px;height:14px;border-radius:999px;background:rgba(37,99,235,.45);border:3px solid rgba(37,99,235,.7);transform:translate(-50%,-50%) scale(.3);z-index:49;pointer-events:none;animation:ripple .65s ease-out forwards}
+@keyframes ripple{to{transform:translate(-50%,-50%) scale(5.5);opacity:0}}
+
+/* barra de marca embaixo */
+.brand{position:absolute;bottom:96px;left:0;right:0;z-index:40;display:flex;flex-direction:column;align-items:center;gap:14px}
+.brand .wm{display:flex;align-items:center;gap:14px}
+.brand .logo{width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,#2563EB,#6D28D9);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:24px}
+.brand .name{font-family:'Satoshi','Sora',sans-serif;font-weight:900;font-size:34px;letter-spacing:-0.01em;color:#fff}
+.brand .tag{font-size:21px;color:#8FA0C2;letter-spacing:.01em}
+.brand .pill{margin-top:4px;font-size:20px;font-weight:600;color:#0B1220;background:#fff;padding:13px 30px;border-radius:999px;box-shadow:0 12px 30px -10px rgba(0,0,0,.5)}
+
+/* ───────────── app mobile (reusado em todas as cenas) ───────────── */
+.appm .status{height:44px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 22px}
+.appm .status .time{font-size:13px;font-weight:700}.appm .status .ic{font-size:12px}
+.appm .head{background:#fff;border-bottom:1px solid var(--line2);padding:8px 14px 12px;display:flex;align-items:center;gap:11px}
+.appm .back{font-size:20px;color:#334155}
+.appm .av{width:38px;height:38px;border-radius:999px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px;background:linear-gradient(135deg,#2563EB,#4A8CE8);flex-shrink:0}
+.appm .head .nm{font-size:14.5px;font-weight:700}.appm .head .ph{font-size:11px;color:var(--faint)}
+.appm .head .st{font-size:10.5px;color:var(--muted);display:flex;align-items:center;gap:5px;margin-top:1px}
+.appm .head .st .d{width:6px;height:6px;border-radius:999px;background:#10B981}
+.appm .head .more{margin-left:auto;font-size:18px;color:#94A3B8}
+.appm .stream{padding:16px 14px;display:flex;flex-direction:column;gap:9px}
+.appm .b{max-width:82%;padding:9px 13px;font-size:13px;line-height:1.45;border-radius:16px;box-shadow:0 1px 2px rgba(15,23,42,.05);opacity:0;transform:translateY(10px)}
+.appm .b.show{animation:pop .5s cubic-bezier(.22,1,.36,1) forwards}
+@keyframes pop{to{opacity:1;transform:translateY(0)}}
+.appm .b.lead{align-self:flex-start;background:#fff;border:1px solid #E2E8F0;border-bottom-left-radius:5px}
+.appm .b.me{align-self:flex-end;background:linear-gradient(135deg,#2563EB,#4A8CE8);color:#fff;border-bottom-right-radius:5px}
+.appm .b .tt{display:block;font-size:9px;opacity:.6;margin-top:3px;text-align:right}
+.appm .typing{align-self:flex-start;display:none;align-items:center;gap:7px;background:#F3EEFE;border:1px solid rgba(124,58,237,.16);padding:8px 13px;border-radius:14px}
+.appm .typing.show{display:inline-flex;animation:pop .4s ease forwards}
+.appm .typing .lab{font-size:11px;font-weight:700;color:#6D28D9}
+.appm .typing i{width:6px;height:6px;border-radius:999px;background:#9333EA;display:inline-block;animation:bd 1.2s infinite}
+.appm .typing i:nth-child(3){animation-delay:.15s}.appm .typing i:nth-child(4){animation-delay:.3s}
+@keyframes bd{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-5px);opacity:1}}

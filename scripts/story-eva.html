@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><title>story-eva</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@800,900&f[]=sentient@500i&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="studio.css">
+<style>
+  /* sheet / diagnóstico / resposta (cena) */
+  .appm .conv{height:844px;background:var(--paper);position:relative;display:flex;flex-direction:column}
+  .appm .stream{flex:1;justify-content:flex-start}
+  .day{align-self:center;font-size:10px;color:var(--faint);background:#fff;border:1px solid var(--line);padding:3px 11px;border-radius:999px;margin-bottom:2px}
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-top:1px solid rgba(124,58,237,.18);border-radius:24px 24px 0 0;box-shadow:0 -18px 44px -16px rgba(109,40,217,.32);padding:14px 16px 22px;transform:translateY(112%);transition:transform .85s cubic-bezier(.22,1,.36,1)}
+  .sheet.show{transform:translateY(0)}
+  .sheet.gone{transform:translateY(112%);transition:transform .5s ease}
+  .grab{width:42px;height:5px;border-radius:999px;background:#E2E8F0;margin:0 auto 13px}
+  .stop{display:flex;align-items:center;gap:9px}
+  .orb{width:32px;height:32px;border-radius:999px;background:radial-gradient(circle at 35% 30%,#a78bfa,#6D28D9 60%,#4c1d95);box-shadow:0 6px 16px -6px rgba(109,40,217,.5);flex-shrink:0}
+  .stop .lab{font-size:13.5px;font-weight:700}.stop .sub{font-size:10.5px;color:var(--muted)}
+  .pill-a{margin-left:auto;font-size:9px;font-weight:800;color:#6D28D9;background:rgba(109,40,217,.10);padding:4px 9px;border-radius:999px;letter-spacing:.05em}
+  .diag{margin-top:13px;display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:13px;padding:11px 12px}
+  .temp{font-size:12px;font-weight:700;color:#B45309;background:rgba(245,158,11,.12);padding:5px 10px;border-radius:999px}
+  .score{font-size:25px;font-weight:800;letter-spacing:-0.02em}.score small{font-size:12px;color:var(--faint);font-weight:600}
+  .fit{margin-left:auto;font-size:10.5px;font-weight:700;color:#047857;background:rgba(16,185,129,.12);padding:5px 10px;border-radius:999px}
+  .reply{margin-top:12px;background:#F7F5FE;border:1px solid rgba(124,58,237,.16);border-radius:14px 14px 14px 4px;padding:12px 14px;font-size:13px;color:#1E1B2E;line-height:1.5}
+  .reply .cap2{font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6D28D9;display:flex;align-items:center;gap:5px;margin-bottom:6px}
+  .reply .cap2 .g{width:8px;height:8px;border-radius:3px;background:linear-gradient(135deg,#6D28D9,#9333EA)}
+  .acts{margin-top:13px;display:flex;gap:10px}
+  .pri{flex:1;height:48px;border-radius:14px;background:linear-gradient(135deg,#2563EB,#4A8CE8);color:#fff;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:7px;box-shadow:0 10px 22px -8px rgba(37,99,235,.55)}
+  .sec{width:104px;height:48px;border-radius:14px;border:1px solid rgba(124,58,237,.22);color:#6D28D9;font-size:13.5px;font-weight:600;display:flex;align-items:center;justify-content:center}
+  .hint{margin-top:10px;text-align:center;font-size:10.5px;color:var(--faint)}
+</style></head>
+<body>
+  <div class="caps">
+    <div class="cap"><div class="kick">No WhatsApp</div><div class="big">A EVA <em>lê cada conversa</em></div></div>
+    <div class="cap"><div class="kick">Em segundos</div><div class="big">Aponta quem está <em>pronto</em></div></div>
+    <div class="cap"><div class="kick">Sem esforço</div><div class="big">E sugere o <em>próximo passo</em></div></div>
+    <div class="cap"><div class="kick">Sempre no controle</div><div class="big">Você aprova <em>e envia</em></div></div>
+  </div>
+
+  <div class="stage">
+    <div class="phone"><div class="notch"></div><div class="screen">
+      <div class="appm"><div class="conv">
+        <div class="status"><span class="time">14:33</span><span class="ic">📶 ▮</span></div>
+        <div class="head"><span class="back">‹</span><div class="av">MC</div><div><div class="nm">Marina Costa</div><div class="st"><span class="d"></span>Clínica Belle · WhatsApp</div></div><span class="more">⋮</span></div>
+        <div class="stream">
+          <div class="day">Hoje</div>
+          <div class="b lead">Oi! Queria entender como funciona o tráfego pago pra agendar mais avaliações.</div>
+          <div class="b lead">Já invisto uns 3 mil/mês, mas vem pouco agendamento qualificado.</div>
+          <div class="b lead">Preciso pra ontem, tô com a agenda parada.</div>
+          <div class="typing" id="typing"><span class="lab">EVA está lendo</span><i></i><i></i><i></i></div>
+          <div class="b me" id="sent">Marina, com R$ 3 mil/mês dá pra estruturar campanhas bem mais qualificadas. Posso te mostrar 2 horários ainda essa semana?</div>
+        </div>
+        <div class="sheet" id="sheet">
+          <div class="grab"></div>
+          <div class="stop"><div class="orb"></div><div><div class="lab">EVA leu esta conversa</div><div class="sub">e sugere o próximo passo</div></div><span class="pill-a">ASSISTIDA</span></div>
+          <div class="diag" data-t="score"><span class="temp">🔥 Quente</span><span class="score"><span id="scoreN">0</span><small>/100</small></span><span class="fit">Fit alto</span></div>
+          <div class="reply" data-t="reply"><div class="cap2"><span class="g"></span>Resposta sugerida</div>Marina, com R$ 3 mil/mês dá pra estruturar campanhas bem mais qualificadas. Posso te mostrar 2 horários ainda essa semana?</div>
+          <div class="acts"><div class="pri" data-t="use" id="use">→ Usar resposta</div><div class="sec">Editar</div></div>
+          <div class="hint">você revisa antes de enviar</div>
+        </div>
+      </div></div>
+    </div></div>
+    <div class="cursor"><svg viewBox="0 0 28 28"><path d="M5 2 L5 22 L10 17 L13.5 25 L17 23.5 L13.5 15.5 L21 15.5 Z" fill="#fff" stroke="#0B1220" stroke-width="1.5" stroke-linejoin="round"/></svg></div>
+  </div>
+
+  <div class="brand">
+    <div class="wm"><div class="logo">V</div><div class="name">Vyzon</div></div>
+    <div class="tag">Central Comercial com EVA</div>
+    <div class="pill">Comece grátis · 14 dias</div>
+  </div>
+
+<script src="studio.js"></script>
+<script>
+(async()=>{
+  const caps=[...document.querySelectorAll('.cap')];
+  const show=i=>caps.forEach((c,j)=>c.classList.toggle('show',j===i));
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  const $=s=>document.querySelector(s);
+  $('#sent').style.opacity=0; $('#sent').style.display='none';
+
+  show(0); await sleep(500);
+  for(const m of document.querySelectorAll('.stream .b.lead')){ m.classList.add('show'); await sleep(560); }
+  $('#typing').classList.add('show'); await sleep(1000);
+  $('#sheet').classList.add('show'); await sleep(950);
+
+  show(1);
+  let n=0,sc=$('#scoreN');
+  await new Promise(res=>{const t=setInterval(()=>{n+=3;if(n>=82){n=82;clearInterval(t);res();}sc.textContent=n;},26);});
+  await sleep(450);
+
+  const S=Studio();
+  await S.zoom('score',1.45); await sleep(1150); await S.reset();
+  show(2);
+  await S.zoom('reply',1.38); await sleep(1350); await S.reset();
+  show(3);
+  await S.enter('use');
+  await S.zoom('use',1.62); await sleep(420);
+  await S.click();
+  $('#typing').classList.remove('show');
+  $('#sheet').classList.add('gone');
+  const sent=$('#sent'); sent.style.display='block'; sent.style.opacity=''; sent.classList.add('show');
+  await sleep(550); await S.reset();
+  await sleep(1400);
+})();
+</script>
+</body></html>

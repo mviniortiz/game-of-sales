@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><title>story-criar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@900&f[]=sentient@500i&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="studio.css">
+<style>
+  .appm .conv{height:844px;background:var(--paper);position:relative;display:flex;flex-direction:column}
+  .appm .stream{flex:1;justify-content:flex-start}
+  .day{align-self:center;font-size:10px;color:var(--faint);background:#fff;border:1px solid var(--line);padding:3px 11px;border-radius:999px;margin-bottom:2px}
+  .b.me{align-self:flex-end;background:linear-gradient(135deg,#2563EB,#4A8CE8);color:#fff;border-bottom-right-radius:5px}
+  .actionbar{position:absolute;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line2);padding:13px 16px;display:flex;align-items:center;gap:12px}
+  .plus{flex:1;height:48px;border-radius:14px;background:#F7F5FE;border:1px solid rgba(124,58,237,.22);color:#6D28D9;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px}
+  .plus .pg{width:11px;height:11px;border-radius:3px;background:linear-gradient(135deg,#6D28D9,#9333EA)}
+  /* modal sheet */
+  .modal{position:absolute;left:0;right:0;bottom:0;background:#fff;border-top:1px solid rgba(124,58,237,.16);border-radius:24px 24px 0 0;box-shadow:0 -18px 44px -16px rgba(11,18,32,.4);padding:14px 18px 22px;transform:translateY(112%);transition:transform .8s cubic-bezier(.22,1,.36,1)}
+  .modal.show{transform:translateY(0)}
+  .grab{width:42px;height:5px;border-radius:999px;background:#E2E8F0;margin:0 auto 12px}
+  .mh{display:flex;align-items:center;gap:10px}
+  .orb{width:32px;height:32px;border-radius:999px;background:radial-gradient(circle at 35% 30%,#a78bfa,#6D28D9 60%,#4c1d95);box-shadow:0 6px 16px -6px rgba(109,40,217,.5);flex-shrink:0}
+  .mh .ti{font-size:16px;font-weight:800;letter-spacing:-0.01em}.mh .st{font-size:10.5px;color:#6D28D9;font-weight:600}
+  .field{margin-top:12px}.field label{font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--faint)}
+  .inp{margin-top:5px;height:42px;border:1px solid var(--line2);border-radius:11px;display:flex;align-items:center;padding:0 13px;font-size:13.5px;font-weight:500;position:relative;overflow:hidden}
+  .inp .val{opacity:0;transition:opacity .3s}.inp.fill{border-color:rgba(37,99,235,.4);background:#F8FBFF}.inp.fill .val{opacity:1}
+  .inp .td{position:absolute;right:11px;font-size:8.5px;font-weight:800;color:#6D28D9;background:rgba(109,40,217,.10);padding:3px 7px;border-radius:6px;opacity:0;transition:opacity .3s}.inp.fill .td{opacity:1}
+  .two{display:flex;gap:11px}.two .field{flex:1}
+  .chips{margin-top:5px;display:flex;gap:8px}.tc{font-size:12.5px;font-weight:700;padding:8px 13px;border-radius:10px;border:1px solid var(--line2);color:var(--muted)}.tc.sel{border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.10);color:#B45309}
+  .save{margin-top:18px;height:50px;border-radius:14px;background:linear-gradient(135deg,#2563EB,#4A8CE8);color:#fff;font-size:14.5px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:7px;box-shadow:0 10px 24px -8px rgba(37,99,235,.55)}
+  .done{position:absolute;inset:0;background:#fff;border-radius:24px 24px 0 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;opacity:0;pointer-events:none;transition:opacity .4s}
+  .done.show{opacity:1}
+  .check{width:72px;height:72px;border-radius:999px;background:rgba(16,185,129,.12);display:flex;align-items:center;justify-content:center;font-size:38px;color:#10B981}
+  .done .dt{font-size:17px;font-weight:800}.done .ds{font-size:12.5px;color:var(--muted);text-align:center;padding:0 30px;line-height:1.5}
+</style></head>
+<body>
+  <div class="caps">
+    <div class="cap"><div class="kick">Sem digitar nada</div><div class="big">Toda conversa <em>vira venda</em></div></div>
+    <div class="cap"><div class="kick">Direto da conversa</div><div class="big">A EVA <em>preenche</em> os campos</div></div>
+    <div class="cap"><div class="kick">Você no comando</div><div class="big">Confere <em>e cria</em></div></div>
+    <div class="cap"><div class="kick">Pronto</div><div class="big">Já está no <em>pipeline</em></div></div>
+  </div>
+
+  <div class="stage">
+    <div class="phone"><div class="notch"></div><div class="screen">
+      <div class="appm"><div class="conv">
+        <div class="status"><span class="time">14:33</span><span class="ic">📶 ▮</span></div>
+        <div class="head"><span class="back">‹</span><div class="av">MC</div><div><div class="nm">Marina Costa</div><div class="st"><span class="d"></span>Clínica Belle · WhatsApp</div></div><span class="more">⋮</span></div>
+        <div class="stream">
+          <div class="day">Hoje</div>
+          <div class="b lead">Já invisto uns 3 mil/mês, mas vem pouco agendamento.</div>
+          <div class="b me">Entendi! Sua meta é volume de agendamento, certo?</div>
+          <div class="b lead">Isso. Preciso pra ontem, tô com a agenda parada.</div>
+        </div>
+        <div class="actionbar" id="bar"><div class="plus" data-t="plus" id="plus"><span class="pg"></span>Criar oportunidade</div></div>
+        <div class="modal" id="modal">
+          <div class="grab"></div>
+          <div class="mh"><div class="orb"></div><div><div class="ti">Nova oportunidade</div><div class="st">a EVA já preencheu pra você</div></div></div>
+          <div data-t="fields">
+            <div class="field"><label>Contato</label><div class="inp" data-f><span class="val">Marina Costa</span><span class="td">EVA</span></div></div>
+            <div class="two">
+              <div class="field"><label>Empresa</label><div class="inp" data-f><span class="val">Clínica Belle</span><span class="td">EVA</span></div></div>
+              <div class="field"><label>Valor</label><div class="inp" data-f><span class="val">R$ 3.000/mês</span><span class="td">EVA</span></div></div>
+            </div>
+            <div class="field"><label>Segmento</label><div class="inp" data-f><span class="val">Tráfego pago</span><span class="td">EVA</span></div></div>
+            <div class="field"><label>Temperatura</label><div class="chips"><div class="tc">Frio</div><div class="tc">Morno</div><div class="tc" id="quente">🔥 Quente</div></div></div>
+          </div>
+          <div class="save" data-t="save" id="save">Criar oportunidade</div>
+          <div class="done" id="done"><div class="check">✓</div><div class="dt">Oportunidade criada</div><div class="ds">Marina Costa entrou no pipeline, na etapa Qualificando.</div></div>
+        </div>
+      </div></div>
+    </div></div>
+    <div class="cursor"><svg viewBox="0 0 28 28"><path d="M5 2 L5 22 L10 17 L13.5 25 L17 23.5 L13.5 15.5 L21 15.5 Z" fill="#fff" stroke="#0B1220" stroke-width="1.5" stroke-linejoin="round"/></svg></div>
+  </div>
+
+  <div class="brand">
+    <div class="wm"><div class="logo">V</div><div class="name">Vyzon</div></div>
+    <div class="tag">Central Comercial com EVA</div>
+    <div class="pill">Comece grátis · 14 dias</div>
+  </div>
+
+<script src="studio.js"></script>
+<script>
+(async()=>{
+  const caps=[...document.querySelectorAll('.cap')];
+  const show=i=>caps.forEach((c,j)=>c.classList.toggle('show',j===i));
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  const $=s=>document.querySelector(s);
+
+  show(0); await sleep(450);
+  for(const m of document.querySelectorAll('.stream .b')){ m.classList.add('show'); await sleep(540); }
+  await sleep(300);
+
+  const S=Studio();   // mede 'plus' (modal ainda escondido)
+  await S.enter('plus');
+  await S.zoom('plus',1.4); await sleep(380);
+  await S.click();
+  await S.reset();
+  $('#modal').classList.add('show'); await sleep(950);
+
+  show(1);
+  const S2=Studio();  // re-mede agora c/ modal aberto: fields, save
+  // EVA preenche
+  const fs=[...document.querySelectorAll('[data-f]')];
+  for(const f of fs){ f.classList.add('fill'); await sleep(480); }
+  $('#quente').classList.add('sel'); await sleep(350);
+  await S2.zoom('fields',1.28); await sleep(1250); await S2.reset();
+
+  show(2);
+  await S2.move('save');
+  await S2.zoom('save',1.45); await sleep(420);
+  await S2.click();
+  show(3);
+  $('#done').classList.add('show');
+  await sleep(500); await S2.reset();
+  await sleep(1500);
+})();
+</script>
+</body></html>

@@ -36,6 +36,22 @@ out/
 # Mobile audit output (screenshots + reports)
 scripts/mobile-audit-out/
 
+# Mídia gerada pela pipeline de marketing/vídeo (renders, frames, VO, trilhas).
+# São SAÍDAS dos scripts .mjs — pesadas e regeneráveis, não versionar.
+# Os scripts (.mjs/.sql/.html/.css/.js) continuam versionados normalmente.
+scripts/*.mp4
+scripts/*.webm
+scripts/*.png
+scripts/*.jpg
+scripts/*.wav
+scripts/*.mp3
+scripts/*.bin
+scripts/_*
+
+# Áudio da pipeline de marketing/vídeo (beds, locuções, samples) — pesado e
+# regenerável, não é usado pelo app em runtime. Decisão: não versionar.
+public/audio/
+
 # Prospecting data (contém leads — nunca versionar)
 prospecting/
 
