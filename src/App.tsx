@@ -19,7 +19,8 @@ const PublicReport = lazy(() => import("./pages/PublicReport"));
 // const CrmComRanking = lazy(() => import("./pages/seo/CrmComRanking"));
 // const CrmParaTimes = lazy(() => import("./pages/seo/CrmParaTimes"));
 
-// LP.6 — Landing v2 é a landing de PRODUÇÃO (cutover 2026-06-17): / e /v2.
+// LP.6 — Landing v2 é a landing de PRODUÇÃO (cutover 2026-06-17): serve a home /.
+// A URL /v2 foi aposentada (2026-06-24): 301 → / no vercel.json (era duplicata).
 // O login v2 virou a página de /auth (dentro do AppShell, com AuthProvider).
 const LandingV2 = lazy(() => import("./pages/LandingV2"));
 const BlogV2 = lazy(() => import("./pages/BlogV2"));
@@ -50,7 +51,6 @@ const App = () => (
       <Routes>
         <Route path="/" element={<Suspense fallback={<LazyFallback />}><LandingV2 /></Suspense>} />
         <Route path="/landing" element={<Suspense fallback={<LazyFallback />}><LandingV2 /></Suspense>} />
-        <Route path="/v2" element={<Suspense fallback={<LazyFallback />}><LandingV2 /></Suspense>} />
         <Route path="/blog" element={<Suspense fallback={<LazyFallback />}><BlogV2 /></Suspense>} />
         <Route path="/blog/:slug" element={<Suspense fallback={<LazyFallback />}><BlogPostV2 /></Suspense>} />
         <Route path="/eva-voz" element={<Suspense fallback={<LazyFallback />}><EvaVoz /></Suspense>} />

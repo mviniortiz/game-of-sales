@@ -107,6 +107,11 @@
             "source": "/para-saas-b2b",
             "destination": "/",
             "statusCode": 301
+        },
+        {
+            "source": "/v2",
+            "destination": "/",
+            "statusCode": 301
         }
     ],
     "rewrites": [
