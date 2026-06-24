@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Lenis from "lenis";
+import type Lenis from "lenis";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
 import { NavV2 } from "@/components/landing-v2/NavV2";
 import { EvaDemoModal } from "@/components/landing-v2/EvaDemoModal";
@@ -47,12 +47,23 @@ const LandingV2 = () => {
     // menos animação. raf loop + cleanup ao sair da página.
     useEffect(() => {
         if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-        const lenis = new Lenis({ lerp: 0.1, smoothWheel: true });
-        lenisRef.current = lenis;
         let raf = 0;
-        const loop = (t: number) => { lenis.raf(t); raf = requestAnimationFrame(loop); };
-        raf = requestAnimationFrame(loop);
-        return () => { cancelAnimationFrame(raf); lenis.destroy(); lenisRef.current = null; };
+        let cancelled = false;
+        // Lenis carregado sob demanda (import dinâmico) — tira ~15KB do bundle
+        // inicial da landing sem mudar o comportamento do scroll suave.
+        import("lenis").then(({ default: Lenis }) => {
+            if (cancelled) return;
+            const lenis = new Lenis({ lerp: 0.1, smoothWheel: true });
+            lenisRef.current = lenis;
+            const loop = (t: number) => { lenis.raf(t); raf = requestAnimationFrame(loop); };
+            raf = requestAnimationFrame(loop);
+        });
+        return () => {
+            cancelled = true;
+            cancelAnimationFrame(raf);
+            lenisRef.current?.destroy();
+            lenisRef.current = null;
+        };
     }, []);
 
     // pausa o scroll suave enquanto a demo (iframe) está aberta

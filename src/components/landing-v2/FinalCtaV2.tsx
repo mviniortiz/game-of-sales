@@ -53,6 +53,8 @@ export const FinalCtaV2 = ({ onScheduleDemoClick, onSecondaryClick }: FinalCtaV2
                 src={eterealLeft}
                 alt=""
                 aria-hidden="true"
+                loading="lazy"
+                decoding="async"
                 className={`vz-etereal vz-etereal-l pointer-events-none absolute left-0 top-1/2 hidden w-[clamp(220px,26vw,400px)] select-none lg:block ${inCls}`}
                 style={{ opacity: 0.95, mixBlendMode: "screen" }}
             />
@@ -60,6 +62,8 @@ export const FinalCtaV2 = ({ onScheduleDemoClick, onSecondaryClick }: FinalCtaV2
                 src={eterealRight}
                 alt=""
                 aria-hidden="true"
+                loading="lazy"
+                decoding="async"
                 className={`vz-etereal vz-etereal-r pointer-events-none absolute right-0 top-1/2 hidden w-[clamp(220px,26vw,400px)] select-none lg:block ${inCls}`}
                 style={{ opacity: 0.95, mixBlendMode: "screen" }}
             />

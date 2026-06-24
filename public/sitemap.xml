@@ -15,6 +15,31 @@
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
+  <!-- Posts do blog (prerenderizados em dist/blog/<slug>/ por scripts/prerender-seo.mjs) -->
+  <url>
+    <loc>https://vyzon.com.br/blog/pare-de-perder-leads-no-whatsapp</loc>
+    <lastmod>2026-06-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://vyzon.com.br/blog/sdr-humano-vs-eva</loc>
+    <lastmod>2026-06-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://vyzon.com.br/blog/seu-lead-ja-decidiu</loc>
+    <lastmod>2026-05-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://vyzon.com.br/blog/central-comercial-para-agencias</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
   <url>
     <loc>https://vyzon.com.br/eva-voz</loc>
     <lastmod>2026-06-21</lastmod>

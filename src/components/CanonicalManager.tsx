@@ -12,7 +12,13 @@ const SELF_CANONICAL = new Set<string>([
   "/changelog",
   "/politica-privacidade",
   "/termos-de-servico",
+  "/blog",
 ]);
+
+// Rotas com slug dinâmico que devem ter canonical próprio (a URL real da página).
+// Ex.: /blog/<slug> dos posts. Os posts são prerenderizados (canonical já correto
+// no HTML cru); reforçar no client cobre a navegação client-side sem vazar a home.
+const SELF_CANONICAL_PREFIXES = ["/blog/"];
 
 /**
  * Mantém <link rel="canonical">, og:url e twitter:url coerentes com a rota.
@@ -31,7 +37,10 @@ export function CanonicalManager() {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    const url = SELF_CANONICAL.has(pathname) ? `${ORIGIN}${pathname}` : `${ORIGIN}/`;
+    const isSelf =
+      SELF_CANONICAL.has(pathname) ||
+      SELF_CANONICAL_PREFIXES.some((p) => pathname.startsWith(p));
+    const url = isSelf ? `${ORIGIN}${pathname}` : `${ORIGIN}/`;
 
     const link = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
     if (link) link.href = url;
