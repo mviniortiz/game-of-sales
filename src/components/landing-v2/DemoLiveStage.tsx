@@ -5,6 +5,7 @@ import { useGeminiLive, primeEvaAudio } from "./useGeminiLive";
 import { whatsappUrl } from "@/config/contact";
 import { WhatsappGlyph } from "@/components/icons/WhatsappGlyph";
 import { DemoScheduler, DEMO_SLOTS, type SchedStep } from "./DemoScheduler";
+import { trackBehavior, claritySet, DEMO_EVENTS } from "@/lib/analytics";
 
 // LP.8 (v2) — tour AO VIVO: o app real num iframe (/embed-demo) + a EVA por VOZ
 // (Gemini Live, rodando no parent) narrando e NAVEGANDO o iframe. A tool
@@ -301,6 +302,11 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
         retryCountRef.current = 0;
         const screen = SCREEN_ORDER[i];
         lastTargetRef.current = screen;
+        // Analytics: a EVA está apresentando esta tela. Marca o passo em GA4 +
+        // Clarity (tag eva_step) pra medir onde a pessoa larga o roteiro guiado.
+        if (i === 0) trackBehavior(DEMO_EVENTS.DEMO_START, { source: "live_tour" });
+        trackBehavior(DEMO_EVENTS.EVA_STEP_VIEW, { step: i, screen });
+        claritySet("eva_step", screen);
         setScreen(screen);
         setCapFallback(SCREEN_CAPTION[screen] || "");
         narrateStep(i);

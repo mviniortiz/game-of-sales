@@ -45,6 +45,7 @@ import {
 import { useTheme } from "@/components/ThemeToggle";
 import { ReminderBell } from "@/components/crm/ReminderBell";
 import { NavLink } from "@/components/NavLink";
+import { trackBehavior, claritySet, clarityUpgrade, isDemoSession, DEMO_EVENTS } from "@/lib/analytics";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
@@ -304,6 +305,18 @@ export function AppSidebar() {
   const inactiveClass = `${baseItem} text-[#64748B] hover:text-[#0B1220] hover:bg-[#F6F4EF]`;
   const activeClass = `${baseItem} text-[#0B1220]`;
 
+  // Analytics: clique manual em aba. Na demo a EVA navega por postMessage, então
+  // qualquer clique na sidebar = a pessoa saindo do roteiro guiado (nav_off_flow).
+  const handleNavClick = (item: NavItem | FooterItem) => {
+    trackBehavior(DEMO_EVENTS.NAV_TAB_CLICK, { tab: item.url, title: item.title, from: location.pathname });
+    claritySet("last_tab", item.title);
+    if (isDemoSession()) {
+      claritySet("demo", "embed");
+      trackBehavior(DEMO_EVENTS.NAV_OFF_FLOW, { tab: item.url, title: item.title });
+      clarityUpgrade("nav_off_flow");
+    }
+  };
+
   const renderNavItem = (item: NavItem | FooterItem, opts?: { footer?: boolean }) => {
     const isFooter = opts?.footer === true;
     const isActive =
@@ -327,6 +340,7 @@ export function AppSidebar() {
         activeClassName=""
         aria-label={item.title}
         data-demo-nav={item.url}
+        onClick={() => handleNavClick(item)}
       >
         {/* Pill ativo — só nav principal. Desliza entre itens (layoutId). */}
         {!isFooter && isActive && (

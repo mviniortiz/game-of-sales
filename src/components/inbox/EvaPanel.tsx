@@ -19,6 +19,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { trackBehavior, clarityUpgrade, DEMO_EVENTS } from "@/lib/analytics";
 import {
     AlertCircle,
     AlertTriangle,
@@ -464,6 +465,11 @@ function PanelContent({
         pendingSuggestionResolvedRef.current = true;
         try {
             await agentLog.resolve({ id, status, appliedPayload: { text: finalText } });
+            // Analytics: a sugestão da EVA foi usada (aceita sem editar ou ajustada).
+            trackBehavior(
+                status === "accepted" ? DEMO_EVENTS.EVA_SUGGESTION_ACCEPTED : DEMO_EVENTS.EVA_SUGGESTION_ADJUSTED,
+                { outcome: status }
+            );
         } catch {
             // permite nova tentativa se a gravação do desfecho falhou
             pendingSuggestionResolvedRef.current = false;
@@ -1715,6 +1721,14 @@ function SuggestedReply({
     const [edited, setEdited] = useState<string | null>(null);
     const [sending, setSending] = useState(false);
     const display = edited ?? text;
+
+    // Analytics: a EVA apresentou uma resposta sugerida. Marca o evento e prioriza
+    // a gravação da sessão (momento de valor da EVA).
+    useEffect(() => {
+        if (!text) return;
+        trackBehavior(DEMO_EVENTS.EVA_SUGGESTION_SHOWN, {});
+        clarityUpgrade("eva_suggestion");
+    }, [text]);
 
     // Desfecho da sugestão: se o texto enviado/copiado difere do original (o
     // humano editou antes de usar), conta como "adjusted"; senão "accepted".

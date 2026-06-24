@@ -35,6 +35,8 @@ declare global {
   interface Window {
     gtag: (...args: any[]) => void;
     dataLayer: any[];
+    // Microsoft Clarity — carregado pelo stub no index.html (após 1ª interação).
+    clarity?: (...args: any[]) => void;
   }
 }
 
@@ -232,5 +234,90 @@ export function trackPageView(path: string, title?: string) {
     });
   } catch {
     // Silently fail
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Microsoft Clarity — custom tags / events / identify / upgrade.
+// O clarity() global é carregado pelo stub no index.html (após a 1ª interação);
+// antes disso window.clarity é undefined, então os wrappers no-op com segurança.
+// Tags levam ~30min–2h pra aparecer como filtro no painel. Docs:
+// https://learn.microsoft.com/clarity/setup-and-installation/clarity-api
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Tag de sessão (filtrável no painel). `value` pode ser string ou lista. */
+export function claritySet(key: string, value: string | string[]) {
+  try {
+    window.clarity?.("set", key, value);
+  } catch {
+    // analytics nunca pode quebrar o app
+  }
+}
+
+/** Evento custom (vira "smart event" filtrável no painel). */
+export function clarityEvent(name: string) {
+  try {
+    window.clarity?.("event", name);
+  } catch {
+    // noop
+  }
+}
+
+/** Liga a sessão a um id estável (ex.: id da demo). friendlyName aparece no painel. */
+export function clarityIdentify(customId: string, friendlyName?: string) {
+  try {
+    window.clarity?.("identify", customId, undefined, undefined, friendlyName);
+  } catch {
+    // noop
+  }
+}
+
+/** Prioriza a GRAVAÇÃO desta sessão (use em momentos-chave: aha da EVA, CTA). */
+export function clarityUpgrade(reason: string) {
+  try {
+    window.clarity?.("upgrade", reason);
+  } catch {
+    // noop
+  }
+}
+
+// Eventos de comportamento da demo/EVA. Mesmos nomes em GA4 (funil mensurável) e
+// no Clarity (filtro de sessão). Use trackBehavior() pra disparar nos dois.
+export const DEMO_EVENTS = {
+  DEMO_START: "demo_start",
+  EVA_STEP_VIEW: "eva_step_view",
+  NAV_TAB_CLICK: "nav_tab_click",
+  NAV_OFF_FLOW: "nav_off_flow",
+  DEMO_CTA: "demo_cta",
+  EVA_SUGGESTION_SHOWN: "eva_suggestion_shown",
+  EVA_SUGGESTION_ACCEPTED: "eva_suggestion_accepted",
+  EVA_SUGGESTION_ADJUSTED: "eva_suggestion_adjusted",
+} as const;
+
+/** Dispara um evento de comportamento em GA4 (+Ads) E no Clarity de uma vez. */
+export function trackBehavior(
+  eventName: string,
+  params?: Record<string, string | number | boolean>
+) {
+  trackEvent(eventName, params);
+  clarityEvent(eventName);
+}
+
+/**
+ * Heurística: a sessão atual é uma DEMO? Verdadeiro se a flag foi setada no
+ * EmbedDemo (sessionStorage) ou se o app roda dentro de um iframe (embed).
+ * Usada pra distinguir clique manual de aba (off-flow) durante a demo.
+ */
+export function isDemoSession(): boolean {
+  try {
+    if (typeof sessionStorage !== "undefined" && sessionStorage.getItem("vyzon_demo") === "1") return true;
+  } catch {
+    // storage bloqueado — segue pra checagem de iframe
+  }
+  try {
+    return window.self !== window.top;
+  } catch {
+    // acesso cross-origin a window.top => estamos num iframe
+    return true;
   }
 }

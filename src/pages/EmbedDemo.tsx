@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { BrandedLoader } from "@/components/ui/BrandedLoader";
+import { trackBehavior, claritySet, clarityUpgrade, DEMO_EVENTS } from "@/lib/analytics";
 
 // LP.8 (v2) — rota de entrada da demo embutida (iframe). Pega uma sessão do
 // ambiente demo dedicado (edge demo-session, senha só no servidor), seta a
@@ -12,6 +13,13 @@ const EmbedDemo = () => {
     const [error, setError] = useState(false);
 
     useEffect(() => {
+        // Marca esta sessão como DEMO: persiste a flag (sobrevive ao reload pro
+        // /inicio), taga no Clarity e prioriza a gravação. Tudo best-effort.
+        try { sessionStorage.setItem("vyzon_demo", "1"); } catch { /* noop */ }
+        claritySet("demo", "embed");
+        clarityUpgrade("demo");
+        trackBehavior(DEMO_EVENTS.DEMO_START, { source: "embed" });
+
         let cancelled = false;
         (async () => {
             try {
