@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ButtonV2 } from "./ButtonV2";
 import { AgentBuilderModal } from "./AgentBuilderModal";
-import { trackBehavior, LANDING_EVENTS } from "@/lib/analytics";
+import { trackBehavior, FUNNEL_EVENTS } from "@/lib/analytics";
 
 // LP.6 (v2) — card "Crie um agente especialista". O lead cola a URL do PRÓPRIO
 // site e clica "Criar agente": abre o AgentBuilderModal (upload de material +
@@ -29,7 +29,7 @@ export const AgentBuilderCard = ({ onCTAClick }: AgentBuilderCardProps) => {
 
     const start = () => {
         if (!url.trim()) return;
-        trackBehavior(LANDING_EVENTS.AGENT_BUILDER_START, {});
+        trackBehavior(FUNNEL_EVENTS.AGENT_BUILDER_START, {});
         setOpen(true);
     };
 

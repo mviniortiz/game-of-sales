@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type Lenis from "lenis";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
-import { trackBehavior, LANDING_EVENTS } from "@/lib/analytics";
+import { trackBehavior, FUNNEL_EVENTS } from "@/lib/analytics";
 import { NavV2 } from "@/components/landing-v2/NavV2";
 import { EvaDemoModal } from "@/components/landing-v2/EvaDemoModal";
 import { HeroV2 } from "@/components/landing-v2/HeroV2";
@@ -29,7 +29,7 @@ const LandingV2 = () => {
     // clara, pré-carrega o chunk do cadastro durante o véu, e então navega — sem
     // corte seco nem flash do loader.
     const goToSignup = (plan: string, source = "unknown") => {
-        trackBehavior(LANDING_EVENTS.CTA_CLICK, { cta: "trial", plan, source });
+        trackBehavior(FUNNEL_EVENTS.LANDING_CTA_CLICK, { cta: "trial", plan, source });
         if (toSignup) return;
         setToSignup(true);
         import("./SignupV2").catch(() => undefined);
@@ -38,7 +38,7 @@ const LandingV2 = () => {
 
     // Abre a demo de voz tagueando a origem do clique.
     const openDemo = (source: string) => {
-        trackBehavior(LANDING_EVENTS.DEMO_OPEN, { source });
+        trackBehavior(FUNNEL_EVENTS.DEMO_OPEN, { source });
         setDemoOpen(true);
     };
 
@@ -101,7 +101,7 @@ const LandingV2 = () => {
 
     // Analytics: view da landing + profundidade de scroll (25/50/75/100%, 1x cada).
     useEffect(() => {
-        trackBehavior(LANDING_EVENTS.VIEW, {});
+        trackBehavior(FUNNEL_EVENTS.LANDING_VIEW, {});
         const seen = new Set<number>();
         const onScroll = () => {
             const el = document.documentElement;
@@ -109,7 +109,7 @@ const LandingV2 = () => {
             if (max <= 0) return;
             const pct = (el.scrollTop / max) * 100;
             for (const m of [25, 50, 75, 100]) {
-                if (pct >= m && !seen.has(m)) { seen.add(m); trackBehavior(LANDING_EVENTS.SCROLL_DEPTH, { depth: m }); }
+                if (pct >= m && !seen.has(m)) { seen.add(m); trackBehavior(FUNNEL_EVENTS.LANDING_SCROLL_DEPTH, { depth: m }); }
             }
         };
         window.addEventListener("scroll", onScroll, { passive: true });

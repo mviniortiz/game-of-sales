@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { getAttribution } from "@/lib/attribution";
-import { trackBehavior, LANDING_EVENTS } from "@/lib/analytics";
+import { trackBehavior, FUNNEL_EVENTS } from "@/lib/analytics";
 import { toast } from "sonner";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
 import { AnimatedMeshAsset } from "@/components/landing-v2/AnimatedMeshAsset";
@@ -32,7 +32,7 @@ const SignupV2 = () => {
 
     // Analytics: início do registro (chegou no cadastro), com o plano escolhido.
     useEffect(() => {
-        trackBehavior(LANDING_EVENTS.REGISTER_START, { plan });
+        trackBehavior(FUNNEL_EVENTS.REGISTER_START, { plan });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
