@@ -1,15 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import { InboxList, type SyncStatus, type SyncTone } from "@/components/inbox/InboxList";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { InboxPriorityList, type InboxLeadSignal } from "@/components/inbox/InboxPriorityList";
+import { ConnectionStatusCard } from "@/components/inbox/ConnectionStatusCard";
 import { InboxConversation } from "@/components/inbox/InboxConversation";
 import { EvaPanel } from "@/components/inbox/EvaPanel";
 import { WhatsAppConnectModal } from "@/components/inbox/WhatsAppConnectModal";
-import { Drawer, DrawerContent } from "@/components/ui/drawer";
+import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { useEvolutionSender } from "@/hooks/useEvolutionSender";
 import { useWhatsAppInboxDb } from "@/hooks/useWhatsAppInboxDb";
 import { useChannelInbox } from "@/hooks/useChannelInbox";
 import { useInboxConnectionStatus } from "@/hooks/useInboxConnectionStatus";
 import { useProspectingMode, PROSPECTING_OBJECTIVE } from "@/hooks/useProspectingMode";
+import { useConversationSummaries, normalizePhone, buildReason } from "@/hooks/useConversationSummaries";
+import { useEvaBlueprint } from "@/hooks/useEvaBlueprint";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -32,8 +35,6 @@ import { toast } from "sonner";
 // não muda.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const STATUS_FRESH_WINDOW_MS = 5 * 60 * 1000;
-
 // Traduz o erro cru do envio (vindo da edge evolution-whatsapp) numa mensagem
 // clara pro usuário. Mantém uma pista da causa real pra diagnóstico.
 function describeSendError(raw: string): string {
@@ -51,21 +52,6 @@ function describeSendError(raw: string): string {
     if (m.includes("no company"))
         return "Não consegui identificar a sua conta. Recarregue a página e tente de novo.";
     return raw ? `Não consegui enviar a mensagem: ${raw}` : "Não consegui enviar a mensagem. Verifique a conexão do WhatsApp.";
-}
-
-function formatTimeAgo(date: Date | null): string {
-    if (!date) return "";
-    const diffMs = Date.now() - date.getTime();
-    if (diffMs < 0) return "agora";
-    const seconds = Math.floor(diffMs / 1000);
-    if (seconds < 15) return "agora";
-    if (seconds < 60) return `há ${seconds}s`;
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `há ${minutes}min`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `há ${hours}h`;
-    const days = Math.floor(hours / 24);
-    return `há ${days}d`;
 }
 
 const Inbox = () => {
@@ -151,6 +137,15 @@ const Inbox = () => {
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [, setTick] = useState(0);
     const isMobile = useIsMobile();
+    const navigate = useNavigate();
+
+    // EVA.INBOX (2026-06-25) — a lista da esquerda passou a ser priorizada pela
+    // EVA. Gate assistido (mesmo do Pulse): só prioriza por VALOR depois que o
+    // gestor aprova o blueprint (approved_assisted). Sem isso, cai no fallback
+    // honesto por tempo de espera.
+    const { initial: evaBlueprint } = useEvaBlueprint();
+    const evaApproved = evaBlueprint?.status === "approved_assisted";
+    const { signalsByPhone } = useConversationSummaries();
 
     // F5C.2 — deep link `?conversationId=<uuid>` vindo da Central de Comando.
     // Aplica uma única vez por valor de param + uma vez por load do active
@@ -195,10 +190,38 @@ const Inbox = () => {
 
     const chats = activeInbox.chats;
     const selectedChatMessages = activeInbox.selectedChatMessages;
-    const isLoadingChats = activeInbox.isLoadingChats;
     const isLoadingMessages = activeInbox.isLoadingMessages;
 
     const selectedChat = chats.find((c) => c.id === selectedChatId);
+
+    // EVA.INBOX — sinais por conversa: leitura da EVA (conversation_summaries) +
+    // tempo que o lead espera resposta SUA (client-side). A etiqueta-motivo vem
+    // do buildReason (objeção → ação de valor → justificativa → próxima ação).
+    const inboxSignals = useMemo<Record<string, InboxLeadSignal>>(() => {
+        const out: Record<string, InboxLeadSignal> = {};
+        const now = Date.now();
+        for (const chat of chats) {
+            if (chat.isGroup) continue;
+            const waitingMinutes =
+                chat.lastMessage && !chat.lastMessage.isMe && chat.lastMessage.at
+                    ? Math.max(0, Math.round((now - chat.lastMessage.at) / 60000))
+                    : null;
+            const sig = signalsByPhone[normalizePhone(chat.phone)];
+            out[chat.id] = sig?.temperature
+                ? {
+                      priority:
+                          sig.temperature === "quente"
+                              ? "quente"
+                              : sig.temperature === "morno"
+                              ? "esfriando"
+                              : "frio",
+                      reason: buildReason(sig),
+                      waitingMinutes,
+                  }
+                : { waitingMinutes };
+        }
+        return out;
+    }, [chats, signalsByPhone]);
 
     // F4W.7.1 — estado da conexão WhatsApp (connection row + status ao vivo).
     const connectionStatus = useInboxConnectionStatus({
@@ -300,43 +323,6 @@ const Inbox = () => {
     // Mobile
     const showListOnMobile = isMobile && !selectedChatId;
     const showDetailOnMobile = isMobile && selectedChatId;
-
-    // ── Estado compound de sincronização ──────────────────────────────────
-    const syncStatus = useMemo<SyncStatus>(() => {
-        const dbHasData = chats.length > 0;
-        const statusIsFresh =
-            !!lastStatusCheckedAt &&
-            Date.now() - lastStatusCheckedAt.getTime() < STATUS_FRESH_WINDOW_MS;
-        const lastLoadedLabel = formatTimeAgo(activeInbox.lastChatsLoadedAt);
-
-        let tone: SyncTone;
-        let badge: string;
-        let detail: string | undefined;
-
-        if (lastStatusCheckedAt === null) {
-            tone = dbHasData ? "offline-with-history" : "unknown";
-            badge = dbHasData ? "Histórico salvo" : "Verificando…";
-            detail = dbHasData ? `Histórico atualizado ${lastLoadedLabel}` : undefined;
-        } else if (connected && statusIsFresh) {
-            tone = "live";
-            badge = "Live";
-            detail = `Atualizado ${lastLoadedLabel}`;
-        } else if (connected && !statusIsFresh) {
-            tone = "stale";
-            badge = "Status não verificado";
-            detail = `Atualizado ${lastLoadedLabel} · clique em atualizar`;
-        } else if (!connected && dbHasData) {
-            tone = "offline-with-history";
-            badge = "Histórico salvo";
-            detail = `WhatsApp desconectado · exibindo histórico (${lastLoadedLabel})`;
-        } else {
-            tone = "offline";
-            badge = "WhatsApp desconectado";
-            detail = undefined;
-        }
-
-        return { tone, badge, detail };
-    }, [chats.length, connected, lastStatusCheckedAt, activeInbox.lastChatsLoadedAt]);
 
     // ── Refresh manual ────────────────────────────────────────────────────
     const handleRefresh = async () => {
@@ -457,10 +443,10 @@ const Inbox = () => {
 
     return (
         <div
-            className="flex w-full overflow-hidden -mx-3 -my-3 sm:-mx-4 sm:-my-4 md:-mx-6 md:-my-6"
+            className="vz-inbox flex w-full overflow-hidden -mx-3 -my-3 sm:-mx-4 sm:-my-4 md:-mx-6 md:-my-6"
             style={{
                 height: "calc(100vh - 3.5rem)",
-                background: "#F6F4EF",
+                background: "var(--ibx-paper)",
             }}
         >
             {/* Coluna esquerda — lista */}
@@ -470,27 +456,31 @@ const Inbox = () => {
                         ? showListOnMobile
                             ? "w-full flex flex-col"
                             : "hidden"
-                        : "w-[340px] xl:w-[380px] shrink-0 flex flex-col border-r border-[#D9E2EC] bg-white"
+                        : "w-[340px] xl:w-[380px] shrink-0 flex flex-col border-r border-[var(--ibx-line)] bg-[var(--ibx-card)]"
                 }
             >
-                <InboxList
+                <InboxPriorityList
                     chats={chats}
+                    signals={inboxSignals}
+                    studioConfigured={evaApproved}
                     selectedChatId={selectedChatId}
                     onSelect={setSelectedChatId}
-                    isLoading={isLoadingChats}
-                    connected={connected}
-                    syncStatus={syncStatus}
-                    onRefresh={handleRefresh}
-                    isRefreshing={isRefreshing}
-                    connectionStatus={connectionStatus}
-                    onConnectClick={() => setConnectModalOpen(true)}
-                    onSyncHistory={handleSyncHistory}
-                    historySyncing={historySyncing}
-                    adminScopeLabel={isAdmin ? "Minhas conversas" : undefined}
-                    onResyncWebhook={handleResyncWebhook}
-                    resyncing={resyncing}
-                    onDisconnect={handleDisconnect}
-                    disconnecting={disconnecting}
+                    onOpenStudio={() => navigate("/eva-studio")}
+                    headerSlot={
+                        connectionStatus ? (
+                            <ConnectionStatusCard
+                                status={connectionStatus}
+                                onConnectClick={() => setConnectModalOpen(true)}
+                                onSyncHistory={handleSyncHistory}
+                                historySyncing={historySyncing}
+                                adminScopeLabel={isAdmin ? "Minhas conversas" : undefined}
+                                onResyncWebhook={handleResyncWebhook}
+                                resyncing={resyncing}
+                                onDisconnect={handleDisconnect}
+                                disconnecting={disconnecting}
+                            />
+                        ) : undefined
+                    }
                 />
             </aside>
 
@@ -531,8 +521,8 @@ const Inbox = () => {
             {/* Coluna direita — EvaPanel (desktop) */}
             {!isMobile && (
                 <aside
-                    className="w-[340px] xl:w-[380px] shrink-0 flex flex-col bg-white"
-                    style={{ borderLeft: "1px solid #D9E2EC" }}
+                    className="w-[340px] xl:w-[380px] shrink-0 flex flex-col bg-[var(--ibx-card)]"
+                    style={{ borderLeft: "1px solid var(--ibx-line)" }}
                 >
                     <EvaPanel
                         chat={selectedChat || null}
@@ -557,7 +547,10 @@ const Inbox = () => {
                 é a coluna direita). Mesmo EvaPanel, mesmos props. */}
             {isMobile && (
                 <Drawer open={evaMobileOpen} onOpenChange={setEvaMobileOpen}>
-                    <DrawerContent className="h-[88vh]">
+                    <DrawerContent className="h-[88vh] bg-[var(--ibx-card)]">
+                        {/* Título sr-only: a11y do Radix Drawer (sem isso, warning).
+                            O título visível mora no header do próprio EvaPanel. */}
+                        <DrawerTitle className="sr-only">Análise da EVA</DrawerTitle>
                         <div className="flex-1 overflow-y-auto overscroll-contain">
                             <EvaPanel
                                 chat={selectedChat || null}
@@ -572,6 +565,7 @@ const Inbox = () => {
                                     : undefined}
                                 objective={prospectingMode ? PROSPECTING_OBJECTIVE : undefined}
                                 onUseReply={(t) => { setComposerInject(t); setEvaMobileOpen(false); }}
+                                onClose={() => setEvaMobileOpen(false)}
                             />
                         </div>
                     </DrawerContent>

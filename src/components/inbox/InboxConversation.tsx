@@ -3,16 +3,14 @@ import {
     ArrowLeft,
     ArrowRight,
     ArrowUp,
-    Calendar,
     Check,
     CheckCheck,
-    CheckCircle2,
+    ChevronUp,
     FileText,
     Loader2,
     Mic,
     Paperclip,
     RefreshCw,
-    UserCheck,
     X,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,7 +21,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AudioMessagePlayer } from "@/components/whatsapp/AudioMessagePlayer";
 import { MediaMessageBubble } from "@/components/whatsapp/MediaMessageBubble";
 import { AudioRecorder } from "@/components/whatsapp/AudioRecorder";
-import { EvaPhotoAvatar } from "@/components/eva/EvaPhotoAvatar";
+import { EvaOrb } from "@/components/landing-v2/EvaOrb";
 import type { Chat, MessageLine } from "@/hooks/useEvolutionAPI";
 import { useProfilePic } from "@/hooks/useProfilePic";
 import { cn } from "@/lib/utils";
@@ -43,57 +41,6 @@ import { cn } from "@/lib/utils";
 // Nada se executa automaticamente — todas as ações dependem de clique do usuário.
 // ─────────────────────────────────────────────────────────────────────────────
 
-type LeadOrigin = "meta" | "google" | "instagram" | "indicacao" | "whatsapp";
-type LeadStatus = "novo" | "qualificando" | "pronto" | "demo_marcada" | "parado";
-
-const ORIGINS: LeadOrigin[] = ["meta", "google", "instagram", "indicacao", "whatsapp"];
-
-const ORIGIN_META: Record<LeadOrigin, { label: string; color: string }> = {
-    meta: { label: "Meta Ads", color: "#1877F2" },
-    google: { label: "Google Ads", color: "#1D4ED8" },
-    instagram: { label: "Instagram", color: "#7C3AED" },
-    indicacao: { label: "Indicação", color: "#10B981" },
-    whatsapp: { label: "WhatsApp", color: "#64748B" },
-};
-
-const STATUS_META: Record<LeadStatus, { label: string; bg: string; color: string }> = {
-    novo: { label: "Novo", bg: "rgba(37,99,235,0.10)", color: "#1D4ED8" },
-    qualificando: { label: "Qualificando", bg: "rgba(124,58,237,0.10)", color: "#6D28D9" },
-    pronto: { label: "Pronto p/ humano", bg: "rgba(16,185,129,0.10)", color: "#047857" },
-    demo_marcada: { label: "Demo marcada", bg: "rgba(245,158,11,0.10)", color: "#B45309" },
-    parado: { label: "Parado", bg: "rgba(148,163,184,0.15)", color: "#64748B" },
-};
-
-// MOCK_F4C — Hash determinístico pra atribuir origem/status/score sem schema
-function hashCode(str: string): number {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-        hash = ((hash << 5) - hash) + str.charCodeAt(i);
-        hash |= 0;
-    }
-    return Math.abs(hash);
-}
-
-function getLeadOrigin(seed: string): LeadOrigin {
-    return ORIGINS[hashCode(seed) % ORIGINS.length];
-}
-
-function getLeadStatus(seed: string): LeadStatus {
-    const pool: LeadStatus[] = [
-        "novo", "novo", "novo",
-        "qualificando", "qualificando",
-        "pronto",
-        "demo_marcada",
-        "parado",
-    ];
-    return pool[hashCode(seed + "_status") % pool.length];
-}
-
-function getLeadScore(seed: string): number {
-    // Score 25..95 — distribuição que parece "real" sem extremos absurdos
-    return 25 + (hashCode(seed + "_score") % 71);
-}
-
 function getInitials(name: string) {
     if (!name) return "?";
     const parts = name.trim().split(" ");
@@ -106,14 +53,6 @@ function formatTime(ts: string | undefined): string {
     const date = new Date(ts);
     if (isNaN(date.getTime())) return ts;
     return date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-}
-
-// MOCK_F4C — Sugestão contextual da EVA. Pega último nome/snippet pra parecer real.
-function buildEvaSuggestion(chat: Chat | null): string {
-    if (!chat) return "";
-    const firstName = chat.name?.split(" ")[0] || "";
-    const greeting = firstName ? `${firstName}, ` : "";
-    return `${greeting}posso te mostrar dois horários disponíveis para uma conversa rápida ainda essa semana?`;
 }
 
 // ─── Props ───────────────────────────────────────────────────────────────
@@ -212,9 +151,9 @@ export function InboxConversation({
 
 function EmptyConversation() {
     return (
-        <div className="flex-1 flex items-center justify-center px-6" style={{ background: "#F4F7FB" }}>
+        <div className="flex-1 flex items-center justify-center px-6" style={{ background: "var(--ibx-paper)" }}>
             <div className="text-center max-w-sm">
-                <EvaPhotoAvatar size="md" ring="subtle" className="mx-auto mb-4" />
+                <EvaOrb variant="blue" state="idle" size={56} showVoice={false} className="mx-auto mb-4" />
                 <h3
                     className="text-[15px] font-semibold mb-2"
                     style={{ color: "#0B1220", letterSpacing: "-0.015em" }}
@@ -318,7 +257,6 @@ function ConversationView({
     const [composer, setComposer] = useState("");
     const [sending, setSending] = useState(false);
     const [showAudio, setShowAudio] = useState(false);
-    const [showSuggestion, setShowSuggestion] = useState(true);
     const [pendingMedia, setPendingMedia] = useState<PendingMedia | null>(null);
     const [mediaCaption, setMediaCaption] = useState("");
     const [sendingMedia, setSendingMedia] = useState(false);
@@ -328,10 +266,6 @@ function ConversationView({
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // V1.0.1 — origin/status/score mock removidos do header (eram MOCK_F4C
-    // baseados em hash determinístico do phone). Sem fonte real, esconde.
-    const suggestion = buildEvaSuggestion(chat);
-
     // Sugestão REAL da EVA inline na conversa (lê a análise salva; o react-query
     // compartilha o cache com o EvaPanel, sem disparar análise extra).
     const evaInsight = useEvaInsight({ chatPhone: chat.phone || chat.id, contactName: chat.name, messages });
@@ -339,6 +273,19 @@ function ConversationView({
         ? (evaInsight.data.qualification?.resposta_sugerida || evaInsight.data.analysis?.draft || "")
         : "";
     const [suggestionDismissed, setSuggestionDismissed] = useState(false);
+
+    // MOBILE — estado compacto da EVA pro botão do header virar um STATUS VIVO
+    // (não uma pílula muda): "Lendo…", temperatura, ou "Análise pronta". É o que
+    // faz o usuário perceber que ali tem algo a abrir.
+    const evaHeaderState: EvaHeaderState = {
+        analyzing: evaInsight.analyzing,
+        hasAnalysis: evaInsight.hasAnalysis,
+        temperature: evaInsight.data?.qualification?.temperatura
+            ?? evaInsight.data?.analysis?.temperature
+            ?? null,
+        stale: evaInsight.isStaleByMessages || evaInsight.isStaleByContext,
+        hasReply: !!evaSuggestionText,
+    };
 
     // Auto-scroll pro fim SÓ quando chega mensagem nova no fim (ou troca de
     // conversa) — não ao prepender páginas antigas (paginação).
@@ -372,7 +319,6 @@ function ConversationView({
     // Quando troca de chat, reseta composer e sugestão
     useEffect(() => {
         setComposer("");
-        setShowSuggestion(true);
         setShowAudio(false);
         setSuggestionDismissed(false);
         setPendingMedia((prev) => {
@@ -494,22 +440,6 @@ function ConversationView({
         uploadAbortRef.current?.abort();
     }, []);
 
-    const handleUseSuggestion = () => {
-        setComposer(suggestion);
-        setShowSuggestion(false);
-        inputRef.current?.focus();
-    };
-
-    const handleEditSuggestion = () => {
-        setComposer(suggestion);
-        setShowSuggestion(false);
-        inputRef.current?.focus();
-    };
-
-    const handleIgnoreSuggestion = () => {
-        setShowSuggestion(false);
-    };
-
     return (
         <>
             <ConversationHeader
@@ -518,6 +448,7 @@ function ConversationView({
                 onRefresh={onRefresh}
                 isRefreshing={isRefreshing}
                 onOpenEva={onOpenEva}
+                eva={evaHeaderState}
                 typing={typing}
             />
 
@@ -607,7 +538,7 @@ function ConversationView({
                 <div
                     className="px-4 py-3"
                     style={{
-                        borderTop: "1px solid #D9E2EC",
+                        borderTop: "1px solid var(--ibx-line)",
                         background: "#FFFFFF",
                     }}
                 >
@@ -637,12 +568,162 @@ function ConversationView({
 
 // ─── Header comercial ────────────────────────────────────────────────────
 
+// MOBILE — sinal compacto da EVA pro botão do header. Sem coluna própria no
+// celular, o botão precisa comunicar (a) que abre um painel e (b) que tem algo
+// a abrir. Daí virar um status vivo em vez de uma pílula "EVA" muda.
+interface EvaHeaderState {
+    analyzing: boolean;
+    hasAnalysis: boolean;
+    temperature: "quente" | "morno" | "frio" | null;
+    stale: boolean;
+    hasReply: boolean;
+}
+
+const EVA_TEMP_LABEL: Record<NonNullable<EvaHeaderState["temperature"]>, string> = {
+    quente: "Quente",
+    morno: "Morno",
+    frio: "Frio",
+};
+// Alinhado à paleta de risco da lista (coral/âmbar/slate).
+const EVA_TEMP_COLOR: Record<NonNullable<EvaHeaderState["temperature"]>, string> = {
+    quente: "#d85a30",
+    morno: "#d97706",
+    frio: "#64748b",
+};
+
+const EVA_HINT_KEY = "vyz_eva_mobile_hint_seen";
+
+// Botão de acesso à EVA no header (só mobile). Status vivo + caret pra cima
+// (afford de "abre um painel de baixo") + coachmark de 1ª vez explicando.
+function EvaHeaderButton({ eva, onOpenEva }: { eva?: EvaHeaderState; onOpenEva: () => void }) {
+    const [showHint, setShowHint] = useState(false);
+
+    // Coachmark único: na 1ª vez que o usuário cai numa conversa no mobile,
+    // aponta o botão e explica que ali está a análise. Some pra sempre depois.
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        let seen = false;
+        try { seen = window.localStorage.getItem(EVA_HINT_KEY) === "1"; } catch { /* storage bloqueado */ }
+        if (seen) return;
+        const t = window.setTimeout(() => setShowHint(true), 700);
+        return () => window.clearTimeout(t);
+    }, []);
+
+    const dismissHint = () => {
+        setShowHint(false);
+        try { window.localStorage.setItem(EVA_HINT_KEY, "1"); } catch { /* ignora */ }
+    };
+
+    const handleOpen = () => {
+        if (showHint) dismissHint();
+        onOpenEva();
+    };
+
+    const analyzing = !!eva?.analyzing;
+    const temp = eva?.temperature ?? null;
+    const hasAnalysis = !!eva?.hasAnalysis;
+    const stale = !!eva?.stale;
+
+    // Rótulo do status: lendo → temperatura → análise pronta → convite cru.
+    const label = analyzing
+        ? "Lendo…"
+        : temp
+        ? EVA_TEMP_LABEL[temp]
+        : hasAnalysis
+        ? "Análise"
+        : "EVA";
+    const labelColor = !analyzing && temp ? EVA_TEMP_COLOR[temp] : "#6D28D9";
+
+    return (
+        <div className="md:hidden relative shrink-0">
+            <button
+                type="button"
+                onClick={handleOpen}
+                className="h-8 pl-1.5 pr-2 rounded-full flex items-center gap-1.5 transition-colors"
+                style={{ background: "rgba(109,40,217,0.08)", border: "1px solid rgba(109,40,217,0.18)" }}
+                aria-label="Abrir análise da EVA"
+                title="Análise da EVA"
+            >
+                {analyzing ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" style={{ color: "#6D28D9" }} />
+                ) : (
+                    <EvaNode size={14} color="#6D28D9" />
+                )}
+                {/* Ponto de temperatura: prova visual de que a EVA leu (e o quê). */}
+                {!analyzing && temp && (
+                    <span className="h-1.5 w-1.5 rounded-full" style={{ background: EVA_TEMP_COLOR[temp] }} />
+                )}
+                <span className="text-[12px] font-semibold" style={{ color: labelColor }}>{label}</span>
+                {/* Caret pra cima = "abre um painel de baixo" (bottom sheet). */}
+                <ChevronUp className="h-3 w-3" style={{ color: "#9F7AEA" }} strokeWidth={2.5} />
+                {/* Selo "desatualizada" — pulso âmbar discreto sobre o botão. */}
+                {!analyzing && hasAnalysis && stale && (
+                    <span
+                        className="vz-eva-stale-dot absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full"
+                        style={{ background: "#F59E0B", boxShadow: "0 0 0 2px #FFFFFF" }}
+                    />
+                )}
+            </button>
+
+            {/* Coachmark de 1ª vez: responde "como eu sei que isso abre a análise?" */}
+            {showHint && (
+                <div
+                    className="vz-eva-coach absolute right-0 top-[calc(100%+8px)] z-30 w-[228px] rounded-xl p-3"
+                    style={{
+                        background: "#FFFFFF",
+                        border: "1px solid rgba(109,40,217,0.20)",
+                        boxShadow: "0 1px 2px rgba(15,23,42,0.06), 0 16px 36px -16px rgba(109,40,217,0.45)",
+                    }}
+                    role="dialog"
+                    aria-label="Dica sobre a EVA"
+                >
+                    {/* Setinha apontando o botão */}
+                    <span
+                        className="absolute -top-1.5 right-5 h-3 w-3 rotate-45"
+                        style={{ background: "#FFFFFF", borderLeft: "1px solid rgba(109,40,217,0.20)", borderTop: "1px solid rgba(109,40,217,0.20)" }}
+                    />
+                    <div className="flex items-start gap-2">
+                        <EvaNode size={14} color="#6D28D9" className="mt-0.5 shrink-0" />
+                        <div className="flex-1 min-w-0">
+                            <p className="text-[12px] font-semibold mb-0.5" style={{ color: "#0B1220" }}>
+                                A análise da EVA fica aqui
+                            </p>
+                            <p className="text-[11px]" style={{ color: "#64748B", lineHeight: 1.45 }}>
+                                Toque para ver a leitura da conversa e a resposta sugerida.
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={dismissHint}
+                            className="h-5 w-5 -mt-0.5 -mr-0.5 rounded flex items-center justify-center shrink-0 transition-colors hover:bg-[var(--ibx-sunken)]"
+                            style={{ color: "#94A3B8" }}
+                            aria-label="Dispensar dica"
+                        >
+                            <X className="h-3 w-3" />
+                        </button>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={handleOpen}
+                        className="mt-2.5 w-full h-8 rounded-lg text-[12px] font-semibold text-white inline-flex items-center justify-center gap-1.5 transition-all hover:brightness-110"
+                        style={{ background: "linear-gradient(135deg, #6D28D9, #8B5CF6)", boxShadow: "0 6px 16px -8px rgba(109,40,217,0.5)" }}
+                    >
+                        Ver análise da EVA
+                        <ArrowUp className="h-3.5 w-3.5" />
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+}
+
 function ConversationHeader({
     chat,
     onBack,
     onRefresh,
     isRefreshing,
     onOpenEva,
+    eva,
     typing,
 }: {
     chat: Chat;
@@ -650,6 +731,7 @@ function ConversationHeader({
     onRefresh?: () => void;
     isRefreshing?: boolean;
     onOpenEva?: () => void;
+    eva?: EvaHeaderState;
     typing?: boolean;
 }) {
     const picUrl = useProfilePic(chat.phone, chat.profilePicUrl);
@@ -657,7 +739,7 @@ function ConversationHeader({
         <div
             className="px-4 sm:px-5 py-3.5 flex items-center gap-3"
             style={{
-                borderBottom: "1px solid #D9E2EC",
+                borderBottom: "1px solid var(--ibx-line)",
                 background: "#FFFFFF",
             }}
         >
@@ -665,7 +747,7 @@ function ConversationHeader({
                 <button
                     type="button"
                     onClick={onBack}
-                    className="h-8 w-8 -ml-1 rounded-md flex items-center justify-center hover:bg-[#F1F5F9] transition-colors shrink-0"
+                    className="h-8 w-8 -ml-1 rounded-md flex items-center justify-center hover:bg-[var(--ibx-sunken)] transition-colors shrink-0"
                     aria-label="Voltar"
                 >
                     <ArrowLeft className="h-4 w-4" style={{ color: "#475569" }} />
@@ -738,7 +820,7 @@ function ConversationHeader({
                     type="button"
                     onClick={onRefresh}
                     disabled={isRefreshing}
-                    className="h-8 w-8 rounded-md flex items-center justify-center hover:bg-[#F1F5F9] transition-colors shrink-0 disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="h-8 w-8 rounded-md flex items-center justify-center hover:bg-[var(--ibx-sunken)] transition-colors shrink-0 disabled:opacity-60 disabled:cursor-not-allowed"
                     aria-label="Atualizar histórico"
                     title="Atualizar histórico"
                 >
@@ -750,50 +832,10 @@ function ConversationHeader({
             )}
 
             {/* EVA — mobile: no celular a EVA não tem coluna própria, então o
-                acesso à análise dela vive aqui (abre o bottom sheet). */}
-            {onOpenEva && (
-                <button
-                    type="button"
-                    onClick={onOpenEva}
-                    className="md:hidden h-8 pl-1.5 pr-2.5 rounded-full flex items-center gap-1.5 shrink-0 transition-colors"
-                    style={{ background: "rgba(109,40,217,0.08)", border: "1px solid rgba(109,40,217,0.18)" }}
-                    aria-label="Abrir análise da EVA"
-                    title="Análise da EVA"
-                >
-                    <EvaNode size={14} color="#6D28D9" />
-                    <span className="text-[12px] font-semibold" style={{ color: "#6D28D9" }}>EVA</span>
-                </button>
-            )}
+                acesso à análise dela vive aqui (abre o bottom sheet). Status vivo
+                + caret + coachmark de 1ª vez resolvem a descoberta. */}
+            {onOpenEva && <EvaHeaderButton eva={eva} onOpenEva={onOpenEva} />}
         </div>
-    );
-}
-
-function HeaderAction({ icon: Icon, label }: { icon: typeof UserCheck; label: string }) {
-    return (
-        <button
-            type="button"
-            title={`${label} · Preview`}
-            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] transition-colors"
-            style={{
-                background: "#F8FAFC",
-                border: "1px solid #E2E8F0",
-                color: "#475569",
-                fontWeight: 500,
-            }}
-            onMouseEnter={(e) => {
-                e.currentTarget.style.background = "rgba(37,99,235,0.06)";
-                e.currentTarget.style.borderColor = "rgba(37,99,235,0.22)";
-                e.currentTarget.style.color = "#1D4ED8";
-            }}
-            onMouseLeave={(e) => {
-                e.currentTarget.style.background = "#F8FAFC";
-                e.currentTarget.style.borderColor = "#E2E8F0";
-                e.currentTarget.style.color = "#475569";
-            }}
-        >
-            <Icon className="h-3.5 w-3.5" />
-            {label}
-        </button>
     );
 }
 
@@ -820,7 +862,7 @@ function MessageThread({
         return (
             <div
                 className="flex-1 flex items-center justify-center"
-                style={{ background: "#F4F7FB" }}
+                style={{ background: "var(--ibx-paper)" }}
             >
                 <Loader2 className="h-5 w-5 animate-spin" style={{ color: "#2563EB" }} />
             </div>
@@ -831,7 +873,7 @@ function MessageThread({
         return (
             <div
                 className="flex-1 flex items-center justify-center px-6"
-                style={{ background: "#F4F7FB" }}
+                style={{ background: "var(--ibx-paper)" }}
             >
                 <p className="text-[12.5px] text-center" style={{ color: "#94A3B8" }}>
                     Sem mensagens ainda nesta conversa.
@@ -844,7 +886,7 @@ function MessageThread({
         <div
             ref={scrollRef}
             className="flex-1 overflow-y-auto px-3 sm:px-5 py-4"
-            style={{ background: "#F4F7FB" }}
+            style={{ background: "var(--ibx-paper)" }}
         >
             {/* F4C.3: limita largura interna da thread pra leitura confortável em ultrawide. */}
             <div className="max-w-[720px] mx-auto">
@@ -857,7 +899,7 @@ function MessageThread({
                             onClick={onLoadOlder}
                             disabled={loadingOlder}
                             className="inline-flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-full transition-colors disabled:opacity-60 hover:bg-white"
-                            style={{ color: "#475569", background: "#FFFFFF", border: "1px solid #D9E2EC" }}
+                            style={{ color: "#475569", background: "#FFFFFF", border: "1px solid var(--ibx-line)" }}
                         >
                             {loadingOlder && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                             {loadingOlder ? "Carregando…" : "Carregar mensagens anteriores"}
@@ -914,7 +956,7 @@ function DayDivider({ timestamp }: { timestamp: number }) {
         <div className="flex justify-center my-3">
             <span
                 className="text-[10.5px] font-semibold px-2.5 py-1 rounded-full"
-                style={{ background: "#E8EEF6", color: "#64748B", letterSpacing: "0.02em" }}
+                style={{ background: "var(--ibx-sunken)", color: "#64748B", letterSpacing: "0.02em" }}
             >
                 {label}
             </span>
@@ -956,13 +998,13 @@ const MessageBubble = memo(function MessageBubble({
                               background: "linear-gradient(135deg, #2563EB, #4A8CE8)",
                               color: "#FFFFFF",
                               ...tail,
-                              boxShadow: "0 1px 2px rgba(37,99,235,0.18), 0 4px 12px -4px rgba(37,99,235,0.18)",
+                              boxShadow: "0 2px 8px -3px rgba(37,99,235,0.28)",
                               opacity: isPending ? 0.92 : 1,
                           }
                         : {
                               background: "#FFFFFF",
                               color: "#0B1220",
-                              border: "1px solid #E2E8F0",
+                              border: "1px solid var(--ibx-line)",
                               ...tail,
                               boxShadow: "0 1px 2px rgba(15,23,42,0.04)",
                           }
@@ -1051,110 +1093,6 @@ const MessageBubble = memo(function MessageBubble({
     );
 });
 
-// ─── Sugestão EVA Preview ────────────────────────────────────────────────
-
-function EvaSuggestionBox({
-    suggestion,
-    onUse,
-    onEdit,
-    onIgnore,
-}: {
-    suggestion: string;
-    onUse: () => void;
-    onEdit: () => void;
-    onIgnore: () => void;
-}) {
-    return (
-        <div
-            className="px-3 sm:px-5 pt-3 pb-1"
-            style={{ background: "#F4F7FB" }}
-        >
-            <div className="max-w-[720px] mx-auto">
-            <div
-                className="rounded-xl px-4 py-3 flex items-start gap-3 relative overflow-hidden"
-                style={{
-                    background: "linear-gradient(135deg, rgba(124,58,237,0.05), rgba(255,255,255,0.6))",
-                    border: "1px solid rgba(124,58,237,0.22)",
-                    boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 4px 12px -4px rgba(124,58,237,0.08)",
-                }}
-            >
-                <EvaPhotoAvatar size="xs" ring="subtle" />
-                <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                        <span
-                            className="text-[10.5px] uppercase"
-                            style={{
-                                color: "#6D28D9",
-                                fontWeight: 700,
-                                letterSpacing: "0.08em",
-                            }}
-                        >
-                            Sugestão EVA
-                        </span>
-                        <span
-                            className="text-[9px] uppercase px-1.5 py-0.5 rounded"
-                            style={{
-                                background: "rgba(124,58,237,0.10)",
-                                color: "#6D28D9",
-                                fontWeight: 700,
-                                letterSpacing: "0.06em",
-                            }}
-                        >
-                            <EvaNode size={10} color="#6D28D9" className="inline -mt-px mr-0.5" />
-                            Preview
-                        </span>
-                    </div>
-                    <p
-                        className="text-[12.5px] leading-snug mb-2"
-                        style={{ color: "#0B1220" }}
-                    >
-                        {suggestion}
-                    </p>
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                        <button
-                            type="button"
-                            onClick={onUse}
-                            className="inline-flex items-center gap-1.5 h-7 px-3 rounded-md text-[11.5px] font-semibold text-white transition-all hover:brightness-110"
-                            style={{
-                                background: "linear-gradient(135deg, #2563EB, #4A8CE8)",
-                                boxShadow: "0 1px 2px rgba(37,99,235,0.2)",
-                            }}
-                        >
-                            Usar resposta
-                            <ArrowRight className="h-3 w-3" />
-                        </button>
-                        <button
-                            type="button"
-                            onClick={onEdit}
-                            className="inline-flex items-center h-7 px-3 rounded-md text-[11.5px] font-medium transition-colors"
-                            style={{
-                                background: "transparent",
-                                color: "#475569",
-                                border: "1px solid #E2E8F0",
-                            }}
-                        >
-                            Editar
-                        </button>
-                        <button
-                            type="button"
-                            onClick={onIgnore}
-                            className="inline-flex items-center h-7 px-2.5 rounded-md text-[11.5px] font-medium transition-colors"
-                            style={{
-                                background: "transparent",
-                                color: "#94A3B8",
-                            }}
-                            title="Esconder sugestão"
-                        >
-                            Ignorar
-                        </button>
-                    </div>
-                </div>
-            </div>
-            </div>
-        </div>
-    );
-}
-
 // ─── Media preview (estilo WhatsApp: prévia + legenda antes de enviar) ──────
 
 // Balão da EVA no FIM da conversa: a resposta sugerida aparece "no meio do chat"
@@ -1162,7 +1100,7 @@ function EvaSuggestionBox({
 // "Usar resposta" joga no composer; o humano revisa e envia (assistido).
 function EvaInlineSuggestion({ text, onUse, onDismiss }: { text: string; onUse: () => void; onDismiss: () => void }) {
     return (
-        <div className="px-3 sm:px-5 pt-1 pb-1" style={{ background: "#F4F7FB" }}>
+        <div className="px-3 sm:px-5 pt-1 pb-1" style={{ background: "var(--ibx-paper)" }}>
             <div className="max-w-[720px] mx-auto">
                 <div
                     className="overflow-hidden"
@@ -1232,9 +1170,9 @@ function UploadProgressCard({ file, pct, onCancel }: { file: File; pct: number; 
     const loaded = Math.round(file.size * p);
     const ext = (file.name.split(".").pop() || "").toUpperCase().slice(0, 4);
     return (
-        <div className="px-3 sm:px-5 py-3" style={{ borderTop: "1px solid #D9E2EC", background: "#FFFFFF" }}>
+        <div className="px-3 sm:px-5 py-3" style={{ borderTop: "1px solid var(--ibx-line)", background: "#FFFFFF" }}>
             <div className="max-w-[720px] mx-auto">
-                <div className="flex items-center gap-3 rounded-xl px-3 py-2.5" style={{ background: "#F4F7FB", border: "1px solid #D9E2EC" }}>
+                <div className="flex items-center gap-3 rounded-xl px-3 py-2.5" style={{ background: "var(--ibx-sunken)", border: "1px solid var(--ibx-line)" }}>
                     <div
                         className="shrink-0 h-9 w-9 rounded-lg flex items-center justify-center text-white font-bold"
                         style={{ background: fileTypeColor(file), fontSize: ext.length > 3 ? 8 : 9 }}
@@ -1259,7 +1197,7 @@ function UploadProgressCard({ file, pct, onCancel }: { file: File; pct: number; 
                             <span style={{ color: "#2563EB", fontWeight: 600 }}>Enviando {Math.round(p * 100)}%</span>
                             <span style={{ color: "#94A3B8" }}> · {fmtMB(loaded)} de {fmtMB(file.size)}</span>
                         </div>
-                        <div className="mt-1.5 h-1.5 rounded-full overflow-hidden" style={{ background: "#E2E8F0" }}>
+                        <div className="mt-1.5 h-1.5 rounded-full overflow-hidden" style={{ background: "var(--ibx-sunken)" }}>
                             <div
                                 className="h-full rounded-full transition-[width] duration-200 ease-out"
                                 style={{ width: `${p * 100}%`, background: "linear-gradient(90deg, #2563EB, #4A8CE8)" }}
@@ -1290,11 +1228,11 @@ function MediaPreviewBar({
     const sizeKb = media.file.size / 1024;
     const sizeLabel = sizeKb >= 1024 ? `${(sizeKb / 1024).toFixed(1)} MB` : `${Math.round(sizeKb)} KB`;
     return (
-        <div className="px-3 sm:px-5 py-3" style={{ borderTop: "1px solid #D9E2EC", background: "#FFFFFF" }}>
+        <div className="px-3 sm:px-5 py-3" style={{ borderTop: "1px solid var(--ibx-line)", background: "#FFFFFF" }}>
             <div className="max-w-[720px] mx-auto">
-                <div className="flex items-start gap-3 rounded-xl p-3" style={{ background: "#F4F7FB", border: "1px solid #D9E2EC" }}>
+                <div className="flex items-start gap-3 rounded-xl p-3" style={{ background: "var(--ibx-sunken)", border: "1px solid var(--ibx-line)" }}>
                     {/* Prévia */}
-                    <div className="shrink-0 rounded-lg overflow-hidden" style={{ width: 72, height: 72, background: "#E2E8F0" }}>
+                    <div className="shrink-0 rounded-lg overflow-hidden" style={{ width: 72, height: 72, background: "var(--ibx-sunken)" }}>
                         {media.kind === "image" ? (
                             <img src={media.previewUrl} alt={media.file.name} className="w-full h-full object-cover" />
                         ) : media.kind === "video" ? (
@@ -1323,7 +1261,7 @@ function MediaPreviewBar({
                             placeholder="Adicione uma legenda…"
                             autoFocus
                             className="w-full bg-white outline-none text-[13px] px-2.5 py-2 rounded-lg"
-                            style={{ color: "#0B1220", border: "1px solid #D9E2EC" }}
+                            style={{ color: "#0B1220", border: "1px solid var(--ibx-line)" }}
                         />
                     </div>
 
@@ -1345,7 +1283,7 @@ function MediaPreviewBar({
                             disabled={sending}
                             aria-label="Cancelar"
                             className="h-9 w-9 rounded-full flex items-center justify-center transition-colors hover:bg-white disabled:opacity-50"
-                            style={{ color: "#64748B", border: "1px solid #D9E2EC" }}
+                            style={{ color: "#64748B", border: "1px solid var(--ibx-line)" }}
                         >
                             <X className="h-4 w-4" />
                         </button>
@@ -1387,6 +1325,10 @@ function Composer({
 }: ComposerProps) {
     const { user, companyId } = useAuth();
     const [showTemplates, setShowTemplates] = useState(false);
+    // O atalho (Enter envia / Shift+Enter) é ruído permanente pra quem já sabe;
+    // só aparece quando o campo está focado. Renderiza sempre (reserva o espaço,
+    // sem pulo de layout) e faz fade pela opacidade.
+    const [focused, setFocused] = useState(false);
 
     // Auto-cresce com o conteúdo (digitado OU injetado pela "Usar resposta" da
     // EVA), até um teto (~128px). Sem isto, texto longo virava uma caixa de 1
@@ -1410,7 +1352,7 @@ function Composer({
         <div
             className="px-3 sm:px-5 py-3"
             style={{
-                borderTop: "1px solid #D9E2EC",
+                borderTop: "1px solid var(--ibx-line)",
                 background: "#FFFFFF",
             }}
         >
@@ -1428,8 +1370,8 @@ function Composer({
             <div
                 className="flex items-end gap-2 rounded-xl px-2 py-2"
                 style={{
-                    background: "#F4F7FB",
-                    border: "1px solid #D9E2EC",
+                    background: "var(--ibx-sunken)",
+                    border: "1px solid var(--ibx-line)",
                 }}
             >
                 <button
@@ -1460,6 +1402,8 @@ function Composer({
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
                     onKeyDown={onKeyDown}
+                    onFocus={() => setFocused(true)}
+                    onBlur={() => setFocused(false)}
                     placeholder="Responder como humano…"
                     rows={1}
                     className="flex-1 bg-transparent outline-none text-[13.5px] py-1.5 px-1 resize-none max-h-32"
@@ -1499,9 +1443,18 @@ function Composer({
                     )}
                 </button>
             </div>
-            <p className="text-[10px] mt-1.5 px-2" style={{ color: "#94A3B8" }}>
-                <kbd className="px-1 rounded" style={{ background: "#F1F5F9", border: "1px solid #E2E8F0" }}>Enter</kbd> envia ·{" "}
-                <kbd className="px-1 rounded" style={{ background: "#F1F5F9", border: "1px solid #E2E8F0" }}>Shift+Enter</kbd> nova linha
+            <p
+                className="text-[10px] mt-1.5 px-2 transition-opacity duration-200"
+                style={{
+                    color: "#94A3B8",
+                    opacity: focused ? 1 : 0,
+                    pointerEvents: focused ? "auto" : "none",
+                    transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
+                }}
+                aria-hidden={!focused}
+            >
+                <kbd className="px-1 rounded" style={{ background: "var(--ibx-sunken)", border: "1px solid var(--ibx-line)" }}>Enter</kbd> envia ·{" "}
+                <kbd className="px-1 rounded" style={{ background: "var(--ibx-sunken)", border: "1px solid var(--ibx-line)" }}>Shift+Enter</kbd> nova linha
             </p>
             </div>
         </div>

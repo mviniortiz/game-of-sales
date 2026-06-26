@@ -40,7 +40,9 @@ import {
     ThermometerSun,
     UserCog,
     Workflow,
+    X,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { EvaNode } from "@/components/landing/EvaNode";
 import { toast } from "sonner";
 import { EvaOrb } from "@/components/landing-v2/EvaOrb";
@@ -204,26 +206,49 @@ interface EvaPanelProps {
     /** Coloca a resposta sugerida no campo de digitação (assistido: humano revisa
      *  e envia). No mobile também fecha o bottom sheet. */
     onUseReply?: (text: string) => void;
+    /** Mobile (bottom sheet): fecha a sheet. Ausente no desktop (coluna fixa) —
+     *  aí não há X (a coluna não se fecha). */
+    onClose?: () => void;
 }
 
-export function EvaPanel({ chat, messages, onDealLinked, onSendReply, objective, onUseReply }: EvaPanelProps) {
-    if (!chat) return <EmptyPanel reason="no-chat" />;
+export function EvaPanel({ chat, messages, onDealLinked, onSendReply, objective, onUseReply, onClose }: EvaPanelProps) {
+    if (!chat) return <EmptyPanel reason="no-chat" onClose={onClose} />;
     // key={chat.id} — remonta por conversa pra não vazar estado local
     // (createOpen / localLinkedDealId) entre chats diferentes.
-    return <PanelContent key={chat.id} chat={chat} messages={messages} onDealLinked={onDealLinked} onSendReply={onSendReply} objective={objective} onUseReply={onUseReply} />;
+    return <PanelContent key={chat.id} chat={chat} messages={messages} onDealLinked={onDealLinked} onSendReply={onSendReply} objective={objective} onUseReply={onUseReply} onClose={onClose} />;
+}
+
+// Botão de fechar a sheet (só mobile). X discreto no canto; o grabber do Drawer
+// cobre o "arrastar", mas muita gente não descobre o gesto — o X é o explícito.
+function SheetCloseButton({ onClose, absolute }: { onClose: () => void; absolute?: boolean }) {
+    return (
+        <button
+            type="button"
+            onClick={onClose}
+            aria-label="Fechar análise da EVA"
+            className={cn(
+                "h-7 w-7 rounded-full flex items-center justify-center shrink-0 transition-colors",
+                absolute && "absolute top-3 right-3 z-10",
+            )}
+            style={{ background: "var(--ibx-sunken)", color: "#64748B" }}
+        >
+            <X className="h-4 w-4" />
+        </button>
+    );
 }
 
 // ─── Empty / loading / error states ─────────────────────────────────────────
 
-function EmptyPanel({ reason }: { reason: "no-chat" | "no-messages" }) {
+function EmptyPanel({ reason, onClose }: { reason: "no-chat" | "no-messages"; onClose?: () => void }) {
     const messageMap = {
         "no-chat": "Selecione uma conversa para a EVA analisar.",
         "no-messages":
             "Selecione uma conversa com mensagens para a EVA analisar.",
     };
     return (
-        <div className="flex-1 flex flex-col items-center justify-center px-5 text-center">
-            <EvaOrb variant="blue" state="idle" size={64} className="mb-4" showVoice={false} />
+        <div className="relative flex-1 flex flex-col items-center justify-center px-5 text-center">
+            {onClose && <SheetCloseButton onClose={onClose} absolute />}
+            <EvaOrb variant="blue" state="idle" size={60} showVoice={false} className="mb-4" />
             <p className="text-[13px] font-semibold mb-1" style={{ color: "#0B1220" }}>
                 Aguardando contexto
             </p>
@@ -240,7 +265,7 @@ function EmptyPanel({ reason }: { reason: "no-chat" | "no-messages" }) {
 function LoadingState({ message }: { message?: string }) {
     return (
         <div className="flex-1 flex flex-col items-center justify-center px-5 text-center">
-            <EvaOrb variant="blue" state="analyzing" size={72} className="mb-4" />
+            <EvaOrb variant="blue" state="analyzing" size={64} className="mb-4" />
             <p className="text-[13px] font-semibold mb-1" style={{ color: "#0B1220" }}>
                 {message || "EVA analisando conversa…"}
             </p>
@@ -332,6 +357,7 @@ function PanelContent({
     onSendReply,
     objective,
     onUseReply,
+    onClose,
 }: {
     chat: Chat;
     messages: MessageLine[];
@@ -339,6 +365,7 @@ function PanelContent({
     onSendReply?: (text: string) => Promise<void>;
     objective?: string;
     onUseReply?: (text: string) => void;
+    onClose?: () => void;
 }) {
     const navigate = useNavigate();
     const chatPhone = chat.phone || chat.id;
@@ -593,7 +620,7 @@ function PanelContent({
             />
         ) : null;
 
-    if (messages.length === 0) return <EmptyPanel reason="no-messages" />;
+    if (messages.length === 0) return <EmptyPanel reason="no-messages" onClose={onClose} />;
 
     const headerSubtitle = insight.analyzing
         ? "Analisando…"
@@ -622,7 +649,7 @@ function PanelContent({
             <div
                 className="px-5 py-3.5 flex items-center gap-3 shrink-0"
                 style={{
-                    borderBottom: "1px solid #D9E2EC",
+                    borderBottom: "1px solid var(--ibx-line)",
                     background: "#FFFFFF",
                 }}
             >
@@ -704,6 +731,8 @@ function PanelContent({
                     <EvaNode size={10} color="#6D28D9" />
                     Assistida
                 </span>
+                {/* Mobile: fecha a bottom sheet (no desktop a coluna é fixa, sem X). */}
+                {onClose && <SheetCloseButton onClose={onClose} />}
             </div>
 
             {/* V1.1.2 — banner: 3 estados a partir da fonte de verdade única */}
@@ -739,7 +768,7 @@ function PanelContent({
 
             {/* Conteúdo — LP-INBOX.1: fundo levemente rebaixado pra dar
                 profundidade ao cartão-herói; ritmo vertical mais curto. */}
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4" style={{ background: "#F8FAFD" }}>
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4" style={{ background: "var(--ibx-paper)" }}>
                 {/* Loading inicial do SELECT (sem custo de IA) */}
                 {insight.loading && !insight.hasAnalysis && (
                     <LoadingState message="Buscando análise salva…" />
@@ -862,7 +891,7 @@ function DealLinkBanner({
         return (
             <div
                 className="px-4 py-2 shrink-0 flex items-center gap-2"
-                style={{ borderBottom: "1px solid #E5EAF1", background: "#FFFFFF" }}
+                style={{ borderBottom: "1px solid var(--ibx-line-soft)", background: "#FFFFFF" }}
             >
                 <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: "#10B981" }} />
                 <p className="text-[11.5px] font-semibold flex-1 min-w-0 truncate" style={{ color: "#0B1220" }}>
@@ -886,7 +915,7 @@ function DealLinkBanner({
         return (
             <div
                 className="px-4 py-2 shrink-0 flex items-center gap-2 flex-wrap"
-                style={{ borderBottom: "1px solid #E5EAF1", background: "rgba(245,158,11,0.05)" }}
+                style={{ borderBottom: "1px solid var(--ibx-line-soft)", background: "rgba(245,158,11,0.05)" }}
             >
                 <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: "#F59E0B" }} />
                 <p
@@ -924,7 +953,7 @@ function DealLinkBanner({
     return (
         <div
             className="px-4 py-2 shrink-0 flex items-center gap-2 flex-wrap"
-            style={{ borderBottom: "1px solid #E5EAF1", background: "#FFFFFF" }}
+            style={{ borderBottom: "1px solid var(--ibx-line-soft)", background: "#FFFFFF" }}
         >
             <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: "#CBD5E1" }} />
             <p className="text-[11.5px] font-semibold flex-1 min-w-0 truncate" style={{ color: "#64748B" }}>
@@ -987,7 +1016,7 @@ function formatResetAt(iso: string | null): string | null {
 function NoAnalysisState({ onAnalyze }: { onAnalyze: () => void }) {
     return (
         <div className="flex flex-col items-center justify-center text-center py-8 px-2">
-            <EvaOrb variant="blue" state="idle" size={72} className="mb-4" showVoice={false} />
+            <EvaOrb variant="blue" state="idle" size={64} showVoice={false} className="mb-4" />
             <p className="text-[13.5px] font-semibold mb-2" style={{ color: "#0B1220" }}>
                 A EVA ainda não analisou esta conversa.
             </p>
@@ -1172,7 +1201,7 @@ function RealContent({
                     className="rounded-xl overflow-hidden vz-eva-hero"
                     style={{
                         background: "#FFFFFF",
-                        border: "1px solid #D9E2EC",
+                        border: "1px solid var(--ibx-line)",
                         boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 12px 32px -16px rgba(37,99,235,0.18)",
                     }}
                 >
@@ -1304,7 +1333,7 @@ function DossierCard({ children }: { children: React.ReactNode }) {
             className="rounded-xl px-4 transition-shadow duration-200"
             style={{
                 background: "#FFFFFF",
-                border: "1px solid #E5EAF1",
+                border: "1px solid var(--ibx-line-soft)",
                 boxShadow: "0 1px 2px rgba(15,23,42,0.03)",
             }}
         >
@@ -1329,7 +1358,7 @@ function DossierRow({
     const [open, setOpen] = useState(defaultOpen);
     const reduce = useReducedMotion();
     return (
-        <div className="border-b last:border-b-0" style={{ borderColor: "#EEF2F6" }}>
+        <div className="border-b last:border-b-0" style={{ borderColor: "var(--ibx-line-soft)" }}>
             <button
                 type="button"
                 onClick={() => setOpen((o) => !o)}
@@ -1455,7 +1484,7 @@ function QuickDiagnosis({ qualification }: { qualification: Qualification }) {
             className="rounded-xl px-3.5 py-3"
             style={{
                 background: "#FFFFFF",
-                border: "1px solid #D9E2EC",
+                border: "1px solid var(--ibx-line)",
                 boxShadow: "0 1px 2px rgba(15,23,42,0.03)",
             }}
         >
@@ -1971,8 +2000,8 @@ function KnowledgeGapsList({ gaps }: { gaps: KnowledgeGap[] }) {
                         key={i}
                         className="rounded-lg px-3 py-2.5"
                         style={{
-                            background: "#F8FAFC",
-                            border: "1px solid #E2E8F0",
+                            background: "var(--ibx-sunken)",
+                            border: "1px solid var(--ibx-line)",
                         }}
                     >
                         <div className="flex items-center gap-1.5 mb-1">
@@ -2095,7 +2124,7 @@ function CrmBlock({
         return (
             <div
                 className="rounded-lg px-3 py-4 flex items-center justify-center"
-                style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }}
+                style={{ background: "var(--ibx-sunken)", border: "1px solid var(--ibx-line)" }}
             >
                 <Loader2 className="h-3.5 w-3.5 animate-spin" style={{ color: "#94A3B8" }} />
             </div>
@@ -2107,7 +2136,7 @@ function CrmBlock({
         return (
             <div
                 className="rounded-lg px-3 py-4 text-center"
-                style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }}
+                style={{ background: "var(--ibx-sunken)", border: "1px solid var(--ibx-line)" }}
             >
                 <Workflow className="h-5 w-5 mx-auto mb-1.5" style={{ color: "#94A3B8" }} />
                 <p className="text-[12px]" style={{ color: "#0B1220", fontWeight: 600 }}>
@@ -2145,7 +2174,7 @@ function CrmBlock({
         return (
             <div
                 className="rounded-lg px-3 py-3"
-                style={{ background: "#FFFFFF", border: "1px solid #D9E2EC", boxShadow: "0 1px 2px rgba(15,23,42,0.03)" }}
+                style={{ background: "#FFFFFF", border: "1px solid var(--ibx-line)", boxShadow: "0 1px 2px rgba(15,23,42,0.03)" }}
             >
                 <p className="text-[12px] font-semibold" style={{ color: noteColor }}>
                     {noteText}
@@ -2186,7 +2215,7 @@ function CrmBlock({
             className="rounded-lg px-3 py-3"
             style={{
                 background: "#FFFFFF",
-                border: "1px solid #D9E2EC",
+                border: "1px solid var(--ibx-line)",
                 boxShadow: "0 1px 2px rgba(15,23,42,0.03)",
             }}
         >
