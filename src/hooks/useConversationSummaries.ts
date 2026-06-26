@@ -15,11 +15,38 @@ export interface ConversationSignal {
     score: number | null;
     confianca: number | null;
     analyzedAt: string | null;
+    // Campos do `qualification` que justificam a etiqueta-motivo (ver buildReason).
+    objecao: string | null;
+    scoreJustificativa: string | null;
+    proximaAcao: string | null;
 }
 
 /** Normaliza pro formato dos chats do Evolution ("+5511…" → "5511…"). */
 export function normalizePhone(phone?: string | null): string {
     return (phone ?? "").replace(/\D/g, "");
+}
+
+// Próximas-ações que viram etiqueta curta de valor (o resto cai pra justificativa).
+const PROXIMA_ACAO_LABEL: Record<string, string> = {
+    criar_oportunidade: "pronto pra avançar",
+    marcar_demo: "quer agendar",
+    qualificar: "falta qualificar",
+};
+
+/**
+ * Deriva a etiqueta-motivo da lista priorizada a partir dos campos que a EVA já
+ * grava — sem campo novo, sem migration. Do mais específico ao mais genérico:
+ * objeção detectada → ação de valor → justificativa do score → próxima ação →
+ * sentimento. Retorna undefined quando não há nada honesto a dizer.
+ */
+export function buildReason(s: ConversationSignal): string | undefined {
+    const clip = (t: string) => (t.length > 56 ? `${t.slice(0, 55)}…` : t);
+    if (s.objecao && s.objecao.trim()) return clip(`objeção: ${s.objecao.trim()}`);
+    if (s.proximaAcao && PROXIMA_ACAO_LABEL[s.proximaAcao]) return PROXIMA_ACAO_LABEL[s.proximaAcao];
+    if (s.scoreJustificativa && s.scoreJustificativa.trim()) return clip(s.scoreJustificativa.trim());
+    if (s.nextAction && s.nextAction.trim()) return clip(s.nextAction.trim());
+    if (s.sentiment && s.sentiment.trim()) return clip(s.sentiment.trim());
+    return undefined;
 }
 
 export function useConversationSummaries() {
@@ -50,6 +77,9 @@ export function useConversationSummaries() {
                     score: typeof qual.score_sugerido === "number" ? qual.score_sugerido : null,
                     confianca: typeof qual.confianca === "number" ? qual.confianca : null,
                     analyzedAt: (row.analyzed_at as string) ?? null,
+                    objecao: typeof qual.objecao === "string" ? qual.objecao : null,
+                    scoreJustificativa: typeof qual.score_justificativa === "string" ? qual.score_justificativa : null,
+                    proximaAcao: typeof qual.proxima_acao === "string" ? qual.proxima_acao : null,
                 };
             }
             return byPhone;
