@@ -5,6 +5,18 @@ import { useEffect, useId, useRef } from "react";
 // feDisplacementMap) cujos parâmetros são animados via requestAnimationFrame
 // (SMIL não re-renderiza img+CSS-filter de forma confiável). A imagem ondula/
 // flui sem zoom e sem mover o painel. prefers-reduced-motion: estático.
+//
+// iOS-SAFE (2026-06-26): o Safari do iOS mata a aba ("webpage crashed") com
+// filtro SVG animado (feTurbulence/feDisplacementMap re-renderizado todo frame),
+// ainda mais em tela de alto DPI (ex.: iPhone 16 Pro) e com várias instâncias na
+// landing. No iOS renderizamos o mesh ESTÁTICO sem filtro — mesmo visual (a
+// esfera gradiente), sem a ondulação, sem crash. Desktop/Android seguem animados.
+const IS_IOS =
+    typeof navigator !== "undefined" &&
+    (/iP(hone|ad|od)/.test(navigator.userAgent) ||
+        // iPadOS 13+ se reporta como MacIntel com touch
+        (navigator.platform === "MacIntel" && (navigator.maxTouchPoints ?? 0) > 1));
+
 interface AnimatedMeshAssetProps {
     src: string;
     className?: string;
@@ -18,6 +30,7 @@ export const AnimatedMeshAsset = ({ src, className = "" }: AnimatedMeshAssetProp
     const dispRef = useRef<SVGFEDisplacementMapElement>(null);
 
     useEffect(() => {
+        if (IS_IOS) return; // iOS: sem filtro animado (evita crash do Safari)
         const reduced =
             typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
         if (reduced) return;
@@ -36,6 +49,16 @@ export const AnimatedMeshAsset = ({ src, className = "" }: AnimatedMeshAssetProp
         raf = requestAnimationFrame(loop);
         return () => cancelAnimationFrame(raf);
     }, []);
+
+    // iOS: mesh estático, SEM o filtro SVG (a fonte do crash). Mesmo enquadramento
+    // (o CSS .vz-mesh-asset img já faz object-fit/scale), só não ondula.
+    if (IS_IOS) {
+        return (
+            <div className={`vz-mesh-asset ${className}`.trim()} aria-hidden="true">
+                <img src={src} alt="" />
+            </div>
+        );
+    }
 
     return (
         <div className={`vz-mesh-asset ${className}`.trim()} aria-hidden="true">
