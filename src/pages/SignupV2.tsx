@@ -126,6 +126,16 @@ const SignupV2 = () => {
     const busy = loading || authLoading;
     const planNice = PLAN_LABEL[plan] || "Plus";
 
+    // Enquanto a auth resolve (ex.: retorno do OAuth Google), não mostra o
+    // formulário de email — evita o flash do form errado antes do ssoMode ligar.
+    if (authLoading) {
+        return (
+            <div className="lp-v2" style={{ minHeight: "100vh", backgroundColor: "#07080A", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <span style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.95rem" }}>Carregando…</span>
+            </div>
+        );
+    }
+
     return (
         <div className="lp-v2" style={{ minHeight: "100vh", backgroundColor: "#07080A", color: "#fff" }}>
             <div className="grid min-h-screen lg:grid-cols-[0.88fr_1.12fr]">

@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
-import { Search, MessageCircle, Users, Loader2, RefreshCw, Wifi, WifiOff, QrCode, AlertCircle } from "lucide-react";
+import { Search, MessageCircle, Users, RefreshCw } from "lucide-react";
 import { InboxListSkeleton } from "@/components/ui/skeletons";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useProfilePic } from "@/hooks/useProfilePic";
+import { ConnectionStatusCard } from "./ConnectionStatusCard";
 import type { Chat } from "@/hooks/useEvolutionAPI";
 import type { InboxConnectionStatus } from "@/hooks/useInboxConnectionStatus";
 
@@ -265,159 +266,6 @@ export function InboxList({
                         ))}
                     </ul>
                 )}
-            </div>
-        </div>
-    );
-}
-
-// ─── F4W.7.1 — Card de status da conexão WhatsApp ─────────────────────────
-
-function ConnectionStatusCard({
-    status,
-    onConnectClick,
-    onSyncHistory,
-    historySyncing,
-    adminScopeLabel,
-    onResyncWebhook,
-    onDisconnect,
-    resyncing,
-    disconnecting,
-}: {
-    status: InboxConnectionStatus;
-    onConnectClick?: () => void;
-    onSyncHistory?: () => void;
-    historySyncing?: boolean;
-    adminScopeLabel?: string;
-    onResyncWebhook?: () => void;
-    onDisconnect?: () => void;
-    resyncing?: boolean;
-    disconnecting?: boolean;
-}) {
-    const showSync = status.status === "connected" && status.provider === "evolution" && !!onSyncHistory;
-    const tone =
-        status.status === "connected"
-            ? { bg: "rgba(16,185,129,0.08)", border: "rgba(16,185,129,0.22)", dot: "#10B981", text: "#047857", Icon: Wifi }
-            : status.status === "pending"
-            ? { bg: "rgba(245,158,11,0.08)", border: "rgba(245,158,11,0.24)", dot: "#F59E0B", text: "#B45309", Icon: QrCode }
-            : status.status === "unknown"
-            ? { bg: "rgba(148,163,184,0.12)", border: "rgba(148,163,184,0.28)", dot: "#94A3B8", text: "#64748B", Icon: AlertCircle }
-            : { bg: "rgba(148,163,184,0.12)", border: "rgba(148,163,184,0.28)", dot: "#94A3B8", text: "#64748B", Icon: WifiOff };
-
-    const agoStr = status.lastUpdatedAt ? formatTimeAgo(status.lastUpdatedAt.toISOString()) : null;
-
-    let subtitle: string;
-    if (status.status === "connected") {
-        subtitle = agoStr ? `Histórico salvo · atualizado ${agoStr}` : "Histórico salvo.";
-    } else if (status.status === "pending") {
-        subtitle = "Leia o QR Code para conectar.";
-    } else if (status.status === "unknown") {
-        subtitle = "Atualize ou verifique a conexão.";
-    } else {
-        subtitle = status.isHistoryOnly
-            ? "Você está vendo apenas o histórico salvo."
-            : "Conecte o WhatsApp para começar.";
-    }
-
-    const showCta = status.canConnect || status.canReconnect;
-    const ctaLabel = status.canReconnect ? "Reconectar" : "Conectar WhatsApp";
-    const Icon = tone.Icon;
-
-    return (
-        <div
-            className="rounded-lg px-3 py-2.5 mb-2"
-            style={{ background: tone.bg, border: `1px solid ${tone.border}` }}
-        >
-            <div className="flex items-start gap-2">
-                <Icon className="h-3.5 w-3.5 mt-0.5 shrink-0" style={{ color: tone.text }} />
-                <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                        <span
-                            className={cn("h-1.5 w-1.5 rounded-full shrink-0", status.status === "connected" && "animate-pulse")}
-                            style={{ background: tone.dot }}
-                        />
-                        <span className="text-[12px] font-semibold truncate" style={{ color: "#0B1220" }}>
-                            {status.connectionLabel}
-                        </span>
-                    </div>
-                    {status.displayPhone && status.status === "connected" && (
-                        <p className="text-[11px] tabular-nums mt-0.5" style={{ color: "#475569" }}>
-                            {status.displayPhone}
-                        </p>
-                    )}
-                    <p className="text-[10.5px] mt-0.5 leading-snug" style={{ color: "#64748B" }}>
-                        {subtitle}
-                    </p>
-                    {showCta && onConnectClick && (
-                        <button
-                            type="button"
-                            onClick={onConnectClick}
-                            className="inline-flex items-center h-7 px-2.5 mt-2 rounded-md text-[11px] font-semibold text-white transition-all hover:brightness-110"
-                            style={{ background: "linear-gradient(135deg, #2563EB, #4A8CE8)" }}
-                        >
-                            {ctaLabel}
-                        </button>
-                    )}
-                    {showSync && (
-                        <div className="mt-2">
-                            <button
-                                type="button"
-                                onClick={onSyncHistory}
-                                disabled={historySyncing}
-                                className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[11px] font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                                style={{ background: "rgba(37,99,235,0.08)", color: "#1D4ED8", border: "1px solid rgba(37,99,235,0.20)" }}
-                            >
-                                {historySyncing ? (
-                                    <>
-                                        <Loader2 className="h-3 w-3 animate-spin" />
-                                        Sincronizando histórico…
-                                    </>
-                                ) : (
-                                    <>
-                                        <RefreshCw className="h-3 w-3" />
-                                        Sincronizar histórico
-                                    </>
-                                )}
-                            </button>
-                            <p className="text-[10px] mt-1.5 leading-snug" style={{ color: "#94A3B8" }}>
-                                A Inbox usa histórico salvo. Sincronize para importar conversas recentes do WhatsApp.
-                            </p>
-                        </div>
-                    )}
-                    {status.status === "connected" && (onResyncWebhook || onDisconnect) && (
-                        <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                            {onResyncWebhook && (
-                                <button
-                                    type="button"
-                                    onClick={onResyncWebhook}
-                                    disabled={resyncing}
-                                    title="Re-aplica a configuração do webhook (ativa os checks de entrega/leitura sem reconectar)"
-                                    className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[11px] font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                                    style={{ background: "rgba(37,99,235,0.06)", color: "#1D4ED8", border: "1px solid rgba(37,99,235,0.18)" }}
-                                >
-                                    {resyncing ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-                                    Re-sincronizar webhook
-                                </button>
-                            )}
-                            {onDisconnect && (
-                                <button
-                                    type="button"
-                                    onClick={onDisconnect}
-                                    disabled={disconnecting}
-                                    className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[11px] font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                                    style={{ background: "rgba(244,63,94,0.06)", color: "#BE123C", border: "1px solid rgba(244,63,94,0.20)" }}
-                                >
-                                    {disconnecting ? <Loader2 className="h-3 w-3 animate-spin" /> : <WifiOff className="h-3 w-3" />}
-                                    Desconectar
-                                </button>
-                            )}
-                        </div>
-                    )}
-                    {adminScopeLabel && (
-                        <p className="text-[10px] mt-1.5" style={{ color: "#94A3B8" }}>
-                            {adminScopeLabel}
-                        </p>
-                    )}
-                </div>
             </div>
         </div>
     );

@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setCompanyId(null);
   };
 
-  const loadProfile = async (userId: string): Promise<"ok" | "missing" | "invalid" | "error"> => {
+  const loadProfile = async (userId: string): Promise<"ok" | "missing" | "needs_onboarding" | "error"> => {
     try {
       const { data, error } = await supabase
         .from("profiles")
@@ -64,17 +64,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return "missing";
       }
 
-      // Regular users must be linked to a company. Super admins can operate without
-      // a default company because TenantContext can select one later.
-      if (!data.is_super_admin && !data.company_id) {
-        console.warn("[AuthContext] Profile is missing company_id for non-super-admin user:", userId);
-        clearProfileState();
-        return "invalid";
-      }
-
+      // Profile exists — reflect it in state even when there's still no company.
       setProfile(data);
       setIsSuperAdmin(data.is_super_admin || false);
       setCompanyId(data.company_id);
+
+      // A regular user without a company is MID-ONBOARDING, not invalid. This is
+      // the expected state right after Google/SSO sign-in: handle_new_user creates
+      // the profile with company_id = NULL by design. Keep the user authenticated
+      // (do NOT sign them out) so /criar-conta (ssoMode) and ProtectedRoute can
+      // route them to finish setup (name the agency → onboarding_assign_company).
+      if (!data.is_super_admin && !data.company_id) {
+        console.warn("[AuthContext] User needs onboarding (no company yet):", userId);
+        return "needs_onboarding";
+      }
+
       return "ok";
     } catch (error) {
       console.error("Error loading profile:", error);
@@ -203,7 +207,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             ]).then(async ([, profileStatus]) => {
               if (!mounted) return;
 
-              if (profileStatus === "missing" || profileStatus === "invalid") {
+              // Only a TRULY corrupted account (no profile row at all) gets signed
+              // out. "needs_onboarding" (authenticated, no company yet) is a valid
+              // pending state — ProtectedRoute/ssoMode route the user to finish.
+              if (profileStatus === "missing") {
                 await forceSignOutForInvalidAccount(profileStatus);
               }
 

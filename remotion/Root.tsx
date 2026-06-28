@@ -36,6 +36,11 @@ import {
     FounderHeroBlock,
     FounderHeroViolet,
 } from "./scenes/igCarousel/FounderHeroVariants";
+import { EvaLightHero } from "./scenes/light/EvaLightHero";
+import { HookCine } from "./scenes/light/HookCine";
+import { FilmLight, FILM_TOTAL } from "./scenes/light/FilmLight";
+import { OpeningLight } from "./scenes/light/OpeningLight";
+import { AgentesFilm, AGENTES_TOTAL } from "./scenes/light/AgentesFilm";
 
 const ASPECTS = [
     { key: "4x5", label: "4x5", w: 1080, h: 1350 },
@@ -92,6 +97,56 @@ const VyzonDemo = () => {
 export const RemotionRoot: React.FC = () => {
     return (
         <>
+            {/* EVA Light Hero — novo padrão LIGHT (tokens da marca) */}
+            <Composition
+                id="EvaLightHero"
+                component={withV2Fonts(EvaLightHero)}
+                durationInFrames={210}
+                fps={30}
+                width={1080}
+                height={1920}
+            />
+
+            {/* Abertura CINEMÁTICA (redesign ousado: 3D/glass + câmera + ritmo) */}
+            <Composition
+                id="HookCine"
+                component={withV2Fonts(HookCine)}
+                durationInFrames={400}
+                fps={30}
+                width={1080}
+                height={1920}
+            />
+
+            {/* Abertura — orbe + word-swap dissolve */}
+            <Composition
+                id="OpeningLight"
+                component={withV2Fonts(OpeningLight)}
+                durationInFrames={100}
+                fps={30}
+                width={1080}
+                height={1920}
+            />
+
+            {/* Filme dos AGENTES — orbe expande + raciocínio (texto branco + Phosphor) */}
+            <Composition
+                id="AgentesFilm"
+                component={withV2Fonts(AgentesFilm)}
+                durationInFrames={AGENTES_TOTAL}
+                fps={30}
+                width={1080}
+                height={1920}
+            />
+
+            {/* Filme completo LIGHT — legendas + motion + transições + música */}
+            <Composition
+                id="FilmLight"
+                component={withV2Fonts(FilmLight)}
+                durationInFrames={FILM_TOTAL}
+                fps={30}
+                width={1080}
+                height={1920}
+            />
+
             {/* Full Demo Video - ~20 seconds */}
             <Composition
                 id="VyzonDemo"

@@ -38,9 +38,17 @@ const InboxListPreview = lazy(() => import("./pages/InboxListPreview"));
 
 // Página temporária de validação do novo EVA Studio, frente a frente (remover após integrar).
 const EvaStudioPreview = lazy(() => import("./pages/EvaStudioPreview"));
+
+// Preview do redesign da Central de Comando (COMMAND.UI.2). Dados SAMPLE; trocar
+// pelos reais e mover pro /inicio quando aprovado. Remover depois de integrar.
+const CentralPreview = lazy(() => import("./pages/CentralPreview"));
 const EvaNudgePreview = lazy(() => import("./pages/EvaNudgePreview"));
 const EvaSuggestionPreview = lazy(() => import("./pages/EvaSuggestionPreview"));
 const UpgradeLockPreview = lazy(() => import("./pages/admin/UpgradeLock"));
+// Páginas de DEMO animada (vertical) pra gravar tela / mandar pras agências.
+const DemoConversa = lazy(() => import("./pages/DemoConversa"));
+const DemoPipeline = lazy(() => import("./pages/DemoPipeline"));
+const DemoLancamento = lazy(() => import("./pages/DemoLancamento"));
 
 const LazyFallback = () => <BrandedLoader />;
 
@@ -99,6 +107,14 @@ const App = () => (
           }
         />
         <Route
+          path="/central-preview"
+          element={
+            <Suspense fallback={<LazyFallback />}>
+              <CentralPreview />
+            </Suspense>
+          }
+        />
+        <Route
           path="/eva-nudge-preview"
           element={
             <Suspense fallback={<LazyFallback />}>
@@ -119,6 +135,30 @@ const App = () => (
           element={
             <Suspense fallback={<LazyFallback />}>
               <UpgradeLockPreview />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/demo/conversa"
+          element={
+            <Suspense fallback={<LazyFallback />}>
+              <DemoConversa />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/demo/pipeline"
+          element={
+            <Suspense fallback={<LazyFallback />}>
+              <DemoPipeline />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/demo/lancamento"
+          element={
+            <Suspense fallback={<LazyFallback />}>
+              <DemoLancamento />
             </Suspense>
           }
         />
