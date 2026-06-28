@@ -151,6 +151,10 @@ export function EvaHelpDock() {
         { label: "Como conecto o WhatsApp?", q: "Como eu conecto o meu WhatsApp no Vyzon?" },
     ];
 
+    // No /inicio a EVA comercial já é a entrada (rail/bottom-sheet) — esconde a orb
+    // de ajuda aqui pra não ter dois "Perguntar à EVA" (sobretudo no mobile).
+    if (/^\/(inicio|dashboard)/.test(location.pathname)) return null;
+
     return (
         <div className="fixed z-[60] right-4 bottom-[88px] sm:right-6 sm:bottom-6 print:hidden">
             <AnimatePresence mode="wait">
