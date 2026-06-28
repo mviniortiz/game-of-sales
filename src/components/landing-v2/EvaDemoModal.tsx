@@ -4,6 +4,7 @@ import { DemoIntakeStep } from "./DemoIntakeStep";
 import { DemoPreparingStep } from "./DemoPreparingStep";
 import { DemoSummaryStep } from "./DemoSummaryStep";
 import { DemoLiveStage } from "./DemoLiveStage";
+import { DemoBooking } from "./DemoBooking";
 
 // LP.8 (v2) — modal da demo da EVA. Fluxo: intake (email + site) → preparando →
 // TOUR AO VIVO (iframe do app real, /embed-demo, a EVA navega Central → Pipeline
@@ -15,7 +16,7 @@ interface EvaDemoModalProps {
     onCTAClick: () => void;
 }
 
-type Step = "intake" | "preparing" | "tour" | "summary";
+type Step = "intake" | "preparing" | "tour" | "booking" | "summary";
 
 export const EvaDemoModal = ({ open, onClose, onCTAClick }: EvaDemoModalProps) => {
     const [step, setStep] = useState<Step>("intake");
@@ -62,7 +63,7 @@ export const EvaDemoModal = ({ open, onClose, onCTAClick }: EvaDemoModalProps) =
 
     if (!open) return null;
 
-    const isTour = step === "tour";
+    const isTour = step === "tour" || step === "booking";
 
     return createPortal(
         <div className="lp-v2">
@@ -90,7 +91,12 @@ export const EvaDemoModal = ({ open, onClose, onCTAClick }: EvaDemoModalProps) =
                             <DemoIntakeStep email={email} site={site} heardFrom={heardFrom} setEmail={setEmail} setSite={setSite} setHeardFrom={setHeardFrom} onStart={() => setStep("preparing")} />
                         )}
                         {step === "preparing" && <DemoPreparingStep />}
-                        {step === "tour" && <DemoLiveStage onDone={() => setStep("summary")} site={site} />}
+                        {step === "tour" && <DemoLiveStage onDone={() => setStep("summary")} onTourEnd={() => setStep("booking")} site={site} />}
+                        {step === "booking" && (
+                            <div className="relative flex-1">
+                                <DemoBooking email={email} site={site} onDone={() => setStep("summary")} />
+                            </div>
+                        )}
                         {step === "summary" && <DemoSummaryStep onSchedule={onCTAClick} onRestart={() => setStep("tour")} />}
                     </div>
                 </div>

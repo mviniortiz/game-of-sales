@@ -17,20 +17,12 @@ interface DemoIntakeStepProps {
 
 const HEARD_OPTIONS = ["Google", "Instagram", "LinkedIn", "Indicação", "YouTube", "Outro"];
 
-// provedores de e-mail pessoal mais comuns no BR — bloqueados (queremos corporativo)
-const PERSONAL_EMAIL_DOMAINS = new Set([
-    "gmail.com", "googlemail.com", "hotmail.com", "hotmail.com.br", "outlook.com", "outlook.com.br",
-    "live.com", "msn.com", "yahoo.com", "yahoo.com.br", "ymail.com", "icloud.com", "me.com",
-    "aol.com", "proton.me", "protonmail.com", "bol.com.br", "uol.com.br", "terra.com.br",
-    "ig.com.br", "globo.com", "globomail.com", "r7.com", "zipmail.com.br",
-]);
-
+// Aceita e-mail pessoal (gmail etc.) — muitos donos de agência usam. Menos
+// fricção = mais demos. Só valida o formato básico, sem bloquear.
 function emailError(e: string): string {
     const v = e.trim().toLowerCase();
     if (!v) return "";
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return "Digite um e-mail válido.";
-    const domain = v.split("@")[1] || "";
-    if (PERSONAL_EMAIL_DOMAINS.has(domain)) return "Use o e-mail corporativo da sua agência, não um e-mail pessoal.";
     return "";
 }
 
@@ -49,7 +41,9 @@ export const DemoIntakeStep = ({ email, site, heardFrom, setEmail, setSite, setH
     const [siteTouched, setSiteTouched] = useState(false);
     const eErr = emailError(email);
     const sErr = siteError(site);
-    const ready = !!email.trim() && !!site.trim() && !eErr && !sErr;
+    // Site é OPCIONAL e não bloqueia (só mostra dica se digitado errado). Pra
+    // iniciar basta um e-mail com formato válido — fricção mínima.
+    const ready = !!email.trim() && !eErr;
     const showErr = (touched: boolean, err: string) => touched && !!err;
     return (
         <div className="vz-modal-step grid flex-1 lg:grid-cols-[1.1fr_0.9fr]">
@@ -71,7 +65,7 @@ export const DemoIntakeStep = ({ email, site, heardFrom, setEmail, setSite, setH
                         <input
                             type="email"
                             className="vz-input-light w-full"
-                            placeholder="Seu e-mail corporativo"
+                            placeholder="Seu melhor e-mail"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             onBlur={() => setEmailTouched(true)}
@@ -86,7 +80,7 @@ export const DemoIntakeStep = ({ email, site, heardFrom, setEmail, setSite, setH
                     <div>
                         <input
                             className="vz-input-light w-full"
-                            placeholder="Site da sua agência (ex: suaagencia.com)"
+                            placeholder="Site da sua agência (opcional)"
                             value={site}
                             onChange={(e) => setSite(e.target.value)}
                             onBlur={() => setSiteTouched(true)}

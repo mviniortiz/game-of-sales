@@ -20,6 +20,9 @@ import { trackBehavior, claritySet, DEMO_EVENTS } from "@/lib/analytics";
 interface DemoLiveStageProps {
     onDone: () => void;
     site: string;
+    // Quando o tour CONCLUI naturalmente, o pai assume (ex.: abrir o booking).
+    // Se não vier, cai na conversa livre (fallback antigo).
+    onTourEnd?: () => void;
 }
 
 // Ordem do tour: EVA Studio logo após o detalhe do lead (destaque), Metas e
@@ -163,7 +166,7 @@ const CtrlBtn = ({ onClick, label, active, danger, disabled, children }: {
     </button>
 );
 
-export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
+export const DemoLiveStage = ({ onDone, site, onTourEnd }: DemoLiveStageProps) => {
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const [active, setActive] = useState("inicio");
     const [appReady, setAppReady] = useState(false);
@@ -294,7 +297,7 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
     const startStep = (i: number) => {
         clearStepWatch();
         clearSpeakTimer();
-        if (i < 0 || i >= SCREEN_ORDER.length) { tourIdxRef.current = -2; enterFreeChat(); return; }
+        if (i < 0 || i >= SCREEN_ORDER.length) { finishTour(); return; }
         if (nudgedStepRef.current >= i) return;  // este passo já foi iniciado (anti-repetição)
         nudgedStepRef.current = i;
         tourIdxRef.current = i;
@@ -367,6 +370,16 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
         } else {
             openFreeChatTurn();
         }
+    };
+
+    // FIM DO TOUR: se o pai quer assumir (ex.: abrir o booking), entrega pra ele
+    // e desconecta a voz; senão cai na conversa livre (fallback antigo).
+    const finishTour = () => {
+        tourIdxRef.current = -2;
+        clearStepWatch();
+        clearSpeakTimer();
+        if (onTourEnd) { try { live.disconnect(); } catch { /* noop */ } onTourEnd(); }
+        else enterFreeChat();
     };
 
     // agendamento conduzido pela EVA (substitui a alucinação do "enviei o link")
@@ -541,7 +554,7 @@ export const DemoLiveStage = ({ onDone, site }: DemoLiveStageProps) => {
 
     const activeIdx = Math.max(0, SCREEN_ORDER.indexOf(active));
     const manual = live.status === "error" || (appReady && live.status === "idle");
-    const goManual = (i: number) => { if (i >= SCREEN_ORDER.length) endCall(); else { nudgedStepRef.current = i - 1; startStep(i); } };
+    const goManual = (i: number) => { if (i >= SCREEN_ORDER.length) finishTour(); else { nudgedStepRef.current = i - 1; startStep(i); } };
     const toggleMute = () => { primeEvaAudio(); const m = !muted; setMuted(m); live.setMuted(m); };
     const toggleMic = () => { primeEvaAudio(); live.setMicEnabled(!live.micOn); };
     const endCall = () => { tourIdxRef.current = -2; awaitingResumeRef.current = false; live.disconnect(); onDone(); };
