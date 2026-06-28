@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
 import { usePlan } from "@/hooks/usePlan";
+import { CONTACT, whatsappUrl } from "@/config/contact";
 
 interface DealResult {
     id: string;
@@ -44,7 +45,7 @@ const NAV_ITEMS = [
     { label: "Gestão", path: "/admin", icon: Shield, sub: "Usuários, permissões e configurações do time", keywords: "admin time equipe", adminOnly: true },
     { label: "Configurações", path: "/configuracoes", icon: Settings, sub: "Integrações, faturamento, preferências", keywords: "settings perfil integracoes" },
     { label: "Minha conta", path: "/configuracoes/perfil", icon: UserCog, sub: "Seu perfil, avatar e dados pessoais", keywords: "profile" },
-    { label: "Guias & docs", path: "/docs", icon: HelpCircle, sub: "Documentação e guias da plataforma (abre em nova aba)", keywords: "help docs guias suporte documentacao" },
+    { label: "Ajuda & suporte", path: "/docs", icon: HelpCircle, sub: "Fala com o suporte no WhatsApp (abre em nova aba)", keywords: "help ajuda suporte docs guias documentacao" },
     { label: "Suporte", path: "/admin/suporte", icon: Inbox, sub: "Tickets e atendimento aos clientes", keywords: "tickets", superAdminOnly: true },
 ];
 
@@ -218,7 +219,7 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
                 onSelect: () => {
                     onOpenChange(false);
                     if (n.path === "/docs") {
-                        window.open("https://docs.vyzon.com.br", "_blank", "noopener,noreferrer");
+                        window.open(whatsappUrl(CONTACT.defaultMessage), "_blank", "noopener,noreferrer");
                     } else {
                         navigate(n.path);
                     }

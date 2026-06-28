@@ -4,6 +4,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { TrialBanner } from "./TrialBanner";
+import { EvaHelpDock } from "@/components/help/EvaHelpDock";
 import { useTrial } from "@/hooks/useTrial";
 
 // Lazy: UpgradeLock só renderiza quando trial expirou.
@@ -100,6 +101,8 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
             </motion.div>
           </main>
         </div>
+        {/* Orb flutuante de ajuda (a "Holly" do Vyzon, na voz da EVA) — global. */}
+        <EvaHelpDock />
       </div>
     </SidebarProvider>
   );

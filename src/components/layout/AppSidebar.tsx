@@ -28,8 +28,6 @@ import {
   Plus,
   CaretUpDown,
   UserCircleGear,
-  Sun as SunIcon,
-  Moon as MoonIcon,
   Question,
   SignOut,
   Star,
@@ -42,7 +40,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useTheme } from "@/components/ThemeToggle";
 import { ReminderBell } from "@/components/crm/ReminderBell";
 import { NavLink } from "@/components/NavLink";
 import { trackBehavior, claritySet, clarityUpgrade, isDemoSession, DEMO_EVENTS } from "@/lib/analytics";
@@ -50,6 +47,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
 import { usePlan } from "@/hooks/usePlan";
+import { CONTACT, whatsappUrl } from "@/config/contact";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
 import logoIcon from "@/assets/logo-icon.png";
@@ -130,7 +128,6 @@ function UserMenu({
   collapsed, profile, user, isProfileActive,
   navigate, signOut, getInitials,
 }: UserMenuProps) {
-  const { theme, toggle: toggleTheme } = useTheme();
 
   const trigger = collapsed ? (
     <button
@@ -187,20 +184,12 @@ function UserMenu({
 
         <DropdownMenuSeparator />
 
-        <DropdownMenuItem onClick={toggleTheme} className="text-[12.5px]">
-          {theme === "dark" ? (
-            <SunIcon size={16} weight="duotone" className="mr-2 text-amber-500" />
-          ) : (
-            <MoonIcon size={16} weight="duotone" className="mr-2 text-[#2563EB]" />
-          )}
-          {theme === "dark" ? "Tema claro" : "Tema escuro"}
-        </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={() => window.open("https://docs.vyzon.com.br", "_blank", "noopener,noreferrer")}
+          onClick={() => window.open(whatsappUrl(CONTACT.defaultMessage), "_blank", "noopener,noreferrer")}
           className="text-[12.5px]"
         >
           <Question size={16} weight="duotone" className="mr-2 text-muted-foreground" />
-          Guias & docs
+          Ajuda & suporte
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />

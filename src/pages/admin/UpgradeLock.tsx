@@ -4,7 +4,7 @@
 import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Lock } from "lucide-react";
+import { Lock, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { trackEvent, FUNNEL_EVENTS } from "@/lib/analytics";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
@@ -13,7 +13,7 @@ import { PlanPicker } from "@/components/billing/PlanPicker";
 
 export default function UpgradeLock() {
     const navigate = useNavigate();
-    const { refreshProfile } = useAuth();
+    const { refreshProfile, signOut } = useAuth();
 
     useEffect(() => {
         trackEvent(FUNNEL_EVENTS.TRIAL_EXPIRED);
@@ -26,7 +26,19 @@ export default function UpgradeLock() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col" style={{ background: "#F8FAFC" }}>
+        <div className="min-h-screen flex flex-col relative" style={{ background: "#F8FAFC" }}>
+            {/* Saída do lock: volta pro login (signOut leva a /auth). Sem isso a
+                tela é um beco sem saída a não ser pagar. */}
+            <button
+                type="button"
+                onClick={() => void signOut()}
+                title="Sair da conta e voltar ao login"
+                className="absolute top-4 left-4 sm:top-6 sm:left-6 inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-[13px] font-medium transition-colors hover:bg-white"
+                style={{ color: "#64748B", border: "1px solid #E2E8F0", background: "rgba(255,255,255,0.7)" }}
+            >
+                <ArrowLeft className="h-4 w-4" />
+                Voltar
+            </button>
             <div className="flex-1 flex flex-col items-center justify-center px-4 py-12 sm:py-16">
                 <ThemeLogo className="h-9 mb-8" />
 

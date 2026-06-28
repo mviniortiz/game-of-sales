@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion, useReducedMotion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { recordMetricSnapshot, getMetricTrend, type MetricTrend } from "@/lib/metricHistory";
 // F5C.5.3 — Phosphor duotone (mesmo set da sidebar e do pipeline /pipeline).
@@ -16,13 +17,14 @@ import {
     CheckCircle,
     CircleNotch,
     Clock,
-    Funnel as Filter,
+    SlidersHorizontal as Filter,
     FireSimple as Flame,
     ChatCircle as MessageCircle,
     DotsThree as MoreHorizontal,
-    ArrowsClockwise as RefreshCw,
+    ArrowClockwise as RefreshCw,
     Question,
     Target,
+    X,
 } from "@phosphor-icons/react";
 import { useInicioData } from "@/hooks/useInicioData";
 import {
@@ -116,8 +118,8 @@ const ATTENTION_ICON: Record<AttentionItem["type"], typeof MessageCircle> = {
 // ─── Building blocks ────────────────────────────────────────────────────────
 
 // COMMAND.UI.2 — faixa densa de KPIs (substitui os 4 cards gigantes).
-// Glance bar: número + label, clicável (leva ao filtro/seção). Sem trend/sparkline
-// porque não há histórico real (regra: sem mocks de métrica).
+// Glance bar: número + label, clicável (leva ao filtro/seção). Trend + sparkline
+// só quando há histórico real (≥2 dias via metricHistory); sem isso, nada renderiza.
 interface KpiStripItem {
     label: string;
     value: string;
@@ -147,9 +149,9 @@ function Sparkline({ series, color }: { series: number[]; color: string }) {
 function KpiStrip({ items, trends, onNavigate }: { items: KpiStripItem[]; trends: Record<string, MetricTrend>; onNavigate: (href: string) => void }) {
     return (
         <div
-            className="rounded-2xl overflow-hidden flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-[#EAF0F6]"
+            className="rounded-2xl overflow-hidden grid grid-cols-2 sm:grid-cols-4 gap-px"
             style={{
-                background: "#FFFFFF",
+                background: "#D9E2EC",
                 border: "1px solid #D9E2EC",
                 boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 10px 30px rgba(15,23,42,0.05)",
             }}
@@ -160,13 +162,16 @@ function KpiStrip({ items, trends, onNavigate }: { items: KpiStripItem[]; trends
                 const delta = t?.delta ?? null;
                 const improving = delta != null && delta !== 0 && ((delta > 0) === it.goodWhenUp);
                 const deltaColor = delta == null || delta === 0 ? "#475569" : improving ? "#047857" : "#B91C1C";
+                // Sparkline neutro = cinza (não azul, que = ação). Só ganha cor
+                // quando há tom real: verde (melhorando) / vermelho (piorando).
+                const sparkColor = delta == null || delta === 0 ? "#94A3B8" : improving ? "#047857" : "#B91C1C";
                 return (
                     <button
                         key={it.label}
                         type="button"
                         onClick={() => onNavigate(it.href)}
-                        className="flex-1 min-w-0 flex items-center gap-3 px-4 sm:px-5 py-3.5 text-left transition-all hover:brightness-[0.97]"
-                        style={{ borderColor: "#EAF0F6", background: `${it.accent}0A` }}
+                        className="min-w-0 flex items-center gap-3 px-4 sm:px-5 py-3.5 text-left transition-all hover:brightness-[0.97]"
+                        style={{ background: "#FFFFFF" }}
                         aria-label={`${it.label}: ${it.value}`}
                     >
                         <span
@@ -199,7 +204,7 @@ function KpiStrip({ items, trends, onNavigate }: { items: KpiStripItem[]; trends
                                 {it.label}
                             </p>
                         </div>
-                        {!it.loading && <Sparkline series={t?.series ?? []} color={it.accent} />}
+                        {!it.loading && <Sparkline series={t?.series ?? []} color={sparkColor} />}
                         <ChevronRight size={14} weight="bold" className="shrink-0" style={{ color: "#64748B" }} />
                     </button>
                 );
@@ -598,6 +603,62 @@ function FilterMenu({
     );
 }
 
+// Chips de filtro ativo — tornam o recorte VISÍVEL (antes ficava escondido no
+// popover). Cada chip remove só aquele filtro; "Limpar tudo" zera. Aparece só
+// quando há filtro aplicado.
+function ActiveFilterChips({ filters, onChange }: { filters: CentralFilters; onChange: (next: CentralFilters) => void }) {
+    const levelLabel = Object.fromEntries(LEVEL_OPTIONS.map((o) => [o.key, o.label])) as Record<PriorityLevel, string>;
+    const sourceLabel = Object.fromEntries(SOURCE_OPTIONS.map((o) => [o.key, o.label])) as Record<PrioritySource, string>;
+
+    const chips: { key: string; label: string; dot?: string; remove: () => void }[] = [];
+    filters.levels.forEach((l) =>
+        chips.push({
+            key: `l-${l}`,
+            label: levelLabel[l],
+            dot: PRIORITY_BAR_COLOR[l],
+            remove: () => { const n = new Set(filters.levels); n.delete(l); onChange({ ...filters, levels: n }); },
+        }),
+    );
+    filters.sources.forEach((s) =>
+        chips.push({
+            key: `s-${s}`,
+            label: sourceLabel[s],
+            remove: () => { const n = new Set(filters.sources); n.delete(s); onChange({ ...filters, sources: n }); },
+        }),
+    );
+    if (chips.length === 0) return null;
+
+    return (
+        <div className="flex flex-wrap items-center gap-2 px-1">
+            <span className="text-[11px] uppercase" style={{ color: "#94A3B8", fontWeight: 700, letterSpacing: "0.06em" }}>
+                Filtrando
+            </span>
+            {chips.map((c) => (
+                <button
+                    key={c.key}
+                    type="button"
+                    onClick={c.remove}
+                    className="group inline-flex items-center gap-1.5 h-7 pl-2.5 pr-2 rounded-full text-[12px] font-medium transition-colors hover:bg-[#EEF2F7]"
+                    style={{ background: "#FFFFFF", border: "1px solid #D9E2EC", color: "#334155" }}
+                    aria-label={`Remover filtro ${c.label}`}
+                >
+                    {c.dot && <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: c.dot }} />}
+                    {c.label}
+                    <X size={11} weight="bold" style={{ color: "#94A3B8" }} />
+                </button>
+            ))}
+            <button
+                type="button"
+                onClick={() => onChange({ levels: new Set(), sources: new Set() })}
+                className="text-[12px] font-semibold transition-colors hover:underline"
+                style={{ color: "#2563EB" }}
+            >
+                Limpar tudo
+            </button>
+        </div>
+    );
+}
+
 // ─── Saudação + Progresso do dia ────────────────────────────────────────────
 
 function getHourlyGreeting(hour: number): string {
@@ -674,6 +735,7 @@ function usePriorityActions(companyId: string | null | undefined) {
 
 const Inicio = () => {
     const navigate = useNavigate();
+    const reduce = useReducedMotion();
     const { profile, companyId } = useAuth();
 
     // Pipeline real (mantém)
@@ -786,7 +848,7 @@ const Inicio = () => {
             : `A EVA leu sua operação. Você tem ${pendingAll.length} ${pendingAll.length === 1 ? "ação" : "ações"} hoje${criticalCount > 0 ? `, ${criticalCount} não ${criticalCount === 1 ? "pode" : "podem"} esperar` : ""}.`;
 
     return (
-        <div className="vz-stagger space-y-5 sm:space-y-6 mx-auto w-full max-w-[1880px] 2xl:px-4">
+        <div className="vz-stagger space-y-5 sm:space-y-6 mx-auto w-full max-w-[1600px] 2xl:px-4 pb-24 lg:pb-0">
             {/* Header */}
             <div
                 className="rounded-2xl px-7 sm:px-9 py-6 sm:py-7 flex flex-col sm:flex-row sm:items-end justify-between gap-4 relative overflow-hidden"
@@ -828,10 +890,11 @@ const Inicio = () => {
                     </p>
                 </div>
                 <div className="relative z-10 flex items-center gap-2">
-                    <button
+                    <motion.button
                         onClick={() => void handleRefresh()}
                         disabled={refreshing}
-                        className="inline-flex items-center gap-2 h-10 px-4 rounded-xl text-[13px] font-medium transition-colors hover:bg-white shrink-0 disabled:opacity-60"
+                        whileTap={reduce ? undefined : { scale: 0.95 }}
+                        className="inline-flex items-center gap-2 h-10 px-4 rounded-xl text-[13px] font-medium transition-colors hover:bg-white hover:border-[#BFD3F2] shrink-0 disabled:opacity-70"
                         style={{
                             background: "rgba(255,255,255,0.85)",
                             backdropFilter: "blur(8px)",
@@ -840,20 +903,32 @@ const Inicio = () => {
                             color: "#475569",
                         }}
                     >
-                        <RefreshCw size={14} weight="duotone" className={refreshing ? "animate-spin" : ""} />
+                        {/* Motion: gira em loop suave enquanto carrega e assenta com
+                            spring (não para seco). Congela em reduced-motion. */}
+                        <motion.span
+                            className="inline-flex"
+                            animate={refreshing && !reduce ? { rotate: 360 } : { rotate: 0 }}
+                            transition={
+                                refreshing && !reduce
+                                    ? { repeat: Infinity, ease: "linear", duration: 0.7 }
+                                    : { type: "spring", stiffness: 260, damping: 18 }
+                            }
+                            style={{ color: refreshing ? "#2563EB" : "#64748B" }}
+                        >
+                            <RefreshCw size={15} weight="bold" />
+                        </motion.span>
                         {refreshing ? "Atualizando…" : "Atualizar"}
-                    </button>
+                    </motion.button>
                     <FilterMenu filters={filters} onChange={setFilters} activeCount={activeFilterCount} />
                 </div>
             </div>
 
-            {/* Barra-missão do dia: plano com fim, não fluxo infinito. */}
-            <DayProgress items={dayItems} state={actions.state} />
+            {/* Filtro aplicado fica visível como chips removíveis (não escondido). */}
+            <ActiveFilterChips filters={filters} onChange={setFilters} />
 
-            {/* COMMAND.UI.2 — Faixa densa de KPIs (clicável), suporte no topo. */}
-            <KpiStrip items={kpiCards} trends={trends} onNavigate={navigate} />
-
-            {/* COMMAND.UI — Decisão primeiro: herói saturado + fila + leitura da EVA. */}
+            {/* COMMAND.UI — 4 zonas (Pulso → Foco → Fila → Atividade) na coluna
+                principal + rail da EVA. DayProgress e KPIs entram como slots da
+                coluna pra alinhar com a fila e o rail subir desde o topo. */}
             <DecisionWorkspace
                 priorities={pendingAll}
                 queuePriorities={queue}
@@ -868,6 +943,8 @@ const Inicio = () => {
                 sendReply={handleQuickReply}
                 replyConnected={sender.connected}
                 evaChat={<EvaChat evaInput={evaInput} onNavigate={navigate} />}
+                dayProgress={<DayProgress items={dayItems} state={actions.state} />}
+                pulse={<KpiStrip items={kpiCards} trends={trends} onNavigate={navigate} />}
             />
 
             {/* Error inline */}

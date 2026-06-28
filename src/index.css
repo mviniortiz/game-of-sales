@@ -852,11 +852,21 @@ All colors MUST be HSL.
 }
 .vz-resolving .vz-row-title { text-decoration: line-through; }
 
+/* 5. "Ver no foco" — a EVA aponta pro herói: anel azul que pulsa 1x e some.
+   Disparado por classe via JS (scrollIntoView + add/remove). */
+@keyframes vz-focus-flash {
+  0%   { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+  20%  { box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.35); }
+  100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+}
+.vz-focus-flash { animation: vz-focus-flash 1.2s ease-out; border-radius: 1rem; }
+
 @media (prefers-reduced-motion: reduce) {
   .vz-stagger > * { opacity: 1; animation: none; }
   .vz-pulse-critical::after { animation: none; }
   .vz-check-pop { animation: none; }
   .vz-resolving { transition: none; }
+  .vz-focus-flash { animation: none; }
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -4804,4 +4814,41 @@ html.lenis, html.lenis body { height: auto; }
   .lp-v2 .vz-post-cover:hover > * { transform: none; }
   .lp-v2 .vz-blog-card:hover .vz-blog-readmore__arrow,
   .lp-v2 .vz-backlink:hover .vz-backlink__arrow { transform: none; }
+}
+
+/* =========================================================================
+   Central de Comando (COMMAND.UI.2) — adições --vyz-* (status, EVA, motion,
+   botão preto, surface-0). Todos NOVOS (sem conflito). --lp-* e --vyz- nunca
+   se misturam. Ver memória project_central_comando_redesign.
+   ========================================================================= */
+:root {
+  --vyz-surface-0: #f3f4f6;       /* page bg FRIA — cards brancos (surface-1) levantam por contraste */
+  --vyz-success: #008a52;
+  --vyz-success-bg: #e4f4ec;
+  --vyz-warning: #b45309;
+  --vyz-warning-bg: #fbeede;
+  --vyz-danger: #c0362c;
+  --vyz-danger-bg: #fbeceb;
+  --vyz-eva: #6d28d9;
+  --vyz-eva-bg: #efeafc;
+  --vyz-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --vyz-dur-hover: 160ms;
+  --vyz-dur-reveal: 600ms;
+  --vyz-radius: 10px;
+  --vyz-radius-pill: 9999px;
+  --vyz-btn-solid: #080808;
+  --vyz-btn-on: #ffffff;
+}
+.dark {
+  --vyz-surface-0: #0A0E14;
+  --vyz-success: #34c98b;
+  --vyz-success-bg: #102a20;
+  --vyz-warning: #e0a44f;
+  --vyz-warning-bg: #2a2012;
+  --vyz-danger: #e57568;
+  --vyz-danger-bg: #2e1714;
+  --vyz-eva: #8b5cf6;
+  --vyz-eva-bg: #1d1633;
+  --vyz-btn-solid: #f4f3ef;
+  --vyz-btn-on: #0c0c0c;
 }
