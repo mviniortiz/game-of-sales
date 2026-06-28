@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -67,14 +68,30 @@ const LoginV2 = () => {
             <div className="grid min-h-screen lg:grid-cols-[0.88fr_1.12fr]">
                 {/* ── Coluna do formulário ───────────────────────────── */}
                 <div className="relative flex flex-col px-6 py-8 sm:px-12 sm:py-10">
-                    <button
-                        onClick={() => navigate("/")}
-                        className="flex items-center self-start opacity-90 transition-opacity hover:opacity-100"
-                        aria-label="Vyzon"
-                        style={{ filter: "brightness(0) invert(1)" }}
-                    >
-                        <ThemeLogo className="h-6 w-auto" />
-                    </button>
+                    {/* Topo: logo + saída explícita pra landing (o logo sozinho não
+                        lê como "voltar"). */}
+                    <div className="flex items-center gap-3 self-start">
+                        <button
+                            onClick={() => navigate("/")}
+                            className="flex items-center opacity-90 transition-opacity hover:opacity-100"
+                            aria-label="Vyzon"
+                            style={{ filter: "brightness(0) invert(1)" }}
+                        >
+                            <ThemeLogo className="h-6 w-auto" />
+                        </button>
+                        <span className="h-4 w-px" style={{ background: "rgba(255,255,255,0.18)" }} aria-hidden />
+                        <button
+                            type="button"
+                            onClick={() => navigate("/")}
+                            className="inline-flex items-center gap-1.5 text-[13px] font-medium transition-colors"
+                            style={{ color: "rgba(255,255,255,0.5)" }}
+                            onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.85)")}
+                            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.5)")}
+                        >
+                            <ArrowLeft className="h-3.5 w-3.5" />
+                            Voltar ao site
+                        </button>
+                    </div>
 
                     <div className="flex flex-1 items-center">
                         <div className="mx-auto w-full max-w-[380px] py-12">
