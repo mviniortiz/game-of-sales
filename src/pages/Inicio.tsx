@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
@@ -444,24 +445,44 @@ function EvaStatusRow({
 
 type PriorityLevel = DailyPriority["priority"];
 type PrioritySource = DailyPriority["source"];
+type StaleWindow = 24 | 48;
 
-const LEVEL_OPTIONS: { key: PriorityLevel; label: string; color: string }[] = [
-    { key: "critical", label: "Crítico", color: "#BE123C" },
-    { key: "high",     label: "Alto",    color: "#B45309" },
-    { key: "medium",   label: "Médio",   color: "#1D4ED8" },
-    { key: "low",      label: "Baixo",   color: "#475569" },
+// "O que fazer" — os 3 verbos que a fila realmente gera (= source, escrito em
+// linguagem de ação, não de dado). "calendar" não é produzido aqui.
+const ACTION_OPTIONS: { key: PrioritySource; label: string }[] = [
+    { key: "conversation", label: "Responder lead" },
+    { key: "deal",         label: "Avançar oportunidade" },
+    { key: "eva",          label: "Completar a EVA" },
 ];
 
-// Só as origens que o gerador de prioridades realmente produz (sem "calendar").
-const SOURCE_OPTIONS: { key: PrioritySource; label: string }[] = [
-    { key: "conversation", label: "Conversa" },
-    { key: "deal",         label: "Oportunidade" },
-    { key: "eva",          label: "Insight da EVA" },
+// "Foco" — tempo parado (lead parado = dinheiro vazando). Mais acionável que
+// filtrar pelos 4 níveis (a fila já vem ordenada por prioridade).
+const STALE_OPTIONS: { key: StaleWindow; label: string }[] = [
+    { key: 24, label: "Parado +24h" },
+    { key: 48, label: "Parado +48h" },
 ];
 
 export interface CentralFilters {
-    levels: Set<PriorityLevel>;
-    sources: Set<PrioritySource>;
+    actions: Set<PrioritySource>;
+    urgent: boolean;             // crítico + alto
+    stale: StaleWindow | null;   // parado há mais de X horas (createdAt)
+}
+
+function emptyFilters(): CentralFilters {
+    return { actions: new Set(), urgent: false, stale: null };
+}
+function countActiveFilters(f: CentralFilters): number {
+    return f.actions.size + (f.urgent ? 1 : 0) + (f.stale != null ? 1 : 0);
+}
+function hoursSinceIso(iso?: string | null): number {
+    if (!iso) return 0;
+    return (Date.now() - new Date(iso).getTime()) / 3_600_000;
+}
+function matchesFilters(p: DailyPriority, f: CentralFilters): boolean {
+    if (f.actions.size && !f.actions.has(p.source)) return false;
+    if (f.urgent && !(p.priority === "critical" || p.priority === "high")) return false;
+    if (f.stale != null && hoursSinceIso(p.createdAt) < f.stale) return false;
+    return true;
 }
 
 function FilterCheckRow({
@@ -506,36 +527,53 @@ function FilterMenu({
     activeCount: number;
 }) {
     const [open, setOpen] = useState(false);
-    const ref = useRef<HTMLDivElement>(null);
+    // Posição do menu portalizado (fixed). O menu é renderizado no body via portal
+    // pra escapar do overflow-hidden do header e de contextos de empilhamento
+    // (vz-stagger), abrindo inteiro e por cima do Pulso.
+    const [pos, setPos] = useState<{ top: number; right: number }>({ top: 0, right: 0 });
+    const triggerRef = useRef<HTMLDivElement>(null);
+    const menuRef = useRef<HTMLDivElement>(null);
+
+    const computePos = useCallback(() => {
+        const el = triggerRef.current;
+        if (!el) return;
+        const r = el.getBoundingClientRect();
+        setPos({ top: r.bottom + 8, right: Math.max(8, window.innerWidth - r.right) });
+    }, []);
 
     useEffect(() => {
         if (!open) return;
+        computePos();
         const onDown = (e: MouseEvent) => {
-            if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+            const t = e.target as Node;
+            if (triggerRef.current?.contains(t) || menuRef.current?.contains(t)) return;
+            setOpen(false);
         };
         const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+        const onReflow = () => computePos();
         document.addEventListener("mousedown", onDown);
         document.addEventListener("keydown", onKey);
+        window.addEventListener("scroll", onReflow, true);
+        window.addEventListener("resize", onReflow);
         return () => {
             document.removeEventListener("mousedown", onDown);
             document.removeEventListener("keydown", onKey);
+            window.removeEventListener("scroll", onReflow, true);
+            window.removeEventListener("resize", onReflow);
         };
-    }, [open]);
+    }, [open, computePos]);
 
-    const toggleLevel = (k: PriorityLevel) => {
-        const next = new Set(filters.levels);
+    const toggleAction = (k: PrioritySource) => {
+        const next = new Set(filters.actions);
         if (next.has(k)) next.delete(k); else next.add(k);
-        onChange({ ...filters, levels: next });
+        onChange({ ...filters, actions: next });
     };
-    const toggleSource = (k: PrioritySource) => {
-        const next = new Set(filters.sources);
-        if (next.has(k)) next.delete(k); else next.add(k);
-        onChange({ ...filters, sources: next });
-    };
-    const clear = () => onChange({ levels: new Set(), sources: new Set() });
+    const toggleUrgent = () => onChange({ ...filters, urgent: !filters.urgent });
+    const toggleStale = (k: StaleWindow) => onChange({ ...filters, stale: filters.stale === k ? null : k });
+    const clear = () => onChange(emptyFilters());
 
     return (
-        <div className="relative" ref={ref}>
+        <div className="relative" ref={triggerRef}>
             <button
                 onClick={() => setOpen((o) => !o)}
                 aria-expanded={open}
@@ -562,10 +600,13 @@ function FilterMenu({
                 <ChevronDown size={13} weight="bold" className="transition-transform" style={{ color: "#94A3B8", transform: open ? "rotate(180deg)" : "none" }} />
             </button>
 
-            {open && (
+            {open && createPortal(
                 <div
-                    className="absolute right-0 mt-2 z-40 w-[244px] rounded-xl p-3"
+                    ref={menuRef}
+                    className="fixed z-[60] w-[244px] rounded-xl p-3"
                     style={{
+                        top: pos.top,
+                        right: pos.right,
                         background: "#FFFFFF",
                         border: "1px solid #D9E2EC",
                         boxShadow: "0 4px 12px rgba(15,23,42,0.08), 0 18px 40px rgba(15,23,42,0.12)",
@@ -573,7 +614,7 @@ function FilterMenu({
                 >
                     <div className="flex items-center justify-between px-1 pb-1.5">
                         <span className="text-[11px] uppercase" style={{ color: "#1E293B", fontWeight: 700, letterSpacing: "0.05em" }}>
-                            Filtrar fila de ação
+                            Filtrar a fila
                         </span>
                         {activeCount > 0 && (
                             <button type="button" onClick={clear} className="text-[11px] font-semibold" style={{ color: "#2563EB" }}>
@@ -583,21 +624,23 @@ function FilterMenu({
                     </div>
 
                     <p className="text-[10px] uppercase px-2.5 mt-1 mb-0.5" style={{ color: "#1E293B", fontWeight: 700, letterSpacing: "0.06em" }}>
-                        Nível
+                        O que fazer
                     </p>
-                    {LEVEL_OPTIONS.map((o) => (
-                        <FilterCheckRow key={o.key} label={o.label} dot={o.color} checked={filters.levels.has(o.key)} onToggle={() => toggleLevel(o.key)} />
+                    {ACTION_OPTIONS.map((o) => (
+                        <FilterCheckRow key={o.key} label={o.label} checked={filters.actions.has(o.key)} onToggle={() => toggleAction(o.key)} />
                     ))}
 
                     <div className="h-px my-1.5" style={{ background: "#F1F5F9" }} />
 
                     <p className="text-[10px] uppercase px-2.5 mb-0.5" style={{ color: "#1E293B", fontWeight: 700, letterSpacing: "0.06em" }}>
-                        Origem
+                        Foco
                     </p>
-                    {SOURCE_OPTIONS.map((o) => (
-                        <FilterCheckRow key={o.key} label={o.label} checked={filters.sources.has(o.key)} onToggle={() => toggleSource(o.key)} />
+                    <FilterCheckRow label="Só urgentes" dot="#F43F5E" checked={filters.urgent} onToggle={toggleUrgent} />
+                    {STALE_OPTIONS.map((o) => (
+                        <FilterCheckRow key={o.key} label={o.label} checked={filters.stale === o.key} onToggle={() => toggleStale(o.key)} />
                     ))}
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );
@@ -607,25 +650,22 @@ function FilterMenu({
 // popover). Cada chip remove só aquele filtro; "Limpar tudo" zera. Aparece só
 // quando há filtro aplicado.
 function ActiveFilterChips({ filters, onChange }: { filters: CentralFilters; onChange: (next: CentralFilters) => void }) {
-    const levelLabel = Object.fromEntries(LEVEL_OPTIONS.map((o) => [o.key, o.label])) as Record<PriorityLevel, string>;
-    const sourceLabel = Object.fromEntries(SOURCE_OPTIONS.map((o) => [o.key, o.label])) as Record<PrioritySource, string>;
+    const actionLabel = Object.fromEntries(ACTION_OPTIONS.map((o) => [o.key, o.label])) as Record<PrioritySource, string>;
 
     const chips: { key: string; label: string; dot?: string; remove: () => void }[] = [];
-    filters.levels.forEach((l) =>
+    filters.actions.forEach((a) =>
         chips.push({
-            key: `l-${l}`,
-            label: levelLabel[l],
-            dot: PRIORITY_BAR_COLOR[l],
-            remove: () => { const n = new Set(filters.levels); n.delete(l); onChange({ ...filters, levels: n }); },
+            key: `a-${a}`,
+            label: actionLabel[a],
+            remove: () => { const n = new Set(filters.actions); n.delete(a); onChange({ ...filters, actions: n }); },
         }),
     );
-    filters.sources.forEach((s) =>
-        chips.push({
-            key: `s-${s}`,
-            label: sourceLabel[s],
-            remove: () => { const n = new Set(filters.sources); n.delete(s); onChange({ ...filters, sources: n }); },
-        }),
-    );
+    if (filters.urgent) {
+        chips.push({ key: "urgent", label: "Urgentes", dot: "#F43F5E", remove: () => onChange({ ...filters, urgent: false }) });
+    }
+    if (filters.stale != null) {
+        chips.push({ key: "stale", label: `Parado +${filters.stale}h`, remove: () => onChange({ ...filters, stale: null }) });
+    }
     if (chips.length === 0) return null;
 
     return (
@@ -649,7 +689,7 @@ function ActiveFilterChips({ filters, onChange }: { filters: CentralFilters; onC
             ))}
             <button
                 type="button"
-                onClick={() => onChange({ levels: new Set(), sources: new Set() })}
+                onClick={() => onChange(emptyFilters())}
                 className="text-[12px] font-semibold transition-colors hover:underline"
                 style={{ color: "#2563EB" }}
             >
@@ -759,8 +799,8 @@ const Inicio = () => {
     const refreshing = manualRefreshing || cc.isFetching || pipeline.isFetching;
 
     // Filtros da Fila de ação (client-side, sobre dados já carregados).
-    const [filters, setFilters] = useState<CentralFilters>({ levels: new Set(), sources: new Set() });
-    const activeFilterCount = filters.levels.size + filters.sources.size;
+    const [filters, setFilters] = useState<CentralFilters>(emptyFilters);
+    const activeFilterCount = countActiveFilters(filters);
 
     // Ações persistidas (resolver/adiar) + envio direto (Responder rápido).
     const actions = usePriorityActions(companyId);
@@ -773,7 +813,8 @@ const Inicio = () => {
         [sender, cc],
     );
 
-    // Plano do dia: tira adiados; separa resolvidos de pendentes.
+    // Plano do dia (top-5 curado): tira adiados; separa resolvidos de pendentes.
+    // pendingAll = a fila do dia (alimenta a leitura da EVA, narração, progresso).
     const { dayItems, pendingAll } = useMemo(() => {
         const nowMs = Date.now();
         const day = cc.dailyPriorities.filter((p) => !isSnoozed(actions.state, p.id, nowMs));
@@ -781,16 +822,20 @@ const Inicio = () => {
         return { dayItems: day, pendingAll: pending };
     }, [cc.dailyPriorities, actions.state]);
 
-    // Fila visível = pendentes + filtro de UI.
-    const queue = useMemo(
-        () =>
-            pendingAll.filter((p) => {
-                if (filters.levels.size && !filters.levels.has(p.priority)) return false;
-                if (filters.sources.size && !filters.sources.has(p.source)) return false;
-                return true;
-            }),
-        [pendingAll, filters],
-    );
+    // Conjunto COMPLETO de pendentes (além do top-5) — usado só quando há filtro,
+    // pra o filtro revelar tudo daquele tipo, não recortar 5.
+    const allPending = useMemo(() => {
+        const nowMs = Date.now();
+        return cc.dailyPrioritiesAll
+            .filter((p) => !isSnoozed(actions.state, p.id, nowMs))
+            .filter((p) => !isResolved(actions.state, p.id));
+    }, [cc.dailyPrioritiesAll, actions.state]);
+
+    // Fila visível: sem filtro = top-5 do dia; com filtro = TODO o pendente que bate.
+    const queue = useMemo(() => {
+        const base = activeFilterCount > 0 ? allPending : pendingAll;
+        return base.filter((p) => matchesFilters(p, filters));
+    }, [activeFilterCount, allPending, pendingAll, filters]);
 
     const criticalCount = useMemo(() => pendingAll.filter((p) => p.priority === "critical").length, [pendingAll]);
     const dayComplete = dayItems.length > 0 && pendingAll.length === 0;
