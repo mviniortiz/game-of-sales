@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowLeft, Calendar, Check, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,15 +30,50 @@ const PAIN_OPTIONS = [
     "Qualificar leads",
 ] as const;
 
-// Disponibilidade real (gerada): próximos dias úteis × horários comerciais.
-// Substitui os 4 slots fixos. "Hoje" filtra os horários já passados (folga de 1h).
+// Disponibilidade REAL do Google Calendar da equipe (edge calendar-slots):
+// horário comercial 9h-18h BRT, dias úteis, em blocos de 30min, já filtrando
+// os compromissos da agenda (freeBusy). Se a função falhar (sem rede etc.),
+// cai no buildDaysFallback gerado pra nunca travar o booking.
+const SP_TZ = "America/Sao_Paulo";
 const TIMES = ["09h", "10h", "11h", "14h", "15h", "16h", "17h"];
 const WD = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 interface TimeOpt { id: string; hora: string; iso: string }
 interface DayOpt { key: string; label: string; date: string; times: TimeOpt[] }
+interface ApiSlot { startIso: string; endIso?: string }
 
-function buildDays(): DayOpt[] {
+// Chave de dia (YYYY-MM-DD) no fuso de Brasília, pra agrupar slots em UTC.
+const spDateKey = (d: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: SP_TZ }).format(d);
+
+// Monta os dias a partir dos slots reais da edge (já ordenados, em UTC).
+function buildDaysFromSlots(slots: ApiSlot[]): DayOpt[] {
+    const now = new Date();
+    const todayKey = spDateKey(now);
+    const tomorrowKey = spDateKey(new Date(now.getTime() + 86400000));
+    const wdFmt = new Intl.DateTimeFormat("pt-BR", { timeZone: SP_TZ, weekday: "short" });
+    const dmFmt = new Intl.DateTimeFormat("pt-BR", { timeZone: SP_TZ, day: "numeric", month: "numeric" });
+    const tFmt = new Intl.DateTimeFormat("pt-BR", { timeZone: SP_TZ, hour: "2-digit", minute: "2-digit", hour12: false });
+
+    const byDay = new Map<string, DayOpt>();
+    for (const s of slots) {
+        if (!s?.startIso) continue;
+        const dt = new Date(s.startIso);
+        const key = spDateKey(dt);
+        let day = byDay.get(key);
+        if (!day) {
+            const wd = wdFmt.format(dt).replace(".", "");
+            const label = key === todayKey ? "Hoje" : key === tomorrowKey ? "Amanhã" : wd.charAt(0).toUpperCase() + wd.slice(1);
+            day = { key, label, date: dmFmt.format(dt), times: [] };
+            byDay.set(key, day);
+        }
+        day.times.push({ id: s.startIso, hora: tFmt.format(dt), iso: s.startIso });
+    }
+    return Array.from(byDay.values()).filter((d) => d.times.length).slice(0, 5);
+}
+
+// Fallback gerado (sem agenda): próximos dias úteis × horários comerciais.
+// "Hoje" filtra os horários já passados (folga de 1h).
+function buildDaysFallback(): DayOpt[] {
     const out: DayOpt[] = [];
     const now = new Date();
     const today0 = new Date(now); today0.setHours(0, 0, 0, 0);
@@ -71,9 +106,38 @@ export const DemoBooking = ({ email, site, onDone }: DemoBookingProps) => {
     const [emailValue, setEmailValue] = useState(email);
     const [submitting, setSubmitting] = useState(false);
 
-    const days = useMemo(buildDays, []);
-    const [dayKey, setDayKey] = useState<string>(() => days[0]?.key ?? "");
+    const [days, setDays] = useState<DayOpt[]>([]);
+    const [loadingSlots, setLoadingSlots] = useState(true);
+    const [synced, setSynced] = useState(false); // veio da agenda real (não do fallback)
+    const [dayKey, setDayKey] = useState<string>("");
     const [slotId, setSlotId] = useState<string | null>(null);
+
+    // Puxa a disponibilidade real da agenda (roda em background durante as 2
+    // perguntas, então chega pronto quando a pessoa abre o passo do horário).
+    useEffect(() => {
+        let alive = true;
+        (async () => {
+            let built: DayOpt[] = [];
+            let fromGcal = false;
+            try {
+                const { data, error } = await supabase.functions.invoke("calendar-slots");
+                const slots = (data as { slots?: ApiSlot[]; gcal_connected?: boolean } | null)?.slots;
+                if (!error && Array.isArray(slots) && slots.length) {
+                    built = buildDaysFromSlots(slots);
+                    fromGcal = !!(data as { gcal_connected?: boolean }).gcal_connected && built.length > 0;
+                }
+            } catch (e) {
+                console.error("[DemoBooking] calendar-slots falhou:", e);
+            }
+            if (!built.length) built = buildDaysFallback();
+            if (!alive) return;
+            setDays(built);
+            setDayKey(built[0]?.key ?? "");
+            setSynced(fromGcal);
+            setLoadingSlots(false);
+        })();
+        return () => { alive = false; };
+    }, []);
     const selectedDay = useMemo(() => days.find((d) => d.key === dayKey) ?? days[0] ?? null, [days, dayKey]);
     const slot = useMemo(() => {
         for (const d of days) {
@@ -274,9 +338,23 @@ export const DemoBooking = ({ email, site, onDone }: DemoBookingProps) => {
                         {/* ---------- HORÁRIO ---------- */}
                         {view === "schedule" && (
                             <motion.div key="schedule" initial={viewInitial} animate={{ opacity: 1, x: 0 }} exit={viewExit} transition={{ duration: 0.35, ease: EASE }}>
-                                <Heading sub="30 minutos, online. Escolha o dia e o horário.">
+                                <Heading sub="30 minutos, online. Estes são os horários livres na nossa agenda.">
                                     Quando fica bom?
                                 </Heading>
+                                {loadingSlots ? (
+                                    <div className="mt-10 flex flex-col items-center gap-3" aria-live="polite">
+                                        <motion.div
+                                            className="h-7 w-7 rounded-full border-2"
+                                            style={{ borderColor: "rgba(21,86,192,0.2)", borderTopColor: "var(--lp-blue)" }}
+                                            animate={reduce ? undefined : { rotate: 360 }}
+                                            transition={{ duration: 0.8, ease: "linear", repeat: Infinity }}
+                                        />
+                                        <span className="lp-mono text-[12.5px]" style={{ color: "var(--lp-ink-40)" }}>
+                                            sincronizando a agenda…
+                                        </span>
+                                    </div>
+                                ) : (
+                                  <>
                                 {/* dias úteis (rolável) */}
                                 <div className="mx-auto mt-6 flex max-w-md gap-2 overflow-x-auto pb-1">
                                     {days.map((d) => {
@@ -329,7 +407,8 @@ export const DemoBooking = ({ email, site, onDone }: DemoBookingProps) => {
                                     })}
                                 </motion.div>
                                 <div className="mt-5 flex items-center justify-center gap-2 text-[13px]" style={{ color: "var(--lp-ink-40)" }}>
-                                    <Calendar size={14} /> Horário de Brasília
+                                    <Calendar size={14} />
+                                    {synced ? "Horários livres na agenda · Brasília" : "Horário de Brasília"}
                                 </div>
                                 <div className="mt-7 flex justify-center">
                                     <button
@@ -342,6 +421,8 @@ export const DemoBooking = ({ email, site, onDone }: DemoBookingProps) => {
                                         Continuar
                                     </button>
                                 </div>
+                                  </>
+                                )}
                             </motion.div>
                         )}
 
