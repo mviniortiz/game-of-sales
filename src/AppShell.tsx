@@ -38,6 +38,7 @@ const ConfFaturamento = lazy(() => import("./pages/configuracoes/Faturamento"));
 const ConfIntegracoes = lazy(() => import("./pages/configuracoes/Integracoes"));
 const ConfTags = lazy(() => import("./pages/configuracoes/Tags"));
 const ConfImportar = lazy(() => import("./pages/configuracoes/Importar"));
+const ConfWebhooksLeads = lazy(() => import("./pages/configuracoes/WebhooksLeads"));
 const ConfRelatoriosPublicos = lazy(() => import("./pages/configuracoes/RelatoriosPublicos"));
 const ConfEvaContexto = lazy(() => import("./pages/configuracoes/EvaContexto"));
 const Calendario = lazy(() => import("./pages/Calendario"));
@@ -317,9 +318,19 @@ const AppShell = () => (
                     </AdminRoute>
                   }
                 />
-                {/* Contratos virou seção da Gestão; Webhooks de leads foi consolidado em Integrações */}
+                {/* Contratos virou seção da Gestão. */}
                 <Route path="contratos" element={<Navigate to="/admin" replace />} />
-                <Route path="webhooks-leads" element={<Navigate to="/configuracoes/integracoes" replace />} />
+                {/* Webhooks de leads (Google Sheets / Meta Lead Ads / etc.): setup via
+                    Apps Script + lead-webhook. Alcançado pelo botão "Conectar" do Sheets
+                    em Integrações (navigate com ?create=). Estava órfão (redirect). */}
+                <Route
+                  path="webhooks-leads"
+                  element={
+                    <AdminRoute>
+                      <ConfWebhooksLeads />
+                    </AdminRoute>
+                  }
+                />
                 {/* F4E.2 2026-05-19: Contexto da Agência (membros leem, admin edita).
                     UI não usa AdminRoute pra permitir leitura — RLS é a defesa real. */}
                 <Route path="eva" element={<ConfEvaContexto />} />
