@@ -162,6 +162,29 @@ serve(async (req) => {
     auth: { persistSession: false },
   });
 
+  // ═══ Modo TESTE (botão do app): valida secret + roda o mapeamento de colunas,
+  //     SEM criar deal. Retorna o que foi reconhecido pra UI mostrar na hora. ═══
+  if ((payload as Record<string, unknown>).__vyzon_test === true) {
+    const { data: hook } = await supabase
+      .from("lead_webhooks")
+      .select("secret, enabled, field_mapping")
+      .eq("slug", slug)
+      .maybeSingle();
+    if (!hook) return json({ ok: false, test: true, error: "not_found" }, 404);
+    if (hook.secret !== secret) return json({ ok: false, test: true, error: "invalid_secret" }, 401);
+    const fm = (hook.field_mapping ?? {}) as { name?: string[]; email?: string[]; phone?: string[] };
+    const p = payload as Record<string, unknown>;
+    const name = pickField(p, fm.name ?? ["nome", "name"]);
+    const email = pickField(p, fm.email ?? ["email"]);
+    const phone = pickField(p, fm.phone ?? ["telefone", "phone", "whatsapp"]);
+    return json({
+      ok: true,
+      test: true,
+      enabled: !!hook.enabled,
+      recognized: { name: !!name, email: !!email, phone: !!phone },
+    }, 200);
+  }
+
   // Chave de idempotência determinística (id estável OU hash por janela).
   const leadKey = await computeLeadKey(slug, payload as Record<string, unknown>);
 

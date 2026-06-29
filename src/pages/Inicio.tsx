@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { recordMetricSnapshot, getMetricTrend, type MetricTrend } from "@/lib/metricHistory";
@@ -44,6 +44,8 @@ import {
 import { useTypewriter } from "@/hooks/useTypewriter";
 import { EvaOrb } from "@/components/landing-v2/EvaOrb";
 import { DecisionWorkspace } from "@/components/inicio/DecisionWorkspace";
+import { OnboardingChecklist } from "@/components/inicio/OnboardingChecklist";
+import { useOnboardingProgress } from "@/hooks/useOnboardingProgress";
 import { useEvolutionSender } from "@/hooks/useEvolutionSender";
 import {
     loadLiveActions,
@@ -783,6 +785,11 @@ const Inicio = () => {
 
     // Central de Comando — métricas reais + listas
     const cc = useCommandCenterData();
+    const onboarding = useOnboardingProgress();
+    // Preview do onboarding (?firstrun=1): força a visão de usuário novo (4 passos
+    // pendentes), pra eyeball mesmo numa conta já ativada. Temporário/dev.
+    const [searchParams] = useSearchParams();
+    const onboardingPreview = searchParams.get("firstrun") === "1";
 
     const metrics: CommandCenterMetrics | null = cc.metrics;
 
@@ -967,6 +974,17 @@ const Inicio = () => {
                     <FilterMenu filters={filters} onChange={setFilters} activeCount={activeFilterCount} />
                 </div>
             </div>
+
+            {/* Primeiros passos — ativação guiada; some sozinho quando tudo pronto. */}
+            {(onboardingPreview || (!onboarding.loading && !onboarding.allDone)) && (
+                <OnboardingChecklist
+                    progress={onboardingPreview ? { whatsapp: false, eva: false, leads: false, deal: false } : onboarding.progress}
+                    doneCount={onboardingPreview ? 0 : onboarding.doneCount}
+                    total={onboarding.total}
+                    nextStep={onboardingPreview ? "whatsapp" : onboarding.nextStep}
+                    onNavigate={navigate}
+                />
+            )}
 
             {/* Filtro aplicado fica visível como chips removíveis (não escondido). */}
             <ActiveFilterChips filters={filters} onChange={setFilters} />
