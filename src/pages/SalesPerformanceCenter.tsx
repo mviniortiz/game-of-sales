@@ -1,18 +1,13 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
-    DollarSign,
-    TrendingUp,
     Target,
     Clock,
-    AlertTriangle,
-    CheckCircle2,
     Users,
+    UserX,
     ArrowRight,
-    Flame,
-    Activity,
     Plus,
 } from "lucide-react";
 import { startOfMonth, endOfMonth, differenceInDays } from "date-fns";
@@ -20,6 +15,7 @@ import { useTenant } from "@/contexts/TenantContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useVisibleSellers } from "@/hooks/useVisibleSellers";
 import { stageLabelFor } from "@/lib/demoPipeline";
+import { recordMetricSnapshot, getMetricTrend, type MetricTrend } from "@/lib/metricHistory";
 import { GoldenHoursHeatmap } from "@/components/dashboard/GoldenHoursHeatmap";
 import { PeriodToggle, DateRangePicker } from "@/components/filters";
 import { PerformanceSkeleton } from "@/components/ui/skeletons";
@@ -32,13 +28,17 @@ const formatCurrencyCompact = (value: number) => {
 };
 const daysSince = (iso?: string | null) => (iso ? differenceInDays(new Date(), new Date(iso)) : 0);
 
-// Etapas abertas do funil (IDs fixos do banco; label relabelado por company).
-const OPEN_STAGE_DEFS = [
-    { id: "lead", label: "Lead", color: "#94A3B8" },
-    { id: "qualification", label: "Qualificação", color: "#1556C0" },
-    { id: "proposal", label: "Proposta", color: "#7C3AED" },
-    { id: "negotiation", label: "Negociação", color: "#F59E0B" },
-];
+// Etapas abertas, em ordem do funil (IDs fixos do banco; label relabelado por company).
+const STAGE_ORDER = [
+    { id: "lead", label: "Lead" },
+    { id: "qualification", label: "Qualificação" },
+    { id: "proposal", label: "Proposta" },
+    { id: "negotiation", label: "Negociação" },
+] as const;
+// Volume mínimo de origem pra medir uma passagem sem virar ruído.
+const MIN_TRANSITION_BASE = 3;
+// Volume mínimo total pra confiar no funil de conversão.
+const MIN_FUNNEL_BASE = 4;
 
 interface OpenDeal {
     id: string;
@@ -73,21 +73,53 @@ const Panel = ({ title, icon: Icon, action, children, className = "" }: {
     </div>
 );
 
-// ─── KPI interpretativo ──────────────────────────────────────────────────────
-const Kpi = ({ label, value, context, tone = "default" }: {
+// Sparkline minúscula a partir do histórico real (≥2 dias). Sem dado → não renderiza.
+// Mesma linguagem do Pulso na home (polyline, sem cor decorativa).
+function Sparkline({ series, color }: { series: number[]; color: string }) {
+    if (series.length < 2) return null;
+    const w = 50, h = 18;
+    const min = Math.min(...series), max = Math.max(...series);
+    const span = max - min || 1;
+    const pts = series.map((v, i) => `${(i / (series.length - 1)) * w},${h - ((v - min) / span) * (h - 2) - 1}`).join(" ");
+    return (
+        <svg width={w} height={h} aria-hidden className="shrink-0">
+            <polyline points={pts} fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" opacity={0.85} />
+        </svg>
+    );
+}
+
+// ─── KPI com tendência (delta dia-a-dia + sparkline, igual ao Pulso) ─────────
+const TrendKpi = ({ label, value, context, tone = "default", trend, goodWhenUp, formatDelta }: {
     label: string;
     value: string;
     context: string;
-    tone?: "default" | "muted" | "positive";
-}) => (
-    <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4">
-        <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">{label}</p>
-        <p className={`text-[22px] font-bold leading-tight mt-1 tabular-nums ${tone === "muted" ? "text-slate-400" : tone === "positive" ? "text-[#10B981]" : "text-[#0B1220]"}`}>
-            {value}
-        </p>
-        <p className="text-[12px] text-slate-500 mt-0.5 leading-snug">{context}</p>
-    </div>
-);
+    tone?: "default" | "muted";
+    trend?: MetricTrend;
+    goodWhenUp: boolean;
+    formatDelta: (abs: number) => string;
+}) => {
+    const delta = trend?.delta ?? null;
+    const improving = delta != null && delta !== 0 && ((delta > 0) === goodWhenUp);
+    const deltaColor = delta == null || delta === 0 ? "#64748B" : improving ? "#047857" : "#B91C1C";
+    const sparkColor = delta == null || delta === 0 ? "#94A3B8" : improving ? "#047857" : "#B91C1C";
+    return (
+        <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4">
+            <p className="text-[11.5px] font-semibold text-slate-500">{label}</p>
+            <div className="flex items-baseline gap-1.5 mt-1">
+                <p className={`text-[22px] font-bold leading-tight tabular-nums ${tone === "muted" ? "text-slate-400" : "text-[#0B1220]"}`}>{value}</p>
+                {delta != null && delta !== 0 && (
+                    <span className="text-[11px] font-bold tabular-nums leading-none" style={{ color: deltaColor }} title="vs. dia anterior">
+                        {delta > 0 ? "↑" : "↓"}{formatDelta(Math.abs(delta))}
+                    </span>
+                )}
+            </div>
+            <div className="flex items-center justify-between gap-2 mt-1">
+                <p className="text-[12px] text-slate-500 leading-snug">{context}</p>
+                <Sparkline series={trend?.series ?? []} color={sparkColor} />
+            </div>
+        </div>
+    );
+};
 
 const SalesPerformanceCenter = () => {
     const { activeCompanyId } = useTenant();
@@ -146,29 +178,45 @@ const SalesPerformanceCenter = () => {
         const wonValue = won.reduce((a, d) => a + (Number(d.value) || 0), 0);
         const decided = wonCount + lostCount;
         const winRate = decided > 0 ? Math.round((wonCount / decided) * 100) : null;
-        const cycles = won.map((d: any) => differenceInDays(new Date(d.updated_at), new Date(d.created_at)));
+        const cycles = won.map((d: { updated_at: string; created_at: string }) => differenceInDays(new Date(d.updated_at), new Date(d.created_at)));
         const avgCycle = cycles.length > 0 ? Math.round(cycles.reduce((a, b) => a + b, 0) / cycles.length) : null;
         const forecast = winRate !== null ? pipelineValue * (winRate / 100) : null;
 
-        const funnelAll = OPEN_STAGE_DEFS.map((s) => {
-            const deals = visibleOpen.filter((d) => d.stage === s.id);
-            return { ...s, count: deals.length, value: deals.reduce((a, d) => a + (Number(d.value) || 0), 0) };
-        });
-        const funnel = funnelAll.filter((s) => s.count > 0);
-        const maxFunnelValue = Math.max(1, ...funnel.map((s) => s.value));
-        const topByValue = funnel.slice().sort((a, b) => b.value - a.value)[0] ?? null;
-        const sortedByCount = funnel.slice().sort((a, b) => b.count - a.count);
-        const topByCount = sortedByCount[0] ?? null;
-        // Empate de volume: não destacar "maior volume" se mais de uma etapa empata.
-        const countTie = topByCount ? sortedByCount.filter((s) => s.count === topByCount.count).length > 1 : false;
+        // Contagem aberta por etapa.
+        const openByStage: Record<string, number> = {};
+        for (const s of STAGE_ORDER) openByStage[s.id] = visibleOpen.filter((d) => d.stage === s.id).length;
 
-        // Atenção
+        // Funil de CONVERSÃO por snapshot: "chegou até a etapa N ou além".
+        // reached(i) = soma das etapas de i em diante + ganhos do período.
+        const reached = (i: number) => {
+            let sum = wonCount;
+            for (let k = i; k < STAGE_ORDER.length; k++) sum += openByStage[STAGE_ORDER[k].id];
+            return sum;
+        };
+        const conversions = STAGE_ORDER.map((s, i) => {
+            const toId = i + 1 < STAGE_ORDER.length ? STAGE_ORDER[i + 1].id : "won";
+            const toLabel = i + 1 < STAGE_ORDER.length ? STAGE_ORDER[i + 1].label : "Ganho";
+            const base = reached(i);
+            const passed = reached(i + 1);
+            const pct = base > 0 ? Math.round((passed / base) * 100) : null;
+            return { fromId: s.id, fromLabel: s.label, toId, toLabel, base, passed, pct };
+        });
+        const totalBase = reached(0);
+        const funnelReliable = totalBase >= MIN_FUNNEL_BASE;
+        // Gargalo = menor conversão entre as passagens com base suficiente.
+        const bottleneck = funnelReliable
+            ? conversions
+                .filter((c) => c.pct !== null && c.base >= MIN_TRANSITION_BASE)
+                .sort((a, b) => (a.pct ?? 100) - (b.pct ?? 100))[0] ?? null
+            : null;
+
+        // Atenção (parados / quentes).
         const stalledProposals = visibleOpen.filter((d) => d.stage === "proposal" && daysSince(d.updated_at) > 7);
         const stalledNegotiations = visibleOpen.filter((d) => d.stage === "negotiation" && daysSince(d.updated_at) > 7);
         const hotStalled = visibleOpen.filter((d) => d.is_hot && daysSince(d.updated_at) > 5);
         const anyStalled = visibleOpen.filter((d) => daysSince(d.updated_at) > 7);
 
-        // Time (por responsável) — só gestor
+        // Time (por responsável) — só gestor. "none" = sem dono (vira alerta de topo).
         const byOwner = new Map<string, { count: number; value: number }>();
         for (const d of open) {
             const k = d.user_id ?? "none";
@@ -176,47 +224,66 @@ const SalesPerformanceCenter = () => {
             cur.count += 1; cur.value += Number(d.value) || 0;
             byOwner.set(k, cur);
         }
+        const unassigned = byOwner.get("none") ?? null;
 
         return {
             open, visibleOpen, pipelineValue, openCount, wonCount, wonValue, lostCount, decided,
-            winRate, avgCycle, forecast, funnel, funnelAll, maxFunnelValue, topByValue, topByCount, countTie,
-            stalledProposals, stalledNegotiations, hotStalled, anyStalled, byOwner,
+            winRate, avgCycle, forecast, conversions, bottleneck, funnelReliable, totalBase,
+            stalledProposals, stalledNegotiations, hotStalled, anyStalled, byOwner, unassigned,
         };
     }, [perf, isManager, user?.id]);
 
+    // Grava snapshot diário desta tela (chaves próprias) pra a tendência acumular.
+    useEffect(() => {
+        if (!activeCompanyId || !perf) return;
+        recordMetricSnapshot(activeCompanyId, {
+            perf_pipeline: Math.round(m.pipelineValue),
+            perf_winrate: m.winRate ?? undefined,
+            perf_cycle: m.avgCycle ?? undefined,
+            perf_forecast: m.forecast != null ? Math.round(m.forecast) : undefined,
+        });
+    }, [activeCompanyId, perf, m.pipelineValue, m.winRate, m.avgCycle, m.forecast]);
+
+    // Lê o histórico (localStorage, snapshots diários por dia) no mount. O ponto de
+    // "hoje" é gravado pelo effect acima e entra na série na próxima visita.
+    const trends = useMemo(() => ({
+        perf_pipeline: getMetricTrend(activeCompanyId, "perf_pipeline"),
+        perf_winrate: getMetricTrend(activeCompanyId, "perf_winrate"),
+        perf_cycle: getMetricTrend(activeCompanyId, "perf_cycle"),
+        perf_forecast: getMetricTrend(activeCompanyId, "perf_forecast"),
+    }), [activeCompanyId]);
+
     const sellerName = (id: string) => sellers.find((s) => s.id === id)?.nome ?? "Sem responsável definido";
+    const stageLbl = useCallback(
+        (id: string, fallback: string) => (id === "won" ? "Ganho" : stageLabelFor(activeCompanyId, id, fallback)),
+        [activeCompanyId],
+    );
 
-    // Resumo executivo determinístico
-    const summary = useMemo(() => {
-        if (!perf) return "Carregando o panorama da operação…";
-        const parts: string[] = [];
-        parts.push(`${formatCurrencyCompact(m.pipelineValue)} em pipeline ativo`);
-        parts.push(`${m.openCount} ${m.openCount === 1 ? "oportunidade aberta" : "oportunidades abertas"}`);
-        parts.push(m.wonCount > 0
-            ? `${m.wonCount} ${m.wonCount === 1 ? "venda" : "vendas"} no período (${formatCurrencyCompact(m.wonValue)})`
-            : "nenhuma venda registrada no período");
-        let leitura = "";
-        if (m.openCount === 0) {
-            leitura = "Ainda não há oportunidades no funil — comece registrando os primeiros leads.";
-        } else if (m.wonCount === 0) {
-            leitura = "A operação ainda está em fase inicial: acompanhe o avanço de propostas, visitas e follow-ups.";
-        } else {
-            leitura = `Win rate de ${m.winRate}% no período. Mantenha o ritmo de avanço das oportunidades abertas.`;
+    // ─── Leitura da EVA: única voz de insight (absorve a antiga "Atenção do gestor") ──
+    const eva = useMemo(() => {
+        const bullets: { tone: "eva" | "warn" | "muted"; text: React.ReactNode }[] = [];
+        if (m.funnelReliable && m.bottleneck && m.bottleneck.pct !== null) {
+            bullets.push({
+                tone: "eva",
+                text: <>Maior queda em <strong className="text-[#0B1220]">{stageLbl(m.bottleneck.fromId, m.bottleneck.fromLabel)} → {stageLbl(m.bottleneck.toId, m.bottleneck.toLabel)}</strong> ({m.bottleneck.pct}%). É onde os deals estão caindo.</>,
+            });
         }
-        return `${parts.join(", ")}. ${leitura}`;
-    }, [perf, m]);
+        if (m.stalledNegotiations.length > 0) bullets.push({ tone: "warn", text: `${m.stalledNegotiations.length} negociação(ões) parada(s) há mais de 7 dias.` });
+        if (m.hotStalled.length > 0) bullets.push({ tone: "warn", text: `${m.hotStalled.length} lead(s) quente(s) sem movimento há dias.` });
+        if (m.stalledProposals.length > 0) bullets.push({ tone: "warn", text: `${m.stalledProposals.length} proposta(s)/visita(s) que precisam avançar.` });
+        if (m.openCount > 0 && m.wonCount === 0) bullets.push({ tone: "muted", text: "Nenhum ganho registrado no período." });
+        if (m.decided > 0 && m.decided < 3) bullets.push({ tone: "muted", text: `Win rate com base pequena (${m.decided} decididos) — ainda é amostra, não tendência.` });
+        if (bullets.length === 0 && m.openCount > 0) bullets.push({ tone: "eva", text: "Pipeline fluindo: nada parado há mais de 7 dias." });
 
-    // Itens de atenção
-    const attention = useMemo(() => {
-        const items: { sev: "high" | "mid" | "info"; text: string }[] = [];
-        if (m.stalledNegotiations.length > 0) items.push({ sev: "high", text: `${m.stalledNegotiations.length} negociação(ões) parada(s) há mais de 7 dias` });
-        if (m.hotStalled.length > 0) items.push({ sev: "high", text: `${m.hotStalled.length} lead(s) quente(s) sem movimento há dias` });
-        if (m.stalledProposals.length > 0) items.push({ sev: "mid", text: `${m.stalledProposals.length} proposta(s)/visita(s) que precisam avançar` });
-        if (m.openCount > 0 && m.wonCount === 0) items.push({ sev: "mid", text: "Nenhum ganho registrado no período" });
-        if (m.topByValue) items.push({ sev: "info", text: `Maior valor concentrado em ${stageLabelFor(activeCompanyId, m.topByValue.id, m.topByValue.label)} — priorize avançar essas oportunidades` });
-        if (m.openCount > 0 && m.decided < 3) items.push({ sev: "info", text: "Histórico ainda insuficiente para medir conversão real" });
-        return items;
-    }, [m, activeCompanyId]);
+        let headline: string;
+        if (m.openCount === 0) headline = "Comece registrando os primeiros leads.";
+        else if (m.funnelReliable && m.bottleneck && m.bottleneck.pct !== null) headline = `Destrave ${stageLbl(m.bottleneck.fromId, m.bottleneck.fromLabel)} → ${stageLbl(m.bottleneck.toId, m.bottleneck.toLabel)} — é onde os deals param.`;
+        else if (m.stalledNegotiations.length + m.hotStalled.length > 0) headline = "Mexa nas oportunidades paradas antes que esfriem.";
+        else if (m.wonCount === 0) headline = "Foco em fechar as oportunidades abertas.";
+        else headline = "Mantenha o ritmo de avanço do pipeline.";
+
+        return { headline, bullets };
+    }, [m, stageLbl]);
 
     const periodFilter = (
         <div className="flex flex-wrap items-center gap-2">
@@ -255,47 +322,60 @@ const SalesPerformanceCenter = () => {
             {/* 1. Header */}
             {headerBlock}
 
-            {/* 2. Executive summary */}
-            <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4 sm:p-5">
-                <div className="flex items-start gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1556C0]/10 flex-shrink-0">
-                        <Activity className="h-5 w-5 text-[#1556C0]" />
+            {/* 2. Alerta de topo: pipeline sem dono (o fato mais importante da tela) */}
+            {isManager && m.unassigned && m.unassigned.count > 0 && (
+                <button
+                    type="button"
+                    onClick={() => navigate("/pipeline")}
+                    className="w-full text-left flex items-center gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 transition hover:bg-rose-100/70"
+                >
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-100 flex-shrink-0">
+                        <UserX className="h-5 w-5 text-rose-600" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                        <p className="text-[13.5px] font-semibold text-[#0B1220]">
+                            {m.unassigned.count} {m.unassigned.count === 1 ? "oportunidade" : "oportunidades"} sem responsável · {formatCurrencyCompact(m.unassigned.value)}
+                        </p>
+                        <p className="text-[12.5px] text-slate-600 mt-0.5">Ninguém está conduzindo esses deals. Distribua para o time avançar.</p>
                     </div>
-                    <div>
-                        <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Resumo do período</p>
-                        <p className="text-[14px] text-[#0B1220] leading-relaxed">{summary}</p>
-                    </div>
-                </div>
-            </div>
+                    <span className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-rose-600 shrink-0">
+                        Distribuir <ArrowRight className="h-3.5 w-3.5" />
+                    </span>
+                </button>
+            )}
 
-            {/* 3. KPIs interpretativos */}
+            {/* 3. KPIs com tendência */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                <Kpi label="Pipeline ativo" value={formatCurrencyCompact(m.pipelineValue)}
-                    context={`${m.openCount} ${m.openCount === 1 ? "oportunidade aberta" : "oportunidades abertas"}`} />
-                <Kpi label="Conversão"
+                <TrendKpi label="Pipeline ativo" value={formatCurrencyCompact(m.pipelineValue)}
+                    context={`${m.openCount} ${m.openCount === 1 ? "oportunidade aberta" : "oportunidades abertas"}`}
+                    trend={trends.perf_pipeline} goodWhenUp formatDelta={(a) => formatCurrencyCompact(a)} />
+                <TrendKpi label="Win rate"
                     value={m.winRate !== null ? `${m.winRate}%` : "Sem base"}
                     context={m.winRate !== null ? `${m.wonCount} ganhos / ${m.decided} decididos` : `${m.wonCount} ganhos no período`}
-                    tone={m.winRate === null ? "muted" : "default"} />
-                <Kpi label="Ciclo médio"
+                    tone={m.winRate === null ? "muted" : "default"}
+                    trend={trends.perf_winrate} goodWhenUp formatDelta={(a) => `${a} pts`} />
+                <TrendKpi label="Ciclo médio"
                     value={m.avgCycle !== null ? `${m.avgCycle} dias` : "Sem histórico"}
                     context={m.avgCycle !== null ? "da criação ao ganho" : "ainda sem vendas fechadas"}
-                    tone={m.avgCycle === null ? "muted" : "default"} />
-                <Kpi label="Forecast"
+                    tone={m.avgCycle === null ? "muted" : "default"}
+                    trend={trends.perf_cycle} goodWhenUp={false} formatDelta={(a) => `${a}d`} />
+                <TrendKpi label="Forecast"
                     value={m.forecast !== null ? formatCurrencyCompact(m.forecast) : "—"}
                     context={m.forecast !== null ? "projeção pelo win rate" : "precisa de histórico de ganhos"}
-                    tone={m.forecast === null ? "muted" : "default"} />
+                    tone={m.forecast === null ? "muted" : "default"}
+                    trend={trends.perf_forecast} goodWhenUp formatDelta={(a) => formatCurrencyCompact(a)} />
             </div>
 
-            {/* 4. História do funil + Leitura da EVA */}
+            {/* 4. Funil de conversão + Leitura da EVA */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
                 <Panel className="lg:col-span-2">
                     <div className="flex items-start justify-between mb-4">
                         <div>
                             <div className="flex items-center gap-2">
                                 <Target className="h-4 w-4 text-slate-400" />
-                                <h2 className="text-[13px] font-semibold text-[#0B1220]">Mapa do funil</h2>
+                                <h2 className="text-[13px] font-semibold text-[#0B1220]">Funil de conversão</h2>
                             </div>
-                            <p className="text-[12px] text-slate-500 mt-0.5">Distribuição de valor e oportunidades por etapa</p>
+                            <p className="text-[12px] text-slate-500 mt-0.5">Passagem entre etapas (snapshot do pipeline atual)</p>
                         </div>
                         {m.openCount > 0 && (
                             <button onClick={() => navigate("/pipeline")} className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#1556C0] hover:underline shrink-0">
@@ -324,117 +404,104 @@ const SalesPerformanceCenter = () => {
                                 </div>
                             </div>
 
-                            <div className="space-y-3.5">
-                                {m.funnelAll.map((s) => {
-                                    const pct = m.pipelineValue > 0 ? Math.round((s.value / m.pipelineValue) * 100) : 0;
-                                    const isTopValue = m.topByValue?.id === s.id && s.count > 0;
-                                    const insight =
-                                        s.count === 0 ? { text: "Sem oportunidades nesta etapa", cls: "text-slate-400" }
-                                        : isTopValue ? { text: "Maior concentração de valor", cls: "text-[#1556C0]" }
-                                        : (!m.countTie && m.topByCount?.id === s.id) ? { text: "Maior volume de oportunidades", cls: "text-[#1556C0]" }
-                                        : (s.id === "proposal" || s.id === "negotiation") ? { text: "Follow-up recomendado", cls: "text-amber-600" }
-                                        : { text: "Precisa avançar qualificação", cls: "text-slate-400" };
-                                    return (
-                                        <div key={s.id} className={`rounded-xl px-3 py-2.5 -mx-1 ${isTopValue ? "bg-[#1556C0]/[0.04] ring-1 ring-[#1556C0]/15" : ""} ${s.count === 0 ? "opacity-55" : ""}`}>
-                                            <div className="flex items-center justify-between gap-3 mb-1.5">
-                                                <div className="flex items-center gap-2 min-w-0">
-                                                    <span className="text-[13px] font-semibold text-[#0B1220]">{stageLabelFor(activeCompanyId, s.id, s.label)}</span>
-                                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10.5px] font-medium bg-slate-100 text-slate-600">
-                                                        {s.count} {s.count === 1 ? "oportunidade" : "oportunidades"}
+                            {!m.funnelReliable ? (
+                                <p className="text-[12.5px] text-slate-500 py-2 leading-relaxed">
+                                    Ainda há poucas oportunidades para medir a passagem entre etapas com segurança. Conforme o pipeline cresce, a conversão de cada etapa aparece aqui.
+                                </p>
+                            ) : (
+                                <div className="space-y-2.5">
+                                    {m.conversions.map((c) => {
+                                        const isBottleneck = m.bottleneck?.fromId === c.fromId;
+                                        const weak = c.base < MIN_TRANSITION_BASE;
+                                        return (
+                                            <div key={c.fromId} className={`rounded-xl px-3 py-2.5 -mx-1 ${isBottleneck ? "bg-rose-50 ring-1 ring-rose-200" : ""}`}>
+                                                <div className="flex items-center justify-between gap-3 mb-1.5">
+                                                    <span className="text-[13px] font-medium text-[#0B1220] min-w-0 truncate">
+                                                        {stageLbl(c.fromId, c.fromLabel)} <span className="text-slate-400">→</span> {stageLbl(c.toId, c.toLabel)}
                                                     </span>
+                                                    <div className="flex items-center gap-2 shrink-0">
+                                                        {isBottleneck && <span className="text-[10.5px] font-semibold text-rose-600">maior queda</span>}
+                                                        <span className={`text-[14px] font-bold tabular-nums ${isBottleneck ? "text-rose-600" : weak ? "text-slate-400" : "text-[#0B1220]"}`}>
+                                                            {c.pct !== null ? `${c.pct}%` : "—"}
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                                <div className="text-right shrink-0 tabular-nums">
-                                                    <span className="text-[14px] font-bold text-[#0B1220]">{formatCurrencyCompact(s.value)}</span>
-                                                    <span className="text-[12px] text-slate-400 ml-1.5">{pct}%</span>
+                                                <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                                                    <div className="h-full rounded-full transition-all" style={{ width: `${c.pct ?? 0}%`, background: isBottleneck ? "#E11D48" : "#94A3B8" }} />
                                                 </div>
+                                                <p className="text-[11px] text-slate-400 mt-1">
+                                                    de {c.base} {c.base === 1 ? "oportunidade" : "oportunidades"}{isBottleneck ? " · é aqui que os deals caem" : weak ? " · base pequena" : ""}
+                                                </p>
                                             </div>
-                                            <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
-                                                <div className="h-full rounded-full transition-all" style={{ width: `${s.count === 0 ? 0 : Math.max(4, (s.value / m.maxFunnelValue) * 100)}%`, background: s.color }} />
-                                            </div>
-                                            <p className={`text-[11px] mt-1 ${insight.cls}`}>{insight.text}</p>
-                                        </div>
-                                    );
-                                })}
-                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </>
                     )}
                 </Panel>
 
+                {/* Leitura da EVA — única voz de insight (gargalo + atenção, num lugar só) */}
                 <Panel className="bg-[#FAF5FF] border-[#E9D5FF]">
                     <div className="flex items-center gap-2 mb-3">
                         <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#7C3AED] text-white text-[8px] font-bold leading-none">E</span>
                         <h2 className="text-[13px] font-semibold text-[#7C3AED]">Leitura da EVA</h2>
                     </div>
-                    {m.funnel.length === 0 ? (
-                        <p className="text-[12.5px] text-slate-500">Quando houver oportunidades no funil, a EVA aponta concentração e gargalos aqui.</p>
+                    {m.openCount === 0 ? (
+                        <p className="text-[12.5px] text-slate-500">Quando houver oportunidades no funil, a EVA aponta o gargalo e o que destravar aqui.</p>
                     ) : (
-                        <ul className="space-y-2 text-[12.5px] text-slate-600">
-                            {m.topByValue && <li className="flex gap-1.5"><span className="text-[#7C3AED] mt-px">•</span><span>Maior valor concentrado em <strong className="text-[#0B1220]">{stageLabelFor(activeCompanyId, m.topByValue.id, m.topByValue.label)}</strong> ({formatCurrencyCompact(m.topByValue.value)}).</span></li>}
-                            <li className="flex gap-1.5"><span className="text-[#7C3AED] mt-px">•</span><span>Prioridade: avançar oportunidades para a próxima etapa.</span></li>
-                            {m.anyStalled.length > 0 && <li className="flex gap-1.5"><span className="text-amber-500 mt-px">•</span><span>{m.anyStalled.length} oportunidade(s) parada(s) há mais de 7 dias — possível gargalo.</span></li>}
-                            {m.wonCount === 0 && <li className="flex gap-1.5"><span className="text-slate-400 mt-px">•</span><span>Histórico ainda insuficiente para medir conversão real.</span></li>}
-                        </ul>
+                        <>
+                            <p className="text-[13px] font-semibold text-[#0B1220] leading-snug mb-3">{eva.headline}</p>
+                            <ul className="space-y-2 text-[12.5px] text-slate-600">
+                                {eva.bullets.map((b, i) => (
+                                    <li key={i} className="flex gap-1.5">
+                                        <span className={`mt-px ${b.tone === "warn" ? "text-amber-500" : b.tone === "muted" ? "text-slate-400" : "text-[#7C3AED]"}`}>•</span>
+                                        <span>{b.text}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                            <button onClick={() => navigate("/pipeline")} className="mt-4 inline-flex items-center gap-1 text-[12px] font-semibold text-[#7C3AED] hover:underline">
+                                Abrir pipeline <ArrowRight className="h-3 w-3" />
+                            </button>
+                        </>
                     )}
                     <p className="text-[10px] text-[#7C3AED]/70 mt-3 pt-3 border-t border-[#E9D5FF]">A EVA aponta tendências. As decisões seguem com o time.</p>
                 </Panel>
             </div>
 
-            {/* 5 + 6: Atenção do gestor + Performance do time lado a lado em telas largas */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-            {/* 5. Atenção do gestor */}
-            <Panel title="Atenção do gestor" icon={AlertTriangle}
-                action={attention.length > 0 ? (
-                    <button onClick={() => navigate("/pipeline")} className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#1556C0] hover:underline">
-                        Abrir pipeline <ArrowRight className="h-3 w-3" />
-                    </button>
-                ) : undefined}>
-                {attention.length === 0 ? (
-                    <div className="flex items-center gap-2 text-[13px] text-[#10B981]">
-                        <CheckCircle2 className="h-4 w-4" />
-                        Tudo em dia. Nenhum deal parado há mais de 7 dias.
-                    </div>
-                ) : (
-                    <ul className="space-y-2">
-                        {attention.map((a, i) => {
-                            const sevStyle = a.sev === "high"
-                                ? { bg: "rgba(244,63,94,0.05)", bd: "rgba(244,63,94,0.2)", dot: "bg-rose-500" }
-                                : a.sev === "mid"
-                                ? { bg: "rgba(245,158,11,0.06)", bd: "rgba(245,158,11,0.25)", dot: "bg-amber-500" }
-                                : { bg: "rgba(21,86,192,0.05)", bd: "rgba(21,86,192,0.18)", dot: "bg-[#1556C0]" };
-                            return (
-                                <li key={i} className="flex items-center gap-2.5 px-3 py-2 rounded-xl border" style={{ background: sevStyle.bg, borderColor: sevStyle.bd }}>
-                                    <span className={`h-1.5 w-1.5 rounded-full ${sevStyle.dot}`} />
-                                    <span className="text-[13px] text-[#0B1220] flex-1">{a.text}</span>
-                                </li>
-                            );
-                        })}
-                    </ul>
-                )}
-            </Panel>
-
-            {/* 6. Performance do time / Minha performance */}
+            {/* 5. Performance do time / Minha performance */}
             <Panel title={isManager ? "Performance do time" : "Minha performance"} icon={Users}>
                 {isManager ? (
-                    m.byOwner.size === 0 ? (
-                        <p className="text-[13px] text-slate-500">Nenhuma oportunidade aberta para distribuir entre o time.</p>
-                    ) : (
-                        <ul className="divide-y divide-[#F1F5F9]">
-                            {[...m.byOwner.entries()].sort((a, b) => b[1].value - a[1].value).map(([uid, agg]) => {
-                                const stalled = m.open.filter((d) => (d.user_id ?? "none") === uid && daysSince(d.updated_at) > 7).length;
-                                return (
-                                    <li key={uid} className="flex items-center justify-between gap-3 py-2.5">
-                                        <div className="min-w-0">
-                                            <p className="text-[13px] font-medium text-[#0B1220] truncate">{uid === "none" ? "Sem responsável definido" : sellerName(uid)}</p>
-                                            <p className="text-[12px] text-slate-500">{agg.count} oportunidade(s) · {formatCurrencyCompact(agg.value)}</p>
-                                        </div>
-                                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold ${stalled > 0 ? "bg-amber-50 text-amber-700 border border-amber-200" : "bg-[#10B981]/10 text-[#0F8A63] border border-[#10B981]/20"}`}>
-                                            {stalled > 0 ? `${stalled} parado(s)` : "Em dia"}
-                                        </span>
-                                    </li>
-                                );
-                            })}
-                        </ul>
-                    )
+                    (() => {
+                        const owners = [...m.byOwner.entries()].filter(([uid]) => uid !== "none").sort((a, b) => b[1].value - a[1].value);
+                        if (owners.length === 0) {
+                            return (
+                                <p className="text-[13px] text-slate-500">
+                                    {m.unassigned && m.unassigned.count > 0
+                                        ? "Distribua as oportunidades acima para montar o ranking do time."
+                                        : "Nenhuma oportunidade aberta para distribuir entre o time."}
+                                </p>
+                            );
+                        }
+                        return (
+                            <ul className="divide-y divide-[#F1F5F9]">
+                                {owners.map(([uid, agg]) => {
+                                    const stalled = m.open.filter((d) => (d.user_id ?? "none") === uid && daysSince(d.updated_at) > 7).length;
+                                    return (
+                                        <li key={uid} className="flex items-center justify-between gap-3 py-2.5">
+                                            <div className="min-w-0">
+                                                <p className="text-[13px] font-medium text-[#0B1220] truncate">{sellerName(uid)}</p>
+                                                <p className="text-[12px] text-slate-500">{agg.count} oportunidade(s) · {formatCurrencyCompact(agg.value)}</p>
+                                            </div>
+                                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold ${stalled > 0 ? "bg-amber-50 text-amber-700 border border-amber-200" : "bg-[#10B981]/10 text-[#0F8A63] border border-[#10B981]/20"}`}>
+                                                {stalled > 0 ? `${stalled} parado(s)` : "Em dia"}
+                                            </span>
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        );
+                    })()
                 ) : (
                     <div className="grid grid-cols-2 gap-3">
                         <div><p className="text-[11px] text-slate-500">Minhas oportunidades</p><p className="text-[18px] font-bold text-[#0B1220] tabular-nums">{m.openCount}</p></div>
@@ -445,9 +512,7 @@ const SalesPerformanceCenter = () => {
                 )}
             </Panel>
 
-            </div>
-
-            {/* 7. Ritmo comercial */}
+            {/* 6. Ritmo comercial */}
             <Panel title="Ritmo comercial" icon={Clock}>
                 {m.open.length + m.wonCount >= 3 ? (
                     <GoldenHoursHeatmap dateRange={dateRange} />
