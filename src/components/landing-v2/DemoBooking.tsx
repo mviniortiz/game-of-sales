@@ -4,7 +4,6 @@ import { ArrowLeft, Calendar, Check, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getAttribution } from "@/lib/attribution";
 import { trackBehavior, DEMO_EVENTS } from "@/lib/analytics";
-import { DEMO_SLOTS } from "./DemoScheduler";
 import { EvaOrb } from "./EvaOrb";
 
 // LP.9 (v2) — booking PÓS-tour. Quando a demo guiada termina, a pessoa marca a
@@ -31,22 +30,35 @@ const PAIN_OPTIONS = [
     "Qualificar leads",
 ] as const;
 
-// dia (label do DEMO_SLOTS) → índice de dia da semana (Date.getDay, dom=0).
-const WEEKDAY: Record<string, number> = {
-    Domingo: 0, Segunda: 1, "Terça": 2, Quarta: 3, Quinta: 4, Sexta: 5, "Sábado": 6,
-};
+// Disponibilidade real (gerada): próximos dias úteis × horários comerciais.
+// Substitui os 4 slots fixos. "Hoje" filtra os horários já passados (folga de 1h).
+const TIMES = ["09h", "10h", "11h", "14h", "15h", "16h", "17h"];
+const WD = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
-// Próxima ocorrência do dia/hora escolhidos (horário local ≈ Brasília), ISO.
-function nextOccurrenceISO(dia: string, hora: string): string {
-    const target = WEEKDAY[dia] ?? 2;
-    const hour = parseInt(hora, 10) || 12;
+interface TimeOpt { id: string; hora: string; iso: string }
+interface DayOpt { key: string; label: string; date: string; times: TimeOpt[] }
+
+function buildDays(): DayOpt[] {
+    const out: DayOpt[] = [];
     const now = new Date();
-    const d = new Date(now);
-    d.setHours(hour, 0, 0, 0);
-    let diff = (target - now.getDay() + 7) % 7;
-    if (diff === 0 && d.getTime() <= now.getTime()) diff = 7; // já passou hoje → semana que vem
-    d.setDate(now.getDate() + diff);
-    return d.toISOString();
+    const today0 = new Date(now); today0.setHours(0, 0, 0, 0);
+    const tomorrow0 = new Date(today0); tomorrow0.setDate(today0.getDate() + 1);
+    for (let i = 0; i < 18 && out.length < 5; i++) {
+        const d = new Date(today0); d.setDate(today0.getDate() + i);
+        const wd = d.getDay();
+        if (wd === 0 || wd === 6) continue; // pula fim de semana
+        const isToday = d.getTime() === today0.getTime();
+        const times: TimeOpt[] = TIMES
+            .filter((h) => !isToday || parseInt(h, 10) > now.getHours() + 1)
+            .map((h) => {
+                const dt = new Date(d); dt.setHours(parseInt(h, 10), 0, 0, 0);
+                return { id: `${d.getTime()}_${h}`, hora: h, iso: dt.toISOString() };
+            });
+        if (!times.length) continue;
+        const label = isToday ? "Hoje" : d.getTime() === tomorrow0.getTime() ? "Amanhã" : WD[wd];
+        out.push({ key: String(d.getTime()), label, date: `${d.getDate()}/${d.getMonth() + 1}`, times });
+    }
+    return out;
 }
 
 export const DemoBooking = ({ email, site, onDone }: DemoBookingProps) => {
@@ -56,11 +68,21 @@ export const DemoBooking = ({ email, site, onDone }: DemoBookingProps) => {
     const [view, setView] = useState<View>("q_team");
     const [teamSize, setTeamSize] = useState<string>("");
     const [pain, setPain] = useState<string>("");
-    const [slotId, setSlotId] = useState<string | null>(null);
     const [emailValue, setEmailValue] = useState(email);
     const [submitting, setSubmitting] = useState(false);
 
-    const slot = useMemo(() => DEMO_SLOTS.find((s) => s.id === slotId) || null, [slotId]);
+    const days = useMemo(buildDays, []);
+    const [dayKey, setDayKey] = useState<string>(() => days[0]?.key ?? "");
+    const [slotId, setSlotId] = useState<string | null>(null);
+    const selectedDay = useMemo(() => days.find((d) => d.key === dayKey) ?? days[0] ?? null, [days, dayKey]);
+    const slot = useMemo(() => {
+        for (const d of days) {
+            const t = d.times.find((x) => x.id === slotId);
+            if (t) return { dia: d.label, date: d.date, hora: t.hora, iso: t.iso };
+        }
+        return null;
+    }, [days, slotId]);
+    const slotText = slot ? `${slot.dia}${slot.dia === "Hoje" || slot.dia === "Amanhã" ? "" : " " + slot.date}, ${slot.hora}` : "";
 
     // 3 etapas no progress (qualificação / horário / confirmar); success é terminal.
     const stepIndex = view === "schedule" ? 1 : view === "confirm" ? 2 : view === "success" ? 3 : 0;
@@ -87,12 +109,12 @@ export const DemoBooking = ({ email, site, onDone }: DemoBookingProps) => {
     const confirm = async () => {
         if (!slot || submitting) return;
         setSubmitting(true);
-        const scheduledAt = nextOccurrenceISO(slot.dia, slot.hora);
+        const scheduledAt = slot.iso;
         const cleanEmail = emailValue.trim().toLowerCase() || email.trim().toLowerCase();
         try {
             trackBehavior(DEMO_EVENTS.DEMO_CTA, {
                 cta: "demo_live_booking_confirm",
-                slot: slot.id,
+                slot: slotId ?? "",
                 team_size: teamSize || "",
                 biggest_pain: pain || "",
             });
@@ -252,40 +274,56 @@ export const DemoBooking = ({ email, site, onDone }: DemoBookingProps) => {
                         {/* ---------- HORÁRIO ---------- */}
                         {view === "schedule" && (
                             <motion.div key="schedule" initial={viewInitial} animate={{ opacity: 1, x: 0 }} exit={viewExit} transition={{ duration: 0.35, ease: EASE }}>
-                                <Heading sub="30 minutos, online. Escolha o melhor horário pra você.">
+                                <Heading sub="30 minutos, online. Escolha o dia e o horário.">
                                     Quando fica bom?
                                 </Heading>
-                                <motion.div variants={listV} initial="hidden" animate="show" className="mx-auto mt-7 grid max-w-md grid-cols-2 gap-2.5 sm:grid-cols-4">
-                                    {DEMO_SLOTS.map((s) => {
-                                        const sel = s.id === slotId;
+                                {/* dias úteis (rolável) */}
+                                <div className="mx-auto mt-6 flex max-w-md gap-2 overflow-x-auto pb-1">
+                                    {days.map((d) => {
+                                        const sel = d.key === dayKey;
+                                        return (
+                                            <button
+                                                key={d.key}
+                                                type="button"
+                                                onClick={() => { setDayKey(d.key); setSlotId(null); }}
+                                                aria-pressed={sel}
+                                                className="flex shrink-0 flex-col items-center rounded-2xl px-4 py-2.5 transition-colors focus:outline-none focus-visible:ring-2"
+                                                style={
+                                                    sel
+                                                        ? { background: "var(--lp-blue)", color: "#fff", border: "1px solid var(--lp-blue)", boxShadow: "0 10px 24px -14px rgba(21,86,192,0.6)" }
+                                                        : { background: "#fff", border: "1px solid var(--lp-line)", color: "var(--lp-ink-90)" }
+                                                }
+                                            >
+                                                <span className="text-[13.5px]" style={{ fontWeight: 600 }}>{d.label}</span>
+                                                <span className="text-[11.5px] tabular-nums" style={{ opacity: 0.7 }}>{d.date}</span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                {/* horários do dia selecionado */}
+                                <motion.div key={dayKey} variants={listV} initial="hidden" animate="show" className="mx-auto mt-3 grid max-w-md grid-cols-3 gap-2.5 sm:grid-cols-4">
+                                    {(selectedDay?.times ?? []).map((t) => {
+                                        const sel = t.id === slotId;
                                         return (
                                             <motion.button
-                                                key={s.id}
+                                                key={t.id}
                                                 type="button"
                                                 variants={itemV}
-                                                onClick={() => setSlotId(s.id)}
+                                                onClick={() => setSlotId(t.id)}
                                                 aria-pressed={sel}
-                                                aria-label={`${s.dia} às ${s.hora}, horário de Brasília`}
+                                                aria-label={`${selectedDay?.label} às ${t.hora}, horário de Brasília`}
                                                 whileHover={reduce ? undefined : { scale: 1.03 }}
                                                 whileTap={reduce ? undefined : { scale: 0.95 }}
                                                 animate={reduce ? undefined : { scale: sel ? 1.05 : 1 }}
                                                 transition={POP}
-                                                className="flex flex-col items-center rounded-2xl px-3 py-4 transition-colors focus:outline-none focus-visible:ring-2"
+                                                className="flex items-center justify-center rounded-2xl px-3 py-3.5 text-[17px] tabular-nums transition-colors focus:outline-none focus-visible:ring-2"
                                                 style={
                                                     sel
-                                                        ? { background: "var(--lp-blue)", color: "#fff", border: "1px solid var(--lp-blue)", boxShadow: "0 12px 30px -14px rgba(21,86,192,0.65)" }
-                                                        : { background: "#fff", border: "1px solid var(--lp-line)", color: "var(--lp-ink-90)" }
+                                                        ? { background: "var(--lp-blue)", color: "#fff", border: "1px solid var(--lp-blue)", fontWeight: 700, boxShadow: "0 12px 30px -14px rgba(21,86,192,0.65)" }
+                                                        : { background: "#fff", border: "1px solid var(--lp-line)", color: "var(--lp-ink-90)", fontWeight: 600 }
                                                 }
                                             >
-                                                <span className="text-[12px] uppercase tracking-wide" style={{ opacity: 0.72, fontWeight: 600 }}>{s.dia}</span>
-                                                <span className="mt-1 text-[20px] tabular-nums" style={{ fontWeight: 700 }}>{s.hora}</span>
-                                                <AnimatePresence>
-                                                    {sel && (
-                                                        <motion.span key="c" initial={reduce ? { opacity: 1 } : { scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={POP} className="mt-1.5">
-                                                            <Check size={15} strokeWidth={3} />
-                                                        </motion.span>
-                                                    )}
-                                                </AnimatePresence>
+                                                {t.hora}
                                             </motion.button>
                                         );
                                     })}
@@ -313,7 +351,7 @@ export const DemoBooking = ({ email, site, onDone }: DemoBookingProps) => {
                                 {slot && (
                                     <div className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full px-4 py-2" style={{ background: "rgba(21,86,192,0.08)", color: "var(--lp-blue)" }}>
                                         <Clock size={15} />
-                                        <span className="text-[13.5px]" style={{ fontWeight: 600 }}>{slot.dia}, {slot.hora} · Brasília</span>
+                                        <span className="text-[13.5px]" style={{ fontWeight: 600 }}>{slotText} · Brasília</span>
                                     </div>
                                 )}
                                 <Heading sub="Confirme o e-mail pra onde mandamos o convite.">Tudo certo pra marcar?</Heading>
@@ -368,7 +406,7 @@ export const DemoBooking = ({ email, site, onDone }: DemoBookingProps) => {
                                 </h3>
                                 {slot && (
                                     <p className="mt-2 text-[15px]" style={{ color: "rgba(13,20,33,0.65)" }}>
-                                        {slot.dia}, {slot.hora} · horário de Brasília
+                                        {slotText} · horário de Brasília
                                     </p>
                                 )}
                                 <p className="mx-auto mt-3 max-w-sm text-[14px]" style={{ color: "rgba(13,20,33,0.55)", lineHeight: 1.55 }}>
