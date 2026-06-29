@@ -65,6 +65,7 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [copiedHeader, setCopiedHeader] = useState(false);
   const [configId, setConfigId] = useState<string | null>(null);
@@ -143,6 +144,40 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
       toast.error(`Erro ao salvar: ${formatError(error)}`);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  // Só dá pra testar do navegador integrações de TOKEN simples em header próprio.
+  // HMAC (assina o corpo) e Basic não validam com o token cru → ficam de fora.
+  const canTest =
+    spec.webhook.authType === "token" &&
+    !spec.webhook.authHeader.toLowerCase().startsWith("authorization");
+
+  // Testa a conexão: manda um ping com o token. 401 = token recusado; qualquer
+  // outra coisa = token aceito (auth passou). Não cria deal (payload não casa
+  // com nenhum evento real).
+  const handleTest = async () => {
+    if (!token.trim()) {
+      toast.error(`Informe ${spec.webhook.authFieldLabel} primeiro`);
+      setActiveTab("webhook");
+      return;
+    }
+    setIsTesting(true);
+    try {
+      const res = await fetch(spec.webhook.url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", [spec.webhook.authHeader]: token.trim() },
+        body: JSON.stringify({ vyzon_connection_test: true }),
+      });
+      if (res.status === 401) {
+        toast.error("Token recusado (401). Confira se colou o token certo da plataforma.");
+      } else {
+        toast.success("Conexão válida — o token foi aceito pelo webhook.");
+      }
+    } catch {
+      toast.error("Não consegui alcançar o webhook. Tente de novo.");
+    } finally {
+      setIsTesting(false);
     }
   };
 
@@ -607,6 +642,17 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
             >
               Fechar
             </button>
+            {canTest && (
+              <button
+                onClick={handleTest}
+                disabled={isTesting || !token.trim()}
+                className="inline-flex items-center justify-center h-9 px-4 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ border: "1px solid #BFD3F2", color: "#1D4ED8", background: "#FFFFFF" }}
+              >
+                {isTesting ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <PlayCircle className="w-3.5 h-3.5 mr-1.5" />}
+                Testar conexão
+              </button>
+            )}
             <button
               onClick={handleSave}
               disabled={isSaving || !token.trim()}

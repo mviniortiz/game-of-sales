@@ -376,6 +376,27 @@ function vyzonOnEdit(e) {
 }`;
 }
 
+// Traduz os erros crus do lead-webhook pra algo acionável (mata o "erro escondido
+// no log do Apps Script"). Surfaçado direto no card.
+function friendlyLeadError(e: string | null): string | null {
+    if (!e) return null;
+    const s = e.toLowerCase();
+    if (s.includes("contact") || s.includes("missing")) return "faltou nome/e-mail/telefone — confira os nomes das colunas da planilha";
+    if (s.includes("secret")) return "secret inválido — confira o que foi colado no Apps Script";
+    if (s.includes("slug") || s.includes("not_found") || s.includes("404")) return "webhook não encontrado — recrie e cole o novo código";
+    return e;
+}
+
+function relShort(iso: string | null): string {
+    if (!iso) return "";
+    const min = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+    if (min < 1) return "agora";
+    if (min < 60) return `há ${min}min`;
+    const h = Math.floor(min / 60);
+    if (h < 24) return `há ${h}h`;
+    return `há ${Math.floor(h / 24)}d`;
+}
+
 function WebhookRow({
     hook,
     onToggle,
@@ -387,6 +408,7 @@ function WebhookRow({
 }) {
     const [showSecret, setShowSecret] = useState(false);
     const [showScript, setShowScript] = useState(false);
+    const [testing, setTesting] = useState(false);
     const url = `${SUPABASE_URL}/functions/v1/lead-webhook/${hook.slug}`;
     const meta = SOURCE_META[hook.source_kind];
     const isSheets = hook.source_kind === "google_sheets";
@@ -397,6 +419,30 @@ function WebhookRow({
             toast.success(`${label} copiado`);
         } catch {
             toast.error("Não foi possível copiar");
+        }
+    };
+
+    // Envia um lead de teste (modo __vyzon_test): valida secret + mapeamento SEM
+    // criar deal. Mostra o resultado na hora (acaba o "será que conectou?").
+    const sendTest = async () => {
+        setTesting(true);
+        try {
+            const res = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "x-webhook-secret": hook.secret },
+                body: JSON.stringify({ __vyzon_test: true, nome: "Lead de Teste", email: "teste@vyzon.com.br", telefone: "11999999999" }),
+            });
+            if (res.status === 401) {
+                toast.error("Secret inválido — confira o que está colado no Apps Script.");
+            } else if (res.ok) {
+                toast.success("Conexão ok! Secret válido e o webhook está recebendo.");
+            } else {
+                toast.error("O webhook respondeu com erro. Tente recriar.");
+            }
+        } catch {
+            toast.error("Não consegui alcançar o webhook.");
+        } finally {
+            setTesting(false);
         }
     };
 
@@ -443,6 +489,37 @@ function WebhookRow({
                                 </Button>
                             }
                         />
+                    </div>
+
+                    {/* Saúde do webhook — surfaça recebidos/rejeitados/último erro
+                        (antes só ficava escondido no log do Apps Script). */}
+                    {(hook.total_received > 0 || hook.total_rejected > 0 || hook.last_error) && (
+                        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px]">
+                            <span className="text-muted-foreground">
+                                {hook.total_received} recebido{hook.total_received === 1 ? "" : "s"}
+                                {hook.last_seen_at ? ` · último ${relShort(hook.last_seen_at)}` : ""}
+                            </span>
+                            {hook.total_rejected > 0 && (
+                                <span className="text-amber-400 font-medium">
+                                    {hook.total_rejected} rejeitado{hook.total_rejected === 1 ? "" : "s"}
+                                </span>
+                            )}
+                            {hook.last_error && (
+                                <span className="text-rose-400">Último erro: {friendlyLeadError(hook.last_error)}</span>
+                            )}
+                        </div>
+                    )}
+
+                    <div className="mt-3">
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={sendTest}
+                            disabled={testing}
+                            className="h-7 px-2.5 text-xs"
+                        >
+                            {testing ? "Testando…" : "Enviar lead de teste"}
+                        </Button>
                     </div>
 
                     {isSheets && (
@@ -704,7 +781,7 @@ function CreateDialog({
                             </Label>
                             <p className="text-[11px] text-muted-foreground leading-snug">
                                 {sourceKind === "google_sheets"
-                                    ? "Nomes EXATOS das colunas da sua planilha. Já reconhecemos Nome, E-mail, Telefone e WhatsApp; some aqui só se usar outros nomes."
+                                    ? "Já reconhecemos colunas como Nome, Nome completo, Cliente, E-mail, Telefone, WhatsApp, Celular, Tel e Fone. Só preencha abaixo se sua planilha usar OUTROS nomes."
                                     : "Nomes dos campos no payload da integração, se forem diferentes dos padrões. Separe por vírgula."}
                             </p>
                         </div>
@@ -763,14 +840,17 @@ function CreateDialog({
                                 <li>
                                     Rode a função{" "}
                                     <code className="font-mono">vyzonInstalar</code> uma vez
-                                    (botão ▶ Executar) e autorize quando o Google pedir.
+                                    (botão ▶ Executar).{" "}
+                                    <span className="text-amber-400 font-medium">Na 1ª vez o Google pede permissão, é normal, clique em Permitir.</span>
                                 </li>
                                 <li>
-                                    A 1ª linha da planilha é o cabeçalho. As colunas de nome,
-                                    e-mail e telefone você mapeia abaixo, com os nomes que já
-                                    usa (ex.: <code className="font-mono">Nome</code>,{" "}
+                                    A 1ª linha da planilha é o cabeçalho; os leads vêm da linha 2
+                                    em diante. Colunas como{" "}
+                                    <code className="font-mono">Nome</code>,{" "}
                                     <code className="font-mono">E-mail</code>,{" "}
-                                    <code className="font-mono">WhatsApp</code>).
+                                    <code className="font-mono">Telefone</code> e{" "}
+                                    <code className="font-mono">WhatsApp</code> são reconhecidas
+                                    sozinhas (mapeie acima só se usar outros nomes).
                                 </li>
                                 <li>Depois disso, cada linha nova cai no pipeline em ~2s.</li>
                             </ol>
