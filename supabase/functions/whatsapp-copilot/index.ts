@@ -845,6 +845,9 @@ Analise a conversa e retorne o JSON estrito com sua análise e o objeto qualific
             qualification,
             context_version_used: contextVersion,
             context_present: !contextEmpty,
+            // EVA.AUTO.1 — marca a leitura feita sozinha (1º contato auto). O front
+            // mostra "a EVA leu sozinha". Reanálise manual sobrescreve com false.
+            auto_qualified: serviceMode,
         };
 
         // ─── Persistence ─────────────────────────────────────────────────────

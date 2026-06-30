@@ -1133,6 +1133,9 @@ function RealContent({
 }) {
     const { analysis, qualification, legacy } = insight;
     const summary = analysis.sentiment || "Análise da EVA disponível.";
+    // EVA.AUTO.1 — leitura feita automaticamente no 1º contato (carimbo do
+    // modo serviço). Some quando o humano reanalisa manualmente.
+    const autoQualified = Boolean((analysis as { auto_qualified?: boolean }).auto_qualified);
     const proximaAcaoLabel = qualification.proxima_acao
         ? PROXIMA_ACAO_LABELS[qualification.proxima_acao] ?? qualification.proxima_acao
         : null;
@@ -1166,6 +1169,18 @@ function RealContent({
 
     return (
         <Stack className="space-y-4" {...(stackProps as object)}>
+            {/* EVA.AUTO.1 — atribuição: a EVA leu sozinha quando o lead chegou */}
+            {autoQualified && (
+                <RevealItem
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg"
+                    style={{ background: "rgba(109,40,217,0.06)", border: "1px solid rgba(109,40,217,0.16)" }}
+                >
+                    <EvaNode size={11} color="#6D28D9" />
+                    <p className="text-[11.5px] font-medium" style={{ color: "#6D28D9", lineHeight: 1.4 }}>
+                        A EVA leu esta conversa sozinha quando o lead chegou.
+                    </p>
+                </RevealItem>
+            )}
             {/* Avisos finos */}
             {hasAgencyGap && (
                 <RevealItem>
