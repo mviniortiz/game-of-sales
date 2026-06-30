@@ -649,96 +649,118 @@ function PanelContent({
         ? "Reanalisar agora"
         : "Reanalisar";
 
+    // Estado da leitura num único ponto (cor do dot + texto do status). De-dup:
+    // o "desatualizada" deixa de ser pill solta e vira o tom desta linha.
+    const isStale = Boolean(
+        insight.hasAnalysis && !insight.analyzing &&
+        (insight.isStaleByMessages || insight.isStaleByContext),
+    );
+    const statusDot = insight.analyzing
+        ? "#2563EB"
+        : insight.error
+        ? "#DC2626"
+        : isStale
+        ? "#F59E0B"
+        : insight.hasAnalysis
+        ? "#10B981"
+        : "#94A3B8";
+    const statusColor = insight.analyzing
+        ? "#2563EB"
+        : insight.error
+        ? "#B91C1C"
+        : isStale
+        ? "#B45309"
+        : insight.hasAnalysis
+        ? "#475569"
+        : "#64748B";
+    // No header, o stale vira só "Desatualizada" (o banner abaixo dá o detalhe +
+    // o CTA de reanalisar) — evita repetir a mesma frase em dois lugares.
+    const statusText = isStale ? "Desatualizada" : headerSubtitle;
+
     return (
         <>
-            {/* Header — sticky */}
+            {/* Header — sticky. 2 linhas: identidade+ações (cima) / status (baixo),
+                pra o status não competir por espaço e quebrar feio. */}
             <div
-                className="px-5 py-3.5 flex items-center gap-3 shrink-0"
+                className="px-5 pt-3.5 pb-3 shrink-0"
                 style={{
                     borderBottom: "1px solid var(--ibx-line)",
                     background: "#FFFFFF",
                 }}
             >
-                <EvaOrb
-                    variant="blue"
-                    size={36}
-                    className="shrink-0"
-                    state={insight.analyzing ? "analyzing" : "idle"}
-                    showVoice={false}
-                />
-                <div className="flex-1 min-w-0">
+                {/* Linha 1 — identidade + ações */}
+                <div className="flex items-center gap-3">
+                    <EvaOrb
+                        variant="blue"
+                        size={36}
+                        className="shrink-0"
+                        state={insight.analyzing ? "analyzing" : "idle"}
+                        showVoice={false}
+                    />
                     <p
-                        className="text-[13px] font-semibold leading-tight"
+                        className="flex-1 min-w-0 truncate text-[14px] font-semibold leading-tight"
                         style={{ color: "#0B1220" }}
                     >
                         EVA Comercial
                     </p>
-                    <p className="text-[10.5px] mt-0.5" style={{ color: "#64748B" }}>
-                        {headerSubtitle}
-                    </p>
+                    {insight.hasAnalysis && !insight.analyzing && (
+                        <button
+                            type="button"
+                            onClick={() => insight.reanalyze()}
+                            title={reanalyzeLabel}
+                            aria-label={reanalyzeLabel}
+                            className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0 cursor-pointer transition-[filter] hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/40"
+                            style={{ background: "rgba(37,99,235,0.07)", color: "#2563EB" }}
+                        >
+                            <RefreshCw className="h-3.5 w-3.5" />
+                        </button>
+                    )}
+                    <span
+                        className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full shrink-0"
+                        title="A EVA sugere. Seu time aprova antes de qualquer ação."
+                        style={{
+                            background: "rgba(124,58,237,0.10)",
+                            color: "#6D28D9",
+                            fontWeight: 600,
+                            letterSpacing: "0.01em",
+                        }}
+                    >
+                        <EvaNode size={9} color="#6D28D9" />
+                        Assistida
+                    </span>
+                    {/* Mobile: fecha a bottom sheet (no desktop a coluna é fixa). */}
+                    {onClose && <SheetCloseButton onClose={onClose} />}
                 </div>
-                {/* LP-INBOX.2 — desatualizada visível JÁ no header (não só no meio),
-                    com pulso muito sutil. Discreto mas inequívoco. */}
-                {insight.hasAnalysis && !insight.analyzing &&
-                 (insight.isStaleByMessages || insight.isStaleByContext) && (
+
+                {/* Linha 2 — status num lugar só (dot + texto), alinhado ao título.
+                    O tom do dot carrega o "desatualizada" (não precisa de pill). */}
+                <div className="flex items-center justify-between gap-2 mt-2 pl-[48px]">
                     <span
-                        className="vz-eva-stale inline-flex items-center gap-1 text-[9.5px] px-1.5 py-0.5 rounded uppercase shrink-0"
-                        title={insight.isStaleByContext ? "O contexto da EVA mudou desde a última análise" : "Chegaram mensagens novas desde a última análise"}
-                        style={{
-                            background: "rgba(245,158,11,0.12)",
-                            color: "#B45309",
-                            fontWeight: 700,
-                            letterSpacing: "0.05em",
-                        }}
+                        className="inline-flex items-center gap-1.5 min-w-0 text-[11px]"
+                        style={{ color: statusColor }}
                     >
-                        <span className="vz-eva-stale-dot h-1.5 w-1.5 rounded-full" style={{ background: "#F59E0B" }} />
-                        Desatualizada
+                        <span
+                            className={`h-1.5 w-1.5 rounded-full shrink-0 ${insight.analyzing || isStale ? "vz-eva-stale-dot" : ""}`}
+                            style={{ background: statusDot }}
+                        />
+                        <span className="truncate">{statusText}</span>
                     </span>
-                )}
-                {insight.hasAnalysis && !insight.analyzing && (
-                    <button
-                        type="button"
-                        onClick={() => insight.reanalyze()}
-                        title={reanalyzeLabel}
-                        className="h-6 w-6 rounded-md flex items-center justify-center transition-colors"
-                        style={{
-                            background: "rgba(37,99,235,0.06)",
-                            color: "#2563EB",
-                        }}
-                    >
-                        <RefreshCw className="h-3 w-3" />
-                    </button>
-                )}
-                {/* FIO 4 — avisa preventivamente quando o limite diário está acabando. */}
-                {insight.remaining !== null && insight.remaining <= 10 && (
-                    <span
-                        className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded shrink-0 tabular-nums"
-                        title={`Restam ${insight.remaining} de ${insight.dailyLimit ?? "—"} análises da EVA hoje`}
-                        style={{
-                            background: insight.remaining <= 3 ? "rgba(220,38,38,0.10)" : "rgba(245,158,11,0.12)",
-                            color: insight.remaining <= 3 ? "#DC2626" : "#B45309",
-                            fontWeight: 700,
-                        }}
-                    >
-                        <Clock className="h-2.5 w-2.5" />
-                        {insight.remaining} {insight.remaining === 1 ? "análise" : "análises"}
-                    </span>
-                )}
-                <span
-                    className="inline-flex items-center gap-1 text-[9.5px] px-1.5 py-0.5 rounded uppercase shrink-0"
-                    title="A EVA sugere. Seu time aprova antes de qualquer ação."
-                    style={{
-                        background: "rgba(124,58,237,0.10)",
-                        color: "#6D28D9",
-                        fontWeight: 700,
-                        letterSpacing: "0.06em",
-                    }}
-                >
-                    <EvaNode size={10} color="#6D28D9" />
-                    Assistida
-                </span>
-                {/* Mobile: fecha a bottom sheet (no desktop a coluna é fixa, sem X). */}
-                {onClose && <SheetCloseButton onClose={onClose} />}
+                    {/* FIO 4 — avisa quando o limite diário está acabando. */}
+                    {insight.remaining !== null && insight.remaining <= 10 && (
+                        <span
+                            className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded shrink-0 tabular-nums"
+                            title={`Restam ${insight.remaining} de ${insight.dailyLimit ?? "—"} análises da EVA hoje`}
+                            style={{
+                                background: insight.remaining <= 3 ? "rgba(220,38,38,0.10)" : "rgba(245,158,11,0.12)",
+                                color: insight.remaining <= 3 ? "#DC2626" : "#B45309",
+                                fontWeight: 700,
+                            }}
+                        >
+                            <Clock className="h-2.5 w-2.5" />
+                            {insight.remaining} {insight.remaining === 1 ? "análise" : "análises"}
+                        </span>
+                    )}
+                </div>
             </div>
 
             {/* V1.1.2 — banner: 3 estados a partir da fonte de verdade única */}
