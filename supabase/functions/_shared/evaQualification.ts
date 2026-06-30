@@ -63,6 +63,9 @@ export interface Qualification {
     score_justificativa: string | null;
     urgencia: Urgencia | null;
     orcamento: Orcamento | null;
+    /** Valor estimado da oportunidade (R$), ANCORADO no preço do serviço
+     *  cadastrado que casa com servico_interesse. null se não houver base. */
+    valor_estimado: number | null;
     objecao: string | null;
     info_coletada: string[];
     info_faltante: string[];
@@ -156,6 +159,12 @@ export function normalizeQualification(raw: unknown): Qualification {
         score = Math.round(clamp(r.score_sugerido, 0, 100));
     }
 
+    // valor estimado (R$) — número não-negativo (ancorado no preço do serviço)
+    let valor_estimado: number | null = null;
+    if (typeof r.valor_estimado === "number" && Number.isFinite(r.valor_estimado) && r.valor_estimado >= 0) {
+        valor_estimado = Math.round(r.valor_estimado);
+    }
+
     // confianca 0..1
     let confianca = 0.5;
     if (typeof r.confianca === "number" && Number.isFinite(r.confianca)) {
@@ -179,6 +188,7 @@ export function normalizeQualification(raw: unknown): Qualification {
         score_justificativa: cleanString(r.score_justificativa, 280),
         urgencia: pickEnum(r.urgencia, URGENCIA_VALUES),
         orcamento: pickEnum(r.orcamento, ORCAMENTO_VALUES),
+        valor_estimado,
         objecao: cleanString(r.objecao, 240),
         info_coletada: cleanStringArray(r.info_coletada, 10, 200),
         info_faltante: cleanStringArray(r.info_faltante, 10, 200),
@@ -201,6 +211,7 @@ export function emptyQualification(): Qualification {
         score_justificativa: null,
         urgencia: null,
         orcamento: null,
+        valor_estimado: null,
         objecao: null,
         info_coletada: [],
         info_faltante: [],
