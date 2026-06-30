@@ -193,6 +193,52 @@ interface DualWriteResult {
 
 /** Dual-write best-effort. Não joga; retorna `{ok:false, step, error}`.
  *  Cada etapa é isolada — falha em uma não interrompe o loop principal. */
+// EVA.AUTO.1 — auto-qualificação no 1º contato de número novo. Quando uma
+// conversa NOVA inbound nasce e a empresa tem o Qualificador ATIVADO
+// (eva_blueprints.status='approved_assisted'), dispara a whatsapp-copilot em
+// modo serviço pra deixar a leitura pronta no painel da EVA, esperando o OK do
+// humano. Fire-and-forget (waitUntil): NUNCA bloqueia nem quebra o recebimento.
+// Assistido: a EVA só LÊ e rascunha — não envia, não move pipeline.
+async function autoQualifyNewLead(admin: any, n: NormalizedMessage): Promise<void> {
+  try {
+    if (!n.companyId || !n.chatPhone || !n.body || !n.body.trim()) return;
+
+    // Gate: a empresa tem o Qualificador ativado? Pega o dono que ativou.
+    const { data: bp } = await admin
+      .from("eva_blueprints")
+      .select("approved_by, created_by")
+      .eq("company_id", n.companyId)
+      .eq("agent_key", "qualifier")
+      .eq("status", "approved_assisted")
+      .limit(1)
+      .maybeSingle();
+    if (!bp) return; // agente não ativado → não faz nada
+    const ownerUserId = bp.approved_by || bp.created_by;
+    if (!ownerUserId) return;
+
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/whatsapp-copilot`, {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        autoQualify: true,
+        company_id: n.companyId,
+        ownerUserId,
+        contactPhone: `+${n.chatPhone}`,
+        contactName: n.contactName || null,
+        messages: [{ text: n.body, sender: "them" }],
+      }),
+    });
+    if (!res.ok) console.warn("[auto-qualify] copilot status", res.status);
+    else console.log("[auto-qualify] pré-análise disparada", n.chatPhone);
+  } catch (e) {
+    console.warn("[auto-qualify] ignorado (erro):", (e as { message?: string })?.message || e);
+  }
+}
+
 async function dualWriteChannel(
   admin: any,
   n: NormalizedMessage,
@@ -352,6 +398,7 @@ async function dualWriteChannel(
 
   // ── 3. channel_conversations (upsert por connection_id + contact_id) ────
   let conversationId: string | undefined;
+  let isNewInboundConv = false; // EVA.AUTO.1 — 1º contato de número novo (inbound)
   try {
     const { data: existing, error: selErr } = await admin
       .from("channel_conversations")
@@ -419,6 +466,7 @@ async function dualWriteChannel(
         }
       } else {
         conversationId = created.id;
+        isNewInboundConv = isInbound; // conversa nova: 1º contato
       }
     }
   } catch (err) {
@@ -535,6 +583,12 @@ async function dualWriteChannel(
       conversationId,
       error: (err as any)?.message?.slice(0, 200) || String(err),
     };
+  }
+
+  // EVA.AUTO.1 — lead novo entrou: dispara a auto-qualificação em background.
+  // waitUntil mantém a função viva sem segurar o 200; o helper é à prova de erro.
+  if (isNewInboundConv && n.body && n.body.trim()) {
+    try { (globalThis as any).EdgeRuntime?.waitUntil?.(autoQualifyNewLead(admin, n)); } catch { /* noop */ }
   }
 
   return {

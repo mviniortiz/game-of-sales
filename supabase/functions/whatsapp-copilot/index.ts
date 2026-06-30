@@ -31,6 +31,9 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
 const DAILY_LIMIT_PER_USER = 50;
+// EVA.AUTO.1 — auto-qualificação (modo serviço) consome um balde por-empresa,
+// separado da cota manual do dono. Teto diário de novos contatos analisados.
+const AUTO_DAILY_LIMIT = 200;
 const WINDOW_SECONDS = 86400;
 const CACHE_TTL_MINUTES = 60;
 const MAX_MESSAGES = 30;
@@ -531,26 +534,11 @@ serve(async (req) => {
         const authHeader = req.headers.get("Authorization");
         if (!authHeader) return json(401, { error: "Unauthorized" });
 
-        const userSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-            global: { headers: { Authorization: authHeader } },
-        });
         const adminSupabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-
-        const { data: { user }, error: userError } = await userSupabase.auth.getUser();
-        if (userError || !user) return json(401, { error: "Unauthorized" });
-
-        // company_id DERIVADO DO JWT — nunca confiar no payload do client
-        const { data: profile } = await adminSupabase
-            .from("profiles")
-            .select("company_id, nome, is_super_admin")
-            .eq("id", user.id)
-            .single();
-
-        const companyId: string | null = profile?.company_id ?? null;
 
         // ─── Body parse ──────────────────────────────────────────────────────
         const body = await req.json();
-        const { messages, contactName, contactPhone, force, objective } = body as {
+        const { messages, contactName, contactPhone, force, objective, autoQualify } = body as {
             messages: Array<{ text: string; sender: string }>;
             contactName?: string;
             contactPhone?: string;
@@ -560,14 +548,63 @@ serve(async (req) => {
             /** PROSPECT.1 — objetivo da conversa (ex.: prospecção, marcar demo).
              *  Quando presente, orienta a resposta_sugerida pra esse fim. */
             objective?: string;
+            /** EVA.AUTO.1 — auto-qualificação interna (modo serviço). Só vale se a
+             *  chamada usar a service_role key. company_id + ownerUserId no payload. */
+            autoQualify?: boolean;
         };
+
+        // EVA.AUTO.1 — modo serviço: chamada interna autenticada com a
+        // service_role key (não JWT de usuário). Só alcançável por quem tem a key
+        // (o webhook). Pula getUser e o tenant guard; persiste sob o dono que
+        // ATIVOU o agente (admin enxerga via RLS "Company admins view all").
+        const isServiceCall = authHeader === `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`;
+        const serviceMode = isServiceCall && autoQualify === true;
+
+        let user: { id: string };
+        let profile: { company_id?: string | null; nome?: string | null; is_super_admin?: boolean } | null;
+        let companyId: string | null;
+
+        if (serviceMode) {
+            const ownerUserId = (body as { ownerUserId?: string }).ownerUserId ?? null;
+            const svcCompanyId = (body as { company_id?: string }).company_id ?? null;
+            if (!ownerUserId || !svcCompanyId) {
+                return json(400, { error: "service call requires company_id + ownerUserId", code: "SERVICE_BAD_PARAMS" });
+            }
+            user = { id: ownerUserId };
+            companyId = svcCompanyId;
+            const { data: prof } = await adminSupabase
+                .from("profiles").select("nome").eq("id", ownerUserId).maybeSingle();
+            profile = { company_id: svcCompanyId, nome: prof?.nome ?? null };
+        } else {
+            const userSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+                global: { headers: { Authorization: authHeader } },
+            });
+            const { data: { user: authedUser }, error: userError } = await userSupabase.auth.getUser();
+            if (userError || !authedUser) return json(401, { error: "Unauthorized" });
+            user = { id: authedUser.id };
+            // company_id DERIVADO DO JWT — nunca confiar no payload do client
+            const { data: prof } = await adminSupabase
+                .from("profiles")
+                .select("company_id, nome, is_super_admin")
+                .eq("id", authedUser.id)
+                .single();
+            profile = prof ?? null;
+            companyId = prof?.company_id ?? null;
+        }
+
+        // Rate limit isolado: a auto-qualificação consome um balde por-empresa,
+        // sem roubar a cota manual diária do dono.
+        const rlBucket = serviceMode ? `whatsapp-copilot:auto:${companyId}` : `whatsapp-copilot:user:${user.id}`;
+        const rlLimit = serviceMode ? AUTO_DAILY_LIMIT : DAILY_LIMIT_PER_USER;
 
         if (!messages || !Array.isArray(messages) || messages.length === 0) {
             return json(400, { error: "messages array is required" });
         }
 
         // ─── Tenant guard: chat_phone pertence ao user? ──────────────────────
-        if (contactPhone) {
+        // (Pulado no modo serviço: a chamada é interna e confiável, e o lead novo
+        //  ainda não tem mensagens sob o user_id do dono.)
+        if (!serviceMode && contactPhone) {
             const owns = await validateChatOwnership(adminSupabase, user.id, contactPhone);
             if (!owns) {
                 console.warn(
@@ -620,8 +657,8 @@ serve(async (req) => {
                         );
                         const peek = await peekRateLimit(
                             adminSupabase,
-                            `whatsapp-copilot:user:${user.id}`,
-                            DAILY_LIMIT_PER_USER,
+                            rlBucket,
+                            rlLimit,
                             WINDOW_SECONDS,
                         );
                         return json(200, {
@@ -648,8 +685,8 @@ serve(async (req) => {
         // ─── Rate limit peek ─────────────────────────────────────────────────
         const rateLimit = await peekRateLimit(
             adminSupabase,
-            `whatsapp-copilot:user:${user.id}`,
-            DAILY_LIMIT_PER_USER,
+            rlBucket,
+            rlLimit,
             WINDOW_SECONDS,
         );
 
@@ -916,8 +953,8 @@ Analise a conversa e retorne o JSON estrito com sua análise e o objeto qualific
         // ─── Consume rate limit só depois do sucesso ─────────────────────────
         const consumed = await consumeRateLimit(
             adminSupabase,
-            `whatsapp-copilot:user:${user.id}`,
-            DAILY_LIMIT_PER_USER,
+            rlBucket,
+            rlLimit,
             WINDOW_SECONDS,
         );
 
