@@ -28,6 +28,10 @@ export interface Specialist {
     opening: string;
     /** Os 4 campos que a conversa monta. */
     fields: SpecialistField[];
+    /** true = card visível na galeria mas "Em breve" (não configurável/ativável).
+     *  Só o Qualificador tem runtime real no Inbox hoje; os outros ainda não
+     *  fazem nada na ponta, então não deixamos configurar agente morto. */
+    comingSoon?: boolean;
 }
 
 export const SPECIALISTS: Record<SpecialistKey, Specialist> = {
@@ -62,6 +66,7 @@ export const SPECIALISTS: Record<SpecialistKey, Specialist> = {
             { key: "tom", label: "Tom da retomada" },
             { key: "parar", label: "Quando parar de insistir" },
         ],
+        comingSoon: true,
     },
     propostas: {
         key: "propostas",
@@ -78,6 +83,7 @@ export const SPECIALISTS: Record<SpecialistKey, Specialist> = {
             { key: "provas", label: "Diferenciais e provas" },
             { key: "redline", label: "O que nunca prometer" },
         ],
+        comingSoon: true,
     },
     reativacao: {
         key: "reativacao",
@@ -94,6 +100,7 @@ export const SPECIALISTS: Record<SpecialistKey, Specialist> = {
             { key: "tom", label: "Tom da reabordagem" },
             { key: "redline", label: "Linha vermelha" },
         ],
+        comingSoon: true,
     },
 };
 
