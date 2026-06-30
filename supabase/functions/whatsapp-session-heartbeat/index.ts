@@ -89,32 +89,17 @@ async function checkConnectionState(instanceName: string): Promise<ResolvedStatu
   }
 }
 
-// ── WATCHDOG da sessão ZUMBI (2026-06-22) ──────────────────────────────────────
+// ── WATCHDOG da sessão ZUMBI (2026-06-22, redesenhado 2026-06-30 anti-ban) ──────
 // Sintoma: connectionState diz "open" e o webhook RECEBE, mas o socket de envio
-// fica preso (sendText/getBase64 estouram timeout). Detecção: um sendText pra um
-// número INVÁLIDO ("000000") — se o socket responde (mesmo com erro "não existe"),
-// está vivo; se ESTOURA o timeout, está zumbi. Cura: /instance/restart (preserva
-// o pareamento, sem QR). Roda só nas instâncias realmente "open".
-const PROBE_TIMEOUT_MS = 6000;
+// fica preso (sendText estoura timeout). ANTES detectávamos com um sendText pra um
+// número INVÁLIDO ("000000") a cada 5min — isso é um SINAL CLÁSSICO DE BAN no
+// Baileys (mensagem robótica pra estranho/número inválido). REMOVIDO.
+// AGORA o sinal é REAL: o /send marca channel_connections.send_failed_at quando um
+// envio do usuário estoura timeout (socket preso). Aqui reiniciamos só as
+// instâncias "open" com falha real recente. Cura: /instance/restart (preserva o
+// pareamento, sem QR). Zero mensagem fake → zero risco de ban.
 const RESTART_TIMEOUT_MS = 15000;
-
-async function isSendSocketStuck(instanceName: string): Promise<boolean> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
-  try {
-    await fetch(`${EVOLUTION_API_URL}/message/sendText/${instanceName}`, {
-      method: "POST",
-      headers: { apikey: EVOLUTION_API_KEY!, "Content-Type": "application/json" },
-      body: JSON.stringify({ number: "000000", text: "ping" }),
-      signal: controller.signal,
-    });
-    return false; // respondeu (qualquer status HTTP) → socket vivo
-  } catch (err) {
-    return (err as Error)?.name === "AbortError"; // timeout → zumbi
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
+const RECENT_SEND_FAIL_MS = 15 * 60 * 1000; // janela da falha real
 
 async function restartInstance(instanceName: string): Promise<boolean> {
   const controller = new AbortController();
@@ -146,7 +131,7 @@ serve(async (req) => {
   // Conexões Evolution conhecidas (pula seeds de demo — sem instância real).
   const { data: conns, error: connErr } = await admin
     .from("channel_connections")
-    .select("id, external_id, status")
+    .select("id, external_id, status, send_failed_at")
     .eq("provider", "evolution");
   if (connErr) {
     return json(500, { error: `select connections failed: ${connErr.message}` });
@@ -192,19 +177,27 @@ serve(async (req) => {
     else updated += ids.length;
   }
 
-  // ── WATCHDOG: testa o socket de envio das instâncias "open" e reinicia as zumbis ──
+  // ── WATCHDOG (anti-ban): reinicia instâncias "open" com FALHA DE ENVIO real
+  //    recente (sinal vindo do /send, sem sonda-fantasma). Restart limpa o flag. ──
   const restarted: string[] = [];
   const stuckButRestartFailed: string[] = [];
-  for (let i = 0; i < activeInstances.length; i += BATCH_SIZE) {
-    const batch = activeInstances.slice(i, i + BATCH_SIZE);
-    const probes = await Promise.all(
-      batch.map(async (name) => ({ name, stuck: await isSendSocketStuck(name) })),
-    );
-    for (const { name, stuck } of probes) {
-      if (!stuck) continue;
-      const ok = await restartInstance(name);
-      if (ok) restarted.push(name);
-      else stuckButRestartFailed.push(name);
+  const nowMs = Date.now();
+  const failByInstance: Record<string, number | null> = {};
+  for (const c of targets) {
+    const t = (c as { send_failed_at?: string | null }).send_failed_at;
+    failByInstance[c.external_id] = t ? new Date(t).getTime() : null;
+  }
+  for (const name of activeInstances) {
+    const failedAt = failByInstance[name];
+    if (!failedAt || nowMs - failedAt > RECENT_SEND_FAIL_MS) continue; // sem falha real recente
+    const ok = await restartInstance(name);
+    if (ok) {
+      restarted.push(name);
+      await admin.from("channel_connections")
+        .update({ send_failed_at: null })
+        .eq("provider", "evolution").eq("external_id", name);
+    } else {
+      stuckButRestartFailed.push(name);
     }
   }
 

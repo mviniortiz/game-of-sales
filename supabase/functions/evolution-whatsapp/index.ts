@@ -165,6 +165,26 @@ function json(status: number, body: unknown) {
   });
 }
 
+// Anti-ban: sinal REAL de socket preso (sem sonda-fantasma). Um envio do usuário
+// que ESTOURA timeout marca send_failed_at; o heartbeat reinicia só quem falhou
+// de verdade. O primeiro envio bem-sucedido limpa o sinal. Best-effort: nunca
+// quebra o envio.
+async function markSendStuck(admin: any, instanceName: string) {
+  try {
+    await admin.from("channel_connections")
+      .update({ send_failed_at: new Date().toISOString() })
+      .eq("provider", "evolution").eq("external_id", instanceName);
+  } catch { /* noop */ }
+}
+async function clearSendStuck(admin: any, instanceName: string) {
+  try {
+    await admin.from("channel_connections")
+      .update({ send_failed_at: null })
+      .eq("provider", "evolution").eq("external_id", instanceName)
+      .not("send_failed_at", "is", null);
+  } catch { /* noop */ }
+}
+
 function extractNumberFromJid(value?: string | null) {
   if (!value) return "";
   return String(value).split("@")[0].replace(/\D/g, "");
@@ -856,9 +876,14 @@ serve(async (req) => {
             presence: "composing",
           }),
         }, typingMs + 8000);
+        // Envio OK → socket vivo: limpa qualquer sinal de "preso".
+        await clearSendStuck(adminSupabase, instanceName);
         return json(200, { success: true, instanceName, result: sendRes });
       } catch (sendErr: any) {
         console.error("[send] error:", sendErr?.message, "status:", sendErr?.status, "payload:", JSON.stringify(sendErr?.payload));
+        // Timeout (sem status HTTP) = socket possivelmente preso → marca pro
+        // heartbeat reiniciar. Erro COM status = o socket respondeu (vivo), não marca.
+        if (!sendErr?.status) await markSendStuck(adminSupabase, instanceName);
         throw sendErr;
       }
     }

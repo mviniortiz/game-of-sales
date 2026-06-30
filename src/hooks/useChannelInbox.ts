@@ -792,6 +792,9 @@ export function useChannelInbox(): UseChannelInbox {
     }, [connectionId, refetchChats]);
 
     // ── 8. Realtime ───────────────────────────────────────────────────────
+    // Detecta queda do socket pra reconciliar na reconexão (o Realtime pode ter
+    // perdido eventos enquanto esteve fora).
+    const realtimeDroppedRef = useRef(false);
     useEffect(() => {
         if (!connectionId) return;
         const channel = supabase
@@ -835,7 +838,17 @@ export function useChannelInbox(): UseChannelInbox {
                     scheduleRefetchChats();
                 },
             )
-            .subscribe();
+            .subscribe((status) => {
+                // Reconexão: se o socket caiu (erro/timeout/closed) e voltou,
+                // reconcilia na hora — recupera o que o Realtime pode ter perdido
+                // enquanto esteve fora. Sem isso, só o intervalo de 15s pegaria.
+                if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+                    realtimeDroppedRef.current = true;
+                } else if (status === "SUBSCRIBED" && realtimeDroppedRef.current) {
+                    realtimeDroppedRef.current = false;
+                    void refreshAll(selectedConversationIdRef.current);
+                }
+            });
         return () => {
             void supabase.removeChannel(channel);
         };
@@ -882,6 +895,24 @@ export function useChannelInbox(): UseChannelInbox {
             void refreshAll(selectedConversationIdRef.current);
         }, INBOX_RESYNC_MS);
         return () => clearInterval(id);
+    }, [connectionId, refreshAll]);
+
+    // ── 8c. Resync imediato ao voltar pro foco da aba ─────────────────────
+    // Acaba o "só aparece quando atualizo": ao reabrir/focar a aba, reconcilia
+    // na hora em vez de esperar até 15s do intervalo. Só DB (Supabase), sem
+    // tocar no WhatsApp — zero risco de ban.
+    useEffect(() => {
+        if (!connectionId) return;
+        const onFocusOrVisible = () => {
+            if (typeof document !== "undefined" && document.hidden) return;
+            void refreshAll(selectedConversationIdRef.current);
+        };
+        window.addEventListener("focus", onFocusOrVisible);
+        document.addEventListener("visibilitychange", onFocusOrVisible);
+        return () => {
+            window.removeEventListener("focus", onFocusOrVisible);
+            document.removeEventListener("visibilitychange", onFocusOrVisible);
+        };
     }, [connectionId, refreshAll]);
 
     // ── 9. Cleanup timers no unmount ──────────────────────────────────────
