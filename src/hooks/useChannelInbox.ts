@@ -157,11 +157,13 @@ function rowsToChat(conv: ConversationRow, lastMsg?: LastMessageRow): Chat {
             ? {
                   text: lastMessageText(lastMsg),
                   time: timeLabel(ts),
+                  at: new Date(ts).getTime(), // epoch p/ ordenação + tempo de espera da lista priorizada
                   isMe: lastMsg.direction === "outbound",
               }
             : {
                   text: "",
                   time: timeLabel(ts),
+                  at: new Date(ts).getTime(),
                   isMe: false,
               },
     };

@@ -21,9 +21,9 @@
 // Validação: /inbox-list-preview com os dois estados. InboxList.tsx antigo
 // intocado até o Markus aprovar.
 // ─────────────────────────────────────────────────────────────────────────────
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { ArrowRight, ChevronDown, ChevronRight, Clock3, ListOrdered, Lock, Search } from "lucide-react";
-import { EvaEntity } from "@/components/eva/EvaEntity";
+import { EvaOrb } from "@/components/landing-v2/EvaOrb";
 import type { Chat } from "@/hooks/useEvolutionAPI";
 
 // ─── Tipos do sinal de prioridade (placeholder do cálculo real) ─────────────
@@ -49,6 +49,8 @@ export interface InboxPriorityListProps {
     onSelect: (chatId: string) => void;
     /** Ponte do estado B → /eva-studio. */
     onOpenStudio: () => void;
+    /** Conteúdo injetado abaixo do header/busca (ex: card de conexão WhatsApp no Inbox). */
+    headerSlot?: ReactNode;
 }
 
 const PRIORITY_LABEL: Record<LeadPriority, string> = {
@@ -106,6 +108,7 @@ export function InboxPriorityList({
     selectedChatId,
     onSelect,
     onOpenStudio,
+    headerSlot,
 }: InboxPriorityListProps) {
     const [query, setQuery] = useState("");
     // A EVA propõe a ordem; "time" é o humano revogando pro cronológico.
@@ -183,7 +186,7 @@ export function InboxPriorityList({
             {/* Header — a entidade sinaliza o modo: roxo priorizando, slate sem base */}
             <div className="vz-evlist-header">
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <EvaEntity size={26} state={studioConfigured ? "idle" : "listening"} />
+                    <EvaOrb variant="blue" size={26} showVoice={false} state={studioConfigured ? "idle" : "listening"} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                         <p className="vz-evlist-title">Inbox Comercial</p>
                         <p className="vz-evlist-subtitle">
@@ -244,13 +247,16 @@ export function InboxPriorityList({
                             borderRadius: 8,
                             fontSize: 12,
                             outline: "none",
-                            background: "#F4F7FB",
-                            border: "1px solid #D9E2EC",
+                            background: "var(--ibx-sunken)",
+                            border: "1px solid var(--ibx-line)",
                             color: "#0B1220",
                         }}
                     />
                 </div>
             </div>
+
+            {/* Slot injetado pelo host (ex: card de conexão WhatsApp no Inbox). */}
+            {headerSlot && <div className="vz-evlist-headerslot" style={{ padding: "10px 12px 0" }}>{headerSlot}</div>}
 
             {/* Estado B — ponte com presença, não erro. O fallback funciona,
                 mas o valor de verdade está trancado atrás do Studio. */}

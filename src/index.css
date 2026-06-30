@@ -1330,6 +1330,38 @@ All colors MUST be HSL.
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
+   Inbox Comercial — tokens WARM (NORTE papel quente, 2026-06-18). NÃO repinta
+   os --vyz-* globais (frios, usados no app todo): adiciona uma paleta warm
+   --ibx-* própria, lida pelas 3 colunas (lista, conversa, EvaPanel) via var().
+   Em :root (não escopada) pra resolver também no EvaPanel mobile, que vai num
+   Drawer portalado pra fora da raiz .vz-inbox. App é light-first (sem .dark).
+   Texto segue ink/slate (neutro, coerente sobre papel quente).
+   ───────────────────────────────────────────────────────────────────────── */
+:root {
+  --ibx-paper: #F6F4EF;        /* base/recessed: thread, corpo do painel, empty */
+  --ibx-card: #FFFFFF;         /* raised: lista, headers, composer, bolha recebida */
+  --ibx-sunken: #F1EDE5;       /* poços: inputs, busca, wells dentro de cards */
+  --ibx-line: #E7E1D5;         /* hairline primária (warm, ex-#D9E2EC) */
+  --ibx-line-soft: #EFEAE0;    /* divisória suave (ex-#E5EAF1/#EEF2F6) */
+  --ibx-line-strong: #DDD5C5;  /* borda forte */
+  --ibx-sel: #ECF1FE;          /* fundo da linha/aba selecionada (acento leve) */
+  --ibx-sel-bar: #2563EB;      /* âncora de acento da selecionada */
+}
+
+/* EVA no header mobile — selo "desatualizada" (pulso) + coachmark de 1ª vez.
+   Globais (o botão vive fora do EvaPanel, que só monta no Drawer ao abrir).
+   Coachmark anima transform+opacity (popover state-driven, não reveal-on-scroll);
+   reduced-motion entrega o estado final estático. */
+@keyframes vzEvaStalePulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.45;transform:scale(.82)} }
+.vz-eva-stale-dot { animation: vzEvaStalePulse 2.2s ease-in-out infinite; }
+@keyframes vzEvaCoachIn { from { transform: translateY(-6px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
+.vz-eva-coach { animation: vzEvaCoachIn .26s cubic-bezier(0.22,1,0.36,1); transform-origin: top right; }
+@media (prefers-reduced-motion: reduce) {
+  .vz-eva-stale-dot { animation: none !important; }
+  .vz-eva-coach { animation: none !important; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
    InboxPriorityList — lista de conversas reordenada pela EVA, com o PORQUÊ.
    Paleta de risco do app: coral = quente/urgente, âmbar = esfriando,
    cinza/neutro = frio. A cor comunica antes da leitura.
@@ -1343,7 +1375,7 @@ All colors MUST be HSL.
   --evlist-warm-deep: #92400e;
   --evlist-cold: #94a3b8;
   --evlist-cold-deep: #64748b;
-  --evlist-border: #d9e2ec;
+  --evlist-border: #e7e1d5; /* warm hairline (NORTE papel quente) */
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -1386,7 +1418,7 @@ All colors MUST be HSL.
   transition: background 0.15s ease;
   flex-shrink: 0;
 }
-.vz-evlist-toggle:hover { background: #f4f7fb; }
+.vz-evlist-toggle:hover { background: #f1ede7; }
 
 /* Ponte pro EVA Studio (estado B) — convite com presença, não erro.
    O fallback resolve a dor de hoje mas tem que vender o Studio de amanhã. */
@@ -1451,9 +1483,11 @@ All colors MUST be HSL.
   cursor: pointer;
   transition: background 0.12s ease;
 }
-.vz-evlist-row:hover { background: #f4f7fb; }
-.vz-evlist-row--selected { background: #eef4ff; }
-.vz-evlist-row--selected:hover { background: #eef4ff; }
+.vz-evlist-row:hover { background: #f1ede7; }
+/* Selecionada: âncora forte de acento à esquerda (não só troca de fundo) —
+   num layout de 3 painéis o olho precisa saber qual conversa está aberta. */
+.vz-evlist-row--selected { background: #ecf1fe; box-shadow: inset 3px 0 0 #2563eb; }
+.vz-evlist-row--selected:hover { background: #e7eefe; }
 
 /* Barra de risco lateral (3px) na cor da prioridade */
 .vz-evlist-bar {
@@ -1585,7 +1619,7 @@ All colors MUST be HSL.
   color: #94a3b8;
   cursor: pointer;
 }
-.vz-evlist-junk-row:hover { background: #f8fafc; }
+.vz-evlist-junk-row:hover { background: #f4f1ea; }
 
 /* ─────────────────────────────────────────────────────────────────────────
    EVA Studio — Frente 1: criar agente é UMA decisão (o propósito), não um

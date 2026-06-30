@@ -81,6 +81,9 @@ export const qualificationSchema = z.object({
 
 export type Qualification = z.infer<typeof qualificationSchema>;
 export type KnowledgeGap = z.infer<typeof knowledgeGapSchema>;
+export type Temperatura = z.infer<typeof temperaturaEnum>;
+export type FitSugerido = z.infer<typeof fitSugeridoEnum>;
+export type Urgencia = z.infer<typeof urgenciaEnum>;
 
 export function emptyQualification(): Qualification {
   return {
