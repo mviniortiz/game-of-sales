@@ -420,8 +420,12 @@ function PanelContent({
             clienteTelefone: chat.phone || "",
             titulo,
             observacoes,
+            // EVA sugere valor (ancorado no preço do serviço) + o serviço, pra o
+            // modal casar o produto cadastrado e pré-preencher o valor. Editável.
+            valorEstimado: qual?.valor_estimado ?? null,
+            servicoInteresse: servico ?? null,
         };
-    }, [chat.name, chat.phone, qual?.servico_interesse, qual?.proxima_acao]);
+    }, [chat.name, chat.phone, qual?.servico_interesse, qual?.proxima_acao, qual?.valor_estimado]);
 
     // ── VYZON.AGENTS.2 (híbrido) — auto-criação de oportunidade ──────────────
     // Quando a empresa optou pelo modo híbrido (auto_create_opportunity) E a EVA
@@ -518,6 +522,7 @@ function PanelContent({
                     title: prefill.titulo,
                     stage: "qualification",
                     phone: prefill.clienteTelefone || null,
+                    value: prefill.valorEstimado ?? undefined,
                     leadSource: "whatsapp",
                     notes: `${prefill.observacoes} (Card criado automaticamente pela EVA — modo híbrido.)`,
                     conversationId,
@@ -573,6 +578,7 @@ function PanelContent({
                 title: prefill.titulo,
                 stage: "qualification",
                 phone: prefill.clienteTelefone || null,
+                value: prefill.valorEstimado ?? undefined,
                 leadSource: "whatsapp",
                 notes: `${prefill.observacoes} (Adicionado ao pipeline pela EVA, confirmado por você.)`,
                 conversationId,

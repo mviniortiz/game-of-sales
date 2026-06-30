@@ -125,12 +125,24 @@ interface NovaOportunidadeModalProps {
     leadSource?: string;
     titulo?: string;
     observacoes?: string;
+    /** EVA sugere o valor (ancorado no preço do serviço) e o serviço de
+     *  interesse, pra pré-preencher o valor e casar o produto cadastrado. */
+    valorEstimado?: number | null;
+    servicoInteresse?: string | null;
   };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Component
 // ─────────────────────────────────────────────────────────────────────────────
+
+const formatBRL = (n: number) =>
+  n.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 
 export const NovaOportunidadeModal = ({
   open,
@@ -174,6 +186,11 @@ export const NovaOportunidadeModal = ({
         setTituloEditadoManualmente(true); // não sobrescrever ao escolher produto
       }
       if (prefillData?.observacoes) setObservacoes(prefillData.observacoes);
+      // EVA sugeriu valor (ancorado no preço do serviço) → pré-preenche, editável.
+      if (prefillData?.valorEstimado != null && prefillData.valorEstimado > 0) {
+        setValor(String(prefillData.valorEstimado));
+        setValorFormatado(formatBRL(prefillData.valorEstimado));
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -220,6 +237,21 @@ export const NovaOportunidadeModal = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [produtoId]);
+
+  // EVA.OPP — casa o serviço de interesse (EVA) com um produto cadastrado quando
+  // a lista carrega, pré-selecionando o dropdown. O valor vem do valor_estimado
+  // da EVA (prefill acima); aqui é só o match. Roda enquanto nada foi escolhido.
+  useEffect(() => {
+    if (!open || produtoId || !prefillData?.servicoInteresse || !produtos?.length) return;
+    const alvo = prefillData.servicoInteresse.trim().toLowerCase();
+    if (!alvo) return;
+    const match = produtos.find((p) => {
+      const n = (p.nome || "").trim().toLowerCase();
+      return n.length > 0 && (n === alvo || n.includes(alvo) || alvo.includes(n));
+    });
+    if (match) setProdutoId(match.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, produtos, prefillData?.servicoInteresse]);
 
   // ── Mutation ──
   const createOportunidade = useMutation({

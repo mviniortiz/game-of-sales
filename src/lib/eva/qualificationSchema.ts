@@ -68,6 +68,8 @@ export const qualificationSchema = z.object({
   score_justificativa: z.string().max(280).nullable().default(null),
   urgencia: urgenciaEnum.nullable().default(null),
   orcamento: orcamentoEnum.nullable().default(null),
+  // Valor estimado (R$) ancorado no preço do serviço cadastrado. null sem base.
+  valor_estimado: z.number().nonnegative().nullable().default(null),
   objecao: z.string().max(240).nullable().default(null),
   info_coletada: z.array(z.string().max(200)).max(10).default([]),
   info_faltante: z.array(z.string().max(200)).max(10).default([]),
@@ -95,6 +97,7 @@ export function emptyQualification(): Qualification {
     score_justificativa: null,
     urgencia: null,
     orcamento: null,
+    valor_estimado: null,
     objecao: null,
     info_coletada: [],
     info_faltante: [],

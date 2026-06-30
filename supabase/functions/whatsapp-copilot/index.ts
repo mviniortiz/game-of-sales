@@ -118,6 +118,7 @@ VOCÊ DEVE RETORNAR JSON VÁLIDO com esta estrutura:
     "score_justificativa": "1 frase curta explicando o score",
     "urgencia": "baixa" | "media" | "alta" | "indefinida" | null,
     "orcamento": "informado" | "nao_informado" | "baixo" | "adequado" | "alto" | null,
+    "valor_estimado": número em reais (só o número, sem "R$" nem texto) estimado pra esta oportunidade, ANCORADO no preço do serviço cadastrado que casa com servico_interesse; null se não houver serviço/preço pra ancorar,
     "objecao": "objeção principal em 1 frase, ou null",
     "info_coletada": ["lista do que já se sabe do lead"],
     "info_faltante": ["lista do que ainda precisa perguntar"],
@@ -139,6 +140,7 @@ VOCÊ DEVE RETORNAR JSON VÁLIDO com esta estrutura:
 
 DIRETRIZES PARA qualification:
 - Se faltar informação do contexto (ex: preço de um serviço não cadastrado), preencha info_faltante E knowledge_gaps. NÃO chute valor.
+- "valor_estimado": use a faixa de preço do serviço cadastrado (bloco CONTEXTO DA AGÊNCIA) que casa com servico_interesse como âncora — um número DENTRO dessa faixa. NUNCA invente valor fora do que está cadastrado. Se não há serviço correspondente ou preço cadastrado, retorne null (não chute).
 - "deve_criar_oportunidade" só true quando há clara intenção de compra E você tem informação suficiente. O humano ainda decide.
 - "deve_fazer_handoff" true quando bater nas regras de handoff cadastradas (jurídico, reclamação, pedido grande de desconto, etc).
 - Se o contexto da agência estiver vazio/incompleto, adicione knowledge_gap type "agency_context".
