@@ -111,6 +111,38 @@ export function AgentPurposeCreate({ purposes, sources, onCreate, onProceed, onP
                     <div className="vz-agentcreate-grid vz-agentcreate-grid--2col">
                         {SPECIALIST_ORDER.map((key, i) => {
                             const s = SPECIALISTS[key];
+                            // "Em breve": card visível mas inerte (pointer-events none
+                            // mata clique + hover). Só o Qualificador é ativável hoje.
+                            if (s.comingSoon) {
+                                return (
+                                    <div
+                                        key={key}
+                                        className="vz-agentcreate-card vz-agentcreate-card--featured"
+                                        aria-disabled="true"
+                                        style={{ animationDelay: `${i * 0.06}s`, pointerEvents: "none", opacity: 0.55 }}
+                                    >
+                                        <span style={{ display: "block", marginBottom: 14 }}>
+                                            <EvaOrb variant={s.orb} size={40} showVoice={false} />
+                                        </span>
+                                        <span className="vz-agentcreate-card-title" style={{ display: "block" }}>
+                                            {s.label}
+                                        </span>
+                                        <span className="vz-agentcreate-card-desc" style={{ display: "block" }}>
+                                            {s.desc}
+                                        </span>
+                                        <span
+                                            style={{
+                                                display: "inline-flex", alignItems: "center", marginTop: 12,
+                                                fontSize: 11.5, fontWeight: 600, color: "#64748B",
+                                                background: "#F1F5F9", border: "1px solid #E2E8F0",
+                                                borderRadius: 999, padding: "3px 10px",
+                                            }}
+                                        >
+                                            Em breve
+                                        </span>
+                                    </div>
+                                );
+                            }
                             return (
                                 <button
                                     key={key}
@@ -138,7 +170,7 @@ export function AgentPurposeCreate({ purposes, sources, onCreate, onProceed, onP
                     </div>
 
                     <p className="vz-agentcreate-promise">
-                        Leva 1 minuto. Você revisa cada coisa antes de a EVA usar.
+                        Começamos pelo Qualificador, o agente que já lê seus leads no WhatsApp. Follow-up, Propostas e Reativação chegam em breve.
                     </p>
                 </>
             ) : (
