@@ -1,93 +1,111 @@
 import { useEffect, useState } from "react";
-import { Check } from "lucide-react";
+import { useReducedMotion } from "framer-motion";
 import { EvaOrb } from "@/components/landing-v2/EvaOrb";
 
-// Momento "EVA analisando a conversa" no Inbox.
-// Em vez de um spinner estático, a EVA mostra os passos reais da leitura,
-// progredindo um a um. Os 3 primeiros avançam por tempo; o último ("Montando
-// a leitura") fica ativo até a análise real retornar e a tela trocar pro
-// resultado. Honesto: descreve o que o copiloto avalia, sem fabricar números.
-const STEPS = [
+// Momento "EVA lendo a conversa" no Inbox. Em vez de um spinner, a EVA mostra
+// que está LENDO: uma linha de varredura passa sobre uma miniatura da conversa
+// (bolhas abstratas) e cada bolha acende quando a leitura cruza por ela, com um
+// status que evolui. Honesto: não fabrica sinais nem números — só representa o
+// ato de ler; os sinais reais aparecem no reveal do resultado (RealContent).
+const STATUSES = [
     "Lendo as mensagens",
     "Identificando a intenção",
     "Avaliando temperatura e urgência",
     "Montando a leitura",
 ];
 
+// Miniatura de conversa: lado (lead=esquerda, você=direita) + largura relativa.
+const BUBBLES: { me: boolean; w: number }[] = [
+    { me: false, w: 64 },
+    { me: false, w: 44 },
+    { me: true, w: 54 },
+    { me: false, w: 72 },
+];
+
 export function EvaAnalyzingState() {
-    const [active, setActive] = useState(0);
+    const reduce = useReducedMotion();
+    const [status, setStatus] = useState(0);
 
     useEffect(() => {
-        if (active >= STEPS.length - 1) return; // último passo segura até a análise real terminar
-        const t = setTimeout(() => setActive((i) => Math.min(i + 1, STEPS.length - 1)), 1150);
-        return () => clearTimeout(t);
-    }, [active]);
+        if (reduce) return; // sem rotação de texto quando o usuário pede menos movimento
+        const t = setInterval(() => setStatus((i) => (i + 1) % STATUSES.length), 1500);
+        return () => clearInterval(t);
+    }, [reduce]);
 
     return (
         <div className="flex-1 flex flex-col items-center justify-center px-5 py-6 text-center">
-            <EvaOrb variant="blue" state="analyzing" size={76} className="mb-4" />
+            <EvaOrb variant="blue" state="analyzing" size={62} className="mb-3.5" />
             <p className="text-[13px] font-semibold mb-4" style={{ color: "#0B1220" }}>
-                EVA analisando a conversa<span className="vz-eva-dots" aria-hidden="true" />
+                EVA lendo a conversa<span className="vz-eva-dots" aria-hidden="true" />
             </p>
 
-            <ul className="w-full max-w-[248px] space-y-2.5 text-left">
-                {STEPS.map((label, i) => {
-                    const done = i < active;
-                    const isActive = i === active;
-                    return (
-                        <li
-                            key={label}
-                            className="flex items-center gap-2.5 vz-eva-step"
-                            style={{ opacity: done || isActive ? 1 : 0.42, transition: "opacity .45s ease" }}
-                        >
-                            <span
-                                className="grid place-items-center shrink-0 rounded-full"
-                                style={{
-                                    width: 18,
-                                    height: 18,
-                                    background: done ? "rgba(37,99,235,0.10)" : "transparent",
-                                    border: done ? "none" : `1.5px solid ${isActive ? "#2563EB" : "#CBD5E1"}`,
-                                }}
-                            >
-                                {done ? (
-                                    <Check size={11} strokeWidth={3} style={{ color: "#2563EB" }} />
-                                ) : isActive ? (
-                                    <span className="vz-eva-dot rounded-full" style={{ width: 7, height: 7, background: "#2563EB" }} />
-                                ) : null}
-                            </span>
-                            <span
-                                className={isActive ? "vz-eva-steplabel" : ""}
-                                style={{
-                                    fontSize: 12.5,
-                                    fontWeight: isActive ? 600 : 500,
-                                    color: done ? "#475569" : isActive ? "#0B1220" : "#94A3B8",
-                                }}
-                            >
-                                {label}
-                            </span>
-                        </li>
-                    );
-                })}
-            </ul>
+            {/* Miniatura da conversa sendo varrida pela leitura da EVA */}
+            <div className="vz-scan-wrap" aria-hidden="true">
+                {BUBBLES.map((b, i) => (
+                    <div key={i} className={`vz-scan-row ${b.me ? "vz-scan-row--me" : ""}`}>
+                        <span
+                            className="vz-scan-bubble"
+                            style={{
+                                width: `${b.w}%`,
+                                background: b.me ? "rgba(37,99,235,0.16)" : "rgba(13,20,33,0.07)",
+                                animationDelay: `${i * 0.42}s`,
+                            }}
+                        />
+                    </div>
+                ))}
+                <span className="vz-scan-line" />
+            </div>
+
+            <p
+                className="vz-eva-steplabel mt-4 text-[12.5px] font-semibold"
+                aria-live="polite"
+                style={{ minHeight: 16 }}
+            >
+                {STATUSES[status]}
+            </p>
 
             <style>{`
-                @keyframes vzEvaDot { 0%,100%{transform:scale(0.62);opacity:.5} 50%{transform:scale(1);opacity:1} }
-                .vz-eva-dot { animation: vzEvaDot 1.1s ease-in-out infinite; }
-                @keyframes vzEvaShimmer { 0%{background-position:-120px 0} 100%{background-position:240px 0} }
+                .vz-scan-wrap {
+                    position: relative; overflow: hidden;
+                    width: 100%; max-width: 250px;
+                    display: flex; flex-direction: column; gap: 8px;
+                    padding: 14px; border-radius: 14px;
+                    background: var(--ibx-card, #ffffff);
+                    border: 1px solid var(--ibx-line, #E7E1D5);
+                }
+                .vz-scan-row { display: flex; }
+                .vz-scan-row--me { justify-content: flex-end; }
+                .vz-scan-bubble {
+                    height: 12px; border-radius: 7px; display: block;
+                    animation: vzScanRead 1.7s ease-in-out infinite;
+                }
+                @keyframes vzScanRead {
+                    0%, 70%, 100% { filter: brightness(1); opacity: .82; }
+                    14% { filter: brightness(1.4); opacity: 1; }
+                }
+                .vz-scan-line {
+                    position: absolute; left: 0; right: 0; top: 0; height: 26px;
+                    background: linear-gradient(180deg, rgba(37,99,235,0) 0%, rgba(37,99,235,0.18) 50%, rgba(37,99,235,0) 100%);
+                    animation: vzScanSweep 1.7s ease-in-out infinite;
+                }
+                @keyframes vzScanSweep {
+                    0% { transform: translateY(-26px); }
+                    100% { transform: translateY(122px); }
+                }
+                .vz-eva-dots::after { content:""; animation: vzEvaDots 1.3s steps(1,end) infinite; }
+                @keyframes vzEvaDots { 0%{content:""} 25%{content:"."} 50%{content:".."} 75%{content:"..."} 100%{content:""} }
                 .vz-eva-steplabel {
-                    background: linear-gradient(90deg, #0B1220 0%, #0B1220 38%, #2563EB 50%, #0B1220 62%, #0B1220 100%);
+                    background: linear-gradient(90deg, #475569 0%, #475569 38%, #2563EB 50%, #475569 62%, #475569 100%);
                     background-size: 240px 100%;
                     -webkit-background-clip: text; background-clip: text;
                     -webkit-text-fill-color: transparent;
                     animation: vzEvaShimmer 1.7s linear infinite;
                 }
-                .vz-eva-dots::after { content:""; animation: vzEvaDots 1.3s steps(1,end) infinite; }
-                @keyframes vzEvaDots { 0%{content:""} 25%{content:"."} 50%{content:".."} 75%{content:"..."} 100%{content:""} }
-                @keyframes vzEvaStepIn { from{opacity:0;transform:translateY(3px)} to{opacity:1;transform:none} }
-                .vz-eva-step { animation: vzEvaStepIn .4s ease both; }
+                @keyframes vzEvaShimmer { 0%{background-position:-120px 0} 100%{background-position:240px 0} }
                 @media (prefers-reduced-motion: reduce) {
-                    .vz-eva-dot, .vz-eva-steplabel, .vz-eva-dots::after, .vz-eva-step { animation: none !important; }
-                    .vz-eva-steplabel { -webkit-text-fill-color: #0B1220; background: none; }
+                    .vz-scan-bubble, .vz-scan-line, .vz-eva-dots::after, .vz-eva-steplabel { animation: none !important; }
+                    .vz-scan-line { display: none; }
+                    .vz-eva-steplabel { -webkit-text-fill-color: #475569; background: none; }
                 }
             `}</style>
         </div>
