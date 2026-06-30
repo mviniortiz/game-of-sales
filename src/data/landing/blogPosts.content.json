@@ -53,6 +53,11 @@
             { "type": "h2", "text": "Faça as contas do seu vazamento esta semana" },
             { "type": "p", "text": "Você não precisa acreditar em nada disso de graça. Faça um teste de sete dias: anote toda conversa que ficou mais de quatro horas sem resposta e toda que você prometeu retomar e não retomou. Some no domingo. Multiplique por quatro pra ter o mês, por cinquenta e dois pra ter o ano." },
             { "type": "p", "text": "Quase sempre o número assusta. E é exatamente esse número, o do que já chega e se perde, que vale mais atenção do que mais um real investido em anúncio. Não é sobre automatizar a venda. É sobre garantir que o trabalho que você já paga pra fazer não escorra pelas frestas do dia a dia." }
+        ],
+        "faq": [
+            { "q": "Por que agências perdem leads no WhatsApp?", "a": "Porque o lead chega com o interesse no pico e a janela de atenção é curta. O vazamento acontece em quatro pontos: a primeira resposta demora, o follow-up depende de memória, a qualificação se perde no meio do papo e o pipeline não reflete a conversa real. Como esse lead nunca virou card nem linha na planilha, ele some sem deixar rastro." },
+            { "q": "Como parar de perder lead no WhatsApp?", "a": "Com um sistema simples, sem ferramenta nova: defina um SLA de primeira resposta (por exemplo, até 1 hora no horário comercial), tenha um dono nominal por conversa, marque sempre o próximo passo, registre orçamento, prazo e dor fora do WhatsApp e revise os esquecidos uma vez por dia. Uma camada de inteligência como a EVA sustenta essa disciplina sem depender de memória." },
+            { "q": "Responder mais rápido resolve o problema de leads no WhatsApp?", "a": "Não sozinho. Velocidade sem contexto queima lead bom: responder no susto, sem ler o histórico, troca o problema de demorar pelo de responder mal. O lead que chega quase decidido quer sentir que alguém entendeu o que ele precisa, não um 'oi, como posso ajudar?'. O ideal é responder rápido e preparado." }
         ]
     },
     {
@@ -113,6 +118,11 @@
             ] },
             { "type": "quote", "text": "Deixe a EVA qualificar e priorizar. Quando o volume justificar um humano, ele entra pra fechar, não pra apagar incêndio." },
             { "type": "p", "text": "Contratar gente boa é um dos melhores investimentos que uma agência faz. Contratar gente boa pra fazer triagem manual que uma camada de IA faz melhor é desperdiçar gente boa. A pergunta nunca foi “SDR ou EVA”. É “como faço meu time gastar tempo com quem está pronto pra comprar”." }
+        ],
+        "faq": [
+            { "q": "Vale a pena contratar um SDR ou usar IA para qualificar leads?", "a": "Depende do gargalo real. O SDR humano é insubstituível para ler a entrelinha emocional, conduzir negociação e fechamento e construir relação. Uma IA como a EVA é melhor no trabalho repetitivo: ler 100% das conversas, qualificar com critério constante, não esquecer follow-up e cobrir o fora de hora. O caminho que economiza é deixar a EVA triar e qualificar primeiro e contratar o humano para fechar, não para apagar incêndio na caixa de entrada." },
+            { "q": "Quanto custa de verdade contratar um SDR para uma agência?", "a": "Muito além do salário. Some encargos, férias e 13º; o tempo de rampa de 6 a 8 semanas com produção parcial; as horas de quem treina e revisa; e o risco de erro silencioso, quando o SDR qualifica errado sem avisar e leads bons são tratados como ruins. Boa parte desse custo não aparece no contracheque, mas é real." },
+            { "q": "A EVA substitui o vendedor ou o time comercial?", "a": "Não. O modelo da EVA é assistido: ela sugere, o humano aprova, e toda mensagem de saída passa por uma pessoa. Ela não conduz o fechamento nem substitui o faro humano para negociação e vínculo. É o copiloto que lê tudo e qualifica, não o piloto." }
         ]
     },
     {
@@ -171,6 +181,11 @@
             { "type": "p", "text": "A EVA lê o atendimento e entrega o contexto pro time antes da resposta sair: o que o lead já disse, o que parece importar pra ele, em que ponto da decisão ele está e qual o próximo passo mais provável. O vendedor revisa, ajusta o tom e envia. De fora, a conversa flui como se a agência tivesse memória impecável. Porque agora tem, sem depender de ninguém guardar tudo na cabeça." },
             { "type": "quote", "text": "Aparecer na hora certa, com a resposta certa, não é sorte. É contexto. E contexto se constrói na conversa, não no anúncio." },
             { "type": "p", "text": "O anúncio traz o lead até a porta, depois de uma jornada inteira que você nem viu. O que acontece nos primeiros minutos de conversa, com quanto contexto e quão rápido, decide se ele entra ou vai bater na porta do lado. Esse é o jogo que dá pra ganhar." }
+        ],
+        "faq": [
+            { "q": "O lead já decidiu antes de chamar no WhatsApp?", "a": "Quase sempre. Hoje o cliente vê o anúncio, olha o perfil, pesquisa no Google, pede indicação e fala com concorrentes antes da primeira mensagem. Quando ele te chama, já passou por cinco ou seis pontos de contato e está confirmando uma decisão quase tomada, não começando a jornada. Você só enxerga o último passo, o 'oi'." },
+            { "q": "Como saber em que ponto da decisão o lead está pela conversa?", "a": "Pelos sinais na própria mensagem. Perguntas específicas (preço, prazo, onboarding) indicam lead avançado e com pressa. Menção a concorrente ou a experiência anterior revela medo de repetir um erro. Urgência explícita como 'preciso começar esse mês' é sinal verde. Pergunta vaga como 'queria entender melhor' indica lead no início, que ainda cabe educar antes de cotar." },
+            { "q": "Como responder um lead que já está quase decidido?", "a": "Chegando preparado, não com script decorado. Leia a conversa inteira antes da primeira resposta, identifique o estágio pelos sinais, devolva uma evidência de que entendeu o que ele disse e proponha sempre um próximo passo concreto. A EVA entrega esse contexto ao time antes da resposta sair, para o vendedor revisar, ajustar o tom e enviar." }
         ]
     },
     {
@@ -230,6 +245,11 @@
                 "Só então padronize etapas e playbook. Com a base organizada, formalizar o processo vira ajuste fino, não revolução."
             ] },
             { "type": "p", "text": "Se a sua agência vende por conversa, o gargalo quase nunca é gerar lead. É não perder o que já chega e fazer cada conversa avançar com contexto. Mais anúncio em cima de uma operação que vaza só enche de lead uma caixa furada. Uma central comercial existe pra fechar o furo primeiro. Depois, com o processo organizado e a EVA assistindo o time, crescer deixa de ser sinônimo de bagunça maior." }
+        ],
+        "faq": [
+            { "q": "O que é uma central comercial para agências?", "a": "É juntar num lugar só três coisas que costumam viver espalhadas: as conversas de todos os canais, o que cada lead quer e em que estágio ele está. O objetivo não é burocratizar, é fazer com que ninguém precise lembrar de cabeça o que foi combinado e que o pipeline diga a verdade sobre o que aconteceu na conversa." },
+            { "q": "Qual a diferença entre uma central comercial e um CRM tradicional?", "a": "Está no centro de gravidade. Num CRM tradicional o centro é o cadastro: você abre uma ficha e preenche campos. Numa central comercial feita para quem vende por conversa, o centro é a própria conversa: o sistema acompanha o atendimento no WhatsApp e o cadastro se preenche a partir do que foi dito, em vez de exigir digitação." },
+            { "q": "Planilha e WhatsApp são suficientes para gerir as vendas de uma agência?", "a": "Funcionam até o volume crescer. Cada peça é boa numa coisa e ruim em outra: o WhatsApp é ótimo para conversar e ruim para organizar; a planilha é boa para registrar e ruim para manter viva; a memória é boa para contexto e ruim para dividir com o time. Quando a cola humana, em geral o dono, começa a rasgar, o arranjo vira gargalo." }
         ]
     }
 ]

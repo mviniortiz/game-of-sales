@@ -37,7 +37,7 @@ export const SpecialistAgentsV2 = ({ onCTAClick }: SpecialistAgentsV2Props) => {
                         Crie especialistas para cada etapa da conversa
                     </h2>
                     <p className="mt-5 max-w-xl" style={{ fontSize: "1.0625rem", lineHeight: 1.6, color: "rgba(5,5,5,0.68)" }}>
-                        No Vyzon, a EVA pode assumir papéis específicos para qualificar leads, sugerir follow-ups, preparar próximos passos e apoiar seu time em cada momento da jornada comercial.
+                        No Vyzon, a EVA assume papéis: qualifica o lead, lembra o follow-up na hora certa e prepara o próximo passo. Sempre com o seu time aprovando antes de qualquer envio.
                     </p>
                 </Reveal>
 

@@ -30,7 +30,7 @@ export const EvaShowcaseV2 = ({ onStartDemo }: EvaShowcaseV2Props) => {
                     {/* texto + botão FORA do card, embaixo */}
                     <div className="mt-9 flex flex-col items-center text-center sm:mt-11">
                         <p className="lp-mono" style={{ color: "rgba(5,5,5,0.5)" }}>
-                            EVA em ação
+                            Demonstração
                         </p>
                         <h2
                             className="lp-display mt-3"
@@ -47,7 +47,7 @@ export const EvaShowcaseV2 = ({ onStartDemo }: EvaShowcaseV2Props) => {
                             className="mx-auto mt-4 max-w-lg"
                             style={{ fontSize: "1.05rem", lineHeight: 1.55, color: "rgba(5,5,5,0.7)" }}
                         >
-                            Entenda como ela lê a conversa, sugere o próximo passo e mantém seu time no controle.
+                            Ela lê a conversa, aponta quem está pronto e sugere o próximo passo. Seu time mantém o controle do que vai pro lead.
                         </p>
                         <div className="mt-7">
                             <ButtonV2 onClick={onStartDemo} variant="primary" showArrow>

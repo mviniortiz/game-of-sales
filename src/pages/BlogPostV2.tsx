@@ -178,6 +178,32 @@ const BlogPostV2 = () => {
                     ))}
                 </div>
 
+                {/* FAQ do post (perguntas frequentes) — UX + GEO (FAQPage no prerender) */}
+                {post.faq && post.faq.length > 0 && (
+                    <Rise>
+                        <section className="vz-faq mt-14">
+                            <h2 className="lp-display" style={{ fontSize: "clamp(1.4rem, 2.7vw, 1.85rem)", letterSpacing: "-0.02em", lineHeight: 1.18, color: "var(--lp-ink)" }}>
+                                Perguntas frequentes
+                            </h2>
+                            <div className="mt-6">
+                                {post.faq.map((f) => (
+                                    <details key={f.q} className="border-t py-5" style={{ borderColor: "rgba(0,0,0,0.10)" }}>
+                                        <summary className="flex items-center justify-between gap-6">
+                                            <span className="lp-display" style={{ fontSize: "clamp(1.05rem, 1.8vw, 1.25rem)", lineHeight: 1.25, letterSpacing: "-0.02em", color: "var(--lp-ink)" }}>
+                                                {f.q}
+                                            </span>
+                                            <span className="vz-faq-plus shrink-0 text-[22px] leading-none" style={{ color: "rgba(5,5,5,0.4)", fontWeight: 300 }} aria-hidden="true">+</span>
+                                        </summary>
+                                        <p className="mt-3" style={{ fontSize: "1rem", lineHeight: 1.6, color: "rgba(5,5,5,0.66)" }}>
+                                            {f.a}
+                                        </p>
+                                    </details>
+                                ))}
+                            </div>
+                        </section>
+                    </Rise>
+                )}
+
                 {/* CTA pra demo */}
                 <Rise>
                     <div className="mt-14 vz-post-cta rounded-2xl px-7 py-9 text-center" style={{ background: "#fff", border: "1px solid var(--lp-line)" }}>

@@ -355,6 +355,9 @@ function renderBlogBlock(b) {
 
 function renderBlogPostNoscript(post) {
     const paras = post.content.map(renderBlogBlock).join("\n          ");
+    const faqHtml = (post.faq && post.faq.length)
+        ? `\n        <h2 style="font-size:21px;line-height:1.3;margin:30px 0 10px;">Perguntas frequentes</h2>\n        ${post.faq.map((f) => `<h3 style="font-size:17px;line-height:1.35;margin:22px 0 6px;">${escapeHtml(f.q)}</h3><p style="color:#222;margin:0 0 16px;">${escapeHtml(f.a)}</p>`).join("\n        ")}`
+        : "";
     return `
   <noscript>
     <div style="max-width:720px;margin:0 auto;padding:32px 20px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;line-height:1.7;color:#111;">
@@ -363,7 +366,7 @@ function renderBlogPostNoscript(post) {
         <p style="font-size:13px;color:#555;margin:0 0 8px;">${escapeHtml(post.category)} · ${escapeHtml(formatBlogDate(post.date))}</p>
         <h1 style="font-size:32px;line-height:1.15;margin:0 0 14px;">${escapeHtml(post.title)}</h1>
         <p style="font-size:18px;color:#333;margin:0 0 24px;">${escapeHtml(post.excerpt)}</p>
-          ${paras}
+          ${paras}${faqHtml}
         <p style="margin:28px 0 0;">
           <a href="/onboarding?plan=plus" style="display:inline-block;padding:10px 18px;background:#1556C0;color:#fff;text-decoration:none;border-radius:8px;margin:0 6px 6px 0;"><strong>Testar 14 dias grátis</strong></a>
           <a href="/?demo=1" style="display:inline-block;padding:10px 18px;border:1px solid #999;color:#111;text-decoration:none;border-radius:8px;">Ver a EVA em ação</a>
@@ -407,6 +410,16 @@ function renderBlogPostJsonLd(post) {
             ],
         },
     ];
+    if (post.faq && post.faq.length) {
+        graph.push({
+            "@type": "FAQPage",
+            mainEntity: post.faq.map((f) => ({
+                "@type": "Question",
+                name: f.q,
+                acceptedAnswer: { "@type": "Answer", text: f.a },
+            })),
+        });
+    }
     return `<script type="application/ld+json">${JSON.stringify({ "@context": "https://schema.org", "@graph": graph })}</script>`;
 }
 

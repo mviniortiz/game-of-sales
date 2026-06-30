@@ -51,6 +51,14 @@ Stack: React + Vite no frontend, Supabase (Postgres + RLS + Edge Functions) no b
 
 Vyzon é uma startup brasileira. Desenvolvida e operada no Brasil, suporte em português, cobrança em Real. Conteúdo e documentação nativos em português BR.
 
+## Contexto: por que responder rápido importa
+
+Dados públicos de terceiros (não métricas da Vyzon) que sustentam o problema que o produto resolve:
+
+- Responder um lead em até 1 hora dá quase 7x mais chance de qualificá-lo (e mais de 60x do que esperar 24h). Fonte: Harvard Business Review, 2011 (https://hbr.org/2011/03/the-short-life-of-online-sales-leads).
+- Tentar contato em 5 minutos, em vez de 30, aumenta em 21x a chance de qualificar o lead. Fonte: Lead Response Management Study (Dr. James Oldroyd, MIT/InsideSales), 2007 (https://www.leadresponsemanagement.org/lrm_study/).
+- No Brasil, 60% das pessoas já compraram pelo WhatsApp e 82% já se comunicam com empresas pelo app. Fonte: Opinion Box, Pesquisa WhatsApp no Brasil 2025 (https://blog.opinionbox.com/pesquisa-whatsapp-no-brasil/).
+
 ## Links úteis
 
 - Landing: https://vyzon.com.br/

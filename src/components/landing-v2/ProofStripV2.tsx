@@ -4,9 +4,9 @@ import { Reveal } from "./Reveal";
 // cliente/citação/métrica inventada). 3 colunas com top border fino, títulos
 // serif e texto muted. Não é card — é uma faixa editorial de prova honesta.
 const ITEMS = [
-    { t: "Onde a conversa acontece", d: "A EVA trabalha no canal em que seus leads já falam com sua agência." },
-    { t: "Aprovação humana", d: "Nenhuma sugestão é enviada sem o ok do seu time." },
-    { t: "Playbook da agência", d: "Cada resposta segue o contexto, a oferta e o processo comercial da operação." },
+    { t: "Onde a conversa acontece", d: "A EVA vive dentro do WhatsApp, onde seus leads já falam com a agência. Sem migrar ninguém de canal." },
+    { t: "Aprovação humana", d: "Nenhuma mensagem sai sem o ok do seu time. A EVA sugere, você decide o que vai pro lead." },
+    { t: "Playbook da agência", d: "Cada sugestão segue a sua oferta, o seu tom e os seus critérios. Não é um robô genérico." },
 ];
 
 export const ProofStripV2 = () => {

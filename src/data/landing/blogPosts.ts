@@ -28,6 +28,7 @@ export interface BlogPost {
     accent: string; // cor de acento da capa
     featured?: boolean;
     content: BlogBlock[]; // corpo em blocos
+    faq?: { q: string; a: string }[]; // perguntas frequentes (GEO: FAQPage + trecho extraível por IA)
 }
 
 export const BLOG_CATEGORIES = ["Crescimento", "Comercial", "Produto"] as const;

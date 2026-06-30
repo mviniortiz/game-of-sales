@@ -69,7 +69,7 @@ export const FeaturesV2 = () => {
                         A EVA acompanha cada etapa da conversa
                     </h2>
                     <p className="mt-5 max-w-xl" style={{ fontSize: "1.0625rem", lineHeight: 1.6, color: "rgba(5,5,5,0.68)" }}>
-                        Da primeira mensagem ao fechamento, ela entende o contexto, sugere o próximo passo e ajuda seu time a vender com mais consistência.
+                        Da primeira mensagem ao fechamento, ela entende o contexto, sugere o próximo passo e não deixa nenhuma conversa ficar pra trás.
                     </p>
                 </Reveal>
                 <div className="flex flex-col gap-24 sm:gap-32">

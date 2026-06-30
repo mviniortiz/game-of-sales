@@ -43,10 +43,10 @@ export const HeroV2 = ({ onSecondaryClick }: HeroV2Props) => {
                         textWrap: "balance",
                     }}
                 >
-                    A EVA lê cada conversa
+                    Pare de perder lead
                     <br />
                     <span className="lp-serif" style={{ color: "#050505" }}>
-                        e aponta quem fechar.
+                        no WhatsApp.
                     </span>
                 </h1>
 
@@ -54,7 +54,7 @@ export const HeroV2 = ({ onSecondaryClick }: HeroV2Props) => {
                     className="mx-auto mt-8 max-w-[560px] landing-fade-in-up landing-delay-200"
                     style={{ fontSize: "clamp(0.9375rem, 1.3vw, 1rem)", lineHeight: 1.55, color: "rgba(5,5,5,0.68)" }}
                 >
-                    Ela lê os atendimentos do WhatsApp, entende o contexto e sugere o próximo passo. Seu time aprova, e nenhum lead esfria por esquecimento.
+                    A EVA lê cada atendimento, aponta quem está pronto pra fechar e sugere o próximo passo. Seu time aprova e envia.
                 </p>
 
                 <div className="mt-9 flex justify-center landing-fade-in-up landing-delay-300">

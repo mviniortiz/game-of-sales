@@ -75,7 +75,7 @@ export const FinalCtaV2 = ({ onScheduleDemoClick, onSecondaryClick }: FinalCtaV2
                     Dê à sua equipe um copiloto para cada conversa.
                 </h2>
                 <p className="mx-auto mt-6 max-w-xl" style={{ fontSize: "1.05rem", lineHeight: 1.6, color: "rgba(255,255,255,0.66)" }}>
-                    A EVA ajuda sua agência a entender atendimentos, sugerir próximos passos e manter o time no controle do processo comercial.
+                    Ela lê cada conversa, mostra quem está pronto pra fechar e escreve o próximo passo. Seu time aprova e envia.
                 </p>
                 <div className="mt-9 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
                     <ButtonV2 variant="light" onClick={onScheduleDemoClick} showArrow>

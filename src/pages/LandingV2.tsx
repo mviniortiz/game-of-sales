@@ -8,6 +8,7 @@ import { EvaDemoModal } from "@/components/landing-v2/EvaDemoModal";
 import { HeroV2 } from "@/components/landing-v2/HeroV2";
 import { IntegrationsStripV2 } from "@/components/landing-v2/IntegrationsStripV2";
 import { ProofStripV2 } from "@/components/landing-v2/ProofStripV2";
+import { StatsV2 } from "@/components/landing-v2/StatsV2";
 import { EvaShowcaseV2 } from "@/components/landing-v2/EvaShowcaseV2";
 import { FeaturesV2 } from "@/components/landing-v2/FeaturesV2";
 import { SpecialistAgentsV2 } from "@/components/landing-v2/SpecialistAgentsV2";
@@ -132,6 +133,7 @@ const LandingV2 = () => {
             <HeroV2 onScheduleDemoClick={() => goToSignup("plus", "hero")} onSecondaryClick={() => openDemo("hero")} />
             <IntegrationsStripV2 />
             <ProofStripV2 />
+            <StatsV2 />
             <EvaShowcaseV2 onStartDemo={() => openDemo("eva_showcase")} />
             <FeaturesV2 />
             <SpecialistAgentsV2 onCTAClick={() => goToSignup("plus", "specialists")} />
