@@ -29,6 +29,10 @@ const PENDING_TTL_MS = 30_000;
 // Resync de fallback do Inbox: o Realtime cobre o caminho rápido; este intervalo
 // garante que a conversa aberta não congele se um evento se perder (igual ao Pulse).
 const INBOX_RESYNC_MS = 15_000;
+// INBOX.PERF.2 — o handler de retorno-de-foco escuta `focus` E `visibilitychange`
+// (os dois disparam juntos ao voltar pra aba); o throttle colapsa o par num
+// resync só e segura re-focos em sequência.
+const FOCUS_RESYNC_THROTTLE_MS = 10_000;
 
 // ─── Rows ───────────────────────────────────────────────────────────────────
 
@@ -174,6 +178,10 @@ function rowToMessage(row: ChannelMessageRow): MessageLine {
     const caption  = (mediaRef["caption"] as string | undefined) || undefined;
     const mimetype = (mediaRef["mimetype"] as string | undefined) || undefined;
     const duration = (mediaRef["duration"] as number | undefined) || undefined;
+    // INBOX.PERF.2 — o webhook grava media_ref.storage_path (bucket
+    // whatsapp-media); com ele o front serve a mídia por signed URL em vez de
+    // baixar base64 via edge getMedia.
+    const storagePath = (mediaRef["storage_path"] as string | undefined) || undefined;
     const text = row.body || caption || "";
     const senderName = (row.metadata?.["sender_name"] as string | undefined) || undefined;
     return {
@@ -187,6 +195,7 @@ function rowToMessage(row: ChannelMessageRow): MessageLine {
         mediaType: mediaTypeOf(row.message_type, mimetype || null),
         mediaCaption: caption,
         mediaMimetype: mimetype,
+        mediaStoragePath: storagePath,
         status: (row.status as MessageLine["status"]) || undefined,
     };
 }
@@ -287,6 +296,12 @@ export function useChannelInbox(): UseChannelInbox {
     const lastConsistencyCheckRef = useRef<{ convId: string; newest: string } | null>(null);
     /** Forward ref pra fetchMessages (declarado depois de refetchChats) */
     const fetchMessagesRef = useRef<((conversationId: string) => Promise<void>) | null>(null);
+    /** INBOX.PERF.2 — espelho síncrono de `chats` pro handler do Realtime
+     *  decidir (fora do setState) se a conversa já está na lista. */
+    const chatsRef = useRef<Chat[]>([]);
+    chatsRef.current = chats;
+    /** Throttle do resync ao focar a aba (focus + visibilitychange). */
+    const lastFocusResyncRef = useRef<number>(0);
 
     // ── Derived: instance name esperado (wa_<userId sem hifens>) ──────────
     const expectedInstanceName = useMemo(() => {
@@ -785,6 +800,66 @@ export function useChannelInbox(): UseChannelInbox {
         });
     }, []);
 
+    // INBOX.PERF.2 — sidebar incremental. Antes, TODO INSERT do Realtime (de
+    // qualquer conversa da conexão) disparava o refetchChats completo: 500
+    // conversas + até 1.500 mensagens só pra derivar a "última mensagem".
+    // Agora a própria row do payload atualiza o chat (preview + reordenação +
+    // unread). Retorna false quando a conversa ainda não está na lista
+    // (conversa nova) → o caller cai pro refetch completo. O resync de 15s
+    // continua de rede de segurança contra divergência.
+    const applyRealtimeChatBump = useCallback((raw: Partial<ChannelMessageRow>): boolean => {
+        try {
+            const row = normalizeRow(raw);
+            if (!row.conversation_id || !row.message_timestamp) return false;
+            // Mesma regra da sidebar no refetch: só considera renderizáveis.
+            // Row não-renderizável não muda o preview — e não precisa de refetch.
+            if (!isRenderableMessage(row)) return true;
+            const convId = row.conversation_id;
+            if (!chatsRef.current.some((c) => c.id === convId)) return false;
+
+            const at = new Date(row.message_timestamp).getTime();
+            const iso = new Date(row.message_timestamp).toISOString();
+            // Alimenta o consistency check com o mesmo cursor que o refetch alimentaria.
+            const knownTs = lastConvMsgAtRef.current.get(convId);
+            if (!knownTs || iso > knownTs) lastConvMsgAtRef.current.set(convId, iso);
+
+            setChats((prev) => {
+                const idx = prev.findIndex((c) => c.id === convId);
+                if (idx === -1) return prev;
+                const chat = prev[idx];
+                // Evento fora de ordem (mais antigo que o preview atual): ignora.
+                if (chat.lastMessage?.at && chat.lastMessage.at > at) return prev;
+                const isInbound = row.direction === "inbound";
+                const isSelected = selectedConversationIdRef.current === convId;
+                const updated: Chat = {
+                    ...chat,
+                    // unread só sobe pra inbound de conversa NÃO aberta (a aberta
+                    // é zerada pelo markConversationAsRead na seleção).
+                    unreadCount: isInbound && !isSelected
+                        ? (chat.unreadCount ?? 0) + 1
+                        : chat.unreadCount,
+                    lastMessage: {
+                        text: lastMessageText(row as LastMessageRow),
+                        time: timeLabel(row.message_timestamp),
+                        at,
+                        isMe: row.direction === "outbound",
+                    },
+                };
+                // Reinsere mantendo a ordem por lastMessage.at DESC (mesma do fetch).
+                const next = [...prev];
+                next.splice(idx, 1);
+                let i = 0;
+                while (i < next.length && (next[i].lastMessage?.at ?? 0) > at) i++;
+                next.splice(i, 0, updated);
+                return next;
+            });
+            return true;
+        } catch (e) {
+            if (import.meta.env.DEV) console.warn("[ChannelInbox] applyRealtimeChatBump failed:", e);
+            return false;
+        }
+    }, []);
+
     // ── 7. Carga inicial dos chats ────────────────────────────────────────
     useEffect(() => {
         if (!connectionId) return;
@@ -834,8 +909,9 @@ export function useChannelInbox(): UseChannelInbox {
                         const applied = applyRealtimeInsert(row);
                         if (!applied) scheduleFetchMessages(convId);
                     }
-                    // Sidebar: reordena + unread (debounced; consistency check embutido).
-                    scheduleRefetchChats();
+                    // Sidebar: aplica a row incremental (preview + reorder + unread).
+                    // Conversa fora da lista (nova) → refetch completo (debounced).
+                    if (!applyRealtimeChatBump(row)) scheduleRefetchChats();
                 },
             )
             .subscribe((status) => {
@@ -905,6 +981,11 @@ export function useChannelInbox(): UseChannelInbox {
         if (!connectionId) return;
         const onFocusOrVisible = () => {
             if (typeof document !== "undefined" && document.hidden) return;
+            // INBOX.PERF.2 — focus e visibilitychange disparam JUNTOS ao voltar
+            // pra aba; sem throttle o resync completo rodava em dobro.
+            const now = Date.now();
+            if (now - lastFocusResyncRef.current < FOCUS_RESYNC_THROTTLE_MS) return;
+            lastFocusResyncRef.current = now;
             void refreshAll(selectedConversationIdRef.current);
         };
         window.addEventListener("focus", onFocusOrVisible);

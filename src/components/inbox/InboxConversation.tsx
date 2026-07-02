@@ -1018,6 +1018,7 @@ const MessageBubble = memo(function MessageBubble({
                             caption={undefined}
                             isMe={isMe}
                             getAudioMedia={getAudioMedia}
+                            storagePath={message.mediaStoragePath}
                         />
                     </div>
                 )}
@@ -1030,6 +1031,7 @@ const MessageBubble = memo(function MessageBubble({
                             duration={message.audioDuration}
                             isMe={isMe}
                             getAudioMedia={getAudioMedia}
+                            storagePath={message.mediaStoragePath}
                         />
                     </div>
                 )}
@@ -1089,7 +1091,8 @@ const MessageBubble = memo(function MessageBubble({
         a.time === b.time &&
         a.mediaType === b.mediaType &&
         a.audioUrl === b.audioUrl &&
-        a.mediaCaption === b.mediaCaption
+        a.mediaCaption === b.mediaCaption &&
+        a.mediaStoragePath === b.mediaStoragePath
     );
 });
 

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback } from "react";
 import { Play, Pause, Loader2 } from "lucide-react";
+import { resolveWhatsAppMediaSrc } from "@/lib/whatsappMedia";
 
 export function AudioMessagePlayer({
     messageId,
@@ -7,12 +8,16 @@ export function AudioMessagePlayer({
     duration,
     isMe,
     getAudioMedia,
+    storagePath,
 }: {
     messageId: string;
     audioUrl?: string;
     duration?: number;
     isMe: boolean;
     getAudioMedia: (messageId: string) => Promise<string | null>;
+    /** INBOX.PERF.2 — media_ref.storage_path; quando presente, o áudio vem por
+     *  signed URL do Storage (barato) em vez de base64 via edge getMedia. */
+    storagePath?: string;
 }) {
     const audioRef = useRef<HTMLAudioElement>(null);
     const [playing, setPlaying] = useState(false);
@@ -25,7 +30,7 @@ export function AudioMessagePlayer({
         if (mediaSrc) return mediaSrc;
         setLoading(true);
         try {
-            const src = await getAudioMedia(messageId);
+            const src = await resolveWhatsAppMediaSrc(messageId, storagePath, getAudioMedia);
             if (src) {
                 setMediaSrc(src);
                 return src;
@@ -36,7 +41,7 @@ export function AudioMessagePlayer({
             setLoading(false);
         }
         return null;
-    }, [mediaSrc, messageId, getAudioMedia]);
+    }, [mediaSrc, messageId, storagePath, getAudioMedia]);
 
     const togglePlay = useCallback(async () => {
         const audio = audioRef.current;

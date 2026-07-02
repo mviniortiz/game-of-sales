@@ -57,6 +57,10 @@ export interface MessageLine {
     mediaCaption?: string;
     /** Mimetype of the media */
     mediaMimetype?: string;
+    /** INBOX.PERF.2 — path no bucket whatsapp-media (media_ref.storage_path,
+     *  gravado pelo webhook). Quando presente, a mídia é servida por signed URL
+     *  direto do Storage em vez de base64 via edge getMedia. */
+    mediaStoragePath?: string;
     /** UI-only: mensagem outbound otimista aguardando confirmação do webhook.
      *  Nunca persistida no banco. */
     pending?: boolean;

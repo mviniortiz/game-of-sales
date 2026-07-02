@@ -301,24 +301,25 @@ const Inbox = () => {
         return () => clearInterval(interval);
     }, []);
 
-    // Resync de fallback (rede de segurança): a cada 20s, com a aba visível,
-    // refaz a carga do Inbox a partir do banco. O Inbox só tinha carga inicial
-    // + Realtime, sem fallback — se o Realtime perde um evento (ou o webhook
-    // grava sem notificar), a mensagem só aparecia no refresh manual. O Pulse
-    // já tinha um resync; o Inbox não. Lê do Supabase (barato), NÃO martela o
-    // Evolution. Refs evitam recriar o timer a cada troca de chat/source.
+    // Resync de fallback (rede de segurança) — SÓ no caminho legacy. O
+    // useChannelInbox já tem o próprio resync de 15s + resync on-focus +
+    // reconciliação na reconexão do Realtime; manter este intervalo também no
+    // caminho channel dobrava a carga (INBOX.PERF.2). O legacy
+    // (useWhatsAppInboxDb) não tem resync interno, então preserva o de 20s.
+    // Refs evitam recriar o timer a cada troca de chat.
     const resyncRef = useRef<{
         refreshAll: (conversationId?: string | null) => Promise<void>;
         selectedChatId: string | null;
     }>({ refreshAll: activeInbox.refreshAll, selectedChatId });
     resyncRef.current = { refreshAll: activeInbox.refreshAll, selectedChatId };
     useEffect(() => {
+        if (!useLegacy) return;
         const interval = setInterval(() => {
             if (typeof document !== "undefined" && document.hidden) return;
             void resyncRef.current.refreshAll(resyncRef.current.selectedChatId);
         }, 20_000);
         return () => clearInterval(interval);
-    }, []);
+    }, [useLegacy]);
 
     // Mobile
     const showListOnMobile = isMobile && !selectedChatId;

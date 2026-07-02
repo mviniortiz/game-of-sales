@@ -9,6 +9,11 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 //   - Falha em channel_* NÃO derruba o insert legado nem o response 200.
 //   - Idempotente: connection_id+provider_message_id, retry de webhook não
 //     duplica nada em channel_messages.
+//
+// PERF (2026-07-01): o dual-write agora usa a RPC ingest_channel_message()
+// (1 round-trip em vez de ~7 SELECTs/UPDATEs em série) e roda em Promise.all
+// com o insert legado. O chain manual antigo fica como fallback se a RPC
+// falhar (ex.: ambiente sem a migration 20260701).
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -188,6 +193,8 @@ interface DualWriteResult {
   contactId?: string;
   conversationId?: string;
   messageId?: string;
+  isNewMessage?: boolean;
+  isNewConversation?: boolean;
   error?: string;
 }
 
@@ -239,7 +246,132 @@ async function autoQualifyNewLead(admin: any, n: NormalizedMessage): Promise<voi
   }
 }
 
+// PERF (2026-07-01): caminho primário do dual-write. A RPC
+// ingest_channel_message() faz o upsert chain inteiro (connection → contact →
+// conversation → message + stats) num ÚNICO round-trip, idempotente por
+// UNIQUE(connection_id, provider_message_id). Substitui os ~7 SELECTs/UPDATEs
+// sequenciais do chain manual, que fica como fallback.
+async function dualWriteChannelViaRpc(
+  admin: any,
+  n: NormalizedMessage,
+): Promise<DualWriteResult> {
+  if (!n.companyId) {
+    return { ok: false, step: "connection", error: "missing_company_id" };
+  }
+
+  // F4W.4.2 — metadata.user_id no connection (lookup nível 1 do useChannelInbox).
+  // A RPC faz merge (metadata || patch), preservando chaves existentes.
+  const connectionMetadataPatch: Record<string, unknown> = {
+    source: "evolution-message-webhook",
+    instance_name: n.instanceName,
+  };
+  if (n.userId) connectionMetadataPatch.user_id = n.userId;
+
+  const { data, error } = await admin.rpc("ingest_channel_message", {
+    p_company_id: n.companyId,
+    p_provider: "evolution",
+    p_channel_type: "whatsapp",
+    p_payload: {
+      connection: {
+        external_id: n.instanceName,
+        // display_name omitido de propósito: no INSERT a RPC usa o external_id
+        // (mesmo comportamento antigo) e no UPDATE preserva o valor existente.
+        metadata: connectionMetadataPatch,
+      },
+      contact: {
+        external_id: n.remoteJid,
+        // F4W.7.4: só nomeia a partir de inbound (n.contactName já vem null em
+        // outbound). A RPC usa coalesce, então null não sobrescreve nome existente.
+        name: n.contactName,
+        phone_e164: n.chatPhone || null,
+        is_group: n.isGroup,
+        metadata: { chat_jid: n.remoteJid },
+      },
+      message: {
+        provider_message_id: n.externalId,
+        direction: n.direction,
+        message_type: mapChannelMessageType(n.internalType),
+        body: n.body,
+        // media_ref é NOT NULL no schema; {} pra texto puro
+        media_ref: (n.mediaUrl || n.mediaMimetype || n.mediaCaption || n.audioDuration)
+          ? {
+              url: n.mediaUrl || null,
+              mimetype: n.mediaMimetype || null,
+              caption: n.mediaCaption || null,
+              duration: n.audioDuration || null,
+            }
+          : {},
+        status: n.direction === "inbound" ? "received" : "sent",
+        sent_by_user_id: n.direction === "outbound" ? n.userId : null,
+        message_timestamp: n.messageTimestamp,
+        metadata: {
+          chat_jid: n.remoteJid,
+          chat_phone: n.chatPhone,
+          instance_name: n.instanceName,
+          original_type: n.internalType,
+        },
+      },
+      raw_payload: n.rawMsg,
+    },
+  });
+
+  if (error) {
+    return {
+      ok: false,
+      step: "message",
+      error: `rpc:${(error as any)?.message?.slice(0, 200) || String(error)}`,
+    };
+  }
+  return {
+    ok: true,
+    connectionId: data?.connection_id,
+    contactId: data?.contact_id,
+    conversationId: data?.conversation_id,
+    messageId: data?.message_id,
+    isNewMessage: data?.is_new_message === true,
+    isNewConversation: data?.is_new_conversation === true,
+  };
+}
+
+// Orquestrador do dual-write: tenta a RPC; se ela falhar (fora o caso de
+// company ausente), cai pro chain manual. Depois dispara os side-effects em
+// background (mídia + auto-qualificação), sem segurar o 200.
 async function dualWriteChannel(
+  admin: any,
+  n: NormalizedMessage,
+): Promise<DualWriteResult> {
+  let result = await dualWriteChannelViaRpc(admin, n);
+  if (!result.ok && result.error !== "missing_company_id") {
+    console.warn(`[webhook] ingest RPC falhou (${result.error}); usando chain fallback`);
+    result = await dualWriteChannelFallback(admin, n);
+  }
+  if (!result.ok) return result;
+
+  // BAIXA a mídia na entrada (não-bloqueante): captura os bytes enquanto a
+  // sessão está viva e guarda no nosso Storage, pra nunca ficar "indisponível".
+  if (result.isNewMessage && result.messageId && n.companyId && MEDIA_TYPES.has(n.internalType) && n.mediaMimetype) {
+    const task = captureMediaToStorage(admin, {
+      messageId: result.messageId,
+      companyId: n.companyId,
+      wamid: n.externalId,
+      remoteJid: n.remoteJid,
+      fromMe: n.direction === "outbound",
+      instanceName: n.instanceName,
+      mimetype: n.mediaMimetype,
+    });
+    // waitUntil mantém a função viva pra terminar o upload sem segurar o 200.
+    try { (globalThis as any).EdgeRuntime?.waitUntil?.(task); } catch { /* noop */ }
+  }
+
+  // EVA.AUTO.1 — lead novo entrou: dispara a auto-qualificação em background.
+  if (result.isNewConversation && n.direction === "inbound" && n.body && n.body.trim()) {
+    try { (globalThis as any).EdgeRuntime?.waitUntil?.(autoQualifyNewLead(admin, n)); } catch { /* noop */ }
+  }
+
+  return result;
+}
+
+async function dualWriteChannelFallback(
   admin: any,
   n: NormalizedMessage,
 ): Promise<DualWriteResult> {
@@ -398,7 +530,7 @@ async function dualWriteChannel(
 
   // ── 3. channel_conversations (upsert por connection_id + contact_id) ────
   let conversationId: string | undefined;
-  let isNewInboundConv = false; // EVA.AUTO.1 — 1º contato de número novo (inbound)
+  let isNewConversation = false; // conversa criada agora (gate EVA.AUTO.1 no orquestrador)
   try {
     const { data: existing, error: selErr } = await admin
       .from("channel_conversations")
@@ -466,7 +598,7 @@ async function dualWriteChannel(
         }
       } else {
         conversationId = created.id;
-        isNewInboundConv = isInbound; // conversa nova: 1º contato
+        isNewConversation = true; // conversa nova: 1º contato
       }
     }
   } catch (err) {
@@ -490,6 +622,7 @@ async function dualWriteChannel(
 
   // ── 4. channel_messages (idempotente por connection_id + provider_msg_id) ─
   let messageId: string | undefined;
+  let isNewMessage = false;
   try {
     // Pré-check pra evitar barulho de 23505 em retries de webhook
     const { data: existing, error: selErr } = await admin
@@ -557,21 +690,9 @@ async function dualWriteChannel(
         }
       } else {
         messageId = created.id;
-        // BAIXA a mídia na entrada (não-bloqueante): captura os bytes enquanto a
-        // sessão está viva e guarda no nosso Storage, pra nunca ficar "indisponível".
-        if (messageId && MEDIA_TYPES.has(n.internalType) && n.mediaMimetype) {
-          const task = captureMediaToStorage(admin, {
-            messageId,
-            companyId: n.companyId,
-            wamid: n.externalId,
-            remoteJid: n.remoteJid,
-            fromMe: n.direction === "outbound",
-            instanceName: n.instanceName,
-            mimetype: n.mediaMimetype,
-          });
-          // waitUntil mantém a função viva pra terminar o upload sem segurar o 200.
-          try { (globalThis as any).EdgeRuntime?.waitUntil?.(task); } catch { /* noop */ }
-        }
+        isNewMessage = true;
+        // Side-effects (captura de mídia, auto-qualificação) ficam no
+        // orquestrador dualWriteChannel, a partir das flags retornadas.
       }
     }
   } catch (err) {
@@ -585,18 +706,14 @@ async function dualWriteChannel(
     };
   }
 
-  // EVA.AUTO.1 — lead novo entrou: dispara a auto-qualificação em background.
-  // waitUntil mantém a função viva sem segurar o 200; o helper é à prova de erro.
-  if (isNewInboundConv && n.body && n.body.trim()) {
-    try { (globalThis as any).EdgeRuntime?.waitUntil?.(autoQualifyNewLead(admin, n)); } catch { /* noop */ }
-  }
-
   return {
     ok: true,
     connectionId,
     contactId,
     conversationId,
     messageId,
+    isNewMessage,
+    isNewConversation,
   };
 }
 
@@ -752,11 +869,20 @@ serve(async (req) => {
 
   const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-  const { data: profile } = await (admin as any)
-    .from("profiles")
-    .select("id, company_id")
-    .eq("id", userId)
-    .single();
+  // PERF: profile e gate de prospecção são independentes — 1 round-trip em vez de 2.
+  const [{ data: profile }, { data: pInst }] = await Promise.all([
+    (admin as any)
+      .from("profiles")
+      .select("id, company_id")
+      .eq("id", userId)
+      .single(),
+    (admin as any)
+      .from("prospecting_instances")
+      .select("user_id")
+      .eq("user_id", userId)
+      .eq("is_active", true)
+      .maybeSingle(),
+  ]);
 
   const companyId: string | null = profile?.company_id || null;
 
@@ -766,23 +892,15 @@ serve(async (req) => {
   // gravar. É a trava que mantém a vida pessoal fora do Vyzon.
   let prospectingActive = false;
   const allowlistTails = new Set<string>();
-  {
-    const { data: pInst } = await (admin as any)
-      .from("prospecting_instances")
-      .select("user_id")
+  if (pInst) {
+    prospectingActive = true;
+    const { data: al } = await (admin as any)
+      .from("prospecting_allowlist")
+      .select("phone_tail")
       .eq("user_id", userId)
-      .eq("is_active", true)
-      .maybeSingle();
-    if (pInst) {
-      prospectingActive = true;
-      const { data: al } = await (admin as any)
-        .from("prospecting_allowlist")
-        .select("phone_tail")
-        .eq("user_id", userId)
-        .eq("is_active", true);
-      for (const r of (al || []) as any[]) {
-        if (r?.phone_tail) allowlistTails.add(r.phone_tail as string);
-      }
+      .eq("is_active", true);
+    for (const r of (al || []) as any[]) {
+      if (r?.phone_tail) allowlistTails.add(r.phone_tail as string);
     }
   }
 
@@ -849,54 +967,7 @@ serve(async (req) => {
       ? new Date(timestampSec * 1000).toISOString()
       : new Date().toISOString();
 
-    // ── Insert legado em whatsapp_messages (continua sendo primário) ─────
     const direction: "inbound" | "outbound" = fromMe ? "outbound" : "inbound";
-    const { error: insertErr } = await (admin as any)
-      .from("whatsapp_messages")
-      .insert({
-        external_id: externalId,
-        instance_name: instanceName,
-        user_id: userId,
-        company_id: companyId,
-        chat_jid: remoteJid,
-        chat_phone: chatPhone,
-        phone_e164_tail: phoneTail,
-        contact_name: msg.pushName || null,
-        is_group: isGroup,
-        direction,
-        message_type: meta.type,
-        body,
-        media_url: meta.mediaUrl || null,
-        media_mimetype: meta.mimetype || null,
-        media_caption: meta.caption || null,
-        audio_duration: meta.audioDuration || null,
-        message_timestamp: messageTimestamp,
-        raw_payload: msg,
-      });
-
-    let legacyDuplicate = false;
-    if (insertErr) {
-      if ((insertErr as any).code === "23505") {
-        skipped.push("duplicate");
-        legacyDuplicate = true;
-      } else {
-        console.error("[webhook] legacy insert error:", JSON.stringify(insertErr));
-        skipped.push(`db_error:${(insertErr as any).code || "unknown"}:${(insertErr as any).message?.slice(0, 160) || ""}`);
-      }
-    } else {
-      inserted.push(externalId);
-    }
-
-    // ── F4W.3 — Dual-write para channel_* (best-effort, isolado) ─────────
-    // Roda mesmo em duplicate do legado, pois channel_messages tem sua
-    // própria unique constraint e dá no-op (idempotente).
-    // Se whatsapp_messages teve erro NÃO-duplicate, ainda tentamos porque
-    // o channel_* pode estar atrasado em relação ao legado.
-    if (!companyId) {
-      dualSkipped++;
-      console.warn("[webhook] dual-write skipped: missing_company_id user=" + userId);
-      continue;
-    }
 
     const normalized: NormalizedMessage = {
       externalId,
@@ -922,30 +993,80 @@ serve(async (req) => {
       rawMsg: msg,
     };
 
-    try {
-      const result = await dualWriteChannel(admin as any, normalized);
-      if (result.ok) {
-        dualOk++;
-        console.log(
-          `[webhook] dual_write_success step=message external_id=${externalId} ` +
-          `connection_id=${result.connectionId} contact_id=${result.contactId} ` +
-          `conversation_id=${result.conversationId} message_id=${result.messageId} ` +
-          `legacy_duplicate=${legacyDuplicate}`,
-        );
+    // ── Insert legado + dual-write em PARALELO (PERF 2026-07-01) ─────────
+    // São independentes: whatsapp_messages (primário, com triggers) e
+    // channel_* (via RPC). O dual-write roda mesmo em duplicate do legado,
+    // pois channel_messages tem sua própria unique constraint e dá no-op.
+    // Falha em um NÃO derruba o outro nem o response 200.
+    const legacyInsertPromise = (admin as any)
+      .from("whatsapp_messages")
+      .insert({
+        external_id: externalId,
+        instance_name: instanceName,
+        user_id: userId,
+        company_id: companyId,
+        chat_jid: remoteJid,
+        chat_phone: chatPhone,
+        phone_e164_tail: phoneTail,
+        contact_name: msg.pushName || null,
+        is_group: isGroup,
+        direction,
+        message_type: meta.type,
+        body,
+        media_url: meta.mediaUrl || null,
+        media_mimetype: meta.mimetype || null,
+        media_caption: meta.caption || null,
+        audio_duration: meta.audioDuration || null,
+        message_timestamp: messageTimestamp,
+        raw_payload: msg,
+      });
+
+    const dualWritePromise: Promise<DualWriteResult | null> = companyId
+      ? dualWriteChannel(admin as any, normalized).catch((err: any) => ({
+          // Última linha de defesa — se algo escapar do best-effort, não falha o webhook.
+          ok: false,
+          step: "message" as const,
+          error: `unexpected:${err?.message?.slice(0, 200) || String(err)}`,
+        }))
+      : Promise.resolve(null);
+
+    const [{ error: insertErr }, dualResult] = await Promise.all([
+      legacyInsertPromise,
+      dualWritePromise,
+    ]);
+
+    let legacyDuplicate = false;
+    if (insertErr) {
+      if ((insertErr as any).code === "23505") {
+        skipped.push("duplicate");
+        legacyDuplicate = true;
       } else {
-        dualErr++;
-        console.error(
-          `[webhook] dual_write_error step=${result.step} external_id=${externalId} ` +
-          `connection_id=${result.connectionId || "-"} contact_id=${result.contactId || "-"} ` +
-          `conversation_id=${result.conversationId || "-"} error=${result.error}`,
-        );
+        console.error("[webhook] legacy insert error:", JSON.stringify(insertErr));
+        skipped.push(`db_error:${(insertErr as any).code || "unknown"}:${(insertErr as any).message?.slice(0, 160) || ""}`);
       }
-    } catch (err) {
-      // Última linha de defesa — se algo escapar do best-effort, não falha o webhook.
+    } else {
+      inserted.push(externalId);
+    }
+
+    if (!dualResult) {
+      dualSkipped++;
+      console.warn("[webhook] dual-write skipped: missing_company_id user=" + userId);
+      continue;
+    }
+    if (dualResult.ok) {
+      dualOk++;
+      console.log(
+        `[webhook] dual_write_success step=message external_id=${externalId} ` +
+        `connection_id=${dualResult.connectionId} contact_id=${dualResult.contactId} ` +
+        `conversation_id=${dualResult.conversationId} message_id=${dualResult.messageId} ` +
+        `legacy_duplicate=${legacyDuplicate}`,
+      );
+    } else {
       dualErr++;
       console.error(
-        `[webhook] dual_write_unexpected external_id=${externalId} err=`,
-        (err as any)?.message?.slice(0, 200) || String(err),
+        `[webhook] dual_write_error step=${dualResult.step} external_id=${externalId} ` +
+        `connection_id=${dualResult.connectionId || "-"} contact_id=${dualResult.contactId || "-"} ` +
+        `conversation_id=${dualResult.conversationId || "-"} error=${dualResult.error}`,
       );
     }
   }
