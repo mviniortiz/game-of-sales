@@ -30,6 +30,14 @@ Deno.serve(async (req) => {
     if (!EVA_CRON_SECRET || provided !== EVA_CRON_SECRET) {
         return new Response("unauthorized", { status: 401 });
     }
+    // Debug (secret-gated): revela o remetente efetivo sem enviar nada.
+    const payload = await req.json().catch(() => ({}));
+    if (payload?.debug === true) {
+        return new Response(JSON.stringify({ from: FROM, replyTo: REPLY_TO, hasKey: !!RESEND_API_KEY }), {
+            headers: { "Content-Type": "application/json" },
+        });
+    }
+
     if (!RESEND_API_KEY || !FROM) {
         return new Response(JSON.stringify({ error: "RESEND_API_KEY/OUTREACH_FROM não configurados" }), { status: 500 });
     }
