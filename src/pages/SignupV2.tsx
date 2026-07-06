@@ -6,8 +6,7 @@ import { getAttribution } from "@/lib/attribution";
 import { trackBehavior, FUNNEL_EVENTS } from "@/lib/analytics";
 import { toast } from "sonner";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
-import { AnimatedMeshAsset } from "@/components/landing-v2/AnimatedMeshAsset";
-import meshSrc from "@/assets/landing-v2/login-mesh.webp";
+import { CloudWaveOrb } from "@/components/landing-v2/CloudWaveOrb";
 
 // Cadastro SIMPLES (substitui o wizard de onboarding): 1 tela → conta criada com
 // trial de 14 dias ativo (sem cartão) → direto pro app. Trata 2 modos: (a) novo
@@ -209,7 +208,7 @@ const SignupV2 = () => {
                 </div>
 
                 <div className="relative hidden p-4 sm:p-5 lg:block landing-fade-in landing-delay-200">
-                    <AnimatedMeshAsset src={meshSrc} className="h-full w-full rounded-[30px]" />
+                    <CloudWaveOrb palette="login" className="h-full w-full rounded-[30px]" />
                 </div>
             </div>
         </div>

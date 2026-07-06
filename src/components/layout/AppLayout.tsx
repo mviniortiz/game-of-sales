@@ -5,6 +5,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { TrialBanner } from "./TrialBanner";
 import { EvaHelpDock } from "@/components/help/EvaHelpDock";
+import { AskEvaPalette } from "@/components/help/AskEvaPalette";
 import { useTrial } from "@/hooks/useTrial";
 
 // Lazy: UpgradeLock só renderiza quando trial expirou.
@@ -103,6 +104,8 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
         </div>
         {/* Orb flutuante de ajuda (a "Holly" do Vyzon, na voz da EVA) — global. */}
         <EvaHelpDock />
+        {/* Pergunte à EVA via ⌘K/Ctrl+K — mesma conversa do dock. */}
+        <AskEvaPalette />
       </div>
     </SidebarProvider>
   );

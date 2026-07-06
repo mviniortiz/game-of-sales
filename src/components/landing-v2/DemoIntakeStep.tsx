@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { CaretDown, Check } from "@phosphor-icons/react";
 import { ButtonV2 } from "./ButtonV2";
 import { EvaOrb } from "./EvaOrb";
 import { primeEvaAudio } from "./useGeminiLive";
@@ -16,6 +18,86 @@ interface DemoIntakeStepProps {
 }
 
 const HEARD_OPTIONS = ["Google", "Instagram", "LinkedIn", "Indicação", "YouTube", "Outro"];
+
+// Dropdown próprio (o <select> nativo destoava do design): botão no estilo dos
+// inputs da landing, chevron que gira, painel com entrada suave e opções com
+// hover + check. Fecha em clique-fora e Esc; ARIA listbox básico.
+function HeardDropdown({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+    const reduce = useReducedMotion();
+    const [open, setOpen] = useState(false);
+    const rootRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!open) return;
+        const onDown = (e: MouseEvent) => {
+            if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+        };
+        const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+        document.addEventListener("mousedown", onDown);
+        document.addEventListener("keydown", onKey);
+        return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey); };
+    }, [open]);
+
+    return (
+        <div ref={rootRef} className="relative">
+            <button
+                type="button"
+                onClick={() => setOpen((v) => !v)}
+                aria-haspopup="listbox"
+                aria-expanded={open}
+                aria-label="Onde você nos encontrou"
+                className="vz-input-light flex w-full items-center justify-between text-left transition-colors"
+                style={{ color: value ? "var(--lp-ink)" : "rgba(5,5,5,0.42)" }}
+            >
+                <span>{value || "Selecione…"}</span>
+                <motion.span
+                    animate={{ rotate: open ? 180 : 0 }}
+                    transition={{ duration: reduce ? 0 : 0.18, ease: "easeOut" }}
+                    className="inline-flex shrink-0"
+                    style={{ color: "rgba(5,5,5,0.45)" }}
+                    aria-hidden="true"
+                >
+                    <CaretDown size={15} weight="bold" />
+                </motion.span>
+            </button>
+            <AnimatePresence>
+                {open && (
+                    <motion.ul
+                        role="listbox"
+                        initial={reduce ? { opacity: 0 } : { opacity: 0, y: -6, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={reduce ? { opacity: 0 } : { opacity: 0, y: -4, scale: 0.98 }}
+                        transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
+                        className="absolute inset-x-0 top-[calc(100%+6px)] z-20 overflow-hidden rounded-[12px] py-1.5"
+                        style={{
+                            background: "#FFFFFF",
+                            border: "1px solid var(--lp-line)",
+                            boxShadow: "0 14px 34px -10px rgba(13,20,33,0.22), 0 4px 10px rgba(13,20,33,0.07)",
+                            transformOrigin: "top",
+                        }}
+                    >
+                        {HEARD_OPTIONS.map((opt) => {
+                            const on = value === opt;
+                            return (
+                                <li key={opt} role="option" aria-selected={on}>
+                                    <button
+                                        type="button"
+                                        onClick={() => { onChange(on ? "" : opt); setOpen(false); }}
+                                        className="flex w-full items-center justify-between px-3.5 py-2.5 text-left text-[14px] transition-colors hover:bg-[rgba(13,20,33,0.04)]"
+                                        style={{ color: "var(--lp-ink)", fontWeight: on ? 600 : 400 }}
+                                    >
+                                        {opt}
+                                        {on && <Check size={14} weight="bold" style={{ color: "var(--lp-blue)" }} />}
+                                    </button>
+                                </li>
+                            );
+                        })}
+                    </motion.ul>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+}
 
 // Aceita e-mail pessoal (gmail etc.) — muitos donos de agência usam. Menos
 // fricção = mais demos. Só valida o formato básico, sem bloquear.
@@ -95,18 +177,7 @@ export const DemoIntakeStep = ({ email, site, heardFrom, setEmail, setSite, setH
                         <label className="mb-2 block text-[13px]" style={{ color: "rgba(5,5,5,0.55)" }}>
                             Onde você nos encontrou? <span style={{ color: "var(--lp-ink-40)" }}>(opcional)</span>
                         </label>
-                        <select
-                            className="vz-input-light w-full"
-                            value={heardFrom}
-                            onChange={(e) => setHeardFrom(e.target.value)}
-                            aria-label="Onde você nos encontrou"
-                            style={{ appearance: "none", backgroundImage: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23667' stroke-width='2.5'><path d='M6 9l6 6 6-6'/></svg>\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center", paddingRight: 38 }}
-                        >
-                            <option value="">Selecione…</option>
-                            {HEARD_OPTIONS.map((opt) => (
-                                <option key={opt} value={opt}>{opt}</option>
-                            ))}
-                        </select>
+                        <HeardDropdown value={heardFrom} onChange={setHeardFrom} />
                     </div>
                     <div className="mt-1">
                         <ButtonV2 onClick={() => { primeEvaAudio(); onStart(); }} variant="primary" showArrow disabled={!ready}>Iniciar demo ao vivo</ButtonV2>

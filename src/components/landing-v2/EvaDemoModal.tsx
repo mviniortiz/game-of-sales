@@ -3,8 +3,10 @@ import { createPortal } from "react-dom";
 import { DemoIntakeStep } from "./DemoIntakeStep";
 import { DemoPreparingStep } from "./DemoPreparingStep";
 import { DemoSummaryStep } from "./DemoSummaryStep";
-import { DemoLiveStage } from "./DemoLiveStage";
+import { DemoLiveStage, type DemoSiteContext } from "./DemoLiveStage";
 import { DemoBooking } from "./DemoBooking";
+import { supabase } from "@/integrations/supabase/client";
+import { getAttribution } from "@/lib/attribution";
 
 // LP.8 (v2) — modal da demo da EVA. Fluxo: intake (email + site) → preparando →
 // TOUR AO VIVO (iframe do app real, /embed-demo, a EVA navega Central → Pipeline
@@ -24,6 +26,9 @@ export const EvaDemoModal = ({ open, onClose, onCTAClick }: EvaDemoModalProps) =
     const [site, setSite] = useState("");
     const [heardFrom, setHeardFrom] = useState("");
     const [closing, setClosing] = useState(false);
+    const [intakeId, setIntakeId] = useState<string | null>(null);
+    const [siteCtx, setSiteCtx] = useState<DemoSiteContext | null>(null);
+    const ctxPromiseRef = useRef<Promise<unknown> | null>(null);
 
     const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const prepTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -41,6 +46,9 @@ export const EvaDemoModal = ({ open, onClose, onCTAClick }: EvaDemoModalProps) =
         setSite("");
         setHeardFrom("");
         setClosing(false);
+        setIntakeId(null);
+        setSiteCtx(null);
+        ctxPromiseRef.current = null;
         const prev = document.body.style.overflow;
         document.body.style.overflow = "hidden";
         const onKey = (e: KeyboardEvent) => e.key === "Escape" && requestClose();
@@ -54,11 +62,42 @@ export const EvaDemoModal = ({ open, onClose, onCTAClick }: EvaDemoModalProps) =
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open]);
 
-    // preparando → tour (estado curto enquanto o iframe começa a subir)
+    // DEMO.A2 + DEMO.C — ao sair do intake: (1) persiste o lead PARCIAL na hora
+    // (quem abandona o tour não se perde); (2) se informou site, dispara a
+    // leitura do site em paralelo (personaliza a narração da EVA).
+    const startDemo = () => {
+        supabase
+            .rpc("submit_demo_intake", {
+                payload: { email, company: site, heard_from: heardFrom, ...(getAttribution() ?? {}) },
+            })
+            .then(({ data, error }) => {
+                if (error) console.error("[EvaDemoModal] submit_demo_intake falhou:", error.message);
+                else if (data) setIntakeId(data as string);
+            });
+        if (site.trim()) {
+            ctxPromiseRef.current = supabase.functions
+                .invoke("demo-site-context", { body: { site } })
+                .then(({ data }) => {
+                    const ctx = (data as { context?: DemoSiteContext | null })?.context;
+                    if (ctx) setSiteCtx(ctx);
+                })
+                .catch(() => undefined);
+        }
+        setStep("preparing");
+    };
+
+    // preparando → tour: espera a leitura do site (teto 6.5s) e no mínimo 1.2s
+    // de tela — o "preparando" agora é trabalho real, não só teatro.
     useEffect(() => {
         if (step !== "preparing") return;
-        prepTimer.current = setTimeout(() => setStep("tour"), 1200);
-        return () => { if (prepTimer.current) clearTimeout(prepTimer.current); };
+        let cancelled = false;
+        const minWait = new Promise((r) => { prepTimer.current = setTimeout(r, 1200); });
+        const ctxWait = Promise.race([
+            ctxPromiseRef.current ?? Promise.resolve(),
+            new Promise((r) => setTimeout(r, 6500)),
+        ]);
+        Promise.all([minWait, ctxWait]).then(() => { if (!cancelled) setStep("tour"); });
+        return () => { cancelled = true; if (prepTimer.current) clearTimeout(prepTimer.current); };
     }, [step]);
 
     if (!open) return null;
@@ -88,16 +127,18 @@ export const EvaDemoModal = ({ open, onClose, onCTAClick }: EvaDemoModalProps) =
 
                     <div className={`flex flex-1 flex-col ${isTour ? "overflow-hidden" : "overflow-y-auto"}`}>
                         {step === "intake" && (
-                            <DemoIntakeStep email={email} site={site} heardFrom={heardFrom} setEmail={setEmail} setSite={setSite} setHeardFrom={setHeardFrom} onStart={() => setStep("preparing")} />
+                            <DemoIntakeStep email={email} site={site} heardFrom={heardFrom} setEmail={setEmail} setSite={setSite} setHeardFrom={setHeardFrom} onStart={startDemo} />
                         )}
-                        {step === "preparing" && <DemoPreparingStep />}
-                        {step === "tour" && <DemoLiveStage onDone={() => setStep("summary")} onTourEnd={() => setStep("booking")} site={site} />}
+                        {step === "preparing" && <DemoPreparingStep site={site} />}
+                        {step === "tour" && <DemoLiveStage onDone={() => setStep("summary")} onTourEnd={() => setStep("booking")} site={site} siteCtx={siteCtx} />}
                         {step === "booking" && (
                             <div className="relative flex-1">
-                                <DemoBooking email={email} site={site} onDone={() => setStep("summary")} />
+                                <DemoBooking email={email} site={site} intakeId={intakeId} onDone={() => setStep("summary")} />
                             </div>
                         )}
-                        {step === "summary" && <DemoSummaryStep onSchedule={onCTAClick} onRestart={() => setStep("tour")} />}
+                        {/* "Agendar demo" abre o BOOKING real (Google Calendar) — não o
+                            teste grátis; o trial segue nos CTAs próprios da página. */}
+                        {step === "summary" && <DemoSummaryStep onSchedule={() => setStep("booking")} onRestart={() => setStep("tour")} />}
                     </div>
                 </div>
             </div>

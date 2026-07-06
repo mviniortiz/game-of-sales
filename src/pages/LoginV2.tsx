@@ -5,8 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
-import { AnimatedMeshAsset } from "@/components/landing-v2/AnimatedMeshAsset";
-import meshSrc from "@/assets/landing-v2/login-mesh.webp";
+import { CloudWaveOrb } from "@/components/landing-v2/CloudWaveOrb";
 
 // LP.6 (v2) — login premium dark, AGORA com auth real (Supabase via AuthContext).
 // Duas colunas: form à esquerda, painel mesh animado à direita. Roda dentro do
@@ -157,7 +156,7 @@ const LoginV2 = () => {
 
                 {/* ── Coluna visual (painel; só a imagem desliza dentro) ── */}
                 <div className="relative hidden p-4 sm:p-5 lg:block">
-                    <AnimatedMeshAsset src={meshSrc} className="h-full w-full rounded-[30px]" />
+                    <CloudWaveOrb palette="login" className="h-full w-full rounded-[30px]" />
                 </div>
             </div>
         </div>

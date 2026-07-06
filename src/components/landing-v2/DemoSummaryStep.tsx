@@ -1,6 +1,10 @@
 import { ButtonV2 } from "./ButtonV2";
 import { EvaOrb } from "./EvaOrb";
-import { DEMO_SUMMARY } from "./evaDemoData";
+
+const DEMO_SUMMARY = {
+    title: "Sua demo terminou.",
+    text: "Nesta experiência, a EVA acompanhou uma conversa, entendeu o contexto e sugeriu uma resposta para o time aprovar, e ainda mostrou a Central de Comando, o pipeline, metas e ranking, e como agentes especialistas apoiam cada etapa da operação comercial.",
+};
 
 // LP.7 (v2) — passo 4: resumo. Fecha a história e leva pra ação (agendar) ou
 // reiniciar a experiência.

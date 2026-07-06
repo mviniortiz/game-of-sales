@@ -64,3 +64,7 @@ public/videos/sales-video-vertical45.mp4
 Vyzonconvs.json
 Vyzonterms.json
 *-google-ads-export.json
+
+# artefatos de producao de video (nao sao codigo do app)
+factory/
+hf-eva-mock/

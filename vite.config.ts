@@ -7,6 +7,9 @@ export default defineConfig({
   server: {
     host: "::",
     port: 8080,
+    // Libera túneis de preview (cloudflare/localtunnel) pra revisar no celular.
+    // Sem isso o Vite responde 403 a hosts externos (proteção DNS-rebinding).
+    allowedHosts: [".trycloudflare.com", ".loca.lt"],
   },
   plugins: [react()],
   resolve: {

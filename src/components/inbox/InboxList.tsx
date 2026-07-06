@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Search, MessageCircle, Users, RefreshCw } from "lucide-react";
 import { InboxListSkeleton } from "@/components/ui/skeletons";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -108,6 +108,36 @@ export function InboxList({
     disconnecting,
 }: InboxListProps) {
     const [query, setQuery] = useState("");
+
+    // Proximity hover (Fluid Functionalism): o card mais próximo do cursor
+    // acende antes do clique — cobre também o vão entre cards, reduzindo
+    // erro de seleção em lista densa. rAF-throttled; -1 = cursor fora.
+    const listRef = useRef<HTMLUListElement>(null);
+    const rafRef = useRef(0);
+    const [nearIdx, setNearIdx] = useState(-1);
+    const handleListMouseMove = (e: React.MouseEvent) => {
+        const y = e.clientY;
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = requestAnimationFrame(() => {
+            const items = listRef.current?.querySelectorAll<HTMLElement>("[data-lead-card]");
+            if (!items?.length) return;
+            let best = -1;
+            let bestDist = Infinity;
+            items.forEach((el, i) => {
+                const r = el.getBoundingClientRect();
+                const d = Math.abs(y - (r.top + r.height / 2));
+                if (d < bestDist) {
+                    bestDist = d;
+                    best = i;
+                }
+            });
+            setNearIdx(best);
+        });
+    };
+    const handleListMouseLeave = () => {
+        cancelAnimationFrame(rafRef.current);
+        setNearIdx(-1);
+    };
 
     // V1.0.1 — só filtra grupos + busca; sem enriquecimento mock
     const visibleChats = useMemo(() => {
@@ -254,12 +284,18 @@ export function InboxList({
                         syncTone={syncStatus?.tone}
                     />
                 ) : (
-                    <ul className="px-2 py-2 flex flex-col gap-0.5">
+                    <ul
+                        ref={listRef}
+                        className="px-2 py-2 flex flex-col gap-0.5"
+                        onMouseMove={handleListMouseMove}
+                        onMouseLeave={handleListMouseLeave}
+                    >
                         {filtered.map((chat, i) => (
                             <LeadCard
                                 key={chat.id}
                                 chat={chat}
                                 isSelected={chat.id === selectedChatId}
+                                isNear={i === nearIdx}
                                 onSelect={() => onSelect(chat.id)}
                                 demoTarget={i === 0}
                             />
@@ -276,22 +312,23 @@ export function InboxList({
 interface LeadCardProps {
     chat: Chat;
     isSelected: boolean;
+    isNear?: boolean;
     onSelect: () => void;
     demoTarget?: boolean;
 }
 
-function LeadCard({ chat, isSelected, onSelect, demoTarget }: LeadCardProps) {
+function LeadCard({ chat, isSelected, isNear, onSelect, demoTarget }: LeadCardProps) {
     const picUrl = useProfilePic(chat.phone, chat.profilePicUrl);
     const isUnread = chat.unreadCount > 0;
     const time = chat.lastMessage?.time ? formatTimeAgo(chat.lastMessage.time) : "";
     return (
-        <li {...(demoTarget ? { "data-demo-inbox-item": "" } : {})}>
+        <li data-lead-card {...(demoTarget ? { "data-demo-inbox-item": "" } : {})}>
             <button
                 type="button"
                 onClick={onSelect}
                 className={cn(
                     "group w-full text-left px-2.5 py-2.5 rounded-xl flex items-center gap-3 transition-all duration-150 ease-[cubic-bezier(0.22,1,0.36,1)]",
-                    isSelected ? "bg-[#EEF4FF]" : "hover:bg-[#F4F7FB]"
+                    isSelected ? "bg-[#EEF4FF]" : isNear ? "bg-[#F4F7FB]" : "hover:bg-[#F4F7FB]"
                 )}
                 style={
                     isSelected

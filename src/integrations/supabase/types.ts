@@ -284,6 +284,7 @@ export type Database = {
           last_seen_at: string | null
           metadata: Json
           provider: string
+          send_failed_at: string | null
           status: string
           updated_at: string
         }
@@ -300,6 +301,7 @@ export type Database = {
           last_seen_at?: string | null
           metadata?: Json
           provider: string
+          send_failed_at?: string | null
           status?: string
           updated_at?: string
         }
@@ -316,6 +318,7 @@ export type Database = {
           last_seen_at?: string | null
           metadata?: Json
           provider?: string
+          send_failed_at?: string | null
           status?: string
           updated_at?: string
         }
@@ -1360,6 +1363,7 @@ export type Database = {
           account_name: string | null
           account_website: string | null
           additional_contacts: Json
+          agent_suggestion_id: string | null
           closer_id: string | null
           company_id: string | null
           created_at: string | null
@@ -1394,6 +1398,7 @@ export type Database = {
           account_name?: string | null
           account_website?: string | null
           additional_contacts?: Json
+          agent_suggestion_id?: string | null
           closer_id?: string | null
           company_id?: string | null
           created_at?: string | null
@@ -1428,6 +1433,7 @@ export type Database = {
           account_name?: string | null
           account_website?: string | null
           additional_contacts?: Json
+          agent_suggestion_id?: string | null
           closer_id?: string | null
           company_id?: string | null
           created_at?: string | null
@@ -1458,6 +1464,13 @@ export type Database = {
           value?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "deals_agent_suggestion_id_fkey"
+            columns: ["agent_suggestion_id"]
+            isOneToOne: false
+            referencedRelation: "agent_suggestions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "deals_closer_id_fkey"
             columns: ["closer_id"]
@@ -1506,6 +1519,8 @@ export type Database = {
         Row: {
           ads_conversion_error: string | null
           ads_conversion_uploaded_at: string | null
+          agent_blueprint: Json | null
+          agent_used_context: boolean
           biggest_pain: string | null
           calendly_event_uri: string | null
           company: string | null
@@ -1538,10 +1553,13 @@ export type Database = {
           utm_medium: string | null
           utm_source: string | null
           utm_term: string | null
+          website: string | null
         }
         Insert: {
           ads_conversion_error?: string | null
           ads_conversion_uploaded_at?: string | null
+          agent_blueprint?: Json | null
+          agent_used_context?: boolean
           biggest_pain?: string | null
           calendly_event_uri?: string | null
           company?: string | null
@@ -1574,10 +1592,13 @@ export type Database = {
           utm_medium?: string | null
           utm_source?: string | null
           utm_term?: string | null
+          website?: string | null
         }
         Update: {
           ads_conversion_error?: string | null
           ads_conversion_uploaded_at?: string | null
+          agent_blueprint?: Json | null
+          agent_used_context?: boolean
           biggest_pain?: string | null
           calendly_event_uri?: string | null
           company?: string | null
@@ -1610,6 +1631,7 @@ export type Database = {
           utm_medium?: string | null
           utm_source?: string | null
           utm_term?: string | null
+          website?: string | null
         }
         Relationships: [
           {
@@ -1901,6 +1923,44 @@ export type Database = {
             columns: ["resolved_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      eva_help_logs: {
+        Row: {
+          answer: string | null
+          company_id: string | null
+          created_at: string
+          id: string
+          page: string | null
+          question: string
+          user_id: string | null
+        }
+        Insert: {
+          answer?: string | null
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          page?: string | null
+          question: string
+          user_id?: string | null
+        }
+        Update: {
+          answer?: string | null
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          page?: string | null
+          question?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eva_help_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -2431,6 +2491,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      landing_chat_logs: {
+        Row: {
+          answer: string | null
+          created_at: string
+          id: string
+          ip: string
+          question: string
+        }
+        Insert: {
+          answer?: string | null
+          created_at?: string
+          id?: string
+          ip: string
+          question: string
+        }
+        Update: {
+          answer?: string | null
+          created_at?: string
+          id?: string
+          ip?: string
+          question?: string
+        }
+        Relationships: []
       }
       lead_webhooks: {
         Row: {
@@ -3430,6 +3514,8 @@ export type Database = {
       webhook_logs: {
         Row: {
           company_id: string | null
+          connection_id: string | null
+          conversation_id: string | null
           created_at: string | null
           error_message: string | null
           event_type: string | null
@@ -3440,6 +3526,8 @@ export type Database = {
         }
         Insert: {
           company_id?: string | null
+          connection_id?: string | null
+          conversation_id?: string | null
           created_at?: string | null
           error_message?: string | null
           event_type?: string | null
@@ -3450,6 +3538,8 @@ export type Database = {
         }
         Update: {
           company_id?: string | null
+          connection_id?: string | null
+          conversation_id?: string | null
           created_at?: string | null
           error_message?: string | null
           event_type?: string | null
@@ -3458,7 +3548,22 @@ export type Database = {
           platform?: string | null
           status?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "webhook_logs_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "channel_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "webhook_logs_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "channel_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       whatsapp_messages: {
         Row: {
@@ -3635,6 +3740,10 @@ export type Database = {
         }
         Returns: string
       }
+      complete_demo_request: {
+        Args: { p_id: string; payload: Json }
+        Returns: string
+      }
       consume_rate_limit: {
         Args: { p_bucket: string; p_limit: number; p_window_seconds: number }
         Returns: {
@@ -3718,8 +3827,22 @@ export type Database = {
         }
         Returns: boolean
       }
+      ingest_channel_message: {
+        Args: {
+          p_channel_type: string
+          p_company_id: string
+          p_payload: Json
+          p_provider: string
+        }
+        Returns: Json
+      }
       ingest_lead_webhook: {
-        Args: { p_payload: Json; p_secret: string; p_slug: string }
+        Args: {
+          p_lead_key?: string
+          p_payload: Json
+          p_secret: string
+          p_slug: string
+        }
         Returns: Json
       }
       initialize_all_metas_current_value: { Args: never; Returns: undefined }
@@ -3746,10 +3869,12 @@ export type Database = {
         Args: { p_aliases: Json; p_payload: Json }
         Returns: string
       }
+      purge_old_whatsapp_messages: { Args: never; Returns: Json }
       recalculate_consolidated_meta: {
         Args: { p_month_start: string }
         Returns: undefined
       }
+      submit_demo_intake: { Args: { payload: Json }; Returns: string }
       submit_demo_request: { Args: { payload: Json }; Returns: string }
       trigger_eva_stale_followup: { Args: never; Returns: number }
       trigger_evolution_keepwarm: { Args: never; Returns: number }

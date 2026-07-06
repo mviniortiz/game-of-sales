@@ -1,24 +1,22 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// EVA Studio (EVA.STUDIO.JOURNEY integrado, 2026-06-09) — a página agora É a
-// jornada: Criar → Ensinar → Provar → Ativar (EvaStudioJourney), com Memória e
-// Insights como vistas secundárias. Substituiu as 4 abas paralelas e o caminho
-// velho de blueprint (modais de revisão/aplicação, teatro de geração, cenários
-// sintéticos de imobiliária) — limpeza da dívida mapeada no acoplamento F1+F2.
+// EVA Studio (EVA.CANVAS.2 integrado, 2026-07-06) — a página tem DOIS estados:
 //
-// Dados reais:
-//   Ensinar  → useEvaContextSuggestions (ponte pro eva_business_context)
-//   Provar   → SimulationLab persiste em eva_simulation_results (lab:*) e
-//              GuidedSimulationReplay usa useEvaReplayMoments (momentos reais)
-//   Ativar   → approveAssisted (eva_blueprints.status → approved_assisted,
-//              que gateia a EVA no Inbox)
-//   Memória  → useEvaMemory · Insights → computeApproval + simResults
+//   1. Agente ainda não ativado → jornada (EvaStudioJourney): Criar → Ensinar →
+//      Provar → Ativar. O first-run guiado continua igual.
+//   2. Agente ativado (eva_blueprints.status = approved_assisted) → EvaCanvas:
+//      o agente como mapa vivo de anatomia fixa (Escuta → Sabe → Regras →
+//      Entrega). Cada bloco abre em modal o editor que já existia; o test-run
+//      "Ver a EVA decidir" percorre os blocos com um momento REAL das conversas
+//      e o julgamento grava (mesmo caminho do Provar).
 //
-// O chat conversacional agora é REAL (edge eva-studio-chat conduz a entrevista
-// e extrai os campos do agente escolhido); é o caminho DEFAULT do Ensinar, e o
-// que a conversa monta é gravado no contexto via ctxBuilder.submitText
-// (ConversationalStudio.onComplete → Journey → onSubmitText).
+// Dados reais (iguais nos dois estados):
+//   Ensinar/Sabe → useEvaContextSuggestions (ponte pro eva_business_context)
+//   Provar/Test-run → useEvaReplayMoments (momentos reais) + eva_simulation_results
+//   Regras → useEvaMemory (regras aprendidas) + useHybridAutoCreate
+//   Entrega → EvaAnalyticsPanel (edge eva-analytics-summary)
+//   Ativar → approveAssisted (gateia a EVA no Inbox)
 // ─────────────────────────────────────────────────────────────────────────────
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -29,11 +27,21 @@ import { useEvaReplayMoments } from "@/hooks/useEvaReplayMoments";
 import { useEvaContextSuggestions } from "@/hooks/useEvaContextSuggestions";
 import { useHybridAutoCreate } from "@/hooks/useHybridAutoCreate";
 import { computeApproval, type Verdict } from "@/lib/eva/approval";
-import { EvaStudioJourney, type EvaStudioJourneyHandle } from "@/components/eva-studio/EvaStudioJourney";
+import { EvaStudioJourney } from "@/components/eva-studio/EvaStudioJourney";
+import { EvaCanvas } from "@/components/eva-studio/EvaCanvas";
 import { EvaMemoryView } from "@/components/eva-studio/EvaMemoryTab";
 import { EvaInsightsTab } from "@/components/eva-studio/EvaInsightsTab";
 import { EvaAnalyticsPanel } from "@/components/eva-studio/EvaAnalyticsPanel";
+import type { AgentSourceInfo } from "@/components/eva-studio/AgentPurposeCreate";
 import type { LabJudgment, LabScenario } from "@/components/eva-studio/SimulationLab";
+
+// Fontes que alimentam a EVA — compartilhadas pela jornada (Criar) e pelo
+// canvas (bloco "O que ela escuta").
+const SOURCES: AgentSourceInfo[] = [
+    { key: "whatsapp", name: "Conversas do WhatsApp", detail: "O histórico real dos seus leads: o que pedem, como falam, onde travam.", available: true, stateLabel: "conectado" },
+    { key: "pipeline", name: "Pipeline e oportunidades", detail: "Etapas, valores e o que o seu time já registrou no CRM.", available: true, stateLabel: "disponível" },
+    { key: "docs", name: "Textos seus", detail: "Proposta, site, pitch: qualquer texto que você colar vira contexto.", available: false, stateLabel: "você cola depois" },
+];
 
 export default function EvaStudio() {
     const { isAdmin } = useAuth();
@@ -45,9 +53,6 @@ export default function EvaStudio() {
     const ctxBuilder = useEvaContextSuggestions();
     const hybrid = useHybridAutoCreate();
 
-    // Handle imperativo da jornada — deixa o painel Analytics navegar pro Ensinar.
-    const journeyRef = useRef<EvaStudioJourneyHandle>(null);
-
     // Aprovação feita nesta sessão (o hook só reflete depois do reload)
     const [approvedNow, setApprovedNow] = useState(false);
     const isApproved = approvedNow || initial.status === "approved_assisted";
@@ -57,7 +62,7 @@ export default function EvaStudio() {
         return true;
     };
 
-    // ── Insights: avaliações persistidas → Verdict + travas + última simulação ──
+    // ── Prontidão: avaliações persistidas → Verdict + travas + última simulação ──
     const evaluations: Record<string, Verdict> = {};
     let criticalRejected = 0;
     let lastSimAt: string | null = null;
@@ -74,6 +79,50 @@ export default function EvaStudio() {
         scenarioCount: 5,
         criticalRejected,
     });
+
+    // ── Escritas compartilhadas (jornada e canvas gravam nos mesmos lugares) ──
+    const handleResolve = async (s: Parameters<typeof ctxBuilder.resolve>[0], r: Parameters<typeof ctxBuilder.resolve>[1]) => {
+        if (!requireEdit("Apenas administradores revisam o contexto.")) return;
+        try { await ctxBuilder.resolve(s, r); }
+        catch (e) { toast.error(`Não consegui salvar: ${String((e as Error)?.message ?? e)}`); }
+    };
+    const handleConfirmBatch = async (batch: Parameters<typeof ctxBuilder.confirmBatch>[0]) => {
+        if (!requireEdit("Apenas administradores revisam o contexto.")) return;
+        try { await ctxBuilder.confirmBatch(batch); }
+        catch (e) { toast.error(`Não consegui confirmar: ${String((e as Error)?.message ?? e)}`); }
+    };
+    const handleDefineGap = async (gap: Parameters<typeof ctxBuilder.defineGap>[0], answer: string) => {
+        if (!requireEdit("Apenas administradores revisam o contexto.")) return;
+        try { await ctxBuilder.defineGap(gap, answer); }
+        catch (e) { toast.error(`Não consegui salvar: ${String((e as Error)?.message ?? e)}`); }
+    };
+    const handleSubmitText = async (text: string) => {
+        if (!requireEdit("Apenas administradores revisam o contexto.")) return;
+        try { await ctxBuilder.submitText(text); toast.success("Texto enviado. Em segundos viram sugestões pra você revisar."); }
+        catch (e) { toast.error(`Não consegui processar: ${String((e as Error)?.message ?? e)}`); }
+    };
+    const handleJudge = async (moment: Parameters<typeof replay.judge>[0], judgment: Parameters<typeof replay.judge>[1]) => {
+        if (!requireEdit("Apenas administradores avaliam a EVA.")) return;
+        try { await replay.judge(moment, judgment); }
+        catch (e) { toast.error(`Não consegui salvar: ${String((e as Error)?.message ?? e)}`); }
+    };
+    const handleRegenerateReplays = canEdit ? async () => {
+        try {
+            const { generated } = await replay.regenerate();
+            toast.success(generated > 0 ? `${generated} ${generated === 1 ? "momento encontrado" : "momentos encontrados"} nas suas conversas.` : "Nenhuma conversa nova com desfecho pra analisar ainda.");
+        } catch (e) { toast.error(`Não consegui gerar: ${String((e as Error)?.message ?? e)}`); }
+    } : undefined;
+    const handleHybridChange = async (v: boolean) => {
+        if (!requireEdit("Apenas administradores mudam o modo de criação.")) return;
+        try {
+            await hybrid.setAutoCreate(v);
+            toast.success(v
+                ? "Modo híbrido ligado: a EVA cria a oportunidade ao qualificar."
+                : "Modo híbrido desligado: criação volta a ser manual.");
+        } catch (e) {
+            toast.error(`Não consegui salvar: ${String((e as Error)?.message ?? e)}`);
+        }
+    };
 
     // ── Julgamento do Campo de Provas → eva_simulation_results (lab:*) ──
     const handleLabJudge = async (s: LabScenario, j: LabJudgment) => {
@@ -99,6 +148,43 @@ export default function EvaStudio() {
         );
     }
 
+    // ── Agente ativo → canvas (o mapa vivo) ──
+    if (isApproved) {
+        return (
+            <div className="w-full">
+                {!canEdit && (
+                    <p className="text-[11.5px] px-6 pt-4" style={{ color: "#94A3B8" }}>
+                        Modo leitura — apenas administradores editam a EVA.
+                    </p>
+                )}
+                <EvaCanvas
+                    canEdit={canEdit}
+                    approval={approval}
+                    sources={SOURCES}
+                    memory={memory}
+                    memoryLoading={memoryLoading}
+                    hasSourceMaterial={ctxBuilder.suggestions.length > 0}
+                    suggestions={ctxBuilder.suggestions}
+                    gaps={ctxBuilder.gaps}
+                    onResolve={handleResolve}
+                    onConfirmBatch={handleConfirmBatch}
+                    onDefineGap={handleDefineGap}
+                    onSubmitText={handleSubmitText}
+                    hybridOn={hybrid.autoCreate}
+                    hybridSaving={hybrid.saving}
+                    onHybridChange={handleHybridChange}
+                    moments={replay.moments}
+                    savedJudgments={replay.savedJudgments}
+                    onJudge={handleJudge}
+                    onRegenerateReplays={handleRegenerateReplays}
+                    regeneratingReplays={replay.regenerating}
+                    insightsContent={<EvaInsightsTab hideHeader approval={approval} memory={memory} lastSimAt={lastSimAt} />}
+                />
+            </div>
+        );
+    }
+
+    // ── First-run → jornada Criar → Ensinar → Provar → Ativar ──
     return (
         <div className="mx-auto w-full max-w-[1400px]">
             {!canEdit && (
@@ -107,147 +193,43 @@ export default function EvaStudio() {
                 </p>
             )}
             <EvaStudioJourney
-                ref={journeyRef}
-                initialStep={isApproved ? "ativar" : "criar"}
-                initialActivated={isApproved}
+                initialStep="criar"
+                initialActivated={false}
                 initialTeachMode="conversa"
-                // ── Criar ──
                 purposes={[
                     { purpose: "vender", available: true },
                     { purpose: "suporte", available: false },
                     { purpose: "pos_venda", available: false },
                 ]}
-                sources={[
-                    { key: "whatsapp", name: "Conversas do WhatsApp", detail: "O histórico real dos seus leads: o que pedem, como falam, onde travam.", available: true, stateLabel: "conectado" },
-                    { key: "pipeline", name: "Pipeline e oportunidades", detail: "Etapas, valores e o que o seu time já registrou no CRM.", available: true, stateLabel: "disponível" },
-                    { key: "docs", name: "Textos seus", detail: "Proposta, site, pitch: qualquer texto que você colar vira contexto.", available: false, stateLabel: "você cola depois" },
-                ]}
+                sources={SOURCES}
                 onCreate={async () => {
                     if (!requireEdit("Apenas administradores criam a EVA.")) return;
                     try { await save({ ...initial, status: "draft" }); toast.success("Agente criado. Agora me ensine o seu negócio."); }
                     catch (e) { toast.error(`Não consegui criar: ${String((e as Error)?.message ?? e)}`); }
                 }}
-                // ── Ensinar ──
                 hasSourceMaterial={ctxBuilder.suggestions.length > 0}
                 suggestions={ctxBuilder.suggestions}
                 gaps={ctxBuilder.gaps}
-                onResolve={async (s, r) => {
-                    if (!requireEdit("Apenas administradores revisam o contexto.")) return;
-                    try { await ctxBuilder.resolve(s, r); }
-                    catch (e) { toast.error(`Não consegui salvar: ${String((e as Error)?.message ?? e)}`); }
-                }}
-                onConfirmBatch={async (batch) => {
-                    if (!requireEdit("Apenas administradores revisam o contexto.")) return;
-                    try { await ctxBuilder.confirmBatch(batch); }
-                    catch (e) { toast.error(`Não consegui confirmar: ${String((e as Error)?.message ?? e)}`); }
-                }}
-                onDefineGap={async (gap, answer) => {
-                    if (!requireEdit("Apenas administradores revisam o contexto.")) return;
-                    try { await ctxBuilder.defineGap(gap, answer); }
-                    catch (e) { toast.error(`Não consegui salvar: ${String((e as Error)?.message ?? e)}`); }
-                }}
-                onSubmitText={async (text) => {
-                    if (!requireEdit("Apenas administradores revisam o contexto.")) return;
-                    try { await ctxBuilder.submitText(text); toast.success("Texto enviado. Em segundos viram sugestões pra você revisar."); }
-                    catch (e) { toast.error(`Não consegui processar: ${String((e as Error)?.message ?? e)}`); }
-                }}
-                // ── Provar ──
+                onResolve={handleResolve}
+                onConfirmBatch={handleConfirmBatch}
+                onDefineGap={handleDefineGap}
+                onSubmitText={handleSubmitText}
                 hasReplays={replay.moments.length > 0}
                 moments={replay.moments}
                 replayInitialJudgments={replay.savedJudgments}
-                onJudge={async (moment, judgment) => {
-                    if (!requireEdit("Apenas administradores avaliam a EVA.")) return;
-                    try { await replay.judge(moment, judgment); }
-                    catch (e) { toast.error(`Não consegui salvar: ${String((e as Error)?.message ?? e)}`); }
-                }}
+                onJudge={handleJudge}
                 onLabJudge={handleLabJudge}
-                onRegenerateReplays={canEdit ? async () => {
-                    try {
-                        const { generated } = await replay.regenerate();
-                        toast.success(generated > 0 ? `${generated} ${generated === 1 ? "momento encontrado" : "momentos encontrados"} nas suas conversas.` : "Nenhuma conversa nova com desfecho pra analisar ainda.");
-                    } catch (e) { toast.error(`Não consegui gerar: ${String((e as Error)?.message ?? e)}`); }
-                } : undefined}
+                onRegenerateReplays={handleRegenerateReplays}
                 regeneratingReplays={replay.regenerating}
-                // ── Ativar ──
                 onActivate={async () => {
                     if (!requireEdit("Apenas administradores aprovam a EVA.")) return;
                     try { await approveAssisted(initial); setApprovedNow(true); toast.success("EVA aprovada para uso assistido. Ela já sugere no Inbox."); }
                     catch (e) { toast.error(`Não consegui aprovar: ${String((e as Error)?.message ?? e)}`); }
                 }}
-                // ── Vistas secundárias ──
                 memoryContent={<EvaMemoryView memory={memory} loading={memoryLoading} />}
                 insightsContent={<EvaInsightsTab hideHeader approval={approval} memory={memory} lastSimAt={lastSimAt} />}
-                analyticsContent={<EvaAnalyticsPanel onTeach={() => journeyRef.current?.goToStep("ensinar")} />}
+                analyticsContent={<EvaAnalyticsPanel />}
             />
-
-            {/* VYZON.AGENTS.2 (híbrido) — auto-criação de oportunidade. Só após
-                a EVA estar aprovada; admin liga/desliga. Saída de mensagem segue
-                sempre humana (aprovar-e-enviar), independente deste flag. */}
-            {isApproved && (
-                <HybridAutoCreateToggle
-                    value={hybrid.autoCreate}
-                    saving={hybrid.saving}
-                    canEdit={canEdit}
-                    onChange={async (v) => {
-                        if (!requireEdit("Apenas administradores mudam o modo de criação.")) return;
-                        try {
-                            await hybrid.setAutoCreate(v);
-                            toast.success(v
-                                ? "Modo híbrido ligado: a EVA cria a oportunidade ao qualificar."
-                                : "Modo híbrido desligado: criação volta a ser manual.");
-                        } catch (e) {
-                            toast.error(`Não consegui salvar: ${String((e as Error)?.message ?? e)}`);
-                        }
-                    }}
-                />
-            )}
-        </div>
-    );
-}
-
-// ── Toggle do modo híbrido (auto-criação de oportunidade no pipeline) ─────────
-function HybridAutoCreateToggle({
-    value,
-    saving,
-    canEdit,
-    onChange,
-}: {
-    value: boolean;
-    saving: boolean;
-    canEdit: boolean;
-    onChange: (v: boolean) => void;
-}) {
-    return (
-        <div className="px-6 pb-10">
-            <div
-                className="rounded-xl px-5 py-4 flex items-start gap-4"
-                style={{ background: "#FFFFFF", border: "1px solid #E5EAF1" }}
-            >
-                <div className="flex-1 min-w-0">
-                    <p className="text-[13.5px] font-semibold" style={{ color: "#0B1220" }}>
-                        Criar oportunidade automaticamente (modo híbrido)
-                    </p>
-                    <p className="text-[12px] mt-1" style={{ color: "#64748B", lineHeight: 1.55 }}>
-                        Quando a EVA qualificar um lead que chegou e recomendar avançar, o card
-                        entra no pipeline sozinho, com os campos preenchidos. Mensagens de saída
-                        continuam sempre com a sua aprovação (aprovar-e-enviar).
-                    </p>
-                </div>
-                <button
-                    type="button"
-                    role="switch"
-                    aria-checked={value}
-                    disabled={!canEdit || saving}
-                    onClick={() => onChange(!value)}
-                    className="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-50"
-                    style={{ background: value ? "#2563EB" : "#CBD5E1" }}
-                >
-                    <span
-                        className="inline-block h-5 w-5 rounded-full bg-white transition-transform"
-                        style={{ transform: value ? "translateX(22px)" : "translateX(2px)" }}
-                    />
-                </button>
-            </div>
         </div>
     );
 }

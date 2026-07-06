@@ -9,12 +9,14 @@ import { HeroV2 } from "@/components/landing-v2/HeroV2";
 import { IntegrationsStripV2 } from "@/components/landing-v2/IntegrationsStripV2";
 import { ProofStripV2 } from "@/components/landing-v2/ProofStripV2";
 import { StatsV2 } from "@/components/landing-v2/StatsV2";
+import { DataFeedV2 } from "@/components/landing-v2/DataFeedV2";
 import { EvaShowcaseV2 } from "@/components/landing-v2/EvaShowcaseV2";
 import { FeaturesV2 } from "@/components/landing-v2/FeaturesV2";
 import { SpecialistAgentsV2 } from "@/components/landing-v2/SpecialistAgentsV2";
 import { PricingV2 } from "@/components/landing-v2/PricingV2";
 import { HowItWorksV2 } from "@/components/landing-v2/HowItWorksV2";
 import { FaqV2 } from "@/components/landing-v2/FaqV2";
+import { EvaChatWidget } from "@/components/landing-v2/EvaChatWidget";
 import { FinalCtaV2 } from "@/components/landing-v2/FinalCtaV2";
 import { FooterV2 } from "@/components/landing-v2/FooterV2";
 
@@ -134,6 +136,7 @@ const LandingV2 = () => {
             <IntegrationsStripV2 />
             <ProofStripV2 />
             <StatsV2 />
+            <DataFeedV2 />
             <EvaShowcaseV2 onStartDemo={() => openDemo("eva_showcase")} />
             <FeaturesV2 />
             <SpecialistAgentsV2 onCTAClick={() => goToSignup("plus", "specialists")} />
@@ -143,6 +146,7 @@ const LandingV2 = () => {
             </div>
             <FaqV2 />
             <FinalCtaV2 onScheduleDemoClick={() => openDemo("final_cta")} onSecondaryClick={() => scrollToId("how-it-works")} />
+            <EvaChatWidget />
             <FooterV2 onNavClick={scrollToId} onLoginClick={() => navigate("/auth")} onBlogClick={() => navigate("/blog")} />
             <EvaDemoModal open={demoOpen} onClose={() => setDemoOpen(false)} onCTAClick={() => goToSignup("plus", "demo_modal")} />
 

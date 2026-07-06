@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowLeft, Calendar, Check, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { whatsappUrl } from "@/config/contact";
+import { WhatsappGlyph } from "@/components/icons/WhatsappGlyph";
 import { getAttribution } from "@/lib/attribution";
 import { trackBehavior, DEMO_EVENTS } from "@/lib/analytics";
 import { EvaOrb } from "./EvaOrb";
@@ -13,6 +15,7 @@ import { EvaOrb } from "./EvaOrb";
 interface DemoBookingProps {
     email: string; // já coletado no intake — pré-preenchido
     site: string; // site/empresa do lead (contexto)
+    intakeId?: string | null; // row do intake (DEMO.A2) — booking ATUALIZA em vez de inserir
     onDone: () => void; // fecha a demo
 }
 
@@ -20,7 +23,7 @@ interface DemoBookingProps {
 const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
 const POP = { type: "spring" as const, stiffness: 300, damping: 24 };
 
-type View = "q_team" | "q_pain" | "schedule" | "confirm" | "success";
+type View = "q_team" | "q_pain" | "schedule" | "confirm" | "success" | "failed";
 
 const TEAM_OPTIONS = ["1-3", "4-10", "11-30", "30+"] as const;
 const PAIN_OPTIONS = [
@@ -96,7 +99,7 @@ function buildDaysFallback(): DayOpt[] {
     return out;
 }
 
-export const DemoBooking = ({ email, site, onDone }: DemoBookingProps) => {
+export const DemoBooking = ({ email, site, intakeId, onDone }: DemoBookingProps) => {
     const reduce = useReducedMotion();
     const siteLabel = site.trim() || "sua agência";
 
@@ -182,24 +185,39 @@ export const DemoBooking = ({ email, site, onDone }: DemoBookingProps) => {
                 team_size: teamSize || "",
                 biggest_pain: pain || "",
             });
-            const { error } = await supabase.rpc("submit_demo_request", {
-                payload: {
-                    email: cleanEmail,
-                    company: site,
-                    source: "demo_live_booking",
-                    team_size: teamSize,
-                    biggest_pain: pain,
-                    scheduled_at: scheduledAt,
-                    ...(getAttribution() ?? {}),
-                },
-            });
-            if (error) console.error("[DemoBooking] submit_demo_request falhou:", error.message);
+            const payload = {
+                email: cleanEmail,
+                company: site,
+                source: "demo_live_booking",
+                team_size: teamSize,
+                biggest_pain: pain,
+                scheduled_at: scheduledAt,
+                ...(getAttribution() ?? {}),
+            };
+            // DEMO.A2: com intake persistido, ATUALIZA a mesma row (não re-dispara
+            // os triggers de insert — sem deal/outreach duplicado). Sem intake
+            // (ou row não encontrada), cai no insert de sempre.
+            let error = null as { message: string } | null;
+            if (intakeId) {
+                ({ error } = await supabase.rpc("complete_demo_request", { p_id: intakeId, payload }));
+                if (error) ({ error } = await supabase.rpc("submit_demo_request", { payload }));
+            } else {
+                ({ error } = await supabase.rpc("submit_demo_request", { payload }));
+            }
+            if (error) {
+                // HONESTO: se não gravou, a pessoa precisa saber (senão o horário
+                // "confirmado" não existe pra ninguém).
+                console.error("[DemoBooking] persistência falhou:", error.message);
+                trackBehavior(DEMO_EVENTS.DEMO_CTA, { cta: "demo_live_booking_failed" });
+                setView("failed");
+                return;
+            }
+            setView("success");
         } catch (err) {
-            // Não trava o usuário: mostra sucesso visual mesmo se a persistência falhar.
             console.error("[DemoBooking] erro inesperado ao confirmar demo:", err);
+            setView("failed");
         } finally {
             setSubmitting(false);
-            setView("success");
         }
     };
 
@@ -261,7 +279,7 @@ export const DemoBooking = ({ email, site, onDone }: DemoBookingProps) => {
             {/* topo */}
             <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: "1px solid var(--lp-line)" }}>
                 <div className="flex items-center gap-2.5">
-                    <EvaOrb state="speaking" size={30} />
+                    <EvaOrb webgl state="speaking" size={30} />
                     <span className="lp-mono" style={{ color: "var(--lp-ink-55)" }}>EVA · agendar sua demo</span>
                 </div>
                 {(view === "q_pain" || view === "schedule" || view === "confirm") && (
@@ -280,7 +298,7 @@ export const DemoBooking = ({ email, site, onDone }: DemoBookingProps) => {
             <div className="flex flex-1 items-center justify-center overflow-y-auto px-5 py-8 sm:px-10">
                 <div className="w-full max-w-xl">
                     {/* progress dots */}
-                    {view !== "success" && (
+                    {view !== "success" && view !== "failed" && (
                         <div className="mb-8 flex items-center justify-center gap-2" aria-hidden="true">
                             {[0, 1, 2].map((i) => {
                                 const done = stepIndex >= i;
@@ -501,6 +519,38 @@ export const DemoBooking = ({ email, site, onDone }: DemoBookingProps) => {
                                 >
                                     Concluir
                                 </button>
+                            </motion.div>
+                        )}
+
+                        {/* ---------- FALHA (honesta): não gravou = a pessoa fica sabendo ---------- */}
+                        {view === "failed" && (
+                            <motion.div key="failed" initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3, ease: EASE }} className="flex flex-col items-center text-center">
+                                <h3 className="lp-display" style={{ fontSize: "clamp(1.4rem,2.8vw,1.9rem)", letterSpacing: "-0.02em", color: "var(--lp-ink)" }}>
+                                    Não consegui confirmar seu horário
+                                </h3>
+                                <p className="mx-auto mt-3 max-w-sm text-[14px]" style={{ color: "rgba(13,20,33,0.6)", lineHeight: 1.55 }}>
+                                    Algo falhou ao gravar o agendamento. Tenta de novo, ou marca direto com a gente no WhatsApp — respondemos rápido.
+                                </p>
+                                <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setView("confirm")}
+                                        className="rounded-full px-6 py-3 text-[14px] text-white transition-transform hover:scale-[1.02] active:scale-95"
+                                        style={{ background: "var(--lp-ink)", fontWeight: 600 }}
+                                    >
+                                        Tentar de novo
+                                    </button>
+                                    <a
+                                        href={whatsappUrl(`Oi! Tentei agendar uma demo da Vyzon (${emailValue || email}) e deu erro. Podem me ajudar?`)}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-2 rounded-full px-5 py-3 text-[14px] font-semibold transition-transform hover:scale-[1.02] active:scale-95"
+                                        style={{ border: "1px solid var(--lp-line)", color: "var(--lp-ink)" }}
+                                    >
+                                        <WhatsappGlyph size={15} />
+                                        Chamar no WhatsApp
+                                    </a>
+                                </div>
                             </motion.div>
                         )}
                     </AnimatePresence>

@@ -23,7 +23,8 @@
 // ESTADO (data-autonomy="human") que um dia vira o toggle de conceder
 // autonomia por tipo de mensagem — mas a autonomia NÃO existe ainda.
 // ─────────────────────────────────────────────────────────────────────────────
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { CornerDownRight, MessageCircleQuestion, PencilLine, SendHorizonal } from "lucide-react";
 import { EvaEntity } from "@/components/eva/EvaEntity";
 import {
@@ -178,13 +179,32 @@ function SuggestZone({
 }) {
     // null = sem edição; string = textarea aberta com o rascunho do vendedor
     const [draft, setDraft] = useState<string | null>(null);
+    // Motion como informação (Fluid Functionalism): ao enviar, o card sobe
+    // em direção à conversa antes de sumir — comunica "virou mensagem".
+    // onSend só dispara no fim da animação (ou imediato com reduced-motion).
+    const [sending, setSending] = useState(false);
+    const reduceMotion = useReducedMotion();
     const editing = draft !== null;
     const textToSend = (draft ?? suggestion).trim();
 
-    const handleSend = () => {
-        if (!textToSend) return;
+    // Nova sugestão do pai = novo ciclo: zera rascunho e estado de envio.
+    useEffect(() => {
+        setDraft(null);
+        setSending(false);
+    }, [suggestion]);
+
+    const fireSend = () => {
         // Loop de aprendizado: direto = accepted, editado = edited + delta.
         onSend(textToSend, buildSuggestionOutcome(suggestion, textToSend));
+    };
+
+    const handleSend = () => {
+        if (!textToSend || sending) return;
+        if (reduceMotion) {
+            fireSend();
+            return;
+        }
+        setSending(true);
     };
 
     return (
@@ -193,7 +213,14 @@ function SuggestZone({
                 <span className="vz-evassist-label">Resposta sugerida</span>
                 <ControlSeal mode="suggest" />
             </div>
-            <div className="vz-evassist-hero">
+            <motion.div
+                className="vz-evassist-hero"
+                animate={sending ? { opacity: 0, y: -14, scale: 0.98 } : { opacity: 1, y: 0, scale: 1 }}
+                transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                onAnimationComplete={() => {
+                    if (sending) fireSend();
+                }}
+            >
                 {editing ? (
                     <textarea
                         className="vz-evassist-hero-edit"
@@ -227,7 +254,7 @@ function SuggestZone({
                 <p className="vz-evassist-learn">
                     Se você editar, a EVA aprende seu jeito.
                 </p>
-            </div>
+            </motion.div>
         </div>
     );
 }

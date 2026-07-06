@@ -1,0 +1,121 @@
+{
+  "inicio": {
+    "text": "Essa é a Central de Comando: é aqui que o gestor começa o dia. Eu leio toda a operação e reúno num lugar só as conversas ativas, os leads quentes e a fila do que precisa de atenção agora, com o próximo passo de cada um.",
+    "duration": 14.814,
+    "sentences": [
+      {
+        "text": "Essa é a Central de Comando: é aqui que o gestor começa o dia.",
+        "start": 0,
+        "end": 3.982
+      },
+      {
+        "text": "Eu leio toda a operação e reúno num lugar só as conversas ativas, os leads quentes e a fila do que precisa de atenção agora, com o próximo passo de cada um.",
+        "start": 4.226,
+        "end": 14.814
+      }
+    ]
+  },
+  "inbox": {
+    "text": "Essa é a Caixa de Entrada: todas as conversas dos seus canais, reunidas num lugar só, na ordem do que precisa de resposta agora.",
+    "duration": 8.731,
+    "sentences": [
+      {
+        "text": "Essa é a Caixa de Entrada: todas as conversas dos seus canais, reunidas num lugar só, na ordem do que precisa de resposta agora.",
+        "start": 0,
+        "end": 8.731
+      }
+    ]
+  },
+  "inbox-analise": {
+    "text": "Aqui abrimos a conversa da Carla, e o meu painel de análise apareceu ao lado. Eu li a conversa inteira, percebi que é um lead quente com intenção de preço, e já deixei a resposta sugerida pronta. Seu time só revisa e aprova antes de enviar: é isso que me diferencia de um chat comum.",
+    "duration": 19.969,
+    "sentences": [
+      {
+        "text": "Aqui abrimos a conversa da Carla, e o meu painel de análise apareceu ao lado.",
+        "start": 0,
+        "end": 5.433
+      },
+      {
+        "text": "Eu li a conversa inteira, percebi que é um lead quente com intenção de preço, e já deixei a resposta sugerida pronta.",
+        "start": 5.677,
+        "end": 13.351
+      },
+      {
+        "text": "Seu time só revisa e aprova antes de enviar: é isso que me diferencia de um chat comum.",
+        "start": 13.677,
+        "end": 19.969
+      }
+    ]
+  },
+  "pipeline": {
+    "text": "Esse é o Pipeline: cada conversa vira uma oportunidade no funil. Você vê os estágios, identifica um lead parado, e eu aviso quando algo precisa de follow-up.",
+    "duration": 10.681,
+    "sentences": [
+      {
+        "text": "Esse é o Pipeline: cada conversa vira uma oportunidade no funil.",
+        "start": 0,
+        "end": 4.226
+      },
+      {
+        "text": "Você vê os estágios, identifica um lead parado, e eu aviso quando algo precisa de follow-up.",
+        "start": 4.505,
+        "end": 10.681
+      }
+    ]
+  },
+  "lead": {
+    "text": "No detalhe da oportunidade você vê o contexto do lead, o histórico da conversa, o que eu entendi dela, e o próximo passo que eu sugiro.",
+    "duration": 8.731,
+    "sentences": [
+      {
+        "text": "No detalhe da oportunidade você vê o contexto do lead, o histórico da conversa, o que eu entendi dela, e o próximo passo que eu sugiro.",
+        "start": 0,
+        "end": 8.731
+      }
+    ]
+  },
+  "eva-studio": {
+    "text": "Esse é o EVA Studio, onde você monta agentes especialistas: qualificação, follow-up, propostas e reativação, cada um treinado com o playbook da sua agência.",
+    "duration": 11.656,
+    "sentences": [
+      {
+        "text": "Esse é o EVA Studio, onde você monta agentes especialistas: qualificação, follow-up, propostas e reativação, cada um treinado com o playbook da sua agência.",
+        "start": 0,
+        "end": 11.656
+      }
+    ]
+  },
+  "eva-studio-criar": {
+    "text": "Criar um agente é uma conversa: você responde algumas perguntas sobre o seu negócio, e o agente de qualificação fica pronto em minutos, já qualificando os leads que chegam.",
+    "duration": 11.238,
+    "sentences": [
+      {
+        "text": "Criar um agente é uma conversa: você responde algumas perguntas sobre o seu negócio, e o agente de qualificação fica pronto em minutos, já qualificando os leads que chegam.",
+        "start": 0,
+        "end": 11.238
+      }
+    ]
+  },
+  "metas": {
+    "text": "Em Metas, você acompanha o objetivo do time em tempo real e configura a meta de cada vendedor: o valor, o período, e eu mostro o quanto falta e o ritmo necessário.",
+    "duration": 11.61,
+    "sentences": [
+      {
+        "text": "Em Metas, você acompanha o objetivo do time em tempo real e configura a meta de cada vendedor: o valor, o período, e eu mostro o quanto falta e o ritmo necessário.",
+        "start": 0,
+        "end": 11.61
+      }
+    ]
+  },
+  "ranking": {
+    "text": "E esse é o Ranking, o placar da equipe: mostra como cada vendedor está em relação à meta, com uma visibilidade que motiva sem expor ninguém.",
+    "duration": 9.659,
+    "sentences": [
+      {
+        "text": "E esse é o Ranking, o placar da equipe: mostra como cada vendedor está em relação à meta, com uma visibilidade que motiva sem expor ninguém.",
+        "start": 0,
+        "end": 9.659
+      }
+    ]
+  }
+}

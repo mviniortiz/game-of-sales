@@ -48,5 +48,11 @@ verify_jwt = false
 [functions.public-report]
 verify_jwt = false
 
+[functions.eva-landing-chat]
+verify_jwt = false
+
+[functions.demo-site-context]
+verify_jwt = false
+
 [functions.lead-webhook]
 verify_jwt = false

@@ -9,14 +9,8 @@ import { useLocation } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowUp, CircleNotch, NotePencil, X } from "@phosphor-icons/react";
 import { EvaOrb } from "@/components/landing-v2/EvaOrb";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 import { useTypewriter } from "@/hooks/useTypewriter";
-
-interface ChatMsg {
-    role: "user" | "assistant";
-    content: string;
-}
+import { useEvaHelpChat } from "@/hooks/useEvaHelpChat";
 
 // Rótulo humano da tela atual (pra "Explicar esta tela" e contexto do endpoint).
 const ROUTE_LABELS: { prefix: string; label: string }[] = [
@@ -33,14 +27,14 @@ const ROUTE_LABELS: { prefix: string; label: string }[] = [
     { prefix: "/eva", label: "EVA Studio" },
 ];
 
-function labelForPath(pathname: string): string {
+export function labelForPath(pathname: string): string {
     const hit = ROUTE_LABELS.find((r) => pathname.startsWith(r.prefix));
     return hit?.label || "uma tela do Vyzon";
 }
 
 // Bolha da EVA com efeito "digitando" só na mensagem recém-chegada (as restauradas
 // do histórico aparecem inteiras). Rola o thread conforme o texto cresce.
-function AssistantBubble({ content, animate, onTick }: { content: string; animate: boolean; onTick: () => void }) {
+export function AssistantBubble({ content, animate, onTick }: { content: string; animate: boolean; onTick: () => void }) {
     const { displayed, done } = useTypewriter(content, { enabled: animate, speed: 10 });
     useEffect(() => { onTick(); }, [displayed, onTick]);
     return (
@@ -67,15 +61,11 @@ function AssistantBubble({ content, animate, onTick }: { content: string; animat
 export function EvaHelpDock() {
     const reduce = useReducedMotion();
     const location = useLocation();
-    const { user } = useAuth();
     const pageLabel = useMemo(() => labelForPath(location.pathname), [location.pathname]);
-    const storageKey = user ? `vyz-eva-help:${user.id}` : null;
 
     const [open, setOpen] = useState(false);
     const [input, setInput] = useState("");
-    const [messages, setMessages] = useState<ChatMsg[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [animateIdx, setAnimateIdx] = useState<number | null>(null); // qual msg digita
+    const { messages, loading, animateIdx, ask: askChat, reset, reloadFromStorage } = useEvaHelpChat(pageLabel);
 
     const threadRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -84,26 +74,8 @@ export function EvaHelpDock() {
         if (threadRef.current) threadRef.current.scrollTop = threadRef.current.scrollHeight;
     };
 
-    // Continuar de onde paramos: restaura o histórico do localStorage (por usuário).
-    useEffect(() => {
-        if (!storageKey) return;
-        try {
-            const raw = localStorage.getItem(storageKey);
-            if (raw) {
-                const parsed = JSON.parse(raw);
-                if (Array.isArray(parsed)) setMessages(parsed);
-            }
-        } catch { /* ignora */ }
-    }, [storageKey]);
-
-    // Persiste (últimas 30 mensagens) a cada mudança.
-    useEffect(() => {
-        if (!storageKey) return;
-        try { localStorage.setItem(storageKey, JSON.stringify(messages.slice(-30))); } catch { /* ignora */ }
-    }, [messages, storageKey]);
-
     useEffect(() => { scrollToEnd(); }, [messages, loading]);
-    useEffect(() => { if (open) { inputRef.current?.focus(); scrollToEnd(); } }, [open]);
+    useEffect(() => { if (open) { reloadFromStorage(); inputRef.current?.focus(); scrollToEnd(); } }, [open, reloadFromStorage]);
 
     useEffect(() => {
         if (!open) return;
@@ -112,36 +84,14 @@ export function EvaHelpDock() {
         return () => document.removeEventListener("keydown", onKey);
     }, [open]);
 
-    const ask = async (question: string) => {
-        const q = question.trim();
-        if (!q || loading) return;
+    const ask = (question: string) => {
         setInput("");
-        const history = messages.slice(-6);
-        const assistantIdx = messages.length + 1; // índice da bolha da EVA (após a do user)
-        setMessages((m) => [...m, { role: "user", content: q }]);
-        setLoading(true);
-        try {
-            const { data, error } = await supabase.functions.invoke("eva-help", {
-                body: { question: q, page: pageLabel, history },
-            });
-            const answer = (!error && data && typeof data.answer === "string")
-                ? data.answer
-                : `Não consegui responder agora. Fala com o suporte no WhatsApp: https://wa.me/5548991696887`;
-            setAnimateIdx(assistantIdx); // a próxima (assistant) digita
-            setMessages((m) => [...m, { role: "assistant", content: answer }]);
-        } catch {
-            setAnimateIdx(assistantIdx);
-            setMessages((m) => [...m, { role: "assistant", content: "Tive um problema pra responder. Tenta de novo em instantes." }]);
-        } finally {
-            setLoading(false);
-        }
+        askChat(question);
     };
 
     const resetChat = () => {
-        setMessages([]);
-        setAnimateIdx(null);
+        reset();
         setInput("");
-        if (storageKey) { try { localStorage.removeItem(storageKey); } catch { /* ignora */ } }
         inputRef.current?.focus();
     };
 

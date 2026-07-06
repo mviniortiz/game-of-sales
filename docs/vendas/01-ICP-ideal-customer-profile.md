@@ -1,56 +1,70 @@
 # ICP - Ideal Customer Profile | Vyzon
 
-## Quem e o nosso cliente ideal?
+> Atualizado em 2026-07-03. Alinhado ao posicionamento em produção:
+> **Central Comercial com EVA para agências que vendem por conversa**.
+> Versão anterior (horizontal, Tier 1 imobiliárias) substituída — segmentos
+> adjacentes viram expansão, não mensagem principal.
 
-### Perfil da Empresa
-- **Porte:** PME (Pequena e Media Empresa)
-- **Faturamento:** R$ 500 mil a R$ 50 milhoes/ano
-- **Time comercial:** 5 a 50 vendedores
-- **Localizacao:** Brasil (foco inicial SP, RJ, MG, PR, SC, RS, BA, PE)
-- **Maturidade digital:** Usa WhatsApp para vender, mas nao tem CRM ou usa planilhas
+## Cliente ideal (núcleo)
 
-### Segmentos Prioritarios (Tier 1 - Alta Conversao)
-| Segmento | Por que? |
-|----------|----------|
-| **Imobiliarias** | Times grandes, vendas de alto valor, competicao interna forte |
-| **Corretoras de Seguros** | Equipes distribuidas, metas mensais, ranking natural |
-| **Energia Solar** | Mercado em explosao, times jovens, ciclo de venda longo |
-| **Infoprodutos / Ed-tech** | Cultura de metas agressivas, equipes de SDR/Closers |
-| **SaaS B2B** | Times de vendas estruturados, familiaridade com tech |
+**Agência de marketing/serviços digitais brasileira que vende por conversa.**
 
-### Segmentos Secundarios (Tier 2 - Boa Oportunidade)
-| Segmento | Por que? |
-|----------|----------|
-| **Agencias de Marketing Digital** | Time comercial ativo, vendem projetos recorrentes |
-| **Concessionarias de Veiculos** | Ranking de vendedores ja e cultura, alto volume |
-| **Franquias** | Multiplas unidades, padronizacao de metas |
-| **Consultorias Financeiras** | Assessores de investimento com metas individuais |
-| **Telecomunicacoes (Revendas)** | Equipes de campo, metas diarias/semanais |
+### Perfil da empresa
+- **Tipo:** tráfego pago, social media, growth, lançamentos, criação de
+  sites/landing, agências nichadas (clínicas, imobiliárias, e-commerce).
+- **Tamanho:** 3 a 30 pessoas; comercial feito por 1–5 (dono + closer + SDR
+  informal). O dono ainda vende.
+- **Faturamento:** R$ 30k a R$ 500k/mês (fees recorrentes de R$ 1,5k–10k/mês
+  por cliente).
+- **Canais de venda:** WhatsApp (principal), Instagram/DM, formulário,
+  indicação, tráfego próprio. Entrada quase toda por **conversa**.
+- **Maturidade:** baixa/média — planilha + WhatsApp + memória; sem SLA de
+  resposta, sem critério de qualificação, follow-up na cabeça do dono.
+- **Localização:** Brasil inteiro (remoto); densidade maior em SP, PR, SC,
+  MG, GO.
 
-### Perfil do Decisor (Buyer Persona)
-- **Cargo:** Gerente Comercial, Diretor de Vendas, CEO/Socio (em PMEs)
-- **Idade:** 28-50 anos
-- **Dores:**
-  - "Nao sei quem esta vendendo mais no meu time"
-  - "Meus vendedores nao batem meta e nao sei por que"
-  - "Uso planilha pra controlar vendas e e uma bagunca"
-  - "WhatsApp e nosso principal canal mas nao tenho visibilidade"
-  - "Quero engajar meu time mas nao sei como"
-- **Motivacoes:**
-  - Aumentar faturamento com o mesmo time
-  - Ter visibilidade em tempo real
-  - Criar competicao saudavel entre vendedores
-  - Profissionalizar a gestao comercial
+### Dores (na voz do dono)
+- "Lead chega no WhatsApp e esfria porque ninguém respondeu a tempo."
+- "Follow-up depende de eu cobrar no grupo."
+- "Fecho pouco porque qualifico mal — perco tempo com curioso."
+- "Já paguei CRM e ninguém usou; o pipeline nunca reflete a conversa real."
+- "Não sei quantas propostas estão paradas nem por quê."
 
-### Sinais de Compra (Triggers)
-- Empresa contratou novos vendedores recentemente
-- Postou vaga de "Gerente Comercial" ou "SDR"
-- Comenta sobre metas no LinkedIn
-- Usa hashtags como #vendas #metabatida #timecomercial
-- Empresa em fase de crescimento / captou investimento
+### Sinais de fit (o que procurar antes de abordar)
+- Botão/link de WhatsApp no site como CTA principal.
+- Oferece "diagnóstico gratuito" / "sessão estratégica" / "fale com
+  especialista" (venda consultiva por conversa).
+- Fundador ativo no Instagram/LinkedIn falando de vendas/crescimento.
+- Roda tráfego pra si mesma (anúncios ativos na Biblioteca de Anúncios Meta).
+- Vaga aberta de SDR/closer/comercial.
+- Reclama publicamente de lead desqualificado ou de agência "refém de indicação".
 
-### Criterios de Desqualificacao
-- Empresa com menos de 3 vendedores (pouco valor percebido no ranking)
-- Ja usa CRM robusto (Salesforce, HubSpot Enterprise, Pipedrive pago)
-- Empresa sem cultura de metas individuais
-- Ciclo de venda > 12 meses (valor do ranking diminui)
+### Decisor (buyer persona)
+- **Cargo:** dono/sócio (decide sozinho ou com 1 sócio); às vezes head
+  comercial em agências de 15+.
+- **Idade:** 25–45. Vive dentro do WhatsApp.
+- **Motivações:** parar de perder lead pago, previsibilidade de receita,
+  sair da operação comercial sem perder controle.
+- **Objeção típica:** "já tentei CRM e o time não usou" → resposta: a EVA lê
+  a conversa e preenche; o time só aprova.
+
+### Desqualificação (não abordar)
+- Freelancer solo / sem time (sem dor de coordenação).
+- Agência enterprise/holding (ciclo longo, compliance, RFP).
+- Branding puro / projetos one-off sem venda consultiva recorrente.
+- Já roda Salesforce/HubSpot pago com adoção real.
+- Venda 100% por licitação/indicação fechada (sem fluxo inbound de conversa).
+
+## Expansão (Tier 2 — não é mensagem principal)
+
+Imobiliárias, corretoras de seguros, energia solar, infoprodutos, SaaS B2B.
+Mesma dor (venda por WhatsApp sem visibilidade), mas copy e demo hoje são de
+agência. Abordar só se chegar quente (inbound/indicação).
+
+## Uso na prospecção (30 dias)
+
+1. Lista: ver `docs/vendas/03-lista-agencias-30-dias.md`.
+2. Priorizar quem tem ≥2 sinais de fit.
+3. Abordagem: `docs/vendas/02-script-abordagem.md` (canal preferido:
+   Instagram DM ou WhatsApp do site; nunca prometer automação total —
+   "a EVA sugere, seu time aprova").
