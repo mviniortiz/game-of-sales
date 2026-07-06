@@ -148,7 +148,9 @@ export function EvaCanvas(props: EvaCanvasProps) {
     const spec = getSpecialist("qualificacao"); // único especialista com runtime hoje
     const feed = useAgentSuggestionFeed();
     const [modal, setModal] = useState<ModalKey | null>(null);
-    const [teachMode, setTeachMode] = useState<"conversa" | "revisao">("revisao");
+    /** Vista dentro do modal "O que ela sabe": hub → drill-down com volta. */
+    const [sabeView, setSabeView] = useState<"hub" | "revisar" | "conversar" | "colar">("hub");
+    const [pasteText, setPasteText] = useState("");
 
     /** -1 = parado; 0..3 = bloco do rail aceso; 4 = desfecho no feed. */
     const [runStep, setRunStep] = useState(-1);
@@ -481,10 +483,21 @@ export function EvaCanvas(props: EvaCanvasProps) {
             </div>
 
             {/* ── Modais dos blocos (editores reais) ── */}
-            <Dialog open={modal !== null} onOpenChange={(open) => !open && setModal(null)}>
+            <Dialog
+                open={modal !== null}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setModal(null);
+                        setSabeView("hub");
+                    }
+                }}
+            >
                 <DialogContent
                     className="max-h-[85vh] overflow-y-auto p-0 sm:rounded-2xl"
-                    style={{ maxWidth: modal === "sabe" || modal === "julgar" ? 880 : 640, background: "#fff" }}
+                    style={{
+                        maxWidth: (modal === "sabe" && sabeView !== "hub") || modal === "julgar" ? 880 : 640,
+                        background: "#fff",
+                    }}
                 >
                     {modal === "escuta" && (
                         <ModalFrame icon={AudioLines} kicker="Entrada" title="O que ela escuta"
@@ -512,51 +525,184 @@ export function EvaCanvas(props: EvaCanvasProps) {
                         </ModalFrame>
                     )}
 
-                    {modal === "sabe" && (
+                    {modal === "sabe" && sabeView === "hub" && (
                         <ModalFrame icon={BookOpen} kicker="Conhecimento" title="O que ela sabe"
-                            desc="O contexto da sua agência: é daqui que saem as sugestões. Nada entra sem sua aprovação.">
-                            <div className="mb-4 flex gap-2">
-                                {([["revisao", "Revisar o que ela extraiu"], ["conversa", "Conversar com a EVA"]] as const).map(([k, label]) => (
-                                    <button
-                                        key={k}
-                                        type="button"
-                                        onClick={() => setTeachMode(k)}
-                                        className="rounded-full px-3.5 py-1.5 transition-colors"
-                                        style={{
-                                            fontSize: 12.5, fontWeight: 600,
-                                            background: teachMode === k ? "#080808" : "rgba(11,18,32,0.05)",
-                                            color: teachMode === k ? "#fff" : SUB,
-                                        }}
-                                    >
-                                        {label}
-                                    </button>
+                            desc="Tudo que a EVA usa pra sugerir vem daqui. Você aprova cada coisa que entra.">
+                            {/* 1 · O que já está na cabeça dela */}
+                            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: MUTE }}>
+                                Na cabeça dela hoje
+                            </p>
+                            <div className="mt-2 grid grid-cols-3 gap-2.5">
+                                {[
+                                    { n: props.memory?.evaStudioCount ?? 0, label: "aprendizados seus" },
+                                    { n: props.memory?.playbooksCount ?? 0, label: "playbooks e respostas" },
+                                    { n: rulesCount, label: "regras de conduta" },
+                                ].map((s) => (
+                                    <div key={s.label} className="rounded-xl border px-3 py-3 text-center" style={{ borderColor: HAIR }}>
+                                        <p style={{ fontSize: 20, fontWeight: 700, lineHeight: 1 }}>{s.n}</p>
+                                        <p className="mt-1" style={{ fontSize: 11.5, color: SUB, lineHeight: 1.3 }}>{s.label}</p>
+                                    </div>
                                 ))}
                             </div>
-                            {teachMode === "revisao" ? (
-                                <GuidedContextBuilder
-                                    hideHeader
-                                    hasSourceMaterial={props.hasSourceMaterial}
-                                    suggestions={props.suggestions}
-                                    gaps={props.gaps}
-                                    onResolve={props.onResolve}
-                                    onConfirmBatch={props.onConfirmBatch}
-                                    onDefineGap={props.onDefineGap}
-                                    onSubmitText={props.onSubmitText}
-                                />
+                            <button
+                                type="button"
+                                onClick={() => setModal("memoria")}
+                                className="mt-2 underline-offset-4 hover:underline"
+                                style={{ fontSize: 12, color: MUTE }}
+                            >
+                                Ver a memória completa (e de onde cada coisa veio)
+                            </button>
+
+                            {/* 2 · O que precisa de você */}
+                            <p className="mt-6" style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: MUTE }}>
+                                Precisa de você
+                            </p>
+                            {props.suggestions.length === 0 && props.gaps.length === 0 ? (
+                                <div className="mt-2 flex items-center gap-2.5 rounded-xl border px-4 py-3.5" style={{ borderColor: HAIR }}>
+                                    <Check style={{ width: 14, height: 14, color: GREEN }} strokeWidth={3} />
+                                    <span style={{ fontSize: 13, color: SUB }}>Nada pendente. Tudo que ela extraiu já passou por você.</span>
+                                </div>
                             ) : (
-                                <ConversationalStudio
-                                    hideHeader
-                                    agentKey={spec.key}
-                                    onComplete={(fields) => {
-                                        const text = spec.fields
-                                            .map((f) => (fields[f.key] ? `${f.label}: ${fields[f.key]}` : ""))
-                                            .filter(Boolean)
-                                            .join("\n");
-                                        if (text) props.onSubmitText(text);
-                                    }}
-                                />
+                                <div className="mt-2 space-y-2">
+                                    {props.suggestions.length > 0 && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setSabeView("revisar")}
+                                            className="flex w-full items-center justify-between rounded-xl border px-4 py-3.5 text-left transition-colors hover:bg-black/[0.02]"
+                                            style={{ borderColor: "rgba(37,99,235,0.30)" }}
+                                        >
+                                            <span style={{ minWidth: 0 }}>
+                                                <span className="block" style={{ fontSize: 13.5, fontWeight: 600 }}>
+                                                    {props.suggestions.length} {props.suggestions.length === 1 ? "fato extraído esperando" : "fatos extraídos esperando"} seu carimbo
+                                                </span>
+                                                <span className="block" style={{ fontSize: 12, color: SUB }}>
+                                                    Ela leu seu material e separou o que entendeu. Confirme ou corrija.
+                                                </span>
+                                            </span>
+                                            <ChevronRight style={{ width: 15, height: 15, color: BLUE, flexShrink: 0 }} />
+                                        </button>
+                                    )}
+                                    {props.gaps.length > 0 && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setSabeView("revisar")}
+                                            className="flex w-full items-center justify-between rounded-xl border px-4 py-3.5 text-left transition-colors hover:bg-black/[0.02]"
+                                            style={{ borderColor: "rgba(180,83,9,0.30)" }}
+                                        >
+                                            <span style={{ minWidth: 0 }}>
+                                                <span className="block" style={{ fontSize: 13.5, fontWeight: 600 }}>
+                                                    {props.gaps.length} {props.gaps.length === 1 ? "pergunta que ela não sabe" : "perguntas que ela não sabe"} responder
+                                                </span>
+                                                <span className="block" style={{ fontSize: 12, color: SUB }}>
+                                                    Leads perguntaram e faltou resposta. Cada uma que você responder destrava sugestões melhores.
+                                                </span>
+                                            </span>
+                                            <ChevronRight style={{ width: 15, height: 15, color: AMBER, flexShrink: 0 }} />
+                                        </button>
+                                    )}
+                                </div>
                             )}
+
+                            {/* 3 · Ensinar mais */}
+                            <p className="mt-6" style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: MUTE }}>
+                                Ensinar mais
+                            </p>
+                            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setSabeView("conversar")}
+                                    className="rounded-xl border px-4 py-3.5 text-left transition-colors hover:bg-black/[0.02]"
+                                    style={{ borderColor: HAIR }}
+                                >
+                                    <span className="block" style={{ fontSize: 13.5, fontWeight: 600 }}>Conversar com a EVA</span>
+                                    <span className="block" style={{ fontSize: 12, color: SUB }}>Ela pergunta, você responde. O jeito mais fácil.</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setSabeView("colar")}
+                                    className="rounded-xl border px-4 py-3.5 text-left transition-colors hover:bg-black/[0.02]"
+                                    style={{ borderColor: HAIR }}
+                                >
+                                    <span className="block" style={{ fontSize: 13.5, fontWeight: 600 }}>Colar um texto</span>
+                                    <span className="block" style={{ fontSize: 12, color: SUB }}>Proposta, site, pitch. Ela extrai e você revisa.</span>
+                                </button>
+                            </div>
                         </ModalFrame>
+                    )}
+
+                    {modal === "sabe" && sabeView !== "hub" && (
+                        <div className="p-6">
+                            <button
+                                type="button"
+                                onClick={() => setSabeView("hub")}
+                                className="mb-4 inline-flex items-center gap-1.5 underline-offset-4 hover:underline"
+                                style={{ fontSize: 12.5, fontWeight: 600, color: SUB }}
+                            >
+                                <ChevronRight style={{ width: 13, height: 13, transform: "rotate(180deg)" }} />
+                                O que ela sabe
+                            </button>
+                            <DialogTitle style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.01em", color: INK }}>
+                                {sabeView === "revisar" ? "Revisar o que ela extraiu" : sabeView === "conversar" ? "Conversar com a EVA" : "Colar um texto"}
+                            </DialogTitle>
+                            <div className="mt-4">
+                                {sabeView === "revisar" && (
+                                    <GuidedContextBuilder
+                                        hideHeader
+                                        hasSourceMaterial={props.hasSourceMaterial}
+                                        suggestions={props.suggestions}
+                                        gaps={props.gaps}
+                                        onResolve={props.onResolve}
+                                        onConfirmBatch={props.onConfirmBatch}
+                                        onDefineGap={props.onDefineGap}
+                                        onSubmitText={props.onSubmitText}
+                                    />
+                                )}
+                                {sabeView === "conversar" && (
+                                    <ConversationalStudio
+                                        hideHeader
+                                        agentKey={spec.key}
+                                        onComplete={(fields) => {
+                                            const text = spec.fields
+                                                .map((f) => (fields[f.key] ? `${f.label}: ${fields[f.key]}` : ""))
+                                                .filter(Boolean)
+                                                .join("\n");
+                                            if (text) props.onSubmitText(text);
+                                        }}
+                                    />
+                                )}
+                                {sabeView === "colar" && (
+                                    <div>
+                                        <p style={{ fontSize: 13, color: SUB, lineHeight: 1.55 }}>
+                                            Cole qualquer texto seu: proposta, página do site, pitch, FAQ. A EVA extrai os
+                                            fatos e devolve como sugestões pra você carimbar — nada entra direto.
+                                        </p>
+                                        <textarea
+                                            value={pasteText}
+                                            onChange={(e) => setPasteText(e.target.value)}
+                                            rows={9}
+                                            placeholder="Cole o texto aqui…"
+                                            className="mt-3 w-full rounded-xl border p-4 outline-none focus:ring-2"
+                                            style={{ borderColor: HAIR, fontSize: 13.5, lineHeight: 1.55, resize: "vertical" }}
+                                        />
+                                        <div className="mt-3 flex justify-end">
+                                            <button
+                                                type="button"
+                                                disabled={!pasteText.trim() || !props.canEdit}
+                                                onClick={() => {
+                                                    props.onSubmitText(pasteText.trim());
+                                                    setPasteText("");
+                                                    setSabeView("hub");
+                                                }}
+                                                className="inline-flex h-9 items-center rounded-full px-4 disabled:opacity-45"
+                                                style={{ background: "#080808", color: "#fff", fontSize: 13, fontWeight: 600 }}
+                                            >
+                                                Enviar pra EVA extrair
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     )}
 
                     {modal === "regras" && (
