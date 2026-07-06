@@ -17,8 +17,10 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const EVA_CRON_SECRET = Deno.env.get("EVA_CRON_SECRET");
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const FROM = Deno.env.get("OUTREACH_FROM") ?? "";
-const REPLY_TO = Deno.env.get("OUTREACH_REPLY_TO") ?? "";
+// Reusa a infra de email que o SDR já usava (domínio já verificado no Resend);
+// OUTREACH_* sobrescreve se um dia houver domínio de envio dedicado.
+const FROM = Deno.env.get("OUTREACH_FROM") ?? Deno.env.get("RESEND_FROM_EMAIL") ?? "";
+const REPLY_TO = Deno.env.get("OUTREACH_REPLY_TO") ?? Deno.env.get("SDR_REPLY_TO") ?? "";
 
 const PER_RUN_CAP = 2;
 
