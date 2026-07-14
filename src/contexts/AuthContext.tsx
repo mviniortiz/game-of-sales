@@ -19,7 +19,7 @@ interface AuthContextType {
   companyId: string | null;
   profile: AuthProfile | null;
   refreshProfile: () => Promise<void>;
-  signUp: (email: string, password: string, nome: string, companyId?: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, nome: string, companyId?: string) => Promise<{ error: any; needsConfirmation?: boolean }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }
@@ -279,9 +279,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const signUp = async (email: string, password: string, nome: string, companyId?: string) => {
-    const redirectUrl = `${window.location.origin}/`;
+    // Link de confirmação leva direto pro app (a sessão vem na URL).
+    const redirectUrl = `${window.location.origin}/inicio`;
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -293,11 +294,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     });
 
-    if (!error) {
-      navigate("/dashboard");
+    // Com confirmação de email ativa, signUp NÃO devolve sessão: navegar pro
+    // app aqui derrubaria a pessoa na tela de login sem explicação. Quem chama
+    // decide o que mostrar (tela de "confirme seu email").
+    const needsConfirmation = !error && !data?.session;
+    if (!error && data?.session) {
+      navigate("/inicio");
     }
 
-    return { error };
+    return { error, needsConfirmation };
   };
 
   const signIn = async (email: string, password: string) => {

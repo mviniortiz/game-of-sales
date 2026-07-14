@@ -25,6 +25,9 @@ const SignupV2 = () => {
     const [email, setEmail] = useState("");
     const [senha, setSenha] = useState("");
     const [loading, setLoading] = useState(false);
+    // email pra onde foi o link de confirmação; quando setado, troca o form
+    // pela tela de "confirme seu email" (conta criada mas sem sessão ainda).
+    const [confirmSentTo, setConfirmSentTo] = useState<string | null>(null);
 
     // veio do Google (logado) mas ainda sem empresa → só completar o nome da empresa
     const ssoMode = !authLoading && !!user && !companyId && !isSuperAdmin;
@@ -46,20 +49,19 @@ const SignupV2 = () => {
         const trialEnds = new Date(Date.now() + 14 * 86400000).toISOString();
         const attribution = getAttribution() || {};
         const base = { name: empresa.trim(), plan, subscription_status: "trialing", trial_ends_at: trialEnds, ...attribution };
+        // id gerado no cliente nos DOIS caminhos: dispensa o .select() pós-insert,
+        // que dependia de policy de SELECT que o usuário recém-criado não tem
+        // (RLS de companies só permite ler a própria empresa DEPOIS do vínculo).
+        const id = globalThis.crypto.randomUUID();
+        const { error } = await supabase.from("companies").insert({ id, ...base } as never);
+        if (error) throw new Error(error.message);
         if (ssoMode) {
-            const { data, error } = await supabase.from("companies").insert(base as never).select("id").single();
-            if (error) throw new Error(error.message);
-            const id = (data as { id: string }).id;
             // associa o usuário (Google) à company — RPC SECURITY DEFINER (bypass RLS)
             // Vínculo só via RPC SECURITY DEFINER (trava 1o-vínculo/company-vazia).
             // Sem fallback de UPDATE direto: profiles agora bloqueia auto-set de role/company_id.
             const { error: rpcErr } = await supabase.rpc("onboarding_assign_company", { target_company_id: id });
             if (rpcErr) throw new Error(rpcErr.message);
-            return id;
         }
-        const id = globalThis.crypto.randomUUID();
-        const { error } = await supabase.from("companies").insert({ id, ...base } as never);
-        if (error) throw new Error(error.message);
         return id;
     };
 
@@ -95,7 +97,7 @@ const SignupV2 = () => {
                 return;
             }
             const id = await createCompanyWithTrial();
-            const { error } = await signUp(email.trim(), senha, nome.trim(), id);
+            const { error, needsConfirmation } = await signUp(email.trim(), senha, nome.trim(), id);
             if (error) {
                 const m = (error.message || "").toLowerCase();
                 if (m.includes("rate limit") || m.includes("too many")) {
@@ -111,6 +113,14 @@ const SignupV2 = () => {
                 } else {
                     toast.error(error.message || "Não foi possível criar a conta.");
                 }
+                return;
+            }
+            if (needsConfirmation) {
+                // Conta criada mas sem sessão: a confirmação de email está ativa.
+                // Mostrar a tela dedicada em vez de navegar (senão a pessoa cai
+                // no login sem entender o que aconteceu).
+                trackBehavior(FUNNEL_EVENTS.REGISTER_START, { step: "confirm_email_sent", plan });
+                setConfirmSentTo(email.trim().toLowerCase());
                 return;
             }
             // signUp() já direciona pro app; o trial está ativo na company.
@@ -131,6 +141,37 @@ const SignupV2 = () => {
         return (
             <div className="lp-v2" style={{ minHeight: "100vh", backgroundColor: "#07080A", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <span style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.95rem" }}>Carregando…</span>
+            </div>
+        );
+    }
+
+    // Conta criada, confirmação de email pendente: tela dedicada no lugar do form.
+    if (confirmSentTo) {
+        return (
+            <div className="lp-v2" style={{ minHeight: "100vh", backgroundColor: "#07080A", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
+                <div className="w-full max-w-[420px] text-center">
+                    <div style={{ filter: "brightness(0) invert(1)", display: "flex", justifyContent: "center" }}>
+                        <ThemeLogo className="h-6 w-auto" />
+                    </div>
+                    <h1 className="lp-display mt-10" style={{ fontSize: "clamp(1.9rem, 3.4vw, 2.4rem)", lineHeight: 1.05, letterSpacing: "-0.03em", color: "#fff" }}>
+                        Confirme seu email
+                    </h1>
+                    <p className="mt-4 text-[15px]" style={{ color: "rgba(255,255,255,0.6)", lineHeight: 1.6 }}>
+                        Sua conta foi criada. Enviamos um link de ativação para{" "}
+                        <strong style={{ color: "#fff", fontWeight: 600 }}>{confirmSentTo}</strong>. Clique nele para entrar e liberar seus 14 dias grátis.
+                    </p>
+                    <p className="mt-4 text-[13px]" style={{ color: "rgba(255,255,255,0.4)", lineHeight: 1.55 }}>
+                        Não chegou em alguns minutos? Confira a caixa de spam. O link expira em 24 horas.
+                    </p>
+                    <button
+                        type="button"
+                        onClick={() => navigate("/auth")}
+                        className="mt-9 rounded-full px-6 py-3 text-[14px] font-semibold transition-opacity hover:opacity-90"
+                        style={{ background: "#fff", color: "#0B1220" }}
+                    >
+                        Já confirmei, fazer login
+                    </button>
+                </div>
             </div>
         );
     }

@@ -114,6 +114,8 @@ export const DemoBooking = ({ email, site, intakeId, onDone }: DemoBookingProps)
     const [synced, setSynced] = useState(false); // veio da agenda real (não do fallback)
     const [dayKey, setDayKey] = useState<string>("");
     const [slotId, setSlotId] = useState<string | null>(null);
+    const [meetLink, setMeetLink] = useState<string | null>(null);
+    const [inviteSent, setInviteSent] = useState(false); // convite de calendário saiu de verdade
 
     // Puxa a disponibilidade real da agenda (roda em background durante as 2
     // perguntas, então chega pronto quando a pessoa abre o passo do horário).
@@ -198,11 +200,20 @@ export const DemoBooking = ({ email, site, intakeId, onDone }: DemoBookingProps)
             // os triggers de insert — sem deal/outreach duplicado). Sem intake
             // (ou row não encontrada), cai no insert de sempre.
             let error = null as { message: string } | null;
+            let demoId: string | null = null;
             if (intakeId) {
-                ({ error } = await supabase.rpc("complete_demo_request", { p_id: intakeId, payload }));
-                if (error) ({ error } = await supabase.rpc("submit_demo_request", { payload }));
+                const r1 = await supabase.rpc("complete_demo_request", { p_id: intakeId, payload });
+                error = r1.error;
+                demoId = (r1.data as string | null) ?? null;
+                if (error) {
+                    const r2 = await supabase.rpc("submit_demo_request", { payload });
+                    error = r2.error;
+                    demoId = (r2.data as string | null) ?? null;
+                }
             } else {
-                ({ error } = await supabase.rpc("submit_demo_request", { payload }));
+                const r = await supabase.rpc("submit_demo_request", { payload });
+                error = r.error;
+                demoId = (r.data as string | null) ?? null;
             }
             if (error) {
                 // HONESTO: se não gravou, a pessoa precisa saber (senão o horário
@@ -211,6 +222,32 @@ export const DemoBooking = ({ email, site, intakeId, onDone }: DemoBookingProps)
                 trackBehavior(DEMO_EVENTS.DEMO_CTA, { cta: "demo_live_booking_failed" });
                 setView("failed");
                 return;
+            }
+            // Cria o evento REAL no calendário (convite por email + Meet link via
+            // calendar-book). O horário já está gravado no banco; se o convite
+            // falhar, a demo continua marcada e a tela avisa sem prometer email.
+            if (demoId) {
+                try {
+                    const { data: bookData, error: bookErr } = await supabase.functions.invoke("calendar-book", {
+                        body: {
+                            demo_request_id: demoId,
+                            start_iso: scheduledAt,
+                            end_iso: new Date(new Date(scheduledAt).getTime() + 30 * 60000).toISOString(),
+                        },
+                    });
+                    const book = bookData as { ok?: boolean; gcal_connected?: boolean; meet_link?: string | null } | null;
+                    if (!bookErr && book?.ok && book.gcal_connected) {
+                        setInviteSent(true);
+                        setMeetLink(book.meet_link ?? null);
+                        trackBehavior(DEMO_EVENTS.DEMO_CTA, { cta: "demo_live_booking_invite_sent" });
+                    } else {
+                        console.error("[DemoBooking] calendar-book sem convite:", bookErr?.message ?? book);
+                        trackBehavior(DEMO_EVENTS.DEMO_CTA, { cta: "demo_live_booking_invite_missing" });
+                    }
+                } catch (bookEx) {
+                    console.error("[DemoBooking] calendar-book falhou:", bookEx);
+                    trackBehavior(DEMO_EVENTS.DEMO_CTA, { cta: "demo_live_booking_invite_missing" });
+                }
             }
             setView("success");
         } catch (err) {
@@ -509,8 +546,22 @@ export const DemoBooking = ({ email, site, intakeId, onDone }: DemoBookingProps)
                                     </p>
                                 )}
                                 <p className="mx-auto mt-3 max-w-sm text-[14px]" style={{ color: "rgba(13,20,33,0.55)", lineHeight: 1.55 }}>
-                                    Nosso time te encontra já com a demo preparada pro contexto de <strong style={{ color: "var(--lp-ink-90)" }}>{siteLabel}</strong>.
+                                    {inviteSent
+                                        ? <>O convite com o link da chamada já foi pro seu e-mail. Nosso time te encontra já com a demo preparada pro contexto de <strong style={{ color: "var(--lp-ink-90)" }}>{siteLabel}</strong>.</>
+                                        : <>Seu horário está reservado e te confirmamos por e-mail. Nosso time te encontra já com a demo preparada pro contexto de <strong style={{ color: "var(--lp-ink-90)" }}>{siteLabel}</strong>.</>}
                                 </p>
+                                {inviteSent && meetLink && (
+                                    <a
+                                        href={meetLink}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="mt-4 inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-[13.5px] transition-transform hover:scale-[1.02] active:scale-95 focus:outline-none focus-visible:ring-2"
+                                        style={{ border: "1px solid var(--lp-line)", color: "var(--lp-blue)", fontWeight: 600 }}
+                                    >
+                                        <Calendar size={14} />
+                                        Ver link da chamada
+                                    </a>
+                                )}
                                 <button
                                     type="button"
                                     onClick={onDone}

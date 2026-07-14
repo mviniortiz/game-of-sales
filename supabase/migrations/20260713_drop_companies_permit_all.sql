@@ -1,0 +1,24 @@
+-- SEC: remove a policy permit-all de companies (achado da auditoria 2026-07-13).
+--
+-- `companies_all` (ALL / authenticated / USING true / WITH CHECK true) permitia
+-- qualquer usuário autenticado LER, EDITAR e APAGAR QUALQUER empresa. Mesma
+-- família do furo de profiles corrigido em 2026-05-28.
+--
+-- Ela é redundante pra todo acesso legítimo, já coberto por:
+--   companies_by_user             SELECT  id = current_company_id()
+--   users_can_update_own_company  UPDATE  id = get_my_company_id()
+--   companies_super               ALL     is_super_admin()
+--   anon/authenticated_users_can_create_companies  INSERT (fluxo de cadastro)
+--
+-- Dependência de front resolvida ANTES desta migration (SignupV2): o caminho
+-- SSO fazia insert().select('id'), e o RETURNING exige policy de SELECT que o
+-- usuário recém-criado ainda não tem; agora o id é gerado no cliente nos dois
+-- caminhos. Aplicar esta migration DEPOIS do deploy desse front.
+--
+-- Sem DELETE policy fora do super_admin: o rollback de cadastro do front antigo
+-- (delete pós-falha de auth) já não funcionava como anon; deixa de existir como
+-- vetor. Órfãs de cadastro abortado ficam pra limpeza administrativa.
+--
+-- Aplicar via: npx supabase db query --linked -f este_arquivo (NUNCA db push).
+
+drop policy if exists companies_all on public.companies;
