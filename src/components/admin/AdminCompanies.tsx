@@ -51,6 +51,8 @@ import {
   Filter,
 } from "lucide-react";
 import { toast } from "sonner";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface CompanyWithCounts {
   id: string;
@@ -61,6 +63,7 @@ interface CompanyWithCounts {
   created_at: string;
   user_count: number;
   product_count: number;
+  last_sign_in_at: string | null;
 }
 
 // Plan badge styles
@@ -139,7 +142,7 @@ export function AdminCompanies() {
       // Fetch user counts per company
       const { data: userCounts, error: userError } = await supabase
         .from("profiles")
-        .select("company_id");
+        .select("company_id, last_sign_in_at");
 
       if (userError) throw userError;
 
@@ -153,10 +156,15 @@ export function AdminCompanies() {
       // Aggregate counts
       const userCountMap = new Map<string, number>();
       const productCountMap = new Map<string, number>();
+      const lastLoginMap = new Map<string, string>();
 
       userCounts?.forEach((u: any) => {
         if (u.company_id) {
           userCountMap.set(u.company_id, (userCountMap.get(u.company_id) || 0) + 1);
+          const prev = lastLoginMap.get(u.company_id);
+          if (u.last_sign_in_at && (!prev || u.last_sign_in_at > prev)) {
+            lastLoginMap.set(u.company_id, u.last_sign_in_at);
+          }
         }
       });
 
@@ -170,6 +178,7 @@ export function AdminCompanies() {
         ...c,
         user_count: userCountMap.get(c.id) || 0,
         product_count: productCountMap.get(c.id) || 0,
+        last_sign_in_at: lastLoginMap.get(c.id) || null,
       })) as CompanyWithCounts[];
     },
     enabled: isSuperAdmin,
@@ -378,6 +387,7 @@ export function AdminCompanies() {
               <TableHead className="text-muted-foreground font-semibold">Empresa</TableHead>
               <TableHead className="text-muted-foreground font-semibold">Plano</TableHead>
               <TableHead className="text-muted-foreground font-semibold text-center">Vendedores</TableHead>
+              <TableHead className="text-muted-foreground font-semibold">Último acesso</TableHead>
               <TableHead className="text-muted-foreground font-semibold text-center">Produtos</TableHead>
               <TableHead className="text-muted-foreground font-semibold">Data de Criação</TableHead>
               <TableHead className="text-muted-foreground font-semibold">Status</TableHead>
@@ -387,13 +397,13 @@ export function AdminCompanies() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
                   Carregando empresas...
                 </TableCell>
               </TableRow>
             ) : filteredCompanies.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-12">
+                <TableCell colSpan={8} className="text-center py-12">
                   <Building2 className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
                   <p className="text-muted-foreground">Nenhuma empresa encontrada</p>
                 </TableCell>
@@ -438,6 +448,17 @@ export function AdminCompanies() {
                       <span className="font-medium">{company.user_count}</span>
                       <span className="text-xs text-muted-foreground">users</span>
                     </div>
+                  </TableCell>
+
+                  {/* Último acesso */}
+                  <TableCell
+                    title={company.last_sign_in_at ? new Date(company.last_sign_in_at).toLocaleString("pt-BR") : "Nenhum login registrado"}
+                  >
+                    <span className={`text-sm ${company.last_sign_in_at ? "text-foreground" : "text-muted-foreground"}`}>
+                      {company.last_sign_in_at
+                        ? formatDistanceToNow(new Date(company.last_sign_in_at), { addSuffix: true, locale: ptBR })
+                        : "nunca"}
+                    </span>
                   </TableCell>
 
                   {/* Produtos */}
