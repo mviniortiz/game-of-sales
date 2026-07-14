@@ -13,6 +13,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { ArrowLeft, Upload, Users, ShoppingCart, Settings, Plus } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface Company {
@@ -67,7 +69,7 @@ export const AdminCompanyDetail = () => {
   const { data: users = [] } = useQuery({
     queryKey: ["company-users", companyId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("profiles").select("id, nome, email, avatar_url").eq("company_id", companyId).order("nome");
+      const { data, error } = await supabase.from("profiles").select("id, nome, email, avatar_url, last_sign_in_at").eq("company_id", companyId).order("nome");
       if (error) throw error;
       return data as any[];
     },
@@ -290,12 +292,13 @@ export const AdminCompanyDetail = () => {
                       <TableRow>
                         <TableHead>Usuário</TableHead>
                         <TableHead>Email</TableHead>
+                        <TableHead>Último acesso</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {users.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={2} className="text-center text-muted-foreground">
+                          <TableCell colSpan={3} className="text-center text-muted-foreground">
                             Nenhum usuário vinculado.
                           </TableCell>
                         </TableRow>
@@ -312,6 +315,14 @@ export const AdminCompanyDetail = () => {
                             <span>{u.nome}</span>
                           </TableCell>
                           <TableCell>{u.email}</TableCell>
+                          <TableCell
+                            title={u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleString("pt-BR") : "Nenhum login registrado"}
+                            className={u.last_sign_in_at ? "text-foreground" : "text-muted-foreground"}
+                          >
+                            {u.last_sign_in_at
+                              ? formatDistanceToNow(new Date(u.last_sign_in_at), { addSuffix: true, locale: ptBR })
+                              : "nunca"}
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>

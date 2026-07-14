@@ -13,6 +13,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Building2, Plus, Sparkles } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
+
+// Último login em linguagem humana ("há 3 dias"); absoluto vai no title.
+const lastLoginLabel = (iso: string | null | undefined) =>
+  iso ? formatDistanceToNow(new Date(iso), { addSuffix: true, locale: ptBR }) : "nunca";
+const lastLoginTitle = (iso: string | null | undefined) =>
+  iso ? new Date(iso).toLocaleString("pt-BR") : "Nenhum login registrado";
 
 interface Company {
   id: string;
@@ -53,9 +61,9 @@ export const AdminCompaniesPage = () => {
   const { data: users = [] } = useQuery({
     queryKey: ["admin-companies-users-count"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("profiles").select("id, company_id");
+      const { data, error } = await supabase.from("profiles").select("id, company_id, last_sign_in_at");
       if (error) throw error;
-      return data as { id: string; company_id: string }[];
+      return data as { id: string; company_id: string; last_sign_in_at: string | null }[];
     },
     enabled: isAdmin,
   });
@@ -63,13 +71,17 @@ export const AdminCompaniesPage = () => {
   const counts = useMemo(() => {
     const productCount: Record<string, number> = {};
     const userCount: Record<string, number> = {};
+    const lastLogin: Record<string, string> = {};
     products.forEach((p) => {
       productCount[p.company_id] = (productCount[p.company_id] || 0) + 1;
     });
     users.forEach((u) => {
       userCount[u.company_id] = (userCount[u.company_id] || 0) + 1;
+      if (u.last_sign_in_at && (!lastLogin[u.company_id] || u.last_sign_in_at > lastLogin[u.company_id])) {
+        lastLogin[u.company_id] = u.last_sign_in_at;
+      }
     });
-    return { productCount, userCount };
+    return { productCount, userCount, lastLogin };
   }, [products, users]);
 
   const createCompany = useMutation({
@@ -169,6 +181,7 @@ export const AdminCompaniesPage = () => {
                   <TableHead>Empresa</TableHead>
                   <TableHead>Plano</TableHead>
                   <TableHead>Usuários</TableHead>
+                  <TableHead>Último acesso</TableHead>
                   <TableHead>Produtos</TableHead>
                   <TableHead>Ações</TableHead>
                 </TableRow>
@@ -176,14 +189,14 @@ export const AdminCompaniesPage = () => {
               <TableBody>
                 {isLoading && (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center text-muted-foreground">
                       Carregando...
                     </TableCell>
                   </TableRow>
                 )}
                 {!isLoading && companies.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center text-muted-foreground">
                       Nenhuma empresa cadastrada.
                     </TableCell>
                   </TableRow>
@@ -209,6 +222,12 @@ export const AdminCompaniesPage = () => {
                       </Badge>
                     </TableCell>
                     <TableCell>{counts.userCount[c.id] || 0}</TableCell>
+                    <TableCell
+                      title={lastLoginTitle(counts.lastLogin[c.id])}
+                      className={counts.lastLogin[c.id] ? "text-foreground" : "text-muted-foreground"}
+                    >
+                      {lastLoginLabel(counts.lastLogin[c.id])}
+                    </TableCell>
                     <TableCell>{counts.productCount[c.id] || 0}</TableCell>
                     <TableCell>
                       <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/admin/companies/${c.id}`); }}>
