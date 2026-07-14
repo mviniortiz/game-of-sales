@@ -189,8 +189,10 @@ export function useEvaBlueprint() {
 
             // ── Regras: append seguro em eva_business_context.playbooks (merge, sem sobrescrever). ──
             if (sections.rules) {
-                const { data: ctxRow, error: ctxErr } = await supabase.from("eva_business_context" as any)
+                const { data: ctxRowRaw, error: ctxErr } = await supabase.from("eva_business_context" as any)
                     .select("id, playbooks").eq("company_id", companyId).maybeSingle();
+                // Tabela fora dos types gerados; select() é tipado como SelectQueryError.
+                const ctxRow = ctxRowRaw as unknown as { id: string; playbooks: unknown } | null;
                 if (ctxErr) {
                     result.rulesNote = "Contexto da EVA indisponível; regras não aplicadas.";
                 } else {

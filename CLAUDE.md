@@ -160,14 +160,34 @@ modo prospecção só conversa com a allowlist; tudo fora é descartado no webho
 
 ## Pricing (verificado em `src/data/landing/pricing.ts`)
 
-3 planos, assinatura via Mercado Pago. **Verificar o arquivo antes de citar
-valores em copy** — eles mudam:
+3 planos. **Verificar o arquivo antes de citar valores em copy** — eles mudam:
 
 - **Starter** — R$ 147/mês
 - **Plus** — R$ 397/mês (popular)
 - **Pro** — R$ 797/mês ("Falar com especialista" → booking externo)
 
-14 dias grátis sem cartão (`/onboarding?plan=plus`).
+O campo `checkoutUrl` (link direto de checkout do Mercado Pago) ainda existe
+em `pricing.ts`, mas não é mais usado por nenhum CTA. Não confiar nele.
+
+### Fluxo de cadastro e checkout (verificado em auditoria 2026-07-13)
+
+- Todo CTA de trial ("Testar grátis", "Começar teste grátis") leva pra
+  `/criar-conta?plan=starter|plus|pro` (`SignupV2.tsx`, roteado em
+  `AppShell.tsx`). `/onboarding?plan=X` e `/register` são só redirects de
+  compatibilidade pra `/criar-conta` (links antigos).
+- Cadastro cria a `company` já com trial de 14 dias **sem pedir cartão**:
+  `subscription_status: "trialing"`, `trial_ends_at` = agora + 14 dias. Sem
+  cartão nesta etapa; Mercado Pago não entra no fluxo de cadastro.
+- Confirmação de email está **ativa**: se o Supabase não devolver sessão
+  (`needsConfirmation`), o SignupV2 mostra uma tela dedicada ("Confirme seu
+  email") em vez de navegar pro app, evitando que a pessoa caia no login sem
+  entender o que aconteceu.
+- Mercado Pago só aparece depois, em **Faturamento → Fazer upgrade** ou
+  `/upgrade` (`PlanPicker` + `PlanCheckoutForm`, checkout transparente com
+  tokenização de cartão embutida na tela; não é link/redirect externo).
+- "Agendar demo gratuita" é um fluxo à parte: agenda via edge functions
+  `calendar-slots` (horários livres) + `calendar-book` (cria evento real no
+  Google Calendar do super_admin com Meet, convite de verdade pro lead).
 
 ## Integrations (verificado em `src/config/integrationsConfig.ts`)
 
@@ -199,10 +219,12 @@ consulta" ou "Integração via API/Webhook".
 
 ### Rotas públicas principais
 
-`/` (landing), `/auth`, `/onboarding?plan=starter|plus|pro`,
-`/changelog`, `/politica-privacidade`, `/termos-de-servico`. App autenticado
-em catch-all (`AppShell`): Inbox, Pipeline, Deal (`DealCommandCenter`), EVA
-(`/eva`), EVA/Agent Studio, Configurações, Performance, Metas.
+`/` (landing), `/auth`, `/criar-conta?plan=starter|plus|pro` (cadastro,
+`/onboarding` e `/register` redirecionam pra cá), `/changelog`,
+`/politica-privacidade`, `/termos-de-servico`. Rotas públicas de SEO ficam em
+`App.tsx`; `/auth`, `/criar-conta` e o app autenticado (catch-all `AppShell`)
+vivem em `AppShell.tsx`: Inbox, Pipeline, Deal (`DealCommandCenter`), EVA
+(`/eva`), EVA/Agent Studio, Configurações (com `/upgrade`), Performance, Metas.
 
 ## Database conventions (migrations)
 
@@ -218,12 +240,19 @@ em catch-all (`AppShell`): Inbox, Pipeline, Deal (`DealCommandCenter`), EVA
 
 ## CTA Rules
 
-- "Agendar demo gratuita" → seção/fluxo de agendamento (`#agendar-demo`,
-  `DemoScheduleSection`).
-- "Testar grátis por 14 dias" / "Começar teste grátis" → `/onboarding?plan=plus`.
+- "Agendar demo gratuita" / "Ver demo" → abre o `EvaDemoModal` (tour guiado +
+  booking em `DemoBooking.tsx`), que agenda de verdade via `calendar-slots` +
+  `calendar-book` (convite real no Google Calendar). `DemoScheduleSection` e
+  `NativeScheduler` estão ÓRFÃOS (fora da árvore de rotas); não usar como
+  referência de fluxo.
+- "Testar grátis por 14 dias" / "Começar teste grátis" → `/criar-conta?plan=X`
+  (trial de 14 dias sem cartão; ver seção Pricing acima).
 - "Falar com especialista" (Pro) → link de booking externo definido em
   `pricing.ts`. Não inventar URLs; reusar rotas existentes e marcar TODO se
   faltar.
+- Upgrade de plano (usuário já em trial/ativo) → `/upgrade` ou Faturamento,
+  checkout embutido com Mercado Pago (`PlanCheckoutForm`). Nunca confundir com
+  o cadastro inicial, que não pede cartão.
 
 ## SEO Requirements
 
@@ -291,6 +320,25 @@ sempre passa por aprovação humana.
 6. Nenhuma claim não verificada introduzida.
 7. Migrations aditivas com GRANT+RLS por empresa; nada vai a produção sem OK.
 8. `tsc --noEmit` e `vite build` passam (ou falha documentada com causa).
+
+## Self-verification (obrigatório antes de entregar)
+
+Minerado dos erros recorrentes (jul/2026):
+
+1. **UI nova ou alterada → olhar o render antes de entregar.** Capturar a tela
+   via Playwright headless (dev server local) e inspecionar contra o pedido —
+   não entregar layout que você nunca viu renderizado. SVG: sempre width/height
+   explícitos em atributo (h-full sem altura definida no pai = default 150px).
+2. **Antes de ligar dado novo, verificar o contrato real:** tipo da coluna no
+   types.ts/banco (date vs string!), unidade/semântica (contagem vs valor),
+   e empresa efetiva (`useTenant().activeCompanyId || companyId` — nunca só
+   `companyId`, super_admin opera outra empresa).
+3. **Query nova de dashboard:** erro de fonte OPCIONAL não pode derrubar o
+   painel inteiro; degradar com warning. Testar a query sob RLS simulando a
+   sessão real (`set_config('role','authenticated')` + jwt claims) quando o
+   resultado parecer vazio sem motivo.
+4. Antes de push: `tsc --noEmit` + `npm run build` (mínimo); mudanças com
+   lógica nova rodam `npm test`.
 
 ## Final Report Format
 

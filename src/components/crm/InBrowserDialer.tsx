@@ -113,8 +113,9 @@ export default function InBrowserDialer({
                 }
 
                 const device = new Device(data.token, {
+                    // enableRingingState foi removido do Options do @twilio/voice-sdk
+                    // (ringing state agora é sempre emitido por padrão).
                     codecPreferences: [Call.Codec.Opus, Call.Codec.PCMU],
-                    enableRingingState: true,
                 });
 
                 device.on("registered", () => {

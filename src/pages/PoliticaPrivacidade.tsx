@@ -1,9 +1,9 @@
-import { ArrowLeft, Shield, Lock, Eye, Database, UserCheck, Share2, CalendarCheck, UserCog, Clock, RefreshCw, Mail } from "lucide-react";
+import { ArrowLeft, Shield, Lock, Eye, Database, UserCheck, Share2, CalendarCheck, UserCog, Clock, RefreshCw, Mail, type LucideIcon } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 
 type SectionProps = {
   number: string;
-  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  icon: LucideIcon;
   title: string;
   children: React.ReactNode;
 };

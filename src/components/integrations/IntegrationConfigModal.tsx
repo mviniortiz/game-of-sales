@@ -89,7 +89,7 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
         .maybeSingle();
 
       if (data) {
-        const config = data as IntegrationConfig;
+        const config = data as unknown as IntegrationConfig;
         setToken(config.hottok || "");
         setIsConnected(Boolean(config.is_active && config.hottok));
         setConfigId(config.id);

@@ -627,7 +627,7 @@ export const useEvolutionIntegration = () => {
     const parseRawToMessages = (raw: any[]): MessageLine[] => {
         const seen = new Set<string>();
         return raw
-            .map((msg: any) => {
+            .map((msg: any): MessageLine | null => {
                 const text = parseTextFromMessage(msg);
                 if (!text) return null;
 

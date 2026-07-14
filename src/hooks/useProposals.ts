@@ -1,6 +1,7 @@
 // CRUD de propostas comerciais (PROP.1) vinculadas a um deal.
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import type { ProposalItem, ProposalSection } from "@/components/crm/ProposalPDFGenerator";
 
@@ -69,6 +70,9 @@ export function useProposals(dealId: string | null | undefined) {
 
   const createProposal = useMutation({
     mutationFn: async (input: CreateProposalInput) => {
+      // company_id é NOT NULL na tabela; sem empresa identificada o insert
+      // falharia no banco mesmo antes desta checagem — aqui só antecipa o erro.
+      if (!companyId) throw new Error("Empresa não identificada");
       const { data, error } = await supabase
         .from("proposals")
         .insert({
@@ -78,14 +82,14 @@ export function useProposals(dealId: string | null | undefined) {
           customer_name: input.customer_name ?? null,
           customer_email: input.customer_email ?? null,
           customer_phone: input.customer_phone ?? null,
-          items: input.items as unknown as object,
+          items: input.items as unknown as Json,
           discount_percent: input.discount_percent ?? 0,
           validity_days: input.validity_days ?? 30,
           conditions: input.conditions ?? null,
           intro: input.intro ?? null,
           about: input.about ?? null,
           brand_color: input.brand_color ?? "#1556C0",
-          sections: (input.sections ?? null) as unknown as object,
+          sections: (input.sections ?? null) as unknown as Json,
           total: input.total,
           status: input.status ?? "rascunho",
           created_by: user?.id ?? null,

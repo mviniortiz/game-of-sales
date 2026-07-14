@@ -83,7 +83,7 @@ export const RDStationConfigModal = ({ open, onClose, onSaved }: RDStationConfig
             }
 
             if (data) {
-                const config = data as IntegrationConfig;
+                const config = data as unknown as IntegrationConfig;
                 setApiToken(config.hottok || "");
                 setIsActive(config.is_active || false);
                 setConfigId(config.id);

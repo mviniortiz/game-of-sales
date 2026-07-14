@@ -27,6 +27,7 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { formatError } from "@/lib/utils";
+import type { TablesInsert } from "@/integrations/supabase/types";
 
 // ─── F4E.5.3 — Helpers de similaridade ────────────────────────────────────
 // Detecta itens já aprovados parecidos com a sugestão pendente.
@@ -467,7 +468,9 @@ export function EvaKnowledgeBaseTab({ companyId, isAdmin, userId }: EvaKnowledge
 
       const { error: e2 } = await supabase
         .from("eva_business_context")
-        .upsert(patch, { onConflict: "company_id" });
+        // patch é montado dinamicamente por suggestion_type (union de shapes JSON);
+        // o cast pro tipo gerado evita repetir "as Json" em cada campo aninhado.
+        .upsert(patch as unknown as TablesInsert<"eva_business_context">, { onConflict: "company_id" });
       if (e2) throw e2;
 
       const { error: e3 } = await supabase

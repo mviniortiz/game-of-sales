@@ -24,6 +24,7 @@ import type { Chat, MessageLine, MediaType } from "@/hooks/useEvolutionAPI";
 
 interface WaMessageRow {
     id: string;
+    user_id: string | null;
     chat_jid: string;
     chat_phone: string;
     contact_name: string | null;

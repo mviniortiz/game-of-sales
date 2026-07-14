@@ -246,7 +246,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         ]).then(async ([, profileStatus]) => {
           if (!mounted) return;
 
-          if (profileStatus === "missing" || profileStatus === "invalid") {
+          // Same rule as the onAuthStateChange handler above: only a truly
+          // corrupted account (no profile row) forces sign-out. "error" is a
+          // transient failure (network/DB), not proof of an invalid account,
+          // so it must not sign the user out; "needs_onboarding"/"ok" are
+          // valid states. "invalid" was never a value loadProfile returns.
+          if (profileStatus === "missing") {
             await forceSignOutForInvalidAccount(profileStatus);
           }
         }).finally(() => {

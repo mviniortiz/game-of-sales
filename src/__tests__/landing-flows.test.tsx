@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
 
 vi.mock('@/integrations/supabase/client', () => ({
     supabase: {
@@ -64,40 +63,10 @@ vi.mock('@/lib/analytics', () => ({
 }));
 
 describe('Landing critical flows', () => {
-    it('PricingSection renderiza 3 planos e toggle mensal/anual', async () => {
-        const { PricingSection } = await import('@/components/landing/sections/PricingSection');
-        render(
-            <MemoryRouter>
-                <PricingSection onPlanSelect={vi.fn()} onScheduleDemo={vi.fn()} />
-            </MemoryRouter>
-        );
-        expect(screen.getByText('STARTER')).toBeInTheDocument();
-        expect(screen.getByText('PLUS')).toBeInTheDocument();
-        expect(screen.getByText('PRO')).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /mensal/i })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /anual/i })).toBeInTheDocument();
-    });
-
-    it('PricingSection dispara onPlanSelect com nome lowercase', async () => {
-        const { PricingSection } = await import('@/components/landing/sections/PricingSection');
-        const onPlanSelect = vi.fn();
-        render(
-            <MemoryRouter>
-                <PricingSection onPlanSelect={onPlanSelect} onScheduleDemo={vi.fn()} />
-            </MemoryRouter>
-        );
-        const ctas = screen.getAllByRole('button', { name: /começar teste de 14 dias/i });
-        fireEvent.click(ctas[0]);
-        expect(onPlanSelect).toHaveBeenCalledWith(expect.stringMatching(/starter|plus|pro/));
-    });
-
-    it('LigacoesSection dispara onSeePlansClick no CTA', async () => {
-        const { LigacoesSection } = await import('@/components/landing/sections/LigacoesSection');
-        const onClick = vi.fn();
-        render(<LigacoesSection onSeePlansClick={onClick} />);
-        fireEvent.click(screen.getByRole('button', { name: /ver planos com ligações/i }));
-        expect(onClick).toHaveBeenCalledTimes(1);
-    });
+    // PricingSection/LigacoesSection eram da landing antiga (Landing.tsx), que
+    // saiu da árvore de rotas no cutover pra LandingV2 (App.tsx só roteia
+    // LandingV2 em "/" e "/landing" — ver LP.6). Nenhum outro arquivo do app
+    // importa esses dois componentes; testes removidos (2026-07-14).
 
     it('NavigatingOverlay mostra o plano capitalizado', async () => {
         const { NavigatingOverlay } = await import('@/components/landing/sections/NavigatingOverlay');

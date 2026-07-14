@@ -269,7 +269,9 @@ export const ConversionFunnelDonut = ({ dateRange }: ConversionFunnelDonutProps)
                                     >
                                         <div
                                             className={`w-3 h-3 rounded-full ring-2 ring-offset-1 ring-offset-background`}
-                                            style={{ backgroundColor: item.color, ringColor: item.color }}
+                                            // "ringColor" nunca foi uma propriedade CSS válida (Tailwind usa a
+                                            // variável --tw-ring-color pra ring-*); era um no-op silencioso.
+                                            style={{ backgroundColor: item.color }}
                                         />
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-1">

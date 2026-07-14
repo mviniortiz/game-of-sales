@@ -41,13 +41,24 @@ describe('useLandingAnchor helpers', () => {
         window.removeEventListener('vyzon:hydrate-all', listener);
     });
 
-    it('scrollToLazyAnchor nunca fica abaixo de zero na posição', () => {
+    it('scrollToLazyAnchor nunca fica abaixo de zero na posição', async () => {
+        // window.scrollY precisa começar DIFERENTE de zero: se já fosse 0 (o
+        // default do beforeEach), o alvo calculado (clampado em 0) bateria com
+        // a posição atual e o hook pularia a chamada por já "estar no lugar"
+        // (branch de diff < 6 em scrollToLazyAnchor) — não exercitaria o clamp.
+        Object.defineProperty(window, 'scrollY', { value: 200, writable: true });
         const el = document.createElement('div');
         el.id = 'top';
-        el.getBoundingClientRect = () => ({ top: 10 } as DOMRect);
+        // top bem negativo (anchor acima do viewport) força o alvo bruto
+        // (top + scrollY - offset) pra negativo, que deve ser clampado em 0.
+        el.getBoundingClientRect = () => ({ top: -300 } as DOMRect);
         document.body.appendChild(el);
 
         scrollToLazyAnchor('top');
+        // O primeiro tick roda dentro de requestAnimationFrame (scrollToLazyAnchor
+        // agenda com rAF antes de chamar window.scrollTo); precisa esperar o
+        // próximo frame antes de checar a chamada.
+        await new Promise((resolve) => requestAnimationFrame(resolve));
         expect(scrollSpy).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' });
     });
 });

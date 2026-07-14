@@ -907,7 +907,7 @@ const WhatsApp = () => {
         sendMediaMessage, sendAudioMessage, appendRealtimeMessage,
     } = useEvolutionIntegration();
 
-    const { user, isAdmin, isSuperAdmin } = useAuth();
+    const { user, isAdmin, isSuperAdmin, companyId } = useAuth();
     const { activeCompanyId, companies } = useTenant();
     const activeCompanyName = companies.find(c => c.id === activeCompanyId)?.name;
     const canViewOthers = isAdmin || isSuperAdmin;

@@ -13,6 +13,7 @@ import {
     Sparkle,
     Brain,
     LineChart,
+    type LucideIcon,
 } from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -22,7 +23,7 @@ import {
 // mocks são 100% HTML/CSS.
 // ─────────────────────────────────────────────────────────────────────────────
 
-type IconCmp = React.ComponentType<{ className?: string; strokeWidth?: number }>;
+type IconCmp = LucideIcon;
 
 interface Case {
     icon: IconCmp;

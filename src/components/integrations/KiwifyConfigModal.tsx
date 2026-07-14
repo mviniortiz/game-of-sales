@@ -82,7 +82,7 @@ export const KiwifyConfigModal = ({ open, onClose, onSaved }: KiwifyConfigModalP
             }
 
             if (data) {
-                const config = data as IntegrationConfig;
+                const config = data as unknown as IntegrationConfig;
                 setSignatureSecret(config.hottok || "");
                 setIsActive(config.is_active || false);
                 setConfigId(config.id);

@@ -106,7 +106,8 @@ const str = (v: unknown): string => (typeof v === "string" ? v.trim() : "");
 
 function detectSegment(ctx: EvaContextRow | null): SegmentKey {
     if (!ctx) return "generic";
-    const hay = JSON.stringify([ctx.agency, ctx.services, ctx.icp, ctx.playbooks] ?? "").toLowerCase();
+    // JSON.stringify(array) nunca retorna undefined/null; o "?? ''" era inalcançável.
+    const hay = JSON.stringify([ctx.agency, ctx.services, ctx.icp, ctx.playbooks]).toLowerCase();
     if (/incorporadora|imobili|im[oó]vel|empreendimento|apartamento|construtora|loteamento|metro quadrado/.test(hay)) return "real_estate";
     if (/ag[eê]ncia|marketing|tr[aá]fego|social ?media|publicidade|criativos|an[uú]ncios|assessoria de marketing/.test(hay)) return "agency";
     return "generic";

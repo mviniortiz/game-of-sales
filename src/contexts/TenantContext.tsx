@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
 import { PLAN_FEATURES, PlanType, PlanFeatures, PLANS_INFO } from '@/config/planConfig';
+import { normalizeSubscriptionStatus } from '@/lib/utils';
 
 interface Company {
   id: string;
@@ -81,7 +82,7 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
                 plan: c.plan || 'starter',
                 logo_url: c.logo_url || null,
                 trial_ends_at: c.trial_ends_at || null,
-                subscription_status: c.subscription_status || 'active',
+                subscription_status: normalizeSubscriptionStatus(c.subscription_status),
               }));
               setCompanies(typedCompanies);
               // Use stored company or allocated company or first one
@@ -111,7 +112,7 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
                     plan: ownCompany.plan || 'starter',
                     logo_url: ownCompany.logo_url || null,
                     trial_ends_at: ownCompany.trial_ends_at || null,
-                    subscription_status: ownCompany.subscription_status || 'active',
+                    subscription_status: normalizeSubscriptionStatus(ownCompany.subscription_status),
                   };
                   setCompanies([typedOwn]);
                   setActiveCompanyId(profileData.company_id);
@@ -138,7 +139,7 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
                 plan: companyData.plan || 'starter',
                 logo_url: companyData.logo_url || null,
                 trial_ends_at: companyData.trial_ends_at || null,
-                subscription_status: companyData.subscription_status || 'active',
+                subscription_status: normalizeSubscriptionStatus(companyData.subscription_status),
               };
               setCompanies([typedCompany]);
               setActiveCompanyId(profileData.company_id);

@@ -196,7 +196,9 @@ export function useEvaContextSuggestions() {
             ]);
 
             const docNames = new Map<string, string>(
-                ((docRes.data ?? []) as { id: string; file_name: string }[]).map((d) => [d.id, d.file_name]),
+                // Tabela fora dos types gerados (from(... as any)); select() é tipado como
+                // SelectQueryError, então o cast direto falha. Passa por unknown primeiro.
+                ((docRes.data ?? []) as unknown as { id: string; file_name: string }[]).map((d) => [d.id, d.file_name]),
             );
             const sourceLabel = (docId: string | null): string =>
                 docId && docNames.has(docId)
@@ -219,7 +221,8 @@ export function useEvaContextSuggestions() {
             .select("id, agency, services, icp, playbooks")
             .eq("company_id", companyId)
             .maybeSingle();
-        const d = (data ?? null) as Record<string, unknown> | null;
+        // Tabela fora dos types gerados; select() é tipado como SelectQueryError.
+        const d = (data ?? null) as unknown as Record<string, unknown> | null;
         return {
             id: (d?.id as string) ?? null,
             agency: (d?.agency as Record<string, unknown>) ?? {},
@@ -305,7 +308,8 @@ export function useEvaContextSuggestions() {
                 .select("fix_target")
                 .eq("id", gap.id)
                 .maybeSingle();
-            const fixTarget = (gapRow as { fix_target: string | null } | null)?.fix_target ?? null;
+            // Tabela fora dos types gerados; select() é tipado como SelectQueryError.
+            const fixTarget = (gapRow as unknown as { fix_target: string | null } | null)?.fix_target ?? null;
             // Resposta entra no slot certo do contexto (fix_target) como playbook/nota
             let ctx = await fetchContext();
             const targetType: ContextSuggestionType =
@@ -342,7 +346,8 @@ export function useEvaContextSuggestions() {
                 .select("id")
                 .single();
             if (error) throw error;
-            const documentId = (data as { id: string }).id;
+            // Tabela fora dos types gerados; select() é tipado como SelectQueryError.
+            const documentId = (data as unknown as { id: string }).id;
             const { error: fnErr } = await supabase.functions.invoke("generate-eva-context-suggestions", {
                 body: { documentId },
             });

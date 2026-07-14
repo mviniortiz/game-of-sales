@@ -1,9 +1,9 @@
-import { ArrowLeft, FileText, Users, AlertTriangle, CreditCard, Scale, Globe, ShieldCheck, Plug, Clock, Power, Gavel, Mail } from "lucide-react";
+import { ArrowLeft, FileText, Users, AlertTriangle, CreditCard, Scale, Globe, ShieldCheck, Plug, Clock, Power, Gavel, Mail, type LucideIcon } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 
 type SectionProps = {
   number: string;
-  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  icon: LucideIcon;
   title: string;
   children: React.ReactNode;
 };

@@ -62,7 +62,7 @@ import {
 } from "lucide-react";
 import { LostDealModal } from "@/components/crm/LostDealModal";
 import { usePipelineStages } from "@/hooks/usePipelines";
-import { configToStage, deriveLegacyStage, AVAILABLE_COLORS, type StageKind } from "@/lib/pipelineStyles";
+import { configToStage, deriveLegacyStage, AVAILABLE_COLORS, type StageKind, type LegacyStageKey } from "@/lib/pipelineStyles";
 import { AddReminderForm } from "@/components/crm/AddReminderForm";
 import { DealTagPicker } from "@/components/crm/DealTagPicker";
 import { syncWonDealToSale } from "@/utils/salesSync";
@@ -86,7 +86,7 @@ interface StepStage {
   borderColor: string;
   dotColor: string;
   kind: StageKind;
-  legacyKey?: string | null;
+  legacyKey?: LegacyStageKey | null;
 }
 
 const DEFAULT_PIPELINE_STAGES: StepStage[] = [

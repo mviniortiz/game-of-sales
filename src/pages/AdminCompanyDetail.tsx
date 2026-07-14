@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -43,13 +43,16 @@ export const AdminCompanyDetail = () => {
       return data as Company | null;
     },
     enabled: !!companyId && isAdmin,
-    onSuccess: (data) => {
-      if (data) {
-        setName(data.name || "");
-        setPlan(data.plan || "free");
-      }
-    },
   });
+
+  // react-query v5 removeu onSuccess de useQuery; sincroniza o estado de edição
+  // local (name/plan) quando a empresa carrega ou muda.
+  useEffect(() => {
+    if (company) {
+      setName(company.name || "");
+      setPlan(company.plan || "free");
+    }
+  }, [company]);
 
   const { data: products = [] } = useQuery({
     queryKey: ["company-products", companyId],

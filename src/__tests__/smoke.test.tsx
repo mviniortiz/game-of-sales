@@ -88,6 +88,20 @@ vi.mock('@vercel/analytics/react', () => ({
 // Mock video/image assets
 vi.mock('/videos/sales-video.mp4', () => ({ default: '' }));
 
+// Mock Lenis (scroll suave) — LandingV2 importa dinamicamente e inicia um loop
+// contínuo de requestAnimationFrame (lenis.raf); em jsdom isso nunca "assenta"
+// e trava o teste até o timeout. O mock preserva a API usada sem o loop real.
+vi.mock('lenis', () => ({
+    default: class MockLenis {
+        raf() {}
+        on() {}
+        stop() {}
+        start() {}
+        scrollTo() {}
+        destroy() {}
+    },
+}));
+
 // Mock shadcn Sheet (used by LandingNav for mobile menu)
 vi.mock('@/components/ui/sheet', () => ({
     Sheet: ({ children }: any) => <>{children}</>,
@@ -145,7 +159,12 @@ describe('Smoke Tests - Public Pages', () => {
             </MemoryRouter>
         );
         expect(container.firstChild).toBeTruthy();
-    });
+        // LandingV2 monta ~17 seções (várias com canvas/WebGL como CloudWaveOrb,
+        // que em jsdom cai no fallback "Not implemented: getContext" repetidas
+        // vezes) + framer-motion + Lottie. Isso passa dos 5s default mesmo sem
+        // travar de verdade (~7-8s observado localmente); timeout maior em vez
+        // de mockar cada seção individualmente.
+    }, 20000);
 });
 
 describe('Smoke Tests - Components', () => {

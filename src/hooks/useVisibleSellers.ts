@@ -72,7 +72,10 @@ export function useVisibleSellers(options: UseVisibleSellersOptions = {}) {
         throw error;
       }
 
-      return data || [];
+      // selectFields é dinâmico (string, não literal), então o parser de tipos do
+      // supabase-js não consegue inferir as colunas e cai em ParserError. O shape
+      // real bate com Seller (id, nome, is_super_admin[, avatar_url]).
+      return (data ?? []) as unknown as Seller[];
     },
     enabled: enabled && canSeeOthers,
   });

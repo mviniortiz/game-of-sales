@@ -26,6 +26,7 @@ import { useTenant } from "@/contexts/TenantContext";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { TablesInsert } from "@/integrations/supabase/types";
 import { resolveAgentSuggestionForConversation } from "@/hooks/useCreateOpportunityFromConversation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -205,7 +206,10 @@ export const NovaOportunidadeModal = ({
         .eq("ativo", true)
         .eq("company_id", effectiveCompanyId);
       if (error) throw error;
-      return data as { id: string; nome: string; preco: number | null }[];
+      // Nota: a coluna "preco" não existe em produtos (colunas reais são
+      // preco_base/valor); mantido como está para não alterar comportamento
+      // de runtime nesta limpeza de tipos — só o cast precisa passar por unknown.
+      return data as unknown as { id: string; nome: string; preco: number | null }[];
     },
     enabled: !!effectiveCompanyId && open,
   });
@@ -292,7 +296,9 @@ export const NovaOportunidadeModal = ({
 
       const { data: deal, error } = await supabase
         .from("deals")
-        .insert([dealInsert])
+        // dealInsert é montado dinamicamente (campos condicionais); cast pro
+        // tipo gerado evita tipar cada campo opcional manualmente.
+        .insert([dealInsert as unknown as TablesInsert<"deals">])
         .select("id")
         .single();
       if (error) throw error;

@@ -204,7 +204,9 @@ export const CallForm = ({ onSuccess }: CallFormProps) => {
         await supabase
           .from("agendamentos")
           .update({
-            status: newStatus,
+            // "nao_compareceu" é usado em produção (ver Calendario.tsx) mas o enum
+            // appointment_status gerado em types.ts está desatualizado (drift).
+            status: newStatus as any,
             attendance_status: formData.attendance_status,
           })
           .eq("id", formData.agendamento_id);
@@ -256,8 +258,10 @@ export const CallForm = ({ onSuccess }: CallFormProps) => {
             loss_reason: formData.loss_reason,
             updated_at: new Date().toISOString(),
           })
-          .eq("cliente_nome", formData.cliente_nome.trim())
-          .eq("user_id", user.id);
+          // .match() em vez de dois .eq() encadeados: mesmo filtro (AND), mas
+          // evita a instanciação de tipo excessivamente profunda (TS2589) que o
+          // encadeamento duplo de .eq() gera nesta tabela.
+          .match({ cliente_nome: formData.cliente_nome.trim(), user_id: user.id });
       }
 
       toast.success("Resultado registrado");

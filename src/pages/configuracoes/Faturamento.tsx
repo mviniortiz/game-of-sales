@@ -11,6 +11,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { PLAN_FEATURES, PLANS_INFO, PlanType } from "@/config/planConfig";
 import { CancelSubscriptionDialog } from "@/components/configuracoes/CancelSubscriptionDialog";
+import { normalizeSubscriptionStatus } from "@/lib/utils";
 
 const PLAN_DETAILS: Record<PlanType, {
   icon: React.ComponentType<any>;
@@ -89,7 +90,7 @@ export default function Faturamento() {
 
     if (companyRes.data) {
       setSubscription({
-        status: companyRes.data.subscription_status || "active",
+        status: normalizeSubscriptionStatus(companyRes.data.subscription_status),
         trial_ends_at: companyRes.data.trial_ends_at,
         cancelled_at: companyRes.data.subscription_cancelled_at,
         ends_at: companyRes.data.subscription_ends_at,

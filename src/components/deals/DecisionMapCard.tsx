@@ -11,6 +11,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { Users, Plus, MessageSquare, StickyNote, User, Building2, ExternalLink } from "lucide-react";
 import {
@@ -236,7 +237,10 @@ export function DecisionMapCard({ dealId, companyId, sourceData }: { dealId: str
     const save = useMutation({
         mutationFn: async (next: DecisionPerson[]) => {
             const prev = sourceData && typeof sourceData === "object" ? (sourceData as Record<string, unknown>) : {};
-            const { error } = await supabase.from("deals").update({ source_data: { ...prev, mapa_decisao: next } }).eq("id", dealId);
+            // DecisionPerson é uma interface simples (sem index signature), então
+            // não bate estruturalmente com Json; o conteúdo é JSON-safe (só strings).
+            const nextSourceData = { ...prev, mapa_decisao: next } as unknown as Json;
+            const { error } = await supabase.from("deals").update({ source_data: nextSourceData }).eq("id", dealId);
             if (error) throw error;
         },
         onSuccess: () => qc.invalidateQueries({ queryKey: ["deal", dealId] }),

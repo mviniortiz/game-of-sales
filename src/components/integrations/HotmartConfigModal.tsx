@@ -83,7 +83,7 @@ export const HotmartConfigModal = ({ open, onClose, onSaved }: HotmartConfigModa
             }
 
             if (data) {
-                const config = data as IntegrationConfig;
+                const config = data as unknown as IntegrationConfig;
                 setHottok(config.hottok || "");
                 setIsActive(config.is_active || false);
                 setConfigId(config.id);
