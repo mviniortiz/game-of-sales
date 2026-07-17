@@ -117,21 +117,23 @@ const R_INNER = 108;
 const R_OUTER = 236;
 
 const ORBIT_CSS = `
-/* ── Órbita (desktop) ── */
+/* ── Órbita (desktop) ──
+   Perf 2026-07-17: tiles ESTÁTICOS (eram 18 layers contra-rotacionando +
+   2 anéis = 20 animações compostas na GPU). O movimento fica por conta das
+   2 guias tracejadas girando devagar — mesmo efeito narrativo, ~10% do custo. */
 .vz-orbit { position: relative; width: ${STAGE}px; height: ${STAGE}px; margin: 0 auto; }
 .vz-orbit__guide {
-  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-  border: 1px solid var(--lp-line); border-radius: 999px; pointer-events: none;
+  position: absolute; left: 50%; top: 50%; margin: 0 auto;
+  translate: -50% -50%;
+  border: 1px dashed var(--lp-line); border-radius: 999px; pointer-events: none;
+  animation: vz-orbit-spin var(--dur, 90s) linear infinite;
 }
-.vz-orbit__ring { position: absolute; inset: 0; animation: vz-orbit-spin var(--dur) linear infinite; }
-.vz-orbit__ring--rev { animation-direction: reverse; }
+.vz-orbit__guide--rev { animation-direction: reverse; }
+.vz-orbit__ring { position: absolute; inset: 0; }
 .vz-orbit__seat { position: absolute; left: 50%; top: 50%; width: 0; height: 0; }
 /* width: max-content — o seat tem largura 0, e sem isso o shrink-to-fit
    colapsa tiles cujo único conteúdo é uma imagem (wordmarks sumiam). */
 .vz-orbit__unrot { position: absolute; width: max-content; }
-.vz-orbit__item { animation: vz-orbit-spin var(--dur) linear infinite reverse; }
-.vz-orbit__ring--rev .vz-orbit__item { animation-direction: normal; }
-.vz-orbit:hover .vz-orbit__ring, .vz-orbit:hover .vz-orbit__item { animation-play-state: paused; }
 @keyframes vz-orbit-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
 .vz-orbit__center {
@@ -189,7 +191,7 @@ const ORBIT_CSS = `
 .vz-int-soon img:hover { opacity: 0.75; }
 
 @media (prefers-reduced-motion: reduce) {
-  .vz-orbit__ring, .vz-orbit__item, .vz-int-mq__track { animation: none; }
+  .vz-orbit__guide, .vz-int-mq__track { animation: none; }
   .vz-int-mq { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .vz-int-mq::before, .vz-int-mq::after { content: none; }
   .vz-int-soon img { transition: none; }
@@ -209,28 +211,19 @@ const OrbitTile = ({ logo }: { logo: LiveLogo }) => {
 const OrbitRing = ({
     logos,
     radius,
-    duration,
-    reverse,
     startDeg,
 }: {
     logos: LiveLogo[];
     radius: number;
-    duration: string;
-    reverse?: boolean;
     startDeg: number;
 }) => (
-    <div
-        className={`vz-orbit__ring${reverse ? " vz-orbit__ring--rev" : ""}`}
-        style={{ "--dur": duration } as React.CSSProperties}
-    >
+    <div className="vz-orbit__ring">
         {logos.map((logo, i) => {
             const deg = startDeg + (360 / logos.length) * i;
             return (
                 <div key={logo.alt} className="vz-orbit__seat" style={{ transform: `rotate(${deg}deg) translateX(${radius}px)` }}>
                     <div className="vz-orbit__unrot" style={{ transform: `translate(-50%, -50%) rotate(${-deg}deg)` }}>
-                        <div className="vz-orbit__item" style={{ "--dur": duration } as React.CSSProperties}>
-                            <OrbitTile logo={logo} />
-                        </div>
+                        <OrbitTile logo={logo} />
                     </div>
                 </div>
             );
@@ -253,13 +246,19 @@ export const IntegrationsStripV2 = () => {
                 {/* Desktop — órbita */}
                 <div className="hidden sm:block mt-6">
                     <div className="vz-orbit" aria-label="Integrações ativas do Vyzon">
-                        <div className="vz-orbit__guide" style={{ width: R_INNER * 2, height: R_INNER * 2 }} />
-                        <div className="vz-orbit__guide" style={{ width: R_OUTER * 2, height: R_OUTER * 2 }} />
+                        <div
+                            className="vz-orbit__guide"
+                            style={{ width: R_INNER * 2, height: R_INNER * 2, "--dur": "70s" } as React.CSSProperties}
+                        />
+                        <div
+                            className="vz-orbit__guide vz-orbit__guide--rev"
+                            style={{ width: R_OUTER * 2, height: R_OUTER * 2, "--dur": "110s" } as React.CSSProperties}
+                        />
                         <div className="vz-orbit__center">
                             <ThemeLogo variant="iconOnly" className="h-10 w-auto" alt="Vyzon" />
                         </div>
-                        <OrbitRing logos={RING_INNER} radius={R_INNER} duration="80s" startDeg={-90} />
-                        <OrbitRing logos={RING_OUTER} radius={R_OUTER} duration="140s" reverse startDeg={-75} />
+                        <OrbitRing logos={RING_INNER} radius={R_INNER} startDeg={-90} />
+                        <OrbitRing logos={RING_OUTER} radius={R_OUTER} startDeg={-75} />
                     </div>
                 </div>
 

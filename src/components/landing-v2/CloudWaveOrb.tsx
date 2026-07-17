@@ -29,7 +29,7 @@ uniform vec3 u_base,u_low,u_mid,u_high;
 float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
 return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),f.x),f.y);}
-float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<5;i++){v+=a*noise(p);p*=2.03;a*=.5;}return v;}
+float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<4;i++){v+=a*noise(p);p*=2.03;a*=.5;}return v;}
 void main(){
 vec2 uv=gl_FragCoord.xy/u_res;
 vec2 p=uv*vec2(u_res.x/u_res.y,1.);
@@ -90,12 +90,13 @@ export const CloudWaveOrb = ({ palette = "login", className = "" }: CloudWaveOrb
         const uRes = gl.getUniformLocation(prog, "u_res");
         const uT = gl.getUniformLocation(prog, "u_t");
 
-        // Nuvem é suave: render em resolução reduzida (DPR ≤ 1.5, lado ≤ 640) e
-        // o CSS estica — indistinguível e muito mais barato.
+        // Nuvem é suave: render em resolução reduzida (DPR ≤ 1, lado ≤ 480) e
+        // o CSS estica — indistinguível e muito mais barato (o fbm custa ~20
+        // amostras de noise POR PIXEL; metade da resolução = 1/4 do custo).
         const resize = () => {
-            const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-            const w = Math.min(640, Math.max(1, Math.round(canvas.clientWidth * dpr)));
-            const h = Math.min(640, Math.max(1, Math.round(canvas.clientHeight * dpr)));
+            const dpr = Math.min(window.devicePixelRatio || 1, 1);
+            const w = Math.min(480, Math.max(1, Math.round(canvas.clientWidth * dpr)));
+            const h = Math.min(480, Math.max(1, Math.round(canvas.clientHeight * dpr)));
             if (canvas.width !== w || canvas.height !== h) {
                 canvas.width = w;
                 canvas.height = h;
@@ -119,9 +120,14 @@ export const CloudWaveOrb = ({ palette = "login", className = "" }: CloudWaveOrb
 
         let raf = 0;
         let running = false;
+        let last = 0;
+        // Cap de 30fps: a nuvem anda a u_t*0.05 — em 30fps o movimento é
+        // visualmente idêntico e o custo de GPU cai pela metade.
         const loop = (t: number) => {
-            draw(t);
             raf = requestAnimationFrame(loop);
+            if (t - last < 33) return;
+            last = t;
+            draw(t);
         };
         const start = () => {
             if (!running && !gl.isContextLost()) {

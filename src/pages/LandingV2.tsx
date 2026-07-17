@@ -58,6 +58,12 @@ const LandingV2 = () => {
     // menos animação. raf loop + cleanup ao sair da página.
     useEffect(() => {
         if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        // Máquina modesta (poucos cores / pouca RAM): scroll NATIVO. O lerp por
+        // frame do Lenis é o que deixa a rolagem "borrachuda" quando o main
+        // thread não sustenta 60fps — nessas máquinas o nativo é mais leve e
+        // mais responsivo. (perf 2026-07-17)
+        const nav = navigator as Navigator & { deviceMemory?: number };
+        if ((nav.hardwareConcurrency || 8) <= 4 || (nav.deviceMemory ?? 8) <= 4) return;
         let raf = 0;
         let cancelled = false;
         // Lenis carregado sob demanda (import dinâmico) — tira ~15KB do bundle
