@@ -406,7 +406,7 @@ export const AdminVendedores = () => {
         description: "Faça upgrade para adicionar mais membros ao time.",
         action: {
           label: "Fazer upgrade",
-          onClick: () => navigate(`/upgrade?plan=${currentPlan === "starter" ? "plus" : "pro"}`),
+          onClick: () => navigate("/upgrade"),
         },
       });
       return;

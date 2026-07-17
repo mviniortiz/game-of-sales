@@ -30,7 +30,8 @@ const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
-const DAILY_LIMIT_PER_USER = 50;
+const DAILY_LIMIT_PER_USER = 50;        // plano Pro (e trial do Pro)
+const FREE_DAILY_LIMIT_PER_USER = 10;   // plano Free — espelha src/config/plans.ts
 // EVA.AUTO.1 — auto-qualificação (modo serviço) consome um balde por-empresa,
 // separado da cota manual do dono. Teto diário de novos contatos analisados.
 const AUTO_DAILY_LIMIT = 200;
@@ -594,10 +595,37 @@ serve(async (req) => {
             companyId = prof?.company_id ?? null;
         }
 
+        // Limite diário por PLANO (espelha src/config/plans.ts): free 10/dia,
+        // pro 50/dia por usuário; trial ativo conta como Pro, expirado degrada.
+        let planDailyLimit = DAILY_LIMIT_PER_USER;
+        if (!serviceMode && companyId) {
+            const { data: comp } = await adminSupabase
+                .from("companies")
+                .select("plan, subscription_status, trial_ends_at")
+                .eq("id", companyId)
+                .maybeSingle();
+            const normalizePlan = (raw: string | null | undefined): string => {
+                const v = (raw || "").toLowerCase();
+                if (v === "pro" || v === "plus") return "pro";
+                if (v === "escala" || v === "enterprise") return "escala";
+                return "free";
+            };
+            let effectivePlan = "free";
+            if (comp?.subscription_status === "trialing") {
+                const ends = comp?.trial_ends_at ? new Date(comp.trial_ends_at).getTime() : NaN;
+                effectivePlan = !Number.isNaN(ends) && ends >= Date.now() ? "pro" : "free";
+            } else if (comp?.subscription_status === "active") {
+                effectivePlan = normalizePlan(comp?.plan);
+            }
+            planDailyLimit = effectivePlan === "free" ? FREE_DAILY_LIMIT_PER_USER : DAILY_LIMIT_PER_USER;
+            // super_admin não sofre limite reduzido
+            if (profile?.is_super_admin) planDailyLimit = DAILY_LIMIT_PER_USER;
+        }
+
         // Rate limit isolado: a auto-qualificação consome um balde por-empresa,
         // sem roubar a cota manual diária do dono.
         const rlBucket = serviceMode ? `whatsapp-copilot:auto:${companyId}` : `whatsapp-copilot:user:${user.id}`;
-        const rlLimit = serviceMode ? AUTO_DAILY_LIMIT : DAILY_LIMIT_PER_USER;
+        const rlLimit = serviceMode ? AUTO_DAILY_LIMIT : planDailyLimit;
 
         if (!messages || !Array.isArray(messages) || messages.length === 0) {
             return json(400, { error: "messages array is required" });
@@ -670,7 +698,7 @@ serve(async (req) => {
                             cached: true,
                             cachedAt: cached.analyzed_at,
                             remaining: peek.remaining,
-                            dailyLimit: DAILY_LIMIT_PER_USER,
+                            dailyLimit: rlLimit,
                         });
                     } else {
                         console.log(
@@ -694,7 +722,7 @@ serve(async (req) => {
 
         if (!rateLimit.allowed) {
             return json(429, {
-                error: `Limite diario de ${DAILY_LIMIT_PER_USER} analises atingido. Tente novamente amanha.`,
+                error: `Limite diario de ${rlLimit} analises atingido. ${rlLimit === FREE_DAILY_LIMIT_PER_USER ? "No plano Pro sao 50 por dia." : "Tente novamente amanha."}`,
                 code: "RATE_LIMITED",
                 remaining: 0,
                 resetAt: rateLimit.resetAt,
@@ -969,7 +997,7 @@ Analise a conversa e retorne o JSON estrito com sua análise e o objeto qualific
             model: modelUsed,
             tokens: completion.usage?.total_tokens || null,
             remaining: consumed.remaining,
-            dailyLimit: DAILY_LIMIT_PER_USER,
+            dailyLimit: rlLimit,
             contextVersion,
             contextPresent: !contextEmpty,
         });

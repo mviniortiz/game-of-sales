@@ -4596,6 +4596,28 @@ html.lenis, html.lenis body { height: auto; }
   transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* ── Página full-height do app (Inbox/Pipeline/Pulse/Agenda) ──────────────
+   Desconta o header real do AppLayout (h-14 = 3.5rem). dvh corrige o Safari
+   iOS (100vh assume a toolbar recolhida e corta o composer). Quando o
+   TrialBanner está no DOM (irmão anterior do <main>), desconta os 41px dele
+   via seletor de irmão — some sozinho quando o banner é dispensado. */
+.vz-page-full {
+  height: calc(100vh - 3.5rem);
+}
+@supports (height: 100dvh) {
+  .vz-page-full {
+    height: calc(100dvh - 3.5rem);
+  }
+}
+.vz-trial-banner-root~main .vz-page-full {
+  height: calc(100vh - 3.5rem - 41px);
+}
+@supports (height: 100dvh) {
+  .vz-trial-banner-root~main .vz-page-full {
+    height: calc(100dvh - 3.5rem - 41px);
+  }
+}
+
 /* ── Easter egg da EVA ── */
 @keyframes lp-egg-veil { from { opacity: 0; } to { opacity: 1; } }
 @keyframes lp-egg-card {

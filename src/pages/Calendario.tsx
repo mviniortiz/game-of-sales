@@ -691,7 +691,7 @@ export default function Calendario() {
 
   return (
     <>
-      <div className="flex flex-col h-[calc(100vh-64px)] bg-background text-foreground overflow-hidden">
+      <div className="vz-page-full -mx-3 -my-3 sm:-mx-4 sm:-my-4 md:-mx-6 md:-my-6 flex flex-col bg-background text-foreground overflow-hidden">
 
         {/* ── TOP BAR ────────────────────────────────────────────────── */}
         <div className="flex items-center gap-2 md:gap-3 px-2 md:px-4 py-2 md:py-3 border-b border-border bg-card/80 backdrop-blur flex-shrink-0">

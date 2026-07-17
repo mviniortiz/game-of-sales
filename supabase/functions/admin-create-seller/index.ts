@@ -418,17 +418,34 @@ serve(async (req) => {
       });
     }
 
-    // Enforce do limite de vendedores do plano (fonte de verdade; espelha src/config/planConfig.ts).
-    // Conta todos os profiles da empresa (inclui admin), igual à barra de uso em /configuracoes/faturamento.
+    // Enforce do limite de usuários do plano (espelha src/config/plans.ts:
+    // free=1, pro=5, escala=ilimitado; trial ativo conta como Pro, trial
+    // expirado degrada pra free). Conta todos os profiles da empresa (inclui
+    // admin), igual à barra de uso em /configuracoes/faturamento.
     if (!isSuperAdmin) {
-      const PLAN_MAX_USERS: Record<string, number> = { starter: 2, plus: 10, pro: Infinity };
+      const PLAN_MAX_USERS: Record<string, number> = { free: 1, pro: 5, escala: Infinity };
       const { data: planRow } = await (supabaseAdmin as any)
         .from("companies")
-        .select("plan")
+        .select("plan, subscription_status, trial_ends_at")
         .eq("id", targetCompanyId)
         .single();
-      const plan = (planRow?.plan as string) || "starter";
-      const maxUsers = PLAN_MAX_USERS[plan] ?? 2;
+      // Espelho de resolveEffectivePlan (src/config/plans.ts)
+      const normalizePlan = (raw: string | null | undefined): string => {
+        const v = (raw || "").toLowerCase();
+        if (v === "pro" || v === "plus") return "pro";
+        if (v === "escala" || v === "enterprise") return "escala";
+        return "free";
+      };
+      let plan: string;
+      if (planRow?.subscription_status === "trialing") {
+        const ends = planRow?.trial_ends_at ? new Date(planRow.trial_ends_at).getTime() : NaN;
+        plan = !Number.isNaN(ends) && ends >= Date.now() ? "pro" : "free";
+      } else if (planRow?.subscription_status === "active") {
+        plan = normalizePlan(planRow?.plan);
+      } else {
+        plan = "free";
+      }
+      const maxUsers = PLAN_MAX_USERS[plan] ?? 1;
       if (Number.isFinite(maxUsers)) {
         const { count } = await (supabaseAdmin as any)
           .from("profiles")
@@ -436,7 +453,9 @@ serve(async (req) => {
           .eq("company_id", targetCompanyId);
         if ((count ?? 0) >= maxUsers) {
           return new Response(JSON.stringify({
-            error: `Seu plano ${plan} permite até ${maxUsers} vendedores. Faça upgrade para adicionar mais.`,
+            error: plan === "free"
+              ? `O plano Free tem 1 usuário. Assine o Pro para ter até 5 pessoas no time.`
+              : `Seu plano ${plan} permite até ${maxUsers} usuários. Fale com a gente para um plano maior.`,
             code: "PLAN_LIMIT",
           }), {
             status: 403,

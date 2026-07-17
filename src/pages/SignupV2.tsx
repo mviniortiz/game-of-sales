@@ -12,12 +12,12 @@ import { CloudWaveOrb } from "@/components/landing-v2/CloudWaveOrb";
 // trial de 14 dias ativo (sem cartão) → direto pro app. Trata 2 modos: (a) novo
 // usuário (nome+empresa+email+senha ou Google); (b) usuário que entrou via Google
 // e ainda não tem empresa (pede só o nome da empresa). Rota /criar-conta.
-const PLAN_LABEL: Record<string, string> = { starter: "Starter", plus: "Plus", pro: "Pro" };
-
 const SignupV2 = () => {
     const navigate = useNavigate();
     const [params] = useSearchParams();
-    const plan = (params.get("plan") || "plus").toLowerCase();
+    // Mantido só pra analytics/atribuição de origem: independente do card
+    // clicado, TODO cadastro entra em trial do Pro (14d) e degrada pro Free.
+    const plan = (params.get("plan") || "pro").toLowerCase();
     const { user, profile, companyId, isSuperAdmin, loading: authLoading, signUp, signIn, refreshProfile } = useAuth();
 
     const [nome, setNome] = useState("");
@@ -48,7 +48,9 @@ const SignupV2 = () => {
     const createCompanyWithTrial = async (): Promise<string> => {
         const trialEnds = new Date(Date.now() + 14 * 86400000).toISOString();
         const attribution = getAttribution() || {};
-        const base = { name: empresa.trim(), plan, subscription_status: "trialing", trial_ends_at: trialEnds, ...attribution };
+        // plan: 'pro' fixo — o trial é sempre do Pro; ao expirar, resolveEffectivePlan
+        // degrada a conta pro Free (não existe mais bloqueio de trial expirado).
+        const base = { name: empresa.trim(), plan: "pro", subscription_status: "trialing", trial_ends_at: trialEnds, ...attribution };
         // id gerado no cliente nos DOIS caminhos: dispensa o .select() pós-insert,
         // que dependia de policy de SELECT que o usuário recém-criado não tem
         // (RLS de companies só permite ler a própria empresa DEPOIS do vínculo).
@@ -133,7 +135,6 @@ const SignupV2 = () => {
     };
 
     const busy = loading || authLoading;
-    const planNice = PLAN_LABEL[plan] || "Plus";
 
     // Enquanto a auth resolve (ex.: retorno do OAuth Google), não mostra o
     // formulário de email — evita o flash do form errado antes do ssoMode ligar.
@@ -190,7 +191,7 @@ const SignupV2 = () => {
                                 {ssoMode ? "Quase lá" : "Criar conta"}
                             </h1>
                             <p className="mt-2.5 landing-fade-in-up landing-delay-150" style={{ color: "rgba(255,255,255,0.55)", fontSize: "1rem" }}>
-                                {ssoMode ? "Só falta o nome da sua agência." : `14 dias grátis no plano ${planNice}, sem cartão.`}
+                                {ssoMode ? "Só falta o nome da sua agência." : "14 dias de Pro grátis, sem cartão. Depois sua conta continua no plano gratuito."}
                             </p>
 
                             {!ssoMode && (

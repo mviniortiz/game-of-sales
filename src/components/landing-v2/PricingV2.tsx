@@ -35,7 +35,7 @@ export const PricingV2 = ({ onTrial, onScheduleDemo }: PricingV2Props) => {
                             Preço simples e transparente
                         </h2>
                         <p className="mx-auto mt-4 max-w-md" style={{ fontSize: "1.05rem", lineHeight: 1.55, color: "rgba(5,5,5,0.66)" }}>
-                            Comece com 14 dias grátis, sem cartão. Cresça quando seu time crescer.
+                            Comece grátis, sem cartão e sem prazo. Assine o Pro quando seu time crescer.
                         </p>
                     </div>
                 </Reveal>
@@ -74,10 +74,20 @@ export const PricingV2 = ({ onTrial, onScheduleDemo }: PricingV2Props) => {
                                     </p>
 
                                     <div className="mt-5 flex items-baseline gap-1.5">
-                                        <span className="lp-display" style={{ fontSize: "2.6rem", letterSpacing: "-0.04em", color: "#050505" }}>
-                                            R$ {plan.price}
-                                        </span>
-                                        <span className="text-[14px]" style={{ color: "rgba(5,5,5,0.55)" }}>/mês</span>
+                                        {plan.priceNumber === null ? (
+                                            <span className="lp-display" style={{ fontSize: "2rem", letterSpacing: "-0.03em", color: "#050505" }}>
+                                                Sob medida
+                                            </span>
+                                        ) : (
+                                            <>
+                                                <span className="lp-display" style={{ fontSize: "2.6rem", letterSpacing: "-0.04em", color: "#050505" }}>
+                                                    R$ {plan.price}
+                                                </span>
+                                                <span className="text-[14px]" style={{ color: "rgba(5,5,5,0.55)" }}>
+                                                    {plan.priceNumber === 0 ? "pra sempre" : "/mês"}
+                                                </span>
+                                            </>
+                                        )}
                                     </div>
                                     {plan.extraInfo && (
                                         <p className="lp-mono mt-1.5" style={{ color: "var(--lp-ink-40)", fontSize: 11.5 }}>{plan.extraInfo}</p>
@@ -93,17 +103,24 @@ export const PricingV2 = ({ onTrial, onScheduleDemo }: PricingV2Props) => {
                                     </div>
 
                                     <div className="flex flex-col items-center gap-2.5 pt-7" style={{ marginTop: "auto" }}>
-                                        {isPro ? (
+                                        {plan.priceNumber === null ? (
+                                            // Escala: conversa com o time, sem self-service
+                                            <ButtonV2 onClick={onScheduleDemo} variant="secondary" className="w-full">
+                                                {plan.ctaLabel}
+                                            </ButtonV2>
+                                        ) : isPro ? (
                                             <>
-                                                <ButtonV2 onClick={onScheduleDemo} variant="primary" className="w-full">Falar com especialista</ButtonV2>
-                                                <button type="button" onClick={() => onTrial(slug)} className="text-[13px] underline-offset-4 hover:underline" style={{ color: "var(--lp-ink-55)" }}>
-                                                    ou testar 14 dias grátis
+                                                <ButtonV2 onClick={() => onTrial(slug)} variant="primary" className="w-full">
+                                                    Testar o Pro 14 dias grátis
+                                                </ButtonV2>
+                                                <button type="button" onClick={onScheduleDemo} className="text-[13px] underline-offset-4 hover:underline" style={{ color: "var(--lp-ink-55)" }}>
+                                                    ou agendar uma demo
                                                 </button>
                                             </>
                                         ) : (
                                             <>
-                                                <ButtonV2 onClick={() => onTrial(slug)} variant={plan.popular ? "primary" : "secondary"} className="w-full">
-                                                    Testar 14 dias grátis
+                                                <ButtonV2 onClick={() => onTrial(slug)} variant="secondary" className="w-full">
+                                                    Começar grátis
                                                 </ButtonV2>
                                                 <button type="button" onClick={onScheduleDemo} className="text-[13px] underline-offset-4 hover:underline" style={{ color: "var(--lp-ink-55)" }}>
                                                     Agendar demo

@@ -62,7 +62,7 @@ const EmbedDemo = lazy(() => import("./pages/EmbedDemo"));
 
 const CheckoutRedirect = () => {
   const [params] = useSearchParams();
-  const plan = params.get("plan") || "plus";
+  const plan = params.get("plan") || "pro";
   return <Navigate to={`/criar-conta?plan=${plan}`} replace />;
 };
 

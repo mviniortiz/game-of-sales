@@ -444,9 +444,8 @@ const Inbox = () => {
 
     return (
         <div
-            className="vz-inbox flex w-full overflow-hidden -mx-3 -my-3 sm:-mx-4 sm:-my-4 md:-mx-6 md:-my-6"
+            className="vz-inbox vz-page-full flex w-full overflow-hidden -mx-3 -my-3 sm:-mx-4 sm:-my-4 md:-mx-6 md:-my-6"
             style={{
-                height: "calc(100vh - 3.5rem)",
                 background: "var(--ibx-paper)",
             }}
         >
@@ -548,7 +547,7 @@ const Inbox = () => {
                 é a coluna direita). Mesmo EvaPanel, mesmos props. */}
             {isMobile && (
                 <Drawer open={evaMobileOpen} onOpenChange={setEvaMobileOpen}>
-                    <DrawerContent className="h-[88vh] bg-[var(--ibx-card)]">
+                    <DrawerContent className="h-[88vh] supports-[height:100dvh]:h-[88dvh] bg-[var(--ibx-card)]">
                         {/* Título sr-only: a11y do Radix Drawer (sem isso, warning).
                             O título visível mora no header do próprio EvaPanel. */}
                         <DrawerTitle className="sr-only">Análise da EVA</DrawerTitle>

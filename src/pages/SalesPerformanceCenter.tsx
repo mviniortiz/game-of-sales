@@ -301,7 +301,16 @@ const SalesPerformanceCenter = () => {
                         {isManager ? "Visão da empresa" : "Minha performance"}
                     </span>
                 </div>
-                <p className="text-[13px] text-slate-500 mt-1">Entenda resultado, funil e ritmo do time em tempo real.</p>
+                <p className="text-[13px] text-slate-500 mt-1">
+                    Entenda resultado, funil e ritmo do time em tempo real.
+                    {/* Metas/Ranking saíram do menu principal (erasure 2026-07-17);
+                        seguem descobríveis daqui. */}
+                    <span className="ml-2">
+                        <button onClick={() => navigate("/metas")} className="font-semibold text-[#1556C0] hover:underline">Metas</button>
+                        <span className="mx-1.5 text-slate-300">·</span>
+                        <button onClick={() => navigate("/ranking")} className="font-semibold text-[#1556C0] hover:underline">Ranking</button>
+                    </span>
+                </p>
             </div>
             {periodFilter}
         </div>

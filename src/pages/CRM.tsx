@@ -1095,7 +1095,7 @@ export default function CRM() {
   return (
     <>
       {/* F5P.4f — fundo com gradient sutil pra tirar cinza chapado, sem ruído */}
-      <div className="h-[calc(100vh-64px)] flex flex-col text-foreground bg-gradient-to-b from-background via-background to-slate-50/40 dark:to-card/20 min-w-0 max-w-full overflow-hidden">
+      <div className="vz-page-full -mx-3 -my-3 sm:-mx-4 sm:-my-4 md:-mx-6 md:-my-6 flex flex-col text-foreground bg-gradient-to-b from-background via-background to-slate-50/40 dark:to-card/20 min-w-0 overflow-hidden">
         {/* F5P.4e — Header com Phosphor duotone + toolbar reestruturada.
             Row 1 = título / stats / ações. Row 2 = search à esquerda, controles à direita (sem spacer flex-1 que squeezava o search). */}
         <div className="flex flex-col gap-2.5 px-4 sm:px-6 py-3 sm:py-3.5 border-b border-border bg-card shadow-sm">
@@ -1200,7 +1200,7 @@ export default function CRM() {
                 placeholder="Buscar negociações..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 h-9 rounded-lg border border-input bg-background text-[13px] text-foreground placeholder:text-muted-foreground/70 transition-colors hover:border-border focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/40 focus-visible:ring-1 focus-visible:ring-emerald-500/40 dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/15"
+                className="w-full pl-9 h-9 rounded-lg border border-input bg-background text-base md:text-[13px] text-foreground placeholder:text-muted-foreground/70 transition-colors hover:border-border focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/40 focus-visible:ring-1 focus-visible:ring-emerald-500/40 dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/15"
               />
             </div>
 

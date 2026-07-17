@@ -199,16 +199,26 @@ serve(async (req) => {
     if (!isSuperAdmin) {
       const { data: company } = await (adminSupabase as any)
         .from("companies")
-        .select("plan")
+        .select("plan, subscription_status, trial_ends_at")
         .eq("id", (deal as any).company_id)
         .single();
 
-      const companyPlan = String(company?.plan || "starter").toLowerCase();
-      if (!["plus", "pro"].includes(companyPlan)) {
+      // Plano efetivo (espelha src/config/plans.ts): trial ativo = Pro;
+      // ligações são exclusivas do Pro/Escala (Free não tem).
+      const rawPlan = String(company?.plan || "free").toLowerCase();
+      let companyPlan = "free";
+      if (company?.subscription_status === "trialing") {
+        const ends = company?.trial_ends_at ? new Date(company.trial_ends_at).getTime() : NaN;
+        companyPlan = !Number.isNaN(ends) && ends >= Date.now() ? "pro" : "free";
+      } else if (company?.subscription_status === "active") {
+        companyPlan = ["pro", "plus"].includes(rawPlan) ? "pro"
+          : ["escala", "enterprise"].includes(rawPlan) ? "escala" : "free";
+      }
+      if (!["pro", "escala"].includes(companyPlan)) {
         return new Response(JSON.stringify({
-          error: "Ligações disponíveis apenas nos planos Plus e Pro",
+          error: "Ligações disponíveis apenas no plano Pro",
           code: "PLAN_UPGRADE_REQUIRED",
-          required_plan: "plus",
+          required_plan: "pro",
           current_plan: companyPlan,
         }), {
           status: 403,

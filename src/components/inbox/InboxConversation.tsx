@@ -1263,7 +1263,7 @@ function MediaPreviewBar({
                             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); onSend(); } }}
                             placeholder="Adicione uma legenda…"
                             autoFocus
-                            className="w-full bg-white outline-none text-[13px] px-2.5 py-2 rounded-lg"
+                            className="w-full bg-white outline-none text-base md:text-[13px] px-2.5 py-2 rounded-lg"
                             style={{ color: "#0B1220", border: "1px solid var(--ibx-line)" }}
                         />
                     </div>
@@ -1409,7 +1409,7 @@ function Composer({
                     onBlur={() => setFocused(false)}
                     placeholder="Responder como humano…"
                     rows={1}
-                    className="flex-1 bg-transparent outline-none text-[13.5px] py-1.5 px-1 resize-none max-h-32"
+                    className="flex-1 bg-transparent outline-none text-base md:text-[13.5px] py-1.5 px-1 resize-none max-h-32"
                     style={{ color: "#0B1220", lineHeight: 1.45 }}
                 />
 

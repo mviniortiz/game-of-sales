@@ -1876,7 +1876,7 @@ function SuggestedReply({
                     value={edited}
                     onChange={(e) => setEdited(e.target.value)}
                     autoFocus
-                    className="w-full text-[12.5px] px-3.5 py-3 outline-none resize-y min-h-[88px]"
+                    className="w-full text-base md:text-[12.5px] px-3.5 py-3 outline-none resize-y min-h-[88px]"
                     style={{
                         background: "#FFFFFF",
                         border: "1px solid rgba(124,58,237,0.35)",

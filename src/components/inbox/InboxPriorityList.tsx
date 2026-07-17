@@ -239,13 +239,13 @@ export function InboxPriorityList({
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         placeholder="Buscar lead ou telefone…"
+                        className="text-base md:text-[12px]"
                         style={{
                             width: "100%",
                             height: 34,
                             paddingLeft: 32,
                             paddingRight: 12,
                             borderRadius: 8,
-                            fontSize: 12,
                             outline: "none",
                             background: "var(--ibx-sunken)",
                             border: "1px solid var(--ibx-line)",

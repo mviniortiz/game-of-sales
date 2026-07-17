@@ -1,6 +1,8 @@
 // Analytics & Conversion Tracking
 // Supports Google Analytics 4 (GA4) + Google Ads conversions
 
+import { getAttribution } from "./attribution";
+
 const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID;
 const GADS_CONVERSION_ID = import.meta.env.VITE_GADS_CONVERSION_ID || "AW-18055201052";
 const GADS_CONVERSION_LABEL = "1oljCLaqtJMcEJyCsqFD";
@@ -111,6 +113,36 @@ export function initAnalytics() {
 
   // Google Ads (AW-...) já tem config feito pelo inline script do index.html.
   // Não reconfigurar aqui para evitar double-config que pode suprimir conversions.
+
+  // Marca a SESSÃO com a hipótese de consciência (não só a conversão), pra dar
+  // pra segmentar conversão por estágio mental no GA4/Clarity. Sem isso a média
+  // esconde o erro (página converte no agregado e desperdiça tráfego alto-intenção).
+  reportAwareness();
+}
+
+// Envia canal + hipótese de consciência pro GA4 (user_property + evento) e Clarity
+// (tags filtráveis). Lê o first-touch já capturado no bootstrap (getAttribution).
+export function reportAwareness() {
+  try {
+    const a = getAttribution();
+    if (!a) return;
+    const params = {
+      traffic_source: a.traffic_source || "unknown",
+      awareness_hypothesis: a.awareness_hypothesis || "unknown",
+      utm_campaign: a.utm_campaign || "(none)",
+      query_intent: a.query_intent || "(none)",
+    };
+    // user_property: segmenta relatórios inteiros por consciência, não só eventos.
+    window.gtag?.("set", "user_properties", {
+      awareness_hypothesis: params.awareness_hypothesis,
+      traffic_source: params.traffic_source,
+    });
+    trackEvent("awareness_detected", params);
+    claritySet("awareness", params.awareness_hypothesis);
+    claritySet("traffic_source", params.traffic_source);
+  } catch {
+    // analytics nunca pode quebrar o app
+  }
 }
 
 // Track a custom event — sem send_to, vai pra TODOS destinos configurados

@@ -6,10 +6,10 @@ import { ButtonV2 } from "./ButtonV2";
 import {
     classifyEmail,
     extractFileText,
-    captureAttribution,
     ACCEPTED_FILE,
     MAX_FILE_BYTES,
 } from "./agentBuilderUtils";
+import { getAttribution } from "@/lib/attribution";
 import evaFigure from "@/assets/landing-v2/eva.webp";
 
 // LP.6 (v2) — modal do Agent Builder (estilo Handhold). Fluxo: site (vem do
@@ -163,7 +163,7 @@ export const AgentBuilderModal = ({ open, onClose, url, onScheduleDemo }: AgentB
                     email: email.trim(),
                     context: useContext ? fileText : "",
                     used_context: useContext,
-                    attribution: captureAttribution(),
+                    attribution: getAttribution() ?? {},
                 },
             });
             if (error || !data?.ok) {

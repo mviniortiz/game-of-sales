@@ -36,9 +36,9 @@ export const TrialBanner = () => {
     const message =
         stage === "critical"
             ? daysRemaining <= 0
-                ? "Seu teste termina hoje"
-                : "Último dia de teste grátis"
-            : `Teste grátis · ${daysRemaining} ${daysRemaining === 1 ? "dia restante" : "dias restantes"}`;
+                ? "Seu Pro grátis termina hoje, depois sua conta continua no Free"
+                : "Último dia de Pro grátis"
+            : `Pro grátis · ${daysRemaining} ${daysRemaining === 1 ? "dia restante" : "dias restantes"}`;
 
     return (
         <AnimatePresence>
@@ -46,7 +46,9 @@ export const TrialBanner = () => {
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
-                className="relative overflow-hidden"
+                // vz-trial-banner-root: as páginas full-height (.vz-page-full)
+                // descontam os 41px do banner via seletor de irmão no index.css.
+                className="vz-trial-banner-root relative overflow-hidden"
                 style={{ background: s.barBg, borderBottom: `1px solid ${s.border}` }}
             >
                 <div className="px-4 sm:px-6 py-2 flex items-center gap-3">

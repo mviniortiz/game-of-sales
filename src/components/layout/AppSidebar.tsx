@@ -18,10 +18,8 @@ import {
   ChatCircleText,
   Kanban as KanbanIcon,
   CalendarBlank,
-  Sparkle as SparkleIcon,
+  Brain as BrainIcon,
   ChartLineUp,
-  Target,
-  Trophy,
   GearSix,
   ShieldCheck,
   Lifebuoy as LifeBuoyIcon,
@@ -89,15 +87,16 @@ type NavItem = {
   badge?: "rotting";
 };
 
+// Erasure 2026-07-17: menu enxuto no caminho da promessa (WhatsApp → EVA →
+// aprovar → pipeline). Metas e Ranking saíram do 1º nível (uso externo zero,
+// herança do "CRM gamificado"); seguem acessíveis via Performance e busca.
 const mainNavItems: NavItem[] = [
   { title: "Início", url: "/inicio", icon: House },
   { title: "Inbox", url: "/inbox", icon: ChatCircleText },
   { title: "Pipeline", url: "/pipeline", icon: KanbanIcon, badge: "rotting" },
   { title: "Agenda", url: "/agenda", icon: CalendarBlank },
-  { title: "EVA Studio", url: "/eva-studio", icon: SparkleIcon, adminOnly: true, feature: "eva" },
+  { title: "EVA Studio", url: "/eva-studio", icon: BrainIcon, adminOnly: true, feature: "eva" },
   { title: "Performance", url: "/performance", icon: ChartLineUp },
-  { title: "Metas", url: "/metas", icon: Target },
-  { title: "Ranking", url: "/ranking", icon: Trophy },
   { title: "Configurações", url: "/configuracoes", icon: GearSix },
 ];
 
@@ -591,7 +590,7 @@ export function AppSidebar() {
                       size={11}
                       weight="fill"
                       className={
-                        currentPlan === "pro" || currentPlan === "plus"
+                        currentPlan !== "free"
                           ? "text-[#2563EB]"
                           : "text-[#94A3B8]"
                       }

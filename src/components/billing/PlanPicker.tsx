@@ -1,27 +1,30 @@
-// Seleção de plano + checkout embutido, compartilhada entre a tela de trial
-// expirado (UpgradeLock) e o /upgrade. Mostra os planos do config e, ao escolher,
-// abre o checkout (PlanCheckoutForm) na própria tela. Aceita QUALQUER plano
-// (inclusive o atual) — é o que conserta o bug do "só plano superior".
+// Seleção de plano + checkout embutido, usada no /upgrade e no Faturamento.
+// Modelo 2026-07: Free (sem cobrança), Pro (checkout Mercado Pago embutido)
+// e Escala (conversa com o time via WhatsApp — sem preço público).
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Star, Crown, Rocket, ArrowRight, ArrowLeft, type LucideIcon } from "lucide-react";
+import { Check, Star, Rocket, Building2, ArrowRight, ArrowLeft, MessageCircle, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { trackEvent, FUNNEL_EVENTS } from "@/lib/analytics";
-import { PLANS, formatPrice } from "@/config/plans";
+import { PLANS, PLAN_ORDER, formatPrice, type PlanId } from "@/config/plans";
+import { whatsappUrl } from "@/config/contact";
 import { PlanCheckoutForm } from "@/components/billing/PlanCheckoutForm";
 
-const PLAN_ICONS: Record<string, LucideIcon> = { starter: Star, plus: Crown, pro: Rocket };
-const PLAN_ORDER = ["starter", "plus", "pro"] as const;
+const PLAN_ICONS: Record<PlanId, LucideIcon> = { free: Star, pro: Rocket, escala: Building2 };
+
+const ESCALA_WHATSAPP_MESSAGE =
+    "Olá! Tenho um time com mais de 5 pessoas e quero conversar sobre o plano Escala do Vyzon.";
 
 interface PlanPickerProps {
     /** Chamado após o pagamento ser aprovado. */
     onPaid: () => void;
-    /** Plano já em uso (marca como atual, mas continua assinável). */
+    /** Plano já em uso (marca como atual). */
     currentPlan?: string;
 }
 
 export function PlanPicker({ onPaid, currentPlan }: PlanPickerProps) {
-    const [checkoutPlan, setCheckoutPlan] = useState<string | null>(null);
+    const [checkoutOpen, setCheckoutOpen] = useState(false);
+    const proPlan = PLANS.pro;
 
     return (
         <>
@@ -31,8 +34,6 @@ export function PlanPicker({ onPaid, currentPlan }: PlanPickerProps) {
                     const Icon = PLAN_ICONS[id];
                     const popular = !!plan.highlight;
                     const isCurrent = currentPlan === id;
-                    const sellers =
-                        plan.limits.sellers === 1 ? "1 vendedor" : `Até ${plan.limits.sellers} vendedores`;
 
                     return (
                         <motion.div
@@ -84,9 +85,15 @@ export function PlanPicker({ onPaid, currentPlan }: PlanPickerProps) {
                                 <span className="text-3xl font-bold tracking-tight" style={{ color: "#0B1220" }}>
                                     {formatPrice(plan.monthlyPrice)}
                                 </span>
-                                <span className="text-sm" style={{ color: "#94A3B8" }}>/mês</span>
+                                {!!plan.monthlyPrice && (
+                                    <span className="text-sm" style={{ color: "#94A3B8" }}>/mês</span>
+                                )}
                             </div>
-                            <p className="text-xs font-semibold mb-5" style={{ color: "#2563EB" }}>{sellers}</p>
+                            <p className="text-xs font-semibold mb-5" style={{ color: "#2563EB" }}>
+                                {Number.isFinite(plan.limits.users)
+                                    ? plan.limits.users === 1 ? "1 usuário" : `Até ${plan.limits.users} usuários`
+                                    : "Time do seu tamanho"}
+                            </p>
 
                             <ul className="space-y-2.5 mb-6 flex-1">
                                 {plan.features.map((feature) => (
@@ -99,80 +106,96 @@ export function PlanPicker({ onPaid, currentPlan }: PlanPickerProps) {
                                 ))}
                             </ul>
 
-                            <Button
-                                onClick={() => {
-                                    trackEvent(FUNNEL_EVENTS.UPGRADE_CLICK, { plan: id });
-                                    setCheckoutPlan(id);
-                                }}
-                                className="w-full h-11 font-semibold text-[14px] rounded-xl border-none text-white mt-auto"
-                                style={popular ? { background: "linear-gradient(135deg, #2563EB, #1D4ED8)" } : { background: "#0B1220" }}
-                            >
-                                Assinar {plan.name}
-                                <ArrowRight className="ml-1.5 h-4 w-4" />
-                            </Button>
+                            {id === "pro" && (
+                                <Button
+                                    onClick={() => {
+                                        trackEvent(FUNNEL_EVENTS.UPGRADE_CLICK, { plan: id });
+                                        setCheckoutOpen(true);
+                                    }}
+                                    disabled={isCurrent}
+                                    className="w-full h-11 font-semibold text-[14px] rounded-xl border-none text-white mt-auto"
+                                    style={{ background: "linear-gradient(135deg, #2563EB, #1D4ED8)" }}
+                                >
+                                    {isCurrent ? "Seu plano atual" : "Assinar Pro"}
+                                    {!isCurrent && <ArrowRight className="ml-1.5 h-4 w-4" />}
+                                </Button>
+                            )}
+                            {id === "free" && (
+                                <div
+                                    className="w-full h-11 flex items-center justify-center font-semibold text-[13px] rounded-xl mt-auto"
+                                    style={{ background: "#F1F5F9", color: "#64748B" }}
+                                >
+                                    {isCurrent ? "Seu plano atual" : "Incluído pra sempre"}
+                                </div>
+                            )}
+                            {id === "escala" && (
+                                <Button
+                                    onClick={() => {
+                                        trackEvent(FUNNEL_EVENTS.UPGRADE_CLICK, { plan: id });
+                                        window.open(whatsappUrl(ESCALA_WHATSAPP_MESSAGE), "_blank", "noopener,noreferrer");
+                                    }}
+                                    className="w-full h-11 font-semibold text-[14px] rounded-xl border-none text-white mt-auto"
+                                    style={{ background: "#0B1220" }}
+                                >
+                                    <MessageCircle className="mr-1.5 h-4 w-4" />
+                                    Falar com a gente
+                                </Button>
+                            )}
                         </motion.div>
                     );
                 })}
             </div>
 
             <AnimatePresence>
-                {checkoutPlan && (
+                {checkoutOpen && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         className="fixed inset-0 z-50 flex items-center justify-center p-4"
                         style={{ background: "rgba(11,18,32,0.45)" }}
-                        onClick={() => setCheckoutPlan(null)}
+                        onClick={() => setCheckoutOpen(false)}
                     >
                         <motion.div
                             initial={{ opacity: 0, y: 16, scale: 0.98 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 16, scale: 0.98 }}
                             transition={{ type: "spring", stiffness: 260, damping: 24 }}
-                            className="w-full max-w-md rounded-2xl bg-white p-6 max-h-[92vh] overflow-y-auto"
+                            className="w-full max-w-md rounded-2xl bg-white p-6 max-h-[92dvh] overflow-y-auto"
                             style={{ boxShadow: "0 24px 64px -24px rgba(15,23,42,0.4)" }}
                             onClick={(e) => e.stopPropagation()}
                         >
-                            {(() => {
-                                const plan = PLANS[checkoutPlan];
-                                const Icon = PLAN_ICONS[checkoutPlan];
-                                return (
-                                    <>
-                                        <button
-                                            type="button"
-                                            onClick={() => setCheckoutPlan(null)}
-                                            className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold mb-4"
-                                            style={{ color: "#64748B" }}
-                                        >
-                                            <ArrowLeft className="h-3.5 w-3.5" />
-                                            Voltar aos planos
-                                        </button>
+                            <button
+                                type="button"
+                                onClick={() => setCheckoutOpen(false)}
+                                className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold mb-4"
+                                style={{ color: "#64748B" }}
+                            >
+                                <ArrowLeft className="h-3.5 w-3.5" />
+                                Voltar aos planos
+                            </button>
 
-                                        <div className="flex items-center gap-3 mb-5 pb-5" style={{ borderBottom: "1px solid #E6EDF5" }}>
-                                            <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(37,99,235,0.1)" }}>
-                                                <Icon className="h-5 w-5" style={{ color: "#2563EB" }} />
-                                            </div>
-                                            <div className="flex-1">
-                                                <p className="text-[13px]" style={{ color: "#64748B" }}>Assinando o plano</p>
-                                                <p className="text-base font-bold" style={{ color: "#0B1220" }}>{plan.name}</p>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="text-xl font-bold" style={{ color: "#0B1220" }}>{formatPrice(plan.monthlyPrice)}</p>
-                                                <p className="text-[11px]" style={{ color: "#94A3B8" }}>/mês</p>
-                                            </div>
-                                        </div>
+                            <div className="flex items-center gap-3 mb-5 pb-5" style={{ borderBottom: "1px solid #E6EDF5" }}>
+                                <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(37,99,235,0.1)" }}>
+                                    <Rocket className="h-5 w-5" style={{ color: "#2563EB" }} />
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-[13px]" style={{ color: "#64748B" }}>Assinando o plano</p>
+                                    <p className="text-base font-bold" style={{ color: "#0B1220" }}>{proPlan.name}</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-xl font-bold" style={{ color: "#0B1220" }}>{formatPrice(proPlan.monthlyPrice)}</p>
+                                    <p className="text-[11px]" style={{ color: "#94A3B8" }}>/mês</p>
+                                </div>
+                            </div>
 
-                                        <PlanCheckoutForm
-                                            planId={checkoutPlan}
-                                            billingCycle="monthly"
-                                            upgrade={!!currentPlan && currentPlan !== checkoutPlan}
-                                            submitLabel={`Assinar ${plan.name} · ${formatPrice(plan.monthlyPrice)}/mês`}
-                                            onSuccess={onPaid}
-                                        />
-                                    </>
-                                );
-                            })()}
+                            <PlanCheckoutForm
+                                planId="pro"
+                                billingCycle="monthly"
+                                upgrade={!!currentPlan && currentPlan !== "pro"}
+                                submitLabel={`Assinar Pro · ${formatPrice(proPlan.monthlyPrice)}/mês`}
+                                onSuccess={onPaid}
+                            />
                         </motion.div>
                     </motion.div>
                 )}

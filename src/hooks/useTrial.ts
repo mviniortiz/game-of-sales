@@ -35,7 +35,7 @@ export const useTrial = (): TrialInfo => {
                 daysRemaining: 0,
                 isTrialActive: false,
                 isExpired: false,
-                planName: 'Starter',
+                planName: 'Free',
                 subscriptionStatus: 'active' as const,
                 trialEndsAt: null,
             };
@@ -55,16 +55,17 @@ export const useTrial = (): TrialInfo => {
         const isTrialActive = subscriptionStatus === 'trialing' && daysRemaining >= 0;
         const isExpired = subscriptionStatus === 'trialing' && daysRemaining < 0;
 
-        // Determine plan display name
+        // Determine plan display name. Trial expirado NÃO bloqueia mais o app:
+        // o plano efetivo degrada pra Free (ver resolveEffectivePlan).
         let planName: string;
         if (isTrialActive) {
             planName = 'Pro (Trial)';
         } else if (currentPlan === 'pro') {
             planName = 'Pro';
-        } else if (currentPlan === 'plus') {
-            planName = 'Plus';
+        } else if (currentPlan === 'escala') {
+            planName = 'Escala';
         } else {
-            planName = 'Starter';
+            planName = 'Free';
         }
 
         return {

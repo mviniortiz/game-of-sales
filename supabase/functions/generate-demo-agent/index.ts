@@ -249,6 +249,9 @@ serve(async (req) => {
                 fbclid: att.fbclid ?? null,
                 referrer: att.referrer ?? null,
                 landing_page: att.landing_page ?? null,
+                traffic_source: att.traffic_source ?? null,
+                awareness_hypothesis: att.awareness_hypothesis ?? null,
+                query_intent: att.query_intent ?? null,
             });
         } catch (e) {
             console.error("[generate-demo-agent] lead insert failed:", e);

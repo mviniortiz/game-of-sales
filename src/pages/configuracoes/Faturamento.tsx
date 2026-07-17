@@ -10,29 +10,17 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { PLAN_FEATURES, PLANS_INFO, PlanType } from "@/config/planConfig";
+import { PLANS, PLAN_ORDER, formatPrice } from "@/config/plans";
+import { whatsappUrl } from "@/config/contact";
 import { CancelSubscriptionDialog } from "@/components/configuracoes/CancelSubscriptionDialog";
 import { normalizeSubscriptionStatus } from "@/lib/utils";
 
-const PLAN_DETAILS: Record<PlanType, {
-  icon: React.ComponentType<any>;
-  price: string;
-  features: string[];
-}> = {
-  starter: {
-    icon: Star,
-    price: "R$ 147/mês",
-    features: ["2 vendedores", "10 produtos", "Dashboard + CRM", "Ranking + Gamificação"],
-  },
-  plus: {
-    icon: Rocket,
-    price: "R$ 397/mês",
-    features: ["10 vendedores", "50 produtos", "Eva (30/dia)", "Tudo do Starter"],
-  },
-  pro: {
-    icon: Crown,
-    price: "R$ 797/mês",
-    features: ["Vendedores ilimitados", "Produtos ilimitados", "Eva ilimitada", "Tudo do Plus"],
-  },
+// Ícones por plano — os dados (preço, features, limites) vêm da fonte única
+// em src/config/plans.ts, nada de lista hardcoded aqui.
+const PLAN_ICONS: Record<PlanType, React.ComponentType<any>> = {
+  free: Star,
+  pro: Rocket,
+  escala: Crown,
 };
 
 interface Subscription {
@@ -130,16 +118,16 @@ export default function Faturamento() {
     );
   }
 
-  const PlanIcon = PLAN_DETAILS[currentPlan].icon;
+  const PlanIcon = PLAN_ICONS[currentPlan];
   const status = subscription?.status || "active";
-  const isTrialing = status === "trialing";
-  const isCancelled = status === "cancelled" || !!subscription?.cancelled_at;
-  const planOrder: PlanType[] = ["starter", "plus", "pro"];
-  const currentIndex = planOrder.indexOf(currentPlan);
-
   const daysLeft = subscription?.trial_ends_at
     ? Math.max(0, Math.ceil((new Date(subscription.trial_ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
     : null;
+  // Trial expirado não é mais "trialing" pra UI: a conta degradou pro Free.
+  const isTrialing = status === "trialing" && (daysLeft ?? 0) > 0;
+  const isCancelled = status === "cancelled" || !!subscription?.cancelled_at;
+  const currentIndex = PLAN_ORDER.indexOf(currentPlan);
+  const currentPlanData = PLANS[currentPlan];
 
   const endsAtFormatted = subscription?.ends_at
     ? new Date(subscription.ends_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })
@@ -181,13 +169,13 @@ export default function Faturamento() {
           <div className="p-6 space-y-4">
             <div className="flex items-center gap-3">
               <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${
-                currentPlan === "pro" ? "bg-[rgba(124,58,237,0.12)]" :
-                currentPlan === "plus" ? "bg-[rgba(37,99,235,0.12)]" :
+                currentPlan === "pro" ? "bg-[rgba(37,99,235,0.12)]" :
+                currentPlan === "escala" ? "bg-[rgba(11,18,32,0.08)]" :
                 "bg-[#F1F5F9]"
               }`}>
                 <PlanIcon className={`h-5 w-5 ${
-                  currentPlan === "pro" ? "text-[#7C3AED]" :
-                  currentPlan === "plus" ? "text-[#2563EB]" :
+                  currentPlan === "pro" ? "text-[#2563EB]" :
+                  currentPlan === "escala" ? "text-[#0B1220]" :
                   "text-[#64748B]"
                 }`} />
               </div>
@@ -204,15 +192,19 @@ export default function Faturamento() {
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {PLAN_DETAILS[currentPlan].price}
+                  {isTrialing
+                    ? "Trial do Pro"
+                    : currentPlanData.monthlyPrice
+                      ? `${formatPrice(currentPlanData.monthlyPrice)}/mês`
+                      : formatPrice(currentPlanData.monthlyPrice)}
                   {isTrialing && daysLeft !== null && (
-                    <span className="text-amber-400 font-medium"> · {daysLeft}d restantes no trial</span>
+                    <span className="text-amber-400 font-medium"> · {daysLeft}d restantes, depois sua conta continua no Free</span>
                   )}
                 </p>
               </div>
             </div>
             <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-              {PLAN_DETAILS[currentPlan].features.map((f, i) => (
+              {currentPlanData.features.map((f, i) => (
                 <span key={i} className="text-[11px] text-muted-foreground flex items-center gap-1.5">
                   <Check className="h-3 w-3 text-emerald-500/70" />{f}
                 </span>
@@ -258,31 +250,42 @@ export default function Faturamento() {
       </div>
 
       {/* Upgrade options */}
-      {currentIndex < planOrder.length - 1 && !isCancelled && (
+      {currentIndex < PLAN_ORDER.length - 1 && !isCancelled && (
         <div className="rounded-2xl border border-[#E6EDF5] bg-white shadow-[0_1px_2px_rgba(11,18,32,0.04)] overflow-hidden">
           <div className="px-5 py-3.5 border-b border-[#E6EDF5]">
             <h2 className="text-[13px] font-semibold text-foreground">Fazer upgrade</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">Destrava mais vendedores, Eva e integrações</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Mais usuários no time e EVA com limite maior</p>
           </div>
           <div className="p-3 space-y-2">
-            {planOrder.slice(currentIndex + 1).map((plan) => {
-              const details = PLAN_DETAILS[plan];
+            {PLAN_ORDER.slice(currentIndex + 1).map((plan) => {
+              const planData = PLANS[plan];
               const info = PLANS_INFO[plan];
-              const Icon = details.icon;
+              const Icon = PLAN_ICONS[plan];
+              const priceLabel = planData.monthlyPrice
+                ? `${formatPrice(planData.monthlyPrice)}/mês`
+                : "Fale com a gente";
               return (
                 <button
                   key={plan}
-                  onClick={() => navigate(`/upgrade?plan=${plan}`)}
+                  onClick={() =>
+                    plan === "escala"
+                      ? window.open(
+                          whatsappUrl("Olá! Quero conversar sobre o plano Escala do Vyzon."),
+                          "_blank",
+                          "noopener,noreferrer",
+                        )
+                      : navigate(`/upgrade?plan=${plan}`)
+                  }
                   className="w-full flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/40 hover:border-border transition-all text-left group"
                 >
                   <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
-                    plan === "plus" ? "bg-[rgba(37,99,235,0.12)]" : "bg-[rgba(124,58,237,0.12)]"
+                    plan === "pro" ? "bg-[rgba(37,99,235,0.12)]" : "bg-[rgba(11,18,32,0.08)]"
                   }`}>
-                    <Icon className={`h-4 w-4 ${plan === "plus" ? "text-[#2563EB]" : "text-[#7C3AED]"}`} />
+                    <Icon className={`h-4 w-4 ${plan === "pro" ? "text-[#2563EB]" : "text-[#0B1220]"}`} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-foreground">{info.label}</p>
-                    <p className="text-xs text-muted-foreground">{details.price} · {details.features[0]}</p>
+                    <p className="text-xs text-muted-foreground">{priceLabel} · {planData.features[0]}</p>
                   </div>
                   <ArrowRight className="h-3.5 w-3.5 text-muted-foreground group-hover:translate-x-0.5 group-hover:text-foreground transition-all shrink-0" />
                 </button>

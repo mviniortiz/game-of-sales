@@ -158,16 +158,23 @@ modo prospecção só conversa com a allowlist; tudo fora é descartado no webho
 (`evolution-message-webhook`), protegendo a vida pessoal. Envio é
 **aprovar-e-enviar**. `validateChatOwnership` é fail-CLOSED.
 
-## Pricing (verificado em `src/data/landing/pricing.ts`)
+## Pricing (fonte única `src/config/plans.ts`; landing espelha em `src/data/landing/pricing.ts`)
 
-3 planos. **Verificar o arquivo antes de citar valores em copy** — eles mudam:
+Modelo 2026-07-16 (Free + 1 pago + contato). **Verificar os arquivos antes de
+citar valores em copy** — eles mudam:
 
-- **Starter** — R$ 147/mês
-- **Plus** — R$ 397/mês (popular)
-- **Pro** — R$ 797/mês ("Falar com especialista" → booking externo)
+- **Free** — grátis pra sempre (1 usuário, 1 WhatsApp, EVA 10 análises/dia,
+  10 produtos, sem ligações)
+- **Pro** — R$ 397/mês (popular; até 5 usuários, EVA 50/dia por usuário,
+  ligações com transcrição)
+- **Escala** — sem preço público ("Falar com a gente" → WhatsApp de suporte
+  em `src/config/contact.ts`)
 
-O campo `checkoutUrl` (link direto de checkout do Mercado Pago) ainda existe
-em `pricing.ts`, mas não é mais usado por nenhum CTA. Não confiar nele.
+Trial: todo cadastro entra com 14 dias de Pro sem cartão; ao expirar a conta
+DEGRADA pro Free em runtime (`resolveEffectivePlan`) — não existe mais tela de
+bloqueio de trial. Limites são espelhados hardcoded nas edges
+`admin-create-seller`, `whatsapp-copilot`, `deal-call-initiate` e
+`deal-call-generate-insights`: mudou limite em plans.ts, redeploya as edges.
 
 ### Fluxo de cadastro e checkout (verificado em auditoria 2026-07-13)
 

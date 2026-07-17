@@ -73,7 +73,7 @@ const ROWS: readonly Row[] = [
     {
         icon: DollarSign,
         feature: "Pricing em R$ (plano inicial)",
-        vyzon: { level: "yes", text: "R$ 147/mês" },
+        vyzon: { level: "yes", text: "Grátis pra começar" },
         kommo: { level: "partial", text: "US$ 25/usuário*" },
         rdstation: { level: "partial", text: "R$ 1.349 + carteira*" },
         pipedrive: { level: "partial", text: "US$ 14/usuário*" },

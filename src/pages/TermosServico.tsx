@@ -166,7 +166,7 @@ const TermosServico = () => {
           <Section number="05" icon={CreditCard} title="Planos e Pagamentos">
             <SubHeading>5.1 Planos Disponíveis</SubHeading>
             <p>
-              A Plataforma oferece diferentes planos (Starter, Plus, Pro) com funcionalidades
+              A Plataforma oferece diferentes planos (Free, Pro, Escala) com funcionalidades
               específicas para cada nível. Os detalhes e preços de cada plano estão disponíveis
               na página de planos.
             </p>

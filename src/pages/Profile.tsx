@@ -13,13 +13,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import {
-  Loader2, Lock, Eye, EyeOff, Sparkles, Crown, Zap, Check,
+  Loader2, Lock, Eye, EyeOff, Star, Rocket, Crown, Check,
   ArrowRight, Users, Package, Bot, CreditCard, User, Shield, ShieldOff,
   Building2, Upload, TrendingUp, Plug, ChevronRight, BarChart3,
   Kanban, UserPlus
 } from "lucide-react";
 import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import { PLAN_FEATURES, PLANS_INFO, PlanType } from "@/config/planConfig";
+import { PLANS, PLAN_ORDER, formatPrice } from "@/config/plans";
 import { useNavigate } from "react-router-dom";
 
 // ─── Types ─────────────────────────────────────────────────────────
@@ -48,27 +49,18 @@ interface IntegrationStatus {
 }
 
 // ─── Plan Details ──────────────────────────────────────────────────
+// Dados (preço, features, limites) vêm da fonte única em src/config/plans.ts;
+// aqui só o ícone por plano.
 
-const PLAN_DETAILS: Record<PlanType, {
-  icon: React.ComponentType<any>;
-  price: string;
-  features: string[];
-}> = {
-  starter: {
-    icon: Zap,
-    price: "R$ 147/mês",
-    features: ["2 vendedores", "10 produtos", "Dashboard + CRM", "Ranking + Gamificação"],
-  },
-  plus: {
-    icon: Sparkles,
-    price: "R$ 297/mês",
-    features: ["10 vendedores", "50 produtos", "Eva (30/dia)", "Tudo do Starter"],
-  },
-  pro: {
-    icon: Crown,
-    price: "R$ 797/mês",
-    features: ["Vendedores ilimitados", "Produtos ilimitados", "Eva ilimitada", "Tudo do Plus"],
-  },
+const PLAN_ICONS: Record<PlanType, React.ComponentType<any>> = {
+  free: Star,
+  pro: Rocket,
+  escala: Crown,
+};
+
+const planPriceLabel = (plan: PlanType): string => {
+  const price = PLANS[plan].monthlyPrice;
+  return price ? `${formatPrice(price)}/mês` : formatPrice(price);
 };
 
 // ─── Section wrapper ───────────────────────────────────────────────
@@ -392,9 +384,8 @@ export default function Profile() {
     return `${days}d atrás`;
   };
 
-  const planOrder: PlanType[] = ["starter", "plus", "pro"];
-  const currentIndex = planOrder.indexOf(currentPlan);
-  const PlanIcon = PLAN_DETAILS[currentPlan].icon;
+  const currentIndex = PLAN_ORDER.indexOf(currentPlan);
+  const PlanIcon = PLAN_ICONS[currentPlan];
 
   const statusLabels: Record<string, string> = {
     active: "Ativo",
@@ -434,8 +425,8 @@ export default function Profile() {
             </span>
           )}
           <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${
-            currentPlan === "pro" ? "bg-emerald-500/10 text-emerald-400" :
-            currentPlan === "plus" ? "bg-blue-500/10 text-blue-400" :
+            currentPlan === "escala" ? "bg-emerald-500/10 text-emerald-400" :
+            currentPlan === "pro" ? "bg-blue-500/10 text-blue-400" :
             "bg-zinc-500/10 text-zinc-400"
           }`}>
             <PlanIcon className="h-3.5 w-3.5" />
@@ -459,20 +450,20 @@ export default function Profile() {
             <div className="p-5 space-y-3">
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                  currentPlan === "pro" ? "bg-emerald-500/15" :
-                  currentPlan === "plus" ? "bg-blue-500/15" :
+                  currentPlan === "escala" ? "bg-emerald-500/15" :
+                  currentPlan === "pro" ? "bg-blue-500/15" :
                   "bg-zinc-500/15"
                 }`}>
                   <PlanIcon className={`h-5 w-5 ${
-                    currentPlan === "pro" ? "text-emerald-400" :
-                    currentPlan === "plus" ? "text-blue-400" :
+                    currentPlan === "escala" ? "text-emerald-400" :
+                    currentPlan === "pro" ? "text-blue-400" :
                     "text-zinc-400"
                   }`} />
                 </div>
                 <div>
                   <p className="text-sm font-bold text-foreground">Plano {planInfo.label}</p>
                   <p className="text-xs text-muted-foreground">
-                    {PLAN_DETAILS[currentPlan].price}
+                    {planPriceLabel(currentPlan)}
                     {isTrialing && daysLeft !== null && (
                       <span className="text-amber-400 font-medium"> · {daysLeft}d restantes no trial</span>
                     )}
@@ -480,7 +471,7 @@ export default function Profile() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-x-4 gap-y-1">
-                {PLAN_DETAILS[currentPlan].features.map((f, i) => (
+                {PLANS[currentPlan].features.map((f, i) => (
                   <span key={i} className="text-[11px] text-muted-foreground flex items-center gap-1">
                     <Check className="h-3 w-3 text-emerald-500/70" />{f}
                   </span>
@@ -497,13 +488,12 @@ export default function Profile() {
 
             {/* Right: Upgrade CTA or stats */}
             <div className="p-5 flex flex-col justify-center">
-              {currentIndex < planOrder.length - 1 ? (
+              {currentIndex < PLAN_ORDER.length - 1 ? (
                 <div className="space-y-2.5">
-                  {planOrder.slice(currentIndex + 1).map(plan => {
-                    const details = PLAN_DETAILS[plan];
+                  {PLAN_ORDER.slice(currentIndex + 1).map(plan => {
                     const info = PLANS_INFO[plan];
-                    const Icon = details.icon;
-                    const isPrimary = plan === planOrder[currentIndex + 1];
+                    const Icon = PLAN_ICONS[plan];
+                    const isPrimary = plan === PLAN_ORDER[currentIndex + 1];
                     return (
                       <button
                         key={plan}
@@ -515,13 +505,13 @@ export default function Profile() {
                         }`}
                       >
                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                          plan === "plus" ? "bg-blue-500/15" : "bg-emerald-500/15"
+                          plan === "pro" ? "bg-blue-500/15" : "bg-emerald-500/15"
                         }`}>
-                          <Icon className={`h-4 w-4 ${plan === "plus" ? "text-blue-400" : "text-emerald-400"}`} />
+                          <Icon className={`h-4 w-4 ${plan === "pro" ? "text-blue-400" : "text-emerald-400"}`} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <span className="text-sm font-semibold text-foreground">{info.label}</span>
-                          <span className="text-xs text-muted-foreground ml-2">{details.price}</span>
+                          <span className="text-xs text-muted-foreground ml-2">{planPriceLabel(plan)}</span>
                         </div>
                         <ArrowRight className="h-3.5 w-3.5 text-muted-foreground group-hover:translate-x-0.5 transition-transform shrink-0" />
                       </button>

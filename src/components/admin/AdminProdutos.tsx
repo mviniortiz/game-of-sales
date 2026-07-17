@@ -169,7 +169,7 @@ export const AdminProdutos = () => {
                     description: "Faça upgrade para cadastrar mais produtos.",
                     action: {
                         label: "Fazer upgrade",
-                        onClick: () => navigate(`/upgrade?plan=${currentPlan === "starter" ? "plus" : "pro"}`),
+                        onClick: () => navigate("/upgrade"),
                     },
                 });
                 return;

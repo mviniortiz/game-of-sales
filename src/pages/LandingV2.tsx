@@ -132,23 +132,23 @@ const LandingV2 = () => {
             style={{ background: "var(--lp-paper)", color: "var(--lp-ink)" }}
         >
             <NavV2 onCTAClick={() => openDemo("nav")} onLoginClick={() => navigate("/auth")} onNavClick={scrollToId} onBlogClick={() => navigate("/blog")} />
-            <HeroV2 onScheduleDemoClick={() => goToSignup("plus", "hero")} onSecondaryClick={() => openDemo("hero")} />
+            <HeroV2 onScheduleDemoClick={() => goToSignup("pro", "hero")} onSecondaryClick={() => openDemo("hero")} />
             <IntegrationsStripV2 />
             <ProofStripV2 />
             <StatsV2 />
             <DataFeedV2 />
             <EvaShowcaseV2 onStartDemo={() => openDemo("eva_showcase")} />
             <FeaturesV2 />
-            <SpecialistAgentsV2 onCTAClick={() => goToSignup("plus", "specialists")} />
+            <SpecialistAgentsV2 onCTAClick={() => goToSignup("pro", "specialists")} />
             <PricingV2 onTrial={(slug) => goToSignup(slug, "pricing")} onScheduleDemo={() => openDemo("pricing")} />
             <div id="how-it-works">
-                <HowItWorksV2 onStart={() => goToSignup("plus", "how_it_works")} />
+                <HowItWorksV2 onStart={() => goToSignup("pro", "how_it_works")} />
             </div>
             <FaqV2 />
             <FinalCtaV2 onScheduleDemoClick={() => openDemo("final_cta")} onSecondaryClick={() => scrollToId("how-it-works")} />
             <EvaChatWidget />
             <FooterV2 onNavClick={scrollToId} onLoginClick={() => navigate("/auth")} onBlogClick={() => navigate("/blog")} />
-            <EvaDemoModal open={demoOpen} onClose={() => setDemoOpen(false)} onCTAClick={() => goToSignup("plus", "demo_modal")} />
+            <EvaDemoModal open={demoOpen} onClose={() => setDemoOpen(false)} onCTAClick={() => goToSignup("pro", "demo_modal")} />
 
             {/* véu de transição pro cadastro (cor do cadastro), some ao trocar de rota */}
             {toSignup && (

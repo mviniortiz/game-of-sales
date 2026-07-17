@@ -174,7 +174,7 @@ export function EvaContextTab({
               value={agency.ticket_medio}
               onChange={(e) => setAgency({ ...agency, ticket_medio: e.target.value })}
               placeholder="Ex: R$ 4.500/mês (mínimo R$ 3.000, máximo R$ 12.000)"
-              className="h-9 text-sm max-w-[480px]"
+              className="h-9 text-base md:text-sm max-w-[480px]"
               disabled={readOnly}
               maxLength={240}
             />

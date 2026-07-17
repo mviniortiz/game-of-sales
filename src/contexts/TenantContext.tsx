@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
 import { PLAN_FEATURES, PlanType, PlanFeatures, PLANS_INFO } from '@/config/planConfig';
+import { resolveEffectivePlan } from '@/config/plans';
 import { normalizeSubscriptionStatus } from '@/lib/utils';
 
 interface Company {
@@ -79,7 +80,7 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
               const typedCompanies: Company[] = allCompanies.map((c) => ({
                 id: c.id,
                 name: c.name,
-                plan: c.plan || 'starter',
+                plan: c.plan || 'free',
                 logo_url: c.logo_url || null,
                 trial_ends_at: c.trial_ends_at || null,
                 subscription_status: normalizeSubscriptionStatus(c.subscription_status),
@@ -109,7 +110,7 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
                   const typedOwn: Company = {
                     id: ownCompany.id,
                     name: ownCompany.name,
-                    plan: ownCompany.plan || 'starter',
+                    plan: ownCompany.plan || 'free',
                     logo_url: ownCompany.logo_url || null,
                     trial_ends_at: ownCompany.trial_ends_at || null,
                     subscription_status: normalizeSubscriptionStatus(ownCompany.subscription_status),
@@ -136,7 +137,7 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
               const typedCompany: Company = {
                 id: companyData.id,
                 name: companyData.name,
-                plan: companyData.plan || 'starter',
+                plan: companyData.plan || 'free',
                 logo_url: companyData.logo_url || null,
                 trial_ends_at: companyData.trial_ends_at || null,
                 subscription_status: normalizeSubscriptionStatus(companyData.subscription_status),
@@ -191,9 +192,16 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
     [companies, activeCompanyId]
   );
 
+  // Plano EFETIVO: trial ativo experimenta o Pro; trial expirado degrada pra
+  // free (sem tela de bloqueio). Valores legados (basic/starter/plus) são
+  // normalizados em resolveEffectivePlan.
   const currentPlan: PlanType = useMemo(() => {
-    const plan = activeCompany?.plan?.toLowerCase() as PlanType;
-    return plan && PLAN_FEATURES[plan] ? plan : 'starter';
+    if (!activeCompany) return 'free';
+    return resolveEffectivePlan(
+      activeCompany.plan,
+      activeCompany.subscription_status,
+      activeCompany.trial_ends_at,
+    );
   }, [activeCompany]);
 
   const planFeatures = useMemo(() => PLAN_FEATURES[currentPlan], [currentPlan]);

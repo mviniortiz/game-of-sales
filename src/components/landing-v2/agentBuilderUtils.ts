@@ -45,20 +45,3 @@ export async function extractFileText(file: File): Promise<string> {
     }
     throw new Error("unsupported");
 }
-
-// Captura UTM/gclid/fbclid/referrer da sessão para atribuição do lead.
-export function captureAttribution(): Record<string, string> {
-    const out: Record<string, string> = {};
-    try {
-        const q = new URLSearchParams(window.location.search);
-        for (const k of ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "gclid", "fbclid"]) {
-            const v = q.get(k);
-            if (v) out[k] = v;
-        }
-        if (document.referrer) out.referrer = document.referrer;
-        out.landing_page = window.location.pathname;
-    } catch {
-        /* noop */
-    }
-    return out;
-}

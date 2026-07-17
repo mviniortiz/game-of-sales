@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Lock, ArrowUpCircle, ArrowRight, Check } from 'lucide-react';
-import { PLAN_FEATURES, PLANS_INFO, PlanType, PlanFeatures } from '@/config/planConfig';
+import { PLAN_FEATURES, PLANS_INFO, PlanFeatures } from '@/config/planConfig';
 import { useNavigate } from 'react-router-dom';
 
 interface UpgradePromptProps {
@@ -30,10 +30,6 @@ export const UpgradePrompt = ({
     const defaultDescription = description ||
         `A funcionalidade "${featureName}" requer o plano ${requiredPlanInfo.label} ou superior.`;
 
-    // Get features comparison
-    const planOrder: PlanType[] = ['starter', 'plus', 'pro'];
-    const requiredIndex = planOrder.indexOf(requiredPlan);
-    const availablePlans = planOrder.slice(requiredIndex);
 
     return (
         <div className={`flex items-center justify-center min-h-[400px] p-6 ${className}`}>

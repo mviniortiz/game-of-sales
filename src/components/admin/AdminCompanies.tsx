@@ -44,7 +44,7 @@ import {
   LogIn,
   Trash2,
   Crown,
-  Sparkles,
+  Rocket,
   CheckCircle,
   XCircle,
   Search,
@@ -66,27 +66,29 @@ interface CompanyWithCounts {
   last_sign_in_at: string | null;
 }
 
-// Plan badge styles
+// Plan badge styles (plus/starter legados aparecem como o plano equivalente)
 const getPlanBadge = (plan: string) => {
   switch (plan?.toLowerCase()) {
-    case "pro":
+    case "escala":
+    case "enterprise":
       return (
         <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white border-0 shadow-sm">
           <Crown className="h-3 w-3 mr-1" />
-          Pro
+          Escala
         </Badge>
       );
+    case "pro":
     case "plus":
       return (
         <Badge className="bg-blue-500 text-white border-0">
-          <Sparkles className="h-3 w-3 mr-1" />
-          Plus
+          <Rocket className="h-3 w-3 mr-1" />
+          Pro
         </Badge>
       );
     default:
       return (
         <Badge variant="secondary" className="bg-muted text-muted-foreground">
-          Starter
+          Free
         </Badge>
       );
   }
@@ -331,9 +333,9 @@ export function AdminCompanies() {
                     <SelectValue placeholder="Selecione um plano" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="free">Starter (Gratuito)</SelectItem>
-                    <SelectItem value="plus">Plus</SelectItem>
+                    <SelectItem value="free">Free</SelectItem>
                     <SelectItem value="pro">Pro</SelectItem>
+                    <SelectItem value="escala">Escala</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -552,9 +554,9 @@ export function AdminCompanies() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="free">Starter</SelectItem>
-                    <SelectItem value="plus">Plus</SelectItem>
+                    <SelectItem value="free">Free</SelectItem>
                     <SelectItem value="pro">Pro</SelectItem>
+                    <SelectItem value="escala">Escala</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

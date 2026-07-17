@@ -122,8 +122,14 @@ export const PricingSection = ({ onPlanSelect, onScheduleDemo }: Props) => {
                 {/* Pricing cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-0 md:items-stretch">
                     {PLANS.map((plan, i) => {
-                        const monthly = isAnnual ? Math.round(plan.priceNumber * 0.9) : plan.priceNumber;
-                        const annualSaving = Math.round((plan.priceNumber - Math.round(plan.priceNumber * 0.9)) * 12);
+                        const isFree = plan.priceNumber === 0;
+                        const isCustom = plan.priceNumber === null;
+                        const monthly = plan.priceNumber && isAnnual
+                            ? Math.round(plan.priceNumber * 0.9)
+                            : plan.priceNumber ?? 0;
+                        const annualSaving = plan.priceNumber
+                            ? Math.round((plan.priceNumber - Math.round(plan.priceNumber * 0.9)) * 12)
+                            : 0;
                         const isPopular = plan.popular;
                         const delayClass = i === 0 ? "" : i === 1 ? "landing-delay-100" : "landing-delay-200";
 
@@ -177,29 +183,53 @@ export const PricingSection = ({ onPlanSelect, onScheduleDemo }: Props) => {
 
                                     {/* Preço */}
                                     <div className="flex items-baseline gap-1.5 mb-2">
-                                        <span className="lp-mono" style={{ color: "var(--lp-ink-55)", fontSize: 13 }}>
-                                            R$
-                                        </span>
-                                        <span
-                                            key={monthly}
-                                            className="font-satoshi leading-none tabular-nums landing-fade-in"
-                                            style={{
-                                                fontWeight: 900,
-                                                color: "var(--lp-ink)",
-                                                fontSize: isPopular ? "clamp(3rem, 8vw, 3.9rem)" : "clamp(2.4rem, 7vw, 3.1rem)",
-                                                letterSpacing: "-0.04em",
-                                            }}
-                                        >
-                                            {monthly}
-                                        </span>
-                                        <span className="lp-mono" style={{ color: "var(--lp-ink-55)", fontSize: 12, textTransform: "none" }}>
-                                            /mês
-                                        </span>
+                                        {isCustom ? (
+                                            <span
+                                                className="font-satoshi leading-none landing-fade-in"
+                                                style={{
+                                                    fontWeight: 900,
+                                                    color: "var(--lp-ink)",
+                                                    fontSize: "clamp(1.8rem, 5vw, 2.3rem)",
+                                                    letterSpacing: "-0.03em",
+                                                }}
+                                            >
+                                                Sob medida
+                                            </span>
+                                        ) : (
+                                            <>
+                                                <span className="lp-mono" style={{ color: "var(--lp-ink-55)", fontSize: 13 }}>
+                                                    R$
+                                                </span>
+                                                <span
+                                                    key={monthly}
+                                                    className="font-satoshi leading-none tabular-nums landing-fade-in"
+                                                    style={{
+                                                        fontWeight: 900,
+                                                        color: "var(--lp-ink)",
+                                                        fontSize: isPopular ? "clamp(3rem, 8vw, 3.9rem)" : "clamp(2.4rem, 7vw, 3.1rem)",
+                                                        letterSpacing: "-0.04em",
+                                                    }}
+                                                >
+                                                    {monthly}
+                                                </span>
+                                                <span className="lp-mono" style={{ color: "var(--lp-ink-55)", fontSize: 12, textTransform: "none" }}>
+                                                    /mês
+                                                </span>
+                                            </>
+                                        )}
                                     </div>
 
                                     {/* Cobrança anual */}
                                     <div className="min-h-[38px] mb-5">
-                                        {isAnnual ? (
+                                        {isFree ? (
+                                            <p className="text-[11.5px]" style={{ color: "var(--lp-live)", fontWeight: 700 }}>
+                                                Grátis pra sempre, sem cartão
+                                            </p>
+                                        ) : isCustom ? (
+                                            <p className="text-[11.5px]" style={{ color: "var(--lp-ink-55)" }}>
+                                                Preço pelo tamanho do time
+                                            </p>
+                                        ) : isAnnual ? (
                                             <p key="annual-info" className="text-[11.5px] landing-fade-in" style={{ color: "var(--lp-ink-55)" }}>
                                                 Cobrado R$ {Math.round(monthly * 12).toLocaleString("pt-BR")}/ano
                                                 {annualSaving > 0 && (
@@ -246,12 +276,17 @@ export const PricingSection = ({ onPlanSelect, onScheduleDemo }: Props) => {
                                         ))}
                                     </ul>
 
-                                    {/* CTA — LP.3: demo é o caminho principal; criar conta e
-                                        testar sozinho vira link secundário discreto. */}
+                                    {/* CTA por plano: Free → criar conta direto; Pro → demo é
+                                        o caminho principal (LP.3), conta como secundário;
+                                        Escala → conversa com o time. */}
                                     <div className="space-y-2.5">
                                         <LandingButton
                                             as="button"
-                                            onClick={() => onScheduleDemo(`pricing_${plan.name.toLowerCase()}`)}
+                                            onClick={() =>
+                                                isFree
+                                                    ? onPlanSelect("free")
+                                                    : onScheduleDemo(`pricing_${plan.name.toLowerCase()}`)
+                                            }
                                             variant={isPopular ? "primary" : "secondary"}
                                             size="lg"
                                             fullWidth
@@ -259,13 +294,15 @@ export const PricingSection = ({ onPlanSelect, onScheduleDemo }: Props) => {
                                         >
                                             {plan.ctaLabel}
                                         </LandingButton>
-                                        <button
-                                            onClick={() => onPlanSelect(plan.name.toLowerCase())}
-                                            className="w-full text-xs cursor-pointer transition-colors hover:text-black"
-                                            style={{ color: "var(--lp-ink-55)", fontWeight: 500 }}
-                                        >
-                                            ou crie sua conta e teste sozinho
-                                        </button>
+                                        {isPopular && (
+                                            <button
+                                                onClick={() => onPlanSelect("pro")}
+                                                className="w-full text-xs cursor-pointer transition-colors hover:text-black"
+                                                style={{ color: "var(--lp-ink-55)", fontWeight: 500 }}
+                                            >
+                                                ou crie sua conta e teste sozinho
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             </div>

@@ -1,5 +1,11 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// COMMAND.UI — Decision Workspace da Central de Comando.
+// COMMAND.UI.7 — peças da Fila de ação da Central (/inicio).
+//
+// A composição DecisionWorkspace e o território da EVA (EvaPanel/EvaSynthesis/
+// chat) foram REMOVIDOS em 2026-07-06: a Central virou Cockpit do gestor
+// (dashboard em Inicio.tsx) e a EVA saiu da página (fica só o dock global).
+// Este arquivo mantém as peças reutilizadas: ActionQueue (herói + fila,
+// resolver/adiar/responder rápido) e ActivityTimeline.
 //
 // Substitui as três listas planas (Prioridades / Atenção / Movimentos) por uma
 // superfície de decisão hierárquica:
@@ -15,7 +21,6 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
     ArrowRight,
-    CaretUp,
     CalendarBlank as Calendar,
     ChatCircle as MessageCircle,
     Check,
@@ -30,32 +35,12 @@ import {
     Warning,
     X,
 } from "@phosphor-icons/react";
-import { EvaOrb } from "@/components/landing-v2/EvaOrb";
-import { Drawer, DrawerContent, DrawerTrigger, DrawerTitle } from "@/components/ui/drawer";
 import type {
     DailyPriority,
-    EvaHighlight,
     RecentActivityItem,
 } from "@/hooks/useCommandCenterData";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-// Casa com o breakpoint `lg` (1024px) do grid: ≥lg a EVA é rail; <lg vira
-// bottom-sheet. Render único (não monta o chat 2x). Inicializa síncrono pra
-// não piscar o layout errado no 1º frame.
-function useIsDesktop(): boolean {
-    const [isDesktop, setIsDesktop] = useState(
-        () => typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches,
-    );
-    useEffect(() => {
-        const mql = window.matchMedia("(min-width: 1024px)");
-        const onChange = () => setIsDesktop(mql.matches);
-        mql.addEventListener("change", onChange);
-        onChange();
-        return () => mql.removeEventListener("change", onChange);
-    }, []);
-    return isDesktop;
-}
 
 function relativeTime(iso: string | null | undefined): string {
     if (!iso) return "";
@@ -140,26 +125,7 @@ const TYPE_META: Record<DailyPriority["source"], { icon: typeof MessageCircle; l
     calendar:     { icon: Calendar,      label: "Agenda" },
 };
 
-const SEV: Record<EvaHighlight["severity"], { label: string; color: string; bg: string }> = {
-    high:   { label: "Alta",  color: "#BE123C", bg: "rgba(244,63,94,0.10)" },
-    medium: { label: "Média", color: "#B45309", bg: "rgba(245,158,11,0.12)" },
-    low:    { label: "Baixa", color: "#475569", bg: "rgba(148,163,184,0.15)" },
-};
-
-function resolveHighlightRoute(it: EvaHighlight): { href: string | null; cta: string | null } {
-    if (it.type === "missing_information" || it.source === "knowledge_gap") {
-        return { href: "/configuracoes/eva?tab=conhecimento", cta: "Completar contexto" };
-    }
-    if (it.conversationId) return { href: `/inbox?conversationId=${it.conversationId}`, cta: "Abrir conversa" };
-    if (it.type === "hot_leads_without_deal" || it.type === "meeting_intent_without_meeting" || it.type === "high_intent_unanswered") {
-        return { href: "/inbox", cta: "Abrir Inbox" };
-    }
-    return { href: null, cta: null };
-}
-
-// ── Building blocks ─────────────────────────────────────────────────────────
-
-const CARD_STYLE: React.CSSProperties = {
+export const CARD_STYLE: React.CSSProperties = {
     background: "#FFFFFF",
     border: "1px solid #E4E9F2",
     boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 10px 30px rgba(15,23,42,0.05)",
@@ -245,7 +211,7 @@ function useResolveTransition(onResolve: (id: string) => void, id: string) {
     return { resolving, resolve };
 }
 
-function ActionHero({ item, onNavigate, onResolve, onSnooze, sendReply, replyConnected }: { item: DailyPriority } & QueueHandlers) {
+function ActionHero({ item, onNavigate, onResolve, onSnooze, sendReply, replyConnected, compact = false }: { item: DailyPriority; compact?: boolean } & QueueHandlers) {
     const lv = LEVEL[item.priority];
     const tp = TYPE_META[item.source];
     const TypeIcon = tp.icon;
@@ -278,7 +244,7 @@ function ActionHero({ item, onNavigate, onResolve, onSnooze, sendReply, replyCon
 
     return (
         <div id="foco-do-dia" className={`rounded-2xl p-4 sm:p-5 ${isCritical ? "vz-pulse-critical" : ""} ${resolving ? "vz-resolving" : ""}`} style={{ background: lv.heroBg, border: `1.5px solid ${lv.heroBorder}`, boxShadow: "0 2px 4px rgba(15,23,42,0.04), 0 12px 28px -10px rgba(15,23,42,0.12)" }}>
-            <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">
+            <div className={compact ? "flex flex-col gap-3" : "flex flex-col sm:flex-row gap-4 sm:gap-5"}>
                 {/* Esquerda — onde se age. Os botões descem pro fim (mt-auto) pra
                     alinhar com a base do contexto à direita. */}
                 <div className="flex-1 min-w-0 flex flex-col">
@@ -288,7 +254,7 @@ function ActionHero({ item, onNavigate, onResolve, onSnooze, sendReply, replyCon
                             <TypeIcon size={12} weight="duotone" /> {item.contactName || tp.label}
                         </span>
                     </div>
-                    <p className="vz-row-title text-[20px] sm:text-[22px] font-bold leading-snug" style={{ color: "#0B1220", letterSpacing: "-0.02em" }}>{item.title}</p>
+                    <p className={`vz-row-title font-bold leading-snug ${compact ? "text-[15.5px]" : "text-[20px] sm:text-[22px]"}`} style={{ color: "#0B1220", letterSpacing: "-0.02em" }}>{item.title}</p>
                     <p className="text-[13px] mt-1.5" style={{ color: "#334155", lineHeight: 1.55 }}>{item.description}</p>
 
                     {/* Botões à esquerda — primário PRETO pill; secundários discretos. */}
@@ -340,13 +306,18 @@ function ActionHero({ item, onNavigate, onResolve, onSnooze, sendReply, replyCon
 
                 {/* Direita — contexto que estava oco: tempo parado, data da última
                     mensagem e o porquê de subir agora. Informação, não ar. */}
-                <div className="sm:w-[188px] shrink-0 flex flex-row flex-wrap sm:flex-col gap-x-7 gap-y-3 sm:border-l sm:pl-5" style={{ borderColor: "rgba(15,23,42,0.08)" }}>
+                <div
+                    className={compact
+                        ? "order-first -mb-1 flex flex-row flex-wrap gap-x-5 gap-y-1.5"
+                        : "sm:w-[188px] shrink-0 flex flex-row flex-wrap sm:flex-col gap-x-7 gap-y-3 sm:border-l sm:pl-5"}
+                    style={compact ? undefined : { borderColor: "rgba(15,23,42,0.08)" }}
+                >
                     {elapsedHrs != null && (
                         <HeroContext label="Parada há" strong={stale}>
                             <span className="tabular-nums" style={stale ? { color: lv.heroBtn } : undefined}>{elapsedHrs}h</span>
                         </HeroContext>
                     )}
-                    {item.createdAt && (
+                    {!compact && item.createdAt && (
                         <HeroContext label="Última mensagem"><span className="tabular-nums">{formatDayMonth(item.createdAt)}</span></HeroContext>
                     )}
                     {item.reason && <HeroContext label="Por que agora">{item.reason}</HeroContext>}
@@ -453,7 +424,7 @@ function QueueEmptyCard({ children }: { children: React.ReactNode }) {
     return <div className="rounded-2xl" style={CARD_STYLE}>{children}</div>;
 }
 
-function ActionQueue({ queue, loading, dayComplete, filterActive, handlers }: { queue: DailyPriority[]; loading: boolean; dayComplete: boolean; filterActive: boolean; handlers: QueueHandlers }) {
+export function ActionQueue({ queue, loading, dayComplete, filterActive, handlers, compact = false }: { queue: DailyPriority[]; loading: boolean; dayComplete: boolean; filterActive: boolean; handlers: QueueHandlers; compact?: boolean }) {
     const reduce = useReducedMotion();
     if (loading) {
         return (
@@ -509,7 +480,7 @@ function ActionQueue({ queue, loading, dayComplete, filterActive, handlers }: { 
                             exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.97 }}
                             transition={{ duration: reduce ? 0 : CHAIN.heroGrow, ease: "easeOut" }}
                         >
-                            <ActionHero item={queue[0]} {...handlers} />
+                            <ActionHero compact={compact} item={queue[0]} {...handlers} />
                         </motion.div>
                         {queue.length > 1 && (
                             <motion.div
@@ -539,190 +510,7 @@ function ActionQueue({ queue, loading, dayComplete, filterActive, handlers }: { 
     );
 }
 
-// ── 2) EVA unificada (direita): síntese + gargalos + chat numa voz só ─────────
-
-function ReadingLine({ icon: Icon, color, label, children }: { icon: typeof Warning; color: string; label: string; children: React.ReactNode }) {
-    return (
-        <div className="flex items-start gap-2.5 py-2">
-            <div className="h-6 w-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${color}1A` }}>
-                <Icon size={13} weight="duotone" style={{ color }} />
-            </div>
-            <div className="min-w-0">
-                <p className="text-[10px] uppercase mb-0.5" style={{ color: "#1E293B", fontWeight: 700, letterSpacing: "0.06em" }}>{label}</p>
-                <p className="text-[12.5px] leading-snug" style={{ color: "#334155" }}>{children}</p>
-            </div>
-        </div>
-    );
-}
-
-// A EVA "fala a próxima frase": quando o risco/recomendação muda (ex: você
-// resolveu a ação crítica), o texto antigo desliza pra fora e o novo pra dentro
-// (mode="wait"), em vez de trocar seco. Só anima quando o swapKey muda.
-function SwapText({ swapKey, children }: { swapKey: string; children: React.ReactNode }) {
-    const reduce = useReducedMotion();
-    return (
-        <AnimatePresence mode="wait" initial={false}>
-            <motion.span
-                key={swapKey}
-                className="block"
-                initial={reduce ? false : { opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={reduce ? { opacity: 0 } : { opacity: 0, y: -5 }}
-                transition={{ duration: reduce ? 0 : CHAIN.evaSwap, ease: "easeOut" }}
-            >
-                {children}
-            </motion.span>
-        </AnimatePresence>
-    );
-}
-
-// "Ver no foco" — a EVA aponta pro herói (zona Foco) em vez de duplicar o card.
-// Rola até o herói (#foco-do-dia) e dispara um anel azul que pulsa 1x.
-function jumpToFocus() {
-    if (typeof document === "undefined") return;
-    const el = document.getElementById("foco-do-dia");
-    if (!el) return;
-    el.scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth", block: "center" });
-    el.classList.remove("vz-focus-flash");
-    void el.offsetWidth; // reinicia a animação
-    el.classList.add("vz-focus-flash");
-    window.setTimeout(() => el.classList.remove("vz-focus-flash"), 1300);
-}
-
-// Síntese da EVA — sinais, não uma 2ª fila. O "Maior risco" NÃO repete o card
-// do Foco: vira um ponteiro ("Ver no foco"). Sem "Recomendação do dia" (que só
-// repetia o Foco). risk/bottleneck já vêm computados do EvaPanel.
-function EvaSynthesis({ risk, bottleneck, repliesSent }: { risk: DailyPriority | null; bottleneck: EvaHighlight | null; repliesSent: number }) {
-    return (
-        <div className="divide-y" style={{ borderColor: "#F1F5F9" }}>
-            <ReadingLine icon={Warning} color="#F43F5E" label="Maior risco">
-                {risk ? (
-                    <SwapText swapKey={risk.id}>
-                        <span className="inline">
-                            A ação mais crítica já está no seu foco.{" "}
-                            <button
-                                type="button"
-                                onClick={jumpToFocus}
-                                className="inline-flex items-center gap-1 font-semibold align-baseline transition-colors hover:underline"
-                                style={{ color: "#1D4ED8" }}
-                            >
-                                Ver no foco <ArrowRight size={11} weight="bold" />
-                            </button>
-                        </span>
-                    </SwapText>
-                ) : (
-                    <SwapText swapKey="none">Nenhum risco crítico no momento.</SwapText>
-                )}
-            </ReadingLine>
-            <ReadingLine icon={Funnel} color="#F59E0B" label="Maior gargalo">
-                {bottleneck ? bottleneck.title : "Sem gargalos relevantes detectados."}
-            </ReadingLine>
-            <ReadingLine icon={CheckCircle} color="#10B981" label="Sinal positivo">
-                {repliesSent > 0 ? `Time enviou ${repliesSent} ${repliesSent === 1 ? "resposta" : "respostas"} recentemente.` : "Operação seguindo o ritmo."}
-            </ReadingLine>
-        </div>
-    );
-}
-
-// Gargalos condensados — "o que a EVA está vendo", lista compacta dentro do
-// próprio território da EVA (não mais um card gigante separado embaixo).
-function EvaBottlenecksSection({ items, onNavigate }: { items: EvaHighlight[]; onNavigate: (href: string) => void }) {
-    const top = items.slice(0, 4);
-    return (
-        <div className="mt-1 pt-3 border-t" style={{ borderColor: "#F1F5F9" }}>
-            <p className="px-5 text-[10px] uppercase mb-1" style={{ color: "#1E293B", fontWeight: 700, letterSpacing: "0.06em" }}>O que estou vendo</p>
-            {top.length === 0 ? (
-                <p className="px-5 pb-1 text-[12px]" style={{ color: "#475569" }}>Sem outros gargalos estruturais hoje.</p>
-            ) : (
-                top.map((it) => {
-                    const sev = SEV[it.severity];
-                    const route = resolveHighlightRoute(it);
-                    const affects = it.count ?? (it.items?.length ?? 0);
-                    const clickable = !!route.href;
-                    return (
-                        <button
-                            key={it.id}
-                            type="button"
-                            disabled={!clickable}
-                            onClick={() => { if (route.href) onNavigate(route.href); }}
-                            className={`w-full flex items-start gap-2.5 px-5 py-2 text-left transition-colors ${clickable ? "hover:bg-[#FBFAFF] cursor-pointer" : "cursor-default"}`}
-                        >
-                            <span className="h-2 w-2 rounded-full mt-[5px] shrink-0" style={{ background: sev.color }} />
-                            <span className="min-w-0 flex-1">
-                                <span className="flex items-center gap-2">
-                                    <span className="text-[12.5px] font-semibold truncate" style={{ color: "#0B1220" }}>{it.title}</span>
-                                    {affects > 0 && <span className="text-[10.5px] tabular-nums shrink-0" style={{ color: "#475569" }}>· {affects}</span>}
-                                </span>
-                                <span className="block text-[11px] truncate" style={{ color: "#475569" }}>{it.description}</span>
-                            </span>
-                            {clickable && <ArrowRight size={12} weight="bold" className="shrink-0 mt-1" style={{ color: "#64748B" }} />}
-                        </button>
-                    );
-                })
-            )}
-        </div>
-    );
-}
-
-// ── A EVA unificada: uma voz, um lugar (síntese + gargalos + chat). ───────────
-// Copiloto que explica e aponta — não uma 2ª lista de tarefas. Vive no rail
-// (300px). Computa risco/gargalo aqui pra alimentar a síntese (ponteiro) e a
-// lista "O que estou vendo" SEM repetir o gargalo já mostrado.
-function EvaPanel({ priorities, highlights, recentActivity, loading, onNavigate, evaChat, bare = false }: {
-    priorities: DailyPriority[];
-    highlights: EvaHighlight[];
-    recentActivity: RecentActivityItem[];
-    loading: boolean;
-    onNavigate: (href: string) => void;
-    evaChat?: React.ReactNode;
-    /** true = dentro do bottom-sheet (mobile): sem o card externo (borda/sombra),
-     *  a superfície vem da própria sheet. */
-    bare?: boolean;
-}) {
-    const sevRank: Record<EvaHighlight["severity"], number> = { high: 3, medium: 2, low: 1 };
-    const risk = priorities.find((p) => p.priority === "critical") ?? priorities.find((p) => p.priority === "high") ?? priorities[0] ?? null;
-    const sortedHl = [...highlights].sort((a, b) => (sevRank[b.severity] - sevRank[a.severity]) || ((b.count ?? 0) - (a.count ?? 0)));
-    const bottleneck = sortedHl[0] ?? null;
-    const restHighlights = sortedHl.slice(1); // exclui o gargalo já exibido na síntese
-    const repliesSent = recentActivity.filter((r) => r.type === "message_outbound").length;
-    return (
-        <div
-            className={bare ? "overflow-hidden" : "rounded-2xl overflow-hidden"}
-            style={bare ? undefined : {
-                background: "linear-gradient(180deg, rgba(124,58,237,0.05) 0%, #FFFFFF 20%)",
-                border: "1px solid #E7E1FA",
-                boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 10px 30px rgba(15,23,42,0.05)",
-            }}
-        >
-            <div className="px-5 pt-5 pb-4 flex items-center gap-3">
-                <EvaOrb variant="blue" size={28} showVoice={false} state="idle" className="shrink-0" />
-                <div className="min-w-0">
-                    <h3 className="text-[16px] font-bold leading-tight" style={{ color: "#0B1220", letterSpacing: "-0.015em" }}>EVA</h3>
-                    {/* única linha de voz da EVA — serif itálico (humano), o resto é UI font */}
-                    <p className="text-[12.5px] italic leading-snug" style={{ color: "#475569", fontFamily: "'Newsreader', Georgia, serif" }}>
-                        Li suas conversas, oportunidades e sinais
-                    </p>
-                </div>
-            </div>
-            <div className="px-5 pb-1">
-                {loading ? <Skeleton rows={3} h={30} /> : <EvaSynthesis risk={risk} bottleneck={bottleneck} repliesSent={repliesSent} />}
-            </div>
-            {!loading && <EvaBottlenecksSection items={restHighlights} onNavigate={onNavigate} />}
-            {evaChat && (
-                <div className="px-5 pt-4 pb-5 mt-1 border-t" style={{ borderColor: "#F1F5F9" }}>
-                    {evaChat}
-                </div>
-            )}
-        </div>
-    );
-}
-
-// ── 4) Atividade recente (timeline compacta) ──────────────────────────────────
-
-// Atividade — a zona de MENOR peso: log apagado, texto muted, timestamps mono.
-// Sem o card forte (CardShell); container de baixa cromática que não compete com
-// Foco/Fila. Inbound vira ponto cinza (azul = ação fica pro que importa).
-function ActivityTimeline({ items, loading, onNavigate }: { items: RecentActivityItem[]; loading: boolean; onNavigate: (href: string) => void }) {
+export function ActivityTimeline({ items, loading, onNavigate }: { items: RecentActivityItem[]; loading: boolean; onNavigate: (href: string) => void }) {
     const visible = items.slice(0, 6);
     return (
         <section className="flex flex-col gap-2.5">
@@ -759,120 +547,3 @@ function ActivityTimeline({ items, loading, onNavigate }: { items: RecentActivit
     );
 }
 
-// ── Composição ────────────────────────────────────────────────────────────────
-
-export interface DecisionWorkspaceProps {
-    /** Pendentes do dia (sem resolvidos/adiados, sem filtro de UI). Alimenta a
-     *  Leitura da EVA — síntese do que ainda falta, não do recorte filtrado. */
-    priorities: DailyPriority[];
-    /** Fila de ação já filtrada pela UI. Default = priorities. */
-    queuePriorities?: DailyPriority[];
-    filterActive?: boolean;
-    /** true = havia ações hoje e todas foram resolvidas (missão concluída). */
-    dayComplete?: boolean;
-    highlights: EvaHighlight[];
-    recentActivity: RecentActivityItem[];
-    loading: boolean;
-    onNavigate: (href: string) => void;
-    onResolve: (id: string) => void;
-    onSnooze: (id: string) => void;
-    sendReply?: (chatJid: string, text: string) => Promise<void>;
-    replyConnected?: boolean;
-    /** Chat da EVA — renderizado dentro do território unificado da EVA (direita). */
-    evaChat?: React.ReactNode;
-    /** Barra-missão do dia (DayProgress). Topo da coluna principal, sem rótulo. */
-    dayProgress?: React.ReactNode;
-    /** Faixa de KPIs (KpiStrip) — a zona Pulso, no topo da coluna principal. */
-    pulse?: React.ReactNode;
-}
-
-export function DecisionWorkspace({
-    priorities,
-    queuePriorities,
-    filterActive = false,
-    dayComplete = false,
-    highlights,
-    recentActivity,
-    loading,
-    onNavigate,
-    onResolve,
-    onSnooze,
-    sendReply,
-    replyConnected,
-    evaChat,
-    dayProgress,
-    pulse,
-}: DecisionWorkspaceProps) {
-    const queue = queuePriorities ?? priorities;
-    const handlers: QueueHandlers = { onNavigate, onResolve, onSnooze, sendReply, replyConnected };
-    const isDesktop = useIsDesktop();
-    const hasCriticalRisk = priorities.some((p) => p.priority === "critical");
-    return (
-        // Coluna principal (1fr) + rail da EVA (300px) no desktop. A ordem de
-        // leitura desce: Pulso → Foco → Fila → Atividade. No mobile (<lg) a EVA
-        // sai do fluxo e vira bottom-sheet (botão fixo no rodapé) — render único,
-        // pra não montar o chat 2x.
-        <>
-            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-5 items-start">
-                <div className="flex flex-col gap-5 min-w-0">
-                    {dayProgress}
-                    {pulse && (
-                        <section className="flex flex-col gap-2.5">
-                            <ZoneLabel>Pulso</ZoneLabel>
-                            {pulse}
-                        </section>
-                    )}
-                    <ActionQueue queue={queue} loading={loading} dayComplete={dayComplete} filterActive={filterActive} handlers={handlers} />
-                    <ActivityTimeline items={recentActivity} loading={loading} onNavigate={onNavigate} />
-                </div>
-                {/* Desktop: rail da EVA — síntese (ponteiros) + gargalos + chat. */}
-                {isDesktop && (
-                    <aside>
-                        <EvaPanel
-                            priorities={priorities}
-                            highlights={highlights}
-                            recentActivity={recentActivity}
-                            loading={loading}
-                            onNavigate={onNavigate}
-                            evaChat={evaChat}
-                        />
-                    </aside>
-                )}
-            </div>
-
-            {/* Mobile: a EVA vira bottom-sheet. Botão fixo no rodapé abre a sheet
-                com a mesma leitura + gargalos + chat (padrão do Inbox). */}
-            {!isDesktop && (
-                <Drawer>
-                    <DrawerTrigger asChild>
-                        <button
-                            type="button"
-                            className="fixed bottom-4 inset-x-4 z-40 flex items-center justify-center gap-2.5 h-12 rounded-full transition-transform active:scale-[0.98]"
-                            style={{ background: "#FFFFFF", border: "1px solid #E7E1FA", boxShadow: "0 10px 28px -8px rgba(15,23,42,0.28)" }}
-                            aria-label="Abrir leitura da EVA"
-                        >
-                            <EvaOrb variant="blue" size={24} showVoice={false} state="idle" className="shrink-0" />
-                            <span className="text-[14px] font-semibold" style={{ color: "#0B1220" }}>Perguntar à EVA</span>
-                            {hasCriticalRisk && <span className="h-2 w-2 rounded-full" style={{ background: "#F43F5E" }} aria-hidden />}
-                            <CaretUp size={14} weight="bold" style={{ color: "#94A3B8" }} />
-                        </button>
-                    </DrawerTrigger>
-                    <DrawerContent className="max-h-[90vh] bg-white">
-                        <DrawerTitle className="sr-only">Leitura da EVA</DrawerTitle>
-                        <div className="overflow-y-auto pb-[max(1.25rem,env(safe-area-inset-bottom))]">
-                            <EvaPanel
-                                priorities={priorities}
-                                highlights={highlights}
-                                recentActivity={recentActivity}
-                                loading={loading}
-                                onNavigate={onNavigate}
-                                evaChat={evaChat}
-                                bare
-                            />
-                        </div>
-                    </DrawerContent>
-                </Drawer>
-            )}
-        </>
-    );
-}

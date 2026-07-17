@@ -167,9 +167,11 @@ export const KanbanColumn = memo(({
           )}
         </div>
 
-        {/* ── Cards Track ──────────────────────────────────── */}
-        <div className="flex-1 p-2.5 overflow-hidden max-h-[calc(100vh-240px)]">
-          <ScrollArea className="h-full max-h-[calc(100vh-260px)] pr-1">
+        {/* ── Cards Track ──────────────────────────────────────
+            Altura vem da cadeia flex (coluna h-full ← board ← .vz-page-full);
+            sem cap em 100vh, que no Safari iOS cortava os últimos cards. */}
+        <div className="flex-1 p-2.5 overflow-hidden">
+          <ScrollArea className="h-full pr-1">
             <SortableContext items={dealIds} strategy={verticalListSortingStrategy}>
               <div className="space-y-2 pt-1 pb-2">
                 {deals.length === 0 ? (

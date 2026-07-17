@@ -1137,7 +1137,7 @@ export default function DealCommandCenter() {
                                                             value={newNote}
                                                             onChange={(e) => setNewNote(e.target.value)}
                                                             placeholder="Adicionar nota ou @mencionar..."
-                                                            className="flex-1 bg-transparent border-0 text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 h-8 p-0"
+                                                            className="flex-1 bg-transparent border-0 text-base md:text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 h-8 p-0"
                                                             onKeyDown={(e) => { if (e.key === "Enter" && newNote.trim()) addNote.mutate(newNote.trim()); }}
                                                         />
                                                         <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground h-7 w-7 p-0">

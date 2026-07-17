@@ -2,48 +2,45 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
+import {
+    Area,
+    AreaChart,
+    Bar,
+    BarChart,
+    CartesianGrid,
+    ReferenceLine,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
+} from "recharts";
 import { useAuth } from "@/contexts/AuthContext";
-import { recordMetricSnapshot, getMetricTrend, type MetricTrend } from "@/lib/metricHistory";
 // F5C.5.3 — Phosphor duotone (mesmo set da sidebar e do pipeline /pipeline).
-// Alias mantém os mesmos nomes locais (AlertTriangle, ArrowRight, …) pra não
-// reescrever cada call site — só adicionei weight="duotone" no JSX.
 import {
     Warning as AlertTriangle,
-    ArrowRight,
-    ArrowUp,
     CaretRight as ChevronRight,
     CaretDown as ChevronDown,
-    CalendarBlank as Calendar,
     Check,
     CheckCircle,
-    CircleNotch,
     Clock,
+    CurrencyDollar,
     SlidersHorizontal as Filter,
-    FireSimple as Flame,
-    ChatCircle as MessageCircle,
-    DotsThree as MoreHorizontal,
+    Funnel,
     ArrowClockwise as RefreshCw,
-    Question,
     Target,
+    Timer,
+    UserPlus,
     X,
 } from "@phosphor-icons/react";
 import { useInicioData } from "@/hooks/useInicioData";
+import { useCockpitData, type CockpitData, type CockpitRange, type DayPoint } from "@/hooks/useCockpitData";
+import { useCommandCenterData, type DailyPriority } from "@/hooks/useCommandCenterData";
 import {
-    useCommandCenterData,
-    type AttentionItem,
-    type CommandCenterMetrics,
-    type DailyPriority,
-    type EvaHighlight,
-    type RecentActivityItem,
-} from "@/hooks/useCommandCenterData";
-import {
-    useCentralEvaAssistant,
-    type CentralEvaInput,
-    type EvaResponse,
-} from "@/hooks/useCentralEvaAssistant";
-import { useTypewriter } from "@/hooks/useTypewriter";
-import { EvaOrb } from "@/components/landing-v2/EvaOrb";
-import { DecisionWorkspace } from "@/components/inicio/DecisionWorkspace";
+    ActionQueue,
+    ActivityTimeline,
+    CARD_STYLE,
+    type QueueHandlers,
+} from "@/components/inicio/DecisionWorkspace";
 import { OnboardingChecklist } from "@/components/inicio/OnboardingChecklist";
 import { useOnboardingProgress } from "@/hooks/useOnboardingProgress";
 import { useEvolutionSender } from "@/hooks/useEvolutionSender";
@@ -58,14 +55,35 @@ import {
 } from "@/lib/priorityActions";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Central de Comando — F5C.1 (2026-05-20)
+// Central de Comando — COMMAND.UI.7 "Cockpit do gestor" (2026-07-06)
 //
-// Dados reais via useCommandCenterData (channel_*/deals/summaries/gaps) +
-// useInicioData (pipeline real). Sem mocks de métrica. Sem mutation. Sem
-// chamada à EVA/Evolution/Meta.
+// A página virou dashboard: números e gráficos do NEGÓCIO à esquerda (receita
+// vs meta, leads/dia, pipeline por etapa, tempo de resposta — useCockpitData),
+// fila de ação compacta à direita (ActionQueue). A EVA saiu da página inteira
+// (rail, síntese, chat) — fica só o dock flutuante global (EvaHelpDock).
+//
+// Identidade vs /performance: aqui é operação de HOJE/semana; análise de
+// período (funil, ciclo, ranking, heatmap) continua em /performance.
+// Dataviz: 1 série por gráfico (sem legenda), azul #2563EB único hue, meta =
+// linha neutra tracejada, grid recessivo, tooltip em todo gráfico.
 // ─────────────────────────────────────────────────────────────────────────────
 
-// ─── Helpers visuais ────────────────────────────────────────────────────────
+const INK = "#0B1220";
+const SUB = "#475569";
+const MUTE = "#94A3B8";
+const BLUE = "#2563EB";
+const GRID = "#EAF0F6";
+
+const fmtBRL = (v: number) =>
+    v >= 1000
+        ? `R$ ${(v / 1000).toLocaleString("pt-BR", { maximumFractionDigits: v >= 100_000 ? 0 : 1 })}k`
+        : `R$ ${Math.round(v).toLocaleString("pt-BR")}`;
+
+const fmtMin = (min: number | null) => {
+    if (min == null) return "—";
+    if (min < 60) return `${min}min`;
+    return `${Math.floor(min / 60)}h${String(min % 60).padStart(2, "0")}`;
+};
 
 function relativeTime(iso: string | null | undefined): string {
     if (!iso) return "";
@@ -80,385 +98,356 @@ function relativeTime(iso: string | null | undefined): string {
     return `há ${d} ${d === 1 ? "dia" : "dias"}`;
 }
 
-// F5C.5.2 — descrição humana da atividade recente
-// Recebe o item normalizado (ex: title="Imagem recebida", description="De Mayara")
-// e devolve uma frase única ("Mayara enviou uma imagem").
-const INBOUND_PHRASE: Record<string, string> = {
-    "Áudio recebido":        "enviou um áudio",
-    "Imagem recebida":       "enviou uma imagem",
-    "Vídeo recebido":        "enviou um vídeo",
-    "Documento recebido":    "enviou um documento",
-    "Localização recebida":  "enviou uma localização",
-    "Contato recebido":      "enviou um contato",
-    "Nova mensagem":         "enviou nova mensagem",
-};
+// ─── KPIs do cockpit ─────────────────────────────────────────────────────────
 
-function describeActivity(item: RecentActivityItem): string {
-    const name = (item.contactName && item.contactName.trim()) || "Contato";
-    if (item.type === "message_outbound") {
-        return item.title === "Resposta enviada"
-            ? `Resposta enviada para ${name}`
-            : `Mensagem enviada para ${name}`;
-    }
-    const verb = INBOUND_PHRASE[item.title] || "enviou uma mensagem";
-    return `${name} ${verb}`;
-}
-
-const PRIORITY_TONE: Record<AttentionItem["priority"], { bg: string; color: string; label: string }> = {
-    high:   { bg: "rgba(220,38,38,0.10)",  color: "#B91C1C", label: "Urgente" },
-    medium: { bg: "rgba(245,158,11,0.10)", color: "#B45309", label: "Atenção" },
-    low:    { bg: "rgba(148,163,184,0.15)", color: "#475569", label: "Baixa" },
-};
-
-const ATTENTION_ICON: Record<AttentionItem["type"], typeof MessageCircle> = {
-    unread_conversation: MessageCircle,
-    hot_lead_waiting:    Flame,
-    stale_conversation:  Clock,
-    stale_deal:          Target,
-    knowledge_gap:       Question,
-};
-
-// ─── Building blocks ────────────────────────────────────────────────────────
-
-// COMMAND.UI.2 — faixa densa de KPIs (substitui os 4 cards gigantes).
-// Glance bar: número + label, clicável (leva ao filtro/seção). Trend + sparkline
-// só quando há histórico real (≥2 dias via metricHistory); sem isso, nada renderiza.
-interface KpiStripItem {
+interface KpiDef {
     label: string;
     value: string;
-    icon: typeof MessageCircle;
+    sub: string | null;
+    icon: typeof Target;
     accent: string;
     href: string;
-    metricKey: string;
-    /** true = subir é bom (conversas/leads/oportunidades); false = subir é ruim (aguardando). */
-    goodWhenUp: boolean;
-    loading?: boolean;
 }
 
-// Sparkline minúscula a partir do histórico real (≥2 dias). Sem dado → não renderiza.
-function Sparkline({ series, color }: { series: number[]; color: string }) {
-    if (series.length < 2) return null;
-    const w = 46, h = 16;
-    const min = Math.min(...series), max = Math.max(...series);
-    const span = max - min || 1;
-    const pts = series.map((v, i) => `${(i / (series.length - 1)) * w},${h - ((v - min) / span) * (h - 2) - 1}`).join(" ");
+function KpiCard({ kpi, loading, onNavigate }: { kpi: KpiDef; loading: boolean; onNavigate: (href: string) => void }) {
+    const Icon = kpi.icon;
     return (
-        <svg width={w} height={h} aria-hidden className="shrink-0">
-            <polyline points={pts} fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" opacity={0.85} />
-        </svg>
-    );
-}
-
-function KpiStrip({ items, trends, onNavigate }: { items: KpiStripItem[]; trends: Record<string, MetricTrend>; onNavigate: (href: string) => void }) {
-    return (
-        <div
-            className="rounded-2xl overflow-hidden grid grid-cols-2 sm:grid-cols-4 gap-px"
-            style={{
-                background: "#D9E2EC",
-                border: "1px solid #D9E2EC",
-                boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 10px 30px rgba(15,23,42,0.05)",
-            }}
+        <button
+            type="button"
+            onClick={() => onNavigate(kpi.href)}
+            className="min-w-0 rounded-2xl px-5 py-4 text-left transition-all hover:brightness-[0.985]"
+            style={CARD_STYLE}
+            aria-label={`${kpi.label}: ${kpi.value}`}
         >
-            {items.map((it) => {
-                const Icon = it.icon;
-                const t = trends[it.metricKey];
-                const delta = t?.delta ?? null;
-                const improving = delta != null && delta !== 0 && ((delta > 0) === it.goodWhenUp);
-                const deltaColor = delta == null || delta === 0 ? "#475569" : improving ? "#047857" : "#B91C1C";
-                // Sparkline neutro = cinza (não azul, que = ação). Só ganha cor
-                // quando há tom real: verde (melhorando) / vermelho (piorando).
-                const sparkColor = delta == null || delta === 0 ? "#94A3B8" : improving ? "#047857" : "#B91C1C";
-                return (
-                    <button
-                        key={it.label}
-                        type="button"
-                        onClick={() => onNavigate(it.href)}
-                        className="min-w-0 flex items-center gap-3 px-4 sm:px-5 py-3.5 text-left transition-all hover:brightness-[0.97]"
-                        style={{ background: "#FFFFFF" }}
-                        aria-label={`${it.label}: ${it.value}`}
-                    >
-                        <span
-                            className="h-9 w-9 rounded-lg flex items-center justify-center shrink-0"
-                            style={{ background: `${it.accent}1F`, border: `1px solid ${it.accent}3D` }}
-                        >
-                            <Icon size={17} weight="duotone" style={{ color: it.accent }} />
-                        </span>
-                        <div className="min-w-0 flex-1">
-                            {it.loading ? (
-                                <span className="inline-block h-6 w-12 rounded" style={{ background: "#EAF0F6" }} aria-label="Carregando" />
-                            ) : (
-                                <div className="flex items-baseline gap-1.5">
-                                    <p className="text-[24px] sm:text-[26px] font-bold tabular-nums leading-none" style={{ color: "#0B1220", letterSpacing: "-0.03em" }}>
-                                        {it.value}
-                                    </p>
-                                    {delta != null && delta !== 0 && (
-                                        <span className="text-[11px] font-bold tabular-nums leading-none" style={{ color: deltaColor }} title="vs. dia anterior">
-                                            {delta > 0 ? "↑" : "↓"}{Math.abs(delta)}
-                                        </span>
-                                    )}
-                                    {delta === 0 && (
-                                        <span className="text-[10.5px] font-semibold leading-none" style={{ color: "#475569" }} title="sem mudança vs. dia anterior">
-                                            estável
-                                        </span>
-                                    )}
-                                </div>
-                            )}
-                            <p className="text-[11px] uppercase mt-1.5 truncate" style={{ color: "#1E293B", fontWeight: 600, letterSpacing: "0.06em" }}>
-                                {it.label}
-                            </p>
-                        </div>
-                        {!it.loading && <Sparkline series={t?.series ?? []} color={sparkColor} />}
-                        <ChevronRight size={14} weight="bold" className="shrink-0" style={{ color: "#64748B" }} />
-                    </button>
-                );
-            })}
-        </div>
-    );
-}
-
-// ─── Pipeline removido de /inicio (COMMAND.UI.6) ────────────────────────────
-// O funil é view analítica e vive em /pipeline (linkado pelo KPI "Oportunidades
-// abertas"); deal parado já vira item da fila. Tirado daqui pra não competir
-// com o plano do dia. O dado do pipeline segue alimentando o cérebro da EVA
-// (evaInput.pipelineStages), só não tem mais card próprio.
-
-// ─── Seções de Atenção / Movimentos / Leituras da EVA: agora vivem em
-//     components/inicio/DecisionWorkspace.tsx (COMMAND.UI). ──────────────────
-
-// ─── EvaChat — o chat da EVA, renderizado dentro do território unificado ─────
-// (EvaPanel, à direita). Sem card próprio: a identidade é do painel. Não chama
-// IA externa; responde com dados já carregados via useCentralEvaAssistant.
-
-// F5C.6 — confiança legível
-const CONFIDENCE_LABEL: Record<EvaResponse["confidence"], string> = {
-    high: "Alta",
-    medium: "Média",
-    low: "Baixa",
-};
-
-// EvaChat — só o chat (composer + chips + resposta). Vive DENTRO do território
-// unificado da EVA (EvaPanel), por isso não tem card/avatar/narração próprios:
-// a identidade já é dada pelo painel. Antes era um 2º card "EVA Comercial".
-function EvaChat({ evaInput, onNavigate }: { evaInput: CentralEvaInput; onNavigate: (href: string) => void }) {
-    const [composer, setComposer] = useState("");
-    const [showAllCommands, setShowAllCommands] = useState(false);
-    const assistant = useCentralEvaAssistant(evaInput);
-    const isThinking = assistant.state === "loading";
-
-    const handleAsk = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!composer.trim() || isThinking) return;
-        assistant.ask(composer);
-    };
-
-    const visibleCommands = showAllCommands ? assistant.commands : assistant.commands.slice(0, 4);
-    const hasMore = assistant.commands.length > 4;
-
-    return (
-        <div>
-            <p className="text-[10px] uppercase mb-2" style={{ color: "#1E293B", fontWeight: 700, letterSpacing: "0.06em" }}>
-                Pergunte à EVA
-            </p>
-            <form onSubmit={handleAsk} className="relative">
-                <input
-                    type="text"
-                    value={composer}
-                    onChange={(e) => setComposer(e.target.value)}
-                    placeholder="Pergunte sobre operação, pipeline ou conversas"
-                    disabled={isThinking}
-                    className="w-full h-11 pl-4 pr-14 rounded-xl text-[13px] outline-none transition-all focus:border-[#2563EB]/40 disabled:opacity-70"
-                    style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", color: "#0B1220" }}
-                />
-                <button
-                    type="submit"
-                    disabled={!composer.trim() || isThinking}
-                    aria-label="Perguntar à EVA"
-                    className={`eva-send-btn absolute right-1.5 top-1.5 inline-flex items-center justify-center h-8 w-8 rounded-full text-white disabled:opacity-40 disabled:shadow-none ${composer.trim() && !isThinking ? "eva-send-idle" : ""}`}
-                    style={{ background: "linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)" }}
-                >
-                    {isThinking
-                        ? <CircleNotch size={15} weight="bold" className="animate-spin" />
-                        : <ArrowUp size={15} weight="bold" />}
-                </button>
-            </form>
-
-            {/* Chips: no máximo 4 + "Mais ações" */}
-            <div className="mt-3 flex flex-wrap gap-2">
-                {visibleCommands.map((c) => (
-                    <button
-                        key={c.id}
-                        type="button"
-                        disabled={isThinking}
-                        onClick={() => {
-                            setComposer(c.label);
-                            assistant.ask(c.label, c.id);
-                        }}
-                        className="text-[12px] px-3 py-1.5 rounded-full transition-colors hover:bg-[#F1F5F9] disabled:opacity-50"
-                        style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", color: "#475569", fontWeight: 500 }}
-                    >
-                        {c.label}
-                    </button>
-                ))}
-                {hasMore && !showAllCommands && (
-                    <button
-                        type="button"
-                        onClick={() => setShowAllCommands(true)}
-                        className="inline-flex items-center gap-1 text-[12px] px-3 py-1.5 rounded-full transition-colors hover:brightness-105"
-                        style={{ background: "rgba(37,99,235,0.06)", border: "1px solid rgba(37,99,235,0.18)", color: "#1D4ED8", fontWeight: 600 }}
-                    >
-                        Mais ações
-                        <MoreHorizontal size={13} weight="bold" />
-                    </button>
-                )}
-            </div>
-
-            {/* Resposta da EVA — loading / answered / error / out_of_scope */}
-            {isThinking && (
-                <div className="mt-4 flex items-center gap-2.5 px-4 py-3 rounded-xl eva-think-in"
-                    style={{ background: "rgba(37,99,235,0.05)", border: "1px solid rgba(37,99,235,0.14)" }}>
-                    <EvaOrb variant="blue" state="analyzing" size={24} showVoice={false} className="shrink-0" />
-                    <span className="text-[13px]" style={{ color: "#475569" }}>
-                        EVA lendo sua operação<span className="eva-dots" aria-hidden="true" />
-                    </span>
-                </div>
-            )}
-
-            {assistant.state === "answered" && assistant.response && (
-                <EvaAnswerBlock
-                    response={assistant.response}
-                    onNavigate={onNavigate}
-                    onReset={() => {
-                        assistant.reset();
-                        setComposer("");
-                    }}
-                />
-            )}
-
-            {assistant.state === "error" && (
-                <EvaStatusRow tone="error" onReset={() => { assistant.reset(); setComposer(""); }}>
-                    Não consegui ler sua operação agora. Tente atualizar.
-                </EvaStatusRow>
-            )}
-
-            {assistant.state === "out_of_scope" && (
-                <EvaStatusRow tone="neutral" onReset={() => { assistant.reset(); setComposer(""); }}>
-                    Consigo te ajudar com conversas, oportunidades, pipeline e prioridades comerciais.
-                </EvaStatusRow>
-            )}
-
-            <style>{`
-                @keyframes evaBlink { 0%,100%{opacity:1} 50%{opacity:0} }
-                .eva-caret { display:inline-block; margin-left:1px; color:#1D4ED8; animation: evaBlink 0.9s steps(1) infinite; }
-                @keyframes evaOrbPulse { 0%,100%{transform:scale(1);opacity:0.8} 50%{transform:scale(1.14);opacity:1} }
-                .eva-orb-pulse { animation: evaOrbPulse 1.1s ease-in-out infinite; }
-                @keyframes evaThinkIn { from{opacity:0; transform:translateY(4px)} to{opacity:1; transform:none} }
-                .eva-think-in { animation: evaThinkIn 0.28s ease-out both; }
-                .eva-reveal { animation: evaThinkIn 0.32s ease-out both; }
-                .eva-dots::after { content:""; animation: evaDots 1.3s steps(1,end) infinite; }
-                @keyframes evaDots { 0%{content:""} 25%{content:"."} 50%{content:".."} 75%{content:"..."} 100%{content:""} }
-                @media (prefers-reduced-motion: reduce) {
-                    .eva-caret, .eva-orb-pulse, .eva-think-in, .eva-reveal, .eva-dots::after { animation: none !important; }
-                    .eva-caret { display:none; }
-                }
-            `}</style>
-        </div>
-    );
-}
-
-// ─── F5C.6 — blocos de resposta da EVA na Central ───────────────────────────
-
-function EvaAnswerBlock({
-    response,
-    onNavigate,
-    onReset,
-}: {
-    response: EvaResponse;
-    onNavigate: (href: string) => void;
-    onReset: () => void;
-}) {
-    const { displayed, done } = useTypewriter(response.answer);
-    return (
-        <div className="mt-4 rounded-xl p-4 eva-think-in"
-            style={{ background: "rgba(37,99,235,0.05)", border: "1px solid rgba(37,99,235,0.16)" }}>
-            <div className="flex items-start gap-2.5">
-                <EvaOrb variant="blue" size={28} showVoice={false} state={done ? "idle" : "analyzing"} className="shrink-0" />
-                <p className="text-[13px] leading-relaxed flex-1" style={{ color: "#0B1220" }}>
-                    {displayed}
-                    {!done && <span className="eva-caret" aria-hidden="true">▍</span>}
+            <div className="flex items-center gap-2 mb-2.5">
+                <span className="h-7 w-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${kpi.accent}17` }}>
+                    <Icon size={15} weight="duotone" style={{ color: kpi.accent }} />
+                </span>
+                <p className="text-[11px] uppercase truncate" style={{ color: SUB, fontWeight: 700, letterSpacing: "0.06em" }}>
+                    {kpi.label}
                 </p>
             </div>
-            {done && response.actions.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-3 pl-[38px] eva-reveal">
-                    {response.actions.map((a) => (
-                        <button
-                            key={a.href}
-                            type="button"
-                            onClick={() => onNavigate(a.href)}
-                            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-semibold transition-all hover:brightness-105"
-                            style={{ background: "#FFFFFF", border: "1px solid rgba(37,99,235,0.28)", color: "#1D4ED8" }}
-                        >
-                            {a.label}
-                            <ArrowRight size={12} weight="bold" />
-                        </button>
-                    ))}
-                </div>
+            {loading ? (
+                <span className="inline-block h-8 w-20 rounded" style={{ background: GRID }} aria-label="Carregando" />
+            ) : (
+                <p className="text-[27px] font-bold tabular-nums leading-none" style={{ color: INK, letterSpacing: "-0.03em" }}>
+                    {kpi.value}
+                </p>
             )}
-            {done && (
-                <div className="flex items-center justify-between mt-3 pl-[38px] eva-reveal">
-                    <span className="text-[10px] uppercase"
-                        style={{ color: "#1E293B", fontWeight: 700, letterSpacing: "0.06em" }}>
-                        Confiança: {CONFIDENCE_LABEL[response.confidence]}
-                    </span>
-                    <button type="button" onClick={onReset} className="text-[11px] font-semibold" style={{ color: "#1D4ED8" }}>
-                        Nova pergunta
-                    </button>
-                </div>
-            )}
-        </div>
+            <p className="text-[11.5px] mt-1.5 truncate" style={{ color: kpi.sub ? SUB : MUTE }}>
+                {kpi.sub ?? " "}
+            </p>
+        </button>
     );
 }
 
-function EvaStatusRow({
-    tone,
-    children,
-    onReset,
-}: {
-    tone: "error" | "neutral";
+// ─── Gráficos (recharts, 1 série, tooltip sempre) ───────────────────────────
+
+function ChartPanel({ title, hint, loading, error, children, height = 190 }: {
+    title: string;
+    hint?: string;
+    loading?: boolean;
+    error?: boolean;
     children: React.ReactNode;
-    onReset: () => void;
+    height?: number;
 }) {
-    const s = tone === "error"
-        ? { bg: "rgba(220,38,38,0.06)", border: "rgba(220,38,38,0.20)", color: "#B91C1C" }
-        : { bg: "rgba(148,163,184,0.10)", border: "rgba(148,163,184,0.25)", color: "#475569" };
     return (
-        <div className="mt-4 flex items-center justify-between gap-3 px-4 py-3 rounded-xl"
-            style={{ background: s.bg, border: `1px solid ${s.border}` }}>
-            <span className="text-[12.5px]" style={{ color: s.color }}>{children}</span>
-            <button type="button" onClick={onReset} className="text-[11px] font-semibold shrink-0" style={{ color: "#1D4ED8" }}>
-                Voltar
-            </button>
+        <section className="rounded-2xl px-5 pt-4 pb-2 min-w-0" style={CARD_STYLE}>
+            <div className="flex items-baseline justify-between gap-3 mb-1.5">
+                <h2 className="text-[13px] font-bold" style={{ color: INK }}>{title}</h2>
+                {hint && <span className="text-[11px] shrink-0" style={{ color: MUTE }}>{hint}</span>}
+            </div>
+            <div style={{ height }}>
+                {loading ? (
+                    <div className="h-full w-full flex items-end gap-2 pb-3 px-2" aria-label="Carregando">
+                        {[38, 62, 45, 76, 52, 68, 40, 58, 72, 48].map((h, i) => (
+                            <div key={i} className="flex-1 rounded-t animate-pulse" style={{ height: `${h}%`, background: GRID }} />
+                        ))}
+                    </div>
+                ) : error ? (
+                    <div className="h-full flex items-center justify-center text-[12.5px]" style={{ color: MUTE }}>
+                        Não consegui carregar este gráfico. Recarregue a página.
+                    </div>
+                ) : (
+                    children
+                )}
+            </div>
+        </section>
+    );
+}
+
+function CockpitTooltip({ active, payload, label, format }: {
+    active?: boolean;
+    payload?: { value: number }[];
+    label?: string;
+    format: (v: number) => string;
+}) {
+    if (!active || !payload?.length) return null;
+    return (
+        <div className="rounded-lg px-3 py-2" style={{ background: "#FFFFFF", border: "1px solid #D9E2EC", boxShadow: "0 8px 24px rgba(15,23,42,0.12)" }}>
+            <p className="text-[11px]" style={{ color: MUTE }}>{label}</p>
+            <p className="text-[13px] font-bold tabular-nums" style={{ color: INK }}>{format(payload[0].value)}</p>
         </div>
     );
 }
 
-// ─── Filtros da Fila de ação ────────────────────────────────────────────────
-// Popover client-side: filtra dailyPriorities por nível e origem. Sem query
-// nova — opera sobre dados já carregados (read-only da Central).
+const AXIS_TICK = { fontSize: 10.5, fill: MUTE } as const;
 
-type PriorityLevel = DailyPriority["priority"];
+// Receita acumulada do mês vs meta (linha neutra tracejada).
+function RevenueChart({ series, goal }: { series: DayPoint[]; goal: number | null }) {
+    return (
+        <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={series} margin={{ top: 8, right: 8, left: 4, bottom: 0 }}>
+                <defs>
+                    <linearGradient id="ck-rev" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={BLUE} stopOpacity={0.18} />
+                        <stop offset="100%" stopColor={BLUE} stopOpacity={0.02} />
+                    </linearGradient>
+                </defs>
+                <CartesianGrid vertical={false} stroke={GRID} />
+                <XAxis dataKey="label" tick={AXIS_TICK} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={28} />
+                <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} width={46} tickFormatter={(v: number) => fmtBRL(v)} domain={[0, (max: number) => Math.max(max, goal ?? 0) * 1.08 || 10]} />
+                <Tooltip content={<CockpitTooltip format={(v) => `R$ ${Math.round(v).toLocaleString("pt-BR")}`} />} cursor={{ stroke: "#CBD5E1", strokeDasharray: "3 3" }} />
+                {goal != null && goal > 0 && (
+                    <ReferenceLine
+                        y={goal}
+                        stroke={MUTE}
+                        strokeDasharray="6 4"
+                        label={{ value: `meta ${fmtBRL(goal)}`, position: "insideTopRight", fontSize: 10.5, fill: SUB }}
+                    />
+                )}
+                <Area type="monotone" dataKey="value" stroke={BLUE} strokeWidth={2} fill="url(#ck-rev)" dot={false} activeDot={{ r: 4, strokeWidth: 2, stroke: "#FFFFFF" }} />
+            </AreaChart>
+        </ResponsiveContainer>
+    );
+}
+
+// Novos leads por dia (14d) — barras finas, ponta arredondada na baseline.
+function LeadsChart({ series }: { series: DayPoint[] }) {
+    return (
+        <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={series} margin={{ top: 8, right: 8, left: 4, bottom: 0 }} barCategoryGap="34%">
+                <CartesianGrid vertical={false} stroke={GRID} />
+                <XAxis dataKey="label" tick={AXIS_TICK} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={22} />
+                <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} width={28} allowDecimals={false} />
+                <Tooltip content={<CockpitTooltip format={(v) => `${v} ${v === 1 ? "lead novo" : "leads novos"}`} />} cursor={{ fill: "rgba(37,99,235,0.06)" }} />
+                <Bar dataKey="value" fill={BLUE} radius={[4, 4, 0, 0]} maxBarSize={22} />
+            </BarChart>
+        </ResponsiveContainer>
+    );
+}
+
+// Funil do pipeline v3 — silhueta contínua com dimensões DETERMINÍSTICAS:
+// cada linha é flex com altura fixa e o svg leva width/height explícitos em
+// atributo (h-full aqui já quebrou 2x: sem altura definida no pai, o SVG cai
+// no default de 150px e os segmentos se sobrepõem). O fundo de um segmento
+// tem a largura do topo do próximo (silhueta emendada), laterais em bezier,
+// rampa azul claro→escuro, Ganho como base verde, passagem % em pill na
+// divisória. Labels laterais em tinta, nunca texto sobre a cor.
+const FUNNEL_RAMP = ["#BFDBFE", "#93C5FD", "#60A5FA", "#3B82F6", "#2563EB"];
+const FUNNEL_ROW = 58;
+const FUNNEL_WON_ROW = 36;
+const FUNNEL_SIDE = 132; // colunas de label (esquerda/direita)
+
+interface FunnelStage { key: string; name: string; count: number; totalValue: number }
+
+function FunnelRow({ height, left, right, children, onClick, ariaLabel }: {
+    height: number;
+    left: React.ReactNode;
+    right: React.ReactNode;
+    children: React.ReactNode;
+    onClick: () => void;
+    ariaLabel: string;
+}) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            aria-label={ariaLabel}
+            className="group flex w-full items-center gap-4 text-left"
+            style={{ height }}
+        >
+            <span className="shrink-0 text-right" style={{ width: FUNNEL_SIDE }}>{left}</span>
+            <span className="relative min-w-0 flex-1" style={{ height }}>{children}</span>
+            <span className="shrink-0" style={{ width: FUNNEL_SIDE }}>{right}</span>
+        </button>
+    );
+}
+
+function PipelineFunnel({ stages, onNavigate }: { stages: FunnelStage[]; onNavigate: (href: string) => void }) {
+    const open = stages.filter((s) => s.key !== "closed_won");
+    const won = stages.find((s) => s.key === "closed_won");
+    const maxCount = Math.max(1, ...open.map((s) => s.count));
+    const w = (count: number) => Math.max(18, (count / maxCount) * 94);
+    const widths = open.map((st) => w(st.count));
+    const bottomOf = (i: number) => (i < open.length - 1 ? widths[i + 1] : widths[i] * 0.72);
+    const goPipeline = () => onNavigate("/pipeline");
+
+    const valueLabel = (st: FunnelStage) => (
+        <span className="block text-[13px] tabular-nums truncate" style={{ color: INK }}>
+            <strong className="text-[14px]">{st.count}</strong>
+            <span style={{ color: MUTE }}> · {fmtBRL(st.totalValue)}</span>
+        </span>
+    );
+
+    return (
+        <div className="flex flex-col" role="img" aria-label="Funil do pipeline por etapa">
+            {open.map((st, i) => {
+                const next = open[i + 1];
+                const tw = widths[i];
+                const bw = bottomOf(i);
+                const k = FUNNEL_ROW * 0.5;
+                const pass = next && st.count > 0 ? Math.round((next.count / st.count) * 100) : null;
+                const d = [
+                    `M ${50 - tw / 2} 0`,
+                    `L ${50 + tw / 2} 0`,
+                    `C ${50 + tw / 2} ${k}, ${50 + bw / 2} ${FUNNEL_ROW - k}, ${50 + bw / 2} ${FUNNEL_ROW}`,
+                    `L ${50 - bw / 2} ${FUNNEL_ROW}`,
+                    `C ${50 - bw / 2} ${FUNNEL_ROW - k}, ${50 - tw / 2} ${k}, ${50 - tw / 2} 0`,
+                    "Z",
+                ].join(" ");
+                return (
+                    <FunnelRow
+                        key={st.key}
+                        height={FUNNEL_ROW}
+                        onClick={goPipeline}
+                        ariaLabel={`${st.name}: ${st.count} oportunidades, ${fmtBRL(st.totalValue)}`}
+                        left={
+                            <span className="block text-[13px] font-semibold truncate transition-colors group-hover:text-[#0B1220]" style={{ color: SUB }}>
+                                {st.name}
+                            </span>
+                        }
+                        right={valueLabel(st)}
+                    >
+                        <svg
+                            width="100%"
+                            height={FUNNEL_ROW}
+                            viewBox={`0 0 100 ${FUNNEL_ROW}`}
+                            preserveAspectRatio="none"
+                            className="block"
+                            aria-hidden
+                        >
+                            <path
+                                d={d}
+                                fill={FUNNEL_RAMP[Math.min(i, FUNNEL_RAMP.length - 2)]}
+                                className="transition-[filter] duration-200 group-hover:brightness-[0.96]"
+                                style={{ transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)" }}
+                            />
+                            {/* hairline branca só no topo (divisória), não nas laterais:
+                                stroke no path todo engrossava a silhueta */}
+                            {i > 0 && <line x1={50 - tw / 2} y1={0.75} x2={50 + tw / 2} y2={0.75} stroke="#FFFFFF" strokeWidth={1.5} />}
+                        </svg>
+                        {pass != null && (
+                            <span
+                                className="absolute left-1/2 -translate-x-1/2 z-10 inline-flex items-center rounded-full px-2 py-[2px] text-[10px] font-mono tabular-nums whitespace-nowrap"
+                                style={{
+                                    bottom: -9,
+                                    background: "#FFFFFF",
+                                    border: "1px solid #E4E9F2",
+                                    color: SUB,
+                                    boxShadow: "0 1px 2px rgba(15,23,42,0.06)",
+                                }}
+                            >
+                                {pass}% ↓
+                            </span>
+                        )}
+                    </FunnelRow>
+                );
+            })}
+
+            {won && (
+                <div className="mt-2.5">
+                    <FunnelRow
+                        height={FUNNEL_WON_ROW}
+                        onClick={goPipeline}
+                        ariaLabel={`Ganho: ${won.count} oportunidades, ${fmtBRL(won.totalValue)}`}
+                        left={
+                            <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold" style={{ color: "#047857" }}>
+                                <Check size={13} weight="bold" /> Ganho
+                            </span>
+                        }
+                        right={valueLabel(won)}
+                    >
+                        <svg
+                            width="100%"
+                            height={FUNNEL_WON_ROW}
+                            viewBox={`0 0 100 ${FUNNEL_WON_ROW}`}
+                            preserveAspectRatio="none"
+                            className="block"
+                            aria-hidden
+                        >
+                            <rect
+                                x={50 - (widths[widths.length - 1] ?? 40) * 0.36}
+                                y={5}
+                                width={(widths[widths.length - 1] ?? 40) * 0.72}
+                                height={FUNNEL_WON_ROW - 10}
+                                rx={4}
+                                fill="#10B981"
+                                className="transition-[filter] duration-200 group-hover:brightness-[0.96]"
+                            />
+                        </svg>
+                    </FunnelRow>
+                </div>
+            )}
+        </div>
+    );
+}
+
+// Tempo de 1ª resposta por dia (mediana, 7d) — subir é ruim.
+function ResponseChart({ series }: { series: DayPoint[] }) {
+    return (
+        <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={series} margin={{ top: 8, right: 8, left: 4, bottom: 0 }} barCategoryGap="38%">
+                <CartesianGrid vertical={false} stroke={GRID} />
+                <XAxis dataKey="label" tick={AXIS_TICK} tickLine={false} axisLine={false} />
+                <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} width={34} tickFormatter={(v: number) => fmtMin(v)} allowDecimals={false} />
+                <Tooltip content={<CockpitTooltip format={(v) => (v === 0 ? "sem respostas no dia" : `mediana ${fmtMin(v)}`)} />} cursor={{ fill: "rgba(37,99,235,0.06)" }} />
+                <Bar dataKey="value" fill="#B45309" fillOpacity={0.85} radius={[4, 4, 0, 0]} maxBarSize={26} />
+            </BarChart>
+        </ResponsiveContainer>
+    );
+}
+
+// ─── Período dos gráficos (leads + tempo de resposta; receita é sempre o mês) ─
+
+const RANGE_OPTIONS: CockpitRange[] = [7, 14, 30];
+
+function PeriodToggle({ value, onChange }: { value: CockpitRange; onChange: (v: CockpitRange) => void }) {
+    return (
+        <div
+            className="inline-flex h-10 items-center rounded-xl p-1"
+            style={{ background: "rgba(255,255,255,0.85)", border: "1px solid #D9E2EC" }}
+            role="group"
+            aria-label="Período dos gráficos"
+        >
+            {RANGE_OPTIONS.map((d) => (
+                <button
+                    key={d}
+                    type="button"
+                    onClick={() => onChange(d)}
+                    aria-pressed={value === d}
+                    className="h-8 px-3 rounded-lg text-[12.5px] font-semibold transition-colors"
+                    style={value === d
+                        ? { background: "#0B1220", color: "#FFFFFF" }
+                        : { color: SUB }}
+                >
+                    {d}d
+                </button>
+            ))}
+        </div>
+    );
+}
+
+// ─── Filtros da Fila de ação (client-side, inalterado) ──────────────────────
+
 type PrioritySource = DailyPriority["source"];
 type StaleWindow = 24 | 48;
 
-// "O que fazer" — os 3 verbos que a fila realmente gera (= source, escrito em
-// linguagem de ação, não de dado). "calendar" não é produzido aqui.
 const ACTION_OPTIONS: { key: PrioritySource; label: string }[] = [
     { key: "conversation", label: "Responder lead" },
     { key: "deal",         label: "Avançar oportunidade" },
     { key: "eva",          label: "Completar a EVA" },
 ];
-
-// "Foco" — tempo parado (lead parado = dinheiro vazando). Mais acionável que
-// filtrar pelos 4 níveis (a fila já vem ordenada por prioridade).
 const STALE_OPTIONS: { key: StaleWindow; label: string }[] = [
     { key: 24, label: "Parado +24h" },
     { key: 48, label: "Parado +48h" },
@@ -466,8 +455,8 @@ const STALE_OPTIONS: { key: StaleWindow; label: string }[] = [
 
 export interface CentralFilters {
     actions: Set<PrioritySource>;
-    urgent: boolean;             // crítico + alto
-    stale: StaleWindow | null;   // parado há mais de X horas (createdAt)
+    urgent: boolean;
+    stale: StaleWindow | null;
 }
 
 function emptyFilters(): CentralFilters {
@@ -487,29 +476,12 @@ function matchesFilters(p: DailyPriority, f: CentralFilters): boolean {
     return true;
 }
 
-function FilterCheckRow({
-    label,
-    dot,
-    checked,
-    onToggle,
-}: {
-    label: string;
-    dot?: string;
-    checked: boolean;
-    onToggle: () => void;
-}) {
+function FilterCheckRow({ label, dot, checked, onToggle }: { label: string; dot?: string; checked: boolean; onToggle: () => void }) {
     return (
-        <button
-            type="button"
-            onClick={onToggle}
-            className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors hover:bg-[#F1F5F9]"
-        >
+        <button type="button" onClick={onToggle} className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors hover:bg-[#F1F5F9]">
             <span
                 className="h-[18px] w-[18px] rounded-[5px] flex items-center justify-center shrink-0 transition-colors"
-                style={{
-                    background: checked ? "#2563EB" : "#FFFFFF",
-                    border: `1.5px solid ${checked ? "#2563EB" : "#CBD5E1"}`,
-                }}
+                style={{ background: checked ? BLUE : "#FFFFFF", border: `1.5px solid ${checked ? BLUE : "#CBD5E1"}` }}
             >
                 {checked && <Check size={12} weight="bold" style={{ color: "#FFFFFF" }} />}
             </span>
@@ -519,19 +491,8 @@ function FilterCheckRow({
     );
 }
 
-function FilterMenu({
-    filters,
-    onChange,
-    activeCount,
-}: {
-    filters: CentralFilters;
-    onChange: (next: CentralFilters) => void;
-    activeCount: number;
-}) {
+function FilterMenu({ filters, onChange, activeCount }: { filters: CentralFilters; onChange: (next: CentralFilters) => void; activeCount: number }) {
     const [open, setOpen] = useState(false);
-    // Posição do menu portalizado (fixed). O menu é renderizado no body via portal
-    // pra escapar do overflow-hidden do header e de contextos de empilhamento
-    // (vz-stagger), abrindo inteiro e por cima do Pulso.
     const [pos, setPos] = useState<{ top: number; right: number }>({ top: 0, right: 0 });
     const triggerRef = useRef<HTMLDivElement>(null);
     const menuRef = useRef<HTMLDivElement>(null);
@@ -570,9 +531,6 @@ function FilterMenu({
         if (next.has(k)) next.delete(k); else next.add(k);
         onChange({ ...filters, actions: next });
     };
-    const toggleUrgent = () => onChange({ ...filters, urgent: !filters.urgent });
-    const toggleStale = (k: StaleWindow) => onChange({ ...filters, stale: filters.stale === k ? null : k });
-    const clear = () => onChange(emptyFilters());
 
     return (
         <div className="relative" ref={triggerRef}>
@@ -583,63 +541,41 @@ function FilterMenu({
                 className="inline-flex items-center gap-2 h-10 px-4 rounded-xl text-[13px] font-medium transition-colors hover:bg-white shrink-0"
                 style={{
                     background: activeCount > 0 ? "#FFFFFF" : "rgba(255,255,255,0.85)",
-                    backdropFilter: "blur(8px)",
-                    WebkitBackdropFilter: "blur(8px)",
                     border: `1px solid ${activeCount > 0 ? "#BFD3F2" : "#D9E2EC"}`,
-                    color: "#475569",
+                    color: SUB,
                 }}
             >
-                <Filter size={14} weight="duotone" style={{ color: activeCount > 0 ? "#2563EB" : "#475569" }} />
+                <Filter size={14} weight="duotone" style={{ color: activeCount > 0 ? BLUE : SUB }} />
                 Filtros
                 {activeCount > 0 && (
-                    <span
-                        className="inline-flex items-center justify-center h-5 min-w-[20px] px-1 rounded-full text-[11px] font-bold tabular-nums text-white"
-                        style={{ background: "#2563EB" }}
-                    >
+                    <span className="inline-flex items-center justify-center h-5 min-w-[20px] px-1 rounded-full text-[11px] font-bold tabular-nums text-white" style={{ background: BLUE }}>
                         {activeCount}
                     </span>
                 )}
-                <ChevronDown size={13} weight="bold" className="transition-transform" style={{ color: "#94A3B8", transform: open ? "rotate(180deg)" : "none" }} />
+                <ChevronDown size={13} weight="bold" className="transition-transform" style={{ color: MUTE, transform: open ? "rotate(180deg)" : "none" }} />
             </button>
 
             {open && createPortal(
                 <div
                     ref={menuRef}
                     className="fixed z-[60] w-[244px] rounded-xl p-3"
-                    style={{
-                        top: pos.top,
-                        right: pos.right,
-                        background: "#FFFFFF",
-                        border: "1px solid #D9E2EC",
-                        boxShadow: "0 4px 12px rgba(15,23,42,0.08), 0 18px 40px rgba(15,23,42,0.12)",
-                    }}
+                    style={{ top: pos.top, right: pos.right, background: "#FFFFFF", border: "1px solid #D9E2EC", boxShadow: "0 4px 12px rgba(15,23,42,0.08), 0 18px 40px rgba(15,23,42,0.12)" }}
                 >
                     <div className="flex items-center justify-between px-1 pb-1.5">
-                        <span className="text-[11px] uppercase" style={{ color: "#1E293B", fontWeight: 700, letterSpacing: "0.05em" }}>
-                            Filtrar a fila
-                        </span>
+                        <span className="text-[11px] uppercase" style={{ color: "#1E293B", fontWeight: 700, letterSpacing: "0.05em" }}>Filtrar a fila</span>
                         {activeCount > 0 && (
-                            <button type="button" onClick={clear} className="text-[11px] font-semibold" style={{ color: "#2563EB" }}>
-                                Limpar
-                            </button>
+                            <button type="button" onClick={() => onChange(emptyFilters())} className="text-[11px] font-semibold" style={{ color: BLUE }}>Limpar</button>
                         )}
                     </div>
-
-                    <p className="text-[10px] uppercase px-2.5 mt-1 mb-0.5" style={{ color: "#1E293B", fontWeight: 700, letterSpacing: "0.06em" }}>
-                        O que fazer
-                    </p>
+                    <p className="text-[10px] uppercase px-2.5 mt-1 mb-0.5" style={{ color: "#1E293B", fontWeight: 700, letterSpacing: "0.06em" }}>O que fazer</p>
                     {ACTION_OPTIONS.map((o) => (
                         <FilterCheckRow key={o.key} label={o.label} checked={filters.actions.has(o.key)} onToggle={() => toggleAction(o.key)} />
                     ))}
-
                     <div className="h-px my-1.5" style={{ background: "#F1F5F9" }} />
-
-                    <p className="text-[10px] uppercase px-2.5 mb-0.5" style={{ color: "#1E293B", fontWeight: 700, letterSpacing: "0.06em" }}>
-                        Foco
-                    </p>
-                    <FilterCheckRow label="Só urgentes" dot="#F43F5E" checked={filters.urgent} onToggle={toggleUrgent} />
+                    <p className="text-[10px] uppercase px-2.5 mb-0.5" style={{ color: "#1E293B", fontWeight: 700, letterSpacing: "0.06em" }}>Foco</p>
+                    <FilterCheckRow label="Só urgentes" dot="#F43F5E" checked={filters.urgent} onToggle={() => onChange({ ...filters, urgent: !filters.urgent })} />
                     {STALE_OPTIONS.map((o) => (
-                        <FilterCheckRow key={o.key} label={o.label} checked={filters.stale === o.key} onToggle={() => toggleStale(o.key)} />
+                        <FilterCheckRow key={o.key} label={o.label} checked={filters.stale === o.key} onToggle={() => onChange({ ...filters, stale: filters.stale === o.key ? null : o.key })} />
                     ))}
                 </div>,
                 document.body
@@ -648,12 +584,8 @@ function FilterMenu({
     );
 }
 
-// Chips de filtro ativo — tornam o recorte VISÍVEL (antes ficava escondido no
-// popover). Cada chip remove só aquele filtro; "Limpar tudo" zera. Aparece só
-// quando há filtro aplicado.
 function ActiveFilterChips({ filters, onChange }: { filters: CentralFilters; onChange: (next: CentralFilters) => void }) {
     const actionLabel = Object.fromEntries(ACTION_OPTIONS.map((o) => [o.key, o.label])) as Record<PrioritySource, string>;
-
     const chips: { key: string; label: string; dot?: string; remove: () => void }[] = [];
     filters.actions.forEach((a) =>
         chips.push({
@@ -662,19 +594,13 @@ function ActiveFilterChips({ filters, onChange }: { filters: CentralFilters; onC
             remove: () => { const n = new Set(filters.actions); n.delete(a); onChange({ ...filters, actions: n }); },
         }),
     );
-    if (filters.urgent) {
-        chips.push({ key: "urgent", label: "Urgentes", dot: "#F43F5E", remove: () => onChange({ ...filters, urgent: false }) });
-    }
-    if (filters.stale != null) {
-        chips.push({ key: "stale", label: `Parado +${filters.stale}h`, remove: () => onChange({ ...filters, stale: null }) });
-    }
+    if (filters.urgent) chips.push({ key: "urgent", label: "Urgentes", dot: "#F43F5E", remove: () => onChange({ ...filters, urgent: false }) });
+    if (filters.stale != null) chips.push({ key: "stale", label: `Parado +${filters.stale}h`, remove: () => onChange({ ...filters, stale: null }) });
     if (chips.length === 0) return null;
 
     return (
         <div className="flex flex-wrap items-center gap-2 px-1">
-            <span className="text-[11px] uppercase" style={{ color: "#94A3B8", fontWeight: 700, letterSpacing: "0.06em" }}>
-                Filtrando
-            </span>
+            <span className="text-[11px] uppercase" style={{ color: MUTE, fontWeight: 700, letterSpacing: "0.06em" }}>Filtrando</span>
             {chips.map((c) => (
                 <button
                     key={c.key}
@@ -686,15 +612,10 @@ function ActiveFilterChips({ filters, onChange }: { filters: CentralFilters; onC
                 >
                     {c.dot && <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: c.dot }} />}
                     {c.label}
-                    <X size={11} weight="bold" style={{ color: "#94A3B8" }} />
+                    <X size={11} weight="bold" style={{ color: MUTE }} />
                 </button>
             ))}
-            <button
-                type="button"
-                onClick={() => onChange(emptyFilters())}
-                className="text-[12px] font-semibold transition-colors hover:underline"
-                style={{ color: "#2563EB" }}
-            >
+            <button type="button" onClick={() => onChange(emptyFilters())} className="text-[12px] font-semibold transition-colors hover:underline" style={{ color: BLUE }}>
                 Limpar tudo
             </button>
         </div>
@@ -709,25 +630,23 @@ function getHourlyGreeting(hour: number): string {
     return "Boa noite";
 }
 
-const PRIORITY_BAR_COLOR: Record<PriorityLevel, string> = {
+const PRIORITY_BAR_COLOR: Record<DailyPriority["priority"], string> = {
     critical: "#F43F5E",
     high: "#F59E0B",
     medium: "#3B82F6",
     low: "#94A3B8",
 };
 
-// Barra-missão do dia: um segmento por ação, cor = severidade. Resolvido fica
-// sólido; pendente fica esmaecido. O avanço é o "plano com fim" da tela.
 function DayProgress({ items, state }: { items: DailyPriority[]; state: PriorityActionState }) {
     const total = items.length;
     if (total === 0) return null;
     const resolved = items.filter((p) => isResolved(state, p.id)).length;
     const allDone = resolved === total;
     return (
-        <div className="rounded-2xl px-5 sm:px-6 py-4" style={{ background: "#FFFFFF", border: "1px solid #D9E2EC", boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}>
+        <div className="rounded-2xl px-5 py-4" style={CARD_STYLE}>
             <div className="flex items-center justify-between mb-2">
-                <span className="text-[12.5px] font-bold" style={{ color: "#0B1220" }}>Progresso do dia</span>
-                <span className="text-[12px] font-semibold tabular-nums inline-flex items-center gap-1.5" style={{ color: allDone ? "#047857" : "#475569" }}>
+                <span className="text-[12.5px] font-bold" style={{ color: INK }}>Progresso do dia</span>
+                <span className="text-[12px] font-semibold tabular-nums inline-flex items-center gap-1.5" style={{ color: allDone ? "#047857" : SUB }}>
                     {allDone && <CheckCircle size={14} weight="fill" />}
                     {resolved} de {total} {resolved === 1 ? "resolvida" : "resolvidas"}
                 </span>
@@ -750,7 +669,6 @@ function DayProgress({ items, state }: { items: DailyPriority[]; state: Priority
     );
 }
 
-// Estado persistido de resolver/adiar (localStorage por empresa).
 function usePriorityActions(companyId: string | null | undefined) {
     const [state, setState] = useState<PriorityActionState>({ resolved: {}, snoozed: {} });
     useEffect(() => {
@@ -780,48 +698,38 @@ const Inicio = () => {
     const reduce = useReducedMotion();
     const { profile, companyId } = useAuth();
 
-    // Pipeline real (mantém)
-    const { pipeline, totalPipeline } = useInicioData();
-
-    // Central de Comando — métricas reais + listas
+    const { pipeline } = useInicioData();
+    const [rangeDays, setRangeDays] = useState<CockpitRange>(14);
+    const cockpit = useCockpitData(rangeDays);
     const cc = useCommandCenterData();
     const onboarding = useOnboardingProgress();
-    // Preview do onboarding (?firstrun=1): força a visão de usuário novo (4 passos
-    // pendentes), pra eyeball mesmo numa conta já ativada. Temporário/dev.
     const [searchParams] = useSearchParams();
     const onboardingPreview = searchParams.get("firstrun") === "1";
 
-    const metrics: CommandCenterMetrics | null = cc.metrics;
-
-    // Atualizar: refresca a Central inteira (métricas + pipeline), não só o cc.
     const [manualRefreshing, setManualRefreshing] = useState(false);
     const handleRefresh = useCallback(async () => {
         setManualRefreshing(true);
         try {
-            await Promise.all([cc.refetch(), pipeline.refetch()]);
+            await Promise.all([cc.refetch(), pipeline.refetch(), cockpit.refetch()]);
         } finally {
             setManualRefreshing(false);
         }
-    }, [cc, pipeline]);
+    }, [cc, pipeline, cockpit]);
     const refreshing = manualRefreshing || cc.isFetching || pipeline.isFetching;
 
-    // Filtros da Fila de ação (client-side, sobre dados já carregados).
     const [filters, setFilters] = useState<CentralFilters>(emptyFilters);
     const activeFilterCount = countActiveFilters(filters);
 
-    // Ações persistidas (resolver/adiar) + envio direto (Responder rápido).
     const actions = usePriorityActions(companyId);
     const sender = useEvolutionSender();
     const handleQuickReply = useCallback(
         async (chatJid: string, text: string) => {
             await sender.sendMessage(chatJid, text);
-            void cc.refetch(); // reflete a resposta enviada
+            void cc.refetch();
         },
         [sender, cc],
     );
 
-    // Plano do dia (top-5 curado): tira adiados; separa resolvidos de pendentes.
-    // pendingAll = a fila do dia (alimenta a leitura da EVA, narração, progresso).
     const { dayItems, pendingAll } = useMemo(() => {
         const nowMs = Date.now();
         const day = cc.dailyPriorities.filter((p) => !isSnoozed(actions.state, p.id, nowMs));
@@ -829,8 +737,6 @@ const Inicio = () => {
         return { dayItems: day, pendingAll: pending };
     }, [cc.dailyPriorities, actions.state]);
 
-    // Conjunto COMPLETO de pendentes (além do top-5) — usado só quando há filtro,
-    // pra o filtro revelar tudo daquele tipo, não recortar 5.
     const allPending = useMemo(() => {
         const nowMs = Date.now();
         return cc.dailyPrioritiesAll
@@ -838,7 +744,6 @@ const Inicio = () => {
             .filter((p) => !isResolved(actions.state, p.id));
     }, [cc.dailyPrioritiesAll, actions.state]);
 
-    // Fila visível: sem filtro = top-5 do dia; com filtro = TODO o pendente que bate.
     const queue = useMemo(() => {
         const base = activeFilterCount > 0 ? allPending : pendingAll;
         return base.filter((p) => matchesFilters(p, filters));
@@ -846,100 +751,84 @@ const Inicio = () => {
 
     const criticalCount = useMemo(() => pendingAll.filter((p) => p.priority === "critical").length, [pendingAll]);
     const dayComplete = dayItems.length > 0 && pendingAll.length === 0;
+    const handlers: QueueHandlers = {
+        onNavigate: navigate,
+        onResolve: actions.resolve,
+        onSnooze: actions.snooze,
+        sendReply: handleQuickReply,
+        replyConnected: sender.connected,
+    };
 
-    // COMMAND.UI.4 — tendência REAL: grava snapshot diário e lê delta/série.
-    // Só aparece quando há histórico (≥2 dias). Nada fabricado.
-    const [trends, setTrends] = useState<Record<string, MetricTrend>>({});
-    useEffect(() => {
-        if (cc.loading || !metrics || !companyId) return;
-        recordMetricSnapshot(companyId, {
-            activeConversations: metrics.activeConversations,
-            hotLeads: metrics.hotLeads,
-            needsFollowUp: metrics.needsFollowUp,
-            opportunitiesOpen: metrics.opportunitiesOpen,
-        });
-        setTrends({
-            activeConversations: getMetricTrend(companyId, "activeConversations"),
-            hotLeads: getMetricTrend(companyId, "hotLeads"),
-            needsFollowUp: getMetricTrend(companyId, "needsFollowUp"),
-            opportunitiesOpen: getMetricTrend(companyId, "opportunitiesOpen"),
-        });
-    }, [cc.loading, metrics, companyId]);
-
-    // F5C.6 — entrada do assistente da EVA (dados já carregados, read-only)
-    const evaInput: CentralEvaInput = useMemo(
-        () => ({
-            metrics: cc.metrics,
-            attentionItems: cc.attentionItems,
-            dailyPriorities: cc.dailyPriorities,
-            evaHighlights: cc.evaHighlights,
-            recentActivity: cc.recentActivity,
-            pipelineStages: (pipeline.data || []).map((s) => ({ name: s.name, count: s.count, key: s.key })),
-            pipelineTotal: totalPipeline,
-            dataError: !!cc.error,
-        }),
-        [cc.metrics, cc.attentionItems, cc.dailyPriorities, cc.evaHighlights, cc.recentActivity, cc.error, pipeline.data, totalPipeline],
-    );
-
-    const kpiCards: KpiStripItem[] = useMemo(() => {
-        const safe = (n: number | null | undefined) => (n == null ? "—" : String(n));
-        return [
-            { label: "Conversas ativas", value: safe(metrics?.activeConversations), icon: MessageCircle, accent: "#2563EB", href: "/inbox", metricKey: "activeConversations", goodWhenUp: true, loading: cc.loading },
-            { label: "Leads quentes", value: safe(metrics?.hotLeads), icon: Flame, accent: "#DC2626", href: "/inbox", metricKey: "hotLeads", goodWhenUp: true, loading: cc.loading },
-            { label: "Aguardando resposta", value: safe(metrics?.needsFollowUp), icon: Clock, accent: "#B45309", href: "/inbox", metricKey: "needsFollowUp", goodWhenUp: false, loading: cc.loading },
-            { label: "Oportunidades abertas", value: safe(metrics?.opportunitiesOpen), icon: Target, accent: "#10B981", href: "/pipeline", metricKey: "opportunitiesOpen", goodWhenUp: true, loading: cc.loading },
-        ];
-    }, [metrics, cc.loading]);
+    // KPIs do negócio (useCockpitData) + oportunidades abertas (pipeline real).
+    const ck: CockpitData | null = cockpit.data;
+    const goalPct = ck?.monthGoal ? Math.round((ck.wonMonthTotal / ck.monthGoal) * 100) : null;
+    // totalPipeline (useInicioData) é CONTAGEM; o valor aberto vem das etapas.
+    const openStages = (pipeline.data ?? []).filter((s) => s.key !== "closed_won");
+    const openValue = openStages.reduce((n, s) => n + s.totalValue, 0);
+    const openCount = openStages.reduce((n, s) => n + s.count, 0);
+    const kpis: KpiDef[] = [
+        {
+            label: "Ganho no mês",
+            value: ck ? fmtBRL(ck.wonMonthTotal) : "—",
+            sub: goalPct != null ? `${goalPct}% da meta de ${fmtBRL(ck!.monthGoal!)}` : "sem meta cadastrada",
+            icon: CurrencyDollar, accent: "#047857", href: "/metas",
+        },
+        {
+            label: "Pipeline aberto",
+            value: pipeline.data ? fmtBRL(openValue) : "—",
+            sub: `${openCount} ${openCount === 1 ? "oportunidade aberta" : "oportunidades abertas"}`,
+            icon: Funnel, accent: BLUE, href: "/pipeline",
+        },
+        {
+            label: "Novos leads (7d)",
+            value: ck ? String(ck.leads7dTotal) : "—",
+            sub: ck && ck.leadsPerDay.length > 0 ? `${ck.leadsPerDay[ck.leadsPerDay.length - 1].value} hoje` : null,
+            icon: UserPlus, accent: "#7C3AED", href: "/inbox",
+        },
+        {
+            label: "Tempo de resposta",
+            value: ck ? fmtMin(ck.responseMedianMin) : "—",
+            sub: `mediana da 1ª resposta, ${rangeDays} dias`,
+            icon: Timer, accent: "#B45309", href: "/inbox",
+        },
+    ];
 
     const firstName = (profile?.nome || "").split(" ")[0] || "";
     const greeting = getHourlyGreeting(new Date().getHours());
-    const narration = cc.loading
-        ? "A EVA está lendo sua operação…"
+    const subtitle = cc.loading
+        ? "Carregando sua operação…"
         : pendingAll.length === 0
-            ? "A EVA leu sua operação. Nada pendente agora, tudo em dia."
-            : `A EVA leu sua operação. Você tem ${pendingAll.length} ${pendingAll.length === 1 ? "ação" : "ações"} hoje${criticalCount > 0 ? `, ${criticalCount} não ${criticalCount === 1 ? "pode" : "podem"} esperar` : ""}.`;
+            ? "Operação em dia. Nada esperando por você agora."
+            : `Sua operação em números. ${pendingAll.length} ${pendingAll.length === 1 ? "ação espera" : "ações esperam"} por você na fila.`;
 
     return (
-        <div className="vz-stagger space-y-5 sm:space-y-6 mx-auto w-full max-w-[1600px] 2xl:px-4 pb-24 lg:pb-0">
+        <div className="vz-stagger space-y-5 sm:space-y-6 mx-auto w-full max-w-[1920px] 2xl:px-2">
             {/* Header */}
             <div
-                className="rounded-2xl px-7 sm:px-9 py-6 sm:py-7 flex flex-col sm:flex-row sm:items-end justify-between gap-4 relative overflow-hidden"
-                style={{
-                    background: "#FFFFFF",
-                    border: "1px solid #E6EDF5",
-                    boxShadow: "0 1px 2px rgba(15,23,42,0.04)",
-                }}
+                className="rounded-2xl px-5 sm:px-9 py-6 sm:py-7 flex flex-col sm:flex-row sm:items-end justify-between gap-4 relative overflow-hidden"
+                style={{ background: "#FFFFFF", border: "1px solid #E6EDF5", boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}
             >
                 <div
                     className="absolute top-0 inset-x-0 h-px pointer-events-none"
-                    style={{
-                        background: "linear-gradient(90deg, transparent, rgba(37,99,235,0.30) 40%, rgba(37,99,235,0.16) 70%, transparent)",
-                    }}
+                    style={{ background: "linear-gradient(90deg, transparent, rgba(37,99,235,0.30) 40%, rgba(37,99,235,0.16) 70%, transparent)" }}
                 />
                 <div className="relative z-10">
-                    <div className="flex items-center gap-3 mb-2">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mb-2">
                         <h1 className="text-[30px] sm:text-[40px] leading-[1.04]"
-                            style={{ color: "#0B1220", fontFamily: "'Newsreader', Georgia, serif", fontWeight: 500, letterSpacing: "-0.012em" }}>
+                            style={{ color: INK, fontFamily: "'Newsreader', Georgia, serif", fontWeight: 500, letterSpacing: "-0.012em" }}>
                             {greeting}{firstName ? `, ${firstName}` : ""}
                         </h1>
                         {criticalCount > 0 && (
                             <button
                                 onClick={() => navigate("/inbox")}
                                 className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase transition-transform hover:scale-[1.03] active:scale-95"
-                                style={{
-                                    background: "#CB4327",
-                                    color: "#FFFFFF",
-                                    letterSpacing: "0.06em",
-                                    boxShadow: "0 4px 12px -3px rgba(203,67,39,0.5)",
-                                }}>
+                                style={{ background: "#CB4327", color: "#FFFFFF", letterSpacing: "0.06em", boxShadow: "0 4px 12px -3px rgba(203,67,39,0.5)" }}>
                                 <AlertTriangle size={12} weight="fill" />
                                 {criticalCount} {criticalCount === 1 ? "urgente" : "urgentes"}
                             </button>
                         )}
                     </div>
-                    <p className="text-[14.5px] sm:text-[15.5px]" style={{ color: "#475569" }}>
-                        {narration}
-                    </p>
+                    <p className="text-[14.5px] sm:text-[15.5px]" style={{ color: SUB }}>{subtitle}</p>
                 </div>
                 <div className="relative z-10 flex items-center gap-2">
                     <motion.button
@@ -947,35 +836,22 @@ const Inicio = () => {
                         disabled={refreshing}
                         whileTap={reduce ? undefined : { scale: 0.95 }}
                         className="inline-flex items-center gap-2 h-10 px-4 rounded-xl text-[13px] font-medium transition-colors hover:bg-white hover:border-[#BFD3F2] shrink-0 disabled:opacity-70"
-                        style={{
-                            background: "rgba(255,255,255,0.85)",
-                            backdropFilter: "blur(8px)",
-                            WebkitBackdropFilter: "blur(8px)",
-                            border: "1px solid #D9E2EC",
-                            color: "#475569",
-                        }}
+                        style={{ background: "rgba(255,255,255,0.85)", border: "1px solid #D9E2EC", color: SUB }}
                     >
-                        {/* Motion: gira em loop suave enquanto carrega e assenta com
-                            spring (não para seco). Congela em reduced-motion. */}
                         <motion.span
                             className="inline-flex"
                             animate={refreshing && !reduce ? { rotate: 360 } : { rotate: 0 }}
-                            transition={
-                                refreshing && !reduce
-                                    ? { repeat: Infinity, ease: "linear", duration: 0.7 }
-                                    : { type: "spring", stiffness: 260, damping: 18 }
-                            }
-                            style={{ color: refreshing ? "#2563EB" : "#64748B" }}
+                            transition={refreshing && !reduce ? { repeat: Infinity, ease: "linear", duration: 0.7 } : { type: "spring", stiffness: 260, damping: 18 }}
+                            style={{ color: refreshing ? BLUE : "#64748B" }}
                         >
                             <RefreshCw size={15} weight="bold" />
                         </motion.span>
                         {refreshing ? "Atualizando…" : "Atualizar"}
                     </motion.button>
-                    <FilterMenu filters={filters} onChange={setFilters} activeCount={activeFilterCount} />
+                    <PeriodToggle value={rangeDays} onChange={setRangeDays} />
                 </div>
             </div>
 
-            {/* Primeiros passos — ativação guiada; some sozinho quando tudo pronto. */}
             {(onboardingPreview || (!onboarding.loading && !onboarding.allDone)) && (
                 <OnboardingChecklist
                     progress={onboardingPreview ? { whatsapp: false, eva: false, leads: false, deal: false } : onboarding.progress}
@@ -986,31 +862,69 @@ const Inicio = () => {
                 />
             )}
 
-            {/* Filtro aplicado fica visível como chips removíveis (não escondido). */}
-            <ActiveFilterChips filters={filters} onChange={setFilters} />
+            {/* COMMAND.UI.7 — Cockpit: números/gráficos (esquerda) + fila (direita). */}
+            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] 2xl:grid-cols-[minmax(0,1fr)_400px] gap-5 2xl:gap-6 items-start">
+                <div className="flex flex-col gap-5 min-w-0">
+                    {/* KPIs do negócio */}
+                    <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
+                        {kpis.map((k) => (
+                            <KpiCard key={k.label} kpi={k} loading={cockpit.loading || cc.loading} onNavigate={navigate} />
+                        ))}
+                    </div>
 
-            {/* COMMAND.UI — 4 zonas (Pulso → Foco → Fila → Atividade) na coluna
-                principal + rail da EVA. DayProgress e KPIs entram como slots da
-                coluna pra alinhar com a fila e o rail subir desde o topo. */}
-            <DecisionWorkspace
-                priorities={pendingAll}
-                queuePriorities={queue}
-                filterActive={activeFilterCount > 0}
-                dayComplete={dayComplete}
-                highlights={cc.evaHighlights}
-                recentActivity={cc.recentActivity}
-                loading={cc.loading}
-                onNavigate={navigate}
-                onResolve={actions.resolve}
-                onSnooze={actions.snooze}
-                sendReply={handleQuickReply}
-                replyConnected={sender.connected}
-                evaChat={<EvaChat evaInput={evaInput} onNavigate={navigate} />}
-                dayProgress={<DayProgress items={dayItems} state={actions.state} />}
-                pulse={<KpiStrip items={kpiCards} trends={trends} onNavigate={navigate} />}
-            />
+                    {/* Gráficos operacionais, no 2xl (tela grande) em pares */}
+                    <div className="grid grid-cols-1 2xl:grid-cols-2 gap-5 2xl:gap-6 items-stretch">
+                        <ChartPanel title="Receita do mês" hint={ck?.monthGoal ? "acumulada vs meta" : "acumulada"} height={248} loading={cockpit.loading} error={!!cockpit.error}>
+                            {ck && <RevenueChart series={ck.wonMonthSeries} goal={ck.monthGoal} />}
+                        </ChartPanel>
+                        <section className="rounded-2xl px-5 pt-4 pb-4 min-w-0" style={CARD_STYLE}>
+                            <div className="flex items-baseline justify-between gap-3 mb-3">
+                                <h2 className="text-[13px] font-bold" style={{ color: INK }}>Funil do pipeline</h2>
+                                <span className="text-[11px] shrink-0" style={{ color: MUTE }}>oportunidades e valor por etapa</span>
+                            </div>
+                            {pipeline.isLoading ? (
+                                <div className="space-y-1 py-1" aria-label="Carregando">
+                                    {[92, 74, 56, 40].map((wd, i) => (
+                                        <div key={i} className="mx-auto animate-pulse" style={{ width: `${wd}%`, height: 48, background: GRID, borderRadius: 6 }} />
+                                    ))}
+                                </div>
+                            ) : (
+                                <PipelineFunnel
+                                    stages={(pipeline.data ?? []).map((s) => ({ key: s.key, name: s.name, count: s.count, totalValue: s.totalValue }))}
+                                    onNavigate={navigate}
+                                />
+                            )}
+                        </section>
+                    </div>
 
-            {/* Error inline */}
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 2xl:gap-6">
+                        <ChartPanel title="Novos leads por dia" hint={`últimos ${rangeDays} dias`} height={210} loading={cockpit.loading} error={!!cockpit.error}>
+                            {ck && <LeadsChart series={ck.leadsPerDay} />}
+                        </ChartPanel>
+                        <ChartPanel title="Tempo de 1ª resposta" hint={`mediana por dia, ${rangeDays} dias`} height={210} loading={cockpit.loading} error={!!cockpit.error}>
+                            {ck && <ResponseChart series={ck.responsePerDay} />}
+                        </ChartPanel>
+                    </div>
+                </div>
+
+                {/* Rail direito: o que precisa de você agora. No mobile vem
+                    ANTES dos gráficos (order-first): a fila de ações é a razão
+                    de ser da tela e ficava 4 telas de scroll abaixo. */}
+                <aside className="flex flex-col gap-5 min-w-0 order-first lg:order-none">
+                    <DayProgress items={dayItems} state={actions.state} />
+                    <div className="flex flex-col gap-2.5">
+                        <div className="flex items-center justify-between gap-2">
+                            <ActiveFilterChips filters={filters} onChange={setFilters} />
+                            <span className="ml-auto shrink-0">
+                                <FilterMenu filters={filters} onChange={setFilters} activeCount={activeFilterCount} />
+                            </span>
+                        </div>
+                    </div>
+                    <ActionQueue compact queue={queue} loading={cc.loading} dayComplete={dayComplete} filterActive={activeFilterCount > 0} handlers={handlers} />
+                    <ActivityTimeline items={cc.recentActivity} loading={cc.loading} onNavigate={navigate} />
+                </aside>
+            </div>
+
             {cc.error && (
                 <div className="text-[11.5px] py-3 px-4 rounded-lg"
                     style={{ background: "rgba(220,38,38,0.06)", color: "#B91C1C", border: "1px solid rgba(220,38,38,0.20)" }}>
@@ -1018,7 +932,7 @@ const Inicio = () => {
                 </div>
             )}
 
-            <div className="text-center text-[11.5px] py-4" style={{ color: "#475569" }}>
+            <div className="text-center text-[11.5px] py-4" style={{ color: SUB }}>
                 Dados em tempo real {cc.lastUpdatedAt ? `· atualizado ${relativeTime(cc.lastUpdatedAt.toISOString())}` : ""}
             </div>
         </div>

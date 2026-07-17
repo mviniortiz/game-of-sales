@@ -258,7 +258,7 @@ const ARTICLES: DocArticle[] = [
       },
       {
         heading: "Limites por plano",
-        body: "- **Plus** — 30 consultas por dia\n- **Pro** — ilimitado\n- **Starter** — não disponível (faça upgrade para usar)",
+        body: "- **Free** — 10 análises por dia\n- **Pro** — 50 análises por dia, por usuário\n- Durante os 14 dias de teste, sua conta usa o limite do Pro.",
       },
     ],
   },
@@ -327,26 +327,26 @@ const ARTICLES: DocArticle[] = [
     title: "Planos e Preços",
     icon: CreditCard,
     category: "Conta",
-    tags: ["plano", "preço", "starter", "plus", "pro", "upgrade", "assinatura", "pagamento", "trial"],
+    tags: ["plano", "preço", "free", "gratuito", "pro", "escala", "upgrade", "assinatura", "pagamento", "trial"],
     content: [
       {
-        body: "O Vyzon oferece 3 planos para atender empresas de todos os tamanhos.",
+        body: "O Vyzon tem um plano gratuito pra você usar sem prazo e um plano pago pra times.",
       },
       {
-        heading: "Starter — R$ 147/mês",
-        body: "Para validar sua operação.\n- Dashboard em tempo real\n- 1 Vendedor + 1 Admin\n- Metas individuais\n- Registro de vendas\n- Painel de performance básico",
+        heading: "Free — grátis pra sempre",
+        body: "Para organizar a operação e testar no dia a dia.\n- 1 usuário\n- WhatsApp conectado\n- Inbox Comercial completo\n- Pipeline com agendamentos\n- EVA sugerindo respostas (10 análises/dia)\n- 10 produtos cadastrados",
       },
       {
-        heading: "Plus — R$ 397/mês (mais popular)",
-        body: "O equilíbrio perfeito.\n- Tudo do Starter\n- 3 Vendedores + 1 Admin\n- Pipeline de vendas (CRM)\n- Ranking gamificado\n- **Eva — analista com IA** (30 consultas/dia)\n- Relatórios completos\n- Metas consolidadas\n- +R$ 49,97/vendedor adicional",
+        heading: "Pro — R$ 397/mês (mais popular)",
+        body: "Para agências que recebem leads todos os dias.\n- Até 5 usuários\n- Tudo do Free\n- EVA com análise de intenção, fit, urgência e objeções (50 análises/dia por usuário)\n- Ligações com transcrição e resumo no deal\n- Ranking e metas do time\n- Relatórios completos\n- Integrações Hotmart, Kiwify e Mercado Pago",
       },
       {
-        heading: "Pro — R$ 797/mês",
-        body: "Escala total.\n- Tudo do Plus\n- 8 Vendedores + 3 Admins\n- CRM completo\n- **Eva ilimitada** + prioridade\n- Integrações (Hotmart, Stripe)\n- Multi-empresa\n- Suporte prioritário\n- +R$ 48,99/vendedor adicional",
+        heading: "Escala — pra times maiores",
+        body: "Mais de 5 usuários? Fale com a gente pelo WhatsApp de suporte e montamos o plano do tamanho do seu time, com implantação acompanhada.",
       },
       {
-        heading: "Trial gratuito",
-        body: "Todos os planos incluem **14 dias de trial gratuito**. Você pode testar todas as funcionalidades sem compromisso. Após o trial, escolha o plano que melhor se encaixa.",
+        heading: "Teste do Pro",
+        body: "Toda conta nova começa com **14 dias de Pro grátis, sem cartão**. Quando o período termina, sua conta continua no plano Free com seus dados intactos, e você assina o Pro quando fizer sentido.",
       },
       {
         heading: "Como fazer upgrade",

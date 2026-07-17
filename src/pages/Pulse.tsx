@@ -808,20 +808,20 @@ const RegisterSaleForm = ({ phone, companyId, onClose, onSuccess }: {
                 value={product}
                 onChange={(e) => setProduct(e.target.value)}
                 placeholder="Produto / Serviço"
-                className="h-8 text-[11px] bg-background/60 border-border text-foreground placeholder:text-muted-foreground/50"
+                className="h-8 text-base md:text-[11px] bg-background/60 border-border text-foreground placeholder:text-muted-foreground/50"
             />
             <Input
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
                 placeholder="Valor (R$)"
-                className="h-8 text-[11px] bg-background/60 border-border text-foreground placeholder:text-muted-foreground/50"
+                className="h-8 text-base md:text-[11px] bg-background/60 border-border text-foreground placeholder:text-muted-foreground/50"
             />
             <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Observações (opcional)"
                 rows={2}
-                className="w-full text-[11px] bg-background/60 border border-border rounded-lg px-3 py-2 text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+                className="w-full text-base md:text-[11px] bg-background/60 border border-border rounded-lg px-3 py-2 text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
             />
             <Button
                 size="sm"
@@ -866,20 +866,20 @@ const CreateProposalForm = ({ contactName, onClose }: {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Título da proposta"
-                className="h-8 text-[11px] bg-background/60 border-border text-foreground placeholder:text-muted-foreground/50"
+                className="h-8 text-base md:text-[11px] bg-background/60 border-border text-foreground placeholder:text-muted-foreground/50"
             />
             <Input
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
                 placeholder="Valor (R$)"
-                className="h-8 text-[11px] bg-background/60 border-border text-foreground placeholder:text-muted-foreground/50"
+                className="h-8 text-base md:text-[11px] bg-background/60 border-border text-foreground placeholder:text-muted-foreground/50"
             />
             <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Descrição da proposta"
                 rows={3}
-                className="w-full text-[11px] bg-background/60 border border-border rounded-lg px-3 py-2 text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:ring-1 focus:ring-blue-500/50"
+                className="w-full text-base md:text-[11px] bg-background/60 border border-border rounded-lg px-3 py-2 text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:ring-1 focus:ring-blue-500/50"
             />
             <Button
                 size="sm"
@@ -1244,7 +1244,7 @@ const WhatsApp = () => {
     };
 
     return (
-        <div className="flex flex-col md:flex-row h-[calc(100vh-theme(spacing.16))] w-full bg-background overflow-hidden relative font-sans">
+        <div className="vz-page-full -mx-3 -my-3 sm:-mx-4 sm:-my-4 md:-mx-6 md:-my-6 flex flex-col md:flex-row w-full bg-background overflow-hidden relative font-sans">
             {/* ─── Left Panel (Chat List) ─── */}
             <div className={`w-full md:w-[320px] md:min-w-[300px] md:max-w-[360px] h-full md:h-full border-r-0 md:border-r border-b md:border-b-0 border-border flex-col bg-background z-20 transition-colors ${selectedChatId && isMobile ? 'hidden' : 'flex'}`}>
                 {/* Header */}
@@ -1738,7 +1738,7 @@ const WhatsApp = () => {
                                 {/* Main Input */}
                                 <Input
                                     placeholder="Mensagem..."
-                                    className="flex-1 bg-transparent border-0 focus-visible:ring-0 text-[13px] px-2 h-9 text-foreground placeholder:text-muted-foreground/40"
+                                    className="flex-1 bg-transparent border-0 focus-visible:ring-0 text-base md:text-[13px] px-2 h-9 text-foreground placeholder:text-muted-foreground/40"
                                     value={inputText}
                                     onChange={(e) => setInputText(e.target.value)}
                                     onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}

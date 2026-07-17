@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from "react";
+import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -7,9 +7,6 @@ import { TrialBanner } from "./TrialBanner";
 import { EvaHelpDock } from "@/components/help/EvaHelpDock";
 import { AskEvaPalette } from "@/components/help/AskEvaPalette";
 import { useTrial } from "@/hooks/useTrial";
-
-// Lazy: UpgradeLock só renderiza quando trial expirou.
-const UpgradeLock = lazy(() => import("@/pages/admin/UpgradeLock"));
 
 // Page titles alinhados com nova nomenclatura visual da nav (F3 2026-05-19).
 // Rotas novas (/inicio, /inbox, etc) são as principais; antigas redirect silencioso.
@@ -36,37 +33,18 @@ const getPageTitle = (pathname: string) => {
   return "Vyzon";
 };
 
-// Pages that should remain accessible even with expired trial
-const ALLOWED_EXPIRED_PATHS = [
-  "/upgrade",
-  "/admin/upgrade",
-  "/admin/settings/billing",
-  "/checkout"
-];
-
 export const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const reduceMotion = useReducedMotion();
-  const { isExpired, isTrialActive } = useTrial();
+  const { isTrialActive } = useTrial();
 
   useEffect(() => {
     const title = getPageTitle(location.pathname);
     document.title = `Vyzon | ${title}`;
   }, [location.pathname]);
 
-  // Check if current path is allowed for expired trial
-  const isPathAllowed = ALLOWED_EXPIRED_PATHS.some(path =>
-    location.pathname.startsWith(path)
-  );
-
-  // If trial expired and path is not allowed, show upgrade lock
-  if (isExpired && !isPathAllowed) {
-    return (
-      <Suspense fallback={null}>
-        <UpgradeLock />
-      </Suspense>
-    );
-  }
+  // Trial expirado NÃO bloqueia mais o app: o plano efetivo degrada pra Free
+  // (resolveEffectivePlan) e os limites fazem o trabalho de upgrade.
 
   return (
     <SidebarProvider>
