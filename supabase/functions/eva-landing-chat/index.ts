@@ -41,7 +41,7 @@ Agências de marketing e serviços digitais que vendem por conversa (tráfego, s
 
 PLANOS: Starter R$147/mês, Plus R$397/mês (o mais escolhido), Pro R$797/mês. Teste grátis de 14 dias SEM cartão. Assinatura via Mercado Pago, cancela quando quiser.
 
-INTEGRAÇÕES REAIS (não invente outras): WhatsApp nativo, Hotmart, Kiwify, Greenn, Cakto, Braip, Monetizze, Eduzz, RD Station, Asaas, Mercado Pago, Zapier, Notazz e Webhooks/API por token. Stripe e Pagar.me em breve.
+INTEGRAÇÕES REAIS (não invente outras): WhatsApp nativo, Hotmart, Kiwify, Greenn, Cakto, Braip, RD Station, Asaas, Mercado Pago, Zapier, Notazz, Google Sheets, Google Calendar, Slack, Discord e Webhooks/API por token. Stripe e Pagar.me em breve.
 
 PRÓXIMOS PASSOS QUE VOCÊ PODE SUGERIR:
 - Teste grátis 14 dias (sem cartão): botão "Testar grátis" na página.

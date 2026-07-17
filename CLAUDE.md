@@ -200,8 +200,9 @@ bloqueio de trial. Limites são espelhados hardcoded nas edges
 
 **Nunca inventar integração.** As reais (webhooks/conectores no código):
 
-- **Vendas/infoproduto:** Hotmart, Kiwify, Greenn, Cakto, Braip, Monetizze,
-  Eduzz.
+- **Vendas/infoproduto:** Hotmart, Kiwify, Greenn, Cakto, Braip.
+  (Eduzz e Monetizze REMOVIDAS em 2026-07-17 a pedido do Markus — edges
+  deletadas, não recolocar em copy.)
 - **B2B / cobrança / pagamento:** RD Station, Asaas, Mercado Pago.
 - **Produtividade / genérico:** Zapier, Notazz, Webhooks/API por token.
 - **Canal nativo:** WhatsApp via **Evolution API** (`evolution-whatsapp`,

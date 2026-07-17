@@ -11,8 +11,6 @@ import hotmartLogo from "@/assets/integrations/hotmart-logo-png_seeklogo-485917.
 import kiwifyLogo from "@/assets/integrations/kiwify-logo-png_seeklogo-537186.webp";
 import asaasLogo from "@/assets/integrations/asaas.svg";
 import zapierLogo from "@/assets/integrations/zapier.svg";
-import eduzzLogo from "@/assets/integrations/eduzz.webp";
-import monetizzeLogo from "@/assets/integrations/monetizze.webp";
 import greennLogo from "@/assets/integrations/greenn.webp";
 import notazzLogo from "@/assets/integrations/notazz.png";
 import googleCalendarLogo from "@/assets/integrations/google-calendar.webp";
@@ -68,8 +66,6 @@ const RING_OUTER: LiveLogo[] = [
     { src: mercadopagoLogo, alt: "Mercado Pago", label: "Mercado Pago", h: 18 },
     { src: asaasLogo, alt: "Asaas", wordmark: true, h: 15 },
     { src: zapierLogo, alt: "Zapier", label: "Zapier", h: 18 },
-    { src: eduzzLogo, alt: "Eduzz", label: "Eduzz", h: 20 },
-    { src: monetizzeLogo, alt: "Monetizze", label: "Monetizze", h: 20 },
     { src: greennLogo, alt: "Greenn", label: "Greenn", h: 20 },
     { src: caktoLogo, alt: "Cakto", label: "Cakto", h: 18 },
     { src: braipLogo, alt: "Braip", label: "Braip", h: 18 },
@@ -87,8 +83,6 @@ const LIVE_ALL: LiveLogo[] = [
     { src: googleSheetsLogo, alt: "Google Sheets", label: "Google Sheets" },
     { src: asaasLogo, alt: "Asaas", wordmark: true, h: 20 },
     { src: zapierLogo, alt: "Zapier", label: "Zapier" },
-    { src: eduzzLogo, alt: "Eduzz", label: "Eduzz", h: 24 },
-    { src: monetizzeLogo, alt: "Monetizze", label: "Monetizze", h: 24 },
     { src: greennLogo, alt: "Greenn", label: "Greenn", h: 24 },
     { src: caktoLogo, alt: "Cakto", label: "Cakto", h: 22 },
     { src: braipLogo, alt: "Braip", label: "Braip", h: 22 },

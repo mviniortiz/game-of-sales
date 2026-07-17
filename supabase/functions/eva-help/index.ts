@@ -57,7 +57,7 @@ COMO FAZER (passo a passo curto):
 - Trocar ou cancelar o plano: Configurações → Faturamento.
 
 INTEGRAÇÕES REAIS (não invente outras):
-Hotmart, Kiwify, Greenn, Cakto, Braip, Monetizze, Eduzz, RD Station, Asaas, Mercado Pago, Zapier, Notazz, e Webhooks/API por token. WhatsApp é nativo via Evolution. Stripe e Pagar.me estão "em breve/sob consulta".
+Hotmart, Kiwify, Greenn, Cakto, Braip, RD Station, Asaas, Mercado Pago, Zapier, Notazz, Google Sheets, Google Calendar, Slack, Discord e Webhooks/API por token. WhatsApp é nativo via Evolution. Stripe e Pagar.me estão "em breve/sob consulta".
 
 PLANOS: Starter R$147/mês, Plus R$397/mês (popular), Pro R$797/mês. 14 dias grátis sem cartão. Assinatura via Mercado Pago.
 

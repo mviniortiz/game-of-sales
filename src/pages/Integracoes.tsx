@@ -40,8 +40,6 @@ import hotmartLogo from "@/assets/integrations/hotmart-logo-png_seeklogo-485917.
 import kiwifyLogo from "@/assets/integrations/kiwify-logo-png_seeklogo-537186.webp";
 import rdstationLogo from "@/assets/integrations/rdstation.svg";
 import braipLogo from "@/assets/integrations/braip.webp";
-import monetizzeLogo from "@/assets/integrations/monetizze.webp";
-import eduzzLogo from "@/assets/integrations/eduzz.webp";
 import mercadopagoLogo from "@/assets/integrations/mercadopago.webp";
 import pagarmeLogo from "@/assets/integrations/pagarme.svg";
 import stripeLogo from "@/assets/integrations/stripe.svg";
@@ -180,26 +178,6 @@ const INTEGRATIONS: Integration[] = [
     status: "available",
     category: "checkout",
     features: ["Pedidos", "Afiliados", "Postbacks"],
-  },
-  {
-    id: "monetizze",
-    name: "Monetizze",
-    description: "Importe vendas, reembolsos e boletos da Monetizze",
-    logo: monetizzeLogo,
-    logoBg: "bg-white",
-    status: "available",
-    category: "checkout",
-    features: ["Vendas", "Boletos", "Reembolsos"],
-  },
-  {
-    id: "eduzz",
-    name: "Eduzz",
-    description: "Conecte vendas de cursos e produtos digitais da Eduzz",
-    logo: eduzzLogo,
-    logoBg: "bg-white",
-    status: "available",
-    category: "checkout",
-    features: ["Faturas", "Assinaturas", "Reembolsos"],
   },
 
   // ── Gateways de pagamento ───────────────────────────────
@@ -352,8 +330,6 @@ const PLATFORM_NAMES: Record<string, string> = {
   rdstation: "RD Station",
   cakto: "Cakto",
   braip: "Braip",
-  monetizze: "Monetizze",
-  eduzz: "Eduzz",
   asaas: "Asaas",
   zapier: "Zapier",
   notazz: "Notazz",

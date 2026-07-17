@@ -24,9 +24,7 @@ Padrão comum: auth por segredo em `integration_configs.hottok`, idempotência v
 | `asaas-webhook` | header `asaas-access-token` | re-busca cliente na API Asaas |
 | `braip-webhook` | header `x-braip-token` | order.paid/refunded/... |
 | `cakto-webhook` | header `x-cakto-token` | purchase_approved/... |
-| `eduzz-webhook` | header `x-eduzz-token` | invoice_paid/... |
 | `greenn-webhook` | header `x-greenn-token` | purchase_approved/... |
-| `monetizze-webhook` | header `x-monetizze-token` | boleto → em_negociacao |
 | `pagarme-webhook` | **Basic Auth** | order/charge/subscription (API v5) |
 | `stripe-webhook` | **HMAC** `Stripe-Signature` (raw body) | re-busca customer na Stripe API |
 | `rdstation-webhook` | header configurável vs `hottok` | Marketing + CRM |

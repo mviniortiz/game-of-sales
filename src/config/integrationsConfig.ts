@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Integration Registry — single source of truth for all integration modals,
  * webhook URLs, setup instructions, and documentation.
  */
@@ -62,8 +62,6 @@ import greennLogo from "@/assets/integrations/greenn.webp";
 import rdstationLogo from "@/assets/integrations/rdstation.svg";
 import caktoLogo from "@/assets/integrations/cakto.webp";
 import braipLogo from "@/assets/integrations/braip.webp";
-import monetizzeLogo from "@/assets/integrations/monetizze.webp";
-import eduzzLogo from "@/assets/integrations/eduzz.webp";
 import asaasLogo from "@/assets/integrations/asaas.svg";
 import mercadopagoLogo from "@/assets/integrations/mercadopago.webp";
 import stripeLogo from "@/assets/integrations/stripe.svg";
@@ -432,126 +430,6 @@ export const INTEGRATIONS_CONFIG: Record<string, IntegrationSpec> = {
     securityNotes: [
       "Token no header x-braip-token valida cada request",
       "Logs completos de eventos recebidos",
-    ],
-  },
-
-  monetizze: {
-    id: "monetizze",
-    platform: "monetizze",
-    name: "Monetizze",
-    logo: monetizzeLogo,
-    accentClass: "sky",
-    tagline: "Marketplace de infoprodutos e afiliação",
-    description:
-      "Receba vendas, reembolsos e boletos aprovados da Monetizze em tempo real. Suporta todos os status de pagamento.",
-    category: "sales",
-    webhook: {
-      url: `${SUPABASE_FUNCTIONS_URL}/monetizze-webhook`,
-      method: "POST",
-      authType: "token",
-      authHeader: "x-monetizze-token",
-      authFieldLabel: "Chave de integração",
-      authFieldPlaceholder: "Cole a chave gerada",
-      authFieldHelp: "Gerada em Monetizze → Integrações → Notificação Online (Postback)",
-    },
-    dashboardUrl: "https://app.monetizze.com.br/",
-    dashboardLabel: "Entrar na Monetizze → Ferramentas → Postback",
-    events: [
-      { label: "venda_realizada", description: "Venda realizada — cria deal + venda" },
-      { label: "venda_reembolsada", description: "Reembolso — closed_lost" },
-      { label: "venda_cancelada", description: "Cancelamento — closed_lost" },
-      { label: "venda_chargeback", description: "Chargeback — closed_lost" },
-      { label: "boleto_gerado", description: "Boleto gerado — cria deal em stage 'em_negociacao'" },
-    ],
-    setupSteps: [
-      { title: "Copie a URL do webhook", description: "A URL é específica da empresa." },
-      {
-        title: "Acesse Postback na Monetizze",
-        description: "Entre em app.monetizze.com.br → menu Ferramentas → Postback.",
-      },
-      {
-        title: "Cole a URL e configure",
-        description:
-          "Cole a URL, selecione os eventos e marque 'Enviar em JSON'. Copie a chave de integração gerada.",
-        note: "É essencial marcar JSON — a Monetizze por padrão envia form-encoded.",
-      },
-      {
-        title: "Cole a chave aqui",
-        description: "Cole a chave de integração da Monetizze no campo ao lado.",
-      },
-      { title: "Salve e teste", description: "Use o botão de teste da Monetizze." },
-    ],
-    make: {
-      enabled: true,
-      description:
-        "Se sua conta Monetizze não permitir 'Enviar em JSON', use Make para transformar form → JSON antes de enviar para o Vyzon.",
-      trigger_module: "Webhooks > Custom webhook (Make)",
-      action_module: "HTTP > Make a request (transforma form-data em JSON e POST)",
-      template_url: "https://www.make.com/en/templates",
-    },
-    features: ["Vendas realizadas", "Reembolsos", "Boletos", "Postbacks nativos"],
-    securityNotes: [
-      "Chave de integração validada em header x-monetizze-token",
-      "Requests form-encoded são rejeitados — obrigue 'Enviar em JSON'",
-    ],
-  },
-
-  eduzz: {
-    id: "eduzz",
-    platform: "eduzz",
-    name: "Eduzz",
-    logo: eduzzLogo,
-    accentClass: "yellow",
-    tagline: "Plataforma completa para criadores digitais",
-    description:
-      "Sincronize vendas, recusas e reembolsos da Eduzz. Suporta produtos digitais, cursos e assinaturas.",
-    category: "sales",
-    webhook: {
-      url: `${SUPABASE_FUNCTIONS_URL}/eduzz-webhook`,
-      method: "POST",
-      authType: "token",
-      authHeader: "x-eduzz-token",
-      authFieldLabel: "Chave pública (API Key)",
-      authFieldPlaceholder: "Cole a API key da Eduzz",
-      authFieldHelp: "Em Configurações → Credenciais → API, copie a chave pública",
-    },
-    dashboardUrl: "https://sun.eduzz.com/",
-    dashboardLabel: "Entrar no Sun Eduzz → MyEduzz → Integrações → Webhook",
-    events: [
-      { label: "invoice_paid", description: "Fatura paga — cria deal + venda" },
-      { label: "invoice_refunded", description: "Reembolso — closed_lost" },
-      { label: "invoice_canceled", description: "Cancelamento — closed_lost" },
-      { label: "invoice_chargeback", description: "Chargeback — closed_lost" },
-      { label: "contract_canceled", description: "Cancelamento de assinatura — closed_lost" },
-    ],
-    setupSteps: [
-      { title: "Copie a URL do webhook", description: "URL exclusiva da sua empresa." },
-      {
-        title: "Acesse Webhook na Eduzz",
-        description: "Entre em sun.eduzz.com → MyEduzz → Integrações → Webhook → + Cadastrar Webhook.",
-      },
-      {
-        title: "Cadastre o webhook",
-        description: "Preencha: Tipo (Fatura), Nome (Vyzon CRM), Produto (o que deseja sincronizar) e cole a URL. Clique em Verificar — a Eduzz envia um evento de teste antes de salvar.",
-        note: "Se a verificação falhar (status != 200), não será possível salvar o webhook. Cheque se está ativo.",
-      },
-      {
-        title: "Copie a API Key",
-        description: "A Eduzz gera uma chave pública. Cole no campo ao lado deste modal.",
-      },
-      { title: "Ative e teste", description: "Use o botão de teste da Eduzz." },
-    ],
-    make: {
-      enabled: true,
-      description:
-        "Eduzz também disponibiliza via Make — use o módulo Eduzz → Watch New Sales para capturar eventos e repassar.",
-      trigger_module: "Eduzz > Watch new sales",
-      action_module: "HTTP > POST para URL do webhook",
-    },
-    features: ["Vendas aprovadas", "Reembolsos", "Assinaturas", "Cursos & produtos digitais"],
-    securityNotes: [
-      "API Key validada em cada evento",
-      "Logs completos em Integrações → Atividade",
     ],
   },
 
