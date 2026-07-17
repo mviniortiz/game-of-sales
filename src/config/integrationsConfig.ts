@@ -69,6 +69,7 @@ import pagarmeLogo from "@/assets/integrations/pagarme.svg";
 import zapierLogo from "@/assets/integrations/zapier.svg";
 import notazzLogo from "@/assets/integrations/notazz.png";
 import grupozapLogo from "@/assets/integrations/grupozap.svg";
+import notionLogo from "@/assets/integrations/notion.svg";
 import clicksignLogo from "@/assets/integrations/clicksign.svg";
 
 export const INTEGRATIONS_CONFIG: Record<string, IntegrationSpec> = {
@@ -430,6 +431,130 @@ export const INTEGRATIONS_CONFIG: Record<string, IntegrationSpec> = {
     securityNotes: [
       "Token no header x-braip-token valida cada request",
       "Logs completos de eventos recebidos",
+    ],
+  },
+
+  notion: {
+    id: "notion",
+    platform: "notion",
+    name: "Notion",
+    logo: notionLogo,
+    accentClass: "slate",
+    tagline: "Seu pipeline espelhado no Notion",
+    description:
+      "O Vyzon cria uma database \"Pipeline Vyzon\" numa página sua do Notion e mantém cada deal como uma linha, atualizada a cada 15 minutos: nome, etapa, valor, cliente e link de volta pro deal.",
+    category: "productivity",
+    webhook: {
+      url: "",
+      method: "POST",
+      authType: "token",
+      authHeader: "Bearer (token da integração interna)",
+      authFieldLabel: "Token da integração (secret_...)",
+      authFieldPlaceholder: "secret_xxxxxxxxxxxxxxxx",
+      authFieldHelp:
+        "Criado em notion.so/my-integrations. O Vyzon usa este token só para escrever na página que você compartilhar com a integração.",
+    },
+    dashboardUrl: "https://www.notion.so/my-integrations",
+    dashboardLabel: "Notion → My integrations",
+    events: [
+      { label: "Sync a cada 15 minutos", description: "Deals novos viram linhas; deals alterados nas últimas 24h são atualizados" },
+      { label: "Primeira sincronização", description: "Cria a database \"Pipeline Vyzon\" na página compartilhada, com o schema pronto" },
+    ],
+    setupSteps: [
+      {
+        title: "Crie uma integração interna no Notion",
+        description: "Em notion.so/my-integrations → New integration. Dê o nome \"Vyzon\" e escolha o workspace da agência.",
+      },
+      {
+        title: "Copie o token secreto",
+        description: "Na integração criada, copie o Internal Integration Secret (começa com secret_).",
+        note: "O token dá acesso apenas ao que você compartilhar com a integração — nunca ao workspace inteiro.",
+      },
+      {
+        title: "Compartilhe UMA página com a integração",
+        description: "Abra (ou crie) a página do Notion onde o pipeline deve morar → menu ••• → Connections → adicione a integração Vyzon.",
+      },
+      {
+        title: "Cole o token neste modal e ative",
+        description: "Na próxima sincronização (até 15 min) a database \"Pipeline Vyzon\" aparece na página com seus deals.",
+      },
+    ],
+    make: {
+      enabled: false,
+      description: "O sync é nativo do Vyzon — não é necessário orquestrador.",
+      trigger_module: "",
+      action_module: "",
+    },
+    features: ["Database criada sozinha", "Sync a cada 15min", "Etapa, valor e cliente", "Link de volta pro deal"],
+    securityNotes: [
+      "O token fica guardado na configuração da sua empresa e só é usado no servidor",
+      "A integração interna do Notion só enxerga a página que você compartilhar",
+      "1 deal = 1 página: sem duplicatas entre sincronizações",
+    ],
+  },
+
+  pagarme: {
+    id: "pagarme",
+    platform: "pagarme",
+    name: "Pagar.me",
+    logo: pagarmeLogo,
+    accentClass: "emerald",
+    tagline: "Gateway de pagamento da Stone (API v5)",
+    description:
+      "Receba pedidos, cobranças e assinaturas da Pagar.me em tempo real. Pagamento aprovado vira deal ganho + venda; falha, reembolso e chargeback atualizam o deal automaticamente.",
+    category: "sales",
+    webhook: {
+      url: `${SUPABASE_FUNCTIONS_URL}/pagarme-webhook`,
+      method: "POST",
+      authType: "token",
+      authHeader: "Authorization (Basic Auth)",
+      authFieldLabel: "Credencial do webhook (usuário:senha)",
+      authFieldPlaceholder: "ex.: vyzon:s3nh4-secreta",
+      authFieldHelp:
+        "Defina usuário e senha ao criar o webhook na Pagar.me e cole aqui no formato usuário:senha. É com esse par que cada evento é validado.",
+    },
+    dashboardUrl: "https://dash.pagar.me/",
+    dashboardLabel: "Entrar na Pagar.me → Configurações → Webhooks",
+    events: [
+      { label: "order.paid / charge.paid / invoice.paid", description: "Pagamento aprovado — cria deal closed_won + venda" },
+      { label: "order.created / charge.pending", description: "Pedido criado — deal pendente em negociação" },
+      { label: "charge.refunded / *.canceled / *.payment_failed", description: "Reembolso, cancelamento ou falha — deal closed_lost com motivo" },
+      { label: "charge.chargeback / chargeback.*", description: "Chargeback — deal closed_lost" },
+    ],
+    setupSteps: [
+      {
+        title: "Copie a URL do webhook",
+        description: "Use o botão de copiar no campo ao lado para copiar a URL única da sua empresa.",
+      },
+      {
+        title: "Acesse o painel da Pagar.me",
+        description: "Entre em dash.pagar.me → Configurações → Webhooks → Criar webhook.",
+      },
+      {
+        title: "Cole a URL e escolha autenticação Basic",
+        description: "Defina um usuário e uma senha fortes para o webhook e selecione os eventos de order, charge e subscription.",
+      },
+      {
+        title: "Cole a credencial neste modal",
+        description: "No formato usuário:senha, exatamente como configurado na Pagar.me.",
+        note: "A credencial valida cada evento — nunca compartilhe.",
+      },
+      {
+        title: "Ative e salve",
+        description: "Clique em Salvar e ligue o toggle. Eventos novos chegarão em tempo real.",
+      },
+    ],
+    make: {
+      enabled: false,
+      description: "A Pagar.me envia webhooks nativos — não é necessário orquestrador.",
+      trigger_module: "",
+      action_module: "",
+    },
+    features: ["Pagamentos aprovados", "PIX, cartão e boleto", "Assinaturas", "Reembolsos e chargebacks"],
+    securityNotes: [
+      "Basic Auth validada em cada evento — requests sem credencial correta são rejeitadas com 401",
+      "Idempotência garantida: eventos duplicados não criam deals duplicados",
+      "Logs completos em Integrações → Atividade",
     ],
   },
 

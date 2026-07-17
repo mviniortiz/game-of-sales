@@ -21,10 +21,11 @@ import braipLogo from "@/assets/integrations/braip.webp";
 import slackLogo from "@/assets/integrations/slack.svg";
 import discordLogo from "@/assets/integrations/discord.svg";
 
-// Logos "em breve" — mono/apagadas. Inclui o roadmap real do produto
-// (Stripe, Pagar.me, Celetus, em /integracoes) + ferramentas do mercado.
-import stripeLogo from "@/assets/integrations/stripe.svg";
 import pagarmeLogo from "@/assets/integrations/pagarme.svg";
+
+// Logos "em breve" — mono/apagadas. Inclui o roadmap real do produto
+// (Stripe, Celetus, em /integracoes) + ferramentas do mercado.
+import stripeLogo from "@/assets/integrations/stripe.svg";
 import celetusLogo from "@/assets/integrations/celetus.webp";
 import makeLogo from "@/assets/integrations/make.svg";
 import calendlyLogo from "@/assets/integrations/calendly.svg";
@@ -69,6 +70,7 @@ const RING_OUTER: LiveLogo[] = [
     { src: greennLogo, alt: "Greenn", label: "Greenn", h: 20 },
     { src: caktoLogo, alt: "Cakto", label: "Cakto", h: 18 },
     { src: braipLogo, alt: "Braip", label: "Braip", h: 18 },
+    { src: pagarmeLogo, alt: "Pagar.me", wordmark: true, h: 18 },
     { src: notazzLogo, alt: "Notazz", wordmark: true, h: 20 },
 ];
 
@@ -87,6 +89,7 @@ const LIVE_ALL: LiveLogo[] = [
     { src: caktoLogo, alt: "Cakto", label: "Cakto", h: 22 },
     { src: braipLogo, alt: "Braip", label: "Braip", h: 22 },
     { src: notazzLogo, alt: "Notazz", wordmark: true, h: 25 },
+    { src: pagarmeLogo, alt: "Pagar.me", wordmark: true, h: 22 },
     { src: googleCalendarLogo, alt: "Google Calendar", label: "Google Calendar" },
     { src: slackLogo, alt: "Slack", label: "Slack" },
     { src: discordLogo, alt: "Discord", label: "Discord" },
@@ -94,7 +97,6 @@ const LIVE_ALL: LiveLogo[] = [
 
 const SOON = [
     { src: stripeLogo, alt: "Stripe" },
-    { src: pagarmeLogo, alt: "Pagar.me" },
     { src: celetusLogo, alt: "Celetus" },
     { src: makeLogo, alt: "Make" },
     { src: calendlyLogo, alt: "Calendly" },

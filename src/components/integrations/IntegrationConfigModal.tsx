@@ -149,7 +149,9 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
 
   // Só dá pra testar do navegador integrações de TOKEN simples em header próprio.
   // HMAC (assina o corpo) e Basic não validam com o token cru → ficam de fora.
+  // Outbound (sem webhook.url, ex.: Notion) também: quem chama é o servidor.
   const canTest =
+    !!spec.webhook.url &&
     spec.webhook.authType === "token" &&
     !spec.webhook.authHeader.toLowerCase().startsWith("authorization");
 
@@ -414,6 +416,9 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
               {/* ─── Webhook credentials ──────────────────── */}
               {activeTab === "webhook" && (
                 <div className="space-y-5">
+                  {/* URL + header: só para integrações INBOUND (a plataforma chama o
+                      Vyzon). Outbound (ex.: Notion, url vazia) mostra só o token. */}
+                  {spec.webhook.url && (<>
                   {/* URL */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
@@ -470,6 +475,7 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
                         : "A plataforma deve enviar o token nesse header em cada request."}
                     </p>
                   </div>
+                  </>)}
 
                   {/* Token input */}
                   <div className="space-y-1.5 pt-3" style={{ borderTop: "1px solid #EEF2F7" }}>

@@ -203,11 +203,17 @@ bloqueio de trial. Limites são espelhados hardcoded nas edges
 - **Vendas/infoproduto:** Hotmart, Kiwify, Greenn, Cakto, Braip.
   (Eduzz e Monetizze REMOVIDAS em 2026-07-17 a pedido do Markus — edges
   deletadas, não recolocar em copy.)
-- **B2B / cobrança / pagamento:** RD Station, Asaas, Mercado Pago.
-- **Produtividade / genérico:** Zapier, Notazz, Webhooks/API por token.
+- **B2B / cobrança / pagamento:** RD Station, Asaas, Mercado Pago, Pagar.me
+  (ligada 2026-07-17: edge deployada + testada ponta a ponta com evento
+  sintético).
+- **Produtividade / genérico:** Zapier, Notazz, Notion (NOTION.1: sync
+  OUTBOUND do pipeline pra database Notion via edge `notion-sync` + cron
+  15min; token de integração interna em `integration_configs.hottok`,
+  estado em `webhook_url` como `db:<id>`; aguarda validação com workspace
+  real), Webhooks/API por token.
 - **Canal nativo:** WhatsApp via **Evolution API** (`evolution-whatsapp`,
   `evolution-message-webhook`).
-- **Em roadmap / sob consulta:** Stripe, Pagar.me.
+- **Em roadmap / sob consulta:** Stripe, Celetus.
 
 Se uma integração não estiver confirmada no código, usar "Em breve", "Sob
 consulta" ou "Integração via API/Webhook".

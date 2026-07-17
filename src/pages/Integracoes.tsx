@@ -48,6 +48,7 @@ import zapierLogo from "@/assets/integrations/zapier.svg";
 import notazzLogo from "@/assets/integrations/notazz.png";
 import googleSheetsLogo from "@/assets/integrations/google-sheets.svg";
 import slackLogo from "@/assets/integrations/slack.svg";
+import notionLogo from "@/assets/integrations/notion.svg";
 import discordLogo from "@/assets/integrations/discord.svg";
 
 // ── Types ──────────────────────────────────────────────────────────
@@ -224,12 +225,12 @@ const INTEGRATIONS: Integration[] = [
   {
     id: "pagarme",
     name: "Pagar.me",
-    description: "Sincronize transações e pagamentos da Pagar.me",
+    description: "Pedidos, assinaturas e chargebacks da Pagar.me viram deals em tempo real",
     logo: pagarmeLogo,
     logoBg: "bg-white",
-    status: "roadmap",
+    status: "available",
     category: "payment",
-    votes: 12,
+    features: ["PIX / Cartão / Boleto", "Assinaturas", "Chargebacks"],
   },
 
   // ── Produtividade ───────────────────────────────────────
@@ -252,6 +253,17 @@ const INTEGRATIONS: Integration[] = [
     status: "available",
     category: "productivity",
     features: ["NF-e / NFS-e", "Callback de status", "PDF/XML no deal"],
+  },
+
+  {
+    id: "notion",
+    name: "Notion",
+    description: "Seu pipeline espelhado numa database do Notion, atualizado a cada 15 minutos",
+    logo: notionLogo,
+    logoBg: "bg-white",
+    status: "available",
+    category: "productivity",
+    features: ["Database criada sozinha", "Sync a cada 15min", "Link de volta pro deal"],
   },
 
   // ── Notificações (saída) ────────────────────────────────
@@ -331,6 +343,8 @@ const PLATFORM_NAMES: Record<string, string> = {
   cakto: "Cakto",
   braip: "Braip",
   asaas: "Asaas",
+  pagarme: "Pagar.me",
+  notion: "Notion",
   zapier: "Zapier",
   notazz: "Notazz",
   mercadopago: "Mercado Pago",
