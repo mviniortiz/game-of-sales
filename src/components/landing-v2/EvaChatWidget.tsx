@@ -1,12 +1,14 @@
-// LP.11 (v2) — widget de chat da EVA acoplado à landing inteira: pill fixo no
-// canto inferior direito; clicou, abre o painel com a EVA já saudando. Chat
-// REAL (edge eva-landing-chat, anônimo, rate-limit por IP no backend). É a
-// prova viva do produto: no dia a dia a EVA sugere e o time aprova; aqui ela
-// responde direto porque o assunto é ela mesma.
+// LP.11 (v2) — widget de chat da EVA acoplado à landing inteira: pill fixo
+// CENTRALIZADO embaixo (2026-07-17, pedido do Markus — a EVA "presente" no
+// centro); clicou, abre o painel com a EVA já saudando. Chat REAL (edge
+// eva-landing-chat, anônimo, rate-limit por IP no backend). O ícone é o
+// ThinkingOrb (canvas 2D leve, estados listening/working) no lugar do orb
+// WebGL. O pill some quando o footer entra na tela (não cobrir o CTA final).
 // Marca: enviar = seta-pra-cima circular preta (NUNCA avião); tema papel.
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowUp, CircleNotch, X } from "@phosphor-icons/react";
+import { ThinkingOrb } from "thinking-orbs";
 import { EvaOrb } from "./EvaOrb";
 import { supabase } from "@/integrations/supabase/client";
 import { useTypewriter } from "@/hooks/useTypewriter";
@@ -49,6 +51,31 @@ export const EvaChatWidget = () => {
     const [animateIdx, setAnimateIdx] = useState<number | null>(null);
     const threadRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+
+    // Some quando o footer entra na tela: centralizado, o pill cobriria o CTA
+    // final. Painel aberto não some (a pessoa está conversando). O footer monta
+    // lazy (seções abaixo da dobra), então tenta achá-lo até existir.
+    const [footerVisible, setFooterVisible] = useState(false);
+    useEffect(() => {
+        if (typeof IntersectionObserver === "undefined") return;
+        let io: IntersectionObserver | null = null;
+        const tryObserve = () => {
+            const footer = document.querySelector("footer");
+            if (!footer) return false;
+            io = new IntersectionObserver(([e]) => setFooterVisible(e.isIntersecting), { rootMargin: "0px 0px -40px 0px" });
+            io.observe(footer);
+            return true;
+        };
+        if (tryObserve()) return () => io?.disconnect();
+        const interval = window.setInterval(() => {
+            if (tryObserve()) window.clearInterval(interval);
+        }, 1000);
+        return () => {
+            window.clearInterval(interval);
+            io?.disconnect();
+        };
+    }, []);
+    const hidden = footerVisible && !open;
 
     const scrollToEnd = () => {
         if (threadRef.current) threadRef.current.scrollTop = threadRef.current.scrollHeight;
@@ -96,16 +123,16 @@ export const EvaChatWidget = () => {
     };
 
     return (
-        <div className="fixed z-[90] right-4 bottom-4 sm:right-6 sm:bottom-6 print:hidden">
+        <div className="fixed z-[90] left-1/2 -translate-x-1/2 bottom-4 sm:bottom-6 print:hidden flex justify-center">
             <AnimatePresence mode="wait">
-                {open ? (
+                {hidden ? null : open ? (
                     <motion.div
                         key="panel"
                         initial={reduce ? false : { opacity: 0, y: 14, scale: 0.97 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={reduce ? { opacity: 0 } : { opacity: 0, y: 14, scale: 0.97 }}
                         transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-                        style={{ transformOrigin: "bottom right" }}
+                        style={{ transformOrigin: "bottom center" }}
                         className="w-[380px] max-w-[calc(100vw-2rem)]"
                     >
                         <div
@@ -119,7 +146,15 @@ export const EvaChatWidget = () => {
                         >
                             {/* Header */}
                             <div className="flex items-center gap-2.5 px-4 py-3 border-b" style={{ borderColor: "var(--lp-line-soft)", background: "#FFFFFF" }}>
-                                <EvaOrb webgl variant="blue" size={28} showVoice={false} state={loading ? "analyzing" : "idle"} className="shrink-0" />
+                                <ThinkingOrb
+                                    state={loading ? "working" : "listening"}
+                                    size={64}
+                                    theme="light"
+                                    paused={!!reduce}
+                                    className="shrink-0"
+                                    style={{ width: 28, height: 28 }}
+                                    aria-label="EVA"
+                                />
                                 <div className="min-w-0 flex-1">
                                     <p className="text-[13.5px] font-bold leading-tight" style={{ color: "var(--lp-ink)" }}>EVA</p>
                                     <p className="text-[11px] leading-tight" style={{ color: "rgba(5,5,5,0.5)" }}>a inteligência do Vyzon, ao vivo</p>
@@ -172,7 +207,7 @@ export const EvaChatWidget = () => {
                                 ))}
                                 {loading && (
                                     <div className="flex items-center gap-2.5 text-[12.5px]" style={{ color: "rgba(5,5,5,0.5)" }}>
-                                        <EvaOrb variant="blue" size={20} showVoice={false} state="analyzing" className="shrink-0" />
+                                        <ThinkingOrb state="working" size={20} theme="light" paused={!!reduce} className="shrink-0" aria-hidden />
                                         EVA está lendo sua pergunta
                                     </div>
                                 )}
@@ -239,7 +274,15 @@ export const EvaChatWidget = () => {
                         }}
                         aria-label="Perguntar à EVA"
                     >
-                        <EvaOrb webgl variant="blue" size={34} showVoice={false} state="idle" className="shrink-0" />
+                        <ThinkingOrb
+                            state="listening"
+                            size={64}
+                            theme="light"
+                            paused={!!reduce}
+                            className="shrink-0"
+                            style={{ width: 36, height: 36 }}
+                            aria-hidden
+                        />
                         <span className="text-[14px] font-semibold" style={{ color: "var(--lp-ink)" }}>Perguntar à EVA</span>
                     </motion.button>
                 )}
