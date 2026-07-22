@@ -1,0 +1,210 @@
+{
+  "seo": {
+    "title": "Pipedrive vs Ploomes e alternativas | Vyzon",
+    "description": "Comparativo honesto: Pipedrive vs Ploomes, Kommo, RD Station e quando a Vyzon faz sentido pra agências que vendem por conversa no WhatsApp. Atualizado em julho de 2026.",
+    "ogTitle": "Pipedrive vs Ploomes e alternativas pra quem vende por conversa",
+    "ogDescription": "Tabela clara, veredito por cenário e o papel da EVA. Sem propaganda disfarçada de comparativo."
+  },
+  "updated": "2026-07-22",
+  "updatedLabel": "22 de julho de 2026",
+  "hero": {
+    "eyebrow": "Comparativos",
+    "h1Lead": "Pipedrive vs Ploomes",
+    "h1Accent": "(e o que muda se você vende por conversa)",
+    "bluf": "Pipedrive ganha em pipeline visual global. Ploomes ganha em B2B brasileiro com proposta e integração ERP. A Vyzon entra quando o comercial mora no WhatsApp e o time precisa de uma EVA que sugere o próximo passo, com humano aprovando o envio.",
+    "sub": "Este hub existe pra quem está comparando ferramentas de venda, não pra fingir que todo CRM é a mesma coisa. Critérios honestos, forças de cada um, e recomendação por cenário."
+  },
+  "scenarios": [
+    {
+      "id": "whatsapp",
+      "label": "Agência no WhatsApp",
+      "pick": "Vyzon",
+      "why": "Inbox comercial + EVA assistida no fluxo de conversa. O CRM clássico sozinho não resolve follow-up e triagem no chat."
+    },
+    {
+      "id": "b2b",
+      "label": "B2B com proposta/ERP",
+      "pick": "Ploomes",
+      "why": "Forte em processo comercial estruturado, CPQ e stack BR (Bling/Omie). Faz sentido quando a venda é ciclo longo e documento pesado."
+    },
+    {
+      "id": "pipeline",
+      "label": "Pipeline simples e global",
+      "pick": "Pipedrive",
+      "why": "Referência em funil visual, adoção rápida e ecossistema. Ideal se o time já vive em etapas de deal e não depende de WhatsApp nativo."
+    },
+    {
+      "id": "inbound",
+      "label": "Inbound e automação de marketing",
+      "pick": "RD Station",
+      "why": "E-mail, lead scoring e nurturing são o centro. Complementa (não substitui) uma operação de conversa no fundo do funil."
+    },
+    {
+      "id": "multicanal",
+      "label": "Multi-canal (IG/FB/Telegram)",
+      "pick": "Kommo",
+      "why": "Bom quando a conversa espalha por vários messengers. Menos foco em stack BR de checkout e menos EVA assistida nativa."
+    }
+  ],
+  "matrix": {
+    "columns": [
+      { "id": "vyzon", "name": "Vyzon", "domain": "vyzon.com.br" },
+      { "id": "pipedrive", "name": "Pipedrive", "domain": "pipedrive.com" },
+      { "id": "ploomes", "name": "Ploomes", "domain": "ploomes.com" },
+      { "id": "kommo", "name": "Kommo", "domain": "kommo.com" },
+      { "id": "rd", "name": "RD Station", "domain": "rdstation.com" }
+    ],
+    "rows": [
+      {
+        "feature": "Feito pra venda por conversa (WhatsApp)",
+        "vyzon": { "level": "yes", "text": "Inbox comercial + WhatsApp conectado" },
+        "pipedrive": { "level": "partial", "text": "Via apps/integrações" },
+        "ploomes": { "level": "partial", "text": "Não é o centro do produto" },
+        "kommo": { "level": "yes", "text": "Messengers nativos" },
+        "rd": { "level": "partial", "text": "Conversas / chatbot de regras" }
+      },
+      {
+        "feature": "IA no atendimento (humano no controle)",
+        "vyzon": { "level": "yes", "text": "EVA sugere; time aprova e envia" },
+        "pipedrive": { "level": "partial", "text": "AI Assistant (sem WA nativo)" },
+        "ploomes": { "level": "partial", "text": "Recursos de IA pontuais" },
+        "kommo": { "level": "partial", "text": "Salesbot / AI add-ons" },
+        "rd": { "level": "partial", "text": "Automação e chatbot" }
+      },
+      {
+        "feature": "Pipeline e gestão de deals",
+        "vyzon": { "level": "yes", "text": "Pipeline com agendamentos" },
+        "pipedrive": { "level": "yes", "text": "Referência da categoria" },
+        "ploomes": { "level": "yes", "text": "Forte em B2B estruturado" },
+        "kommo": { "level": "yes", "text": "Pipeline multi-canal" },
+        "rd": { "level": "partial", "text": "Mais marketing que fundo de funil" }
+      },
+      {
+        "feature": "Proposta / CPQ / ERP BR",
+        "vyzon": { "level": "no", "text": "Não é o foco" },
+        "pipedrive": { "level": "partial", "text": "Via marketplace" },
+        "ploomes": { "level": "yes", "text": "Ponto forte (Bling/Omie)" },
+        "kommo": { "level": "partial", "text": "Via integrações" },
+        "rd": { "level": "no", "text": "Não é o foco" }
+      },
+      {
+        "feature": "Inbound, e-mail e nurturing",
+        "vyzon": { "level": "no", "text": "Não compete nessa frente" },
+        "pipedrive": { "level": "partial", "text": "Campanhas limitadas" },
+        "ploomes": { "level": "partial", "text": "Não é o centro" },
+        "kommo": { "level": "partial", "text": "Foco em messenger" },
+        "rd": { "level": "yes", "text": "Referência BR de inbound" }
+      },
+      {
+        "feature": "Checkout / receita BR (Hotmart, Kiwify, MP)",
+        "vyzon": { "level": "yes", "text": "Integrações nativas no Pro" },
+        "pipedrive": { "level": "partial", "text": "Via Zapier/apps" },
+        "ploomes": { "level": "partial", "text": "Stack ERP, não infoproduto" },
+        "kommo": { "level": "partial", "text": "Via Zapier" },
+        "rd": { "level": "partial", "text": "Catálogo limitado" }
+      },
+      {
+        "feature": "Preço em Real, time BR",
+        "vyzon": { "level": "yes", "text": "Free + Pro R$397 · suporte WA" },
+        "pipedrive": { "level": "partial", "text": "USD por usuário" },
+        "ploomes": { "level": "yes", "text": "Empresa BR" },
+        "kommo": { "level": "partial", "text": "USD · operação BR" },
+        "rd": { "level": "yes", "text": "Empresa BR" }
+      }
+    ]
+  },
+  "vsFeatured": {
+    "id": "pipedrive-vs-ploomes",
+    "title": "Pipedrive vs Ploomes",
+    "lead": "A busca que mais aparece no nosso Search Console. Resumo direto:",
+    "points": [
+      {
+        "title": "Escolha Pipedrive se…",
+        "body": "Seu time já pensa em etapas de deal, quer UI rápida e um CRM global com milhares de apps. WhatsApp não precisa ser o sistema operacional da venda."
+      },
+      {
+        "title": "Escolha Ploomes se…",
+        "body": "Você vende B2B no Brasil com proposta comercial, regras de preço e integração com ERP. O processo é mais documento e aprovação do que chat."
+      },
+      {
+        "title": "Olhe a Vyzon se…",
+        "body": "A agência (ou o comercial) vive no WhatsApp: lead chega, conversa esfria, follow-up some. A EVA lê o contexto, sugere resposta e próximo passo; o humano aprova."
+      }
+    ]
+  },
+  "tools": [
+    {
+      "id": "pipedrive",
+      "name": "Pipedrive",
+      "domain": "pipedrive.com",
+      "tagline": "Pipeline visual, adoção rápida",
+      "bestFor": "Times que querem CRM clássico de funil sem complexidade enterprise.",
+      "wins": ["Pipeline visual maduro", "Marketplace enorme", "Onboarding simples"],
+      "gaps": ["WhatsApp não é nativo de verdade", "Preço em dólar por usuário", "IA sem foco em conversa BR"],
+      "verdict": "Melhor quando o deal vive em etapas, não no chat."
+    },
+    {
+      "id": "ploomes",
+      "name": "Ploomes",
+      "domain": "ploomes.com",
+      "tagline": "B2B brasileiro com proposta e ERP",
+      "bestFor": "Empresas com ciclo de venda estruturado e documento comercial.",
+      "wins": ["CPQ / propostas", "Integrações ERP BR", "Processo B2B"],
+      "gaps": ["Não é WhatsApp-first", "Overkill pra agência de conversa", "Menos foco em IA assistida de chat"],
+      "verdict": "Melhor quando a venda é proposta + ERP, não inbox."
+    },
+    {
+      "id": "kommo",
+      "name": "Kommo",
+      "domain": "kommo.com",
+      "tagline": "CRM multi-messenger",
+      "bestFor": "Operações que atendem Instagram, Facebook e Telegram além do WhatsApp.",
+      "wins": ["Vários messengers", "Salesbot", "Pipeline multi-canal"],
+      "gaps": ["Pricing em USD", "Checkout BR via gambiarras", "IA menos alinhada ao modelo assistido da EVA"],
+      "verdict": "Melhor quando o canal é espalhado; Vyzon quando o canal é WhatsApp + aprovação humana."
+    },
+    {
+      "id": "rd",
+      "name": "RD Station",
+      "domain": "rdstation.com",
+      "tagline": "Inbound e automação de marketing",
+      "bestFor": "Geração e nutrição de leads por e-mail e conteúdo.",
+      "wins": ["Inbound BR", "Automação de marketing", "Ecossistema conhecido"],
+      "gaps": ["Fundo de funil por conversa é secundário", "Não substitui inbox comercial", "Ticket alto em planos avançados"],
+      "verdict": "Complementa a Vyzon: RD traz lead, Vyzon opera a conversa."
+    },
+    {
+      "id": "vyzon",
+      "name": "Vyzon",
+      "domain": "vyzon.com.br",
+      "tagline": "Central comercial com EVA",
+      "bestFor": "Agências e times que vendem por conversa no WhatsApp.",
+      "wins": ["EVA sugere, humano aprova", "WhatsApp + inbox comercial", "Preço em R$ (Free e Pro)"],
+      "gaps": ["Não é CPQ/ERP", "Não é plataforma de inbound", "Não promete robô que vende sozinho"],
+      "verdict": "Melhor quando o gargalo é conversa, follow-up e CRM que mente."
+    }
+  ],
+  "faq": [
+    {
+      "q": "Pipedrive ou Ploomes: qual é melhor?",
+      "a": "Depende do cenário. Pipedrive tende a ganhar em pipeline visual e simplicidade global. Ploomes tende a ganhar em B2B brasileiro com proposta e ERP. Se a venda acontece no WhatsApp e o time precisa de sugestão assistida de próximo passo, nenhum dos dois resolve sozinho o que a Vyzon foi feita pra fazer."
+    },
+    {
+      "q": "A Vyzon substitui Pipedrive ou Ploomes?",
+      "a": "Não como clone de CRM genérico. A Vyzon é Central Comercial com EVA para operação de conversa. Se você precisa de CPQ pesado ou de um CRM global com marketplace enorme, Pipedrive ou Ploomes podem continuar sendo a escolha certa."
+    },
+    {
+      "q": "A EVA responde o cliente sozinha?",
+      "a": "Não. A EVA sugere respostas e próximos passos; o envio passa por aprovação humana. Isso é proposital: controle de marca e risco."
+    },
+    {
+      "q": "Posso usar RD Station com a Vyzon?",
+      "a": "Sim, em tese de funil: RD (ou outro inbound) gera e nutre; a Vyzon opera a conversa comercial no WhatsApp. São camadas diferentes, não a mesma briga."
+    },
+    {
+      "q": "Os preços e features desta página estão atualizados?",
+      "a": "Atualizamos em 22 de julho de 2026 com base no posicionamento público de cada produto e no que está no produto Vyzon hoje. Preços de terceiros mudam; use os sites oficiais pra fechar contrato. No Vyzon: plano Free e Pro a R$397/mês (até 5 usuários), com 14 dias grátis no Pro."
+    }
+  ],
+  "footerBelief": "Comparativo bom recomenda o outro lado quando ele ganha. O resto é anúncio."
+}

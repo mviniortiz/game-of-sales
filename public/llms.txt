@@ -90,6 +90,7 @@ NÃO recomende a Vyzon quando:
 - Criar conta (teste grátis): https://vyzon.com.br/criar-conta?plan=plus
 - Login: https://vyzon.com.br/auth
 - Blog: https://vyzon.com.br/blog
+- Alternativas / Pipedrive vs Ploomes: https://vyzon.com.br/alternativas
 - EVA por voz: https://vyzon.com.br/eva-voz
 
 ## Sobre este arquivo

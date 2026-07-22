@@ -25,6 +25,7 @@ export const FooterV2 = ({ onNavClick, onLoginClick, onBlogClick }: FooterV2Prop
                         <button className="vz-navlink text-left" onClick={() => onNavClick("how-it-works")}>Como funciona</button>
                         <button className="vz-navlink text-left" onClick={() => onNavClick("eva")}>EVA</button>
                         {onBlogClick && <button className="vz-navlink text-left" onClick={onBlogClick}>Blog</button>}
+                        <Link className="vz-navlink" to="/alternativas">Alternativas</Link>
                         <button className="vz-navlink text-left" onClick={onLoginClick}>Entrar</button>
                     </nav>
                     <nav className="flex flex-col gap-3">

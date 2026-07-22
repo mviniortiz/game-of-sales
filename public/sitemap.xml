@@ -15,6 +15,12 @@
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
+  <url>
+    <loc>https://vyzon.com.br/alternativas</loc>
+    <lastmod>2026-07-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
   <!-- Posts do blog (prerenderizados em dist/blog/<slug>/ por scripts/prerender-seo.mjs) -->
   <url>
     <loc>https://vyzon.com.br/blog/pare-de-perder-leads-no-whatsapp</loc>

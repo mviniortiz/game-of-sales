@@ -8,7 +8,8 @@ const ORIGIN = "https://vyzon.com.br";
 // Qualquer rota fora desta lista (home, /landing, app interno, /auth, previews,
 // /r/:token) cai no canonical da home.
 const SELF_CANONICAL = new Set<string>([
-  // /alternativa-*, /para-* e /crm-* despublicadas (301 → home no vercel.json).
+  // /para-* e /crm-* despublicadas (301 → home). /alternativas republicada 2026-07-22.
+  "/alternativas",
   "/changelog",
   "/politica-privacidade",
   "/termos-de-servico",

@@ -67,6 +67,11 @@ const SIMPLE_ROUTES = [
     },
 ];
 
+// Hub /alternativas — fonte única: src/data/landing/alternativasContent.json
+const ALTERNATIVAS = JSON.parse(
+    await readFile(path.join(ROOT, "src/data/landing/alternativasContent.json"), "utf8")
+);
+
 const ORIGIN = "https://vyzon.com.br";
 
 const escapeHtml = (s = "") =>
@@ -517,6 +522,157 @@ async function buildBlogIndex(posts) {
     console.log(`✓ dist/blog/index.html  (${html.length.toLocaleString()} bytes)`);
 }
 
+async function buildAlternativas(data) {
+    const template = await readFile(TEMPLATE_PATH, "utf8");
+    const seo = {
+        slug: "alternativas",
+        seo: data.seo,
+    };
+    let html = rewriteHead(template, seo);
+    html = html.replace(/<noscript>([\s\S]*?)<\/noscript>/g, (match) =>
+        match.includes("facebook.com/tr") ? match : ""
+    );
+
+    const levelLabel = (level) => (level === "yes" ? "Sim" : level === "partial" ? "Parcial" : "Não");
+    const tableRows = data.matrix.rows
+        .map((row) => {
+            const cells = data.matrix.columns
+                .map((col) => {
+                    const cell = row[col.id];
+                    return `<td style="padding:10px 8px;vertical-align:top;text-align:center;font-size:13px;color:#444;"><strong>${levelLabel(cell.level)}</strong><br />${escapeHtml(cell.text)}</td>`;
+                })
+                .join("");
+            return `<tr><th scope="row" style="padding:10px 12px;text-align:left;font-size:13px;color:#111;border-top:1px solid #eee;">${escapeHtml(row.feature)}</th>${cells}</tr>`;
+        })
+        .join("\n");
+
+    const headCols = data.matrix.columns
+        .map((c) => `<th style="padding:12px 8px;font-size:13px;">${escapeHtml(c.name)}</th>`)
+        .join("");
+
+    const vsPoints = data.vsFeatured.points
+        .map((p) => `<li style="margin:0 0 12px;"><strong>${escapeHtml(p.title)}</strong> ${escapeHtml(p.body)}</li>`)
+        .join("");
+
+    const scenarios = data.scenarios
+        .map((s) => `<li style="margin:0 0 10px;"><strong>${escapeHtml(s.label)} → ${escapeHtml(s.pick)}</strong>: ${escapeHtml(s.why)}</li>`)
+        .join("");
+
+    const tools = data.tools
+        .map(
+            (t) => `<section style="margin:0 0 22px;">
+        <h3 style="font-size:18px;margin:0 0 6px;">${escapeHtml(t.name)} — ${escapeHtml(t.tagline)}</h3>
+        <p style="margin:0 0 8px;color:#333;">${escapeHtml(t.bestFor)}</p>
+        <p style="margin:0 0 4px;"><strong>Ganha em:</strong> ${escapeHtml(t.wins.join("; "))}</p>
+        <p style="margin:0 0 4px;"><strong>Limite:</strong> ${escapeHtml(t.gaps.join("; "))}</p>
+        <p style="margin:0;color:#444;">${escapeHtml(t.verdict)}</p>
+      </section>`
+        )
+        .join("\n");
+
+    const faq = data.faq
+        .map(
+            (f) => `<details style="margin:0 0 12px;border-top:1px solid #eee;padding-top:10px;">
+        <summary style="font-weight:600;cursor:pointer;">${escapeHtml(f.q)}</summary>
+        <p style="margin:8px 0 0;color:#333;">${escapeHtml(f.a)}</p>
+      </details>`
+        )
+        .join("\n");
+
+    const noscript = `
+  <noscript>
+    <div style="max-width:960px;margin:0 auto;padding:32px 20px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;line-height:1.6;color:#111;">
+      <p style="font-size:13px;color:#666;margin:0 0 8px;">Comparativos · atualizado ${escapeHtml(data.updatedLabel)}</p>
+      <h1 style="font-size:34px;line-height:1.15;margin:0 0 14px;">${escapeHtml(data.hero.h1Lead)} ${escapeHtml(data.hero.h1Accent)}</h1>
+      <p style="font-size:17px;color:#222;margin:0 0 12px;max-width:720px;font-weight:500;">${escapeHtml(data.hero.bluf)}</p>
+      <p style="font-size:15px;color:#555;margin:0 0 24px;max-width:680px;">${escapeHtml(data.hero.sub)}</p>
+      <p style="margin:0 0 28px;">
+        <a href="/?demo=1" style="display:inline-block;padding:10px 18px;background:#1556C0;color:#fff;text-decoration:none;border-radius:999px;margin:0 6px 6px 0;"><strong>Ver a EVA em ação</strong></a>
+        <a href="/criar-conta?plan=plus" style="display:inline-block;padding:10px 18px;border:1px solid #999;color:#111;text-decoration:none;border-radius:999px;">Testar o Pro 14 dias</a>
+      </p>
+
+      <h2 style="font-size:22px;margin:28px 0 12px;">Veredito por cenário</h2>
+      <ul style="padding-left:18px;margin:0 0 28px;">${scenarios}</ul>
+
+      <h2 style="font-size:22px;margin:28px 0 12px;">${escapeHtml(data.vsFeatured.title)}</h2>
+      <p style="margin:0 0 12px;color:#333;">${escapeHtml(data.vsFeatured.lead)}</p>
+      <ul style="padding-left:18px;margin:0 0 28px;">${vsPoints}</ul>
+
+      <h2 style="font-size:22px;margin:28px 0 12px;">Tabela comparativa</h2>
+      <table style="width:100%;border-collapse:collapse;margin:0 0 28px;border:1px solid #e5e5e5;">
+        <thead><tr><th style="padding:12px;text-align:left;font-size:12px;color:#666;">Critério</th>${headCols}</tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+
+      <h2 style="font-size:22px;margin:28px 0 12px;">Por ferramenta</h2>
+      ${tools}
+
+      <h2 style="font-size:22px;margin:28px 0 12px;">Perguntas frequentes</h2>
+      ${faq}
+
+      <p style="margin:28px 0 0;font-size:15px;color:#555;font-style:italic;">${escapeHtml(data.footerBelief)}</p>
+      <p style="margin:16px 0 0;font-size:13px;"><a href="/" style="color:#1556C0;">← Voltar ao Vyzon</a> · <a href="/blog" style="color:#1556C0;">Blog</a></p>
+    </div>
+  </noscript>`;
+
+    html = html.replace("</body>", `${noscript}\n</body>`);
+
+    // Remove FAQPage/SoftwareApplication da home; injeta graph desta página
+    html = html.replace(
+        /<script type="application\/ld\+json">\s*\{\s*"@context":\s*"https:\/\/schema\.org",\s*"@type":\s*"SoftwareApplication"[\s\S]*?<\/script>/,
+        ""
+    );
+    html = html.replace(
+        /<script type="application\/ld\+json">\s*\{\s*"@context":\s*"https:\/\/schema\.org",\s*"@type":\s*"FAQPage"[\s\S]*?<\/script>/,
+        ""
+    );
+
+    const graph = {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "WebPage",
+                name: data.seo.title,
+                description: data.seo.description,
+                url: `${ORIGIN}/alternativas`,
+                dateModified: data.updated,
+                inLanguage: "pt-BR",
+            },
+            {
+                "@type": "BreadcrumbList",
+                itemListElement: [
+                    { "@type": "ListItem", position: 1, name: "Vyzon", item: `${ORIGIN}/` },
+                    { "@type": "ListItem", position: 2, name: "Alternativas", item: `${ORIGIN}/alternativas` },
+                ],
+            },
+            {
+                "@type": "FAQPage",
+                mainEntity: data.faq.map((f) => ({
+                    "@type": "Question",
+                    name: f.q,
+                    acceptedAnswer: { "@type": "Answer", text: f.a },
+                })),
+            },
+            {
+                "@type": "ItemList",
+                name: "Ferramentas comparadas",
+                itemListElement: data.tools.map((t, i) => ({
+                    "@type": "ListItem",
+                    position: i + 1,
+                    name: t.name,
+                    url: `https://${t.domain}`,
+                })),
+            },
+        ],
+    };
+    html = html.replace("</head>", `  <script type="application/ld+json">${JSON.stringify(graph)}</script>\n</head>`);
+
+    const outDir = path.join(DIST, "alternativas");
+    if (!existsSync(outDir)) await mkdir(outDir, { recursive: true });
+    await writeFile(path.join(outDir, "index.html"), html, "utf8");
+    console.log(`✓ dist/alternativas/index.html  (${html.length.toLocaleString()} bytes)`);
+}
+
 if (!existsSync(TEMPLATE_PATH)) {
     console.error(`✗ ${TEMPLATE_PATH} não encontrado. Rode 'vite build' primeiro.`);
     process.exit(1);
@@ -533,4 +689,5 @@ await buildBlogIndex(BLOG_POSTS);
 for (const post of BLOG_POSTS) {
     await buildBlogPost(post);
 }
+await buildAlternativas(ALTERNATIVAS);
 console.log("\nDone.");
