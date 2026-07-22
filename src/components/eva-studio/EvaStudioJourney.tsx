@@ -33,7 +33,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState, type ReactNode } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import { EvaOrb, type EvaOrbState } from "@/components/landing-v2/EvaOrb";
+import { EvaThinkingOrb } from "@/components/eva/EvaThinkingOrb";
+import type { EvaOrbState } from "@/components/landing-v2/EvaOrb";
 import {
     AgentPurposeCreate,
     type AgentPurpose,
@@ -470,7 +471,14 @@ export const EvaStudioJourney = forwardRef<EvaStudioJourneyHandle, EvaStudioJour
                     <div className={`vz-simreplay-panel vz-simreplay-panel--ready vz-journey-activate ${activated ? "vz-journey-activate--on" : ""}`}>
                         <div className="vz-simreplay-panel-top">
                             <span className={`vz-journey-activate-orb ${activated ? "vz-journey-activate-orb--on" : ""}`}>
-                                <EvaOrb variant="blue" size={52} showVoice={false} state={activated ? "speaking" : "thinking"} />
+                                <EvaThinkingOrb
+                                    state={activated ? "composing" : "working"}
+                                    size={64}
+                                    displaySize={52}
+                                    theme="light"
+                                    agentKey="qualificacao"
+                                    aria-hidden
+                                />
                             </span>
                             <div style={{ flex: 1, minWidth: 0 }}>
                                 <p className="vz-simreplay-panel-headline">

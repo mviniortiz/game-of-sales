@@ -807,7 +807,7 @@ Analise a conversa e retorne o JSON estrito com sua análise e o objeto qualific
         // cresce. Subindo max_completion_tokens 1000 → 2000 pra cobrir.
         // gpt-5.x consome reasoning tokens antes do conteúdo, então cap baixo
         // trunca o JSON e o parse falha com "Resposta invalida da IA".
-        const modelUsed = "gpt-5.4-nano";
+        const modelUsed = "gpt-5.4-mini";
         const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
             method: "POST",
             headers: {

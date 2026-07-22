@@ -12,7 +12,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { useState } from "react";
 import { ArrowRight, Check } from "lucide-react";
-import { EvaOrb } from "@/components/landing-v2/EvaOrb";
+import { EvaThinkingOrb } from "@/components/eva/EvaThinkingOrb";
 import { SPECIALISTS, SPECIALIST_ORDER, type SpecialistKey } from "@/lib/eva/evaSpecialists";
 
 // ─── Tipos ──────────────────────────────────────────────────────────────────
@@ -88,7 +88,14 @@ export function AgentPurposeCreate({ purposes, sources, onCreate, onProceed, onP
             {/* Header — orb do agente escolhido + pergunta única */}
             {!hideHeader && (
             <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 22 }}>
-                <EvaOrb variant={chosenSpec?.orb ?? "blue"} size={44} showVoice={false} state={chosen ? "thinking" : "idle"} />
+                <EvaThinkingOrb
+                    state={chosen ? "working" : "listening"}
+                    size={64}
+                    displaySize={44}
+                    theme="light"
+                    agentKey={chosenSpec?.key ?? "qualificacao"}
+                    aria-hidden
+                />
                 <div style={{ flex: 1, minWidth: 0 }}>
                     <p className="vz-agentcreate-label">EVA Studio · Agentes especialistas</p>
                     <h1
@@ -122,7 +129,7 @@ export function AgentPurposeCreate({ purposes, sources, onCreate, onProceed, onP
                                         style={{ animationDelay: `${i * 0.06}s`, pointerEvents: "none", opacity: 0.55 }}
                                     >
                                         <span style={{ display: "block", marginBottom: 14 }}>
-                                            <EvaOrb variant={s.orb} size={40} showVoice={false} />
+                                            <EvaThinkingOrb state="listening" size={64} displaySize={40} theme="light" agentKey={s.key} aria-hidden />
                                         </span>
                                         <span className="vz-agentcreate-card-title" style={{ display: "block" }}>
                                             {s.label}
@@ -152,7 +159,7 @@ export function AgentPurposeCreate({ purposes, sources, onCreate, onProceed, onP
                                     style={{ animationDelay: `${i * 0.06}s` }}
                                 >
                                     <span style={{ display: "block", marginBottom: 14 }}>
-                                        <EvaOrb variant={s.orb} size={40} showVoice={false} />
+                                        <EvaThinkingOrb state="listening" size={64} displaySize={40} theme="light" agentKey={s.key} aria-hidden />
                                     </span>
                                     <span className="vz-agentcreate-card-title" style={{ display: "block" }}>
                                         {s.label}

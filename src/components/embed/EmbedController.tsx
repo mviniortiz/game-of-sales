@@ -34,11 +34,24 @@ export function EmbedController() {
     const [visible, setVisible] = useState(false);
     const [clicking, setClicking] = useState(false);
     const [flash, setFlash] = useState<{ label: string; n: number } | null>(null);
+    // Tour core da landing: bloqueia clique do usuário; navigate()/el.click() da EVA seguem.
+    const [interactionLocked, setInteractionLocked] = useState(false);
     const timers = useRef<number[]>([]);
     const flashN = useRef(0);
     const flashTimer = useRef<number | null>(null);
 
     const clearTimers = () => { timers.current.forEach((t) => clearTimeout(t)); timers.current = []; };
+
+    useEffect(() => {
+        const onLock = (e: MessageEvent) => {
+            if (e.origin !== window.location.origin) return;
+            const d = e.data;
+            if (!d || d.source !== "vyzon-demo" || d.action !== "interaction-lock") return;
+            setInteractionLocked(!!d.locked);
+        };
+        window.addEventListener("message", onLock);
+        return () => window.removeEventListener("message", onLock);
+    }, []);
 
     useEffect(() => {
         const moveTo = (selector: string): boolean => {
@@ -161,6 +174,25 @@ export function EmbedController() {
 
     return (
         <>
+            {/* Trava interação do usuário durante o tour guiado (cursor/navigate da EVA passam). */}
+            {interactionLocked && (
+                <div
+                    style={{
+                        position: "fixed",
+                        inset: 0,
+                        zIndex: 2147483500,
+                        pointerEvents: "auto",
+                        cursor: "default",
+                        background: "transparent",
+                    }}
+                    aria-hidden="true"
+                    title="A EVA está conduzindo a demo"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                    onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                    onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                />
+            )}
+
             {/* selo Live */}
             <div
                 style={{ position: "fixed", top: 14, right: 16, zIndex: 2147483600, display: "flex", alignItems: "center", gap: 6, padding: "5px 11px", borderRadius: 999, background: "rgba(255,255,255,0.92)", border: "1px solid rgba(13,20,33,0.10)", boxShadow: "0 6px 18px -8px rgba(13,20,33,0.3)", fontSize: 11.5, fontWeight: 600, color: "#0B1220", pointerEvents: "none", backdropFilter: "blur(4px)" }}

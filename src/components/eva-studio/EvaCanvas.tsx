@@ -35,7 +35,7 @@ import {
     X,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { EvaOrb } from "@/components/landing-v2/EvaOrb";
+import { EvaThinkingOrb } from "@/components/eva/EvaThinkingOrb";
 import { getSpecialist } from "@/lib/eva/evaSpecialists";
 import type { ApprovalResult } from "@/lib/eva/approval";
 import type { EvaMemory } from "@/hooks/useEvaMemory";
@@ -234,7 +234,14 @@ export function EvaCanvas(props: EvaCanvasProps) {
                 <aside className="w-full flex-shrink-0 lg:w-[320px] 2xl:w-[360px]">
                     <div className="rounded-2xl p-5" style={cardSoft}>
                         <div className="flex items-center gap-3">
-                            <EvaOrb variant={spec.orb} size={44} showVoice={false} state={running ? "analyzing" : "idle"} />
+                            <EvaThinkingOrb
+                                state={running ? "working" : "listening"}
+                                size={64}
+                                displaySize={44}
+                                theme="light"
+                                agentKey={spec.key}
+                                aria-label={spec.role}
+                            />
                             <div style={{ minWidth: 0 }}>
                                 <h1 style={{ fontSize: 16.5, fontWeight: 700, letterSpacing: "-0.01em" }}>{spec.role}</h1>
                                 <span
@@ -419,7 +426,14 @@ export function EvaCanvas(props: EvaCanvasProps) {
                         </div>
                     ) : groups.length === 0 ? (
                         <div className="rounded-2xl px-6 py-14 text-center" style={cardSoft}>
-                            <EvaOrb variant={spec.orb} size={52} showVoice={false} state="idle" />
+                            <EvaThinkingOrb
+                                state="listening"
+                                size={64}
+                                displaySize={52}
+                                theme="light"
+                                agentKey={spec.key}
+                                aria-hidden
+                            />
                             <p className="mt-4" style={{ fontSize: 15, fontWeight: 700 }}>A EVA ainda não registrou trabalho por aqui.</p>
                             <p className="mx-auto mt-2 max-w-md" style={{ fontSize: 13, color: SUB, lineHeight: 1.55 }}>
                                 Assim que os leads chegarem no Inbox, cada leitura, sugestão e card criado

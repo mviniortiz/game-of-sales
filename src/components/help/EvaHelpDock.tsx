@@ -8,7 +8,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowUp, CircleNotch, NotePencil, X } from "@phosphor-icons/react";
-import { EvaOrb } from "@/components/landing-v2/EvaOrb";
+import { EvaThinkingOrb } from "@/components/eva/EvaThinkingOrb";
+import { useEvaOrbCycle } from "@/hooks/useEvaOrbCycle";
 import { useTypewriter } from "@/hooks/useTypewriter";
 import { useEvaHelpChat } from "@/hooks/useEvaHelpChat";
 
@@ -66,9 +67,25 @@ export function EvaHelpDock() {
     const [open, setOpen] = useState(false);
     const [input, setInput] = useState("");
     const { messages, loading, animateIdx, ask: askChat, reset, reloadFromStorage } = useEvaHelpChat(pageLabel);
+    const orb = useEvaOrbCycle({
+        open,
+        lifePulse: !open && !reduce,
+    });
 
     const threadRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (loading) orb.onAskStart();
+        else if (messages.length > 0) {
+            const last = messages[messages.length - 1];
+            if (last?.role === "assistant") orb.onAnswerStart(last.content.length);
+            else orb.onIdle();
+        } else {
+            orb.onIdle();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [loading]);
 
     const scrollToEnd = () => {
         if (threadRef.current) threadRef.current.scrollTop = threadRef.current.scrollHeight;
@@ -129,7 +146,15 @@ export function EvaHelpDock() {
                         >
                             {/* Header */}
                             <div className="flex items-center gap-2.5 px-4 py-3 border-b" style={{ borderColor: "#F1F5F9" }}>
-                                <EvaOrb variant="blue" size={26} showVoice={false} state={loading ? "analyzing" : "idle"} className="shrink-0" />
+                                <EvaThinkingOrb
+                                    state={loading ? "working" : orb.state}
+                                    size={20}
+                                    displaySize={26}
+                                    theme="light"
+                                    paused={!!reduce}
+                                    className="shrink-0"
+                                    aria-label="EVA"
+                                />
                                 <div className="min-w-0 flex-1">
                                     <p className="text-[13.5px] font-bold leading-tight" style={{ color: "#0B1220" }}>EVA</p>
                                     <p className="text-[11px] leading-tight" style={{ color: "#64748B" }}>Ajuda com o Vyzon</p>
@@ -262,7 +287,15 @@ export function EvaHelpDock() {
                         }}
                         aria-label="Perguntar à EVA"
                     >
-                        <EvaOrb variant="blue" size={34} showVoice={false} state="idle" className="shrink-0" />
+                        <EvaThinkingOrb
+                            state={orb.state}
+                            size={64}
+                            displaySize={34}
+                            theme="light"
+                            paused={!!reduce}
+                            className="shrink-0"
+                            aria-hidden
+                        />
                         <span className="text-[14px] font-semibold" style={{ color: "#0B1220" }}>Perguntar à EVA</span>
                     </motion.button>
                 )}

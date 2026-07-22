@@ -9,7 +9,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowUp, ChatCircleText, CircleNotch, Compass, MagnifyingGlass, NotePencil, WhatsappLogo, X } from "@phosphor-icons/react";
-import { EvaOrb } from "@/components/landing-v2/EvaOrb";
+import { EvaThinkingOrb } from "@/components/eva/EvaThinkingOrb";
 import { useEvaHelpChat } from "@/hooks/useEvaHelpChat";
 import { AssistantBubble, labelForPath } from "./EvaHelpDock";
 
@@ -89,7 +89,7 @@ export function AskEvaPalette() {
         const typed = input.trim();
         return [
             {
-                icon: <EvaOrb variant="blue" size={18} showVoice={false} state="idle" />,
+                icon: <EvaThinkingOrb state="listening" size={20} displaySize={18} theme="light" aria-hidden />,
                 label: "Perguntar à EVA",
                 desc: typed ? `“${typed}”` : "Digite sua pergunta",
                 run: () => { if (typed) { ask(typed); setInput(""); } },
@@ -152,7 +152,14 @@ export function AskEvaPalette() {
                         {/* Header do modo chat */}
                         {inChat && (
                             <div className="flex items-center gap-2.5 px-4 py-2.5 border-b" style={{ borderColor: "#F1F5F9" }}>
-                                <EvaOrb variant="blue" size={24} showVoice={false} state={loading ? "analyzing" : "idle"} className="shrink-0" />
+                                <EvaThinkingOrb
+                                    state={loading ? "working" : "listening"}
+                                    size={20}
+                                    displaySize={24}
+                                    theme="light"
+                                    className="shrink-0"
+                                    aria-label="EVA"
+                                />
                                 <p className="flex-1 text-[13px] font-bold" style={{ color: "#0B1220" }}>EVA · ajuda com o Vyzon</p>
                                 <button
                                     type="button"

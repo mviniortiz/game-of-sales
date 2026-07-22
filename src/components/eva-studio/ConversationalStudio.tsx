@@ -18,7 +18,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { useRef, useState, useEffect, useCallback } from "react";
 import { ArrowUp, Check, Mic, Paperclip, FileImage, X, ArrowLeft, Loader2 } from "lucide-react";
-import { EvaOrb } from "@/components/landing-v2/EvaOrb";
+import { EvaThinkingOrb } from "@/components/eva/EvaThinkingOrb";
 import { useEvaStudioChat, type StudioFields } from "@/hooks/useEvaStudioChat";
 import { useEvaPriorContext } from "@/hooks/useEvaPriorContext";
 import { getSpecialist, type SpecialistKey } from "@/lib/eva/evaSpecialists";
@@ -251,7 +251,14 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
             `}</style>
             {!hideHeader && (
                 <div className="vz-convo-head">
-                    <EvaOrb variant={spec.orb} size={36} showVoice={false} state={thinking ? "analyzing" : "idle"} />
+                    <EvaThinkingOrb
+                        state={thinking ? "working" : "listening"}
+                        size={64}
+                        displaySize={36}
+                        theme="light"
+                        agentKey={spec.key}
+                        aria-label={spec.role}
+                    />
                     <div style={{ flex: 1, minWidth: 0 }}>
                         <h1 className="vz-convo-title">Vamos montar a sua EVA de {spec.label.toLowerCase()}</h1>
                         <p className="vz-convo-sub">Sem formulário. Você fala ou escreve, e eu construo.</p>
@@ -266,7 +273,9 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
                         {messages.map((m, i) => (
                             <div key={i} className={`vz-convo-row vz-convo-row--${m.from}`}>
                                 {m.from === "eva" && (
-                                    <span className="vz-convo-ava"><EvaOrb variant={spec.orb} size={26} showVoice={false} state="idle" /></span>
+                                    <span className="vz-convo-ava">
+                                        <EvaThinkingOrb state="listening" size={20} displaySize={26} theme="light" agentKey={spec.key} aria-hidden />
+                                    </span>
                                 )}
                                 <div
                                     className={`vz-convo-bubble vz-convo-bubble--${m.from}`}
@@ -286,7 +295,9 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
                         {/* ── Pensando ── */}
                         {thinking && (
                             <div className="vz-convo-row vz-convo-row--eva">
-                                <span className="vz-convo-ava"><EvaOrb variant={spec.orb} size={26} showVoice={false} state="analyzing" /></span>
+                                <span className="vz-convo-ava">
+                                    <EvaThinkingOrb state="working" size={20} displaySize={26} theme="light" agentKey={spec.key} aria-hidden />
+                                </span>
                                 <div className="vz-convo-bubble vz-convo-bubble--eva vz-convo-typing">
                                     <span className="vz-convo-typing-dot" />
                                     <span className="vz-convo-typing-dot" />
@@ -374,7 +385,14 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
                 <aside className="vz-convo-agent">
                     <div className="vz-convo-agent-head">
                         <span style={{ flexShrink: 0, lineHeight: 0 }}>
-                            <EvaOrb variant={spec.orb} size={30} showVoice={false} state={thinking ? "analyzing" : "idle"} />
+                            <EvaThinkingOrb
+                                state={thinking ? "working" : "listening"}
+                                size={20}
+                                displaySize={30}
+                                theme="light"
+                                agentKey={spec.key}
+                                aria-hidden
+                            />
                         </span>
                         <div style={{ flex: 1, minWidth: 0 }}>
                             <p className="vz-convo-agent-kicker">Sua EVA de vendas</p>
@@ -443,7 +461,7 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
                             >
                                 <p style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12.5, fontWeight: 600, color: "var(--vyz-text-strong, #0B1220)" }}>
                                     <span style={{ lineHeight: 0 }}>
-                                        <EvaOrb variant={spec.orb} size={18} showVoice={false} state="idle" />
+                                        <EvaThinkingOrb state="listening" size={20} displaySize={18} theme="light" agentKey={spec.key} aria-hidden />
                                     </span>
                                     Montei a sua EVA de {spec.label.toLowerCase()} assim:
                                 </p>

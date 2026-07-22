@@ -21,7 +21,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AudioMessagePlayer } from "@/components/whatsapp/AudioMessagePlayer";
 import { MediaMessageBubble } from "@/components/whatsapp/MediaMessageBubble";
 import { AudioRecorder } from "@/components/whatsapp/AudioRecorder";
-import { EvaOrb } from "@/components/landing-v2/EvaOrb";
+import { EvaThinkingOrb } from "@/components/eva/EvaThinkingOrb";
 import type { Chat, MessageLine } from "@/hooks/useEvolutionAPI";
 import { useProfilePic } from "@/hooks/useProfilePic";
 import { cn } from "@/lib/utils";
@@ -153,7 +153,15 @@ function EmptyConversation() {
     return (
         <div className="flex-1 flex items-center justify-center px-6" style={{ background: "var(--ibx-paper)" }}>
             <div className="text-center max-w-sm">
-                <EvaOrb variant="blue" state="idle" size={56} showVoice={false} className="mx-auto mb-4" />
+                <EvaThinkingOrb
+                    state="listening"
+                    size={64}
+                    displaySize={56}
+                    theme="light"
+                    agentKey="qualificacao"
+                    className="mx-auto mb-4"
+                    aria-hidden
+                />
                 <h3
                     className="text-[15px] font-semibold mb-2"
                     style={{ color: "#0B1220", letterSpacing: "-0.015em" }}

@@ -23,7 +23,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { useMemo, useState, type ReactNode } from "react";
 import { ArrowRight, ChevronDown, ChevronRight, Clock3, ListOrdered, Lock, Search } from "lucide-react";
-import { EvaOrb } from "@/components/landing-v2/EvaOrb";
+import { EvaThinkingOrb } from "@/components/eva/EvaThinkingOrb";
 import type { Chat } from "@/hooks/useEvolutionAPI";
 
 // ─── Tipos do sinal de prioridade (placeholder do cálculo real) ─────────────
@@ -186,7 +186,14 @@ export function InboxPriorityList({
             {/* Header — a entidade sinaliza o modo: roxo priorizando, slate sem base */}
             <div className="vz-evlist-header">
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <EvaOrb variant="blue" size={26} showVoice={false} state={studioConfigured ? "idle" : "listening"} />
+                    <EvaThinkingOrb
+                        state={studioConfigured ? "listening" : "shaping"}
+                        size={20}
+                        displaySize={26}
+                        theme="light"
+                        agentKey="qualificacao"
+                        aria-hidden
+                    />
                     <div style={{ flex: 1, minWidth: 0 }}>
                         <p className="vz-evlist-title">Inbox Comercial</p>
                         <p className="vz-evlist-subtitle">

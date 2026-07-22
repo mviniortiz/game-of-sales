@@ -316,7 +316,7 @@ export const DemoBooking = ({ email, site, intakeId, onDone }: DemoBookingProps)
             {/* topo */}
             <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: "1px solid var(--lp-line)" }}>
                 <div className="flex items-center gap-2.5">
-                    <EvaOrb webgl state="speaking" size={30} />
+                    <EvaOrb state="speaking" size={30} />
                     <span className="lp-mono" style={{ color: "var(--lp-ink-55)" }}>EVA · agendar sua demo</span>
                 </div>
                 {(view === "q_pain" || view === "schedule" || view === "confirm") && (

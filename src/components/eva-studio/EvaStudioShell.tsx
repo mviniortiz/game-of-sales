@@ -14,7 +14,9 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import type { ReactNode } from "react";
 import { Check } from "lucide-react";
-import { EvaOrb, type EvaOrbState } from "@/components/landing-v2/EvaOrb";
+import { EvaThinkingOrb } from "@/components/eva/EvaThinkingOrb";
+import type { EvaOrbState } from "@/components/landing-v2/EvaOrb";
+import { mapEvaOrbUiState } from "@/hooks/useEvaOrbCycle";
 
 export type StudioStepKey = "criar" | "ensinar" | "provar" | "ativar";
 
@@ -71,7 +73,14 @@ export function EvaStudioShell({
         <div className="vz-studioshell">
             {/* ── Cabeçalho ÚNICO ── */}
             <div className="vz-studioshell-head">
-                <EvaOrb variant="blue" size={38} showVoice={false} state={orbState} />
+                <EvaThinkingOrb
+                    state={mapEvaOrbUiState(orbState)}
+                    size={64}
+                    displaySize={38}
+                    theme="light"
+                    agentKey="qualificacao"
+                    aria-label="EVA Studio"
+                />
                 <div style={{ flex: 1, minWidth: 0 }}>
                     <h1 className="vz-studioshell-title">EVA Studio</h1>
                     <p className="vz-studioshell-subtitle">

@@ -9,7 +9,7 @@ import {
     CheckCircle,
     ArrowRight,
 } from "@phosphor-icons/react";
-import { EvaOrb } from "@/components/landing-v2/EvaOrb";
+import { EvaThinkingOrb } from "@/components/eva/EvaThinkingOrb";
 import type { OnboardingProgress, OnboardingStepKey } from "@/hooks/useOnboardingProgress";
 
 interface StepDef {
@@ -64,7 +64,7 @@ export function OnboardingChecklist({
             {/* Header + EVA nudge */}
             <div className="px-5 sm:px-6 pt-5 pb-4 border-b" style={{ borderColor: "#F1F5F9", background: "linear-gradient(180deg, rgba(124,58,237,0.05) 0%, #FFFFFF 90%)" }}>
                 <div className="flex items-center gap-3">
-                    <EvaOrb variant="blue" size={30} showVoice={false} state="idle" className="shrink-0" />
+                    <EvaThinkingOrb state="listening" size={20} displaySize={30} theme="light" className="shrink-0" aria-hidden />
                     <div className="min-w-0 flex-1">
                         <h2 className="text-[17px] font-bold leading-tight" style={{ color: "#0B1220", letterSpacing: "-0.015em" }}>
                             Primeiros passos

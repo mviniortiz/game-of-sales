@@ -45,7 +45,7 @@ import {
 import { cn } from "@/lib/utils";
 import { EvaNode } from "@/components/landing/EvaNode";
 import { toast } from "sonner";
-import { EvaOrb } from "@/components/landing-v2/EvaOrb";
+import { EvaThinkingOrb } from "@/components/eva/EvaThinkingOrb";
 import { EvaAnalyzingState } from "@/components/inbox/EvaAnalyzingState";
 import { NovaOportunidadeModal } from "@/components/deals/NovaOportunidadeModal";
 import { EvaCreateDealNudge } from "@/components/inbox/EvaCreateDealNudge";
@@ -248,7 +248,15 @@ function EmptyPanel({ reason, onClose }: { reason: "no-chat" | "no-messages"; on
     return (
         <div className="relative flex-1 flex flex-col items-center justify-center px-5 text-center">
             {onClose && <SheetCloseButton onClose={onClose} absolute />}
-            <EvaOrb variant="blue" state="idle" size={60} showVoice={false} className="mb-4" />
+            <EvaThinkingOrb
+                state="listening"
+                size={64}
+                displaySize={56}
+                theme="light"
+                agentKey="qualificacao"
+                className="mb-4"
+                aria-hidden
+            />
             <p className="text-[13px] font-semibold mb-1" style={{ color: "#0B1220" }}>
                 Aguardando contexto
             </p>
@@ -265,7 +273,15 @@ function EmptyPanel({ reason, onClose }: { reason: "no-chat" | "no-messages"; on
 function LoadingState({ message }: { message?: string }) {
     return (
         <div className="flex-1 flex flex-col items-center justify-center px-5 text-center">
-            <EvaOrb variant="blue" state="analyzing" size={64} className="mb-4" />
+            <EvaThinkingOrb
+                state="working"
+                size={64}
+                displaySize={56}
+                theme="light"
+                agentKey="qualificacao"
+                className="mb-4"
+                aria-hidden
+            />
             <p className="text-[13px] font-semibold mb-1" style={{ color: "#0B1220" }}>
                 {message || "EVA analisando conversa…"}
             </p>
@@ -690,12 +706,14 @@ function PanelContent({
             >
                 {/* Linha 1 — identidade + ações */}
                 <div className="flex items-center gap-3">
-                    <EvaOrb
-                        variant="blue"
-                        size={36}
+                    <EvaThinkingOrb
+                        state={insight.analyzing ? "working" : "listening"}
+                        size={64}
+                        displaySize={36}
+                        theme="light"
+                        agentKey="qualificacao"
                         className="shrink-0"
-                        state={insight.analyzing ? "analyzing" : "idle"}
-                        showVoice={false}
+                        aria-label="EVA Comercial"
                     />
                     <p
                         className="flex-1 min-w-0 truncate text-[14px] font-semibold leading-tight"
@@ -1044,7 +1062,15 @@ function formatResetAt(iso: string | null): string | null {
 function NoAnalysisState({ onAnalyze }: { onAnalyze: () => void }) {
     return (
         <div className="flex flex-col items-center justify-center text-center py-8 px-2">
-            <EvaOrb variant="blue" state="idle" size={64} showVoice={false} className="mb-4" />
+            <EvaThinkingOrb
+                state="listening"
+                size={64}
+                displaySize={56}
+                theme="light"
+                agentKey="qualificacao"
+                className="mb-4"
+                aria-hidden
+            />
             <p className="text-[13.5px] font-semibold mb-2" style={{ color: "#0B1220" }}>
                 A EVA ainda não analisou esta conversa.
             </p>

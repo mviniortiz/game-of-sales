@@ -212,6 +212,19 @@ export const DemoLiveStage = ({ onDone, site, siteCtx, onTourEnd }: DemoLiveStag
     const sendGoto = (screen: string) => {
         try { iframeRef.current?.contentWindow?.postMessage({ source: "vyzon-demo", action: "goto", screen }, window.location.origin); } catch { /* noop */ }
     };
+    const sendInteractionLock = (locked: boolean) => {
+        try {
+            iframeRef.current?.contentWindow?.postMessage(
+                { source: "vyzon-demo", action: "interaction-lock", locked },
+                window.location.origin,
+            );
+        } catch { /* noop */ }
+    };
+    // Tour core (tourIdx >= 0): trava cliques do usuário no iframe. Menu/extras/pós-tour liberam.
+    const setTourIdx = (i: number) => {
+        tourIdxRef.current = i;
+        sendInteractionLock(i >= 0);
+    };
     const setScreen = (screen: string) => { activeRef.current = screen; setActive(screen); sendGoto(screen); };
 
     // SINCRONIA tela↔fala: o tool call `navegar` chega ADIANTADO (no tempo de
@@ -274,7 +287,7 @@ export const DemoLiveStage = ({ onDone, site, siteCtx, onTourEnd }: DemoLiveStag
         if (i < 0 || i >= CORE_ORDER.length) { enterMenu(false); return; }
         if (nudgedStepRef.current >= i) return;  // este passo já foi iniciado (anti-repetição)
         nudgedStepRef.current = i;
-        tourIdxRef.current = i;
+        setTourIdx(i);
         setTourMode(true);
         const screen = CORE_ORDER[i];
         lastTargetRef.current = screen;
@@ -309,7 +322,7 @@ export const DemoLiveStage = ({ onDone, site, siteCtx, onTourEnd }: DemoLiveStag
         clearStepWatch();
         narr.stop();
         extraRef.current = null;
-        tourIdxRef.current = -3;
+        setTourIdx(-3);
         setTourMode(false);
         setMenu(true);
         trackBehavior(DEMO_EVENTS.EVA_STEP_VIEW, { step: returning ? "menu_return" : "menu", screen: "menu" });
@@ -328,7 +341,7 @@ export const DemoLiveStage = ({ onDone, site, siteCtx, onTourEnd }: DemoLiveStag
         narr.stop();
         setMenu(false);
         extraRef.current = screen;
-        tourIdxRef.current = -4;
+        setTourIdx(-4);
         setTourMode(true);
         setVisited((v) => (v.includes(screen) ? v : [...v, screen]));
         trackBehavior(DEMO_EVENTS.EVA_STEP_VIEW, { step: "extra", screen });
@@ -417,7 +430,7 @@ export const DemoLiveStage = ({ onDone, site, siteCtx, onTourEnd }: DemoLiveStag
     // FIM DO TOUR: se o pai quer assumir (ex.: abrir o booking), entrega pra ele
     // e desconecta a voz; senão cai na conversa livre (fallback antigo).
     const finishTour = () => {
-        tourIdxRef.current = -2;
+        setTourIdx(-2);
         setTourMode(false);
         clearStepWatch();
         narr.stop();
@@ -434,6 +447,7 @@ export const DemoLiveStage = ({ onDone, site, siteCtx, onTourEnd }: DemoLiveStag
             if (d.path && String(d.path).startsWith("/embed-demo")) return;
             setAppReady(true);
             setScreen(activeRef.current); // posiciona em "inicio"; o tour é dirigido pelo cliente
+            sendInteractionLock(tourIdxRef.current >= 0); // re-sincroniza se o iframe remonta no meio do tour
             if (!connectedRef.current) {
                 connectedRef.current = true;
                 live.connect({
@@ -611,7 +625,7 @@ export const DemoLiveStage = ({ onDone, site, siteCtx, onTourEnd }: DemoLiveStag
     const goManual = (i: number) => { if (i >= CORE_ORDER.length) enterMenu(false); else { nudgedStepRef.current = i - 1; startStep(i); } };
     const toggleMute = () => { primeEvaAudio(); const m = !muted; setMuted(m); live.setMuted(m); };
     const toggleMic = () => { primeEvaAudio(); live.setMicEnabled(!live.micOn); };
-    const endCall = () => { tourIdxRef.current = -2; narr.stop(); live.disconnect(); onDone(); };
+    const endCall = () => { setTourIdx(-2); narr.stop(); live.disconnect(); onDone(); };
     const voiceLive = live.status === "live";
     // estado do orbe: reflete o que a EVA está fazendo (fala/escuta/pensa).
     const liveOrb = live.status === "live" ? live.orbState : live.status === "connecting" ? "thinking" : "idle";
@@ -659,7 +673,7 @@ export const DemoLiveStage = ({ onDone, site, siteCtx, onTourEnd }: DemoLiveStag
                         style={{ background: "linear-gradient(to top, rgba(8,9,12,0.62), rgba(8,9,12,0.18) 55%, transparent)" }}>
                         {/* orbe da EVA: anima quando ela fala (narração estática ou Live) */}
                         <div className={(narr.active || live.orbState === "speaking") ? "vz-orb-speaking" : "vz-orb-calm"}>
-                            <EvaOrb webgl state={narr.active ? "speaking" : liveOrb} size={58} />
+                            <EvaOrb theme="dark" state={narr.active ? "speaking" : liveOrb} size={58} />
                         </div>
                         <span className="lp-mono inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-white"
                             style={{ background: "rgba(8,9,12,0.55)", backdropFilter: "blur(6px)", fontSize: 10.5, letterSpacing: "0.04em" }}>
@@ -741,7 +755,7 @@ export const DemoLiveStage = ({ onDone, site, siteCtx, onTourEnd }: DemoLiveStag
                 <div className="absolute inset-x-0 bottom-0 z-20 flex flex-col items-center gap-3 px-4 pb-6 pt-24"
                     style={{ background: "linear-gradient(to top, rgba(8,9,12,0.78), rgba(8,9,12,0.30) 60%, transparent)" }}>
                     <div className={live.orbState === "speaking" ? "vz-orb-speaking" : "vz-orb-calm"}>
-                        <EvaOrb webgl state={liveOrb} size={58} />
+                        <EvaOrb theme="dark" state={liveOrb} size={58} />
                     </div>
                     <p className="text-center text-[15px] font-medium text-white" style={{ textShadow: "0 1px 8px rgba(0,0,0,0.45)" }} aria-live="polite">
                         {(voiceLive && capCurrent) ? capCurrent : "O que você quer ver de perto agora?"}
