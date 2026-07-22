@@ -77,6 +77,42 @@ export const EvaChatWidget = () => {
     }, []);
     const hidden = footerVisible && !open;
 
+    // ── Ciclo de estados do ThinkingOrb ──────────────────────────────────
+    // O orb narra o que a EVA está fazendo: listening parada → shaping ao
+    // abrir (a animação do clique) → searching/working enquanto pensa →
+    // composing enquanto a resposta digita → listening de novo. No pill
+    // fechado, um "sinal de vida" ocasional (shaping curto a cada ~18s).
+    type OrbCycleState = "listening" | "working" | "searching" | "solving" | "composing" | "shaping";
+    const [orbState, setOrbState] = useState<OrbCycleState>("listening");
+    const [pillState, setPillState] = useState<OrbCycleState>("listening");
+    const orbTimers = useRef<number[]>([]);
+    const clearOrbTimers = () => {
+        orbTimers.current.forEach((t) => window.clearTimeout(t));
+        orbTimers.current = [];
+    };
+    const queueOrbState = (state: OrbCycleState, delayMs: number) => {
+        orbTimers.current.push(window.setTimeout(() => setOrbState(state), delayMs));
+    };
+    useEffect(() => clearOrbTimers, []);
+
+    // Abertura: morph de "shaping" (~1.5s) e assenta em listening.
+    useEffect(() => {
+        if (!open) return;
+        clearOrbTimers();
+        setOrbState("shaping");
+        queueOrbState("listening", 1500);
+    }, [open]);
+
+    // Pill fechado: sinal de vida a cada ~18s (não roda com reduced-motion).
+    useEffect(() => {
+        if (open || hidden || reduce) return;
+        const interval = window.setInterval(() => {
+            setPillState("shaping");
+            window.setTimeout(() => setPillState("listening"), 2200);
+        }, 18000);
+        return () => window.clearInterval(interval);
+    }, [open, hidden, reduce]);
+
     const scrollToEnd = () => {
         if (threadRef.current) threadRef.current.scrollTop = threadRef.current.scrollHeight;
     };
@@ -105,6 +141,10 @@ export const EvaChatWidget = () => {
         const assistantIdx = messages.length + 1;
         setMessages((m) => [...m, { role: "user", content: q }]);
         setLoading(true);
+        // Pensando: busca primeiro, trabalha se demorar.
+        clearOrbTimers();
+        setOrbState("searching");
+        queueOrbState("working", 1600);
         try {
             const { data, error } = await supabase.functions.invoke("eva-landing-chat", {
                 body: { question: q, history },
@@ -114,9 +154,15 @@ export const EvaChatWidget = () => {
                 : "Não consegui responder agora. Tenta de novo em instantes, ou agende uma demo no topo da página.";
             setAnimateIdx(assistantIdx);
             setMessages((m) => [...m, { role: "assistant", content: answer }]);
+            // Compondo enquanto o typewriter digita (10ms/char, teto de 6s).
+            clearOrbTimers();
+            setOrbState("composing");
+            queueOrbState("listening", Math.min(answer.length * 10, 6000) + 400);
         } catch {
             setAnimateIdx(assistantIdx);
             setMessages((m) => [...m, { role: "assistant", content: "Não consegui responder agora. Tenta de novo em instantes." }]);
+            clearOrbTimers();
+            setOrbState("listening");
         } finally {
             setLoading(false);
         }
@@ -128,10 +174,10 @@ export const EvaChatWidget = () => {
                 {hidden ? null : open ? (
                     <motion.div
                         key="panel"
-                        initial={reduce ? false : { opacity: 0, y: 14, scale: 0.97 }}
+                        initial={reduce ? false : { opacity: 0, y: 22, scale: 0.9 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={reduce ? { opacity: 0 } : { opacity: 0, y: 14, scale: 0.97 }}
-                        transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                        exit={reduce ? { opacity: 0 } : { opacity: 0, y: 16, scale: 0.95 }}
+                        transition={reduce ? { duration: 0.15 } : { type: "spring", stiffness: 380, damping: 26 }}
                         style={{ transformOrigin: "bottom center" }}
                         className="w-[380px] max-w-[calc(100vw-2rem)]"
                     >
@@ -147,7 +193,7 @@ export const EvaChatWidget = () => {
                             {/* Header */}
                             <div className="flex items-center gap-2.5 px-4 py-3 border-b" style={{ borderColor: "var(--lp-line-soft)", background: "#FFFFFF" }}>
                                 <ThinkingOrb
-                                    state={loading ? "working" : "listening"}
+                                    state={orbState}
                                     size={64}
                                     theme="light"
                                     paused={!!reduce}
@@ -275,7 +321,7 @@ export const EvaChatWidget = () => {
                         aria-label="Perguntar à EVA"
                     >
                         <ThinkingOrb
-                            state="listening"
+                            state={pillState}
                             size={64}
                             theme="light"
                             paused={!!reduce}
