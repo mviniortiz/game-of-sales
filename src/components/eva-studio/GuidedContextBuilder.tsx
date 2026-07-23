@@ -61,14 +61,18 @@ export interface ContextSuggestion {
     effect?: string;
 }
 
+export type ContextGapTarget = "agency" | "services" | "icp" | "playbooks" | "other";
+
 export interface ContextGap {
     id: string;
-    /** A pergunta que destrava ("Quanto custa o pacote de social media?"). */
+    /** O que faltou (descrição). */
     question: string;
-    /** O que fica travado sem essa resposta. */
+    /** O que cadastrar / como destravar. */
     blocks: string;
     /** Quantas conversas sentiram essa falta (0 = pergunta essencial). */
     occurrenceCount: number;
+    /** Alvo do conserto (badge). */
+    target?: ContextGapTarget | string | null;
 }
 
 export type SuggestionResolution =
@@ -429,6 +433,16 @@ function SuggestionCard({
 
 // ─── Lacunas acionáveis ─────────────────────────────────────────────────────
 
+const GAP_TARGET_LABEL: Record<string, string> = {
+    agency: "Agência",
+    services: "Serviço / preço",
+    icp: "ICP",
+    playbooks: "Playbook",
+    other: "Contexto",
+};
+
+const GAPS_VISIBLE_DEFAULT = 5;
+
 function GapsBlock({
     gaps,
     onDefineGap,
@@ -443,11 +457,17 @@ function GapsBlock({
     const [openId, setOpenId] = useState<string | null>(null);
     const [answer, setAnswer] = useState("");
     const [definedIds, setDefinedIds] = useState<Set<string>>(new Set());
+    const [expandedId, setExpandedId] = useState<string | null>(null);
+    const [showAll, setShowAll] = useState(false);
+
     const visible = [...gaps]
         .filter((g) => !definedIds.has(g.id))
         .sort((a, b) => b.occurrenceCount - a.occurrenceCount);
 
     if (visible.length === 0) return null;
+
+    const listed = showAll ? visible : visible.slice(0, GAPS_VISIBLE_DEFAULT);
+    const hiddenCount = visible.length - listed.length;
 
     const handleSave = (gap: ContextGap) => {
         const text = answer.trim();
@@ -460,23 +480,54 @@ function GapsBlock({
 
     return (
         <div className="vz-ctxbuild-gaps">
-            <p className="vz-agentcreate-label" style={{ marginBottom: 2 }}>
-                Isto eu não consegui descobrir sozinha
-            </p>
-            {visible.map((gap) => {
-                const open = openId === gap.id;
-                return (
-                    <div key={gap.id} className="vz-ctxbuild-gap">
-                        <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                                <p className="vz-ctxbuild-gap-q">{gap.question}</p>
-                                <p className="vz-ctxbuild-gap-meta">
-                                    {gap.occurrenceCount > 0
-                                        ? `Me faltou em ${gap.occurrenceCount} ${gap.occurrenceCount === 1 ? "conversa" : "conversas"} · trava: ${gap.blocks}`
-                                        : `Pergunta essencial · destrava: ${gap.blocks}`}
-                                </p>
+            <div className="vz-ctxbuild-gaps-head">
+                <div>
+                    <p className="vz-ctxbuild-gaps-title">O que falta no contexto</p>
+                    <p className="vz-ctxbuild-gaps-sub">
+                        A EVA sentiu falta disso nas conversas. Cadastre pra ela sugerir melhor.
+                    </p>
+                </div>
+                <span className="vz-ctxbuild-gaps-count">{visible.length}</span>
+            </div>
+
+            <ul className="vz-ctxbuild-gap-list">
+                {listed.map((gap) => {
+                    const open = openId === gap.id;
+                    const long = gap.question.length > 140;
+                    const expanded = expandedId === gap.id;
+                    const targetLabel = GAP_TARGET_LABEL[gap.target ?? "other"] ?? "Contexto";
+                    return (
+                        <li key={gap.id} className={`vz-ctxbuild-gap-card ${open ? "vz-ctxbuild-gap-card--open" : ""}`}>
+                            <div className="vz-ctxbuild-gap-card-top">
+                                <span className="vz-ctxbuild-gap-badge">{targetLabel}</span>
+                                {gap.occurrenceCount > 0 ? (
+                                    <span className="vz-ctxbuild-gap-count">
+                                        {gap.occurrenceCount} {gap.occurrenceCount === 1 ? "conversa" : "conversas"}
+                                    </span>
+                                ) : (
+                                    <span className="vz-ctxbuild-gap-count vz-ctxbuild-gap-count--soft">Essencial</span>
+                                )}
                             </div>
-                            {!open && (
+
+                            <p className={`vz-ctxbuild-gap-q ${!expanded && long ? "vz-ctxbuild-gap-q--clamp" : ""}`}>
+                                {gap.question}
+                            </p>
+                            {long && (
+                                <button
+                                    type="button"
+                                    className="vz-ctxbuild-gap-more"
+                                    onClick={() => setExpandedId(expanded ? null : gap.id)}
+                                >
+                                    {expanded ? "Ver menos" : "Ver completo"}
+                                </button>
+                            )}
+
+                            <div className="vz-ctxbuild-gap-fix">
+                                <p className="vz-ctxbuild-gap-fix-label">Como destravar</p>
+                                <p className="vz-ctxbuild-gap-fix-text">{gap.blocks}</p>
+                            </div>
+
+                            {!open ? (
                                 <button
                                     type="button"
                                     className={`vz-ctxbuild-gap-define ${subdued ? "vz-ctxbuild-gap-define--lite" : ""}`}
@@ -485,44 +536,53 @@ function GapsBlock({
                                         setAnswer("");
                                     }}
                                 >
-                                    Definir agora
+                                    Definir
                                 </button>
-                            )}
-                        </div>
-                        {open && (
-                            <>
-                                <textarea
-                                    className="vz-ctxbuild-edit"
-                                    style={{ minHeight: 56, borderColor: "rgba(217,119,6,0.35)" }}
-                                    value={answer}
-                                    onChange={(e) => setAnswer(e.target.value)}
-                                    placeholder="Responde do seu jeito, eu estruturo."
-                                    autoFocus
-                                    aria-label={gap.question}
-                                />
-                                <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                                    <button
-                                        type="button"
-                                        className="vz-evassist-btn vz-evassist-btn--primary"
-                                        onClick={() => handleSave(gap)}
-                                        disabled={!answer.trim()}
-                                    >
-                                        <Check style={{ width: 13, height: 13 }} />
-                                        Salvar
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className="vz-evassist-btn vz-evassist-btn--ghost"
-                                        onClick={() => setOpenId(null)}
-                                    >
-                                        Cancelar
-                                    </button>
+                            ) : (
+                                <div className="vz-ctxbuild-gap-editor">
+                                    <textarea
+                                        className="vz-ctxbuild-edit"
+                                        style={{ minHeight: 64 }}
+                                        value={answer}
+                                        onChange={(e) => setAnswer(e.target.value)}
+                                        placeholder="Responda em 1–2 frases. Ex.: Clinicas com WhatsApp, verba a partir de R$3 mil/mês."
+                                        autoFocus
+                                        aria-label={gap.question}
+                                    />
+                                    <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                                        <button
+                                            type="button"
+                                            className="vz-evassist-btn vz-evassist-btn--primary"
+                                            onClick={() => handleSave(gap)}
+                                            disabled={!answer.trim()}
+                                        >
+                                            <Check style={{ width: 13, height: 13 }} />
+                                            Salvar no contexto
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="vz-evassist-btn vz-evassist-btn--ghost"
+                                            onClick={() => setOpenId(null)}
+                                        >
+                                            Cancelar
+                                        </button>
+                                    </div>
                                 </div>
-                            </>
-                        )}
-                    </div>
-                );
-            })}
+                            )}
+                        </li>
+                    );
+                })}
+            </ul>
+
+            {hiddenCount > 0 && (
+                <button
+                    type="button"
+                    className="vz-ctxbuild-gaps-showmore"
+                    onClick={() => setShowAll(true)}
+                >
+                    Ver mais {hiddenCount} {hiddenCount === 1 ? "item" : "itens"}
+                </button>
+            )}
         </div>
     );
 }
@@ -607,12 +667,6 @@ function PasteFirstState({
             {/* O que sobrar vem como pergunta, uma de cada vez (mesma UI de lacunas) */}
             {gaps.length > 0 && (
                 <>
-                    <p
-                        className="vz-agentcreate-sub"
-                        style={{ marginTop: 24, fontSize: 12 }}
-                    >
-                        Ou, se preferir, responde uma pergunta de cada vez:
-                    </p>
                     <GapsBlock gaps={gaps} onDefineGap={onDefineGap} subdued />
                 </>
             )}

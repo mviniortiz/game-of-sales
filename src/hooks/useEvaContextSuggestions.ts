@@ -101,6 +101,7 @@ function mapGap(r: GapRow): ContextGap {
         question: r.gap_description,
         blocks: r.suggested_fix?.trim() || GAP_BLOCKS_BY_TARGET[r.fix_target ?? "other"] || "respostas sobre isso",
         occurrenceCount: r.occurrence_count ?? 0,
+        target: r.fix_target ?? "other",
     };
 }
 
