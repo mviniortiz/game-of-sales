@@ -175,7 +175,7 @@ export function EvaCanvas(props: EvaCanvasProps) {
 
     const blocks: BlockDef[] = [
         {
-            key: "escuta", icon: AudioLines, title: "O que ela escuta",
+            key: "escuta", icon: AudioLines, title: "Onde ela lê",
             state: `${activeSources} de ${props.sources.length} fontes ativas`, ok: true,
             trace: runMoment ? `${runMoment.leadName} · ${runMoment.context}` : "",
         },
@@ -186,17 +186,17 @@ export function EvaCanvas(props: EvaCanvasProps) {
             trace: runMoment ? `Tensão reconhecida: ${runMoment.tension}. Respondo com o que você me ensinou.` : "",
         },
         {
-            key: "regras", icon: ShieldCheck, title: "Regras do jogo",
-            state: `Aprovar-e-enviar · ${rulesCount} ${rulesCount === 1 ? "regra sua" : "regras suas"}`, ok: true,
+            key: "regras", icon: ShieldCheck, title: "Limites",
+            state: `Você aprova · ${rulesCount} ${rulesCount === 1 ? "regra sua" : "regras suas"}`, ok: true,
             trace: runMoment?.critical
                 ? "Linha vermelha: eu preparo, não envio. A decisão é sua."
                 : "Dentro dos limites: a sugestão espera sua aprovação.",
         },
         {
-            key: "entrega", icon: Inbox, title: "O que ela entrega",
+            key: "entrega", icon: Inbox, title: "O que chega no Inbox",
             state: feed.pendingCount > 0 ? `${feed.pendingCount} ${feed.pendingCount === 1 ? "sugestão esperando" : "sugestões esperando"}` : "Inbox em dia",
             ok: true,
-            trace: "Resposta pronta pro seu aprovar-e-enviar.",
+            trace: "Resposta pronta pra você revisar e enviar.",
         },
     ];
 
@@ -243,13 +243,16 @@ export function EvaCanvas(props: EvaCanvasProps) {
                                 aria-label={spec.role}
                             />
                             <div style={{ minWidth: 0 }}>
-                                <h1 style={{ fontSize: 16.5, fontWeight: 700, letterSpacing: "-0.01em" }}>{spec.role}</h1>
+                                <h1 style={{ fontSize: 16.5, fontWeight: 700, letterSpacing: "-0.01em" }}>Qualificador</h1>
+                                <p style={{ marginTop: 2, fontSize: 12, color: SUB, lineHeight: 1.4 }}>
+                                    Sugere respostas no Inbox. Você aprova.
+                                </p>
                                 <span
-                                    className="mt-0.5 inline-flex items-center gap-1.5 rounded-full px-2 py-0.5"
+                                    className="mt-1.5 inline-flex items-center gap-1.5 rounded-full px-2 py-0.5"
                                     style={{ background: "rgba(22,163,74,0.10)", color: GREEN, fontSize: 11, fontWeight: 600 }}
                                 >
                                     <span className="h-1.5 w-1.5 rounded-full" style={{ background: GREEN }} />
-                                    Ativa no Inbox
+                                    Ativo no Inbox
                                 </span>
                             </div>
                         </div>
@@ -334,7 +337,7 @@ export function EvaCanvas(props: EvaCanvasProps) {
                                 title={runMoment ? undefined : "Ainda não há casos reais analisados"}
                             >
                                 <Play style={{ width: 13, height: 13 }} fill="#fff" />
-                                Ver a EVA decidir
+                                Ver um exemplo real
                             </button>
                         ) : (
                             <button
@@ -356,7 +359,7 @@ export function EvaCanvas(props: EvaCanvasProps) {
                                 style={{ borderColor: "rgba(8,8,8,0.18)", color: SUB, fontSize: 12.5, fontWeight: 600, background: "transparent" }}
                             >
                                 {props.regeneratingReplays && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                                Buscar momentos nas conversas
+                                Buscar nas conversas
                             </button>
                         )}
 
@@ -434,10 +437,10 @@ export function EvaCanvas(props: EvaCanvasProps) {
                                 agentKey={spec.key}
                                 aria-hidden
                             />
-                            <p className="mt-4" style={{ fontSize: 15, fontWeight: 700 }}>A EVA ainda não registrou trabalho por aqui.</p>
+                            <p className="mt-4" style={{ fontSize: 15, fontWeight: 700 }}>Ainda sem sugestões neste período.</p>
                             <p className="mx-auto mt-2 max-w-md" style={{ fontSize: 13, color: SUB, lineHeight: 1.55 }}>
-                                Assim que os leads chegarem no Inbox, cada leitura, sugestão e card criado
-                                aparece nesta linha do tempo. Enquanto isso, veja como ela decide num caso real.
+                                Quando houver leads no Inbox, cada leitura e sugestão aparece aqui.
+                                Enquanto isso, você pode ver um exemplo de como ela decide.
                             </p>
                             {runMoment && runStep === -1 && (
                                 <button
@@ -447,7 +450,7 @@ export function EvaCanvas(props: EvaCanvasProps) {
                                     style={{ background: "#080808", color: "#fff", fontSize: 13.5, fontWeight: 600 }}
                                 >
                                     <Play style={{ width: 13, height: 13 }} fill="#fff" />
-                                    Ver a EVA decidir
+                                    Ver um exemplo real
                                 </button>
                             )}
                         </div>

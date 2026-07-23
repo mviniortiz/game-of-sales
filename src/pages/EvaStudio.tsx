@@ -38,9 +38,9 @@ import type { LabJudgment, LabScenario } from "@/components/eva-studio/Simulatio
 // Fontes que alimentam a EVA — compartilhadas pela jornada (Criar) e pelo
 // canvas (bloco "O que ela escuta").
 const SOURCES: AgentSourceInfo[] = [
-    { key: "whatsapp", name: "Conversas do WhatsApp", detail: "O histórico real dos seus leads: o que pedem, como falam, onde travam.", available: true, stateLabel: "conectado" },
-    { key: "pipeline", name: "Pipeline e oportunidades", detail: "Etapas, valores e o que o seu time já registrou no CRM.", available: true, stateLabel: "disponível" },
-    { key: "docs", name: "Textos seus", detail: "Proposta, site, pitch: qualquer texto que você colar vira contexto.", available: false, stateLabel: "você cola depois" },
+    { key: "whatsapp", name: "Conversas do WhatsApp", detail: "O que os leads pedem, como falam e onde travam.", available: true, stateLabel: "conectado" },
+    { key: "pipeline", name: "Pipeline", detail: "Etapas e o que o time já registrou nas oportunidades.", available: true, stateLabel: "disponível" },
+    { key: "docs", name: "Textos seus", detail: "Site, proposta ou pitch que você colar depois.", available: false, stateLabel: "opcional" },
 ];
 
 export default function EvaStudio() {

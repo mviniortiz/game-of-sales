@@ -26,11 +26,12 @@ export interface StudioFieldView {
 // Perguntas de follow-up genéricas do fallback (sem backend) — uma por campo
 // ainda não preenchido, na ordem do agente.
 const FALLBACK_FOLLOWUPS = [
-    "Boa. Me conta um pouco mais sobre o próximo ponto?",
-    "Entendi. E sobre o passo seguinte, como funciona aí?",
-    "Quase lá. Tem mais alguma coisa importante nisso?",
+    "Boa. E quem é o cliente que fecha melhor com vocês?",
+    "Entendi. Num lead novo, o que você precisa descobrir pra saber se vale seguir?",
+    "Última: o que você nunca quer que digam pro lead?",
 ];
-const FALLBACK_CLOSING = "Pronto, montei a sua EVA. Olha à direita o que eu entendi. Se tiver algo torto, é só me dizer e eu ajusto.";
+const FALLBACK_CLOSING =
+    "Pronto. Montei o Qualificador com o que você me passou. Confira o resumo à direita: se algo estiver torto, me fala e eu ajusto.";
 
 // ── Persistência (localStorage) ──────────────────────────────────────────────
 const STORE_PREFIX = "vyz:eva-studio-chat:v1";

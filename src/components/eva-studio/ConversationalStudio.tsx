@@ -260,8 +260,10 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
                         aria-label={spec.role}
                     />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                        <h1 className="vz-convo-title">Vamos montar a sua EVA de {spec.label.toLowerCase()}</h1>
-                        <p className="vz-convo-sub">Sem formulário. Você fala ou escreve, e eu construo.</p>
+                        <h1 className="vz-convo-title">Me conta como a sua agência vende</h1>
+                        <p className="vz-convo-sub">
+                            Quatro perguntas curtas. Depois a EVA sugere no Inbox e você aprova cada mensagem.
+                        </p>
                     </div>
                 </div>
             )}
@@ -349,7 +351,7 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
                             onKeyDown={(e) => {
                                 if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
                             }}
-                            placeholder={done ? "Quer ajustar algo? Me fala…" : recording ? "Gravando… toque no microfone pra transcrever" : transcribing ? "Transcrevendo sua fala…" : "Responde com as suas palavras, ou toque no microfone"}
+                            placeholder={done ? "Quer ajustar algo? Me fala…" : recording ? "Gravando… toque no microfone pra transcrever" : transcribing ? "Transcrevendo sua fala…" : "Responda em 1–2 frases…"}
                             rows={1}
                             disabled={done}
                         />
@@ -376,8 +378,12 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
                         <p className="vz-convo-rechint" style={{ color: "#dc2626" }} role="alert">
                             {micError}
                         </p>
+                    ) : done ? (
+                        <p className="vz-convo-hint">Confira o resumo à direita antes de seguir.</p>
                     ) : (
-                        <p className="vz-convo-hint">Dica: toque no microfone pra ditar, ou anexe um material em imagem (JPG/PNG).</p>
+                        <p className="vz-convo-hint">
+                            Pergunta {Math.min(filledCount + 1, total)} de {total}. Pode digitar ou usar o microfone.
+                        </p>
                     )}
                 </div>
 
@@ -395,20 +401,33 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
                             />
                         </span>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                            <p className="vz-convo-agent-kicker">Sua EVA de vendas</p>
-                            <p className="vz-convo-agent-name">{spec.role}</p>
+                            <p className="vz-convo-agent-kicker">Montando agora</p>
+                            <p className="vz-convo-agent-name">Qualificador</p>
                         </div>
                         <span
                             className={`vz-convo-agent-status ${recapConfirmed ? "vz-convo-agent-status--done" : ""}`}
                             style={recapConfirmed ? { color: accent } : undefined}
                         >
-                            {recapConfirmed ? "pronta" : showRecap ? "confere comigo" : thinking ? "pensando…" : "montando…"}
+                            {recapConfirmed
+                                ? "pronta"
+                                : showRecap
+                                ? "confira"
+                                : thinking
+                                ? "pensando…"
+                                : `${filledCount}/${total}`}
                         </span>
                     </div>
 
                     <div className="vz-convo-agent-prog">
                         <div className="vz-convo-agent-prog-fill vz-cvs-prog-fill" style={{ width: `${(filledCount / total) * 100}%`, background: accent }} />
                     </div>
+                    {!showRecap && !recapConfirmed && (
+                        <p className="vz-convo-hint" style={{ margin: "8px 0 0" }}>
+                            {filledCount >= total
+                                ? "Tudo preenchido. Confira o resumo abaixo."
+                                : `Faltam ${total - filledCount} ${total - filledCount === 1 ? "resposta" : "respostas"}.`}
+                        </p>
+                    )}
 
                     {prior.ready && filledCount > 0 && messages.length <= 1 && (
                         <p
@@ -439,7 +458,7 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
                                             className={`vz-convo-field-value vz-cvs-value ${on ? "vz-cvs-value--on" : ""}`}
                                             style={on ? { color: "var(--vyz-text-strong, #0B1220)" } : undefined}
                                         >
-                                            {on ? f.value : "a EVA ainda vai te perguntar"}
+                                            {on ? f.value : "ainda não perguntou"}
                                         </p>
                                     </div>
                                 </div>
@@ -463,7 +482,7 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
                                     <span style={{ lineHeight: 0 }}>
                                         <EvaThinkingOrb state="listening" size={20} displaySize={18} theme="light" agentKey={spec.key} aria-hidden />
                                     </span>
-                                    Montei a sua EVA de {spec.label.toLowerCase()} assim:
+                                    Confira o que a EVA entendeu:
                                 </p>
                                 <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 8 }}>
                                     {fieldsView.map((f, i) => {
@@ -492,7 +511,7 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
                                     onClick={confirmRecap}
                                     style={{ background: "#0B1220", flex: 1 }}
                                 >
-                                    Confirmar e gravar
+                                    Confirmar e seguir
                                     <Check style={{ width: 14, height: 14 }} strokeWidth={2.6} />
                                 </button>
                                 <button
@@ -501,7 +520,7 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
                                     onClick={reopenForAdjust}
                                 >
                                     <ArrowLeft style={{ width: 13, height: 13 }} />
-                                    Quero ajustar
+                                    Ajustar
                                 </button>
                             </div>
                         </div>
@@ -509,7 +528,7 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
 
                     {recapConfirmed && (
                         <button type="button" className="vz-convo-agent-cta" onClick={onProceed} style={{ background: accent, marginTop: 16 }}>
-                            Testar a EVA nos meus casos
+                            Provar com um caso
                             <ArrowUp style={{ width: 14, height: 14, transform: "rotate(90deg)" }} />
                         </button>
                     )}

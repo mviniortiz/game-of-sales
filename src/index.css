@@ -1697,6 +1697,15 @@ All colors MUST be HSL.
 @media (max-width: 720px) {
   .vz-agentcreate-grid--2col { grid-template-columns: 1fr; }
 }
+/* Intro: 1 frase, uma ideia (clareza pro cliente). */
+.vz-agentcreate-intro {
+  margin: 6px 0 0;
+  max-width: 560px;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: #475569;
+  font-weight: 500;
+}
 .vz-agentcreate-card {
   position: relative;
   text-align: left;
@@ -1714,6 +1723,53 @@ All colors MUST be HSL.
   transform: translateY(-2px);
 }
 .vz-agentcreate-card:active { transform: translateY(0); }
+/* Herói: Qualificador ocupa a tela; Em breve fica abaixo e menor. */
+.vz-agentcreate-card--hero {
+  display: block;
+  width: 100%;
+  margin-top: 22px;
+  padding: 26px 24px 22px;
+  border-color: rgba(37, 99, 235, 0.28);
+  background: linear-gradient(180deg, #ffffff 0%, #f8faff 100%);
+  box-shadow: 0 18px 40px -26px rgba(37, 99, 235, 0.55);
+}
+.vz-agentcreate-card--hero:hover {
+  border-color: #2563eb;
+  box-shadow: 0 22px 48px -24px rgba(37, 99, 235, 0.55);
+}
+.vz-agentcreate-hero-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.vz-agentcreate-live-badge {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  color: #15803d;
+  background: rgba(22, 163, 74, 0.10);
+  border: 1px solid rgba(22, 163, 74, 0.22);
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+.vz-agentcreate-soon-label {
+  margin: 28px 0 10px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+.vz-agentcreate-soon-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+@media (max-width: 720px) {
+  .vz-agentcreate-soon-row { grid-template-columns: 1fr; }
+}
 .vz-agentcreate-card-icon {
   width: 38px;
   height: 38px;
@@ -1756,11 +1812,13 @@ All colors MUST be HSL.
 .vz-agentcreate-card--soon {
   cursor: default;
   background: #fafbfd;
+  padding: 16px 14px 14px;
+  opacity: 0.92;
 }
 .vz-agentcreate-card--soon:hover { border-color: #e2e8f0; box-shadow: none; transform: none; }
 .vz-agentcreate-card--soon .vz-agentcreate-card-icon { background: #f1f5f9; color: #94a3b8; }
 .vz-agentcreate-card--soon .vz-agentcreate-card-title { color: #64748b; font-size: 13.5px; }
-.vz-agentcreate-card--soon .vz-agentcreate-card-desc { color: #94a3b8; font-size: 11px; }
+.vz-agentcreate-card--soon .vz-agentcreate-card-desc { color: #94a3b8; font-size: 11.5px; margin-top: 4px; }
 .vz-agentcreate-soon-badge {
   position: absolute;
   top: 14px;
@@ -2449,7 +2507,7 @@ All colors MUST be HSL.
   font-size: 11px;
   font-weight: 700;
   color: #1d4ed8;
-  background: #f5f3ff;
+  background: rgba(37, 99, 235, 0.08);
   border: 1px solid rgba(37, 99, 235, 0.18);
   padding: 4px 10px;
   border-radius: 999px;
@@ -2519,7 +2577,7 @@ All colors MUST be HSL.
   color: #ffffff;
   box-shadow: 0 4px 12px -4px rgba(37, 99, 235, 0.5);
 }
-.vz-studioshell-stepper-node--current .vz-studioshell-stepper-label { color: #4c1d95; font-weight: 700; }
+.vz-studioshell-stepper-node--current .vz-studioshell-stepper-label { color: #1d4ed8; font-weight: 700; }
 
 /* Corpo: lateral + conteúdo */
 .vz-studioshell-body {

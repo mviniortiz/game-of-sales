@@ -5,8 +5,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 // (qualificação, follow-up, propostas ou reativação), sem formulário. A cada
 // turno ela: (1) faz UMA pergunta curta, (2) reextrai os campos daquele agente
 // do que o gestor já disse, (3) marca done quando estão preenchidos. Stateless;
-// mesmo LLM da EVA (gpt-5.4-nano). Fail-open: sem key → {ok:false,reason:"no_key"}
-// e o front cai no roteiro guiado. Não persiste nada (fluxo assistido).
+// LLM: gpt-5.4-nano (custo baixo na entrevista). Fail-open: sem key →
+// {ok:false,reason:"no_key"} e o front cai no roteiro guiado. Não persiste
+// nada (fluxo assistido).
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -39,8 +40,8 @@ const AGENTS: Record<string, AgentDef> = {
         fields: [
             { key: "vende", label: "o que a agência vende (serviços/ofertas)" },
             { key: "icp", label: "o cliente ideal (porte, segmento, quem fecha melhor)" },
-            { key: "qualifica", label: "o que descobrir de um lead novo pra saber se vale a pena" },
-            { key: "redline", label: "a linha vermelha: o que NUNCA prometer ou dizer pro lead" },
+            { key: "qualifica", label: "o que descobrir num lead novo pra saber se vale seguir" },
+            { key: "redline", label: "o que NUNCA dizer ou prometer ao lead" },
         ],
     },
     followup: {
@@ -81,31 +82,36 @@ function buildSystemPrompt(agent: AgentDef, priorContext?: string): string {
     const fieldList = agent.fields.map((f) => `- ${f.key}: ${f.label}`).join("\n");
     const emptyJson = JSON.stringify(Object.fromEntries(agent.fields.map((f) => [f.key, ""])));
     const priorBlock = priorContext
-        ? `\nA agência JÁ configurou parte do contexto no Vyzon. Use isto e NÃO repita perguntas já respondidas: considere esses campos preenchidos, só CONFIRME rapidamente ("vi que vocês trabalham com X, certo?") e pergunte SÓ o que ainda falta. Nunca peça do zero o que já está aqui:\n${priorContext}\n`
+        ? `\nA agência JÁ tem contexto no Vyzon. NÃO repita o que já sabe: confirme em uma frase curta ("vi que vocês fazem X, certo?") e pergunte SÓ o que falta:\n${priorContext}\n`
         : "";
-    return `Você é a EVA, a camada de inteligência comercial do Vyzon. Você está CONVERSANDO com o dono ou gestor de uma agência para ${agent.focus} — sem formulário, só conversa.
+    return `Você é a EVA, do Vyzon. Está conversando com o dono/gestor de uma agência brasileira para ${agent.focus}.
 
-Preencha estes campos, conversando de forma natural e acolhedora:
+Objetivo pro gestor: em poucos minutos montar o agente que vai SUGERIR respostas no Inbox. Nada é enviado ao lead sem a aprovação dele. Sem formulário: só conversa.
+
+Você precisa capturar estes pontos (internamente; o gestor não vê os nomes técnicos):
 ${fieldList}
 ${priorBlock}
-Conduta (siga à risca):
-- Faça UMA pergunta por vez, curta, em português do Brasil. Sem jargão técnico.
-- O gestor pode não saber "preencher campos": pergunte com as palavras dele, puxe um exemplo quando ajudar.
-- A cada mensagem do gestor, ATUALIZE os campos com o que ele disse (resuma em 1 frase, não invente). Campo que ele ainda não falou fica como string vazia "".
-- Nunca invente números, preços, clientes nem promessas. Use só o que ele disse.
+Tom:
+- Português do Brasil, curto, direto, acolhedor. Sem emoji. Sem travessão. Sem jargão de CRM/IA.
+- Fale como colega comercial, não como formulário. Peça exemplo concreto quando ajudar ("um lead bom e um lead ruim").
+- 1 a 3 frases por reply. Uma pergunta no máximo, e só se ainda faltar campo.
 
-REGRA DE PROGRESSÃO (o mais importante — evita ficar enrolando):
-- Pergunte SEMPRE sobre o PRÓXIMO campo que ainda está VAZIO, na ordem da lista. Olhe os campos já capturados e NÃO pergunte de novo sobre um campo que já tem resposta.
-- Faça NO MÁXIMO UMA pergunta por campo. Se o gestor deu uma resposta razoável, ACEITE e siga pro próximo campo vazio. NÃO refine, não aprofunde, não peça mais detalhes de algo que já está preenchido.
-- Fique ESTRITAMENTE dentro da lista de campos acima. NÃO pergunte sobre preço, fee, faturamento, metas, número de leads, prazos ou qualquer assunto que não seja um dos campos listados.
-- Limite-se a no máximo ~6 perguntas no total. Se já cobriu os campos, pare.
+Extração:
+- A cada mensagem do gestor, ATUALIZE os campos com o que ele disse (1 frase por campo, sem inventar). O que ele ainda não falou fica "".
+- Nunca invente preço, serviço, cliente ou promessa.
 
-FECHAMENTO (obrigatório):
-- Assim que TODOS os campos tiverem ao menos uma resposta, FECHE NA MESMA HORA: NÃO faça mais nenhuma pergunta. Agradeça em 1-2 frases, diga que montou a EVA e que ele revisa/ajusta o que quiser, e marque done=true.
-- Quando done=true, a sua "reply" NÃO pode terminar com pergunta — é uma fala de fechamento.
-- Seja breve, calorosa e confiante, nunca robótica.
+Progressão (obrigatória):
+- Pergunte sempre o PRÓXIMO campo ainda VAZIO, na ordem da lista. Não volte a um campo já preenchido.
+- No máximo UMA pergunta por campo. Resposta razoável = ACEITE e avance. Não refine nem aprofunde.
+- Não pergunte preço, fee, faturamento, metas, volume de leads ou qualquer coisa fora da lista.
+- No máximo ~6 perguntas no total.
 
-Responda SOMENTE com JSON válido neste formato (sem texto fora do JSON):
+Fechamento (obrigatório):
+- Quando TODOS os campos tiverem resposta, FECHE NA HORA: done=true, sem pergunta.
+- Reply de fechamento: 1-2 frases, diga que montou e que ele confere o resumo à direita (pode ajustar).
+- done=true NUNCA termina com "?".
+
+Responda SOMENTE JSON válido:
 {
   "reply": "sua próxima fala (1 a 3 frases)",
   "fields": ${emptyJson},
@@ -130,7 +136,10 @@ interface Turn { from: "eva" | "user"; text: string }
 // Circuit breaker: a entrevista NUNCA pode conversar pra sempre. Passou disso de
 // respostas do gestor, fecha-se com o que tiver (o gestor revisa no recap).
 const MAX_USER_TURNS = 8;
-const FORCED_CLOSING = "Pronto — montei a sua EVA com tudo que você me passou. Olha o resumo aqui do lado: se algo estiver torto, é só me dizer e eu ajusto.";
+function forcedClosing(agent: AgentDef): string {
+    const name = agent.label.includes("qualificação") ? "Qualificador" : `agente de ${agent.label}`;
+    return `Pronto. Montei o ${name} com o que você me passou. Confira o resumo à direita: se algo estiver torto, me fala e eu ajusto. Depois disso a EVA sugere no Inbox e você aprova cada mensagem.`;
+}
 
 async function runChat(agent: AgentDef, messages: Turn[], fields: Fields, priorContext?: string): Promise<{ reply: string; fields: Fields; done: boolean } | null> {
     if (!OPENAI_API_KEY) return null;
@@ -177,7 +186,7 @@ async function runChat(agent: AgentDef, messages: Turn[], fields: Fields, priorC
         let reply = typeof parsed.reply === "string" ? parsed.reply.trim().slice(0, 800) : "";
         // Se vai fechar mas a EVA ainda fez uma pergunta, troca por uma fala de
         // fechamento — não pode "encerrar" terminando em "?".
-        if (done && (forced || /\?\s*$/.test(reply) || !reply)) reply = FORCED_CLOSING;
+        if (done && (forced || /\?\s*$/.test(reply) || !reply)) reply = forcedClosing(agent);
 
         return { reply, fields: cleanFields, done };
     } catch {

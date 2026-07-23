@@ -112,16 +112,16 @@ export interface EvaStudioJourneyHandle {
 }
 
 const ASIDE_META: Record<AsideView, { title: string; sub: string }> = {
-    memoria: { title: "Memória da EVA", sub: "Tudo que eu sei hoje, e de onde cada coisa veio." },
-    insights: { title: "Insights da EVA", sub: "O que melhorar antes de me soltar no Inbox." },
-    analytics: { title: "Analytics da EVA", sub: "O que a EVA fez no período: confiança, resultado e o que ensinar." },
+    memoria: { title: "Memória da EVA", sub: "O que ela já sabe da sua agência." },
+    insights: { title: "Insights", sub: "O que ainda falta ensinar antes do Inbox." },
+    analytics: { title: "Resultados", sub: "O que a EVA sugeriu e como o time usou." },
 };
 
 const STEPS = [
-    { key: "criar" as StudioStepKey, label: "Criar", sub: "Escolher o propósito" },
-    { key: "ensinar" as StudioStepKey, label: "Ensinar", sub: "Conversar e construir o contexto" },
-    { key: "provar" as StudioStepKey, label: "Provar", sub: "Testar do simples ao extremo" },
-    { key: "ativar" as StudioStepKey, label: "Ativar", sub: "Soltar no Inbox, você no controle" },
+    { key: "criar" as StudioStepKey, label: "Escolher", sub: "Começar pelo Qualificador" },
+    { key: "ensinar" as StudioStepKey, label: "Ensinar", sub: "Contar como a agência vende" },
+    { key: "provar" as StudioStepKey, label: "Provar", sub: "Ver se a sugestão faz sentido" },
+    { key: "ativar" as StudioStepKey, label: "Ativar", sub: "Ligar no Inbox (você aprova)" },
 ];
 
 const ORDER: StudioStepKey[] = ["criar", "ensinar", "provar", "ativar"];
@@ -270,7 +270,7 @@ export const EvaStudioJourney = forwardRef<EvaStudioJourneyHandle, EvaStudioJour
             current={step}
             doneKeys={doneKeys}
             onSelect={selectStep}
-            readiness={{ label: "Prontidão da EVA", pct: readinessPct }}
+            readiness={{ label: "Pronta pro Inbox", pct: readinessPct }}
             hideStepLabel={aside !== null}
             orbState={aside ? "analyzing" : STEP_ORB[step]}
             secondary={(["memoria", "insights", "analytics"] as AsideView[])
@@ -337,7 +337,7 @@ export const EvaStudioJourney = forwardRef<EvaStudioJourneyHandle, EvaStudioJour
                                 className={`vz-studiomode-btn ${teachMode === "conversa" ? "vz-studiomode-btn--on" : ""}`}
                                 onClick={() => setTeachMode("conversa")}
                             >
-                                Conversar com a EVA
+                                Conversar
                                 {chatBadge && <span className="vz-studiomode-tag">{chatBadge}</span>}
                             </button>
                             <button
@@ -347,7 +347,7 @@ export const EvaStudioJourney = forwardRef<EvaStudioJourneyHandle, EvaStudioJour
                                 className={`vz-studiomode-btn ${teachMode === "revisao" ? "vz-studiomode-btn--on" : ""}`}
                                 onClick={() => setTeachMode("revisao")}
                             >
-                                Revisar o que ela extraiu
+                                Revisar o que entendeu
                                 {suggestions.length + gaps.length > 0 && (
                                     <span className="vz-studiomode-badge">{suggestions.length + gaps.length}</span>
                                 )}
@@ -397,7 +397,7 @@ export const EvaStudioJourney = forwardRef<EvaStudioJourneyHandle, EvaStudioJour
                                         className="vz-journey-footnav-btn"
                                         onClick={() => advance("ensinar", "provar")}
                                     >
-                                        Continuar: provar a EVA
+                                        Continuar: provar com casos
                                         <ArrowRight style={{ width: 14, height: 14 }} />
                                     </button>
                                 </div>
@@ -418,7 +418,7 @@ export const EvaStudioJourney = forwardRef<EvaStudioJourneyHandle, EvaStudioJour
                                 className={`vz-studiomode-btn ${proveMode === "campo" ? "vz-studiomode-btn--on" : ""}`}
                                 onClick={() => setProveMode("campo")}
                             >
-                                Campo de provas
+                                Casos de exemplo
                             </button>
                             <button
                                 type="button"
@@ -427,7 +427,7 @@ export const EvaStudioJourney = forwardRef<EvaStudioJourneyHandle, EvaStudioJour
                                 className={`vz-studiomode-btn ${proveMode === "reais" ? "vz-studiomode-btn--on" : ""}`}
                                 onClick={() => setProveMode("reais")}
                             >
-                                Seus casos reais
+                                Suas conversas
                                 {moments.length > 0 && (
                                     <span className="vz-studiomode-badge">{moments.length}</span>
                                 )}
@@ -483,13 +483,13 @@ export const EvaStudioJourney = forwardRef<EvaStudioJourneyHandle, EvaStudioJour
                             <div style={{ flex: 1, minWidth: 0 }}>
                                 <p className="vz-simreplay-panel-headline">
                                     {activated
-                                        ? "A EVA está ativa no seu Inbox."
-                                        : "A EVA está pronta pra te ajudar no Inbox."}
+                                        ? "Qualificador ativo no Inbox"
+                                        : "Último passo: ligar o Qualificador no Inbox"}
                                 </p>
                                 <p className="vz-simreplay-panel-reason">
                                     {activated
-                                        ? "A partir de agora ela sugere respostas nas suas conversas. Nada sai sem você aprovar, e cada correção sua continua ensinando."
-                                        : "Você criou, ensinou e provou. Agora a EVA passa a sugerir respostas no Inbox, sempre pra você aprovar antes de enviar."}
+                                        ? "Em cada conversa a EVA lê o lead e sugere a próxima mensagem. Nada sai sem a sua aprovação."
+                                        : "Ao ativar, ela passa a sugerir respostas no WhatsApp. Você revisa, edita se quiser, e só então envia."}
                                 </p>
                             </div>
                         </div>
@@ -504,7 +504,7 @@ export const EvaStudioJourney = forwardRef<EvaStudioJourneyHandle, EvaStudioJour
                                     onActivate();
                                 }}
                             >
-                                Ativar a EVA no Inbox
+                                Ativar sugestões no Inbox
                             </button>
                         )}
                     </div>

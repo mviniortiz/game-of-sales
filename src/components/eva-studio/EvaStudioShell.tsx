@@ -84,7 +84,7 @@ export function EvaStudioShell({
                 <div style={{ flex: 1, minWidth: 0 }}>
                     <h1 className="vz-studioshell-title">EVA Studio</h1>
                     <p className="vz-studioshell-subtitle">
-                        Montando sua EVA de vendas, um passo de cada vez.
+                        Configure a EVA que sugere respostas no Inbox. Você aprova cada mensagem.
                     </p>
                 </div>
                 <span className="vz-studioshell-stepcount">
@@ -120,7 +120,7 @@ export function EvaStudioShell({
             {/* ── Corpo: lateral âncora + conteúdo do passo ── */}
             <div className="vz-studioshell-body">
                 <aside className="vz-studioshell-rail">
-                    <p className="vz-studioshell-rail-head">Sua jornada</p>
+                    <p className="vz-studioshell-rail-head">Seu caminho</p>
                     {steps.map((s, i) => {
                         const st = STATUS_OF(s.key, current, doneKeys);
                         return (

@@ -41,14 +41,14 @@ export const SPECIALISTS: Record<SpecialistKey, Specialist> = {
         role: "Agente de qualificação",
         orb: "blue",
         accent: "#2563EB",
-        desc: "Lê cada lead novo, qualifica e te avisa quem está pronto pra avançar.",
+        desc: "Lê cada lead no WhatsApp, aponta quem está quente e sugere a próxima mensagem pra você aprovar.",
         opening:
-            "Oi! Eu monto a sua EVA de qualificação só conversando, sem formulário nenhum. Me conta com as suas palavras: o que a sua agência vende?",
+            "Oi! Em quatro perguntas eu monto o Qualificador. Depois ele sugere no Inbox e você aprova cada mensagem. Primeira: o que a sua agência vende?",
         fields: [
             { key: "vende", label: "O que vende" },
             { key: "icp", label: "Cliente ideal" },
-            { key: "qualifica", label: "Como qualifica o lead" },
-            { key: "redline", label: "Linha vermelha" },
+            { key: "qualifica", label: "O que descobrir no lead" },
+            { key: "redline", label: "O que nunca dizer" },
         ],
     },
     followup: {
@@ -57,9 +57,9 @@ export const SPECIALISTS: Record<SpecialistKey, Specialist> = {
         role: "Agente de follow-up",
         orb: "aqua",
         accent: "#0E9DA8",
-        desc: "Retoma quem ficou no vácuo e lembra o time do próximo toque, na hora certa.",
+        desc: "Lembra o time de retomar quem sumiu, na hora certa.",
         opening:
-            "Vamos montar a sua EVA de follow-up. Pra começar: quando um lead esfria ou some, em quanto tempo você gosta de retomar?",
+            "Vamos montar o Follow-up. Quando um lead esfria ou some, em quanto tempo você gosta de retomar?",
         fields: [
             { key: "cadencia", label: "Quando retomar" },
             { key: "gatilho", label: "O que dispara o follow-up" },
@@ -74,9 +74,9 @@ export const SPECIALISTS: Record<SpecialistKey, Specialist> = {
         role: "Agente de propostas",
         orb: "violet",
         accent: "#7C3AED",
-        desc: "Monta o rascunho da proposta a partir da conversa e do que já foi combinado.",
+        desc: "Monta o rascunho da proposta a partir do que já foi combinado na conversa.",
         opening:
-            "Bora montar a sua EVA de propostas. Me conta: o que costuma entrar numa proposta sua?",
+            "Vamos montar Propostas. O que costuma entrar numa proposta sua?",
         fields: [
             { key: "escopo", label: "O que entra na proposta" },
             { key: "preco", label: "Como você precifica" },
@@ -91,9 +91,9 @@ export const SPECIALISTS: Record<SpecialistKey, Specialist> = {
         role: "Agente de reativação",
         orb: "warm",
         accent: "#E0703A",
-        desc: "Encontra clientes parados e sugere uma abordagem pra trazer de volta.",
+        desc: "Sugere como reabordar clientes parados que ainda valem a pena.",
         opening:
-            "Vamos montar a sua EVA de reativação. Primeiro: que tipo de cliente parado vale a pena reabordar?",
+            "Vamos montar Reativação. Que tipo de cliente parado vale a pena reabordar?",
         fields: [
             { key: "alvo", label: "Quem reativar" },
             { key: "oferta", label: "Oferta de retorno" },
