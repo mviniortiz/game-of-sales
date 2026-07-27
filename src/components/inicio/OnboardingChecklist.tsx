@@ -10,6 +10,7 @@ import {
     ArrowRight,
 } from "@phosphor-icons/react";
 import { EvaThinkingOrb } from "@/components/eva/EvaThinkingOrb";
+import { isDemoSession } from "@/lib/analytics";
 import type { OnboardingProgress, OnboardingStepKey } from "@/hooks/useOnboardingProgress";
 
 interface StepDef {
@@ -50,6 +51,10 @@ export function OnboardingChecklist({
     nextStep: OnboardingStepKey | null;
     onNavigate: (href: string) => void;
 }) {
+    // Na demo embutida da landing o card de ativação quebra a ilusão de
+    // operação madura (a conta demo nunca conecta WhatsApp de verdade).
+    if (isDemoSession()) return null;
+
     const pct = Math.round((doneCount / total) * 100);
 
     return (

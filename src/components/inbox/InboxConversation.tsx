@@ -14,6 +14,7 @@ import {
     X,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { isDemoSession } from "@/lib/analytics";
 import { TemplatePicker } from "@/components/whatsapp/TemplatePicker";
 import { EvaNode } from "@/components/landing/EvaNode";
 import { useEvaInsight } from "@/hooks/useEvaInsight";
@@ -484,8 +485,9 @@ function ConversationView({
             />
 
             {/* Aviso: WhatsApp desconectado — o envio vai falhar até reconectar.
-                Só aparece depois do 1º check de status (evita flash no load). */}
-            {statusChecked && connected === false && (
+                Só aparece depois do 1º check de status (evita flash no load).
+                Nunca na demo embutida: lá a desconexão é o estado permanente. */}
+            {statusChecked && connected === false && !isDemoSession() && (
                 <div
                     className="flex items-center gap-2 px-4 py-2 text-[12.5px]"
                     style={{ borderTop: "1px solid #FCD9B6", background: "#FFF7ED", color: "#9A3412" }}

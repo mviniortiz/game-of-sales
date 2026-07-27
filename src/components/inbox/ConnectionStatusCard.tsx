@@ -5,6 +5,7 @@
 import { useState } from "react";
 import { Wifi, WifiOff, QrCode, AlertCircle, Loader2, RefreshCw, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { isDemoSession } from "@/lib/analytics";
 import type { InboxConnectionStatus } from "@/hooks/useInboxConnectionStatus";
 
 function formatTimeAgo(timeStr: string): string {
@@ -44,6 +45,10 @@ export function ConnectionStatusCard({
     resyncing,
     disconnecting,
 }: ConnectionStatusCardProps) {
+    // Na demo embutida da landing a conta nunca tem Evolution viva: o card de
+    // conexão viraria "produto quebrado" pro visitante. Só o estado conectado
+    // (impossível hoje na demo) passaria.
+    if (isDemoSession() && status.status !== "connected") return null;
     const showSync = status.status === "connected" && status.provider === "evolution" && !!onSyncHistory;
     const tone =
         status.status === "connected"
