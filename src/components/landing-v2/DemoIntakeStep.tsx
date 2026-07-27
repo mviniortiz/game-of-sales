@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { CaretDown, Check } from "@phosphor-icons/react";
 import { ButtonV2 } from "./ButtonV2";
+import { CloudWaveOrb } from "./CloudWaveOrb";
 import { EvaOrb } from "./EvaOrb";
 import { primeEvaAudio } from "./useGeminiLive";
 
@@ -187,8 +188,35 @@ export const DemoIntakeStep = ({ email, site, heardFrom, setEmail, setSite, setH
                 <p className="lp-mono" style={{ color: "var(--lp-ink-40)" }}>Experiência demonstrativa. Nenhuma mensagem será enviada.</p>
             </div>
 
-            <div className="relative hidden items-center justify-center overflow-hidden lg:flex" style={{ background: "linear-gradient(155deg,#f4f2ee 0%,#ece9e3 100%)" }}>
-                <EvaOrb state="idle" size={168} />
+            {/* Painel da EVA: cloud wave da landing (WebGL, paleta da marca) como
+                fundo, com o orb num disco de vidro pra manter contraste. */}
+            <div className="relative hidden items-center justify-center overflow-hidden lg:flex">
+                <div className="absolute inset-0" aria-hidden="true">
+                    <CloudWaveOrb palette="blue" className="h-full w-full" />
+                </div>
+                {/* véu que escurece as bordas de leve e foca o centro */}
+                <div
+                    className="absolute inset-0"
+                    aria-hidden="true"
+                    style={{
+                        background:
+                            "radial-gradient(85% 85% at 50% 46%, rgba(250,249,245,0) 42%, rgba(13,20,33,0.18) 100%)",
+                    }}
+                />
+                <div
+                    className="relative flex items-center justify-center rounded-full"
+                    style={{
+                        width: 216,
+                        height: 216,
+                        background: "rgba(255,255,255,0.82)",
+                        backdropFilter: "blur(12px)",
+                        WebkitBackdropFilter: "blur(12px)",
+                        boxShadow:
+                            "0 30px 80px -32px rgba(13,20,33,0.5), inset 0 0 0 1px rgba(255,255,255,0.65)",
+                    }}
+                >
+                    <EvaOrb state="idle" size={168} />
+                </div>
             </div>
         </div>
     );
