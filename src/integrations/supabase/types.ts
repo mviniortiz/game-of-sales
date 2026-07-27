@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -582,6 +582,7 @@ export type Database = {
       }
       companies: {
         Row: {
+          awareness_hypothesis: string | null
           cancellation_reason: string | null
           cnpj: string | null
           created_at: string | null
@@ -597,6 +598,7 @@ export type Database = {
           name: string
           phone: string | null
           plan: string | null
+          query_intent: string | null
           referral_source: string | null
           referrer: string | null
           segment: string | null
@@ -604,6 +606,7 @@ export type Database = {
           subscription_ends_at: string | null
           subscription_status: string | null
           team_size: string | null
+          traffic_source: string | null
           trial_ends_at: string | null
           utm_campaign: string | null
           utm_content: string | null
@@ -613,6 +616,7 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          awareness_hypothesis?: string | null
           cancellation_reason?: string | null
           cnpj?: string | null
           created_at?: string | null
@@ -628,6 +632,7 @@ export type Database = {
           name: string
           phone?: string | null
           plan?: string | null
+          query_intent?: string | null
           referral_source?: string | null
           referrer?: string | null
           segment?: string | null
@@ -635,6 +640,7 @@ export type Database = {
           subscription_ends_at?: string | null
           subscription_status?: string | null
           team_size?: string | null
+          traffic_source?: string | null
           trial_ends_at?: string | null
           utm_campaign?: string | null
           utm_content?: string | null
@@ -644,6 +650,7 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          awareness_hypothesis?: string | null
           cancellation_reason?: string | null
           cnpj?: string | null
           created_at?: string | null
@@ -659,6 +666,7 @@ export type Database = {
           name?: string
           phone?: string | null
           plan?: string | null
+          query_intent?: string | null
           referral_source?: string | null
           referrer?: string | null
           segment?: string | null
@@ -666,6 +674,7 @@ export type Database = {
           subscription_ends_at?: string | null
           subscription_status?: string | null
           team_size?: string | null
+          traffic_source?: string | null
           trial_ends_at?: string | null
           utm_campaign?: string | null
           utm_content?: string | null
@@ -1371,6 +1380,7 @@ export type Database = {
           customer_name: string
           customer_phone: string | null
           expected_close_date: string | null
+          external_id: string | null
           handoff_at: string | null
           id: string
           is_active: boolean
@@ -1378,6 +1388,7 @@ export type Database = {
           lead_source: string | null
           loss_reason: string | null
           notes: string | null
+          notion_page_id: string | null
           pipeline_id: string | null
           position: number | null
           probability: number | null
@@ -1385,6 +1396,7 @@ export type Database = {
           sdr_id: string | null
           sla_breach_at: string | null
           sla_hours: number
+          source: string | null
           source_data: Json | null
           stage: string
           stage_id: string | null
@@ -1406,6 +1418,7 @@ export type Database = {
           customer_name: string
           customer_phone?: string | null
           expected_close_date?: string | null
+          external_id?: string | null
           handoff_at?: string | null
           id?: string
           is_active?: boolean
@@ -1413,6 +1426,7 @@ export type Database = {
           lead_source?: string | null
           loss_reason?: string | null
           notes?: string | null
+          notion_page_id?: string | null
           pipeline_id?: string | null
           position?: number | null
           probability?: number | null
@@ -1420,6 +1434,7 @@ export type Database = {
           sdr_id?: string | null
           sla_breach_at?: string | null
           sla_hours?: number
+          source?: string | null
           source_data?: Json | null
           stage?: string
           stage_id?: string | null
@@ -1441,6 +1456,7 @@ export type Database = {
           customer_name?: string
           customer_phone?: string | null
           expected_close_date?: string | null
+          external_id?: string | null
           handoff_at?: string | null
           id?: string
           is_active?: boolean
@@ -1448,6 +1464,7 @@ export type Database = {
           lead_source?: string | null
           loss_reason?: string | null
           notes?: string | null
+          notion_page_id?: string | null
           pipeline_id?: string | null
           position?: number | null
           probability?: number | null
@@ -1455,6 +1472,7 @@ export type Database = {
           sdr_id?: string | null
           sla_breach_at?: string | null
           sla_hours?: number
+          source?: string | null
           source_data?: Json | null
           stage?: string
           stage_id?: string | null
@@ -1521,6 +1539,7 @@ export type Database = {
           ads_conversion_uploaded_at: string | null
           agent_blueprint: Json | null
           agent_used_context: boolean
+          awareness_hypothesis: string | null
           biggest_pain: string | null
           calendly_event_uri: string | null
           company: string | null
@@ -1528,6 +1547,7 @@ export type Database = {
           company_offer: string | null
           company_segment: string | null
           created_at: string | null
+          deal_id: string | null
           demo_company_id: string | null
           demo_credentials_sent_at: string | null
           email: string
@@ -1535,17 +1555,21 @@ export type Database = {
           gclid: string | null
           google_event_id: string | null
           google_meet_link: string | null
+          heard_from: string | null
           id: string
           improvement_goal: string | null
           landing_page: string | null
           name: string
           notes: string | null
           phone: string | null
+          query_intent: string | null
           referrer: string | null
           scheduled_at: string | null
+          site_context: Json | null
           source: string | null
           status: string | null
           team_size: string | null
+          traffic_source: string | null
           updated_at: string | null
           uses_spreadsheets: boolean | null
           utm_campaign: string | null
@@ -1560,6 +1584,7 @@ export type Database = {
           ads_conversion_uploaded_at?: string | null
           agent_blueprint?: Json | null
           agent_used_context?: boolean
+          awareness_hypothesis?: string | null
           biggest_pain?: string | null
           calendly_event_uri?: string | null
           company?: string | null
@@ -1567,6 +1592,7 @@ export type Database = {
           company_offer?: string | null
           company_segment?: string | null
           created_at?: string | null
+          deal_id?: string | null
           demo_company_id?: string | null
           demo_credentials_sent_at?: string | null
           email: string
@@ -1574,17 +1600,21 @@ export type Database = {
           gclid?: string | null
           google_event_id?: string | null
           google_meet_link?: string | null
+          heard_from?: string | null
           id?: string
           improvement_goal?: string | null
           landing_page?: string | null
           name: string
           notes?: string | null
           phone?: string | null
+          query_intent?: string | null
           referrer?: string | null
           scheduled_at?: string | null
+          site_context?: Json | null
           source?: string | null
           status?: string | null
           team_size?: string | null
+          traffic_source?: string | null
           updated_at?: string | null
           uses_spreadsheets?: boolean | null
           utm_campaign?: string | null
@@ -1599,6 +1629,7 @@ export type Database = {
           ads_conversion_uploaded_at?: string | null
           agent_blueprint?: Json | null
           agent_used_context?: boolean
+          awareness_hypothesis?: string | null
           biggest_pain?: string | null
           calendly_event_uri?: string | null
           company?: string | null
@@ -1606,6 +1637,7 @@ export type Database = {
           company_offer?: string | null
           company_segment?: string | null
           created_at?: string | null
+          deal_id?: string | null
           demo_company_id?: string | null
           demo_credentials_sent_at?: string | null
           email?: string
@@ -1613,17 +1645,21 @@ export type Database = {
           gclid?: string | null
           google_event_id?: string | null
           google_meet_link?: string | null
+          heard_from?: string | null
           id?: string
           improvement_goal?: string | null
           landing_page?: string | null
           name?: string
           notes?: string | null
           phone?: string | null
+          query_intent?: string | null
           referrer?: string | null
           scheduled_at?: string | null
+          site_context?: Json | null
           source?: string | null
           status?: string | null
           team_size?: string | null
+          traffic_source?: string | null
           updated_at?: string | null
           uses_spreadsheets?: boolean | null
           utm_campaign?: string | null
@@ -1634,6 +1670,13 @@ export type Database = {
           website?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "demo_requests_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "demo_requests_demo_company_id_fkey"
             columns: ["demo_company_id"]
@@ -2748,6 +2791,107 @@ export type Database = {
           },
         ]
       }
+      outreach_emails: {
+        Row: {
+          body: string
+          created_at: string
+          error: string | null
+          id: string
+          prospect_id: string
+          resend_id: string | null
+          scheduled_at: string
+          sent_at: string | null
+          status: string
+          step: number
+          subject: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          prospect_id: string
+          resend_id?: string | null
+          scheduled_at: string
+          sent_at?: string | null
+          status?: string
+          step: number
+          subject: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          prospect_id?: string
+          resend_id?: string | null
+          scheduled_at?: string
+          sent_at?: string | null
+          status?: string
+          step?: number
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outreach_emails_prospect_id_fkey"
+            columns: ["prospect_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_prospects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      outreach_prospects: {
+        Row: {
+          city: string | null
+          created_at: string
+          email: string | null
+          fit_signal: string | null
+          founder: string | null
+          id: string
+          instagram: string | null
+          name: string
+          niche: string | null
+          notes: string | null
+          priority: string
+          site: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string
+          email?: string | null
+          fit_signal?: string | null
+          founder?: string | null
+          id?: string
+          instagram?: string | null
+          name: string
+          niche?: string | null
+          notes?: string | null
+          priority?: string
+          site?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          city?: string | null
+          created_at?: string
+          email?: string | null
+          fit_signal?: string | null
+          founder?: string | null
+          id?: string
+          instagram?: string | null
+          name?: string
+          niche?: string | null
+          notes?: string | null
+          priority?: string
+          site?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pipeline_stages: {
         Row: {
           color_id: string
@@ -3721,6 +3865,10 @@ export type Database = {
       }
     }
     Functions: {
+      attach_demo_site_context: {
+        Args: { ctx: Json; p_id: string }
+        Returns: undefined
+      }
       claim_webhook_event: {
         Args: { p_event_key: string; p_metadata?: Json; p_provider: string }
         Returns: boolean
@@ -3874,10 +4022,13 @@ export type Database = {
         Args: { p_month_start: string }
         Returns: undefined
       }
+      refresh_landing_demo: { Args: never; Returns: Json }
       submit_demo_intake: { Args: { payload: Json }; Returns: string }
       submit_demo_request: { Args: { payload: Json }; Returns: string }
       trigger_eva_stale_followup: { Args: never; Returns: number }
       trigger_evolution_keepwarm: { Args: never; Returns: number }
+      trigger_notion_sync: { Args: never; Returns: undefined }
+      trigger_outreach_dispatch: { Args: never; Returns: number }
       trigger_whatsapp_session_heartbeat: { Args: never; Returns: number }
     }
     Enums: {

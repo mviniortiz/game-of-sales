@@ -32,6 +32,7 @@ export const EvaDemoModal = ({ open, onClose, onCTAClick }: EvaDemoModalProps) =
 
     const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const prepTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const ctxSentRef = useRef(false);
 
     const requestClose = () => {
         if (closing) return;
@@ -49,6 +50,7 @@ export const EvaDemoModal = ({ open, onClose, onCTAClick }: EvaDemoModalProps) =
         setIntakeId(null);
         setSiteCtx(null);
         ctxPromiseRef.current = null;
+        ctxSentRef.current = false;
         const prev = document.body.style.overflow;
         document.body.style.overflow = "hidden";
         const onKey = (e: KeyboardEvent) => e.key === "Escape" && requestClose();
@@ -85,6 +87,22 @@ export const EvaDemoModal = ({ open, onClose, onCTAClick }: EvaDemoModalProps) =
         }
         setStep("preparing");
     };
+
+    // DEMO.CRM.1 — a leitura do site (name/segment/oneliner) vira dado do CRM:
+    // assim que intake + contexto existem, persiste no demo_request e enriquece
+    // o deal no pipeline da Vyzon. Best-effort: falha não afeta a demo.
+    useEffect(() => {
+        if (!intakeId || !siteCtx || ctxSentRef.current) return;
+        ctxSentRef.current = true;
+        supabase
+            .rpc("attach_demo_site_context", {
+                p_id: intakeId,
+                ctx: { name: siteCtx.name, segment: siteCtx.segment, oneliner: siteCtx.oneliner },
+            })
+            .then(({ error }) => {
+                if (error) console.error("[EvaDemoModal] attach_demo_site_context falhou:", error.message);
+            });
+    }, [intakeId, siteCtx]);
 
     // preparando → tour: espera a leitura do site (teto 6.5s) e no mínimo 1.2s
     // de tela — o "preparando" agora é trabalho real, não só teatro.

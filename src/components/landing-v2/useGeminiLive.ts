@@ -139,7 +139,15 @@ export function useGeminiLive() {
         const src = ctx.createBufferSource();
         src.buffer = buf;
         src.connect(ctx.destination);
-        const t = Math.max(ctx.currentTime, playHeadRef.current);
+        // JITTER BUFFER (DEMO.VOICE.1): sem folga, o 1º chunk de cada rajada
+        // começava exatamente em currentTime e qualquer atraso de rede entre
+        // chunks virava gap audível (os micro-engasgos da EVA). Quando o buffer
+        // drenou, re-ancora com 150ms de colchão; os chunks seguintes encadeiam
+        // sample-accurate no playhead. Custo: +150ms no início de cada fala,
+        // imperceptível em conversa.
+        const PRIME_S = 0.15;
+        const drained = playHeadRef.current <= ctx.currentTime + 0.01;
+        const t = drained ? ctx.currentTime + PRIME_S : playHeadRef.current;
         src.start(t);
         playHeadRef.current = t + buf.duration;
         sourcesRef.current.push(src);

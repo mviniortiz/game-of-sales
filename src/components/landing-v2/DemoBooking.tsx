@@ -23,7 +23,9 @@ interface DemoBookingProps {
 const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
 const POP = { type: "spring" as const, stiffness: 300, damping: 24 };
 
-type View = "q_team" | "q_pain" | "schedule" | "confirm" | "success" | "failed";
+// DEMO.BOOK.1: a etapa "confirm" separada morreu — escolher o horário revela a
+// confirmação INLINE na mesma tela (email pré-preenchido + 1 botão).
+type View = "q_team" | "q_pain" | "schedule" | "success" | "failed";
 
 const TEAM_OPTIONS = ["1-3", "4-10", "11-30", "30+"] as const;
 const PAIN_OPTIONS = [
@@ -71,7 +73,7 @@ function buildDaysFromSlots(slots: ApiSlot[]): DayOpt[] {
         }
         day.times.push({ id: s.startIso, hora: tFmt.format(dt), iso: s.startIso });
     }
-    return Array.from(byDay.values()).filter((d) => d.times.length).slice(0, 5);
+    return Array.from(byDay.values()).filter((d) => d.times.length).slice(0, 7);
 }
 
 // Fallback gerado (sem agenda): próximos dias úteis × horários comerciais.
@@ -81,7 +83,7 @@ function buildDaysFallback(): DayOpt[] {
     const now = new Date();
     const today0 = new Date(now); today0.setHours(0, 0, 0, 0);
     const tomorrow0 = new Date(today0); tomorrow0.setDate(today0.getDate() + 1);
-    for (let i = 0; i < 18 && out.length < 5; i++) {
+    for (let i = 0; i < 18 && out.length < 7; i++) {
         const d = new Date(today0); d.setDate(today0.getDate() + i);
         const wd = d.getDay();
         if (wd === 0 || wd === 6) continue; // pula fim de semana
@@ -153,8 +155,9 @@ export const DemoBooking = ({ email, site, intakeId, onDone }: DemoBookingProps)
     }, [days, slotId]);
     const slotText = slot ? `${slot.dia}${slot.dia === "Hoje" || slot.dia === "Amanhã" ? "" : " " + slot.date}, ${slot.hora}` : "";
 
-    // 3 etapas no progress (qualificação / horário / confirmar); success é terminal.
-    const stepIndex = view === "schedule" ? 1 : view === "confirm" ? 2 : view === "success" ? 3 : 0;
+    // 3 etapas no progress (qualificação / horário / confirmar-inline); o 3º
+    // ponto acende quando o horário é escolhido. Success é terminal.
+    const stepIndex = view === "schedule" ? (slotId ? 2 : 1) : view === "success" ? 3 : 0;
 
     // ---- helpers de motion (gate por prefers-reduced-motion) ----
     const viewInitial = reduce ? { opacity: 0 } : { opacity: 0, x: 24 };
@@ -319,10 +322,10 @@ export const DemoBooking = ({ email, site, intakeId, onDone }: DemoBookingProps)
                     <EvaOrb state="speaking" size={30} />
                     <span className="lp-mono" style={{ color: "var(--lp-ink-55)" }}>EVA · agendar sua demo</span>
                 </div>
-                {(view === "q_pain" || view === "schedule" || view === "confirm") && (
+                {(view === "q_pain" || view === "schedule") && (
                     <button
                         type="button"
-                        onClick={() => setView(view === "confirm" ? "schedule" : view === "schedule" ? "q_pain" : "q_team")}
+                        onClick={() => setView(view === "schedule" ? "q_pain" : "q_team")}
                         className="flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] transition-transform hover:scale-[1.03] active:scale-95 focus:outline-none focus-visible:ring-2"
                         style={{ background: "rgba(13,20,33,0.05)", color: "var(--lp-ink-90)", fontWeight: 500 }}
                         aria-label="Voltar à etapa anterior"
@@ -465,56 +468,49 @@ export const DemoBooking = ({ email, site, intakeId, onDone }: DemoBookingProps)
                                     <Calendar size={14} />
                                     {synced ? "Horários livres na agenda · Brasília" : "Horário de Brasília"}
                                 </div>
-                                <div className="mt-7 flex justify-center">
-                                    <button
-                                        type="button"
-                                        onClick={() => setView("confirm")}
-                                        disabled={!slotId}
-                                        className="rounded-full px-6 py-3 text-[14px] text-white transition-transform enabled:hover:scale-[1.02] enabled:active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 focus:outline-none focus-visible:ring-2"
-                                        style={{ background: "var(--lp-ink)", fontWeight: 600 }}
-                                    >
-                                        Continuar
-                                    </button>
-                                </div>
+                                {/* confirmação INLINE: escolheu o horário → confirma aqui
+                                    mesmo, com o email do intake pré-preenchido. */}
+                                <AnimatePresence>
+                                    {slot && (
+                                        <motion.div
+                                            key="inline-confirm"
+                                            ref={(el) => el?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "nearest" })}
+                                            initial={reduce ? { opacity: 0 } : { opacity: 0, y: 12 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={reduce ? { opacity: 0 } : { opacity: 0, y: 8 }}
+                                            transition={{ duration: 0.3, ease: EASE }}
+                                            className="mx-auto mt-6 max-w-md rounded-2xl p-4 text-left"
+                                            style={{ background: "#fff", border: "1px solid var(--lp-line)", boxShadow: "0 18px 44px -28px rgba(13,20,33,0.35)" }}
+                                        >
+                                            <div className="flex items-center gap-2" style={{ color: "var(--lp-blue)" }}>
+                                                <Clock size={15} />
+                                                <span className="text-[13.5px]" style={{ fontWeight: 600 }}>{slotText} · Brasília</span>
+                                            </div>
+                                            <label htmlFor="db-email" className="mb-1.5 mt-3.5 block text-[12.5px]" style={{ color: "var(--lp-ink-55)" }}>
+                                                Convite vai pra
+                                            </label>
+                                            <input
+                                                id="db-email"
+                                                type="email"
+                                                className="vz-input-light w-full"
+                                                value={emailValue}
+                                                onChange={(e) => setEmailValue(e.target.value)}
+                                                aria-label="E-mail para o convite"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={confirm}
+                                                disabled={submitting || !slot || !emailValue.trim()}
+                                                className="mt-3.5 w-full rounded-full px-6 py-3 text-[14.5px] text-white transition-transform enabled:hover:scale-[1.01] enabled:active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2"
+                                                style={{ background: "var(--lp-ink)", fontWeight: 600 }}
+                                            >
+                                                {submitting ? "Confirmando…" : "Confirmar demo"}
+                                            </button>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                                   </>
                                 )}
-                            </motion.div>
-                        )}
-
-                        {/* ---------- CONFIRMAR ---------- */}
-                        {view === "confirm" && (
-                            <motion.div key="confirm" initial={viewInitial} animate={{ opacity: 1, x: 0 }} exit={viewExit} transition={{ duration: 0.35, ease: EASE }} className="text-center">
-                                {slot && (
-                                    <div className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full px-4 py-2" style={{ background: "rgba(21,86,192,0.08)", color: "var(--lp-blue)" }}>
-                                        <Clock size={15} />
-                                        <span className="text-[13.5px]" style={{ fontWeight: 600 }}>{slotText} · Brasília</span>
-                                    </div>
-                                )}
-                                <Heading sub="Confirme o e-mail pra onde mandamos o convite.">Tudo certo pra marcar?</Heading>
-                                <div className="mx-auto mt-6 max-w-sm text-left">
-                                    <label htmlFor="db-email" className="mb-2 block text-[13px]" style={{ color: "var(--lp-ink-55)" }}>
-                                        Seu e-mail
-                                    </label>
-                                    <input
-                                        id="db-email"
-                                        type="email"
-                                        className="vz-input-light w-full"
-                                        value={emailValue}
-                                        onChange={(e) => setEmailValue(e.target.value)}
-                                        aria-label="E-mail para o convite"
-                                    />
-                                </div>
-                                <div className="mt-7 flex justify-center">
-                                    <button
-                                        type="button"
-                                        onClick={confirm}
-                                        disabled={submitting || !slot}
-                                        className="rounded-full px-7 py-3.5 text-[14.5px] text-white transition-transform enabled:hover:scale-[1.02] enabled:active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2"
-                                        style={{ background: "var(--lp-ink)", fontWeight: 600 }}
-                                    >
-                                        {submitting ? "Confirmando…" : "Confirmar demo"}
-                                    </button>
-                                </div>
                             </motion.div>
                         )}
 
@@ -585,7 +581,7 @@ export const DemoBooking = ({ email, site, intakeId, onDone }: DemoBookingProps)
                                 <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
                                     <button
                                         type="button"
-                                        onClick={() => setView("confirm")}
+                                        onClick={() => setView("schedule")}
                                         className="rounded-full px-6 py-3 text-[14px] text-white transition-transform hover:scale-[1.02] active:scale-95"
                                         style={{ background: "var(--lp-ink)", fontWeight: 600 }}
                                     >
