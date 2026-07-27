@@ -129,11 +129,15 @@ const TOOLS = [{
 
 // teto absoluto que uma tela pode ficar no ar quando a voz CONDUZ (anti-trava):
 // se a EVA não terminar de narrar nesse tempo, o tour avança mesmo assim.
-const STEP_CEIL = 22000;
+// (DEMO.RITMO.1: 22s → 16s; o avanço normal é o onended do áudio, isto é
+// só backstop — visitante de site não espera cena de 20s+.)
+const STEP_CEIL = 16000;
 // quanto tempo cada tela fica no ar quando a voz NÃO conduz (fallback legenda).
-const STEP_DWELL_NOVOICE = 9000;
+const STEP_DWELL_NOVOICE = 7000;
 // quanto esperar a voz conectar antes de conduzir o tour por legenda.
-const CONNECT_WAIT = 13000;
+// (DEMO.RITMO.1: 13s → 7s de tela parada é o máximo aceitável; a voz que
+// conectar depois ainda entra viva no menu e no Q&A.)
+const CONNECT_WAIT = 7000;
 // RESILIÊNCIA da voz — SESSÃO CONTÍNUA (validado em Node, 8/9 telas numa sessão só):
 // o native-audio às vezes devolve turno VAZIO quando o contexto acumula, mas a
 // sessão NÃO cai. Em vez de reconectar por tela (que apagava a memória e criava
@@ -374,7 +378,9 @@ export const DemoLiveStage = ({ onDone, site, siteCtx, onTourEnd }: DemoLiveStag
     const clearGreetWatch = () => { if (greetWatchRef.current) { clearTimeout(greetWatchRef.current); greetWatchRef.current = null; } };
     // termina a saudação com TRANSIÇÃO: o overlay DISSOLVE (greetExit) e, ao
     // fim, a demo ENTRA com um zoom sutil (stageIn) e o tour começa.
-    const endGreeting = () => {
+    // `target` permite pular a saudação DIRETO pra uma cena (clique no
+    // progresso durante a apresentação); o padrão segue sendo a cena 0.
+    const endGreeting = (target = 0) => {
         clearGreetWatch();
         if (greetExitRef.current) return; // já transicionando
         greetExitRef.current = true;
@@ -386,7 +392,8 @@ export const DemoLiveStage = ({ onDone, site, siteCtx, onTourEnd }: DemoLiveStag
             setStageIn(true);
             const t2 = window.setTimeout(() => setStageIn(false), 950);
             navTimersRef.current.push(t2);
-            startStep(0);
+            if (target >= CORE_ORDER.length) enterMenu(false);
+            else startStep(target);
         }, 640); // dura a dissolução do overlay
         navTimersRef.current.push(t);
     };
@@ -401,7 +408,9 @@ export const DemoLiveStage = ({ onDone, site, siteCtx, onTourEnd }: DemoLiveStag
             navTimersRef.current.push(t);
         }
         clearGreetWatch();
-        greetWatchRef.current = window.setTimeout(endGreeting, live.status === "live" ? 17000 : 1100);
+        // DEMO.RITMO.1: teto da saudação 17s → 11s (3 frases curtas cabem; o
+        // resto é lentidão do modelo, e o visitante não deve pagar por ela).
+        greetWatchRef.current = window.setTimeout(endGreeting, live.status === "live" ? 11000 : 1100);
     };
 
     // CONVERSA LIVRE (fim da demo): tela de mesh gradient + Q&A por voz. Abre
@@ -622,7 +631,18 @@ export const DemoLiveStage = ({ onDone, site, siteCtx, onTourEnd }: DemoLiveStag
     const activeIdx = Math.max(0, CORE_ORDER.indexOf(active));
     const inMenuPhase = menu || !!extraRef.current;
     const manual = live.status === "error" || (appReady && live.status === "idle");
-    const goManual = (i: number) => { if (i >= CORE_ORDER.length) enterMenu(false); else { nudgedStepRef.current = i - 1; startStep(i); } };
+    // Pulo dirigido pelo visitante (botão Próximo/Pular ou clique no progresso).
+    // Funciona de QUALQUER fase: dissolve a saudação se estiver na frente,
+    // reseta menu/extra e posiciona na cena (ou abre o menu, no último ponto).
+    const goManual = (i: number) => {
+        setMenu(false);
+        extraRef.current = null;
+        trackBehavior(DEMO_EVENTS.EVA_STEP_VIEW, { step: "skip_to", screen: CORE_ORDER[i] ?? "menu" });
+        if (i < CORE_ORDER.length) nudgedStepRef.current = i - 1;
+        if (greetingRef.current) { endGreeting(i); return; }
+        if (i >= CORE_ORDER.length) { enterMenu(false); return; }
+        startStep(i);
+    };
     const toggleMute = () => { primeEvaAudio(); const m = !muted; setMuted(m); live.setMuted(m); };
     const toggleMic = () => { primeEvaAudio(); live.setMicEnabled(!live.micOn); };
     const endCall = () => { setTourIdx(-2); narr.stop(); live.disconnect(); onDone(); };
@@ -659,10 +679,26 @@ export const DemoLiveStage = ({ onDone, site, siteCtx, onTourEnd }: DemoLiveStag
                         </div>
                         <div className="max-w-xl">
                             <p className="lp-display" style={{ fontSize: "clamp(1.8rem,3.4vw,2.4rem)", color: "var(--lp-ink)", letterSpacing: "-0.03em", lineHeight: 1.1 }}>EVA</p>
+                            {/* DEMO.PERSONAL.1: a leitura do site vira sinal VISÍVEL,
+                                não só narração ("ela me conhece" na tela). */}
+                            {siteCtx?.name && (
+                                <p className="lp-mono mt-2" style={{ color: "var(--lp-blue)", fontSize: 11.5, letterSpacing: "0.14em" }}>
+                                    TOUR PREPARADO PRA {siteCtx.name.toUpperCase()}
+                                </p>
+                            )}
                             <p className="mx-auto mt-3 text-[16px]" style={{ color: "rgba(8,10,15,0.92)", lineHeight: 1.55, minHeight: 50, maxWidth: 520 }} aria-live="polite">
                                 {live.evaText || "Oi! Só um instante, já começo…"}
                             </p>
                         </div>
+                        {/* DEMO.RITMO.1: quem tem pressa pula a apresentação */}
+                        <button
+                            type="button"
+                            onClick={() => endGreeting()}
+                            className="rounded-full px-4 py-2 text-[13px] font-medium transition-colors"
+                            style={{ background: "rgba(5,5,5,0.05)", color: "var(--lp-ink-90)" }}
+                        >
+                            Pular apresentação →
+                        </button>
                     </div>
                 )}
 
@@ -675,11 +711,20 @@ export const DemoLiveStage = ({ onDone, site, siteCtx, onTourEnd }: DemoLiveStag
                         <div className={(narr.active || live.orbState === "speaking") ? "vz-orb-speaking" : "vz-orb-calm"}>
                             <EvaOrb theme="dark" state={narr.active ? "speaking" : liveOrb} size={58} />
                         </div>
-                        <span className="lp-mono inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-white"
-                            style={{ background: "rgba(8,9,12,0.55)", backdropFilter: "blur(6px)", fontSize: 10.5, letterSpacing: "0.04em" }}>
-                            <span className="h-1.5 w-1.5 rounded-full" style={{ background: voiceLive ? "var(--lp-live)" : "rgba(255,255,255,0.55)" }} />
-                            EVA · {SCREEN_LABEL[active] || active}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                            <span className="lp-mono inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-white"
+                                style={{ background: "rgba(8,9,12,0.55)", backdropFilter: "blur(6px)", fontSize: 10.5, letterSpacing: "0.04em" }}>
+                                <span className="h-1.5 w-1.5 rounded-full" style={{ background: voiceLive ? "var(--lp-live)" : "rgba(255,255,255,0.55)" }} />
+                                EVA · {SCREEN_LABEL[active] || active}
+                            </span>
+                            {/* DEMO.PERSONAL.1: leitura do site visível no palco inteiro */}
+                            {siteCtx?.name && (
+                                <span className="lp-mono hidden rounded-full px-2.5 py-1 sm:inline-flex"
+                                    style={{ background: "rgba(21,86,192,0.75)", backdropFilter: "blur(6px)", color: "#fff", fontSize: 10.5, letterSpacing: "0.04em" }}>
+                                    pra {siteCtx.name}
+                                </span>
+                            )}
+                        </div>
                         <div className="relative w-full max-w-2xl text-center" style={{ minHeight: "2.7em" }} aria-live="polite">
                             {voiceLive && capFading.map((f) => (
                                 <p key={f.id} className="vz-cap-out pointer-events-none absolute inset-x-0 top-0 line-clamp-2 text-[14.5px] font-medium leading-snug text-white">
@@ -791,12 +836,30 @@ export const DemoLiveStage = ({ onDone, site, siteCtx, onTourEnd }: DemoLiveStag
             {/* BARRA HANDHOLD: progresso à esquerda, controles circulares no centro
                 (conversar · mic · áudio · desligar), CTA "Falar com a gente" à direita */}
             <div className="flex shrink-0 items-center gap-3 px-3 py-2.5 sm:gap-4 sm:px-6 sm:py-3" style={{ borderTop: "1px solid var(--lp-line)", background: "#fff" }}>
-                {/* esquerda: progresso do tour (some no mobile estreito) */}
-                <div className="hidden min-w-0 flex-1 items-center gap-1.5 sm:flex">
+                {/* esquerda: progresso do tour CLICÁVEL (DEMO.RITMO.1) — cada ponto
+                    pula pra cena; o último abre o menu. Some no mobile estreito. */}
+                <div className="hidden min-w-0 flex-1 items-center sm:flex">
                     {CORE_ORDER.map((s, i) => (
-                        <span key={s} className="h-1.5 rounded-full transition-all" style={{ width: !inMenuPhase && i === activeIdx ? 18 : 6, background: inMenuPhase || i <= activeIdx ? "var(--lp-blue)" : "var(--lp-line)" }} />
+                        <button
+                            key={s}
+                            type="button"
+                            onClick={() => goManual(i)}
+                            aria-label={`Ir pra ${SCREEN_LABEL[s]}`}
+                            title={SCREEN_LABEL[s]}
+                            className="group flex items-center px-[3px] py-2"
+                        >
+                            <span className="h-1.5 rounded-full transition-all group-hover:opacity-70" style={{ width: !inMenuPhase && i === activeIdx ? 18 : 6, background: inMenuPhase || i <= activeIdx ? "var(--lp-blue)" : "var(--lp-line)" }} />
+                        </button>
                     ))}
-                    <span className="h-1.5 rounded-full transition-all" style={{ width: inMenuPhase ? 18 : 6, background: inMenuPhase ? "var(--lp-blue)" : "var(--lp-line)" }} />
+                    <button
+                        type="button"
+                        onClick={() => goManual(CORE_ORDER.length)}
+                        aria-label="Ir pro menu de áreas"
+                        title="Escolher o que ver"
+                        className="group flex items-center px-[3px] py-2"
+                    >
+                        <span className="h-1.5 rounded-full transition-all group-hover:opacity-70" style={{ width: inMenuPhase ? 18 : 6, background: inMenuPhase ? "var(--lp-blue)" : "var(--lp-line)" }} />
+                    </button>
                 </div>
 
                 {/* centro: pílula de controles estilo Handhold */}
@@ -818,9 +881,11 @@ export const DemoLiveStage = ({ onDone, site, siteCtx, onTourEnd }: DemoLiveStag
 
                 {/* direita: estado/manual + CTA WhatsApp */}
                 <div className="flex min-w-0 flex-1 items-center justify-end gap-2.5">
-                    {manual && (
+                    {/* DEMO.RITMO.1: o avanço manual fica SEMPRE disponível durante o
+                        roteiro (antes só quando a voz falhava) — ritmo é do visitante. */}
+                    {(manual || (tourMode && !inMenuPhase)) && (
                         <button type="button" onClick={() => goManual(activeIdx + 1)} className="hidden rounded-full px-4 py-1.5 text-[13px] text-white sm:inline-flex" style={{ background: "var(--lp-ink)", fontWeight: 600 }}>
-                            {activeIdx >= CORE_ORDER.length - 1 ? "Concluir" : "Próximo"}
+                            {activeIdx >= CORE_ORDER.length - 1 ? (manual ? "Concluir" : "Pular cena →") : (manual ? "Próximo" : "Pular cena →")}
                         </button>
                     )}
                     <a
