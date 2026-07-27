@@ -21,16 +21,19 @@ const MODEL_ID = "eleven_multilingual_v2";
 
 // Roteiro FINAL da EVA por cena (1ª pessoa, tom caloroso e consultivo).
 // Mantido alinhado com SCREEN_CAPTION/TOUR_PROMPT do DemoLiveStage.
+// DEMO.RITMO.2 (2026-07-28): roteiro encurtado pra ~8-10s por cena (o core
+// tinha 54s de áudio; visitante de site não espera cena de 15-20s). O
+// essencial fica; o "seu time aprova" fica; o resto era gordura.
 const SCRIPT = {
-    "inicio": "Essa é a Central de Comando: é aqui que o gestor começa o dia. Eu leio toda a operação e reúno num lugar só as conversas ativas, os leads quentes e a fila do que precisa de atenção agora, com o próximo passo de cada um.",
-    "inbox": "Essa é a Caixa de Entrada: todas as conversas dos seus canais, reunidas num lugar só, na ordem do que precisa de resposta agora.",
-    "inbox-analise": "Aqui abrimos a conversa da Carla, e o meu painel de análise apareceu ao lado. Eu li a conversa inteira, percebi que é um lead quente com intenção de preço, e já deixei a resposta sugerida pronta. Seu time só revisa e aprova antes de enviar: é isso que me diferencia de um chat comum.",
-    "pipeline": "Esse é o Pipeline: cada conversa vira uma oportunidade no funil. Você vê os estágios, identifica um lead parado, e eu aviso quando algo precisa de follow-up.",
-    "lead": "No detalhe da oportunidade você vê o contexto do lead, o histórico da conversa, o que eu entendi dela, e o próximo passo que eu sugiro.",
-    "eva-studio": "Esse é o EVA Studio, onde você monta agentes especialistas: qualificação, follow-up, propostas e reativação, cada um treinado com o playbook da sua agência.",
-    "eva-studio-criar": "Criar um agente é uma conversa: você responde algumas perguntas sobre o seu negócio, e o agente de qualificação fica pronto em minutos, já qualificando os leads que chegam.",
-    "metas": "Em Metas, você acompanha o objetivo do time em tempo real e configura a meta de cada vendedor: o valor, o período, e eu mostro o quanto falta e o ritmo necessário.",
-    "ranking": "E esse é o Ranking, o placar da equipe: mostra como cada vendedor está em relação à meta, com uma visibilidade que motiva sem expor ninguém.",
+    "inicio": "Essa é a Central de Comando. Eu leio a operação inteira e te mostro o que precisa de atenção agora, com o próximo passo de cada conversa.",
+    "inbox": "Essa é a Caixa de Entrada: todas as conversas num lugar só, na ordem do que precisa de resposta agora.",
+    "inbox-analise": "Aqui eu li a conversa da Carla inteira: lead quente, com intenção de preço. A resposta já está pronta, e seu time revisa e aprova antes de enviar.",
+    "pipeline": "E esse é o Pipeline: cada conversa vira uma oportunidade no funil, e eu aviso quando alguém precisa de follow-up.",
+    "lead": "No detalhe da oportunidade você vê o contexto, o histórico da conversa e o próximo passo que eu sugiro.",
+    "eva-studio": "Esse é o EVA Studio: aqui você monta agentes especialistas de qualificação, follow-up, propostas e reativação.",
+    "eva-studio-criar": "Criar um agente é uma conversa: você responde algumas perguntas e ele fica pronto em minutos, já qualificando seus leads.",
+    "metas": "Em Metas você acompanha o objetivo do time em tempo real, e eu mostro o quanto falta e o ritmo necessário.",
+    "ranking": "E esse é o Ranking, o placar da equipe: motiva o time sem expor ninguém.",
 };
 
 // mesma quebra de frases do DemoLiveStage (legenda por frase)
