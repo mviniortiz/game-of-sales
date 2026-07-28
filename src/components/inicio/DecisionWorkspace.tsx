@@ -28,7 +28,6 @@ import {
     CircleNotch,
     Clock,
     ClockCounterClockwise,
-    Funnel,
     PaperPlaneRight,
     Sparkle as Sparkles,
     Target,
@@ -424,7 +423,7 @@ function QueueEmptyCard({ children }: { children: React.ReactNode }) {
     return <div className="rounded-2xl" style={CARD_STYLE}>{children}</div>;
 }
 
-export function ActionQueue({ queue, loading, dayComplete, filterActive, handlers, compact = false }: { queue: DailyPriority[]; loading: boolean; dayComplete: boolean; filterActive: boolean; handlers: QueueHandlers; compact?: boolean }) {
+export function ActionQueue({ queue, loading, dayComplete, handlers, compact = false }: { queue: DailyPriority[]; loading: boolean; dayComplete: boolean; handlers: QueueHandlers; compact?: boolean }) {
     const reduce = useReducedMotion();
     if (loading) {
         return (
@@ -453,9 +452,7 @@ export function ActionQueue({ queue, loading, dayComplete, filterActive, handler
                     transition={{ duration: reduce ? 0 : CHAIN.stateSwap, ease: "easeOut" }}
                 >
                     <QueueEmptyCard>
-                        {filterActive ? (
-                            <EmptyState icon={Funnel} title="Nada com esses filtros" text="Nenhuma ação bate com os filtros selecionados. Ajuste ou limpe os filtros pra ver a fila completa." />
-                        ) : dayComplete ? (
+                        {dayComplete ? (
                             <EmptyState icon={CheckCircle} title="Missão do dia concluída" text="Você resolveu todas as ações de hoje. A EVA te avisa quando surgir algo novo." />
                         ) : (
                             <EmptyState icon={Target} title="Tudo em dia" text="Nada crítico agora. Continuo de olho nas conversas e te aviso quando surgir uma ação urgente." />

@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import {
@@ -18,19 +17,14 @@ import { useAuth } from "@/contexts/AuthContext";
 // F5C.5.3 — Phosphor duotone (mesmo set da sidebar e do pipeline /pipeline).
 import {
     Warning as AlertTriangle,
-    CaretRight as ChevronRight,
-    CaretDown as ChevronDown,
     Check,
     CheckCircle,
-    Clock,
     CurrencyDollar,
-    SlidersHorizontal as Filter,
     Funnel,
     ArrowClockwise as RefreshCw,
     Target,
     Timer,
     UserPlus,
-    X,
 } from "@phosphor-icons/react";
 import { useInicioData } from "@/hooks/useInicioData";
 import { useCockpitData, type CockpitData, type CockpitRange, type DayPoint } from "@/hooks/useCockpitData";
@@ -237,39 +231,76 @@ function LeadsChart({ series }: { series: DayPoint[] }) {
     );
 }
 
-// Funil do pipeline v3 — silhueta contínua com dimensões DETERMINÍSTICAS:
-// cada linha é flex com altura fixa e o svg leva width/height explícitos em
-// atributo (h-full aqui já quebrou 2x: sem altura definida no pai, o SVG cai
-// no default de 150px e os segmentos se sobrepõem). O fundo de um segmento
-// tem a largura do topo do próximo (silhueta emendada), laterais em bezier,
-// rampa azul claro→escuro, Ganho como base verde, passagem % em pill na
-// divisória. Labels laterais em tinta, nunca texto sobre a cor.
-const FUNNEL_RAMP = ["#BFDBFE", "#93C5FD", "#60A5FA", "#3B82F6", "#2563EB"];
-const FUNNEL_ROW = 58;
-const FUNNEL_WON_ROW = 36;
-const FUNNEL_SIDE = 132; // colunas de label (esquerda/direita)
+// Funil do pipeline v5 — "cada bloco é uma oportunidade". Nada de silhueta
+// nem barra agregada: com o volume real de uma agência (unidades, não
+// centenas), proporção contínua é abstração genérica. Aqui cada deal vira um
+// bloco discreto cuja largura é o VALOR dele numa régua compartilhada entre
+// as etapas — dá pra ver em que etapa o dinheiro está sentado e quantas
+// oportunidades compõem cada total. Bloco sem valor cadastrado fica vazado
+// (outline). Acima de MUITOS deals a etapa degrada pra barra sólida (blocos
+// perdem leitura). Rampa azul por profundidade, Ganho verde após hairline.
+const FUNNEL_RAMP = ["#93C5FD", "#60A5FA", "#3B82F6", "#2563EB", "#1D4ED8"];
+const FUNNEL_BLOCK_LIMIT = 16;
 
-interface FunnelStage { key: string; name: string; count: number; totalValue: number }
+interface FunnelStage { key: string; name: string; count: number; totalValue: number; values: number[] }
 
-function FunnelRow({ height, left, right, children, onClick, ariaLabel }: {
-    height: number;
-    left: React.ReactNode;
-    right: React.ReactNode;
-    children: React.ReactNode;
+function FunnelBlocks({ stage, color, maxTotal }: { stage: FunnelStage; color: string; maxTotal: number }) {
+    if (stage.count === 0) {
+        return <span className="block h-px w-full self-center" style={{ borderTop: `1.5px dashed ${GRID}` }} />;
+    }
+    // Largura da faixa = fatia da etapa na régua; piso pra etapa sem valores
+    // não sumir (blocos de valor 0 precisam de corpo pra contar unidades).
+    const stripPct = Math.min(100, Math.max((stage.totalValue / maxTotal) * 100, stage.count * 5, 6));
+    const solid = stage.count > FUNNEL_BLOCK_LIMIT;
+    return (
+        <span className="flex h-[14px] items-stretch gap-[3px]" style={{ width: `${stripPct}%` }}>
+            {solid ? (
+                <span className="min-w-0 flex-1 rounded-[4px] transition-[filter] duration-200 group-hover:brightness-[0.94]" style={{ background: color }} />
+            ) : (
+                stage.values.map((v, i) => (
+                    <span
+                        key={i}
+                        title={v > 0 ? fmtBRL(v) : "sem valor cadastrado"}
+                        className="min-w-[9px] rounded-[4px] transition-[filter] duration-200 group-hover:brightness-[0.94]"
+                        style={{
+                            flexGrow: Math.max(v, stage.totalValue * 0.04, 1),
+                            flexBasis: 0,
+                            ...(v > 0
+                                ? { background: color }
+                                : { background: "transparent", boxShadow: `inset 0 0 0 1.5px ${color}` }),
+                        }}
+                    />
+                ))
+            )}
+        </span>
+    );
+}
+
+function FunnelRow({ label, ariaName, stage, color, maxTotal, onClick }: {
+    label: React.ReactNode;
+    ariaName: string;
+    stage: FunnelStage;
+    color: string;
+    maxTotal: number;
     onClick: () => void;
-    ariaLabel: string;
 }) {
     return (
         <button
             type="button"
             onClick={onClick}
-            aria-label={ariaLabel}
-            className="group flex w-full items-center gap-4 text-left"
-            style={{ height }}
+            aria-label={`${ariaName}: ${stage.count} ${stage.count === 1 ? "oportunidade" : "oportunidades"}, ${fmtBRL(stage.totalValue)}`}
+            className="group flex w-full items-center gap-4 rounded-lg px-1.5 py-[8px] text-left transition-colors hover:bg-[#F8FAFC]"
         >
-            <span className="shrink-0 text-right" style={{ width: FUNNEL_SIDE }}>{left}</span>
-            <span className="relative min-w-0 flex-1" style={{ height }}>{children}</span>
-            <span className="shrink-0" style={{ width: FUNNEL_SIDE }}>{right}</span>
+            <span className="w-[108px] shrink-0 text-[13px] font-semibold truncate transition-colors group-hover:text-[#0B1220]" style={{ color: SUB }}>
+                {label}
+            </span>
+            <span className="flex min-w-0 flex-1 items-center">
+                <FunnelBlocks stage={stage} color={color} maxTotal={maxTotal} />
+            </span>
+            <span className="w-[108px] shrink-0 text-right text-[13px] tabular-nums truncate" style={{ color: stage.count === 0 ? MUTE : INK }}>
+                <strong className="text-[14px]">{stage.count}</strong>
+                <span style={{ color: MUTE }}> · {fmtBRL(stage.totalValue)}</span>
+            </span>
         </button>
     );
 }
@@ -277,117 +308,38 @@ function FunnelRow({ height, left, right, children, onClick, ariaLabel }: {
 function PipelineFunnel({ stages, onNavigate }: { stages: FunnelStage[]; onNavigate: (href: string) => void }) {
     const open = stages.filter((s) => s.key !== "closed_won");
     const won = stages.find((s) => s.key === "closed_won");
-    const maxCount = Math.max(1, ...open.map((s) => s.count));
-    const w = (count: number) => Math.max(18, (count / maxCount) * 94);
-    const widths = open.map((st) => w(st.count));
-    const bottomOf = (i: number) => (i < open.length - 1 ? widths[i + 1] : widths[i] * 0.72);
+    const maxTotal = Math.max(1, ...open.map((s) => s.totalValue), won?.totalValue ?? 0);
     const goPipeline = () => onNavigate("/pipeline");
 
-    const valueLabel = (st: FunnelStage) => (
-        <span className="block text-[13px] tabular-nums truncate" style={{ color: INK }}>
-            <strong className="text-[14px]">{st.count}</strong>
-            <span style={{ color: MUTE }}> · {fmtBRL(st.totalValue)}</span>
-        </span>
-    );
-
     return (
-        <div className="flex flex-col" role="img" aria-label="Funil do pipeline por etapa">
-            {open.map((st, i) => {
-                const next = open[i + 1];
-                const tw = widths[i];
-                const bw = bottomOf(i);
-                const k = FUNNEL_ROW * 0.5;
-                const pass = next && st.count > 0 ? Math.round((next.count / st.count) * 100) : null;
-                const d = [
-                    `M ${50 - tw / 2} 0`,
-                    `L ${50 + tw / 2} 0`,
-                    `C ${50 + tw / 2} ${k}, ${50 + bw / 2} ${FUNNEL_ROW - k}, ${50 + bw / 2} ${FUNNEL_ROW}`,
-                    `L ${50 - bw / 2} ${FUNNEL_ROW}`,
-                    `C ${50 - bw / 2} ${FUNNEL_ROW - k}, ${50 - tw / 2} ${k}, ${50 - tw / 2} 0`,
-                    "Z",
-                ].join(" ");
-                return (
-                    <FunnelRow
-                        key={st.key}
-                        height={FUNNEL_ROW}
-                        onClick={goPipeline}
-                        ariaLabel={`${st.name}: ${st.count} oportunidades, ${fmtBRL(st.totalValue)}`}
-                        left={
-                            <span className="block text-[13px] font-semibold truncate transition-colors group-hover:text-[#0B1220]" style={{ color: SUB }}>
-                                {st.name}
-                            </span>
-                        }
-                        right={valueLabel(st)}
-                    >
-                        <svg
-                            width="100%"
-                            height={FUNNEL_ROW}
-                            viewBox={`0 0 100 ${FUNNEL_ROW}`}
-                            preserveAspectRatio="none"
-                            className="block"
-                            aria-hidden
-                        >
-                            <path
-                                d={d}
-                                fill={FUNNEL_RAMP[Math.min(i, FUNNEL_RAMP.length - 2)]}
-                                className="transition-[filter] duration-200 group-hover:brightness-[0.96]"
-                                style={{ transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)" }}
-                            />
-                            {/* hairline branca só no topo (divisória), não nas laterais:
-                                stroke no path todo engrossava a silhueta */}
-                            {i > 0 && <line x1={50 - tw / 2} y1={0.75} x2={50 + tw / 2} y2={0.75} stroke="#FFFFFF" strokeWidth={1.5} />}
-                        </svg>
-                        {pass != null && (
-                            <span
-                                className="absolute left-1/2 -translate-x-1/2 z-10 inline-flex items-center rounded-full px-2 py-[2px] text-[10px] font-mono tabular-nums whitespace-nowrap"
-                                style={{
-                                    bottom: -9,
-                                    background: "#FFFFFF",
-                                    border: "1px solid #E4E9F2",
-                                    color: SUB,
-                                    boxShadow: "0 1px 2px rgba(15,23,42,0.06)",
-                                }}
-                            >
-                                {pass}% ↓
-                            </span>
-                        )}
-                    </FunnelRow>
-                );
-            })}
-
+        <div className="flex flex-col" aria-label="Funil do pipeline por etapa">
+            {open.map((st, i) => (
+                <FunnelRow
+                    key={st.key}
+                    label={st.name}
+                    ariaName={st.name}
+                    stage={st}
+                    color={FUNNEL_RAMP[Math.min(i, FUNNEL_RAMP.length - 1)]}
+                    maxTotal={maxTotal}
+                    onClick={goPipeline}
+                />
+            ))}
             {won && (
-                <div className="mt-2.5">
+                <>
+                    <div className="mx-1.5 my-1.5 h-px" style={{ background: GRID }} />
                     <FunnelRow
-                        height={FUNNEL_WON_ROW}
-                        onClick={goPipeline}
-                        ariaLabel={`Ganho: ${won.count} oportunidades, ${fmtBRL(won.totalValue)}`}
-                        left={
-                            <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold" style={{ color: "#047857" }}>
+                        label={
+                            <span className="inline-flex items-center gap-1.5" style={{ color: "#047857" }}>
                                 <Check size={13} weight="bold" /> Ganho
                             </span>
                         }
-                        right={valueLabel(won)}
-                    >
-                        <svg
-                            width="100%"
-                            height={FUNNEL_WON_ROW}
-                            viewBox={`0 0 100 ${FUNNEL_WON_ROW}`}
-                            preserveAspectRatio="none"
-                            className="block"
-                            aria-hidden
-                        >
-                            <rect
-                                x={50 - (widths[widths.length - 1] ?? 40) * 0.36}
-                                y={5}
-                                width={(widths[widths.length - 1] ?? 40) * 0.72}
-                                height={FUNNEL_WON_ROW - 10}
-                                rx={4}
-                                fill="#10B981"
-                                className="transition-[filter] duration-200 group-hover:brightness-[0.96]"
-                            />
-                        </svg>
-                    </FunnelRow>
-                </div>
+                        ariaName="Ganho"
+                        stage={won}
+                        color="#10B981"
+                        maxTotal={maxTotal}
+                        onClick={goPipeline}
+                    />
+                </>
             )}
         </div>
     );
@@ -434,190 +386,6 @@ function PeriodToggle({ value, onChange }: { value: CockpitRange; onChange: (v: 
                     {d}d
                 </button>
             ))}
-        </div>
-    );
-}
-
-// ─── Filtros da Fila de ação (client-side, inalterado) ──────────────────────
-
-type PrioritySource = DailyPriority["source"];
-type StaleWindow = 24 | 48;
-
-const ACTION_OPTIONS: { key: PrioritySource; label: string }[] = [
-    { key: "conversation", label: "Responder lead" },
-    { key: "deal",         label: "Avançar oportunidade" },
-    { key: "eva",          label: "Completar a EVA" },
-];
-const STALE_OPTIONS: { key: StaleWindow; label: string }[] = [
-    { key: 24, label: "Parado +24h" },
-    { key: 48, label: "Parado +48h" },
-];
-
-export interface CentralFilters {
-    actions: Set<PrioritySource>;
-    urgent: boolean;
-    stale: StaleWindow | null;
-}
-
-function emptyFilters(): CentralFilters {
-    return { actions: new Set(), urgent: false, stale: null };
-}
-function countActiveFilters(f: CentralFilters): number {
-    return f.actions.size + (f.urgent ? 1 : 0) + (f.stale != null ? 1 : 0);
-}
-function hoursSinceIso(iso?: string | null): number {
-    if (!iso) return 0;
-    return (Date.now() - new Date(iso).getTime()) / 3_600_000;
-}
-function matchesFilters(p: DailyPriority, f: CentralFilters): boolean {
-    if (f.actions.size && !f.actions.has(p.source)) return false;
-    if (f.urgent && !(p.priority === "critical" || p.priority === "high")) return false;
-    if (f.stale != null && hoursSinceIso(p.createdAt) < f.stale) return false;
-    return true;
-}
-
-function FilterCheckRow({ label, dot, checked, onToggle }: { label: string; dot?: string; checked: boolean; onToggle: () => void }) {
-    return (
-        <button type="button" onClick={onToggle} className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors hover:bg-[#F1F5F9]">
-            <span
-                className="h-[18px] w-[18px] rounded-[5px] flex items-center justify-center shrink-0 transition-colors"
-                style={{ background: checked ? BLUE : "#FFFFFF", border: `1.5px solid ${checked ? BLUE : "#CBD5E1"}` }}
-            >
-                {checked && <Check size={12} weight="bold" style={{ color: "#FFFFFF" }} />}
-            </span>
-            {dot && <span className="h-2 w-2 rounded-full shrink-0" style={{ background: dot }} />}
-            <span className="text-[13px]" style={{ color: "#334155", fontWeight: 500 }}>{label}</span>
-        </button>
-    );
-}
-
-function FilterMenu({ filters, onChange, activeCount }: { filters: CentralFilters; onChange: (next: CentralFilters) => void; activeCount: number }) {
-    const [open, setOpen] = useState(false);
-    const [pos, setPos] = useState<{ top: number; right: number }>({ top: 0, right: 0 });
-    const triggerRef = useRef<HTMLDivElement>(null);
-    const menuRef = useRef<HTMLDivElement>(null);
-
-    const computePos = useCallback(() => {
-        const el = triggerRef.current;
-        if (!el) return;
-        const r = el.getBoundingClientRect();
-        setPos({ top: r.bottom + 8, right: Math.max(8, window.innerWidth - r.right) });
-    }, []);
-
-    useEffect(() => {
-        if (!open) return;
-        computePos();
-        const onDown = (e: MouseEvent) => {
-            const t = e.target as Node;
-            if (triggerRef.current?.contains(t) || menuRef.current?.contains(t)) return;
-            setOpen(false);
-        };
-        const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
-        const onReflow = () => computePos();
-        document.addEventListener("mousedown", onDown);
-        document.addEventListener("keydown", onKey);
-        window.addEventListener("scroll", onReflow, true);
-        window.addEventListener("resize", onReflow);
-        return () => {
-            document.removeEventListener("mousedown", onDown);
-            document.removeEventListener("keydown", onKey);
-            window.removeEventListener("scroll", onReflow, true);
-            window.removeEventListener("resize", onReflow);
-        };
-    }, [open, computePos]);
-
-    const toggleAction = (k: PrioritySource) => {
-        const next = new Set(filters.actions);
-        if (next.has(k)) next.delete(k); else next.add(k);
-        onChange({ ...filters, actions: next });
-    };
-
-    return (
-        <div className="relative" ref={triggerRef}>
-            <button
-                onClick={() => setOpen((o) => !o)}
-                aria-expanded={open}
-                aria-haspopup="true"
-                className="inline-flex items-center gap-2 h-10 px-4 rounded-xl text-[13px] font-medium transition-colors hover:bg-white shrink-0"
-                style={{
-                    background: activeCount > 0 ? "#FFFFFF" : "rgba(255,255,255,0.85)",
-                    border: `1px solid ${activeCount > 0 ? "#BFD3F2" : "#D9E2EC"}`,
-                    color: SUB,
-                }}
-            >
-                <Filter size={14} weight="duotone" style={{ color: activeCount > 0 ? BLUE : SUB }} />
-                Filtros
-                {activeCount > 0 && (
-                    <span className="inline-flex items-center justify-center h-5 min-w-[20px] px-1 rounded-full text-[11px] font-bold tabular-nums text-white" style={{ background: BLUE }}>
-                        {activeCount}
-                    </span>
-                )}
-                <ChevronDown size={13} weight="bold" className="transition-transform" style={{ color: MUTE, transform: open ? "rotate(180deg)" : "none" }} />
-            </button>
-
-            {open && createPortal(
-                <div
-                    ref={menuRef}
-                    className="fixed z-[60] w-[244px] rounded-xl p-3"
-                    style={{ top: pos.top, right: pos.right, background: "#FFFFFF", border: "1px solid #D9E2EC", boxShadow: "0 4px 12px rgba(15,23,42,0.08), 0 18px 40px rgba(15,23,42,0.12)" }}
-                >
-                    <div className="flex items-center justify-between px-1 pb-1.5">
-                        <span className="text-[11px] uppercase" style={{ color: "#1E293B", fontWeight: 700, letterSpacing: "0.05em" }}>Filtrar a fila</span>
-                        {activeCount > 0 && (
-                            <button type="button" onClick={() => onChange(emptyFilters())} className="text-[11px] font-semibold" style={{ color: BLUE }}>Limpar</button>
-                        )}
-                    </div>
-                    <p className="text-[10px] uppercase px-2.5 mt-1 mb-0.5" style={{ color: "#1E293B", fontWeight: 700, letterSpacing: "0.06em" }}>O que fazer</p>
-                    {ACTION_OPTIONS.map((o) => (
-                        <FilterCheckRow key={o.key} label={o.label} checked={filters.actions.has(o.key)} onToggle={() => toggleAction(o.key)} />
-                    ))}
-                    <div className="h-px my-1.5" style={{ background: "#F1F5F9" }} />
-                    <p className="text-[10px] uppercase px-2.5 mb-0.5" style={{ color: "#1E293B", fontWeight: 700, letterSpacing: "0.06em" }}>Foco</p>
-                    <FilterCheckRow label="Só urgentes" dot="#F43F5E" checked={filters.urgent} onToggle={() => onChange({ ...filters, urgent: !filters.urgent })} />
-                    {STALE_OPTIONS.map((o) => (
-                        <FilterCheckRow key={o.key} label={o.label} checked={filters.stale === o.key} onToggle={() => onChange({ ...filters, stale: filters.stale === o.key ? null : o.key })} />
-                    ))}
-                </div>,
-                document.body
-            )}
-        </div>
-    );
-}
-
-function ActiveFilterChips({ filters, onChange }: { filters: CentralFilters; onChange: (next: CentralFilters) => void }) {
-    const actionLabel = Object.fromEntries(ACTION_OPTIONS.map((o) => [o.key, o.label])) as Record<PrioritySource, string>;
-    const chips: { key: string; label: string; dot?: string; remove: () => void }[] = [];
-    filters.actions.forEach((a) =>
-        chips.push({
-            key: `a-${a}`,
-            label: actionLabel[a],
-            remove: () => { const n = new Set(filters.actions); n.delete(a); onChange({ ...filters, actions: n }); },
-        }),
-    );
-    if (filters.urgent) chips.push({ key: "urgent", label: "Urgentes", dot: "#F43F5E", remove: () => onChange({ ...filters, urgent: false }) });
-    if (filters.stale != null) chips.push({ key: "stale", label: `Parado +${filters.stale}h`, remove: () => onChange({ ...filters, stale: null }) });
-    if (chips.length === 0) return null;
-
-    return (
-        <div className="flex flex-wrap items-center gap-2 px-1">
-            <span className="text-[11px] uppercase" style={{ color: MUTE, fontWeight: 700, letterSpacing: "0.06em" }}>Filtrando</span>
-            {chips.map((c) => (
-                <button
-                    key={c.key}
-                    type="button"
-                    onClick={c.remove}
-                    className="group inline-flex items-center gap-1.5 h-7 pl-2.5 pr-2 rounded-full text-[12px] font-medium transition-colors hover:bg-[#EEF2F7]"
-                    style={{ background: "#FFFFFF", border: "1px solid #D9E2EC", color: "#334155" }}
-                    aria-label={`Remover filtro ${c.label}`}
-                >
-                    {c.dot && <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: c.dot }} />}
-                    {c.label}
-                    <X size={11} weight="bold" style={{ color: MUTE }} />
-                </button>
-            ))}
-            <button type="button" onClick={() => onChange(emptyFilters())} className="text-[12px] font-semibold transition-colors hover:underline" style={{ color: BLUE }}>
-                Limpar tudo
-            </button>
         </div>
     );
 }
@@ -717,9 +485,6 @@ const Inicio = () => {
     }, [cc, pipeline, cockpit]);
     const refreshing = manualRefreshing || cc.isFetching || pipeline.isFetching;
 
-    const [filters, setFilters] = useState<CentralFilters>(emptyFilters);
-    const activeFilterCount = countActiveFilters(filters);
-
     const actions = usePriorityActions(companyId);
     const sender = useEvolutionSender();
     const handleQuickReply = useCallback(
@@ -736,18 +501,6 @@ const Inicio = () => {
         const pending = day.filter((p) => !isResolved(actions.state, p.id));
         return { dayItems: day, pendingAll: pending };
     }, [cc.dailyPriorities, actions.state]);
-
-    const allPending = useMemo(() => {
-        const nowMs = Date.now();
-        return cc.dailyPrioritiesAll
-            .filter((p) => !isSnoozed(actions.state, p.id, nowMs))
-            .filter((p) => !isResolved(actions.state, p.id));
-    }, [cc.dailyPrioritiesAll, actions.state]);
-
-    const queue = useMemo(() => {
-        const base = activeFilterCount > 0 ? allPending : pendingAll;
-        return base.filter((p) => matchesFilters(p, filters));
-    }, [activeFilterCount, allPending, pendingAll, filters]);
 
     const criticalCount = useMemo(() => pendingAll.filter((p) => p.priority === "critical").length, [pendingAll]);
     const dayComplete = dayItems.length > 0 && pendingAll.length === 0;
@@ -880,17 +633,17 @@ const Inicio = () => {
                         <section className="rounded-2xl px-5 pt-4 pb-4 min-w-0" style={CARD_STYLE}>
                             <div className="flex items-baseline justify-between gap-3 mb-3">
                                 <h2 className="text-[13px] font-bold" style={{ color: INK }}>Funil do pipeline</h2>
-                                <span className="text-[11px] shrink-0" style={{ color: MUTE }}>oportunidades e valor por etapa</span>
+                                <span className="text-[11px] shrink-0" style={{ color: MUTE }}>cada bloco é uma oportunidade · largura = valor</span>
                             </div>
                             {pipeline.isLoading ? (
-                                <div className="space-y-1 py-1" aria-label="Carregando">
-                                    {[92, 74, 56, 40].map((wd, i) => (
-                                        <div key={i} className="mx-auto animate-pulse" style={{ width: `${wd}%`, height: 48, background: GRID, borderRadius: 6 }} />
+                                <div className="space-y-2 py-2" aria-label="Carregando">
+                                    {[92, 74, 56, 40, 66].map((wd, i) => (
+                                        <div key={i} className="animate-pulse" style={{ width: `${wd}%`, height: 22, background: GRID, borderRadius: 9999 }} />
                                     ))}
                                 </div>
                             ) : (
                                 <PipelineFunnel
-                                    stages={(pipeline.data ?? []).map((s) => ({ key: s.key, name: s.name, count: s.count, totalValue: s.totalValue }))}
+                                    stages={(pipeline.data ?? []).map((s) => ({ key: s.key, name: s.name, count: s.count, totalValue: s.totalValue, values: s.values }))}
                                     onNavigate={navigate}
                                 />
                             )}
@@ -912,15 +665,7 @@ const Inicio = () => {
                     de ser da tela e ficava 4 telas de scroll abaixo. */}
                 <aside className="flex flex-col gap-5 min-w-0 order-first lg:order-none">
                     <DayProgress items={dayItems} state={actions.state} />
-                    <div className="flex flex-col gap-2.5">
-                        <div className="flex items-center justify-between gap-2">
-                            <ActiveFilterChips filters={filters} onChange={setFilters} />
-                            <span className="ml-auto shrink-0">
-                                <FilterMenu filters={filters} onChange={setFilters} activeCount={activeFilterCount} />
-                            </span>
-                        </div>
-                    </div>
-                    <ActionQueue compact queue={queue} loading={cc.loading} dayComplete={dayComplete} filterActive={activeFilterCount > 0} handlers={handlers} />
+                    <ActionQueue compact queue={pendingAll} loading={cc.loading} dayComplete={dayComplete} handlers={handlers} />
                     <ActivityTimeline items={cc.recentActivity} loading={cc.loading} onNavigate={navigate} />
                 </aside>
             </div>

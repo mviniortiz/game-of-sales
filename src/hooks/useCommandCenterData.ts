@@ -116,9 +116,6 @@ export interface CommandCenterData {
     recentActivity: RecentActivityItem[];
     evaHighlights: EvaHighlight[];
     dailyPriorities: DailyPriority[];
-    /** Conjunto COMPLETO de ações pendentes (antes do corte de top-5). Usado quando
-     *  um filtro está ativo, pra revelar além das 5 do dia. */
-    dailyPrioritiesAll: DailyPriority[];
     lastUpdatedAt: Date;
 }
 
@@ -1106,7 +1103,6 @@ async function fetchCommandCenterData(companyId: string): Promise<CommandCenterD
         recentActivity,
         evaHighlights,
         dailyPriorities,
-        dailyPrioritiesAll: dailyAll.slice(0, 25),
         lastUpdatedAt: new Date(),
     };
 }
@@ -1136,7 +1132,6 @@ export function useCommandCenterData() {
             recentActivity: query.data?.recentActivity ?? [],
             evaHighlights: query.data?.evaHighlights ?? [],
             dailyPriorities: query.data?.dailyPriorities ?? [],
-            dailyPrioritiesAll: query.data?.dailyPrioritiesAll ?? [],
             refetch: query.refetch,
         }),
         [query],

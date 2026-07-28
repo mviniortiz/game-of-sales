@@ -35,6 +35,8 @@ export interface PipelineStageData {
   color: string;
   count: number;
   totalValue: number;
+  /** Valor de cada deal da etapa (0 = sem valor cadastrado), decrescente. */
+  values: number[];
 }
 
 const STAGE_META: Record<PipelineStageKey, { name: string; color: string }> = {
@@ -62,8 +64,8 @@ export function usePipelineStages() {
       if (error) throw error;
 
       const init = Object.fromEntries(
-        PIPELINE_STAGE_KEYS.map((k) => [k, { count: 0, total: 0 }]),
-      ) as Record<PipelineStageKey, { count: number; total: number }>;
+        PIPELINE_STAGE_KEYS.map((k) => [k, { count: 0, total: 0, values: [] as number[] }]),
+      ) as Record<PipelineStageKey, { count: number; total: number; values: number[] }>;
 
       for (const row of data || []) {
         const stage = (row as { stage: string }).stage as PipelineStageKey;
@@ -71,6 +73,7 @@ export function usePipelineStages() {
         init[stage].count += 1;
         const v = (row as { value: number | null }).value;
         if (typeof v === "number") init[stage].total += v;
+        init[stage].values.push(typeof v === "number" ? v : 0);
       }
 
       return PIPELINE_STAGE_KEYS.map((key) => ({
@@ -79,6 +82,7 @@ export function usePipelineStages() {
         color: STAGE_META[key].color,
         count: init[key].count,
         totalValue: init[key].total,
+        values: init[key].values.sort((a, b) => b - a),
       }));
     },
   });
