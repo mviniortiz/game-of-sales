@@ -4,7 +4,6 @@ import { CaretDown, Check } from "@phosphor-icons/react";
 import { ButtonV2 } from "./ButtonV2";
 import { CloudWaveOrb } from "./CloudWaveOrb";
 import { EvaOrb } from "./EvaOrb";
-import { primeEvaAudio } from "./useGeminiLive";
 
 // LP.7 (v2) — passo 1 da demo guiada: intake. Coleta e-mail CORPORATIVO + site
 // (sem backend nesta versão; nada é enviado). Valida e-mail pessoal e domínio.
@@ -181,7 +180,7 @@ export const DemoIntakeStep = ({ email, site, heardFrom, setEmail, setSite, setH
                         <HeardDropdown value={heardFrom} onChange={setHeardFrom} />
                     </div>
                     <div className="mt-1">
-                        <ButtonV2 onClick={() => { primeEvaAudio(); onStart(); }} variant="primary" showArrow disabled={!ready}>Iniciar demo ao vivo</ButtonV2>
+                        <ButtonV2 onClick={onStart} variant="primary" showArrow disabled={!ready}>Iniciar demo ao vivo</ButtonV2>
                     </div>
                 </div>
 
