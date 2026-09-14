@@ -65,6 +65,13 @@ const SIMPLE_ROUTES = [
             description: "Termos e condições de uso da plataforma Vyzon.",
         },
     },
+    {
+        slug: "orcamento",
+        seo: {
+            title: "Mandou o orçamento e o cliente sumiu? | Vyzon",
+            description: "A EVA acompanha os orçamentos que você manda pelo WhatsApp e, se o cliente some, prepara a retomada pra você aprovar. Teste fechado pra 20 negócios.",
+        },
+    },
 ];
 
 // Hub /alternativas — fonte única: src/data/landing/alternativasContent.json

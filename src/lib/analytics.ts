@@ -52,6 +52,7 @@ export const FUNNEL_EVENTS = {
   DEMO_OPEN: "demo_open",
   AGENT_BUILDER_START: "agent_builder_start",
   AGENT_BUILDER_LEAD: "agent_builder_lead",
+  ORCAMENTO_LEAD: "orcamento_lp_lead",
 
   // Registration
   REGISTER_START: "register_start",
@@ -325,6 +326,7 @@ export const DEMO_EVENTS = {
   NAV_TAB_CLICK: "nav_tab_click",
   NAV_OFF_FLOW: "nav_off_flow",
   DEMO_CTA: "demo_cta",
+  DEMO_COMPLETE: "demo_complete",
   EVA_SUGGESTION_SHOWN: "eva_suggestion_shown",
   EVA_SUGGESTION_ACCEPTED: "eva_suggestion_accepted",
   EVA_SUGGESTION_ADJUSTED: "eva_suggestion_adjusted",

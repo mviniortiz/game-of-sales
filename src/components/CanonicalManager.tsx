@@ -14,6 +14,7 @@ const SELF_CANONICAL = new Set<string>([
   "/politica-privacidade",
   "/termos-de-servico",
   "/blog",
+  "/orcamento",
 ]);
 
 // Rotas com slug dinâmico que devem ter canonical próprio (a URL real da página).

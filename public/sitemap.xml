@@ -47,6 +47,12 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://vyzon.com.br/orcamento</loc>
+    <lastmod>2026-09-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://vyzon.com.br/eva-voz</loc>
     <lastmod>2026-06-21</lastmod>
     <changefreq>monthly</changefreq>
